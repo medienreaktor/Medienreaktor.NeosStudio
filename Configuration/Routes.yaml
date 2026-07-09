@@ -1,0 +1,13 @@
+-
+  name: 'Studio: OAuth callback / SPA entry'
+  uriPattern: 'neos/studio'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Studio'
+    '@action': 'index'
+    '@format': 'html'
+  # The SPA returns from the OAuth flow with ?code=&state= as query string;
+  # allow them as exceeding arguments so the intercepted-request resume after
+  # login can reverse-route this URL.
+  appendExceedingArguments: true
+  httpMethods: ['GET']

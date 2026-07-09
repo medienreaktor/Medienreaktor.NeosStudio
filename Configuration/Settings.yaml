@@ -1,0 +1,19 @@
+Neos:
+  Flow:
+    mvc:
+      routes:
+        'Medienreaktor.NeosStudio':
+          position: 'before Neos.Neos'
+
+    security:
+      authentication:
+        providers:
+          # Require a logged-in Neos backend user to open the Studio shell.
+          # Once loaded, the SPA obtains an OAuth token via the (first-party,
+          # auto-approving) authorization flow using the same session.
+          'Neos.Neos:Backend':
+            requestPatterns:
+              'Medienreaktor.NeosStudio:Controllers':
+                pattern: 'ControllerObjectName'
+                patternOptions:
+                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\.*'

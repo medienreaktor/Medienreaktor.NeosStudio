@@ -1,0 +1,13 @@
+privilegeTargets:
+  'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
+    'Medienreaktor.NeosStudio:Module':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\StudioController->indexAction())'
+
+roles:
+  # Any backend editor may open the Studio; what they can actually do inside
+  # is governed by the API's own policies and the OAuth token scopes.
+  'Neos.Neos:AbstractEditor':
+    privileges:
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Module'
+        permission: GRANT

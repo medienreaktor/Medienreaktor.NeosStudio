@@ -1,0 +1,17 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// Flow publishes Resources/Public/ to _Resources/Static/Packages/<key>/.
+// Build the SPA there and point asset URLs at that absolute base so the
+// StudioController can serve the built index.html verbatim.
+const base = '/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/'
+
+export default defineConfig({
+  base,
+  plugins: [react()],
+  build: {
+    outDir: 'Resources/Public/Studio',
+    emptyOutDir: true,
+    assetsDir: 'assets',
+  },
+})
