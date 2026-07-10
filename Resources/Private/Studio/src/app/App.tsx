@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
 import { ApiError } from '@/api/client'
 import { type DimensionSpacePoint, useDimensions } from '@/api/dimensions'
@@ -71,6 +71,24 @@ export function App() {
   const [variantRequest, setVariantRequest] = useState<DimensionSpacePoint | null>(null)
   // Where the selected document exists; drives the switcher's muted "+" items.
   const { data: documentVariants } = useNodeVariants(selectedDocument?.address ?? null, auth === 'authenticated')
+
+  // Keep the user on the same document across a dimension switch: fetch the
+  // node at its address in the target point and reselect it once it resolves.
+  // The counter drops stale responses when dimensions change in quick
+  // succession, so a slow earlier fetch cannot override the latest switch.
+  const followDocumentRequest = useRef(0)
+  const followDocumentInto = (previousAddress: string, point: DimensionSpacePoint) => {
+    const request = ++followDocumentRequest.current
+    fetchNode(addressInDimension(previousAddress, point))
+      .then((node) => {
+        if (followDocumentRequest.current !== request) return
+        setSelectedDocument(node)
+        setInspectedNode(node)
+      })
+      .catch(() => {
+        /* fine - the tree simply starts unselected */
+      })
+  }
 
   const { data: sitesResponse } = useSites(activeWorkspace?.name ?? null, dimensionSpacePoint, auth === 'authenticated')
 
@@ -150,6 +168,7 @@ export function App() {
                   key={activeSite.nodeAddress}
                   site={activeSite}
                   workspaceName={activeWorkspace.name}
+                  selectedAddress={selectedDocument?.address ?? null}
                   onSelect={(node) => {
                     setSelectedDocument(node)
                     setInspectedNode(node)
@@ -197,9 +216,11 @@ export function App() {
                 documentCoverage={selectedDocument ? documentVariants?.coveredDimensionSpacePoints : undefined}
                 onCreateVariant={setVariantRequest}
                 onChange={(point) => {
+                  const previousAddress = selectedDocument?.address ?? null
                   setDimensionSpacePoint(point)
                   setSelectedDocument(null)
                   setInspectedNode(null)
+                  if (previousAddress) followDocumentInto(previousAddress, point)
                 }}
               />
             )}
@@ -245,14 +266,7 @@ export function App() {
               setInspectedNode(null)
               // Follow the document into its new dimension so outliner and
               // inspector show the just-created variant right away.
-              fetchNode(addressInDimension(previousAddress, point))
-                .then((node) => {
-                  setSelectedDocument(node)
-                  setInspectedNode(node)
-                })
-                .catch(() => {
-                  /* fine - the tree simply starts unselected */
-                })
+              followDocumentInto(previousAddress, point)
             }}
           />
         )}

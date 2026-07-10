@@ -9,6 +9,7 @@ import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
 import { usePendingChanges } from './usePendingChanges'
+import { useRevealSelection } from './useRevealSelection'
 
 /**
  * Virtual root above the site node. Never rendered; its single child is the
@@ -25,10 +26,13 @@ type TreeItemData = NodeDto | typeof ROOT_ID
 export function DocumentTree({
   site,
   workspaceName,
+  selectedAddress = null,
   onSelect,
 }: {
   site: Site
   workspaceName: string
+  /** Address selected outside the tree (e.g. followed across a dimension switch) - revealed and highlighted. */
+  selectedAddress?: string | null
   onSelect?: (node: NodeDto) => void
 }) {
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -86,6 +90,7 @@ export function DocumentTree({
   // The visible root is the site node (level 0), so the site itself plus
   // loadingDepth further document levels load eagerly.
   useAutoExpand(tree, config.nodeTree.loadingDepth)
+  useRevealSelection(tree, selectedAddress)
 
   return (
     <>
