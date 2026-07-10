@@ -22,19 +22,13 @@ export function ContentOutliner({
   workspaceName: string | null
   onSelect?: (node: NodeDto) => void
 }) {
-  return (
-    <div className="mb-6">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Content outliner</h2>
-      {document === null ? (
-        <div className="text-xs text-muted-foreground">Select a document to outline its content.</div>
-      ) : (
-        // Key by document: a new document is a new tree (fresh root, fresh
-        // expansion state) - remounting is simpler and more predictable than
-        // mutating rootItemId on a live tree instance.
-        <OutlinerTree key={document.address} document={document} workspaceName={workspaceName} onSelect={onSelect} />
-      )}
-    </div>
-  )
+  if (document === null) {
+    return <div className="px-2 text-xs text-muted-foreground">Select a document to outline its content.</div>
+  }
+  // Key by document: a new document is a new tree (fresh root, fresh
+  // expansion state) - remounting is simpler and more predictable than
+  // mutating rootItemId on a live tree instance.
+  return <OutlinerTree key={document.address} document={document} workspaceName={workspaceName} onSelect={onSelect} />
 }
 
 function OutlinerTree({

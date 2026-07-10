@@ -2,16 +2,26 @@ import { useEffect, useState } from 'react'
 import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
 import { ApiError } from '@/api/client'
 import { useMe } from '@/api/me'
-import type { NodeDto } from '@/api/nodes'
+import { nodeLabel, type NodeDto } from '@/api/nodes'
 import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Console, type InspectRequest } from '@/features/console/Console'
+import { SidebarResizeHandle, useResizableSidebar } from '@/components/ui/sidebar-resize'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
-import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
+import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
 
@@ -22,10 +32,12 @@ const AUTO_LOGIN_KEY = 'neos-studio.auto_login_attempted'
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
   const [error, setError] = useState<string | null>(null)
-  const [inspect, setInspect] = useState<InspectRequest | null>(null)
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
 
-  const { data: me, error: meError } = useMe(auth === 'authenticated')
+  // The identity itself is not displayed, but the me-query doubles as the
+  // token check: a 401 drives the logout below.
+  const { error: meError } = useMe(auth === 'authenticated')
+  const { sidebarWidth, isResizing, resizeHandleProps } = useResizableSidebar()
   const { data: workspacesResponse } = useWorkspaces(auth === 'authenticated')
 
   // Editors never browse live (ROOT) directly - only their personal
@@ -86,7 +98,7 @@ export function App() {
       <div className="grid min-h-screen place-items-center">
         <div className="rounded-lg border bg-card px-12 py-10 text-center">
           <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
-          <p className="mb-6 text-muted-foreground">API debugging console</p>
+          <p className="mb-6 text-muted-foreground">Editing environment for Neos</p>
           {error && <p className="mb-4 text-destructive">{error}</p>}
           <Button onClick={() => beginLogin()}>Connect to the API</Button>
         </div>
@@ -95,95 +107,89 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b bg-card px-5 py-3">
-        <div className="flex items-center gap-4">
-          <div className="text-lg">
-            Neos <strong>Studio</strong>{' '}
-            <span className="align-middle rounded-sm bg-primary px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-primary-foreground">
-              debug
-            </span>
+    <SidebarProvider
+      style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+      className={
+        isResizing
+          ? 'select-none **:data-[slot=sidebar-container]:transition-none! **:data-[slot=sidebar-gap]:transition-none!'
+          : undefined
+      }
+    >
+      <Sidebar>
+        <SidebarHeader>
+          <div className="px-2 py-1 text-lg">
+            Neos <strong>Studio</strong>
           </div>
-          {sites.length > 0 && (
-            <SiteSwitcher
-              sites={sites}
-              value={activeSite?.nodeName ?? null}
-              onChange={(nodeName) => {
-                setSiteNodeName(nodeName)
-                setSelectedDocument(null)
-              }}
-            />
-          )}
-          {workspaces.length > 0 && (
-            <WorkspaceSwitcher
-              workspaces={workspaces}
-              value={activeWorkspace?.name ?? null}
-              onChange={(name) => {
-                setWorkspaceName(name)
-                setSelectedDocument(null)
-              }}
-            />
-          )}
-        </div>
-        {me && (
-          <div className="flex items-center gap-4 text-sm">
-            <span title="Authenticated account">
-              👤 {me.account} <span className="text-muted-foreground">on {me.contentRepository}</span>
-            </span>
-            <span className="flex gap-1.5">
-              {me.scopes.map((s) => (
-                <Badge key={s} variant="secondary">
-                  {s}
-                </Badge>
-              ))}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                logout()
-                setAuth('anonymous')
-              }}
-            >
-              Disconnect
-            </Button>
-          </div>
-        )}
-      </header>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Document tree</SidebarGroupLabel>
+            <SidebarGroupContent>
+              {activeSite && activeWorkspace ? (
+                <DocumentTree
+                  key={activeSite.nodeAddress}
+                  site={activeSite}
+                  workspaceName={activeWorkspace.name}
+                  onSelect={setSelectedDocument}
+                />
+              ) : (
+                <div className="px-2 text-xs text-muted-foreground">Loading sites…</div>
+              )}
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Content outliner</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <ContentOutliner document={selectedDocument} workspaceName={activeWorkspace?.name ?? null} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarResizeHandle {...resizeHandleProps} />
+      </Sidebar>
 
-      {error && <div className="px-5 py-2.5 text-destructive">{error}</div>}
-
-      <Console
-        me={me}
-        inspect={inspect}
-        sidebarExtra={
-          <>
-            {activeSite && activeWorkspace ? (
-              <DocumentTree
-                key={activeSite.nodeAddress}
-                site={activeSite}
-                workspaceName={activeWorkspace.name}
-                onSelect={(node) => {
-                  setSelectedDocument(node)
-                  setInspect({ path: `/api/nodes/${node.address}` })
+      <SidebarInset>
+        <header className="flex items-center justify-between border-b px-4 py-2.5">
+          <div className="flex items-center gap-3">
+            <SidebarTrigger />
+            {sites.length > 0 && (
+              <SiteSwitcher
+                sites={sites}
+                value={activeSite?.nodeName ?? null}
+                onChange={(nodeName) => {
+                  setSiteNodeName(nodeName)
+                  setSelectedDocument(null)
                 }}
               />
-            ) : (
-              <div className="mb-6">
-                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Document tree
-                </h2>
-                <div className="text-xs text-muted-foreground">Loading sites…</div>
-              </div>
             )}
-            <ContentOutliner
-              document={selectedDocument}
-              workspaceName={activeWorkspace?.name ?? null}
-              onSelect={(node) => setInspect({ path: `/api/nodes/${node.address}` })}
-            />
-          </>
-        }
-      />
-    </div>
+            {workspaces.length > 0 && (
+              <WorkspaceSwitcher
+                workspaces={workspaces}
+                value={activeWorkspace?.name ?? null}
+                onChange={(name) => {
+                  setWorkspaceName(name)
+                  setSelectedDocument(null)
+                }}
+              />
+            )}
+          </div>
+        </header>
+
+        {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
+
+        <main className="grid flex-1 place-items-center p-6">
+          <div className="text-center text-muted-foreground">
+            {selectedDocument ? (
+              <>
+                <div className="mb-1 text-lg text-foreground">{nodeLabel(selectedDocument)}</div>
+                <div className="text-sm">{selectedDocument.nodeType}</div>
+              </>
+            ) : (
+              <p>Select a document in the tree.</p>
+            )}
+            <p className="mt-4 text-xs">The inspector will live here.</p>
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

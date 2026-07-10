@@ -1,6 +1,6 @@
 # Medienreaktor.NeosStudio
 
-A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) HTTP API — no coupling to the legacy `Neos.Neos.Ui`. It starts as an **API debugging console** and is the foundation for a full editing UI.
+A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) HTTP API — no coupling to the legacy `Neos.Neos.Ui`. An **editing environment in the making**: workspace-aware document tree and content outliner today, inspector and publishing views next.
 
 - **Stack:** Vite + React + TypeScript + TanStack Query + Tailwind CSS v4 + shadcn/ui (Radix primitives)
 - **Lives at:** `/neos/studio` (inside the `/neos/` namespace, so the backend login works cleanly)
@@ -12,7 +12,7 @@ A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienre
 - On first load it **lazily provisions** a first-party OAuth client `neos-studio` (public, PKCE) whose redirect URI tracks the current origin — zero setup for the operator.
 - Runtime config (client id, endpoints, scopes) is injected into the shell as `window.__NEOS_STUDIO__`.
 - The SPA runs the PKCE flow: since the client is first-party and the user is already logged in, a token is obtained silently (no consent screen), then stored in `sessionStorage`.
-- The debugging console lets you fire requests against any API endpoint and inspect the response, with quick-actions for the common ones and a live view of your account, roles and token scopes.
+- The shell (a shadcn Sidebar layout) offers site and workspace switchers; the sidebar holds the lazy-loading **document tree** and the **content outliner** of the selected document — with node type icons, visibility states and pending-change markers. The main area is reserved for the inspector.
 
 ## Development
 
@@ -39,13 +39,13 @@ src/
     queryClient.ts      shared QueryClient defaults (staleTime, retry policy)
   auth/oauth.ts         authorization-code + PKCE flow
   api/                  data layer
-    client.ts           fetch core: typed apiFetch() + free-form rawRequest()
+    client.ts           fetch core: typed apiFetch(), throws ApiError
     keys.ts             hierarchical query-key factory — all keys live here
-    me.ts               useMe(); future: nodes.ts, workspaces.ts, …
+    me.ts, nodes.ts, …  one hook file per API resource
   components/ui/        shadcn/ui components (owned code, added via `npx shadcn add`)
-  features/<name>/      one folder per feature (console/, tree/, sites/, …)
+  features/<name>/      one folder per feature (tree/, sites/, workspaces/, …)
+  hooks/                shared hooks (shadcn's use-mobile)
   lib/utils.ts          cn() class-merge helper (shadcn convention)
-  utils/                small generic helpers
 ```
 
 Conventions: every query key comes from `api/keys.ts` (never inline literals, or
@@ -74,9 +74,10 @@ tested against the built-and-served shell.
 
 ## Status
 
-v0: API debugging console. Verified end-to-end against a ddev Neos 9 site —
-login, silent first-party token acquisition, and authenticated API calls
-(reads, commands, workspace operations) all work.
+Editing shell: silent first-party auth, site + workspace switchers (personal/
+shared only, never live), lazy document tree and content outliner with node
+type icons, visibility states and pending-change markers, respecting the Neos
+loadingDepth settings. Verified end-to-end against a ddev Neos 9 site.
 
-Roadmap: node tree explorer, inspector/editing UI, workspace & publishing
-views — replacing legacy Neos.Neos.Ui surfaces one at a time.
+Roadmap: inspector/editing UI, drag & drop node moves, dimension switcher,
+publishing views — replacing legacy Neos.Neos.Ui surfaces one at a time.

@@ -1,14 +1,6 @@
 import { config } from '@/config'
 import { getTokens } from '@/auth/oauth'
 
-export interface ApiResult {
-  status: number
-  ok: boolean
-  durationMs: number
-  body: unknown
-  raw: string
-}
-
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -19,46 +11,6 @@ export class ApiError extends Error {
   }
 }
 
-function buildUrl(path: string): string {
-  // Allow both absolute-ish "/api/..." paths and bare "sites" shortcuts
-  return path.startsWith('http')
-    ? path
-    : config.apiBase + (path.startsWith('/') ? path.replace(/^\/api/, '') : '/' + path)
-}
-
-function buildHeaders(hasBody: boolean): Record<string, string> {
-  const headers: Record<string, string> = {}
-  const tokens = getTokens()
-  if (tokens) headers['Authorization'] = `Bearer ${tokens.access_token}`
-  if (hasBody) headers['Content-Type'] = 'application/json'
-  return headers
-}
-
-/**
- * Free-form request preserving status, timing and raw body. Used by the
- * debugging console, which renders non-2xx responses as inspectable results
- * rather than errors.
- */
-export async function rawRequest(method: string, path: string, body?: string): Promise<ApiResult> {
-  const started = performance.now()
-  const response = await fetch(buildUrl(path), {
-    method,
-    headers: buildHeaders(Boolean(body) && method !== 'GET'),
-    body: method === 'GET' ? undefined : body,
-  })
-  const raw = await response.text()
-  const durationMs = Math.round(performance.now() - started)
-
-  let parsed: unknown = raw
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    /* keep raw text */
-  }
-
-  return { status: response.status, ok: response.ok, durationMs, body: parsed, raw }
-}
-
 /**
  * Typed request for query/mutation hooks: resolves with the parsed body on
  * 2xx and throws ApiError otherwise, so TanStack Query sees proper error
@@ -67,7 +19,22 @@ export async function rawRequest(method: string, path: string, body?: string): P
 export async function apiFetch<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const method = init?.method ?? 'GET'
   const body = init?.body !== undefined ? JSON.stringify(init.body) : undefined
-  const result = await rawRequest(method, path, body)
-  if (!result.ok) throw new ApiError(result.status, result.body)
-  return result.body as T
+
+  const headers: Record<string, string> = {}
+  const tokens = getTokens()
+  if (tokens) headers['Authorization'] = `Bearer ${tokens.access_token}`
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+
+  const response = await fetch(config.apiBase + path, { method, headers, body })
+  const raw = await response.text()
+
+  let parsed: unknown = raw
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    /* keep raw text */
+  }
+
+  if (!response.ok) throw new ApiError(response.status, parsed)
+  return parsed as T
 }

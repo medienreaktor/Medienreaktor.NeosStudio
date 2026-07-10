@@ -88,15 +88,14 @@ export function DocumentTree({
   useAutoExpand(tree, config.nodeTree.loadingDepth)
 
   return (
-    <div className="mb-6">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document tree</h2>
-      {loadError && <div className="text-xs text-destructive">{loadError}</div>}
+    <>
+      {loadError && <div className="px-2 text-xs text-destructive">{loadError}</div>}
       <TreeList
         tree={tree}
         label="Document tree"
         emptyText="Loading tree…"
         decorate={(data) => (data === ROOT_ID || data === null ? null : nodeDecor(data, nodeTypes, pendingChanges))}
       />
-    </div>
+    </>
   )
 }
