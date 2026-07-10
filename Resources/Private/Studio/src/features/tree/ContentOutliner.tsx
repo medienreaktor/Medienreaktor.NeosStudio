@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, type NodeDto } from '@/api/nodes'
+import { useNodeTypes } from '@/api/nodeTypes'
+import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
+import { usePendingChanges } from './usePendingChanges'
 
 /**
  * The content structure below the selected document: collections and content
@@ -32,6 +35,8 @@ export function ContentOutliner({
 
 function OutlinerTree({ document, onSelect }: { document: NodeDto; onSelect?: (node: NodeDto) => void }) {
   const [loadError, setLoadError] = useState<string | null>(null)
+  const { data: nodeTypes } = useNodeTypes()
+  const pendingChanges = usePendingChanges()
 
   const tree = useTree<NodeDto | null>({
     rootItemId: document.address,
@@ -72,7 +77,12 @@ function OutlinerTree({ document, onSelect }: { document: NodeDto; onSelect?: (n
   return (
     <>
       {loadError && <div className="text-xs text-destructive">{loadError}</div>}
-      <TreeList tree={tree} label="Content outliner" emptyText="No content below this document." />
+      <TreeList
+        tree={tree}
+        label="Content outliner"
+        emptyText="No content below this document."
+        decorate={(data) => (data === null ? null : nodeDecor(data, nodeTypes, pendingChanges))}
+      />
     </>
   )
 }

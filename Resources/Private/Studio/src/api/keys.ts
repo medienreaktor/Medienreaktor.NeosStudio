@@ -11,7 +11,10 @@
 export const queryKeys = {
   me: ['me'] as const,
   sites: ['sites'] as const,
-  workspaces: ['workspaces'] as const,
+  workspaces: {
+    all: ['workspaces'] as const,
+    changes: (name: string) => ['workspaces', name, 'changes'] as const,
+  },
   nodeTypes: ['nodeTypes'] as const,
   dimensions: ['dimensions'] as const,
   nodes: {

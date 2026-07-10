@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { DOCUMENT_NODE_TYPE, fetchChildren, fetchNode, nodeLabel, type NodeDto } from '@/api/nodes'
+import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
+import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
+import { usePendingChanges } from './usePendingChanges'
 
 /**
  * Virtual root above the site node. Never rendered; its single child is the
@@ -19,6 +22,8 @@ type TreeItemData = NodeDto | typeof ROOT_ID
  */
 export function DocumentTree({ site, onSelect }: { site: Site; onSelect?: (node: NodeDto) => void }) {
   const [loadError, setLoadError] = useState<string | null>(null)
+  const { data: nodeTypes } = useNodeTypes()
+  const pendingChanges = usePendingChanges()
 
   const tree = useTree<TreeItemData>({
     rootItemId: ROOT_ID,
@@ -72,7 +77,12 @@ export function DocumentTree({ site, onSelect }: { site: Site; onSelect?: (node:
     <div className="mb-6">
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document tree</h2>
       {loadError && <div className="text-xs text-destructive">{loadError}</div>}
-      <TreeList tree={tree} label="Document tree" emptyText="Loading tree…" />
+      <TreeList
+        tree={tree}
+        label="Document tree"
+        emptyText="Loading tree…"
+        decorate={(data) => (data === ROOT_ID || data === null ? null : nodeDecor(data, nodeTypes, pendingChanges))}
+      />
     </div>
   )
 }
