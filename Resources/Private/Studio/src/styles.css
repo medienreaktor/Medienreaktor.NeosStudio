@@ -138,6 +138,53 @@ button:hover {
   letter-spacing: 0.06em;
   color: var(--muted);
 }
+.tree-panel {
+  margin-bottom: 1.5rem;
+}
+.tree {
+  display: flex;
+  flex-direction: column;
+}
+.tree:focus-within {
+  outline: none;
+}
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-item:hover {
+  background: var(--panel-2);
+}
+.tree-item.selected {
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+.tree-item.focused {
+  outline: 1px dotted var(--muted);
+}
+.tree-arrow {
+  color: var(--muted);
+  font-size: 0.7rem;
+  width: 0.8rem;
+  flex-shrink: 0;
+}
+.tree-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .quick {
   display: flex;
   align-items: center;

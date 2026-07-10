@@ -17,6 +17,7 @@ export const queryKeys = {
   nodes: {
     all: ['nodes'] as const,
     byAddress: (address: string) => ['nodes', address] as const,
-    children: (address: string) => ['nodes', address, 'children'] as const,
+    children: (address: string, nodeTypes?: string) =>
+      ['nodes', address, 'children', { nodeTypes: nodeTypes ?? null }] as const,
   },
 }

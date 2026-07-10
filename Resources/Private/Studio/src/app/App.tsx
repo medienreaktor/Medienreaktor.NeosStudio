@@ -3,7 +3,8 @@ import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oa
 import { ApiError } from '@/api/client'
 import { useMe } from '@/api/me'
 import { Chip } from '@/components/ui/Chip'
-import { Console } from '@/features/console/Console'
+import { Console, type InspectRequest } from '@/features/console/Console'
+import { NodeTree } from '@/features/tree/NodeTree'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
 
@@ -14,6 +15,7 @@ const AUTO_LOGIN_KEY = 'neos-studio.auto_login_attempted'
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
   const [error, setError] = useState<string | null>(null)
+  const [inspect, setInspect] = useState<InspectRequest | null>(null)
 
   const { data: me, error: meError } = useMe(auth === 'authenticated')
 
@@ -97,7 +99,11 @@ export function App() {
 
       {error && <div className="error banner">{error}</div>}
 
-      <Console me={me} />
+      <Console
+        me={me}
+        inspect={inspect}
+        sidebarExtra={<NodeTree onInspect={(node) => setInspect({ path: `/api/nodes/${node.address}` })} />}
+      />
     </div>
   )
 }

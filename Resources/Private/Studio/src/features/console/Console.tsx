@@ -1,10 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Me } from '@/api/me'
 import { prettyJson } from '@/utils/json'
 import { QUICK_REQUESTS } from './quickRequests'
 import { useConsoleRequest } from './useConsoleRequest'
 
-export function Console({ me }: { me?: Me }) {
+export interface InspectRequest {
+  path: string
+}
+
+export function Console({
+  me,
+  sidebarExtra,
+  inspect,
+}: {
+  me?: Me
+  /** Rendered above the quick requests, e.g. the content tree. */
+  sidebarExtra?: ReactNode
+  /** When a new object arrives, its path is sent as a GET immediately. */
+  inspect?: InspectRequest | null
+}) {
   const [method, setMethod] = useState('GET')
   const [path, setPath] = useState('/api/me')
   const [body, setBody] = useState('')
@@ -17,11 +31,17 @@ export function Console({ me }: { me?: Me }) {
     request.mutate({ method: m, path: p, body: b || undefined })
   }
 
+  useEffect(() => {
+    if (inspect) send('GET', inspect.path, '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per inspect object
+  }, [inspect])
+
   const result = request.data
 
   return (
     <div className="layout">
       <aside className="sidebar">
+        {sidebarExtra}
         <h2>Quick requests</h2>
         {QUICK_REQUESTS.map((q) => (
           <button key={q.label} className="quick" onClick={() => send(q.method, q.path, q.body ?? '')}>
