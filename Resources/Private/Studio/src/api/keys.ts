@@ -10,7 +10,8 @@
  */
 export const queryKeys = {
   me: ['me'] as const,
-  sites: (workspace: string) => ['sites', { workspace }] as const,
+  sites: (workspace: string, dimensions: Record<string, string> | null) =>
+    ['sites', { workspace, dimensions }] as const,
   workspaces: {
     all: ['workspaces'] as const,
     changes: (name: string) => ['workspaces', name, 'changes'] as const,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
 import { ApiError } from '@/api/client'
+import { type DimensionSpacePoint, useDimensions } from '@/api/dimensions'
 import { useMe } from '@/api/me'
 import type { NodeDto } from '@/api/nodes'
 import { useSites } from '@/api/sites'
@@ -18,6 +19,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { Inspector } from '@/features/inspector/Inspector'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
@@ -55,7 +57,13 @@ export function App() {
     workspaces[0] ??
     null
 
-  const { data: sitesResponse } = useSites(activeWorkspace?.name ?? null, auth === 'authenticated')
+  const { data: dimensionsResponse } = useDimensions(auth === 'authenticated')
+  const dimensions = dimensionsResponse?.dimensions ?? []
+  // null = let the backend pick its default dimension space point; the sites
+  // response reports the point actually in effect, which the switcher shows.
+  const [dimensionSpacePoint, setDimensionSpacePoint] = useState<DimensionSpacePoint | null>(null)
+
+  const { data: sitesResponse } = useSites(activeWorkspace?.name ?? null, dimensionSpacePoint, auth === 'authenticated')
 
   const sites = sitesResponse?.sites ?? []
   const [siteNodeName, setSiteNodeName] = useState<string | null>(null)
@@ -167,6 +175,18 @@ export function App() {
                 value={activeSite?.nodeName ?? null}
                 onChange={(nodeName) => {
                   setSiteNodeName(nodeName)
+                  setSelectedDocument(null)
+                  setInspectedNode(null)
+                }}
+              />
+            )}
+            {dimensions.length > 0 && sitesResponse && (
+              <DimensionSwitcher
+                dimensions={dimensions}
+                allowedPoints={dimensionsResponse?.allowedDimensionSpacePoints ?? []}
+                value={dimensionSpacePoint ?? sitesResponse.dimensionSpacePoint}
+                onChange={(point) => {
+                  setDimensionSpacePoint(point)
                   setSelectedDocument(null)
                   setInspectedNode(null)
                 }}
