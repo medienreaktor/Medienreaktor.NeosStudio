@@ -3,6 +3,7 @@ import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@h
 import { useTree } from '@headless-tree/react'
 import { DOCUMENT_NODE_TYPE, fetchChildren, fetchNode, nodeLabel, type NodeDto } from '@/api/nodes'
 import { fetchSites } from '@/api/sites'
+import { TreeList } from './TreeList'
 
 /**
  * Virtual root above the site nodes. Never rendered; its children are the
@@ -12,7 +13,7 @@ const ROOT_ID = '__sites_root__'
 
 type TreeItemData = NodeDto | typeof ROOT_ID
 
-export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void }) {
+export function DocumentTree({ onSelect }: { onSelect?: (node: NodeDto) => void }) {
   const [loadError, setLoadError] = useState<string | null>(null)
   // Site nodes are fetched individually (unfiltered), so their hasChildren
   // flag counts content children too; remember them and always treat them
@@ -35,7 +36,7 @@ export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void })
     },
     onPrimaryAction: (item) => {
       const data = item.getItemData()
-      if (data !== ROOT_ID && data !== null && onInspect) onInspect(data)
+      if (data !== ROOT_ID && data !== null && onSelect) onSelect(data)
     },
     dataLoader: {
       getItem: async (itemId): Promise<TreeItemData> => {
@@ -68,32 +69,11 @@ export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void })
     features: [asyncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
   })
 
-  const items = tree.getItems()
-
   return (
     <div className="tree-panel">
-      <h2>Content tree</h2>
+      <h2>Document tree</h2>
       {loadError && <div className="error small">{loadError}</div>}
-      <div {...tree.getContainerProps('Content tree')} className="tree">
-        {items.length === 0 && !loadError && <div className="muted small">Loading tree…</div>}
-        {items.map((item) => (
-          <button
-            {...item.getProps()}
-            key={item.getId()}
-            className={[
-              'tree-item',
-              item.isSelected() ? 'selected' : '',
-              item.isFocused() ? 'focused' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            style={{ paddingLeft: `${item.getItemMeta().level * 14 + 6}px` }}
-          >
-            <span className="tree-arrow">{item.isFolder() ? (item.isExpanded() ? '▾' : '▸') : ''}</span>
-            <span className="tree-label">{item.isLoading() ? '…' : item.getItemName()}</span>
-          </button>
-        ))}
-      </div>
+      <TreeList tree={tree} label="Document tree" emptyText="Loading tree…" />
     </div>
   )
 }

@@ -35,6 +35,12 @@ export interface NodeDto {
 
 export const DOCUMENT_NODE_TYPE = 'Neos.Neos:Document'
 
+/**
+ * The content structure below a document: collections (e.g. "main") are not
+ * Neos.Neos:Content subtypes, so both types are needed to outline content.
+ */
+export const CONTENT_NODE_TYPES = 'Neos.Neos:Content,Neos.Neos:ContentCollection'
+
 export function nodeLabel(node: NodeDto): string {
   const title = node.properties['title']?.value
   if (typeof title === 'string' && title !== '') return title

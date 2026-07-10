@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
 import { ApiError } from '@/api/client'
 import { useMe } from '@/api/me'
+import type { NodeDto } from '@/api/nodes'
 import { Chip } from '@/components/ui/Chip'
 import { Console, type InspectRequest } from '@/features/console/Console'
-import { NodeTree } from '@/features/tree/NodeTree'
+import { ContentOutliner } from '@/features/tree/ContentOutliner'
+import { DocumentTree } from '@/features/tree/DocumentTree'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
 
@@ -16,6 +18,7 @@ export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
   const [error, setError] = useState<string | null>(null)
   const [inspect, setInspect] = useState<InspectRequest | null>(null)
+  const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
 
   const { data: me, error: meError } = useMe(auth === 'authenticated')
 
@@ -102,7 +105,20 @@ export function App() {
       <Console
         me={me}
         inspect={inspect}
-        sidebarExtra={<NodeTree onInspect={(node) => setInspect({ path: `/api/nodes/${node.address}` })} />}
+        sidebarExtra={
+          <>
+            <DocumentTree
+              onSelect={(node) => {
+                setSelectedDocument(node)
+                setInspect({ path: `/api/nodes/${node.address}` })
+              }}
+            />
+            <ContentOutliner
+              document={selectedDocument}
+              onSelect={(node) => setInspect({ path: `/api/nodes/${node.address}` })}
+            />
+          </>
+        }
       />
     </div>
   )
