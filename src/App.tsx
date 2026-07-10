@@ -4,6 +4,10 @@ import { apiRequest, ApiResult } from './api'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
 
+// Guards against a redirect loop if the silent auto-login ever fails:
+// set before redirecting, cleared once tokens arrive.
+const AUTO_LOGIN_KEY = 'neos-studio.auto_login_attempted'
+
 interface Me {
   account: string | null
   roles: string[]
@@ -51,13 +55,21 @@ export function App() {
 
   useEffect(() => {
     ;(async () => {
+      let callbackFailed = false
       try {
         await handleRedirectCallback()
       } catch (e) {
+        callbackFailed = true
         setError(e instanceof Error ? e.message : String(e))
       }
       if (getTokens()) {
+        sessionStorage.removeItem(AUTO_LOGIN_KEY)
         setAuth('authenticated')
+      } else if (!callbackFailed && !sessionStorage.getItem(AUTO_LOGIN_KEY)) {
+        // The Studio client is first-party and the shell already required a
+        // backend login, so the authorization redirect completes silently.
+        sessionStorage.setItem(AUTO_LOGIN_KEY, '1')
+        void beginLogin()
       } else {
         setAuth('anonymous')
       }
