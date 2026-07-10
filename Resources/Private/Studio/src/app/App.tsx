@@ -3,9 +3,12 @@ import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oa
 import { ApiError } from '@/api/client'
 import { type DimensionSpacePoint, useDimensions } from '@/api/dimensions'
 import { useMe } from '@/api/me'
-import type { NodeDto } from '@/api/nodes'
+import { queryKeys } from '@/api/keys'
+import { fetchNode, type NodeDto, useNodeVariants } from '@/api/nodes'
+import { addressInDimension } from '@/api/nodeAddress'
 import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
+import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import { SidebarResizeHandle, useResizableSidebar } from '@/components/ui/sidebar-resize'
 import {
@@ -19,6 +22,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { Inspector } from '@/features/inspector/Inspector'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
@@ -62,6 +66,11 @@ export function App() {
   // null = let the backend pick its default dimension space point; the sites
   // response reports the point actually in effect, which the switcher shows.
   const [dimensionSpacePoint, setDimensionSpacePoint] = useState<DimensionSpacePoint | null>(null)
+  // Set when the user picked a dimension the selected document does not exist
+  // in - the create-variant dialog is open for this target point.
+  const [variantRequest, setVariantRequest] = useState<DimensionSpacePoint | null>(null)
+  // Where the selected document exists; drives the switcher's muted "+" items.
+  const { data: documentVariants } = useNodeVariants(selectedDocument?.address ?? null, auth === 'authenticated')
 
   const { data: sitesResponse } = useSites(activeWorkspace?.name ?? null, dimensionSpacePoint, auth === 'authenticated')
 
@@ -185,6 +194,8 @@ export function App() {
                 dimensions={dimensions}
                 allowedPoints={dimensionsResponse?.allowedDimensionSpacePoints ?? []}
                 value={dimensionSpacePoint ?? sitesResponse.dimensionSpacePoint}
+                documentCoverage={selectedDocument ? documentVariants?.coveredDimensionSpacePoints : undefined}
+                onCreateVariant={setVariantRequest}
                 onChange={(point) => {
                   setDimensionSpacePoint(point)
                   setSelectedDocument(null)
@@ -214,6 +225,37 @@ export function App() {
         </main>
 
         <Inspector node={inspectedNode} onClose={() => setInspectedNode(null)} />
+
+        {variantRequest && selectedDocument && activeWorkspace && (
+          <CreateVariantDialog
+            document={selectedDocument}
+            targetPoint={variantRequest}
+            dimensions={dimensions}
+            workspaceName={activeWorkspace.name}
+            onCancel={() => setVariantRequest(null)}
+            onCreated={(point) => {
+              setVariantRequest(null)
+              const previousAddress = selectedDocument.address
+              // The new variants exist now - drop every cached node read and
+              // the pending-changes badge state before anything refetches.
+              void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+              void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+              setDimensionSpacePoint(point)
+              setSelectedDocument(null)
+              setInspectedNode(null)
+              // Follow the document into its new dimension so outliner and
+              // inspector show the just-created variant right away.
+              fetchNode(addressInDimension(previousAddress, point))
+                .then((node) => {
+                  setSelectedDocument(node)
+                  setInspectedNode(node)
+                })
+                .catch(() => {
+                  /* fine - the tree simply starts unselected */
+                })
+            }}
+          />
+        )}
       </SidebarInset>
     </SidebarProvider>
   )

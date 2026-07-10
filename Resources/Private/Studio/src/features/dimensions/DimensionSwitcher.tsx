@@ -1,3 +1,4 @@
+import { PlusIcon } from 'lucide-react'
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
 import { dimensionSpacePointEquals } from '@/api/dimensions'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -33,19 +34,32 @@ function resolveSwitch(
  * it automatically. Values that occur in no allowed dimension space point are
  * disabled; when a combination is not allowed, the other coordinates snap to
  * the closest allowed point.
+ *
+ * With documentCoverage set (a document is selected), values whose target
+ * point the document does not exist in are muted and marked with a "+";
+ * choosing one raises onCreateVariant instead of switching, so the caller
+ * can offer to create the missing variant.
  */
 export function DimensionSwitcher({
   dimensions,
   allowedPoints,
   value,
   onChange,
+  documentCoverage,
+  onCreateVariant,
 }: {
   dimensions: ContentDimension[]
   allowedPoints: DimensionSpacePoint[]
   /** The dimension space point currently in effect */
   value: DimensionSpacePoint
   onChange: (point: DimensionSpacePoint) => void
+  /** Dimension space points the selected document exists in; omit for no document context */
+  documentCoverage?: DimensionSpacePoint[]
+  onCreateVariant?: (point: DimensionSpacePoint) => void
 }) {
+  const documentExistsAt = (point: DimensionSpacePoint) =>
+    documentCoverage === undefined || documentCoverage.some((covered) => dimensionSpacePointEquals(covered, point))
+
   return (
     <>
       {dimensions.map((dimension) => {
@@ -60,7 +74,12 @@ export function DimensionSwitcher({
             value={value[dimension.id] ?? undefined}
             onValueChange={(v) => {
               const next = resolveSwitch(value, dimension.id, v as string, allowedPoints)
-              if (next && !dimensionSpacePointEquals(next, value)) onChange(next)
+              if (!next || dimensionSpacePointEquals(next, value)) return
+              if (!documentExistsAt(next) && onCreateVariant) {
+                onCreateVariant(next)
+              } else {
+                onChange(next)
+              }
             }}
             // Lets SelectValue render the label for the selected value.
             items={items}
@@ -72,19 +91,28 @@ export function DimensionSwitcher({
               <SelectValue placeholder={dimension.label} />
             </SelectTrigger>
             <SelectContent>
-              {dimension.values.map((dimensionValue) => (
-                <SelectItem
-                  key={dimensionValue.value}
-                  value={dimensionValue.value}
-                  disabled={!reachable.has(dimensionValue.value)}
-                >
-                  {/* Specializations are listed right after their generalization;
-                      indentation makes the hierarchy visible. */}
-                  <span style={{ paddingLeft: `${dimensionValue.specializationDepth * 0.75}rem` }}>
-                    {dimensionValue.label}
-                  </span>
-                </SelectItem>
-              ))}
+              {dimension.values.map((dimensionValue) => {
+                const target = resolveSwitch(value, dimension.id, dimensionValue.value, allowedPoints)
+                const missingVariant = target !== null && !documentExistsAt(target)
+                return (
+                  <SelectItem
+                    key={dimensionValue.value}
+                    value={dimensionValue.value}
+                    disabled={!reachable.has(dimensionValue.value)}
+                    title={missingVariant ? 'The selected document does not exist here yet - create it?' : undefined}
+                  >
+                    {/* Specializations are listed right after their generalization;
+                        indentation makes the hierarchy visible. */}
+                    <span
+                      className={`inline-flex items-center gap-1.5${missingVariant ? ' text-muted-foreground' : ''}`}
+                      style={{ paddingLeft: `${dimensionValue.specializationDepth * 0.75}rem` }}
+                    >
+                      {dimensionValue.label}
+                      {missingVariant && <PlusIcon className="size-3.5" aria-hidden />}
+                    </span>
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
         )

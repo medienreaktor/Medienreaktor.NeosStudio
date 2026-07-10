@@ -64,6 +64,46 @@ export function fetchNode(address: string): Promise<NodeDto> {
 }
 
 /**
+ * Where a node aggregate exists: its own variants (occupied origins) and all
+ * dimension space points it is reachable in, including specialization
+ * shine-through (covered). A point outside "covered" needs a
+ * CreateNodeVariant command before the node appears there.
+ */
+export interface NodeVariantsDto {
+  occupiedDimensionSpacePoints: Record<string, string>[]
+  coveredDimensionSpacePoints: Record<string, string>[]
+}
+
+export function useNodeVariants(address: string | null, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.nodes.variants(address ?? ''),
+    queryFn: () => apiFetch<NodeVariantsDto>(`/nodes/${address}/variants`),
+    enabled: enabled && address !== null,
+  })
+}
+
+/** Imperative variant for non-hook contexts. */
+export function fetchNodeVariants(address: string): Promise<NodeVariantsDto> {
+  return queryClient.fetchQuery({
+    queryKey: queryKeys.nodes.variants(address),
+    queryFn: () => apiFetch<NodeVariantsDto>(`/nodes/${address}/variants`),
+  })
+}
+
+/** Ancestors, closest first (parent, grandparent, ... up to the root). */
+export function fetchAncestors(address: string, nodeTypes?: string): Promise<NodeDto[]> {
+  return queryClient
+    .fetchQuery({
+      queryKey: queryKeys.nodes.ancestors(address, nodeTypes),
+      queryFn: () =>
+        apiFetch<{ nodes: NodeDto[] }>(
+          `/nodes/${address}/ancestors${nodeTypes ? `?nodeTypes=${encodeURIComponent(nodeTypes)}` : ''}`,
+        ),
+    })
+    .then(({ nodes }) => nodes)
+}
+
+/**
  * Fetches child nodes and seeds each child into its own node query cache, so
  * a later fetchNode()/useNode() for a child resolves without a request.
  */
