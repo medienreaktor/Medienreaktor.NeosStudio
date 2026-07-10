@@ -17,7 +17,12 @@ export function SiteSwitcher({
   onChange: (nodeName: string) => void
 }) {
   return (
-    <Select value={value ?? undefined} onValueChange={onChange}>
+    <Select
+      value={value ?? undefined}
+      onValueChange={(v) => onChange(v as string)}
+      // Lets SelectValue render the site name for the selected nodeName.
+      items={sites.map((site) => ({ value: site.nodeName, label: site.name }))}
+    >
       <SelectTrigger className="w-48" title="Active site" size="sm">
         <SelectValue placeholder="Select site…" />
       </SelectTrigger>

@@ -16,8 +16,16 @@ export function WorkspaceSwitcher({
   value: string | null
   onChange: (name: string) => void
 }) {
+  const workspaceLabel = (workspace: Workspace) =>
+    workspace.classification === 'PERSONAL' ? 'Personal Workspace' : workspace.title || workspace.name
+
   return (
-    <Select value={value ?? undefined} onValueChange={onChange}>
+    <Select
+      value={value ?? undefined}
+      onValueChange={(v) => onChange(v as string)}
+      // Lets SelectValue render the label for the selected workspace name.
+      items={workspaces.map((workspace) => ({ value: workspace.name, label: workspaceLabel(workspace) }))}
+    >
       <SelectTrigger className="w-48" title="Active workspace" size="sm">
         <SelectValue placeholder="Select workspace…" />
       </SelectTrigger>
@@ -30,7 +38,7 @@ export function WorkspaceSwitcher({
             />
             {/* The personal workspace is titled after the user; a static
                 label reads better than seeing your own name. */}
-            {workspace.classification === 'PERSONAL' ? 'Personal Workspace' : workspace.title || workspace.name}
+            {workspaceLabel(workspace)}
           </SelectItem>
         ))}
       </SelectContent>

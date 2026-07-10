@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
 import { ApiError } from '@/api/client'
 import { useMe } from '@/api/me'
-import { nodeLabel, type NodeDto } from '@/api/nodes'
+import type { NodeDto } from '@/api/nodes'
 import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { Inspector } from '@/features/inspector/Inspector'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
@@ -33,6 +34,8 @@ export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
   const [error, setError] = useState<string | null>(null)
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
+  // The node shown in the inspector drawer - a document or a content node.
+  const [inspectedNode, setInspectedNode] = useState<NodeDto | null>(null)
 
   // The identity itself is not displayed, but the me-query doubles as the
   // token check: a 401 drives the logout below.
@@ -130,7 +133,10 @@ export function App() {
                   key={activeSite.nodeAddress}
                   site={activeSite}
                   workspaceName={activeWorkspace.name}
-                  onSelect={setSelectedDocument}
+                  onSelect={(node) => {
+                    setSelectedDocument(node)
+                    setInspectedNode(node)
+                  }}
                 />
               ) : (
                 <div className="px-2 text-xs text-muted-foreground">Loading sites…</div>
@@ -140,7 +146,11 @@ export function App() {
           <SidebarGroup>
             <SidebarGroupLabel>Content outliner</SidebarGroupLabel>
             <SidebarGroupContent>
-              <ContentOutliner document={selectedDocument} workspaceName={activeWorkspace?.name ?? null} />
+              <ContentOutliner
+                document={selectedDocument}
+                workspaceName={activeWorkspace?.name ?? null}
+                onSelect={setInspectedNode}
+              />
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
@@ -158,6 +168,7 @@ export function App() {
                 onChange={(nodeName) => {
                   setSiteNodeName(nodeName)
                   setSelectedDocument(null)
+                  setInspectedNode(null)
                 }}
               />
             )}
@@ -168,6 +179,7 @@ export function App() {
                 onChange={(name) => {
                   setWorkspaceName(name)
                   setSelectedDocument(null)
+                  setInspectedNode(null)
                 }}
               />
             )}
@@ -176,19 +188,12 @@ export function App() {
 
         {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
 
+        {/* The rendered-page preview iframe will live here. */}
         <main className="grid flex-1 place-items-center p-6">
-          <div className="text-center text-muted-foreground">
-            {selectedDocument ? (
-              <>
-                <div className="mb-1 text-lg text-foreground">{nodeLabel(selectedDocument)}</div>
-                <div className="text-sm">{selectedDocument.nodeType}</div>
-              </>
-            ) : (
-              <p>Select a document in the tree.</p>
-            )}
-            <p className="mt-4 text-xs">The inspector will live here.</p>
-          </div>
+          <p className="text-sm text-muted-foreground">Page preview coming soon.</p>
         </main>
+
+        <Inspector node={inspectedNode} onClose={() => setInspectedNode(null)} />
       </SidebarInset>
     </SidebarProvider>
   )

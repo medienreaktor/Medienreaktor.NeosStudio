@@ -2,7 +2,7 @@
 
 A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) HTTP API — no coupling to the legacy `Neos.Neos.Ui`. An **editing environment in the making**: workspace-aware document tree and content outliner today, inspector and publishing views next.
 
-- **Stack:** Vite + React + TypeScript + TanStack Query + Tailwind CSS v4 + shadcn/ui (Radix primitives)
+- **Stack:** Vite + React + TypeScript + TanStack Query + Tailwind CSS v4 + shadcn-style components on Base UI primitives
 - **Lives at:** `/neos/studio` (inside the `/neos/` namespace, so the backend login works cleanly)
 - **Auth:** authorization-code + PKCE against the API, using a **first-party** OAuth client (consent screen skipped)
 
@@ -56,8 +56,10 @@ folders own their UI and feature-specific hooks; `@/` aliases `src/`.
 official Neos UI palette (from `Neos.Neos.Ui/cssVariables.css`) mapped onto the
 shadcn token contract. Studio is dark-only: tokens live on `:root` and the
 `dark:` variant is pinned to a static `.dark` class on `<html>`. UI primitives
-come from shadcn/ui and are vendored into `components/ui/` — edit them freely,
-they're ours.
+come from Base UI (`@base-ui/react` — not Radix); the shadcn-style components
+wrapping them are vendored into `components/ui/` — edit them freely, they're
+ours. The inspector uses Base UI's native Drawer (non-modal, nested drawers
+supported).
 
 Then publish resources and flush caches on the Neos side:
 
