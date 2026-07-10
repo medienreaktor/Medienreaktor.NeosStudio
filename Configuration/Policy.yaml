@@ -1,7 +1,13 @@
 privilegeTargets:
   'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
     'Medienreaktor.NeosStudio:Module':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\StudioController->indexAction())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\StudioController->indexAction()) || method(Medienreaktor\NeosStudio\Controller\StudioModuleController->indexAction())'
+
+  'Neos\Neos\Security\Authorization\Privilege\ModulePrivilege':
+    # Controls both visibility of the "Neos Studio" entry in the backend menu
+    # and access to /neos/module/studio. Matcher must equal the module path.
+    'Medienreaktor.NeosStudio:Backend.Module.Studio':
+      matcher: 'studio'
 
 roles:
   # Any backend editor may open the Studio; what they can actually do inside
@@ -10,4 +16,7 @@ roles:
     privileges:
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Module'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Backend.Module.Studio'
         permission: GRANT

@@ -1,4 +1,17 @@
 Neos:
+  Neos:
+    modules:
+      # Main-level backend menu entry, placed above "Content" (which declares
+      # position 'start'). The module controller redirects to the standalone
+      # Studio shell at /neos/studio instead of rendering in the module chrome.
+      studio:
+        position: 'before content'
+        label: 'Neos Studio'
+        controller: 'Medienreaktor\NeosStudio\Controller\StudioModuleController'
+        description: 'API-first editing UI for Neos'
+        icon: 'fas fa-rocket'
+        mainStylesheet: 'Lite'
+
   Flow:
     mvc:
       routes:
