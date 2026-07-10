@@ -3,8 +3,10 @@ import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oa
 import { ApiError } from '@/api/client'
 import { useMe } from '@/api/me'
 import type { NodeDto } from '@/api/nodes'
+import { useSites } from '@/api/sites'
 import { Chip } from '@/components/ui/Chip'
 import { Console, type InspectRequest } from '@/features/console/Console'
+import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 
@@ -21,6 +23,12 @@ export function App() {
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
 
   const { data: me, error: meError } = useMe(auth === 'authenticated')
+  const { data: sitesResponse } = useSites(auth === 'authenticated')
+
+  const sites = sitesResponse?.sites ?? []
+  const [siteNodeName, setSiteNodeName] = useState<string | null>(null)
+  const activeSite =
+    sites.find((s) => s.nodeName === siteNodeName) ?? sites.find((s) => s.nodeAddress !== null) ?? null
 
   useEffect(() => {
     ;(async () => {
@@ -74,8 +82,20 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          Neos <strong>Studio</strong> <span className="tag">debug</span>
+        <div className="topbar-left">
+          <div className="brand">
+            Neos <strong>Studio</strong> <span className="tag">debug</span>
+          </div>
+          {sites.length > 0 && (
+            <SiteSwitcher
+              sites={sites}
+              value={activeSite?.nodeName ?? null}
+              onChange={(nodeName) => {
+                setSiteNodeName(nodeName)
+                setSelectedDocument(null)
+              }}
+            />
+          )}
         </div>
         {me && (
           <div className="identity">
@@ -107,12 +127,21 @@ export function App() {
         inspect={inspect}
         sidebarExtra={
           <>
-            <DocumentTree
-              onSelect={(node) => {
-                setSelectedDocument(node)
-                setInspect({ path: `/api/nodes/${node.address}` })
-              }}
-            />
+            {activeSite ? (
+              <DocumentTree
+                key={activeSite.nodeAddress}
+                site={activeSite}
+                onSelect={(node) => {
+                  setSelectedDocument(node)
+                  setInspect({ path: `/api/nodes/${node.address}` })
+                }}
+              />
+            ) : (
+              <div className="tree-panel">
+                <h2>Document tree</h2>
+                <div className="muted small">Loading sites…</div>
+              </div>
+            )}
             <ContentOutliner
               document={selectedDocument}
               onSelect={(node) => setInspect({ path: `/api/nodes/${node.address}` })}

@@ -81,8 +81,22 @@ button:hover {
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 .brand {
   font-size: 1.1rem;
+}
+.site-switcher {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
 }
 .tag {
   font-size: 0.65rem;
