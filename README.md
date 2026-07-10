@@ -2,7 +2,7 @@
 
 A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) HTTP API — no coupling to the legacy `Neos.Neos.Ui`. It starts as an **API debugging console** and is the foundation for a full editing UI.
 
-- **Stack:** Vite + React + TypeScript
+- **Stack:** Vite + React + TypeScript + TanStack Query
 - **Lives at:** `/neos/studio` (inside the `/neos/` namespace, so the backend login works cleanly)
 - **Auth:** authorization-code + PKCE against the API, using a **first-party** OAuth client (consent screen skipped)
 
@@ -24,6 +24,32 @@ nvm use            # Node 22, see .nvmrc
 npm install
 npm run build      # outputs to Resources/Public/Studio/ (git-ignored)
 ```
+
+### Source structure
+
+Server state is managed with **TanStack Query**; the `src/` layout is feature-based:
+
+```
+src/
+  main.tsx              entry: mounts <AppProviders><App/></AppProviders>
+  config.ts             runtime config injected by StudioController
+  app/                  application shell
+    App.tsx             auth gate + chrome
+    providers.tsx       QueryClientProvider (+ devtools, future providers)
+    queryClient.ts      shared QueryClient defaults (staleTime, retry policy)
+  auth/oauth.ts         authorization-code + PKCE flow
+  api/                  data layer
+    client.ts           fetch core: typed apiFetch() + free-form rawRequest()
+    keys.ts             hierarchical query-key factory — all keys live here
+    me.ts               useMe(); future: nodes.ts, workspaces.ts, …
+  components/ui/        generic presentational components
+  features/<name>/      one folder per feature (console/, later tree/, …)
+  utils/                small generic helpers
+```
+
+Conventions: every query key comes from `api/keys.ts` (never inline literals, or
+invalidation misses them); one hook file per API resource in `api/`; feature
+folders own their UI and feature-specific hooks; `@/` aliases `src/`.
 
 Then publish resources and flush caches on the Neos side:
 

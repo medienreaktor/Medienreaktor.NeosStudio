@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -9,6 +10,11 @@ const base = '/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/'
 export default defineConfig({
   base,
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   build: {
     outDir: '../../Public/Studio',
     emptyOutDir: true,

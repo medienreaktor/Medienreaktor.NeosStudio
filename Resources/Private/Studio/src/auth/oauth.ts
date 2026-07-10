@@ -1,4 +1,4 @@
-import { config } from './config'
+import { config } from '@/config'
 
 // Authorization-code + PKCE flow against Medienreaktor.NeosApi.
 // The Studio client is first-party, so the consent screen is skipped and the
