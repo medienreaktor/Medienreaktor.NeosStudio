@@ -3,8 +3,10 @@ import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@h
 import { useTree } from '@headless-tree/react'
 import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
+import { config } from '@/config'
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
+import { useAutoExpand } from './useAutoExpand'
 import { usePendingChanges } from './usePendingChanges'
 
 /**
@@ -83,6 +85,10 @@ function OutlinerTree({
     },
     features: [asyncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
   })
+
+  // Content levels below the selected document load eagerly like the classic
+  // structure tree (loadingDepth 0 = unlimited).
+  useAutoExpand(tree, config.structureTree.loadingDepth)
 
   return (
     <>

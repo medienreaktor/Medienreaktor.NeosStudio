@@ -35,6 +35,17 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosApi', path: 'oauth.scopes')]
     protected array $apiScopes = [];
 
+    /**
+     * Studio respects the same tree-depth preferences as the classic Neos
+     * backend (Neos.Neos.userInterface.navigateComponent.*.loadingDepth).
+     * Untyped: configuration injection may yield null if the path is absent.
+     */
+    #[Flow\InjectConfiguration(package: 'Neos.Neos', path: 'userInterface.navigateComponent.nodeTree.loadingDepth')]
+    protected $nodeTreeLoadingDepth;
+
+    #[Flow\InjectConfiguration(package: 'Neos.Neos', path: 'userInterface.navigateComponent.structureTree.loadingDepth')]
+    protected $structureTreeLoadingDepth;
+
     public function indexAction(): string
     {
         $uri = $this->request->getHttpRequest()->getUri();
@@ -51,6 +62,13 @@ class StudioController extends ActionController
             'apiBase' => $origin . '/api',
             'redirectUri' => $redirectUri,
             'scopes' => $scopes,
+            'nodeTree' => [
+                'loadingDepth' => (int)($this->nodeTreeLoadingDepth ?? 4),
+            ],
+            'structureTree' => [
+                // 0 means unlimited, per the Neos.Neos setting's contract
+                'loadingDepth' => (int)($this->structureTreeLoadingDepth ?? 4),
+            ],
         ];
 
         return $this->renderSpa($config);
@@ -95,7 +113,7 @@ class StudioController extends ActionController
     }
 
     /**
-     * @param array<string, string> $config
+     * @param array<string, mixed> $config
      */
     private function renderSpa(array $config): string
     {

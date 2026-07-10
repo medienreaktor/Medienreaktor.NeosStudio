@@ -4,8 +4,10 @@ import { useTree } from '@headless-tree/react'
 import { DOCUMENT_NODE_TYPE, fetchChildren, fetchNode, nodeLabel, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
+import { config } from '@/config'
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
+import { useAutoExpand } from './useAutoExpand'
 import { usePendingChanges } from './usePendingChanges'
 
 /**
@@ -80,6 +82,10 @@ export function DocumentTree({
     },
     features: [asyncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
   })
+
+  // The visible root is the site node (level 0), so the site itself plus
+  // loadingDepth further document levels load eagerly.
+  useAutoExpand(tree, config.nodeTree.loadingDepth)
 
   return (
     <div className="mb-6">
