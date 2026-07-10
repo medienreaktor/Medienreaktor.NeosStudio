@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { DOCUMENT_NODE_TYPE, fetchChildren, fetchNode, nodeLabel, type NodeDto } from '@/api/nodes'
@@ -14,6 +14,10 @@ type TreeItemData = NodeDto | typeof ROOT_ID
 
 export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void }) {
   const [loadError, setLoadError] = useState<string | null>(null)
+  // Site nodes are fetched individually (unfiltered), so their hasChildren
+  // flag counts content children too; remember them and always treat them
+  // as expandable entry points.
+  const siteAddresses = useRef(new Set<string>())
 
   const tree = useTree<TreeItemData>({
     rootItemId: ROOT_ID,
@@ -21,10 +25,14 @@ export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void })
       const data = item.getItemData()
       return data === ROOT_ID || data === null ? '…' : nodeLabel(data)
     },
-    // The document tree cannot know whether a node has children without
-    // fetching them, so every node is expandable; expanding a leaf simply
-    // yields no children.
-    isItemFolder: () => true,
+    // Children of tree expansions carry a document-filtered hasChildren
+    // ("has document children"), so content-only documents render as leaves.
+    isItemFolder: (item) => {
+      const data = item.getItemData()
+      if (data === ROOT_ID || data === null) return true
+      if (siteAddresses.current.has(data.address)) return true
+      return data.hasChildren
+    },
     onPrimaryAction: (item) => {
       const data = item.getItemData()
       if (data !== ROOT_ID && data !== null && onInspect) onInspect(data)
@@ -46,6 +54,7 @@ export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void })
             const siteNodes = await Promise.all(
               sites.flatMap((site) => (site.nodeAddress === null ? [] : [fetchNode(site.nodeAddress)])),
             )
+            for (const node of siteNodes) siteAddresses.current.add(node.address)
             return siteNodes.map((node) => ({ id: node.address, data: node as TreeItemData }))
           }
           const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
@@ -80,7 +89,7 @@ export function NodeTree({ onInspect }: { onInspect?: (node: NodeDto) => void })
               .join(' ')}
             style={{ paddingLeft: `${item.getItemMeta().level * 14 + 6}px` }}
           >
-            <span className="tree-arrow">{item.isExpanded() ? '▾' : '▸'}</span>
+            <span className="tree-arrow">{item.isFolder() ? (item.isExpanded() ? '▾' : '▸') : ''}</span>
             <span className="tree-label">{item.isLoading() ? '…' : item.getItemName()}</span>
           </button>
         ))}

@@ -14,6 +14,12 @@ export interface NodeDto {
   nodeType: string
   name: string | null
   classification: string
+  /**
+   * Whether the node has visible children; when the response came from a
+   * nodeTypes-filtered children/descendants request, the same filter applies
+   * (a document listing reports "has document children").
+   */
+  hasChildren: boolean
   workspace: string
   dimensionSpacePoint: Record<string, string>
   originDimensionSpacePoint: Record<string, string>
