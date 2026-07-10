@@ -20,10 +20,18 @@ type TreeItemData = NodeDto | typeof ROOT_ID
  * Document tree of one site. Remount per site (key by the site's node
  * address) so a site switch starts with fresh expansion state.
  */
-export function DocumentTree({ site, onSelect }: { site: Site; onSelect?: (node: NodeDto) => void }) {
+export function DocumentTree({
+  site,
+  workspaceName,
+  onSelect,
+}: {
+  site: Site
+  workspaceName: string
+  onSelect?: (node: NodeDto) => void
+}) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const { data: nodeTypes } = useNodeTypes()
-  const pendingChanges = usePendingChanges()
+  const pendingChanges = usePendingChanges(workspaceName)
 
   const tree = useTree<TreeItemData>({
     rootItemId: ROOT_ID,

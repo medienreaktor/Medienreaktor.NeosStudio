@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useWorkspaceChanges, useWorkspaces } from '@/api/workspaces'
+import { useWorkspaceChanges } from '@/api/workspaces'
 
 export interface PendingChanges {
   workspace: string
@@ -10,26 +10,20 @@ export interface PendingChanges {
 }
 
 /**
- * Pending changes to mark nodes as "dirty" in the trees. The trees browse
- * live, so "dirty" means: modified in the user's personal workspace relative
- * to its base. Until Studio grows a workspace switcher, the first writable
- * personal workspace is used.
+ * Pending changes of the active workspace relative to its base - the trees
+ * browse that same workspace, so "dirty" means "will be published from here".
  */
-export function usePendingChanges(): PendingChanges | null {
-  const { data: workspacesResponse } = useWorkspaces()
-  const workspace =
-    workspacesResponse?.workspaces.find((w) => w.classification === 'PERSONAL' && w.permissions.write) ?? null
-
-  const { data: changesResponse } = useWorkspaceChanges(workspace?.name ?? null)
+export function usePendingChanges(workspaceName: string | null): PendingChanges | null {
+  const { data: changesResponse } = useWorkspaceChanges(workspaceName)
 
   return useMemo(() => {
-    if (!workspace || !changesResponse) return null
+    if (workspaceName === null || !changesResponse) return null
     return {
-      workspace: workspace.name,
+      workspace: workspaceName,
       ids: new Set(changesResponse.changes.map((c) => c.nodeAggregateId)),
       documentIds: new Set(
         changesResponse.changes.flatMap((c) => (c.documentAggregateId === null ? [] : [c.documentAggregateId])),
       ),
     }
-  }, [workspace, changesResponse])
+  }, [workspaceName, changesResponse])
 }

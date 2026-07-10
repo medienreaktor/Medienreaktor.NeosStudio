@@ -13,9 +13,11 @@ import { usePendingChanges } from './usePendingChanges'
  */
 export function ContentOutliner({
   document,
+  workspaceName,
   onSelect,
 }: {
   document: NodeDto | null
+  workspaceName: string | null
   onSelect?: (node: NodeDto) => void
 }) {
   return (
@@ -27,16 +29,24 @@ export function ContentOutliner({
         // Key by document: a new document is a new tree (fresh root, fresh
         // expansion state) - remounting is simpler and more predictable than
         // mutating rootItemId on a live tree instance.
-        <OutlinerTree key={document.address} document={document} onSelect={onSelect} />
+        <OutlinerTree key={document.address} document={document} workspaceName={workspaceName} onSelect={onSelect} />
       )}
     </div>
   )
 }
 
-function OutlinerTree({ document, onSelect }: { document: NodeDto; onSelect?: (node: NodeDto) => void }) {
+function OutlinerTree({
+  document,
+  workspaceName,
+  onSelect,
+}: {
+  document: NodeDto
+  workspaceName: string | null
+  onSelect?: (node: NodeDto) => void
+}) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const { data: nodeTypes } = useNodeTypes()
-  const pendingChanges = usePendingChanges()
+  const pendingChanges = usePendingChanges(workspaceName)
 
   const tree = useTree<NodeDto | null>({
     rootItemId: document.address,

@@ -4,10 +4,12 @@ import { ApiError } from '@/api/client'
 import { useMe } from '@/api/me'
 import type { NodeDto } from '@/api/nodes'
 import { useSites } from '@/api/sites'
+import { useWorkspaces } from '@/api/workspaces'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Console, type InspectRequest } from '@/features/console/Console'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
+import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 
@@ -24,7 +26,21 @@ export function App() {
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
 
   const { data: me, error: meError } = useMe(auth === 'authenticated')
-  const { data: sitesResponse } = useSites(auth === 'authenticated')
+  const { data: workspacesResponse } = useWorkspaces(auth === 'authenticated')
+
+  // Editors never browse live (ROOT) directly - only their personal
+  // workspace or shared ones. Default to the personal workspace.
+  const workspaces = (workspacesResponse?.workspaces ?? []).filter(
+    (w) => w.classification === 'PERSONAL' || w.classification === 'SHARED',
+  )
+  const [workspaceName, setWorkspaceName] = useState<string | null>(null)
+  const activeWorkspace =
+    workspaces.find((w) => w.name === workspaceName) ??
+    workspaces.find((w) => w.classification === 'PERSONAL') ??
+    workspaces[0] ??
+    null
+
+  const { data: sitesResponse } = useSites(activeWorkspace?.name ?? null, auth === 'authenticated')
 
   const sites = sitesResponse?.sites ?? []
   const [siteNodeName, setSiteNodeName] = useState<string | null>(null)
@@ -98,6 +114,16 @@ export function App() {
               }}
             />
           )}
+          {workspaces.length > 0 && (
+            <WorkspaceSwitcher
+              workspaces={workspaces}
+              value={activeWorkspace?.name ?? null}
+              onChange={(name) => {
+                setWorkspaceName(name)
+                setSelectedDocument(null)
+              }}
+            />
+          )}
         </div>
         {me && (
           <div className="flex items-center gap-4 text-sm">
@@ -132,10 +158,11 @@ export function App() {
         inspect={inspect}
         sidebarExtra={
           <>
-            {activeSite ? (
+            {activeSite && activeWorkspace ? (
               <DocumentTree
                 key={activeSite.nodeAddress}
                 site={activeSite}
+                workspaceName={activeWorkspace.name}
                 onSelect={(node) => {
                   setSelectedDocument(node)
                   setInspect({ path: `/api/nodes/${node.address}` })
@@ -151,6 +178,7 @@ export function App() {
             )}
             <ContentOutliner
               document={selectedDocument}
+              workspaceName={activeWorkspace?.name ?? null}
               onSelect={(node) => setInspect({ path: `/api/nodes/${node.address}` })}
             />
           </>

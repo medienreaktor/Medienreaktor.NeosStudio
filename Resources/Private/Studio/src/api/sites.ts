@@ -16,16 +16,22 @@ export interface SitesResponse {
   sites: Site[]
 }
 
-const sitesQuery = {
-  queryKey: queryKeys.sites,
-  queryFn: () => apiFetch<SitesResponse>('/sites'),
+/**
+ * Sites in the given workspace. The returned node addresses encode the
+ * workspace, so all node traversal that starts from them stays in it.
+ */
+function sitesQuery(workspace: string) {
+  return {
+    queryKey: queryKeys.sites(workspace),
+    queryFn: () => apiFetch<SitesResponse>(`/sites?workspace=${encodeURIComponent(workspace)}`),
+  }
 }
 
-export function useSites(enabled = true) {
-  return useQuery({ ...sitesQuery, enabled })
+export function useSites(workspace: string | null, enabled = true) {
+  return useQuery({ ...sitesQuery(workspace ?? ''), enabled: enabled && workspace !== null })
 }
 
-/** Imperative variant for non-hook contexts (e.g. the tree data loader). */
-export function fetchSites(): Promise<SitesResponse> {
-  return queryClient.fetchQuery(sitesQuery)
+/** Imperative variant for non-hook contexts. */
+export function fetchSites(workspace: string): Promise<SitesResponse> {
+  return queryClient.fetchQuery(sitesQuery(workspace))
 }
