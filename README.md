@@ -16,8 +16,10 @@ A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienre
 
 ## Development
 
+The SPA sources live in `Resources/Private/Studio/` (with `src/`, `index.html` and the npm/Vite tooling); the build output goes to `Resources/Public/Studio/`.
+
 ```sh
-cd DistributionPackages/Medienreaktor.NeosStudio
+cd DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio
 npm install
 npm run build      # outputs to Resources/Public/Studio/ (git-ignored)
 ```

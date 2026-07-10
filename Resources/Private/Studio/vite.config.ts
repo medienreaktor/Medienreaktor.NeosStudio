@@ -10,7 +10,7 @@ export default defineConfig({
   base,
   plugins: [react()],
   build: {
-    outDir: 'Resources/Public/Studio',
+    outDir: '../../Public/Studio',
     emptyOutDir: true,
     assetsDir: 'assets',
   },
