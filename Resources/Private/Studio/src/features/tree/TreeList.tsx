@@ -75,11 +75,7 @@ export function TreeList<T>({
             >
               {item.isFolder() ? (item.isExpanded() ? '▾' : '▸') : ''}
             </span>
-            {decor?.icon && (
-              <span className={cn('shrink-0 text-muted-foreground', decor.dimmed && 'opacity-50')}>
-                {decor.icon}
-              </span>
-            )}
+            {decor?.icon && <span className="shrink-0 text-foreground">{decor.icon}</span>}
             <span className={cn('overflow-hidden text-ellipsis', decor?.dimmed && 'opacity-50')}>
               {item.isLoading() ? '…' : item.getItemName()}
             </span>
