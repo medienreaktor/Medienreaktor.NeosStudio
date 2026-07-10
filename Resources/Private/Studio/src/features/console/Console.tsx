@@ -1,5 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Me } from '@/api/me'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import { prettyJson } from '@/utils/json'
 import { QUICK_REQUESTS } from './quickRequests'
 import { useConsoleRequest } from './useConsoleRequest'
@@ -7,6 +12,8 @@ import { useConsoleRequest } from './useConsoleRequest'
 export interface InspectRequest {
   path: string
 }
+
+const METHODS = ['GET', 'POST', 'PUT', 'DELETE']
 
 export function Console({
   me,
@@ -39,21 +46,32 @@ export function Console({
   const result = request.data
 
   return (
-    <div className="layout">
-      <aside className="sidebar">
+    <div className="grid min-h-0 flex-1 grid-cols-[300px_1fr]">
+      <aside className="overflow-y-auto border-r bg-card p-4">
         {sidebarExtra}
-        <h2>Quick requests</h2>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick requests</h2>
         {QUICK_REQUESTS.map((q) => (
-          <button key={q.label} className="quick" onClick={() => send(q.method, q.path, q.body ?? '')}>
-            <span className={`verb verb-${q.method.toLowerCase()}`}>{q.method}</span>
+          <button
+            key={q.label}
+            className="mb-1.5 flex w-full items-center gap-2 rounded-md border bg-secondary px-3 py-2 text-left text-sm hover:brightness-115"
+            onClick={() => send(q.method, q.path, q.body ?? '')}
+          >
+            <span
+              className={cn(
+                'rounded-sm px-1.5 py-0.5 text-[0.65rem] font-bold',
+                q.method === 'GET' ? 'bg-success/15 text-success' : 'bg-warn/15 text-warn',
+              )}
+            >
+              {q.method}
+            </span>
             {q.label.replace(/^\w+\s/, '')}
           </button>
         ))}
         {me && (
-          <div className="roles">
-            <h3>Roles</h3>
+          <div className="mt-6">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Roles</h3>
             {me.roles.map((r) => (
-              <div key={r} className="muted small">
+              <div key={r} className="text-xs text-muted-foreground">
                 {r}
               </div>
             ))}
@@ -61,29 +79,37 @@ export function Console({
         )}
       </aside>
 
-      <main className="console">
-        {request.error && <div className="error banner">{String(request.error)}</div>}
+      <main className="min-h-0 overflow-y-auto p-5">
+        {request.error && <div className="mb-4 text-destructive">{String(request.error)}</div>}
 
-        <div className="request-bar">
-          <select value={method} onChange={(e) => setMethod(e.target.value)}>
-            {['GET', 'POST', 'PUT', 'DELETE'].map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-          <input
+        <div className="flex gap-2">
+          <Select value={method} onValueChange={setMethod}>
+            <SelectTrigger className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METHODS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            className="flex-1 font-mono"
             value={path}
             onChange={(e) => setPath(e.target.value)}
             placeholder="/api/nodes/{address}/children"
             onKeyDown={(e) => e.key === 'Enter' && send()}
           />
-          <button className="primary" disabled={request.isPending} onClick={() => send()}>
+          <Button disabled={request.isPending} onClick={() => send()}>
             {request.isPending ? '…' : 'Send'}
-          </button>
+          </Button>
         </div>
 
         {method !== 'GET' && (
-          <textarea
-            className="body-input"
+          <Textarea
+            className="mt-3 font-mono text-sm"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="JSON request body"
@@ -92,11 +118,13 @@ export function Console({
         )}
 
         {result && (
-          <div className="response">
-            <div className={`status ${result.ok ? 'ok' : 'fail'}`}>
+          <div className="mt-5">
+            <div className={cn('mb-2 font-semibold', result.ok ? 'text-success' : 'text-destructive')}>
               {result.status} {result.ok ? 'OK' : 'Error'} · {result.durationMs} ms
             </div>
-            <pre>{prettyJson(result.body)}</pre>
+            <pre className="overflow-x-auto rounded-md border bg-card p-4 font-mono text-sm leading-relaxed">
+              {prettyJson(result.body)}
+            </pre>
           </div>
         )}
       </main>

@@ -1,293 +1,77 @@
+@import 'tailwindcss';
+
+/* Studio is dark-only: the dark variant is pinned to the static .dark class
+   on <html> (see index.html) instead of following the OS color scheme, so
+   shadcn components' dark: refinements always apply. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Official Neos UI palette (Neos.Neos.Ui/cssVariables.css) mapped onto the
+ * shadcn/Tailwind token contract. Studio is dark-only, so the dark values
+ * live directly on :root - no .dark toggle.
+ */
 :root {
-  --bg: #12141a;
-  --panel: #1a1d26;
-  --panel-2: #21252f;
-  --border: #2c313d;
-  --text: #e6e8ee;
-  --muted: #8a91a0;
-  --accent: #00adee;
-  --ok: #3fb950;
-  --fail: #f85149;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --background: #141414; /* ContrastDarkest */
+  --foreground: #ffffff; /* ContrastBrightest */
+  --card: #222222; /* ContrastDarker */
+  --card-foreground: #ffffff;
+  --popover: #222222;
+  --popover-foreground: #ffffff;
+  --primary: #00adee; /* PrimaryBlue */
+  --primary-hover: #35c3f8; /* PrimaryBlueHover */
+  --primary-foreground: #ffffff;
+  --secondary: #323232; /* ContrastNeutral */
+  --secondary-foreground: #ffffff;
+  --muted: #323232;
+  --muted-foreground: #999999; /* ContrastBright */
+  --accent: #323232;
+  --accent-foreground: #ffffff;
+  --destructive: #ff460d; /* Error */
+  --destructive-hover: #ff6a3c;
+  --success: #00a338;
+  --warn: #ff8700;
+  --border: #3f3f3f; /* ContrastDark */
+  --input: #3f3f3f;
+  --ring: #00adee;
+  /* Neos UI is deliberately sharp-cornered */
+  --radius: 0.25rem;
 }
 
-* {
-  box-sizing: border-box;
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.center {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-}
-
-.muted {
-  color: var(--muted);
-}
-.small {
-  font-size: 0.8rem;
-}
-
-.login-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 2.5rem 3rem;
-  text-align: center;
-}
-.login-card h1 {
-  margin: 0 0 0.25rem;
-}
-
-button {
-  cursor: pointer;
-  font: inherit;
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  background: var(--panel-2);
-  color: var(--text);
-  padding: 0.5rem 0.9rem;
-}
-button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #04222e;
-  font-weight: 600;
-}
-button.ghost {
-  background: transparent;
-}
-button:hover {
-  filter: brightness(1.12);
-}
-
-.app {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
-}
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.brand {
-  font-size: 1.1rem;
-}
-.site-switcher {
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 0.35rem 0.5rem;
-  font: inherit;
-  font-size: 0.85rem;
-}
-.tag {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: var(--accent);
-  color: #04222e;
-  padding: 2px 6px;
-  border-radius: 4px;
-  vertical-align: middle;
-}
-.identity {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.9rem;
-}
-.scopes {
-  display: flex;
-  gap: 0.3rem;
-}
-.chip {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 1px 9px;
-  font-size: 0.75rem;
-}
-
-.banner {
-  padding: 0.6rem 1.25rem;
-}
-.error {
-  color: var(--fail);
-}
-
-.layout {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  min-height: 0;
-}
-
-.sidebar {
-  border-right: 1px solid var(--border);
-  padding: 1rem;
-  overflow-y: auto;
-  background: var(--panel);
-}
-.sidebar h2 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-.tree-panel {
-  margin-bottom: 1.5rem;
-}
-.tree {
-  display: flex;
-  flex-direction: column;
-}
-.tree:focus-within {
-  outline: none;
-}
-.tree-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tree-item:hover {
-  background: var(--panel-2);
-}
-.tree-item.selected {
-  background: var(--panel-2);
-  border-color: var(--accent);
-}
-.tree-item.focused {
-  outline: 1px dotted var(--muted);
-}
-.tree-arrow {
-  color: var(--muted);
-  font-size: 0.7rem;
-  width: 0.8rem;
-  flex-shrink: 0;
-}
-.tree-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.quick {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  text-align: left;
-  margin-bottom: 0.4rem;
-  font-size: 0.85rem;
-}
-.verb {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-.verb-get {
-  background: #113a2f;
-  color: var(--ok);
-}
-.verb-post {
-  background: #3a2f11;
-  color: #e3b341;
-}
-.roles {
-  margin-top: 1.5rem;
-}
-.roles h3 {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.console {
-  padding: 1.25rem;
-  overflow-y: auto;
-  min-height: 0;
-}
-.request-bar {
-  display: flex;
-  gap: 0.5rem;
-}
-.request-bar select {
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 0 0.5rem;
-}
-.request-bar input {
-  flex: 1;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 0.5rem 0.75rem;
-  font-family: ui-monospace, monospace;
-}
-.body-input {
-  width: 100%;
-  margin-top: 0.75rem;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 0.75rem;
-  font-family: ui-monospace, monospace;
-  font-size: 0.85rem;
-  resize: vertical;
-}
-
-.response {
-  margin-top: 1.25rem;
-}
-.status {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-.status.ok {
-  color: var(--ok);
-}
-.status.fail {
-  color: var(--fail);
-}
-.response pre {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  overflow-x: auto;
-  font-family: ui-monospace, monospace;
-  font-size: 0.85rem;
-  line-height: 1.5;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
 }

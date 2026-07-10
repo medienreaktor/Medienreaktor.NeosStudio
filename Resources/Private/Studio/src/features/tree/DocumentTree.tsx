@@ -69,9 +69,9 @@ export function DocumentTree({ site, onSelect }: { site: Site; onSelect?: (node:
   })
 
   return (
-    <div className="tree-panel">
-      <h2>Document tree</h2>
-      {loadError && <div className="error small">{loadError}</div>}
+    <div className="mb-6">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document tree</h2>
+      {loadError && <div className="text-xs text-destructive">{loadError}</div>}
       <TreeList tree={tree} label="Document tree" emptyText="Loading tree…" />
     </div>
   )

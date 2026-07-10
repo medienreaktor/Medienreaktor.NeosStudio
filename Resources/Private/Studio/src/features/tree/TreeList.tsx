@@ -1,4 +1,5 @@
 import type { TreeInstance } from '@headless-tree/core'
+import { cn } from '@/lib/utils'
 
 /**
  * Shared presentational renderer for headless-tree instances: flat item list
@@ -17,19 +18,23 @@ export function TreeList<T>({
   const items = tree.getItems()
 
   return (
-    <div {...tree.getContainerProps(label)} className="tree">
-      {items.length === 0 && <div className="muted small">{emptyText}</div>}
+    <div {...tree.getContainerProps(label)} className="flex flex-col outline-none">
+      {items.length === 0 && <div className="text-xs text-muted-foreground">{emptyText}</div>}
       {items.map((item) => (
         <button
           {...item.getProps()}
           key={item.getId()}
-          className={['tree-item', item.isSelected() ? 'selected' : '', item.isFocused() ? 'focused' : '']
-            .filter(Boolean)
-            .join(' ')}
+          className={cn(
+            'flex w-full items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-sm border border-transparent px-1.5 py-1 text-left text-sm hover:bg-secondary',
+            item.isSelected() && 'border-primary bg-secondary',
+            item.isFocused() && 'outline-1 outline-dotted outline-muted-foreground',
+          )}
           style={{ paddingLeft: `${item.getItemMeta().level * 14 + 6}px` }}
         >
-          <span className="tree-arrow">{item.isFolder() ? (item.isExpanded() ? '▾' : '▸') : ''}</span>
-          <span className="tree-label">{item.isLoading() ? '…' : item.getItemName()}</span>
+          <span className="w-3 shrink-0 text-[0.7rem] text-muted-foreground">
+            {item.isFolder() ? (item.isExpanded() ? '▾' : '▸') : ''}
+          </span>
+          <span className="overflow-hidden text-ellipsis">{item.isLoading() ? '…' : item.getItemName()}</span>
         </button>
       ))}
     </div>

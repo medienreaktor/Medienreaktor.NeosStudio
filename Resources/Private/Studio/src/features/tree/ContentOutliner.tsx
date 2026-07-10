@@ -16,10 +16,10 @@ export function ContentOutliner({
   onSelect?: (node: NodeDto) => void
 }) {
   return (
-    <div className="tree-panel">
-      <h2>Content outliner</h2>
+    <div className="mb-6">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Content outliner</h2>
       {document === null ? (
-        <div className="muted small">Select a document to outline its content.</div>
+        <div className="text-xs text-muted-foreground">Select a document to outline its content.</div>
       ) : (
         // Key by document: a new document is a new tree (fresh root, fresh
         // expansion state) - remounting is simpler and more predictable than
@@ -71,7 +71,7 @@ function OutlinerTree({ document, onSelect }: { document: NodeDto; onSelect?: (n
 
   return (
     <>
-      {loadError && <div className="error small">{loadError}</div>}
+      {loadError && <div className="text-xs text-destructive">{loadError}</div>}
       <TreeList tree={tree} label="Content outliner" emptyText="No content below this document." />
     </>
   )

@@ -2,7 +2,7 @@
 
 A modern UI for Neos 9 built entirely on the [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) HTTP API — no coupling to the legacy `Neos.Neos.Ui`. It starts as an **API debugging console** and is the foundation for a full editing UI.
 
-- **Stack:** Vite + React + TypeScript + TanStack Query
+- **Stack:** Vite + React + TypeScript + TanStack Query + Tailwind CSS v4 + shadcn/ui (Radix primitives)
 - **Lives at:** `/neos/studio` (inside the `/neos/` namespace, so the backend login works cleanly)
 - **Auth:** authorization-code + PKCE against the API, using a **first-party** OAuth client (consent screen skipped)
 
@@ -42,14 +42,22 @@ src/
     client.ts           fetch core: typed apiFetch() + free-form rawRequest()
     keys.ts             hierarchical query-key factory — all keys live here
     me.ts               useMe(); future: nodes.ts, workspaces.ts, …
-  components/ui/        generic presentational components
-  features/<name>/      one folder per feature (console/, later tree/, …)
+  components/ui/        shadcn/ui components (owned code, added via `npx shadcn add`)
+  features/<name>/      one folder per feature (console/, tree/, sites/, …)
+  lib/utils.ts          cn() class-merge helper (shadcn convention)
   utils/                small generic helpers
 ```
 
 Conventions: every query key comes from `api/keys.ts` (never inline literals, or
 invalidation misses them); one hook file per API resource in `api/`; feature
 folders own their UI and feature-specific hooks; `@/` aliases `src/`.
+
+**Styling:** Tailwind v4 (CSS-first config in `src/styles.css`) themed with the
+official Neos UI palette (from `Neos.Neos.Ui/cssVariables.css`) mapped onto the
+shadcn token contract. Studio is dark-only: tokens live on `:root` and the
+`dark:` variant is pinned to a static `.dark` class on `<html>`. UI primitives
+come from shadcn/ui and are vendored into `components/ui/` — edit them freely,
+they're ours.
 
 Then publish resources and flush caches on the Neos side:
 
