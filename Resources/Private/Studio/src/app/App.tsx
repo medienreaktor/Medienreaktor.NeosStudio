@@ -25,6 +25,7 @@ import {
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { Inspector } from '@/features/inspector/Inspector'
+import { PreviewPane } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
@@ -240,10 +241,7 @@ export function App() {
 
         {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
 
-        {/* The rendered-page preview iframe will live here. */}
-        <main className="grid flex-1 place-items-center p-6">
-          <p className="text-sm text-muted-foreground">Page preview coming soon.</p>
-        </main>
+        <PreviewPane document={selectedDocument} />
 
         <Inspector node={inspectedNode} onClose={() => setInspectedNode(null)} />
 

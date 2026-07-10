@@ -60,6 +60,7 @@ class StudioController extends ActionController
             'authorizeEndpoint' => $origin . '/oauth/authorize',
             'tokenEndpoint' => $origin . '/oauth/token',
             'apiBase' => $origin . '/api',
+            'previewBase' => $origin . '/neos/studio/preview',
             'redirectUri' => $redirectUri,
             'scopes' => $scopes,
             'nodeTree' => [

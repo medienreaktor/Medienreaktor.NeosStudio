@@ -2,6 +2,11 @@ privilegeTargets:
   'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
     'Medienreaktor.NeosStudio:Module':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\StudioController->indexAction()) || method(Medienreaktor\NeosStudio\Controller\StudioModuleController->indexAction())'
+    # The preview iframe renders arbitrary workspaces/dimensions; what the
+    # user may actually see is enforced by the CR's structural authorization
+    # inside the subgraph, this target only gates the endpoint as such.
+    'Medienreaktor.NeosStudio:Preview':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->showAction())'
 
   'Neos\Neos\Security\Authorization\Privilege\ModulePrivilege':
     # Controls both visibility of the "Neos Studio" entry in the backend menu
@@ -19,4 +24,7 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Backend.Module.Studio'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Preview'
         permission: GRANT

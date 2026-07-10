@@ -1,4 +1,17 @@
 -
+  name: 'Studio: document preview (iframe)'
+  uriPattern: 'neos/studio/preview'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Preview'
+    '@action': 'show'
+    '@format': 'html'
+  # node (base64url NodeAddress: workspace + dimension + aggregate id) and
+  # mode (rendering mode name) travel as query parameters.
+  appendExceedingArguments: true
+  httpMethods: ['GET']
+
+-
   name: 'Studio: OAuth callback / SPA entry'
   uriPattern: 'neos/studio'
   defaults:

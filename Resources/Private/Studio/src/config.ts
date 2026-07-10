@@ -3,6 +3,8 @@ export interface StudioConfig {
   authorizeEndpoint: string
   tokenEndpoint: string
   apiBase: string
+  /** Endpoint of the Studio's own preview action (session-authenticated). */
+  previewBase: string
   redirectUri: string
   scopes: string
   /** Mirrors Neos.Neos.userInterface.navigateComponent.nodeTree */
@@ -22,6 +24,7 @@ const fallback: StudioConfig = {
   authorizeEndpoint: '/oauth/authorize',
   tokenEndpoint: '/oauth/token',
   apiBase: '/api',
+  previewBase: '/neos/studio/preview',
   redirectUri: window.location.origin + '/neos/studio',
   scopes: 'neos.read neos.write neos.publish',
   nodeTree: { loadingDepth: 4 },
