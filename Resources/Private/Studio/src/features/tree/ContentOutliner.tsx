@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, type NodeDto } from '@/api/nodes'
@@ -8,6 +8,13 @@ import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
 import { usePendingChanges } from './usePendingChanges'
+import { useRevealSelection } from './useRevealSelection'
+
+/** An inline edit that happened in the preview; token distinguishes repeats. */
+export interface NodeEdit {
+  address: string
+  token: number
+}
 
 /**
  * The content structure below the selected document: collections and content
@@ -16,10 +23,16 @@ import { usePendingChanges } from './usePendingChanges'
 export function ContentOutliner({
   document,
   workspaceName,
+  selectedAddress = null,
+  lastEdit = null,
   onSelect,
 }: {
   document: NodeDto | null
   workspaceName: string | null
+  /** Address selected outside the tree (e.g. clicked in the preview) - revealed and highlighted. */
+  selectedAddress?: string | null
+  /** Last inline edit from the preview - refreshes that item's label. */
+  lastEdit?: NodeEdit | null
   onSelect?: (node: NodeDto) => void
 }) {
   if (document === null) {
@@ -28,16 +41,29 @@ export function ContentOutliner({
   // Key by document: a new document is a new tree (fresh root, fresh
   // expansion state) - remounting is simpler and more predictable than
   // mutating rootItemId on a live tree instance.
-  return <OutlinerTree key={document.address} document={document} workspaceName={workspaceName} onSelect={onSelect} />
+  return (
+    <OutlinerTree
+      key={document.address}
+      document={document}
+      workspaceName={workspaceName}
+      selectedAddress={selectedAddress}
+      lastEdit={lastEdit}
+      onSelect={onSelect}
+    />
+  )
 }
 
 function OutlinerTree({
   document,
   workspaceName,
+  selectedAddress,
+  lastEdit,
   onSelect,
 }: {
   document: NodeDto
   workspaceName: string | null
+  selectedAddress: string | null
+  lastEdit: NodeEdit | null
   onSelect?: (node: NodeDto) => void
 }) {
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -83,6 +109,18 @@ function OutlinerTree({
   // Content levels below the selected document load eagerly like the classic
   // structure tree (loadingDepth 0 = unlimited).
   useAutoExpand(tree, config.structureTree.loadingDepth)
+  // Selection from outside (preview clicks): expand the content rootline
+  // down to the node and highlight it.
+  useRevealSelection(tree, selectedAddress, CONTENT_NODE_TYPES)
+
+  // After an inline edit, re-fetch that item so its label (usually derived
+  // from the edited text) stays in sync. The node query was invalidated by
+  // the save, so invalidating the tree item triggers a fresh request.
+  useEffect(() => {
+    if (lastEdit === null) return
+    const item = tree.getItems().find((candidate) => candidate.getId() === lastEdit.address)
+    void item?.invalidateItemData()
+  }, [lastEdit, tree])
 
   return (
     <>

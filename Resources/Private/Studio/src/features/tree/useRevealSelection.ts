@@ -12,7 +12,12 @@ import { DOCUMENT_NODE_TYPE, fetchAncestors } from '@/api/nodes'
  * clicked address through here is harmless (everything is already expanded
  * and selected, and the guard stops repeat work per address).
  */
-export function useRevealSelection<T>(tree: TreeInstance<T>, address: string | null) {
+export function useRevealSelection<T>(
+  tree: TreeInstance<T>,
+  address: string | null,
+  /** Ancestor filter matching the tree's levels (documents vs. content). */
+  nodeTypes: string = DOCUMENT_NODE_TYPE,
+) {
   // Document rootline top-down, target last; null while unknown.
   const [path, setPath] = useState<string[] | null>(null)
   const revealed = useRef<string | null>(null)
@@ -31,7 +36,7 @@ export function useRevealSelection<T>(tree: TreeInstance<T>, address: string | n
       return
     }
     let cancelled = false
-    fetchAncestors(address, DOCUMENT_NODE_TYPE)
+    fetchAncestors(address, nodeTypes)
       .then((ancestors) => {
         // Closest-first from the API; the tree wants root-first. The filter
         // already dropped the Neos.Neos:Sites root, so the site node leads.
@@ -43,7 +48,7 @@ export function useRevealSelection<T>(tree: TreeInstance<T>, address: string | n
     return () => {
       cancelled = true
     }
-  }, [address, tree])
+  }, [address, tree, nodeTypes])
 
   const items = tree.getItems()
 

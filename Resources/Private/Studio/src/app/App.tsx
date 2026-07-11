@@ -27,7 +27,7 @@ import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { Inspector } from '@/features/inspector/Inspector'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
-import { ContentOutliner } from '@/features/tree/ContentOutliner'
+import { ContentOutliner, type NodeEdit } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
@@ -42,7 +42,10 @@ export function App() {
   const [error, setError] = useState<string | null>(null)
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
   // The node shown in the inspector drawer - a document or a content node.
+  // Also the node outlined in the preview and revealed in the outliner.
   const [inspectedNode, setInspectedNode] = useState<NodeDto | null>(null)
+  // The last inline edit from the preview; refreshes the outliner label.
+  const [lastEdit, setLastEdit] = useState<NodeEdit | null>(null)
 
   // The identity itself is not displayed, but the me-query doubles as the
   // token check: a 401 drives the logout below.
@@ -186,6 +189,8 @@ export function App() {
               <ContentOutliner
                 document={selectedDocument}
                 workspaceName={activeWorkspace?.name ?? null}
+                selectedAddress={inspectedNode?.address ?? null}
+                lastEdit={lastEdit}
                 onSelect={setInspectedNode}
               />
             </SidebarGroupContent>
@@ -241,7 +246,20 @@ export function App() {
 
         {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
 
-        <PreviewPane document={selectedDocument} />
+        <PreviewPane
+          document={selectedDocument}
+          selectedAddress={inspectedNode?.address ?? null}
+          onSelectNode={(address) => {
+            // A click in the preview: inspect the node and reveal it in the
+            // outliner (via selectedAddress above).
+            fetchNode(address)
+              .then(setInspectedNode)
+              .catch(() => {
+                /* fine - e.g. the node vanished from this workspace meanwhile */
+              })
+          }}
+          onNodeEdited={(address) => setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))}
+        />
 
         <Inspector node={inspectedNode} onClose={() => setInspectedNode(null)} />
 

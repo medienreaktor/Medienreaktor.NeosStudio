@@ -24,6 +24,22 @@ export function encodeNodeAddress(address: NodeAddress): string {
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+/**
+ * Studio address for a NodeAddress JSON string as emitted into edit-mode
+ * markup (data-__neos-node-contextpath). The explicit literal re-establishes
+ * the backend's field order, so the encoding is byte-identical to the
+ * addresses the API returns (they serve as cache keys and tree item ids).
+ */
+export function addressFromContextPath(contextPath: string): string {
+  const raw = JSON.parse(contextPath) as NodeAddress
+  return encodeNodeAddress({
+    contentRepositoryId: raw.contentRepositoryId,
+    workspaceName: raw.workspaceName,
+    dimensionSpacePoint: raw.dimensionSpacePoint,
+    aggregateId: raw.aggregateId,
+  })
+}
+
 /** The address of the same node aggregate in another dimension space point. */
 export function addressInDimension(encoded: string, dimensionSpacePoint: DimensionSpacePoint): string {
   return encodeNodeAddress({ ...decodeNodeAddress(encoded), dimensionSpacePoint })
