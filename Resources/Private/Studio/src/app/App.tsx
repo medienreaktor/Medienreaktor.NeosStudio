@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
 import { ApiError } from '@/api/client'
-import { type DimensionSpacePoint, useDimensions } from '@/api/dimensions'
+import { type DimensionSpacePoint, dimensionSpacePointEquals, useDimensions } from '@/api/dimensions'
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
 import { fetchNode, type NodeDto, useNodeVariants } from '@/api/nodes'
@@ -256,6 +256,24 @@ export function App() {
               .then(setInspectedNode)
               .catch(() => {
                 /* fine - e.g. the node vanished from this workspace meanwhile */
+              })
+          }}
+          onNavigateToNode={(address) => {
+            // A followed link: show the target document; the document tree
+            // reveals and selects it via selectedAddress. Links can cross
+            // dimensions (e.g. a language menu) - follow the switch so the
+            // trees browse the same dimension as the preview.
+            fetchNode(address)
+              .then((node) => {
+                const currentPoint = dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
+                if (currentPoint && !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)) {
+                  setDimensionSpacePoint(node.dimensionSpacePoint)
+                }
+                setSelectedDocument(node)
+                setInspectedNode(node)
+              })
+              .catch(() => {
+                /* fine - e.g. the linked document is not visible in this workspace */
               })
           }}
           onNodeEdited={(address) => setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))}

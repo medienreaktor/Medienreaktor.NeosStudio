@@ -91,6 +91,7 @@ export function PreviewPane({
   document,
   selectedAddress,
   onSelectNode,
+  onNavigateToNode,
   onNodeEdited,
 }: {
   document: NodeDto | null
@@ -98,6 +99,8 @@ export function PreviewPane({
   selectedAddress: string | null
   /** A content element was clicked in the preview. */
   onSelectNode: (address: string) => void
+  /** A link to another document was followed in the preview. */
+  onNavigateToNode?: (address: string) => void
   /** An inline edit for this address was persisted. */
   onNodeEdited?: (address: string) => void
 }) {
@@ -112,6 +115,8 @@ export function PreviewPane({
   // Latest-callback refs keep the message listener subscription stable.
   const onSelectNodeRef = useRef(onSelectNode)
   onSelectNodeRef.current = onSelectNode
+  const onNavigateToNodeRef = useRef(onNavigateToNode)
+  onNavigateToNodeRef.current = onNavigateToNode
   const onNodeEditedRef = useRef(onNodeEdited)
   onNodeEditedRef.current = onNodeEdited
 
@@ -136,6 +141,13 @@ export function PreviewPane({
             onSelectNodeRef.current(addressFromContextPath(message.contextPath))
           } catch {
             /* malformed contextpath - ignore the click */
+          }
+          break
+        case 'neos-studio/navigate-to-node':
+          try {
+            onNavigateToNodeRef.current?.(addressFromContextPath(message.contextPath))
+          } catch {
+            /* malformed contextpath - ignore the navigation */
           }
           break
         case 'neos-studio/property-changed': {

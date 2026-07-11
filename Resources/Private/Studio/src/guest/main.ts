@@ -108,11 +108,50 @@ function commitEdit(): void {
 function onClick(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
   if (!target?.closest) return
-  // The preview must not navigate away from the edit-mode rendering - the
-  // document to show is the host's decision (document tree).
-  if (target.closest('a[href]')) event.preventDefault()
+  const anchor = target.closest<HTMLAnchorElement>('a[href]')
+  if (anchor && handleLinkClick(event, anchor)) return
   const wrapper = target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
   if (wrapper) select(wrapper, { notifyHost: true })
+}
+
+/**
+ * Links keep working in the edit-mode preview, but the iframe itself never
+ * navigates - the document to show is the host's decision. Returns true when
+ * the click is handled entirely (a navigation); false when it should still
+ * select the containing content element.
+ */
+function handleLinkClick(event: MouseEvent, anchor: HTMLAnchorElement): boolean {
+  const href = anchor.getAttribute('href') ?? ''
+  // Same-page anchors keep their default scroll behavior.
+  if (href.startsWith('#')) return false
+  // A link inside an inline-editable text is content being edited, not
+  // navigation - just place the caret.
+  if (anchor.closest(`[${PROPERTY_ATTRIBUTE}]`)) {
+    event.preventDefault()
+    return false
+  }
+  event.preventDefault()
+  let url: URL
+  try {
+    url = new URL(href, window.location.href)
+  } catch {
+    return true
+  }
+  // Document links in non-live workspaces point to the core preview action
+  // and carry the target's NodeAddress (NodeUriBuilder::previewUriFor) - let
+  // the host navigate, so the document tree follows and the preview reloads
+  // through the Studio's own edit-mode endpoint.
+  if (url.origin === window.location.origin && url.pathname.endsWith('/neos/preview')) {
+    const contextPath = url.searchParams.get('node')
+    if (contextPath) {
+      post({ type: 'neos-studio/navigate-to-node', contextPath })
+      return true
+    }
+  }
+  // Everything else (external sites, assets, mailto): open alongside, the
+  // editor never loses the editing context.
+  window.open(url.href, '_blank', 'noopener')
+  return true
 }
 
 function onMouseOver(event: MouseEvent): void {
