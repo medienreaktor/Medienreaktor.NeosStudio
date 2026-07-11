@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
  * names render verbatim - including project-specific node type icons we
  * could never enumerate in a mapping table.
  */
-function faClassName(configured: string): string {
+export function faClassName(configured: string): string {
   const icon = configured.trim()
   // Full FA class list ("fas fa-file", "fa-solid fa-file") - use as-is.
   if (icon.includes(' ')) return icon

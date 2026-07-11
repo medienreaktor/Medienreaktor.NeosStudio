@@ -16,7 +16,10 @@ export const queryKeys = {
     all: ['workspaces'] as const,
     changes: (name: string) => ['workspaces', name, 'changes'] as const,
   },
-  nodeTypes: ['nodeTypes'] as const,
+  nodeTypes: {
+    all: ['nodeTypes'] as const,
+    schema: (name: string) => ['nodeTypes', 'schema', name] as const,
+  },
   dimensions: ['dimensions'] as const,
   nodes: {
     all: ['nodes'] as const,

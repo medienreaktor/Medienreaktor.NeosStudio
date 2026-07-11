@@ -46,6 +46,9 @@ export function App() {
   const [inspectedNode, setInspectedNode] = useState<NodeDto | null>(null)
   // The last inline edit from the preview; refreshes the outliner label.
   const [lastEdit, setLastEdit] = useState<NodeEdit | null>(null)
+  // Bumped after inspector edits so the preview shows them (inline edits
+  // already render live inside the iframe and need no reload).
+  const [previewReloadToken, setPreviewReloadToken] = useState(0)
 
   // The identity itself is not displayed, but the me-query doubles as the
   // token check: a 401 drives the logout below.
@@ -277,9 +280,24 @@ export function App() {
               })
           }}
           onNodeEdited={(address) => setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))}
+          reloadToken={previewReloadToken}
         />
 
-        <Inspector node={inspectedNode} onClose={() => setInspectedNode(null)} />
+        <Inspector
+          node={inspectedNode}
+          onClose={() => setInspectedNode(null)}
+          onNodeEdited={(address) => {
+            setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))
+            setPreviewReloadToken((token) => token + 1)
+            // The inspected-node snapshot is stale now - the save already
+            // invalidated the cache, so this refetches fresh values.
+            fetchNode(address)
+              .then(setInspectedNode)
+              .catch(() => {
+                /* fine - keep showing the previous snapshot */
+              })
+          }}
+        />
 
         {variantRequest && selectedDocument && activeWorkspace && (
           <CreateVariantDialog

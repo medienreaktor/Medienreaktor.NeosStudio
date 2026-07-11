@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, Eye, Pencil, RotateCw } from 'lucide-react'
-import { type Command, executeCommands } from '@/api/commands'
-import { queryKeys } from '@/api/keys'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
-import { fetchAncestors, fetchNode, type NodeDto } from '@/api/nodes'
-import { queryClient } from '@/app/queryClient'
+import type { NodeDto } from '@/api/nodes'
 import { Button } from '@/components/ui/button'
 import { config } from '@/config'
+import { persistPropertyChange } from '@/features/editing/persistProperty'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
 /**
@@ -23,64 +21,6 @@ export function previewUrl(address: string, mode?: string): string {
 }
 
 /**
- * Persists an inline edit. Mirrors the classic UI's semantics for
- * shine-through nodes (origin dimension != viewed dimension): transparently
- * create the variant at the viewed dimension first - varying the closest
- * non-tethered ancestor if the edited node is tethered - so the edit never
- * writes through to the other variant.
- */
-async function persistPropertyChange(address: string, property: string, value: string): Promise<void> {
-  const node = await fetchNode(address)
-  const commands: Command[] = []
-
-  const isShineThrough = JSON.stringify(node.dimensionSpacePoint) !== JSON.stringify(node.originDimensionSpacePoint)
-  if (isShineThrough) {
-    let nodeToVary: NodeDto = node
-    if (node.classification === 'tethered') {
-      const chain = [node, ...(await fetchAncestors(address))]
-      const firstUntethered = chain.findIndex((n) => n.classification !== 'tethered')
-      let candidate = chain[firstUntethered] ?? node
-      // Root nodes cannot vary, but their tethered children can.
-      if (candidate.classification === 'root' && firstUntethered > 0) {
-        candidate = chain[firstUntethered - 1] ?? node
-      }
-      nodeToVary = candidate
-    }
-    commands.push({
-      type: 'CreateNodeVariant',
-      payload: {
-        workspaceName: nodeToVary.workspace,
-        nodeAggregateId: nodeToVary.aggregateId,
-        sourceOrigin: nodeToVary.originDimensionSpacePoint,
-        targetOrigin: node.dimensionSpacePoint,
-      },
-    })
-  }
-
-  commands.push({
-    type: 'SetNodeProperties',
-    payload: {
-      workspaceName: node.workspace,
-      nodeAggregateId: node.aggregateId,
-      // After a transparent variant creation the viewed dimension is occupied.
-      originDimensionSpacePoint: isShineThrough ? node.dimensionSpacePoint : node.originDimensionSpacePoint,
-      propertyValues: { [property]: value },
-    },
-  })
-
-  await executeCommands(commands)
-
-  if (isShineThrough) {
-    // A new variant changes coverage everywhere - drop all node reads.
-    await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-  } else {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.byAddress(address) })
-  }
-  // Refresh the pending-changes badges.
-  void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-}
-
-/**
  * Renders the selected document in an iframe and bridges it to the shell:
  * clicks on content elements surface as onSelectNode (the outliner follows),
  * the shell's selection is pushed back as an outline, and inline edits are
@@ -93,6 +33,7 @@ export function PreviewPane({
   onSelectNode,
   onNavigateToNode,
   onNodeEdited,
+  reloadToken = 0,
 }: {
   document: NodeDto | null
   /** Address outlined in the preview - the node inspected in the shell. */
@@ -103,6 +44,8 @@ export function PreviewPane({
   onNavigateToNode?: (address: string) => void
   /** An inline edit for this address was persisted. */
   onNodeEdited?: (address: string) => void
+  /** Bump to reload the iframe after edits made outside of it (e.g. the inspector). */
+  reloadToken?: number
 }) {
   // Remount key: bumping it reloads the iframe even though the src string is
   // unchanged (e.g. after edits in the same document).
@@ -125,7 +68,7 @@ export function PreviewPane({
   // A new iframe document means a new guest lifecycle.
   useEffect(() => {
     setGuestReady(false)
-  }, [src, reloadCount])
+  }, [src, reloadCount, reloadToken])
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -216,7 +159,7 @@ export function PreviewPane({
       </div>
       <iframe
         ref={iframeRef}
-        key={`${src}:${reloadCount}`}
+        key={`${src}:${reloadCount}:${reloadToken}`}
         src={src}
         title="Page preview"
         className="min-h-0 w-full flex-1 border-0 bg-white"
