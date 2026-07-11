@@ -4,10 +4,12 @@ import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cn } from "@/lib/utils"
 
 /**
- * Right-side drawer on Base UI's native Drawer. Non-modal use (page stays
+ * Right-side floating drawer on Base UI's native Drawer: inset from the
+ * viewport edges with rounded corners and a shadow. Non-modal use (page stays
  * fully interactive) is a first-class mode: set `modal={false}` and
  * `disablePointerDismissal` on the root. Drawers nest natively - render
- * another <Drawer> inside an open drawer's content.
+ * another <Drawer> inside an open drawer's content. Override the margins via
+ * className on DrawerContent to inset it further (e.g. below a header).
  */
 function Drawer({
   swipeDirection = "right",
@@ -69,11 +71,14 @@ function DrawerContent({
         <DrawerPrimitive.Popup
           data-slot="drawer-content"
           className={cn(
-            "pointer-events-auto flex h-full w-96 max-w-[calc(100vw-3rem)] flex-col overflow-y-auto overscroll-contain border-l bg-card text-card-foreground outline-none",
+            // mr-4 keeps the drawer clear of the page's scrollbar.
+            "pointer-events-auto mt-2 mr-4 mb-2 flex w-96 max-w-[calc(100vw-3rem)] flex-col overflow-y-auto overscroll-contain rounded-lg border bg-card text-card-foreground shadow-lg outline-none",
             // Swipe follows the pointer; open/close slide via the
             // starting/ending styles, close duration scaled by swipe strength.
+            // The extra 1rem clears the right margin so the closed drawer
+            // (and its shadow's origin) sits fully offscreen.
             "touch-auto transform-[translateX(var(--drawer-swipe-movement-x))] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
-            "data-swiping:select-none data-starting-style:transform-[translateX(100%)] data-ending-style:transform-[translateX(100%)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*300ms)]",
+            "data-swiping:select-none data-starting-style:transform-[translateX(calc(100%+1rem))] data-ending-style:transform-[translateX(calc(100%+1rem))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*300ms)]",
             className
           )}
           {...props}

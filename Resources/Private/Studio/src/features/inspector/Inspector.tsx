@@ -12,7 +12,7 @@ import {
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 
 /**
- * The inspector: a non-modal right-side drawer (the trees and the future
+ * The inspector: a non-modal, floating right-side drawer (the trees and the
  * page preview in <main> stay interactive while it is open). Property
  * editors will replace the read-only summary; nested drawers (DrawerNested)
  * are available for secondary editors like media or reference pickers.
@@ -31,7 +31,9 @@ export function Inspector({ node, onClose }: { node: NodeDto | null; onClose: ()
         if (!open) onClose()
       }}
     >
-      <DrawerContent showOverlay={false}>
+      {/* The inspector floats over the lower half of the viewport only, so
+          the preview stays largely unobstructed. */}
+      <DrawerContent showOverlay={false} className="mt-[50vh]">
         {node && (
           <>
             <DrawerHeader>
