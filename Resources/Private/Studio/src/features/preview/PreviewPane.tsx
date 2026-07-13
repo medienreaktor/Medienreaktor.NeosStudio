@@ -1,28 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { ExternalLink, Eye, EyeOff, Pencil, RotateCw, Trash2 } from 'lucide-react'
+import { ExternalLink, Eye, Pencil, RotateCw } from 'lucide-react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import type { NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { config } from '@/config'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import { type CreationDrag, getCreationDrag, subscribeCreationDrag } from '@/features/creation/creationDrag'
 import { CreateNodeFlow } from '@/features/creation/NodeCreationDialog'
-import { deleteNode, hideNode, moveNode, unhideNode } from '@/features/editing/nodeActions'
+import { moveNode } from '@/features/editing/nodeActions'
+import { NodeContextMenu, type NodeMenuTarget } from '@/features/editing/NodeContextMenu'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
@@ -117,22 +104,9 @@ export function PreviewPane({
   // A drop from the creation panel landed in the preview - the creation flow
   // (optional creation dialog + command) runs for this insertion point.
   const [pendingCreation, setPendingCreation] = useState<CreateNodeRequest | null>(null)
-  // The element menu (hide/delete, or unhide for hidden elements) requested
-  // via the "..." handle in the guest, anchored at the handle's viewport
-  // position over the iframe.
-  const [elementMenu, setElementMenu] = useState<{
-    address: string
-    /** Enclosing collection - inspected after a delete, refreshed in the outliner. */
-    parentAddress: string | null
-    /** The element is explicitly hidden - the menu offers "Unhide" instead of "Hide". */
-    hidden: boolean
-    anchor: { x: number; y: number; width: number; height: number }
-  } | null>(null)
-  // A delete waiting for confirmation; the dialog is open while set.
-  const [pendingDelete, setPendingDelete] = useState<{
-    address: string
-    parentAddress: string | null
-  } | null>(null)
+  // The element menu (hide/unhide/delete) requested via the "..." handle in
+  // the guest, anchored at the handle's viewport position over the iframe.
+  const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
   const { data: nodeTypes } = useNodeTypes()
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -208,6 +182,7 @@ export function PreviewPane({
                     address,
                     parentAddress,
                     hidden: message.hidden,
+                    tethered: false,
                     anchor: {
                       x: frameRect.left + message.buttonRect.left,
                       y: frameRect.top + message.buttonRect.top,
@@ -284,43 +259,6 @@ export function PreviewPane({
     frame.postMessage(message, window.location.origin)
   }, [guestReady, selectedAddress])
 
-  // Hide or unhide the element the menu was opened for. Both render only
-  // after a reload.
-  const runVisibilityAction = (action: 'hide' | 'unhide') => {
-    if (!elementMenu) return
-    const { address } = elementMenu
-    setElementMenu(null)
-    setSaveError(null)
-    const run = action === 'hide' ? hideNode : unhideNode
-    run(address)
-      .then(() => {
-        setReloadCount((count) => count + 1)
-        // Refresh outliner decor and the inspected node's snapshot.
-        onNodeEditedRef.current?.(address)
-        onSelectNodeRef.current(address)
-      })
-      .catch((e: unknown) =>
-        setSaveError(
-          `${action === 'hide' ? 'Hiding' : 'Unhiding'} failed: ${e instanceof Error ? e.message : String(e)}`,
-        ),
-      )
-  }
-
-  // Delete the element after confirmation. The inspection moves to the
-  // enclosing collection - the deleted node has no data to inspect anymore.
-  const runDelete = ({ address, parentAddress }: { address: string; parentAddress: string | null }) => {
-    setSaveError(null)
-    deleteNode(address)
-      .then(() => {
-        setReloadCount((count) => count + 1)
-        if (parentAddress) onSelectNodeRef.current(parentAddress)
-        onNodeEditedRef.current?.(parentAddress ? [parentAddress] : [])
-      })
-      .catch((e: unknown) =>
-        setSaveError(`Deleting failed: ${e instanceof Error ? e.message : String(e)}`),
-      )
-  }
-
   if (!document || !src) {
     return (
       <div className="grid flex-1 place-items-center p-6">
@@ -343,74 +281,27 @@ export function PreviewPane({
         title="Page preview"
         className="min-h-0 w-full flex-1 border-0 bg-white"
       />
-      {elementMenu && (
-        <DropdownMenu open onOpenChange={(open) => !open && setElementMenu(null)}>
-          {/* Invisible anchor at the guest handle's position - the handle
-              itself lives in the iframe, out of reach for the menu. */}
-          <DropdownMenuTrigger
-            aria-hidden
-            tabIndex={-1}
-            style={{
-              position: 'fixed',
-              left: elementMenu.anchor.x,
-              top: elementMenu.anchor.y,
-              width: elementMenu.anchor.width,
-              height: elementMenu.anchor.height,
-              opacity: 0,
-              pointerEvents: 'none',
-            }}
-          />
-          <DropdownMenuContent align="end">
-            {elementMenu.hidden ? (
-              <DropdownMenuItem onClick={() => runVisibilityAction('unhide')}>
-                <Eye />
-                Unhide
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => runVisibilityAction('hide')}>
-                <EyeOff />
-                Hide
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => {
-                if (!elementMenu) return
-                setPendingDelete({ address: elementMenu.address, parentAddress: elementMenu.parentAddress })
-                setElementMenu(null)
-              }}
-            >
-              <Trash2 />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-      <Dialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete this element?</DialogTitle>
-            <DialogDescription>
-              The element and everything inside it will be removed. This is undone by discarding the change from the
-              workspace.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setPendingDelete(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (pendingDelete) runDelete(pendingDelete)
-                setPendingDelete(null)
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NodeContextMenu
+        target={elementMenu}
+        entityLabel="element"
+        onClose={() => setElementMenu(null)}
+        onDone={(action, target) => {
+          setSaveError(null)
+          // Every action renders only after a reload. Hide/unhide keep the
+          // node inspected (with a fresh snapshot); a delete moves the
+          // inspection to the enclosing collection - the deleted node has no
+          // data to inspect anymore.
+          setReloadCount((count) => count + 1)
+          if (action === 'delete') {
+            if (target.parentAddress) onSelectNodeRef.current(target.parentAddress)
+            onNodeEditedRef.current?.(target.parentAddress ? [target.parentAddress] : [])
+          } else {
+            onNodeEditedRef.current?.(target.address)
+            onSelectNodeRef.current(target.address)
+          }
+        }}
+        onError={setSaveError}
+      />
       {pendingCreation && (
         <CreateNodeFlow
           request={pendingCreation}

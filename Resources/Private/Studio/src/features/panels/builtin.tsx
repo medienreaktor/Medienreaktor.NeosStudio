@@ -1,5 +1,7 @@
+import { fetchNode } from '@/api/nodes'
 import { useStudio } from '@/app/StudioContext'
 import { NodeCreationPanel } from '@/features/creation/NodeCreationPanel'
+import type { NodeMenuAction, NodeMenuTarget } from '@/features/editing/NodeContextMenu'
 import { InspectorPanel } from '@/features/inspector/Inspector'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
@@ -12,8 +14,26 @@ import { panelRegistry } from './registry'
  * reusable feature component.
  */
 
+/**
+ * Shared refresh semantics after a tree context-menu action: hide/unhide
+ * report the node itself (its decor and inspector snapshot refresh), a
+ * delete reports the parent (its children list shrinks and the inspection
+ * has to move somewhere that still exists).
+ */
+function reportNodeAction(
+  nodeEdited: (address: string) => void,
+  action: NodeMenuAction,
+  target: NodeMenuTarget,
+): void {
+  if (action === 'delete') {
+    if (target.parentAddress) nodeEdited(target.parentAddress)
+  } else {
+    nodeEdited(target.address)
+  }
+}
+
 function DocumentsPanel() {
-  const { site, workspaceName, selectedDocument, selectDocument } = useStudio()
+  const { site, workspaceName, selectedDocument, selectDocument, lastEdit, nodeEdited } = useStudio()
   if (!site || !workspaceName) {
     return <div className="p-4 text-xs text-muted-foreground">Loading sites…</div>
   }
@@ -25,14 +45,26 @@ function DocumentsPanel() {
         site={site}
         workspaceName={workspaceName}
         selectedAddress={selectedDocument?.address ?? null}
+        lastEdit={lastEdit}
         onSelect={selectDocument}
+        onNodeAction={(action, target) => {
+          reportNodeAction(nodeEdited, action, target)
+          // The deleted document cannot stay selected - browse its parent.
+          if (action === 'delete' && target.parentAddress && selectedDocument?.address === target.address) {
+            fetchNode(target.parentAddress)
+              .then(selectDocument)
+              .catch(() => {
+                /* fine - the tree simply keeps the stale selection */
+              })
+          }
+        }}
       />
     </div>
   )
 }
 
 function OutlinePanel() {
-  const { selectedDocument, workspaceName, inspectedNode, lastEdit, inspectNode } = useStudio()
+  const { selectedDocument, workspaceName, inspectedNode, lastEdit, inspectNode, nodeEdited } = useStudio()
   return (
     <div className="p-2">
       <ContentOutliner
@@ -41,6 +73,7 @@ function OutlinePanel() {
         selectedAddress={inspectedNode?.address ?? null}
         lastEdit={lastEdit}
         onSelect={inspectNode}
+        onNodeAction={(action, target) => reportNodeAction(nodeEdited, action, target)}
       />
     </div>
   )

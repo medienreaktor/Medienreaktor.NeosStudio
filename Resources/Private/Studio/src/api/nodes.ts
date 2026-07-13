@@ -41,6 +41,15 @@ export const DOCUMENT_NODE_TYPE = 'Neos.Neos:Document'
  */
 export const CONTENT_NODE_TYPES = 'Neos.Neos:Content,Neos.Neos:ContentCollection'
 
+/**
+ * Whether the node itself is hidden (tagged "disabled" on the node, not
+ * merely inherited from a hidden ancestor) - only then does unhiding it
+ * change anything.
+ */
+export function isExplicitlyHidden(node: NodeDto): boolean {
+  return node.tags.all.includes('disabled') && !node.tags.inherited.includes('disabled')
+}
+
 export function nodeLabel(node: NodeDto): string {
   const title = node.properties['title']?.value
   if (typeof title === 'string' && title !== '') return title

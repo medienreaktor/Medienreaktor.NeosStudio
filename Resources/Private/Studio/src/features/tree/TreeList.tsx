@@ -1,4 +1,4 @@
-import type { TreeInstance } from '@headless-tree/core'
+import type { ItemInstance, TreeInstance } from '@headless-tree/core'
 import { cn } from '@/lib/utils'
 import type { TreeRowDecor } from './nodeDecor'
 
@@ -12,6 +12,7 @@ export function TreeList<T>({
   label,
   emptyText,
   decorate,
+  onItemContextMenu,
 }: {
   tree: TreeInstance<T>
   /** Accessible tree label (aria-label on the container). */
@@ -19,6 +20,8 @@ export function TreeList<T>({
   emptyText: string
   /** Row decorations for an item's data; return null for undecorated rows. */
   decorate?: (data: T) => TreeRowDecor | null
+  /** Right-click on a row; when set, the browser menu is suppressed. */
+  onItemContextMenu?: (item: ItemInstance<T>, event: React.MouseEvent) => void
 }) {
   const items = tree.getItems()
 
@@ -51,6 +54,13 @@ export function TreeList<T>({
               item.setFocused()
               item.primaryAction()
             }}
+            onContextMenu={
+              onItemContextMenu &&
+              ((e) => {
+                e.preventDefault()
+                onItemContextMenu(item, e)
+              })
+            }
             className={cn(
               'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm hover:bg-secondary',
               item.isSelected() && 'border-primary bg-secondary',

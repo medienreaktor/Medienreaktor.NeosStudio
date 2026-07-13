@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature } from '@headless-tree/core'
+import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature, type ItemInstance } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
-import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, type NodeDto } from '@/api/nodes'
+import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, isExplicitlyHidden, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
+import { NodeContextMenu, type NodeMenuAction, type NodeMenuTarget } from '@/features/editing/NodeContextMenu'
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
@@ -29,6 +30,7 @@ export function ContentOutliner({
   selectedAddress = null,
   lastEdit = null,
   onSelect,
+  onNodeAction,
 }: {
   document: NodeDto | null
   workspaceName: string | null
@@ -37,6 +39,8 @@ export function ContentOutliner({
   /** Last inline edit from the preview - refreshes that item's label. */
   lastEdit?: NodeEdit | null
   onSelect?: (node: NodeDto) => void
+  /** A context-menu action (hide/unhide/delete) succeeded for this target. */
+  onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
 }) {
   if (document === null) {
     return <div className="px-2 text-xs text-muted-foreground">Select a document to outline its content.</div>
@@ -52,6 +56,7 @@ export function ContentOutliner({
       selectedAddress={selectedAddress}
       lastEdit={lastEdit}
       onSelect={onSelect}
+      onNodeAction={onNodeAction}
     />
   )
 }
@@ -62,14 +67,18 @@ function OutlinerTree({
   selectedAddress,
   lastEdit,
   onSelect,
+  onNodeAction,
 }: {
   document: NodeDto
   workspaceName: string | null
   selectedAddress: string | null
   lastEdit: NodeEdit | null
   onSelect?: (node: NodeDto) => void
+  onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
 }) {
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
 
@@ -123,20 +132,47 @@ function OutlinerTree({
   useEffect(() => {
     if (lastEdit === null) return
     for (const address of lastEdit.addresses) {
-      const item = tree.getItems().find((candidate) => candidate.getId() === address)
+      // getItemInstance also resolves the (never listed) root item, so edits
+      // reported for the document itself refresh its direct children.
+      const item = tree.getItemInstance(address)
       void item?.invalidateItemData()
       void item?.invalidateChildrenIds()
     }
   }, [lastEdit, tree])
 
+  // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
+  const openMenu = (item: ItemInstance<NodeDto | null>, event: React.MouseEvent) => {
+    const data = item.getItemData()
+    if (!data) return
+    setMenuTarget({
+      address: data.address,
+      parentAddress: item.getParent()?.getId() ?? null,
+      hidden: isExplicitlyHidden(data),
+      tethered: data.classification === 'tethered',
+      anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
+    })
+  }
+
   return (
     <>
       {loadError && <div className="text-xs text-destructive">{loadError}</div>}
+      {actionError && <div className="text-xs text-destructive">{actionError}</div>}
       <TreeList
         tree={tree}
         label="Content outliner"
         emptyText="No content below this document."
         decorate={(data) => (data === null ? null : nodeDecor(data, nodeTypes, pendingChanges))}
+        onItemContextMenu={openMenu}
+      />
+      <NodeContextMenu
+        target={menuTarget}
+        entityLabel="element"
+        onClose={() => setMenuTarget(null)}
+        onDone={(action, target) => {
+          setActionError(null)
+          onNodeAction?.(action, target)
+        }}
+        onError={setActionError}
       />
     </>
   )
