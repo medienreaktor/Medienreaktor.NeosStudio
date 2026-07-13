@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature, type ItemInstance } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { DOCUMENT_NODE_TYPE, fetchChildren, fetchNode, isExplicitlyHidden, nodeLabel, type NodeDto } from '@/api/nodes'
@@ -6,10 +6,10 @@ import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
 import { config } from '@/config'
 import { NodeContextMenu, type NodeMenuAction, type NodeMenuTarget } from '@/features/editing/NodeContextMenu'
-import type { NodeEdit } from './ContentOutliner'
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
+import { type NodeEdit, useNodeEditRefresh } from './useNodeEditRefresh'
 import { usePendingChanges } from './usePendingChanges'
 import { useRevealSelection } from './useRevealSelection'
 
@@ -104,14 +104,7 @@ export function DocumentTree({
 
   // After an edit, re-fetch the reported items so labels stay in sync and
   // structural changes (a deleted document) appear.
-  useEffect(() => {
-    if (lastEdit === null) return
-    for (const address of lastEdit.addresses) {
-      const item = tree.getItemInstance(address)
-      void item?.invalidateItemData()
-      void item?.invalidateChildrenIds()
-    }
-  }, [lastEdit, tree])
+  useNodeEditRefresh(tree, lastEdit, ROOT_ID)
 
   // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
   // The site node is the tree's anchor - hiding or deleting the site you are

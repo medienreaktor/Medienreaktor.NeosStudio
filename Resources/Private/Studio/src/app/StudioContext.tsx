@@ -26,6 +26,12 @@ export type StudioContextValue = {
   inspectNode: (node: NodeDto) => void
   /** Report that a property edit for this address was persisted. */
   nodeEdited: (address: string) => void
+  /**
+   * Report that the workspace's content changed wholesale (published -
+   * which rebases the workspace - or discarded): every cached node read,
+   * tree item and the preview are refreshed.
+   */
+  workspaceContentChanged: () => void
 }
 
 const StudioContext = React.createContext<StudioContextValue | null>(null)

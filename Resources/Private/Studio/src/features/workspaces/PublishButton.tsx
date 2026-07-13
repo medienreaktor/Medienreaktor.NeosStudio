@@ -43,7 +43,7 @@ interface Operation {
 export function PublishButton({ workspaceName }: { workspaceName: string }) {
   // Same query the trees' dirty markers use, so button and badges agree.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
-  const { selectedDocument, nodeEdited } = useStudio()
+  const { selectedDocument, workspaceContentChanged } = useStudio()
   // A discard waiting for confirmation; the dialog is open while set.
   const [pendingDiscard, setPendingDiscard] = useState<Operation | null>(null)
 
@@ -60,17 +60,16 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
       if (op.kind === 'publish') await publishWorkspace(workspaceName, op.filter)
       else await discardWorkspace(workspaceName, op.filter)
     },
-    onSuccess: (_, op) => {
+    onSuccess: () => {
       // Covers the changes query (this bubble, tree badges) and the workspace
       // list's hasPublishableChanges flag.
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-      if (op.kind === 'discard') {
-        // Unlike publishing, discarding rewrites the workspace's content:
-        // cached node reads are stale, and reporting the selected document as
-        // edited reloads the preview and refreshes the outliner below it.
-        void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-        if (selectedDocument) nodeEdited(selectedDocument.address)
-      }
+      // Publishing rebases the workspace onto the new base (changes published
+      // by others flow in) and discarding rewrites its content - cached node
+      // reads are stale either way, and every loaded tree item needs a
+      // re-read (per-item caches in the trees never expire on their own).
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+      workspaceContentChanged()
     },
   })
 

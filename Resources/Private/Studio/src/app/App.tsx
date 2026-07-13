@@ -27,6 +27,7 @@ import { PanelDock, PanelsProvider } from '@/features/panels/PanelSystem'
 import { PreviewPane, PreviewToolbar } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
+import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
 import { PublishButton } from '@/features/workspaces/PublishButton'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
@@ -180,6 +181,25 @@ export function App() {
         .catch(() => {
           /* fine - keep showing the previous snapshot */
         })
+    },
+    workspaceContentChanged: () => {
+      setLastEdit((prev) => ({ addresses: [ALL_NODES], token: (prev?.token ?? 0) + 1 }))
+      setPreviewReloadToken((token) => token + 1)
+      // The snapshots held in app state are re-read as well; a node that no
+      // longer exists (created in the workspace, then discarded) is dropped.
+      if (selectedDocument) {
+        fetchNode(selectedDocument.address)
+          .then(setSelectedDocument)
+          .catch(() => {
+            setSelectedDocument(null)
+            setInspectedNode(null)
+          })
+      }
+      if (inspectedNode) {
+        fetchNode(inspectedNode.address)
+          .then(setInspectedNode)
+          .catch(() => setInspectedNode(null))
+      }
     },
   }
 

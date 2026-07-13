@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature, type ItemInstance } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, isExplicitlyHidden, type NodeDto } from '@/api/nodes'
@@ -8,17 +8,11 @@ import { NodeContextMenu, type NodeMenuAction, type NodeMenuTarget } from '@/fea
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
+import { type NodeEdit, useNodeEditRefresh } from './useNodeEditRefresh'
 import { usePendingChanges } from './usePendingChanges'
 import { useRevealSelection } from './useRevealSelection'
 
-/**
- * An edit that happened in the preview; token distinguishes repeats. Usually
- * one address; structural edits (a move) touch several nodes at once.
- */
-export interface NodeEdit {
-  addresses: string[]
-  token: number
-}
+export type { NodeEdit } from './useNodeEditRefresh'
 
 /**
  * The content structure below the selected document: collections and content
@@ -125,20 +119,10 @@ function OutlinerTree({
   // down to the node and highlight it.
   useRevealSelection(tree, selectedAddress, CONTENT_NODE_TYPES)
 
-  // After an edit, re-fetch that item so its label (usually derived from the
-  // edited text) stays in sync, and its children so structural edits (a node
-  // created in the collection) appear. The queries were invalidated by the
-  // save; unchanged children resolve from the still-fresh cache.
-  useEffect(() => {
-    if (lastEdit === null) return
-    for (const address of lastEdit.addresses) {
-      // getItemInstance also resolves the (never listed) root item, so edits
-      // reported for the document itself refresh its direct children.
-      const item = tree.getItemInstance(address)
-      void item?.invalidateItemData()
-      void item?.invalidateChildrenIds()
-    }
-  }, [lastEdit, tree])
+  // After an edit, re-fetch the affected items so labels stay in sync and
+  // structural edits (a node created in a collection) appear. The queries
+  // were invalidated by the save; unchanged items resolve from the cache.
+  useNodeEditRefresh(tree, lastEdit, document.address)
 
   // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
   const openMenu = (item: ItemInstance<NodeDto | null>, event: React.MouseEvent) => {
