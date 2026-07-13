@@ -19,15 +19,13 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { StudioProvider, type StudioContextValue } from '@/app/StudioContext'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
-import { InspectorPanel } from '@/features/inspector/Inspector'
-import { type PanelDefinition, PanelDock, PanelsProvider } from '@/features/panels/PanelSystem'
-import type { PanelId } from '@/features/panels/panelLayout'
+import { PanelDock, PanelsProvider } from '@/features/panels/PanelSystem'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
-import { ContentOutliner, type NodeEdit } from '@/features/tree/ContentOutliner'
-import { DocumentTree } from '@/features/tree/DocumentTree'
+import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
@@ -150,61 +148,31 @@ export function App() {
     )
   }
 
-  // The three dockable panels. Their placement (sidebar dock, floating,
-  // tab grouping) is the panel system's business; this only supplies content.
-  const panels: Record<PanelId, PanelDefinition> = {
-    documents: {
-      title: 'Documents',
-      content:
-        activeSite && activeWorkspace ? (
-          <div className="p-2">
-            <DocumentTree
-              key={activeSite.nodeAddress}
-              site={activeSite}
-              workspaceName={activeWorkspace.name}
-              selectedAddress={selectedDocument?.address ?? null}
-              onSelect={(node) => {
-                setSelectedDocument(node)
-                setInspectedNode(node)
-              }}
-            />
-          </div>
-        ) : (
-          <div className="p-4 text-xs text-muted-foreground">Loading sites…</div>
-        ),
+  // The app state and actions panels read via useStudio(). Panels register
+  // themselves in the panel registry (see features/panels/builtin.tsx); their
+  // placement (sidebar dock, floating, tab grouping) is the panel system's
+  // business.
+  const studio: StudioContextValue = {
+    site: activeSite,
+    workspaceName: activeWorkspace?.name ?? null,
+    selectedDocument,
+    inspectedNode,
+    lastEdit,
+    selectDocument: (node) => {
+      setSelectedDocument(node)
+      setInspectedNode(node)
     },
-    outline: {
-      title: 'Outline',
-      content: (
-        <div className="p-2">
-          <ContentOutliner
-            document={selectedDocument}
-            workspaceName={activeWorkspace?.name ?? null}
-            selectedAddress={inspectedNode?.address ?? null}
-            lastEdit={lastEdit}
-            onSelect={setInspectedNode}
-          />
-        </div>
-      ),
-    },
-    inspector: {
-      title: 'Inspector',
-      content: (
-        <InspectorPanel
-          node={inspectedNode}
-          onNodeEdited={(address) => {
-            setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))
-            setPreviewReloadToken((token) => token + 1)
-            // The inspected-node snapshot is stale now - the save already
-            // invalidated the cache, so this refetches fresh values.
-            fetchNode(address)
-              .then(setInspectedNode)
-              .catch(() => {
-                /* fine - keep showing the previous snapshot */
-              })
-          }}
-        />
-      ),
+    inspectNode: setInspectedNode,
+    nodeEdited: (address) => {
+      setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))
+      setPreviewReloadToken((token) => token + 1)
+      // The inspected-node snapshot is stale now - the save already
+      // invalidated the cache, so this refetches fresh values.
+      fetchNode(address)
+        .then(setInspectedNode)
+        .catch(() => {
+          /* fine - keep showing the previous snapshot */
+        })
     },
   }
 
@@ -217,125 +185,127 @@ export function App() {
           : undefined
       }
     >
-      <PanelsProvider panels={panels}>
-        <Sidebar>
-          <SidebarHeader>
-            <div className="px-2 py-1 text-lg">
-              Neos <strong>Studio</strong>
-            </div>
-          </SidebarHeader>
-          <SidebarContent className="overflow-hidden">
-            <PanelDock />
-          </SidebarContent>
-          <SidebarResizeHandle {...resizeHandleProps} />
-        </Sidebar>
-  
-        <SidebarInset>
-          <header className="flex items-center justify-between border-b px-4 py-2.5">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger />
-              {sites.length > 0 && (
-                <SiteSwitcher
-                  sites={sites}
-                  value={activeSite?.nodeName ?? null}
-                  onChange={(nodeName) => {
-                    setSiteNodeName(nodeName)
-                    setSelectedDocument(null)
-                    setInspectedNode(null)
-                  }}
-                />
-              )}
-              {dimensions.length > 0 && sitesResponse && (
-                <DimensionSwitcher
-                  dimensions={dimensions}
-                  allowedPoints={dimensionsResponse?.allowedDimensionSpacePoints ?? []}
-                  value={dimensionSpacePoint ?? sitesResponse.dimensionSpacePoint}
-                  documentCoverage={selectedDocument ? documentVariants?.coveredDimensionSpacePoints : undefined}
-                  onCreateVariant={setVariantRequest}
-                  onChange={(point) => {
-                    const previousAddress = selectedDocument?.address ?? null
-                    setDimensionSpacePoint(point)
-                    setSelectedDocument(null)
-                    setInspectedNode(null)
-                    if (previousAddress) followDocumentInto(previousAddress, point)
-                  }}
-                />
-              )}
-              {workspaces.length > 0 && (
-                <WorkspaceSwitcher
-                  workspaces={workspaces}
-                  value={activeWorkspace?.name ?? null}
-                  onChange={(name) => {
-                    setWorkspaceName(name)
-                    setSelectedDocument(null)
-                    setInspectedNode(null)
-                  }}
-                />
-              )}
-            </div>
-          </header>
-  
-          {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
-  
-          <PreviewPane
-            document={selectedDocument}
-            selectedAddress={inspectedNode?.address ?? null}
-            onSelectNode={(address) => {
-              // A click in the preview: inspect the node and reveal it in the
-              // outliner (via selectedAddress above).
-              fetchNode(address)
-                .then(setInspectedNode)
-                .catch(() => {
-                  /* fine - e.g. the node vanished from this workspace meanwhile */
-                })
-            }}
-            onNavigateToNode={(address) => {
-              // A followed link: show the target document; the document tree
-              // reveals and selects it via selectedAddress. Links can cross
-              // dimensions (e.g. a language menu) - follow the switch so the
-              // trees browse the same dimension as the preview.
-              fetchNode(address)
-                .then((node) => {
-                  const currentPoint = dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
-                  if (currentPoint && !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)) {
-                    setDimensionSpacePoint(node.dimensionSpacePoint)
-                  }
-                  setSelectedDocument(node)
-                  setInspectedNode(node)
-                })
-                .catch(() => {
-                  /* fine - e.g. the linked document is not visible in this workspace */
-                })
-            }}
-            onNodeEdited={(address) => setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))}
-            reloadToken={previewReloadToken}
-          />
-  
-          {variantRequest && selectedDocument && activeWorkspace && (
-            <CreateVariantDialog
+      <StudioProvider value={studio}>
+        <PanelsProvider>
+          <Sidebar>
+            <SidebarHeader>
+              <div className="px-2 py-1 text-lg">
+                Neos <strong>Studio</strong>
+              </div>
+            </SidebarHeader>
+            <SidebarContent className="overflow-hidden">
+              <PanelDock />
+            </SidebarContent>
+            <SidebarResizeHandle {...resizeHandleProps} />
+          </Sidebar>
+    
+          <SidebarInset>
+            <header className="flex items-center justify-between border-b px-4 py-2.5">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger />
+                {sites.length > 0 && (
+                  <SiteSwitcher
+                    sites={sites}
+                    value={activeSite?.nodeName ?? null}
+                    onChange={(nodeName) => {
+                      setSiteNodeName(nodeName)
+                      setSelectedDocument(null)
+                      setInspectedNode(null)
+                    }}
+                  />
+                )}
+                {dimensions.length > 0 && sitesResponse && (
+                  <DimensionSwitcher
+                    dimensions={dimensions}
+                    allowedPoints={dimensionsResponse?.allowedDimensionSpacePoints ?? []}
+                    value={dimensionSpacePoint ?? sitesResponse.dimensionSpacePoint}
+                    documentCoverage={selectedDocument ? documentVariants?.coveredDimensionSpacePoints : undefined}
+                    onCreateVariant={setVariantRequest}
+                    onChange={(point) => {
+                      const previousAddress = selectedDocument?.address ?? null
+                      setDimensionSpacePoint(point)
+                      setSelectedDocument(null)
+                      setInspectedNode(null)
+                      if (previousAddress) followDocumentInto(previousAddress, point)
+                    }}
+                  />
+                )}
+                {workspaces.length > 0 && (
+                  <WorkspaceSwitcher
+                    workspaces={workspaces}
+                    value={activeWorkspace?.name ?? null}
+                    onChange={(name) => {
+                      setWorkspaceName(name)
+                      setSelectedDocument(null)
+                      setInspectedNode(null)
+                    }}
+                  />
+                )}
+              </div>
+            </header>
+    
+            {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
+    
+            <PreviewPane
               document={selectedDocument}
-              targetPoint={variantRequest}
-              dimensions={dimensions}
-              workspaceName={activeWorkspace.name}
-              onCancel={() => setVariantRequest(null)}
-              onCreated={(point) => {
-                setVariantRequest(null)
-                const previousAddress = selectedDocument.address
-                // The new variants exist now - drop every cached node read and
-                // the pending-changes badge state before anything refetches.
-                void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-                void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-                setDimensionSpacePoint(point)
-                setSelectedDocument(null)
-                setInspectedNode(null)
-                // Follow the document into its new dimension so outliner and
-                // inspector show the just-created variant right away.
-                followDocumentInto(previousAddress, point)
+              selectedAddress={inspectedNode?.address ?? null}
+              onSelectNode={(address) => {
+                // A click in the preview: inspect the node and reveal it in the
+                // outliner (via selectedAddress above).
+                fetchNode(address)
+                  .then(setInspectedNode)
+                  .catch(() => {
+                    /* fine - e.g. the node vanished from this workspace meanwhile */
+                  })
               }}
+              onNavigateToNode={(address) => {
+                // A followed link: show the target document; the document tree
+                // reveals and selects it via selectedAddress. Links can cross
+                // dimensions (e.g. a language menu) - follow the switch so the
+                // trees browse the same dimension as the preview.
+                fetchNode(address)
+                  .then((node) => {
+                    const currentPoint = dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
+                    if (currentPoint && !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)) {
+                      setDimensionSpacePoint(node.dimensionSpacePoint)
+                    }
+                    setSelectedDocument(node)
+                    setInspectedNode(node)
+                  })
+                  .catch(() => {
+                    /* fine - e.g. the linked document is not visible in this workspace */
+                  })
+              }}
+              onNodeEdited={(address) => setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))}
+              reloadToken={previewReloadToken}
             />
-          )}
-        </SidebarInset>
-      </PanelsProvider>
+    
+            {variantRequest && selectedDocument && activeWorkspace && (
+              <CreateVariantDialog
+                document={selectedDocument}
+                targetPoint={variantRequest}
+                dimensions={dimensions}
+                workspaceName={activeWorkspace.name}
+                onCancel={() => setVariantRequest(null)}
+                onCreated={(point) => {
+                  setVariantRequest(null)
+                  const previousAddress = selectedDocument.address
+                  // The new variants exist now - drop every cached node read and
+                  // the pending-changes badge state before anything refetches.
+                  void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+                  void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+                  setDimensionSpacePoint(point)
+                  setSelectedDocument(null)
+                  setInspectedNode(null)
+                  // Follow the document into its new dimension so outliner and
+                  // inspector show the just-created variant right away.
+                  followDocumentInto(previousAddress, point)
+                }}
+              />
+            )}
+          </SidebarInset>
+        </PanelsProvider>
+      </StudioProvider>
     </SidebarProvider>
   )
 }

@@ -13,6 +13,11 @@ import '@fortawesome/fontawesome-free/css/solid.min.css'
 import '@fortawesome/fontawesome-free/css/regular.min.css'
 import '@fortawesome/fontawesome-free/css/v4-shims.min.css'
 import '@fortawesome/fontawesome-free/css/v4-font-face.min.css'
+import { registerBuiltinPanels } from './features/panels/builtin'
+
+// Built-in panels register before mount, exactly like third-party panels
+// would from a plugin entry point.
+registerBuiltinPanels()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

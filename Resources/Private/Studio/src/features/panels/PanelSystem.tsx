@@ -12,6 +12,7 @@ import {
   type DropTarget,
   type FloatingGroup,
   loadLayout,
+  normalizeLayout,
   type PanelGroup,
   type PanelId,
   type PanelLayout,
@@ -20,29 +21,27 @@ import {
   type TabDrop,
   toggleCollapsed,
 } from './panelLayout'
+import { type PanelDefinition, panelRegistry } from './registry'
 
 /**
- * Adobe-CS-style dockable panels: every panel is a tab in a group; groups
- * stack in the sidebar dock or float above the app. Drag a tab to reorder it,
- * merge it into another group (drop on a tab bar or a group's body), dock it
- * between groups (drop in a sidebar gap), or tear it out (drop anywhere
- * else). Floating groups drag by their bar, resize from every edge, collapse
- * to their tab bar and stack by click order. The layout persists to
- * localStorage.
+ * Adobe-CS-style dockable panels: every panel registered in the panelRegistry
+ * is a tab in a group; groups stack in the sidebar dock or float above the
+ * app. Drag a tab to reorder it, merge it into another group (drop on a tab
+ * bar or a group's body), dock it between groups (drop in a sidebar gap), or
+ * tear it out (drop anywhere else). Floating groups drag by their bar, resize
+ * from every edge, collapse to their tab bar and stack by click order. The
+ * layout persists to localStorage.
  *
- * Wrap the app in <PanelsProvider panels={...}> (it portals the floating
- * groups and the drag ghost to <body>) and render <PanelDock /> where docked
- * groups belong.
+ * Wrap the app in <PanelsProvider> (it portals the floating groups and the
+ * drag ghost to <body>) and render <PanelDock /> where docked groups belong.
  */
 
 const STORAGE_KEY = 'neos-studio.panel_layout'
 const DRAG_THRESHOLD = 5
 
-export type PanelDefinition = { title: string; content: React.ReactNode }
-
 type PanelsContextValue = {
   layout: PanelLayout
-  panels: Record<PanelId, PanelDefinition>
+  definitions: Map<PanelId, PanelDefinition>
   drag: TabDrop | null
   onTabPointerDown: (e: React.PointerEvent<HTMLElement>, groupId: string, panel: PanelId) => void
   toggle: (groupId: string) => void
@@ -83,17 +82,23 @@ function findDropTarget(x: number, y: number): DropTarget {
   return { kind: 'float' }
 }
 
-export function PanelsProvider({
-  panels,
-  children,
-}: {
-  panels: Record<PanelId, PanelDefinition>
-  children: React.ReactNode
-}) {
-  const [layout, setLayout] = React.useState<PanelLayout>(() => loadLayout(STORAGE_KEY))
+export function PanelsProvider({ children }: { children: React.ReactNode }) {
+  const registered = React.useSyncExternalStore(
+    (onChange) => panelRegistry.subscribe(onChange),
+    () => panelRegistry.getAll(),
+  )
+  const definitions = React.useMemo(() => new Map(registered.map((d) => [d.id, d])), [registered])
+  const [layout, setLayout] = React.useState<PanelLayout>(() => loadLayout(STORAGE_KEY, panelRegistry.getAll()))
   const [drag, setDrag] = React.useState<TabDrop | null>(null)
   const layoutRef = React.useRef(layout)
   layoutRef.current = layout
+
+  // Panels registered or unregistered after mount (plugins): reconcile the
+  // layout - new panels appear at their default placement, unloaded panels'
+  // entries drop out.
+  React.useEffect(() => {
+    setLayout((l) => normalizeLayout(l, registered))
+  }, [registered])
 
   // Persist debounced (drags update the rect per pointermove); flush on
   // unload so the very last change survives a quick tab close.
@@ -191,7 +196,7 @@ export function PanelsProvider({
 
   const context: PanelsContextValue = {
     layout,
-    panels,
+    definitions,
     drag,
     onTabPointerDown,
     toggle: React.useCallback((groupId) => setLayout((l) => toggleCollapsed(l, groupId)), []),
@@ -217,7 +222,7 @@ export function PanelsProvider({
           {layout.floating.map((group) => (
             <FloatingGroupWindow key={group.id} group={group} />
           ))}
-          {drag && <DragGhost drag={drag} title={panels[drag.panel].title} />}
+          {drag && <DragGhost drag={drag} title={definitions.get(drag.panel)?.title ?? drag.panel} />}
         </>,
         document.body,
       )}
@@ -255,14 +260,14 @@ export function PanelDock() {
 }
 
 function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
-  const { panels, toFront, trackFloatingResize } = usePanels()
+  const { definitions, toFront, trackFloatingResize } = usePanels()
   const handles = group.collapsed
     ? RESIZE_HANDLES.filter((h) => h.direction === 'e' || h.direction === 'w')
     : RESIZE_HANDLES
   return (
     <div
       role="dialog"
-      aria-label={group.panels.map((panel) => panels[panel].title).join(', ')}
+      aria-label={group.panels.map((panel) => definitions.get(panel)?.title ?? panel).join(', ')}
       className="fixed z-100 flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg"
       style={{
         left: group.rect.x,
@@ -287,7 +292,7 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
 }
 
 function GroupTabBar({ group, floating = false }: { group: PanelGroup; floating?: boolean }) {
-  const { panels, drag, onTabPointerDown, toggle, trackFloatingDrag } = usePanels()
+  const { definitions, drag, onTabPointerDown, toggle, trackFloatingDrag } = usePanels()
   const dropIndex =
     drag?.target.kind === 'tabs' && drag.target.groupId === group.id
       ? Math.min(drag.target.index, group.panels.length)
@@ -317,7 +322,7 @@ function GroupTabBar({ group, floating = false }: { group: PanelGroup; floating?
               drag?.panel === panel && 'opacity-50',
             )}
           >
-            {panels[panel].title}
+            {definitions.get(panel)?.title ?? panel}
           </button>
         </React.Fragment>
       ))}
@@ -340,17 +345,23 @@ function GroupTabBar({ group, floating = false }: { group: PanelGroup; floating?
 }
 
 function GroupBody({ group }: { group: PanelGroup }) {
-  const { panels } = usePanels()
+  const { definitions } = usePanels()
   return (
     // The body doubles as a drop zone that appends to this group's tabs.
     <div data-panel-drop="tabs" data-group-id={group.id} data-append className="flex min-h-0 flex-1 flex-col">
-      {group.panels.map((panel) => (
-        // Inactive tabs stay mounted (hidden) so e.g. tree expansion state
-        // survives tab switches.
-        <div key={panel} className={cn('min-h-0 flex-1 overflow-y-auto', panel !== group.active && 'hidden')}>
-          {panels[panel].content}
-        </div>
-      ))}
+      {group.panels.map((panel) => {
+        // Unregistered ids only exist for the render before the layout
+        // reconciles with the registry - skip them.
+        const definition = definitions.get(panel)
+        if (!definition) return null
+        return (
+          // Inactive tabs stay mounted (hidden) so e.g. tree expansion state
+          // survives tab switches.
+          <div key={panel} className={cn('min-h-0 flex-1 overflow-y-auto', panel !== group.active && 'hidden')}>
+            <definition.component />
+          </div>
+        )
+      })}
     </div>
   )
 }

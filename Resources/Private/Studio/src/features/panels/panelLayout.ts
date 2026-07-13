@@ -1,15 +1,18 @@
 import { clampToViewport, type PanelRect } from './geometry'
+import type { PanelDefinition } from './registry'
 
 /**
- * The panel layout model: every panel lives in exactly one group; a group is
- * either docked in the sidebar (vertical stack) or floating (free rect,
- * array order = z-order, last on top). Panels in a group render as tabs.
- * The whole layout persists to localStorage and is normalized on load, so
- * added/renamed panels and corrupt stored state degrade gracefully.
+ * The panel layout model: every registered panel lives in exactly one group;
+ * a group is either docked in the sidebar (vertical stack) or floating (free
+ * rect, array order = z-order, last on top). Panels in a group render as
+ * tabs. The whole layout persists to localStorage and is normalized against
+ * the registered panel set - on load and whenever the set changes - so
+ * unknown panels drop out and missing ones appear at their default
+ * placement.
  */
 
-export const PANEL_IDS = ['documents', 'outline', 'inspector'] as const
-export type PanelId = (typeof PANEL_IDS)[number]
+/** A registered panel's id. */
+export type PanelId = string
 
 export type PanelGroup = {
   id: string
@@ -44,35 +47,32 @@ export type TabDrop = {
 
 const DEFAULT_FLOAT_SIZE = { width: 340, height: 440 }
 
-/** Where the inspector historically sat: right edge, lower half. */
-function defaultInspectorRect(): PanelRect {
-  return clampToViewport({
-    width: 384,
-    height: Math.round(window.innerHeight / 2) - 16,
-    x: window.innerWidth - 384 - 16,
-    y: Math.round(window.innerHeight / 2) + 8,
-  })
-}
-
 function newGroup(panel: PanelId): PanelGroup {
   return { id: crypto.randomUUID(), panels: [panel], active: panel, collapsed: false }
 }
 
-export function loadLayout(storageKey: string): PanelLayout {
+export function loadLayout(storageKey: string, definitions: PanelDefinition[]): PanelLayout {
   let stored: unknown = null
   try {
     stored = JSON.parse(localStorage.getItem(storageKey) ?? '')
   } catch {
     /* nothing stored or unparsable - the default layout applies */
   }
-  return normalizeLayout(stored)
+  return normalizeLayout(stored, definitions)
 }
 
 export function saveLayout(storageKey: string, layout: PanelLayout): void {
   localStorage.setItem(storageKey, JSON.stringify(layout))
 }
 
-function normalizeLayout(stored: unknown): PanelLayout {
+/**
+ * Reconcile a stored (or live) layout with the registered panels: drop
+ * unregistered and duplicate panels, drop empty groups, repair active tabs
+ * and rects, then place registered panels the layout does not contain at
+ * their default placement. Accepts arbitrary junk for `stored`.
+ */
+export function normalizeLayout(stored: unknown, definitions: PanelDefinition[]): PanelLayout {
+  const known = new Map(definitions.map((d) => [d.id, d]))
   const seenPanels = new Set<PanelId>()
   const usedIds = new Set<string>()
   const s = stored as { dock?: unknown; floating?: unknown } | null
@@ -80,7 +80,7 @@ function normalizeLayout(stored: unknown): PanelLayout {
   const sanitizeGroup = (value: unknown): PanelGroup | null => {
     const g = value as Partial<PanelGroup> | null
     const panels = (Array.isArray(g?.panels) ? g.panels : []).filter(
-      (p): p is PanelId => PANEL_IDS.includes(p as PanelId) && !seenPanels.has(p as PanelId),
+      (p): p is PanelId => typeof p === 'string' && known.has(p) && !seenPanels.has(p),
     )
     if (panels.length === 0) return null
     panels.forEach((p) => seenPanels.add(p))
@@ -105,15 +105,25 @@ function normalizeLayout(stored: unknown): PanelLayout {
     const group = sanitizeGroup(value)
     if (!group) continue
     const rect = (value as { rect?: Partial<PanelRect> }).rect
-    const valid =
-      rect && [rect.x, rect.y, rect.width, rect.height].every((v) => Number.isFinite(v))
-    floating.push({ ...group, rect: valid ? clampToViewport(rect as PanelRect) : defaultInspectorRect() })
+    const valid = rect && [rect.x, rect.y, rect.width, rect.height].every((v) => Number.isFinite(v))
+    floating.push({
+      ...group,
+      rect: valid
+        ? clampToViewport(rect as PanelRect)
+        : clampToViewport({ x: 80, y: 80, ...DEFAULT_FLOAT_SIZE }),
+    })
   }
 
-  // Panels missing from the stored layout appear at their default spot.
-  if (!seenPanels.has('documents')) dock.push(newGroup('documents'))
-  if (!seenPanels.has('outline')) dock.push(newGroup('outline'))
-  if (!seenPanels.has('inspector')) floating.push({ ...newGroup('inspector'), rect: defaultInspectorRect() })
+  // Registered panels missing from the layout appear at their default spot,
+  // in registration order.
+  for (const definition of definitions) {
+    if (seenPanels.has(definition.id)) continue
+    if (definition.defaultPlacement.kind === 'dock') {
+      dock.push(newGroup(definition.id))
+    } else {
+      floating.push({ ...newGroup(definition.id), rect: clampToViewport(definition.defaultPlacement.rect()) })
+    }
+  }
 
   return { dock, floating }
 }
