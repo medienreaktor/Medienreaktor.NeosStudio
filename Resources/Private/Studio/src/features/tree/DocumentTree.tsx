@@ -71,14 +71,11 @@ export function DocumentTree({
       const data = item.getItemData()
       return data === ROOT_ID || data === null ? '…' : nodeLabel(data)
     },
-    // Children of tree expansions carry a document-filtered hasChildren
-    // ("has document children"), so content-only documents render as leaves.
-    // The site node's flag comes from an unfiltered single-node fetch (it
-    // counts content children too), so it is always treated as expandable.
+    // Every item's hasChildren is fetched document-filtered ("has document
+    // children"), so content-only documents render as leaves.
     isItemFolder: (item) => {
       const data = item.getItemData()
       if (data === ROOT_ID || data === null) return true
-      if (data.address === site.nodeAddress) return true
       return data.hasChildren
     },
     onPrimaryAction: (item) => {
@@ -89,7 +86,7 @@ export function DocumentTree({
       getItem: async (itemId): Promise<TreeItemData> => {
         if (itemId === ROOT_ID) return ROOT_ID
         try {
-          return await fetchNode(itemId)
+          return await fetchNode(itemId, DOCUMENT_NODE_TYPE)
         } catch (e) {
           setLoadError(String(e))
           throw e
@@ -99,7 +96,10 @@ export function DocumentTree({
         try {
           if (itemId === ROOT_ID) {
             if (site.nodeAddress === null) return []
-            const siteNode = await fetchNode(site.nodeAddress)
+            const siteNode = await fetchNode(
+              site.nodeAddress,
+              DOCUMENT_NODE_TYPE,
+            )
             return [{ id: siteNode.address, data: siteNode as TreeItemData }]
           }
           const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)

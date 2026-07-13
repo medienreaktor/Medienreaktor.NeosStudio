@@ -68,11 +68,22 @@ export function useNode(address: string, enabled = true) {
   })
 }
 
-/** Imperative variant for non-hook contexts (e.g. the tree data loader). */
-export function fetchNode(address: string): Promise<NodeDto> {
+/**
+ * Imperative variant for non-hook contexts (e.g. the tree data loader).
+ * Pass the same nodeTypes filter the caller uses for hasChildren elsewhere
+ * (e.g. a tree's children fetch), or it is reported unfiltered ("has any
+ * children").
+ */
+export function fetchNode(
+  address: string,
+  nodeTypes?: string,
+): Promise<NodeDto> {
   return queryClient.fetchQuery({
-    queryKey: queryKeys.nodes.byAddress(address),
-    queryFn: () => apiFetch<NodeDto>(`/nodes/${address}`),
+    queryKey: queryKeys.nodes.byAddress(address, nodeTypes),
+    queryFn: () =>
+      apiFetch<NodeDto>(
+        `/nodes/${address}${nodeTypes ? `?nodeTypes=${encodeURIComponent(nodeTypes)}` : ''}`,
+      ),
   })
 }
 
@@ -135,7 +146,14 @@ export async function fetchChildren(
       ),
   })
   for (const node of nodes) {
-    queryClient.setQueryData(queryKeys.nodes.byAddress(node.address), node)
+    // Seed under the same filter this list was fetched with, so a later
+    // fetchNode(address, nodeTypes) with a matching filter resolves from
+    // cache instead of re-fetching an unfiltered (differently-scoped)
+    // hasChildren.
+    queryClient.setQueryData(
+      queryKeys.nodes.byAddress(node.address, nodeTypes),
+      node,
+    )
   }
   return nodes
 }

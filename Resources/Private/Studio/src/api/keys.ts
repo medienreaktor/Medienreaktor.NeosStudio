@@ -23,7 +23,10 @@ export const queryKeys = {
   dimensions: ['dimensions'] as const,
   nodes: {
     all: ['nodes'] as const,
-    byAddress: (address: string) => ['nodes', address] as const,
+    /** Prefix covering every cached variant (any nodeTypes filter) of one address - for invalidation, not for reading. */
+    node: (address: string) => ['nodes', address] as const,
+    byAddress: (address: string, nodeTypes?: string) =>
+      ['nodes', address, { nodeTypes: nodeTypes ?? null }] as const,
     children: (address: string, nodeTypes?: string) =>
       ['nodes', address, 'children', { nodeTypes: nodeTypes ?? null }] as const,
     ancestors: (address: string, nodeTypes?: string) =>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { TreeInstance } from '@headless-tree/core'
+import type { AsyncDataLoaderDataRef, TreeInstance } from '@headless-tree/core'
 
 /**
  * An edit that happened elsewhere (preview, inspector, context menu); token
@@ -30,10 +30,23 @@ export function useNodeEditRefresh<T>(
   useEffect(() => {
     if (lastEdit === null) return
     if (lastEdit.addresses.includes(ALL_NODES)) {
-      // Re-fetch every loaded item and the (never listed) root. Optimistic
-      // invalidation keeps the old rows on screen until fresh data arrives
-      // instead of flashing every label to a placeholder.
-      for (const item of [tree.getItemInstance(rootId), ...tree.getItems()]) {
+      // Re-fetch every loaded item and the (never listed) root - not just
+      // the currently visible ones. tree.getItems() only walks expanded
+      // items, so a collapsed folder's own (previously loaded) descendants
+      // would otherwise keep their pre-change data/children forever, since
+      // headless-tree serves cached children ids as-is once loaded.
+      // Optimistic invalidation keeps the old rows on screen until fresh
+      // data arrives instead of flashing every label to a placeholder.
+      const loadedIds = Object.keys(
+        tree.getDataRef<AsyncDataLoaderDataRef>().current.itemData ?? {},
+      )
+      const ids = new Set([
+        rootId,
+        ...loadedIds,
+        ...tree.getItems().map((item) => item.getId()),
+      ])
+      for (const id of ids) {
+        const item = tree.getItemInstance(id)
         void item?.invalidateItemData(true)
         void item?.invalidateChildrenIds(true)
       }

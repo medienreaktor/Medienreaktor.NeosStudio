@@ -66,7 +66,7 @@ export async function persistPropertyChange(
     await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
   } else {
     await queryClient.invalidateQueries({
-      queryKey: queryKeys.nodes.byAddress(address),
+      queryKey: queryKeys.nodes.node(address),
     })
   }
   // Refresh the pending-changes badges.

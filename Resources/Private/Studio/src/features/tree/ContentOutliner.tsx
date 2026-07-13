@@ -112,7 +112,7 @@ function OutlinerTree({
       getItem: async (itemId): Promise<NodeDto | null> => {
         if (itemId === document.address) return document
         try {
-          return await fetchNode(itemId)
+          return await fetchNode(itemId, CONTENT_NODE_TYPES)
         } catch (e) {
           setLoadError(String(e))
           throw e
