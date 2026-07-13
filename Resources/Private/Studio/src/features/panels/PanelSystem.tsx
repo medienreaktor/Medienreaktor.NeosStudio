@@ -3,7 +3,13 @@ import { createPortal } from 'react-dom'
 import { ChevronDownIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { clampToViewport, RESIZE_HANDLES, type PanelRect, type ResizeDirection, resizeRect } from './geometry'
+import {
+  clampToViewport,
+  RESIZE_HANDLES,
+  type PanelRect,
+  type ResizeDirection,
+  resizeRect,
+} from './geometry'
 import {
   activatePanel,
   applyDrop,
@@ -43,28 +49,45 @@ type PanelsContextValue = {
   layout: PanelLayout
   definitions: Map<PanelId, PanelDefinition>
   drag: TabDrop | null
-  onTabPointerDown: (e: React.PointerEvent<HTMLElement>, groupId: string, panel: PanelId) => void
+  onTabPointerDown: (
+    e: React.PointerEvent<HTMLElement>,
+    groupId: string,
+    panel: PanelId,
+  ) => void
   toggle: (groupId: string) => void
   toFront: (groupId: string) => void
-  trackFloatingDrag: (e: React.PointerEvent<HTMLElement>, groupId: string) => void
-  trackFloatingResize: (e: React.PointerEvent<HTMLElement>, groupId: string, direction: ResizeDirection) => void
+  trackFloatingDrag: (
+    e: React.PointerEvent<HTMLElement>,
+    groupId: string,
+  ) => void
+  trackFloatingResize: (
+    e: React.PointerEvent<HTMLElement>,
+    groupId: string,
+    direction: ResizeDirection,
+  ) => void
 }
 
 const PanelsContext = React.createContext<PanelsContextValue | null>(null)
 
 function usePanels(): PanelsContextValue {
   const context = React.useContext(PanelsContext)
-  if (!context) throw new Error('Panel components must live inside <PanelsProvider>')
+  if (!context)
+    throw new Error('Panel components must live inside <PanelsProvider>')
   return context
 }
 
 /** Hit-test the pointer against the drop zones in the DOM. */
 function findDropTarget(x: number, y: number): DropTarget {
-  const zone = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-panel-drop]')
+  const zone = document
+    .elementFromPoint(x, y)
+    ?.closest<HTMLElement>('[data-panel-drop]')
   if (zone?.dataset.panelDrop === 'tabs' && zone.dataset.groupId) {
     // A group's body appends; its tab bar inserts at the pointer's position.
-    if ('append' in zone.dataset) return { kind: 'tabs', groupId: zone.dataset.groupId, index: Infinity }
-    const tabs = Array.from(zone.querySelectorAll<HTMLElement>('[data-panel-tab]'))
+    if ('append' in zone.dataset)
+      return { kind: 'tabs', groupId: zone.dataset.groupId, index: Infinity }
+    const tabs = Array.from(
+      zone.querySelectorAll<HTMLElement>('[data-panel-tab]'),
+    )
     const index = tabs.filter((tab) => {
       const r = tab.getBoundingClientRect()
       return r.left + r.width / 2 < x
@@ -72,7 +95,9 @@ function findDropTarget(x: number, y: number): DropTarget {
     return { kind: 'tabs', groupId: zone.dataset.groupId, index }
   }
   if (zone?.dataset.panelDrop === 'dock') {
-    const groups = Array.from(zone.querySelectorAll<HTMLElement>('[data-panel-group]'))
+    const groups = Array.from(
+      zone.querySelectorAll<HTMLElement>('[data-panel-group]'),
+    )
     const index = groups.filter((group) => {
       const r = group.getBoundingClientRect()
       return r.top + r.height / 2 < y
@@ -87,8 +112,13 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
     (onChange) => panelRegistry.subscribe(onChange),
     () => panelRegistry.getAll(),
   )
-  const definitions = React.useMemo(() => new Map(registered.map((d) => [d.id, d])), [registered])
-  const [layout, setLayout] = React.useState<PanelLayout>(() => loadLayout(STORAGE_KEY, panelRegistry.getAll()))
+  const definitions = React.useMemo(
+    () => new Map(registered.map((d) => [d.id, d])),
+    [registered],
+  )
+  const [layout, setLayout] = React.useState<PanelLayout>(() =>
+    loadLayout(STORAGE_KEY, panelRegistry.getAll()),
+  )
   const [drag, setDrag] = React.useState<TabDrop | null>(null)
   const layoutRef = React.useRef(layout)
   layoutRef.current = layout
@@ -138,11 +168,18 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
       handle.setPointerCapture(e.pointerId)
       const startX = e.clientX
       const startY = e.clientY
-      const sourceGroup = layoutRef.current.floating.find((g) => g.id === groupId)
-      const sourceRect = sourceGroup && sourceGroup.panels.length === 1 ? sourceGroup.rect : null
+      const sourceGroup = layoutRef.current.floating.find(
+        (g) => g.id === groupId,
+      )
+      const sourceRect =
+        sourceGroup && sourceGroup.panels.length === 1 ? sourceGroup.rect : null
       let current: TabDrop | null = null
       const onMove = (ev: PointerEvent) => {
-        if (!current && Math.hypot(ev.clientX - startX, ev.clientY - startY) < DRAG_THRESHOLD) return
+        if (
+          !current &&
+          Math.hypot(ev.clientX - startX, ev.clientY - startY) < DRAG_THRESHOLD
+        )
+          return
         current = {
           panel,
           fromGroupId: groupId,
@@ -199,8 +236,14 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
     definitions,
     drag,
     onTabPointerDown,
-    toggle: React.useCallback((groupId) => setLayout((l) => toggleCollapsed(l, groupId)), []),
-    toFront: React.useCallback((groupId) => setLayout((l) => bringToFront(l, groupId)), []),
+    toggle: React.useCallback(
+      (groupId) => setLayout((l) => toggleCollapsed(l, groupId)),
+      [],
+    ),
+    toFront: React.useCallback(
+      (groupId) => setLayout((l) => bringToFront(l, groupId)),
+      [],
+    ),
     trackFloatingDrag: React.useCallback(
       (e, groupId) =>
         trackFloating(e, groupId, (start, dx, dy) =>
@@ -209,7 +252,10 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
       [trackFloating],
     ),
     trackFloatingResize: React.useCallback(
-      (e, groupId, direction) => trackFloating(e, groupId, (start, dx, dy) => resizeRect(start, direction, dx, dy)),
+      (e, groupId, direction) =>
+        trackFloating(e, groupId, (start, dx, dy) =>
+          resizeRect(start, direction, dx, dy),
+        ),
       [trackFloating],
     ),
   }
@@ -222,7 +268,12 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
           {layout.floating.map((group) => (
             <FloatingGroupWindow key={group.id} group={group} />
           ))}
-          {drag && <DragGhost drag={drag} title={definitions.get(drag.panel)?.title ?? drag.panel} />}
+          {drag && (
+            <DragGhost
+              drag={drag}
+              title={definitions.get(drag.panel)?.title ?? drag.panel}
+            />
+          )}
         </>,
         document.body,
       )}
@@ -235,7 +286,10 @@ export function PanelDock() {
   const { layout, drag } = usePanels()
   const gapIndex = drag?.target.kind === 'dock-gap' ? drag.target.index : null
   return (
-    <div data-panel-drop="dock" className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+    <div
+      data-panel-drop="dock"
+      className="flex min-h-0 flex-1 flex-col gap-2 p-2"
+    >
       {layout.dock.map((group, index) => (
         <React.Fragment key={group.id}>
           {gapIndex === index && <DockGapMarker />}
@@ -253,7 +307,9 @@ export function PanelDock() {
       ))}
       {gapIndex !== null && gapIndex >= layout.dock.length && <DockGapMarker />}
       {layout.dock.length === 0 && (
-        <div className="grid flex-1 place-items-center text-xs text-muted-foreground">Drag panels here</div>
+        <div className="grid flex-1 place-items-center text-xs text-muted-foreground">
+          Drag panels here
+        </div>
       )}
     </div>
   )
@@ -267,7 +323,9 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
   return (
     <div
       role="dialog"
-      aria-label={group.panels.map((panel) => definitions.get(panel)?.title ?? panel).join(', ')}
+      aria-label={group.panels
+        .map((panel) => definitions.get(panel)?.title ?? panel)
+        .join(', ')}
       className="fixed z-100 flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg"
       style={{
         left: group.rect.x,
@@ -291,8 +349,15 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
   )
 }
 
-function GroupTabBar({ group, floating = false }: { group: PanelGroup; floating?: boolean }) {
-  const { definitions, drag, onTabPointerDown, toggle, trackFloatingDrag } = usePanels()
+function GroupTabBar({
+  group,
+  floating = false,
+}: {
+  group: PanelGroup
+  floating?: boolean
+}) {
+  const { definitions, drag, onTabPointerDown, toggle, trackFloatingDrag } =
+    usePanels()
   const dropIndex =
     drag?.target.kind === 'tabs' && drag.target.groupId === group.id
       ? Math.min(drag.target.index, group.panels.length)
@@ -328,19 +393,33 @@ function GroupTabBar({ group, floating = false }: { group: PanelGroup; floating?
           </button>
         </React.Fragment>
       ))}
-      {dropIndex !== null && dropIndex >= group.panels.length && <TabDropMarker />}
+      {dropIndex !== null && dropIndex >= group.panels.length && (
+        <TabDropMarker />
+      )}
       {/* The spare bar area drags the whole floating group, Adobe-style. */}
       <div
-        className={cn('h-full min-w-4 flex-1', floating && 'cursor-grab touch-none')}
-        onPointerDown={floating ? (e) => trackFloatingDrag(e, group.id) : undefined}
+        className={cn(
+          'h-full min-w-4 flex-1',
+          floating && 'cursor-grab touch-none',
+        )}
+        onPointerDown={
+          floating ? (e) => trackFloatingDrag(e, group.id) : undefined
+        }
       />
       <button
         type="button"
-        aria-label={group.collapsed ? 'Expand panel group' : 'Collapse panel group'}
+        aria-label={
+          group.collapsed ? 'Expand panel group' : 'Collapse panel group'
+        }
         onClick={() => toggle(group.id)}
         className="rounded p-1 text-muted-foreground hover:text-foreground"
       >
-        <ChevronDownIcon className={cn('size-3.5 transition-transform', group.collapsed && '-rotate-90')} />
+        <ChevronDownIcon
+          className={cn(
+            'size-3.5 transition-transform',
+            group.collapsed && '-rotate-90',
+          )}
+        />
       </button>
     </div>
   )
@@ -350,7 +429,12 @@ function GroupBody({ group }: { group: PanelGroup }) {
   const { definitions } = usePanels()
   return (
     // The body doubles as a drop zone that appends to this group's tabs.
-    <div data-panel-drop="tabs" data-group-id={group.id} data-append className="flex min-h-0 flex-1 flex-col">
+    <div
+      data-panel-drop="tabs"
+      data-group-id={group.id}
+      data-append
+      className="flex min-h-0 flex-1 flex-col"
+    >
       {group.panels.map((panel) => {
         // Unregistered ids only exist for the render before the layout
         // reconciles with the registry - skip them.
@@ -359,7 +443,13 @@ function GroupBody({ group }: { group: PanelGroup }) {
         return (
           // Inactive tabs stay mounted (hidden) so e.g. tree expansion state
           // survives tab switches.
-          <div key={panel} className={cn('min-h-0 flex-1 overflow-y-auto', panel !== group.active && 'hidden')}>
+          <div
+            key={panel}
+            className={cn(
+              'min-h-0 flex-1 overflow-y-auto',
+              panel !== group.active && 'hidden',
+            )}
+          >
             <definition.component />
           </div>
         )
@@ -381,5 +471,9 @@ function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
 
 // Negative margins cancel the marker's own footprint (its box plus the extra
 // flex gap), so showing it does not shift the layout being hit-tested.
-const TabDropMarker = () => <div className="-mx-0.5 h-5 w-0.5 shrink-0 rounded bg-primary" />
-const DockGapMarker = () => <div className="-my-1.25 h-0.5 shrink-0 rounded bg-primary" />
+const TabDropMarker = () => (
+  <div className="-mx-0.5 h-5 w-0.5 shrink-0 rounded bg-primary" />
+)
+const DockGapMarker = () => (
+  <div className="-my-1.25 h-0.5 shrink-0 rounded bg-primary" />
+)

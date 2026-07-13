@@ -1,7 +1,10 @@
 import { fetchNode } from '@/api/nodes'
 import { useStudio } from '@/app/StudioContext'
 import { NodeCreationPanel } from '@/features/creation/NodeCreationPanel'
-import type { NodeMenuAction, NodeMenuTarget } from '@/features/editing/NodeContextMenu'
+import type {
+  NodeMenuAction,
+  NodeMenuTarget,
+} from '@/features/editing/NodeContextMenu'
 import { InspectorPanel } from '@/features/inspector/Inspector'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
@@ -33,9 +36,18 @@ function reportNodeAction(
 }
 
 function DocumentsPanel() {
-  const { site, workspaceName, selectedDocument, selectDocument, lastEdit, nodeEdited } = useStudio()
+  const {
+    site,
+    workspaceName,
+    selectedDocument,
+    selectDocument,
+    lastEdit,
+    nodeEdited,
+  } = useStudio()
   if (!site || !workspaceName) {
-    return <div className="p-4 text-xs text-muted-foreground">Loading sites…</div>
+    return (
+      <div className="p-4 text-xs text-muted-foreground">Loading sites…</div>
+    )
   }
   return (
     <div className="p-2">
@@ -50,7 +62,11 @@ function DocumentsPanel() {
         onNodeAction={(action, target) => {
           reportNodeAction(nodeEdited, action, target)
           // The deleted document cannot stay selected - browse its parent.
-          if (action === 'delete' && target.parentAddress && selectedDocument?.address === target.address) {
+          if (
+            action === 'delete' &&
+            target.parentAddress &&
+            selectedDocument?.address === target.address
+          ) {
             fetchNode(target.parentAddress)
               .then(selectDocument)
               .catch(() => {
@@ -64,7 +80,14 @@ function DocumentsPanel() {
 }
 
 function OutlinePanel() {
-  const { selectedDocument, workspaceName, inspectedNode, lastEdit, inspectNode, nodeEdited } = useStudio()
+  const {
+    selectedDocument,
+    workspaceName,
+    inspectedNode,
+    lastEdit,
+    inspectNode,
+    nodeEdited,
+  } = useStudio()
   return (
     <div className="p-2">
       <ContentOutliner
@@ -73,7 +96,9 @@ function OutlinePanel() {
         selectedAddress={inspectedNode?.address ?? null}
         lastEdit={lastEdit}
         onSelect={inspectNode}
-        onNodeAction={(action, target) => reportNodeAction(nodeEdited, action, target)}
+        onNodeAction={(action, target) =>
+          reportNodeAction(nodeEdited, action, target)
+        }
       />
     </div>
   )

@@ -15,7 +15,10 @@ import { config } from '@/config'
 
 /** Values are plain strings or plural forms (an array, singular first). */
 type TranslationValue = string | string[]
-type XliffBundle = Record<string, Record<string, Record<string, TranslationValue>>>
+type XliffBundle = Record<
+  string,
+  Record<string, Record<string, TranslationValue>>
+>
 
 let bundle: XliffBundle | null = null
 

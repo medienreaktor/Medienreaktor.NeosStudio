@@ -259,7 +259,12 @@ function onHandleClick(): void {
     contextPath,
     parentContextPath: parentCollectionContextPath(element),
     hidden: element.hasAttribute(HIDDEN_ATTRIBUTE),
-    buttonRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+    buttonRect: {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    },
   })
 }
 
@@ -313,7 +318,9 @@ function updateEmptyState(element: HTMLElement): void {
   if (!element.hasAttribute(PLACEHOLDER_ATTRIBUTE)) return
   const empty =
     (element.textContent ?? '').trim() === '' &&
-    element.querySelector('img,picture,video,audio,iframe,svg,object,embed,hr,table') === null
+    element.querySelector(
+      'img,picture,video,audio,iframe,svg,object,embed,hr,table',
+    ) === null
   element.classList.toggle(EMPTY_CLASS, empty)
 }
 
@@ -445,8 +452,10 @@ let activeDrag: {
 } | null = null
 
 /** The insertion point under the pointer; before === null appends. */
-let currentDrop: { collection: HTMLElement; before: HTMLElement | null } | null =
-  null
+let currentDrop: {
+  collection: HTMLElement
+  before: HTMLElement | null
+} | null = null
 
 function collectionAllows(
   collection: HTMLElement,
@@ -509,7 +518,9 @@ function isNoOpMove(
   collection: HTMLElement,
   before: HTMLElement | null,
 ): boolean {
-  if (element.parentElement?.closest(`[${COLLECTION_ATTRIBUTE}]`) !== collection)
+  if (
+    element.parentElement?.closest(`[${COLLECTION_ATTRIBUTE}]`) !== collection
+  )
     return false
   const next =
     childElementsOf(collection).find(
@@ -647,11 +658,16 @@ function onDrop(event: DragEvent): void {
     }
   } else if (parentContextPath && drag.movingElement !== null) {
     const nodeContextPath = drag.movingElement.getAttribute(WRAPPER_ATTRIBUTE)
-    if (nodeContextPath && !isNoOpMove(drag.movingElement, collection, before)) {
+    if (
+      nodeContextPath &&
+      !isNoOpMove(drag.movingElement, collection, before)
+    ) {
       message = {
         type: 'neos-studio/move-node-request',
         nodeContextPath,
-        sourceParentContextPath: parentCollectionContextPath(drag.movingElement),
+        sourceParentContextPath: parentCollectionContextPath(
+          drag.movingElement,
+        ),
         parentContextPath,
         succeedingSiblingContextPath,
       }

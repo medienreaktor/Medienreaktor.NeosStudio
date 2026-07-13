@@ -16,7 +16,10 @@ export class ApiError extends Error {
  * 2xx and throws ApiError otherwise, so TanStack Query sees proper error
  * states (and the retry logic can distinguish 4xx from 5xx).
  */
-export async function apiFetch<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  init?: { method?: string; body?: unknown },
+): Promise<T> {
   const method = init?.method ?? 'GET'
   const body = init?.body !== undefined ? JSON.stringify(init.body) : undefined
 

@@ -18,7 +18,12 @@ export type GuestToHostMessage =
   /** The user followed a link to another document (from its preview URI). */
   | { type: 'neos-studio/navigate-to-node'; contextPath: string }
   /** An inline edit was committed (blur with changed content). */
-  | { type: 'neos-studio/property-changed'; contextPath: string; property: string; value: string }
+  | {
+      type: 'neos-studio/property-changed'
+      contextPath: string
+      property: string
+      value: string
+    }
   /**
    * A node type dragged from the creation panel was dropped into a content
    * collection. The new node goes before the succeeding sibling, or to the

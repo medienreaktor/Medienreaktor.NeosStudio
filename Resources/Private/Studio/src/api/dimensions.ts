@@ -37,7 +37,13 @@ export function useDimensions(enabled = true) {
   })
 }
 
-export function dimensionSpacePointEquals(a: DimensionSpacePoint, b: DimensionSpacePoint): boolean {
+export function dimensionSpacePointEquals(
+  a: DimensionSpacePoint,
+  b: DimensionSpacePoint,
+): boolean {
   const aKeys = Object.keys(a)
-  return aKeys.length === Object.keys(b).length && aKeys.every((key) => a[key] === b[key])
+  return (
+    aKeys.length === Object.keys(b).length &&
+    aKeys.every((key) => a[key] === b[key])
+  )
 }

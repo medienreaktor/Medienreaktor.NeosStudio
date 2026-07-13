@@ -48,10 +48,18 @@ export type TabDrop = {
 const DEFAULT_FLOAT_SIZE = { width: 340, height: 440 }
 
 function newGroup(panel: PanelId): PanelGroup {
-  return { id: crypto.randomUUID(), panels: [panel], active: panel, collapsed: false }
+  return {
+    id: crypto.randomUUID(),
+    panels: [panel],
+    active: panel,
+    collapsed: false,
+  }
 }
 
-export function loadLayout(storageKey: string, definitions: PanelDefinition[]): PanelLayout {
+export function loadLayout(
+  storageKey: string,
+  definitions: PanelDefinition[],
+): PanelLayout {
   let stored: unknown = null
   try {
     stored = JSON.parse(localStorage.getItem(storageKey) ?? '')
@@ -71,7 +79,10 @@ export function saveLayout(storageKey: string, layout: PanelLayout): void {
  * and rects, then place registered panels the layout does not contain at
  * their default placement. Accepts arbitrary junk for `stored`.
  */
-export function normalizeLayout(stored: unknown, definitions: PanelDefinition[]): PanelLayout {
+export function normalizeLayout(
+  stored: unknown,
+  definitions: PanelDefinition[],
+): PanelLayout {
   const known = new Map(definitions.map((d) => [d.id, d]))
   const seenPanels = new Set<PanelId>()
   const usedIds = new Set<string>()
@@ -80,16 +91,22 @@ export function normalizeLayout(stored: unknown, definitions: PanelDefinition[])
   const sanitizeGroup = (value: unknown): PanelGroup | null => {
     const g = value as Partial<PanelGroup> | null
     const panels = (Array.isArray(g?.panels) ? g.panels : []).filter(
-      (p): p is PanelId => typeof p === 'string' && known.has(p) && !seenPanels.has(p),
+      (p): p is PanelId =>
+        typeof p === 'string' && known.has(p) && !seenPanels.has(p),
     )
     if (panels.length === 0) return null
     panels.forEach((p) => seenPanels.add(p))
-    const id = typeof g?.id === 'string' && !usedIds.has(g.id) ? g.id : crypto.randomUUID()
+    const id =
+      typeof g?.id === 'string' && !usedIds.has(g.id)
+        ? g.id
+        : crypto.randomUUID()
     usedIds.add(id)
     return {
       id,
       panels,
-      active: panels.includes(g?.active as PanelId) ? (g!.active as PanelId) : panels[0],
+      active: panels.includes(g?.active as PanelId)
+        ? (g!.active as PanelId)
+        : panels[0],
       collapsed: g?.collapsed === true,
     }
   }
@@ -105,7 +122,9 @@ export function normalizeLayout(stored: unknown, definitions: PanelDefinition[])
     const group = sanitizeGroup(value)
     if (!group) continue
     const rect = (value as { rect?: Partial<PanelRect> }).rect
-    const valid = rect && [rect.x, rect.y, rect.width, rect.height].every((v) => Number.isFinite(v))
+    const valid =
+      rect &&
+      [rect.x, rect.y, rect.width, rect.height].every((v) => Number.isFinite(v))
     floating.push({
       ...group,
       rect: valid
@@ -121,29 +140,58 @@ export function normalizeLayout(stored: unknown, definitions: PanelDefinition[])
     if (definition.defaultPlacement.kind === 'dock') {
       dock.push(newGroup(definition.id))
     } else {
-      floating.push({ ...newGroup(definition.id), rect: clampToViewport(definition.defaultPlacement.rect()) })
+      floating.push({
+        ...newGroup(definition.id),
+        rect: clampToViewport(definition.defaultPlacement.rect()),
+      })
     }
   }
 
   return { dock, floating }
 }
 
-export function activatePanel(layout: PanelLayout, groupId: string, panel: PanelId): PanelLayout {
+export function activatePanel(
+  layout: PanelLayout,
+  groupId: string,
+  panel: PanelId,
+): PanelLayout {
   const update = <T extends PanelGroup>(g: T): T =>
     g.id === groupId && g.panels.includes(panel) ? { ...g, active: panel } : g
-  return { dock: layout.dock.map(update), floating: layout.floating.map(update) }
+  return {
+    dock: layout.dock.map(update),
+    floating: layout.floating.map(update),
+  }
 }
 
-export function toggleCollapsed(layout: PanelLayout, groupId: string): PanelLayout {
-  const update = <T extends PanelGroup>(g: T): T => (g.id === groupId ? { ...g, collapsed: !g.collapsed } : g)
-  return { dock: layout.dock.map(update), floating: layout.floating.map(update) }
+export function toggleCollapsed(
+  layout: PanelLayout,
+  groupId: string,
+): PanelLayout {
+  const update = <T extends PanelGroup>(g: T): T =>
+    g.id === groupId ? { ...g, collapsed: !g.collapsed } : g
+  return {
+    dock: layout.dock.map(update),
+    floating: layout.floating.map(update),
+  }
 }
 
-export function setFloatingRect(layout: PanelLayout, groupId: string, rect: PanelRect): PanelLayout {
-  return { ...layout, floating: layout.floating.map((g) => (g.id === groupId ? { ...g, rect } : g)) }
+export function setFloatingRect(
+  layout: PanelLayout,
+  groupId: string,
+  rect: PanelRect,
+): PanelLayout {
+  return {
+    ...layout,
+    floating: layout.floating.map((g) =>
+      g.id === groupId ? { ...g, rect } : g,
+    ),
+  }
 }
 
-export function bringToFront(layout: PanelLayout, groupId: string): PanelLayout {
+export function bringToFront(
+  layout: PanelLayout,
+  groupId: string,
+): PanelLayout {
   const index = layout.floating.findIndex((g) => g.id === groupId)
   if (index < 0 || index === layout.floating.length - 1) return layout
   const floating = [...layout.floating]
@@ -154,7 +202,13 @@ export function bringToFront(layout: PanelLayout, groupId: string): PanelLayout 
 
 /** Re-clamp all floating groups, e.g. after a window resize. */
 export function clampFloating(layout: PanelLayout): PanelLayout {
-  return { ...layout, floating: layout.floating.map((g) => ({ ...g, rect: clampToViewport(g.rect) })) }
+  return {
+    ...layout,
+    floating: layout.floating.map((g) => ({
+      ...g,
+      rect: clampToViewport(g.rect),
+    })),
+  }
 }
 
 /** Apply a finished tab drag: remove the panel from its group, reinsert per target. */
@@ -183,14 +237,21 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
       if (g.id !== target.groupId) return g
       let index = Math.min(target.index, g.panels.length)
       // Moving within the same group: the removal shifted later tabs left.
-      if (g.id === fromGroupId && removedTabIndex >= 0 && removedTabIndex < index) index -= 1
+      if (
+        g.id === fromGroupId &&
+        removedTabIndex >= 0 &&
+        removedTabIndex < index
+      )
+        index -= 1
       const panels = [...g.panels]
       panels.splice(index, 0, panel)
       // Expand so the dropped panel is visible right away.
       return { ...g, panels, active: panel, collapsed: false }
     }
     const next = { dock: dock.map(insert), floating: floating.map(insert) }
-    const landed = [...next.dock, ...next.floating].some((g) => g.panels.includes(panel))
+    const landed = [...next.dock, ...next.floating].some((g) =>
+      g.panels.includes(panel),
+    )
     // Target vanished (it was the emptied source group) - treat as a no-op.
     return landed ? next : layout
   }
@@ -206,6 +267,10 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
   // Tear out: keep the size it had when it floated alone, position the tab
   // bar under the pointer, and stack on top.
   const size = sourceRect ?? DEFAULT_FLOAT_SIZE
-  const rect = clampToViewport({ ...size, x: pointer.x - 48, y: pointer.y - 18 })
+  const rect = clampToViewport({
+    ...size,
+    x: pointer.x - 48,
+    y: pointer.y - 18,
+  })
   return { dock, floating: [...floating, { ...newGroup(panel), rect }] }
 }

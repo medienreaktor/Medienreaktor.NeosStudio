@@ -21,14 +21,25 @@ import {
 } from '@/components/ui/dialog'
 
 /** "English (US)" or "English (US), Customers" for multiple dimensions. */
-function pointLabel(point: DimensionSpacePoint, dimensions: ContentDimension[]): string {
+function pointLabel(
+  point: DimensionSpacePoint,
+  dimensions: ContentDimension[],
+): string {
   return dimensions
-    .map((dimension) => dimension.values.find((v) => v.value === point[dimension.id])?.label ?? point[dimension.id])
+    .map(
+      (dimension) =>
+        dimension.values.find((v) => v.value === point[dimension.id])?.label ??
+        point[dimension.id],
+    )
     .filter(Boolean)
     .join(', ')
 }
 
-function variantCommand(node: NodeDto, workspaceName: string, targetPoint: DimensionSpacePoint): Command {
+function variantCommand(
+  node: NodeDto,
+  workspaceName: string,
+  targetPoint: DimensionSpacePoint,
+): Command {
   return {
     type: 'CreateNodeVariant',
     payload: {
@@ -100,11 +111,18 @@ export function CreateVariantDialog({
       try {
         // Ancestors come closest-first; keep only documents that do not exist
         // in the target dimension and reverse to creation (top-down) order.
-        const ancestors = await fetchAncestors(document.address, DOCUMENT_NODE_TYPE)
+        const ancestors = await fetchAncestors(
+          document.address,
+          DOCUMENT_NODE_TYPE,
+        )
         const missing: NodeDto[] = []
         for (const ancestor of ancestors) {
           const variants = await fetchNodeVariants(ancestor.address)
-          if (!variants.coveredDimensionSpacePoints.some((point) => dimensionSpacePointEquals(point, targetPoint))) {
+          if (
+            !variants.coveredDimensionSpacePoints.some((point) =>
+              dimensionSpacePointEquals(point, targetPoint),
+            )
+          ) {
             missing.push(ancestor)
           }
         }
@@ -132,7 +150,12 @@ export function CreateVariantDialog({
       for (const doc of [...missingAncestors, document]) {
         commands.push(variantCommand(doc, workspaceName, targetPoint))
         if (copyContent) {
-          await collectContentCommands(doc, workspaceName, targetPoint, commands)
+          await collectContentCommands(
+            doc,
+            workspaceName,
+            targetPoint,
+            commands,
+          )
         }
       }
       await executeCommands(commands)
@@ -144,13 +167,20 @@ export function CreateVariantDialog({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && phase !== 'creating' && onCancel()}>
+    <Dialog
+      open
+      onOpenChange={(open) => !open && phase !== 'creating' && onCancel()}
+    >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create document in {pointLabel(targetPoint, dimensions)}?</DialogTitle>
+          <DialogTitle>
+            Create document in {pointLabel(targetPoint, dimensions)}?
+          </DialogTitle>
           <DialogDescription>
-            &ldquo;{nodeLabel(document)}&rdquo; does not exist in {pointLabel(targetPoint, dimensions)} yet.
-            {phase === 'analyzing' && ' Checking which parent documents are missing…'}
+            &ldquo;{nodeLabel(document)}&rdquo; does not exist in{' '}
+            {pointLabel(targetPoint, dimensions)} yet.
+            {phase === 'analyzing' &&
+              ' Checking which parent documents are missing…'}
             {missingAncestors.length > 0 &&
               ` ${missingAncestors.length} missing parent document${missingAncestors.length === 1 ? '' : 's'} will be created as well.`}
           </DialogDescription>
@@ -159,10 +189,18 @@ export function CreateVariantDialog({
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onCancel} disabled={phase === 'creating'}>
+          <Button
+            variant="ghost"
+            onClick={onCancel}
+            disabled={phase === 'creating'}
+          >
             Cancel
           </Button>
-          <Button variant="outline" onClick={() => create(false)} disabled={phase !== 'ready'}>
+          <Button
+            variant="outline"
+            onClick={() => create(false)}
+            disabled={phase !== 'ready'}
+          >
             Create empty
           </Button>
           <Button onClick={() => create(true)} disabled={phase !== 'ready'}>

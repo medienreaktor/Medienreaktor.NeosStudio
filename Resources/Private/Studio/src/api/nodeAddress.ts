@@ -41,6 +41,12 @@ export function addressFromContextPath(contextPath: string): string {
 }
 
 /** The address of the same node aggregate in another dimension space point. */
-export function addressInDimension(encoded: string, dimensionSpacePoint: DimensionSpacePoint): string {
-  return encodeNodeAddress({ ...decodeNodeAddress(encoded), dimensionSpacePoint })
+export function addressInDimension(
+  encoded: string,
+  dimensionSpacePoint: DimensionSpacePoint,
+): string {
+  return encodeNodeAddress({
+    ...decodeNodeAddress(encoded),
+    dimensionSpacePoint,
+  })
 }

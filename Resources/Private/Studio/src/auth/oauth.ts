@@ -29,7 +29,10 @@ function randomString(byteLength: number): string {
 }
 
 async function sha256Challenge(verifier: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(verifier),
+  )
   return base64UrlEncode(digest)
 }
 
@@ -43,7 +46,11 @@ export function getTokens(): Tokens | null {
   }
 }
 
-function storeTokens(data: { access_token: string; refresh_token?: string; expires_in: number }): void {
+function storeTokens(data: {
+  access_token: string
+  refresh_token?: string
+  expires_in: number
+}): void {
   const tokens: Tokens = {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
@@ -86,7 +93,9 @@ export async function handleRedirectCallback(): Promise<boolean> {
 
   if (error) {
     cleanUrl()
-    throw new Error(`Authorization failed: ${error} ${url.searchParams.get('error_description') ?? ''}`)
+    throw new Error(
+      `Authorization failed: ${error} ${url.searchParams.get('error_description') ?? ''}`,
+    )
   }
   if (!code) return false
 
@@ -111,7 +120,9 @@ export async function handleRedirectCallback(): Promise<boolean> {
   })
   if (!response.ok) {
     cleanUrl()
-    throw new Error(`Token exchange failed (${response.status}): ${await response.text()}`)
+    throw new Error(
+      `Token exchange failed (${response.status}): ${await response.text()}`,
+    )
   }
   storeTokens(await response.json())
   sessionStorage.removeItem(VERIFIER_KEY)

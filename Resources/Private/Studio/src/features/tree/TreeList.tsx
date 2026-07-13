@@ -26,8 +26,13 @@ export function TreeList<T>({
   const items = tree.getItems()
 
   return (
-    <div {...tree.getContainerProps(label)} className="flex flex-col outline-none">
-      {items.length === 0 && <div className="text-xs text-muted-foreground">{emptyText}</div>}
+    <div
+      {...tree.getContainerProps(label)}
+      className="flex flex-col outline-none select-none"
+    >
+      {items.length === 0 && (
+        <div className="text-xs text-muted-foreground">{emptyText}</div>
+      )}
       {items.map((item) => {
         const decor = decorate?.(item.getItemData()) ?? null
         return (
@@ -49,7 +54,9 @@ export function TreeList<T>({
               if (!e.shiftKey) {
                 // Internal anchor bookkeeping the selection feature does on
                 // click; kept so shift-range selection anchors correctly.
-                tree.getDataRef<{ selectUpToAnchorId?: string }>().current.selectUpToAnchorId = item.getId()
+                tree.getDataRef<{
+                  selectUpToAnchorId?: string
+                }>().current.selectUpToAnchorId = item.getId()
               }
               item.setFocused()
               item.primaryAction()
@@ -64,7 +71,7 @@ export function TreeList<T>({
             className={cn(
               'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm hover:bg-secondary',
               item.isSelected() && 'border-primary bg-secondary',
-              item.isFocused() && 'outline-1 outline-dotted outline-muted-foreground',
+              item.isFocused() && 'outline-0',
             )}
             style={{ paddingLeft: `${item.getItemMeta().level * 14 + 2}px` }}
           >
@@ -83,10 +90,31 @@ export function TreeList<T>({
                 }
               }}
             >
-              {item.isFolder() ? (item.isExpanded() ? '▾' : '▸') : ''}
+              {item.isFolder() ? (
+                item.isExpanded() ? (
+                  <i
+                    className={'fas fa-caret-down fa-fw text-[0.75rem]'}
+                    aria-hidden
+                  />
+                ) : (
+                  <i
+                    className={'fas fa-caret-right fa-fw text-[0.75rem]'}
+                    aria-hidden
+                  />
+                )
+              ) : (
+                ''
+              )}
             </span>
-            {decor?.icon && <span className="shrink-0 text-foreground">{decor.icon}</span>}
-            <span className={cn('overflow-hidden text-ellipsis', decor?.dimmed && 'opacity-50')}>
+            {decor?.icon && (
+              <span className="shrink-0 text-foreground">{decor.icon}</span>
+            )}
+            <span
+              className={cn(
+                'overflow-hidden text-ellipsis',
+                decor?.dimmed && 'opacity-50',
+              )}
+            >
               {item.isLoading() ? '…' : item.getItemName()}
             </span>
             {decor?.markers && (

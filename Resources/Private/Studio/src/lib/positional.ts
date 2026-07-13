@@ -22,14 +22,22 @@ type Parsed =
   | { kind: 'start' | 'end'; weight: number }
   | { kind: 'before' | 'after'; reference: string }
 
-function parse(position: string | number | null | undefined, declarationIndex: number): Parsed {
-  if (position === null || position === undefined) return { kind: 'middle', value: declarationIndex }
+function parse(
+  position: string | number | null | undefined,
+  declarationIndex: number,
+): Parsed {
+  if (position === null || position === undefined)
+    return { kind: 'middle', value: declarationIndex }
   if (typeof position === 'number') return { kind: 'middle', value: position }
   const trimmed = position.trim()
-  if (/^-?\d+$/.test(trimmed)) return { kind: 'middle', value: parseInt(trimmed, 10) }
+  if (/^-?\d+$/.test(trimmed))
+    return { kind: 'middle', value: parseInt(trimmed, 10) }
   const [word, argument] = trimmed.split(/\s+/, 2)
   if (word === 'start' || word === 'end') {
-    return { kind: word, weight: argument !== undefined ? parseInt(argument, 10) || 0 : 0 }
+    return {
+      kind: word,
+      weight: argument !== undefined ? parseInt(argument, 10) || 0 : 0,
+    }
   }
   if ((word === 'before' || word === 'after') && argument) {
     return { kind: word, reference: argument }
@@ -40,11 +48,23 @@ function parse(position: string | number | null | undefined, declarationIndex: n
 
 /** Returns the keys of the entries in position order. */
 export function sortByPosition(entries: Positioned[]): string[] {
-  const parsed = entries.map((entry, index) => ({ key: entry.key, spec: parse(entry.position, index) }))
+  const parsed = entries.map((entry, index) => ({
+    key: entry.key,
+    spec: parse(entry.position, index),
+  }))
 
-  const starts = parsed.filter((p) => p.spec.kind === 'start') as { key: string; spec: { weight: number } }[]
-  const middles = parsed.filter((p) => p.spec.kind === 'middle') as { key: string; spec: { value: number } }[]
-  const ends = parsed.filter((p) => p.spec.kind === 'end') as { key: string; spec: { weight: number } }[]
+  const starts = parsed.filter((p) => p.spec.kind === 'start') as {
+    key: string
+    spec: { weight: number }
+  }[]
+  const middles = parsed.filter((p) => p.spec.kind === 'middle') as {
+    key: string
+    spec: { value: number }
+  }[]
+  const ends = parsed.filter((p) => p.spec.kind === 'end') as {
+    key: string
+    spec: { weight: number }
+  }[]
 
   // Stable sorts - ties keep declaration order.
   const ordered = [
@@ -62,7 +82,11 @@ export function sortByPosition(entries: Positioned[]): string[] {
       if (spec.kind === 'before') ordered.unshift(key)
       else ordered.push(key)
     } else {
-      ordered.splice(spec.kind === 'before' ? referenceIndex : referenceIndex + 1, 0, key)
+      ordered.splice(
+        spec.kind === 'before' ? referenceIndex : referenceIndex + 1,
+        0,
+        key,
+      )
     }
   }
 

@@ -70,8 +70,12 @@ export async function deleteNode(address: string): Promise<void> {
 }
 
 export async function moveNode(request: MoveNodeRequest): Promise<void> {
-  const node = decodeNodeAddress(addressFromContextPath(request.nodeContextPath))
-  const parent = decodeNodeAddress(addressFromContextPath(request.parentContextPath))
+  const node = decodeNodeAddress(
+    addressFromContextPath(request.nodeContextPath),
+  )
+  const parent = decodeNodeAddress(
+    addressFromContextPath(request.parentContextPath),
+  )
   const payload: Record<string, unknown> = {
     workspaceName: node.workspaceName,
     dimensionSpacePoint: node.dimensionSpacePoint,

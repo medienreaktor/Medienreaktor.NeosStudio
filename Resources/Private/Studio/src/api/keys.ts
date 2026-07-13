@@ -27,7 +27,12 @@ export const queryKeys = {
     children: (address: string, nodeTypes?: string) =>
       ['nodes', address, 'children', { nodeTypes: nodeTypes ?? null }] as const,
     ancestors: (address: string, nodeTypes?: string) =>
-      ['nodes', address, 'ancestors', { nodeTypes: nodeTypes ?? null }] as const,
+      [
+        'nodes',
+        address,
+        'ancestors',
+        { nodeTypes: nodeTypes ?? null },
+      ] as const,
     variants: (address: string) => ['nodes', address, 'variants'] as const,
   },
 }

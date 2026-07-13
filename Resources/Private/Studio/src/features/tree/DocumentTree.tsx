@@ -1,11 +1,27 @@
 import { useState } from 'react'
-import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature, type ItemInstance } from '@headless-tree/core'
+import {
+  asyncDataLoaderFeature,
+  hotkeysCoreFeature,
+  selectionFeature,
+  type ItemInstance,
+} from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
-import { DOCUMENT_NODE_TYPE, fetchChildren, fetchNode, isExplicitlyHidden, nodeLabel, type NodeDto } from '@/api/nodes'
+import {
+  DOCUMENT_NODE_TYPE,
+  fetchChildren,
+  fetchNode,
+  isExplicitlyHidden,
+  nodeLabel,
+  type NodeDto,
+} from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
 import { config } from '@/config'
-import { NodeContextMenu, type NodeMenuAction, type NodeMenuTarget } from '@/features/editing/NodeContextMenu'
+import {
+  NodeContextMenu,
+  type NodeMenuAction,
+  type NodeMenuTarget,
+} from '@/features/editing/NodeContextMenu'
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
@@ -87,7 +103,10 @@ export function DocumentTree({
             return [{ id: siteNode.address, data: siteNode as TreeItemData }]
           }
           const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
-          return children.map((node) => ({ id: node.address, data: node as TreeItemData }))
+          return children.map((node) => ({
+            id: node.address,
+            data: node as TreeItemData,
+          }))
         } catch (e) {
           setLoadError(String(e))
           return []
@@ -109,7 +128,10 @@ export function DocumentTree({
   // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
   // The site node is the tree's anchor - hiding or deleting the site you are
   // standing in is not offered, same as for tethered documents.
-  const openMenu = (item: ItemInstance<TreeItemData>, event: React.MouseEvent) => {
+  const openMenu = (
+    item: ItemInstance<TreeItemData>,
+    event: React.MouseEvent,
+  ) => {
     const data = item.getItemData()
     if (data === ROOT_ID || data === null) return
     const parentId = item.getParent()?.getId() ?? null
@@ -117,20 +139,29 @@ export function DocumentTree({
       address: data.address,
       parentAddress: parentId === ROOT_ID ? null : parentId,
       hidden: isExplicitlyHidden(data),
-      tethered: data.classification === 'tethered' || data.address === site.nodeAddress,
+      tethered:
+        data.classification === 'tethered' || data.address === site.nodeAddress,
       anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
     })
   }
 
   return (
     <>
-      {loadError && <div className="px-2 text-xs text-destructive">{loadError}</div>}
-      {actionError && <div className="px-2 text-xs text-destructive">{actionError}</div>}
+      {loadError && (
+        <div className="px-2 text-xs text-destructive">{loadError}</div>
+      )}
+      {actionError && (
+        <div className="px-2 text-xs text-destructive">{actionError}</div>
+      )}
       <TreeList
         tree={tree}
         label="Document tree"
         emptyText="Loading tree…"
-        decorate={(data) => (data === ROOT_ID || data === null ? null : nodeDecor(data, nodeTypes, pendingChanges))}
+        decorate={(data) =>
+          data === ROOT_ID || data === null
+            ? null
+            : nodeDecor(data, nodeTypes, pendingChanges)
+        }
         onItemContextMenu={openMenu}
       />
       <NodeContextMenu

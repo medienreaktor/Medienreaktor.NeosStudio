@@ -40,7 +40,8 @@ export function useRevealSelection<T>(
       .then((ancestors) => {
         // Closest-first from the API; the tree wants root-first. The filter
         // already dropped the Neos.Neos:Sites root, so the site node leads.
-        if (!cancelled) setPath([...ancestors.map((a) => a.address).reverse(), address])
+        if (!cancelled)
+          setPath([...ancestors.map((a) => a.address).reverse(), address])
       })
       .catch(() => {
         /* fine - the node stays unrevealed */
@@ -53,7 +54,8 @@ export function useRevealSelection<T>(
   const items = tree.getItems()
 
   useEffect(() => {
-    if (path === null || address === null || revealed.current === address) return
+    if (path === null || address === null || revealed.current === address)
+      return
     const itemsById = new Map(items.map((item) => [item.getId(), item]))
     for (const ancestorAddress of path.slice(0, -1)) {
       const item = itemsById.get(ancestorAddress)

@@ -38,7 +38,8 @@ export function useNodeTypes(enabled = true) {
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled,
-    select: (data): NodeTypeMap => new Map(data.nodeTypes.map((nt) => [nt.name, nt])),
+    select: (data): NodeTypeMap =>
+      new Map(data.nodeTypes.map((nt) => [nt.name, nt])),
   })
 }
 
@@ -130,7 +131,10 @@ export interface NodeTypeSchemaDto {
 export function useNodeTypeSchema(name: string | null, enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.schema(name ?? ''),
-    queryFn: () => apiFetch<NodeTypeSchemaDto>(`/nodetypes/${encodeURIComponent(name ?? '')}`),
+    queryFn: () =>
+      apiFetch<NodeTypeSchemaDto>(
+        `/nodetypes/${encodeURIComponent(name ?? '')}`,
+      ),
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled: enabled && name !== null,
@@ -141,7 +145,11 @@ export function useNodeTypeSchema(name: string | null, enabled = true) {
  * Whether a node type is (transitively) of the given super type, walking the
  * declared super types through the map.
  */
-export function isOfType(map: NodeTypeMap, name: string, superTypeName: string): boolean {
+export function isOfType(
+  map: NodeTypeMap,
+  name: string,
+  superTypeName: string,
+): boolean {
   if (name === superTypeName) return true
   const seen = new Set<string>()
   const queue = [name]

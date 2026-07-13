@@ -18,7 +18,9 @@ function clamp(width: number): number {
 export function useResizableSidebar() {
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const stored = Number(localStorage.getItem(STORAGE_KEY))
-    return Number.isFinite(stored) && stored >= MIN_WIDTH && stored <= MAX_WIDTH ? stored : DEFAULT_WIDTH
+    return Number.isFinite(stored) && stored >= MIN_WIDTH && stored <= MAX_WIDTH
+      ? stored
+      : DEFAULT_WIDTH
   })
   const [isResizing, setIsResizing] = useState(false)
 
@@ -48,7 +50,9 @@ export function useResizableSidebar() {
   return { sidebarWidth, isResizing, resizeHandleProps: { onPointerDown } }
 }
 
-export function SidebarResizeHandle(props: { onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void }) {
+export function SidebarResizeHandle(props: {
+  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void
+}) {
   return (
     <div
       role="separator"

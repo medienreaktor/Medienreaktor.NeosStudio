@@ -1,10 +1,25 @@
 import { useState } from 'react'
-import { asyncDataLoaderFeature, hotkeysCoreFeature, selectionFeature, type ItemInstance } from '@headless-tree/core'
+import {
+  asyncDataLoaderFeature,
+  hotkeysCoreFeature,
+  selectionFeature,
+  type ItemInstance,
+} from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
-import { CONTENT_NODE_TYPES, fetchChildren, fetchNode, isExplicitlyHidden, type NodeDto } from '@/api/nodes'
+import {
+  CONTENT_NODE_TYPES,
+  fetchChildren,
+  fetchNode,
+  isExplicitlyHidden,
+  type NodeDto,
+} from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
-import { NodeContextMenu, type NodeMenuAction, type NodeMenuTarget } from '@/features/editing/NodeContextMenu'
+import {
+  NodeContextMenu,
+  type NodeMenuAction,
+  type NodeMenuTarget,
+} from '@/features/editing/NodeContextMenu'
 import { nodeDecor } from './nodeDecor'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
@@ -37,7 +52,11 @@ export function ContentOutliner({
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
 }) {
   if (document === null) {
-    return <div className="px-2 text-xs text-muted-foreground">Select a document to outline its content.</div>
+    return (
+      <div className="px-2 text-xs text-muted-foreground">
+        Select a document to outline its content.
+      </div>
+    )
   }
   // Key by document: a new document is a new tree (fresh root, fresh
   // expansion state) - remounting is simpler and more predictable than
@@ -102,7 +121,10 @@ function OutlinerTree({
       getChildrenWithData: async (itemId) => {
         try {
           const children = await fetchChildren(itemId, CONTENT_NODE_TYPES)
-          return children.map((node) => ({ id: node.address, data: node as NodeDto | null }))
+          return children.map((node) => ({
+            id: node.address,
+            data: node as NodeDto | null,
+          }))
         } catch (e) {
           setLoadError(String(e))
           return []
@@ -125,7 +147,10 @@ function OutlinerTree({
   useNodeEditRefresh(tree, lastEdit, document.address)
 
   // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
-  const openMenu = (item: ItemInstance<NodeDto | null>, event: React.MouseEvent) => {
+  const openMenu = (
+    item: ItemInstance<NodeDto | null>,
+    event: React.MouseEvent,
+  ) => {
     const data = item.getItemData()
     if (!data) return
     setMenuTarget({
@@ -140,12 +165,16 @@ function OutlinerTree({
   return (
     <>
       {loadError && <div className="text-xs text-destructive">{loadError}</div>}
-      {actionError && <div className="text-xs text-destructive">{actionError}</div>}
+      {actionError && (
+        <div className="text-xs text-destructive">{actionError}</div>
+      )}
       <TreeList
         tree={tree}
         label="Content outliner"
         emptyText="No content below this document."
-        decorate={(data) => (data === null ? null : nodeDecor(data, nodeTypes, pendingChanges))}
+        decorate={(data) =>
+          data === null ? null : nodeDecor(data, nodeTypes, pendingChanges)
+        }
         onItemContextMenu={openMenu}
       />
       <NodeContextMenu
@@ -172,7 +201,8 @@ function contentLabel(node: NodeDto): string {
   const text = node.properties['text']?.value
   if (typeof text === 'string') {
     const stripped = text.replace(/<[^>]*>/g, '').trim()
-    if (stripped !== '') return stripped.length > 40 ? `${stripped.slice(0, 40)}…` : stripped
+    if (stripped !== '')
+      return stripped.length > 40 ? `${stripped.slice(0, 40)}…` : stripped
   }
   if (node.name) return node.name
   return node.nodeType.split(':').pop() ?? node.nodeType

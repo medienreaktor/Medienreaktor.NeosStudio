@@ -6,10 +6,17 @@ import { useNodeTypes } from '@/api/nodeTypes'
 import { Button } from '@/components/ui/button'
 import { config } from '@/config'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
-import { type CreationDrag, getCreationDrag, subscribeCreationDrag } from '@/features/creation/creationDrag'
+import {
+  type CreationDrag,
+  getCreationDrag,
+  subscribeCreationDrag,
+} from '@/features/creation/creationDrag'
 import { CreateNodeFlow } from '@/features/creation/NodeCreationDialog'
 import { moveNode } from '@/features/editing/nodeActions'
-import { NodeContextMenu, type NodeMenuTarget } from '@/features/editing/NodeContextMenu'
+import {
+  NodeContextMenu,
+  type NodeMenuTarget,
+} from '@/features/editing/NodeContextMenu'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
@@ -54,10 +61,20 @@ export function PreviewToolbar({
       >
         {editing ? <Eye /> : <Pencil />}
       </Button>
-      <Button variant="ghost" size="icon-xs" title="Reload preview" onClick={onReload}>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        title="Reload preview"
+        onClick={onReload}
+      >
         <RotateCw />
       </Button>
-      <Button asChild variant="ghost" size="icon-xs" title="Open page in a new tab">
+      <Button
+        asChild
+        variant="ghost"
+        size="icon-xs"
+        title="Open page in a new tab"
+      >
         <a href={previewUrl(document.address)} target="_blank" rel="noreferrer">
           <ExternalLink />
         </a>
@@ -103,7 +120,8 @@ export function PreviewPane({
   const [saveError, setSaveError] = useState<string | null>(null)
   // A drop from the creation panel landed in the preview - the creation flow
   // (optional creation dialog + command) runs for this insertion point.
-  const [pendingCreation, setPendingCreation] = useState<CreateNodeRequest | null>(null)
+  const [pendingCreation, setPendingCreation] =
+    useState<CreateNodeRequest | null>(null)
   // The element menu (hide/unhide/delete) requested via the "..." handle in
   // the guest, anchored at the handle's viewport position over the iframe.
   const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
@@ -118,7 +136,9 @@ export function PreviewPane({
   const onNodeEditedRef = useRef(onNodeEdited)
   onNodeEditedRef.current = onNodeEdited
 
-  const src = document ? previewUrl(document.address, editing ? 'inPlace' : undefined) : null
+  const src = document
+    ? previewUrl(document.address, editing ? 'inPlace' : undefined)
+    : null
 
   // A new iframe document means a new guest lifecycle; a menu anchored in
   // the previous document has nothing to point at anymore.
@@ -130,7 +150,11 @@ export function PreviewPane({
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return
-      if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) return
+      if (
+        !iframeRef.current ||
+        event.source !== iframeRef.current.contentWindow
+      )
+        return
       const message = event.data as GuestToHostMessage
       switch (message?.type) {
         case 'neos-studio/guest-ready':
@@ -145,7 +169,9 @@ export function PreviewPane({
           break
         case 'neos-studio/navigate-to-node':
           try {
-            onNavigateToNodeRef.current?.(addressFromContextPath(message.contextPath))
+            onNavigateToNodeRef.current?.(
+              addressFromContextPath(message.contextPath),
+            )
           } catch {
             /* malformed contextpath - ignore the navigation */
           }
@@ -155,7 +181,11 @@ export function PreviewPane({
           setSaveError(null)
           persistPropertyChange(address, message.property, message.value)
             .then(() => onNodeEditedRef.current?.(address))
-            .catch((e: unknown) => setSaveError(`Saving failed: ${e instanceof Error ? e.message : String(e)}`))
+            .catch((e: unknown) =>
+              setSaveError(
+                `Saving failed: ${e instanceof Error ? e.message : String(e)}`,
+              ),
+            )
           break
         }
         case 'neos-studio/create-node-request':
@@ -199,7 +229,9 @@ export function PreviewPane({
         case 'neos-studio/move-node-request': {
           setSaveError(null)
           try {
-            const targetAddress = addressFromContextPath(message.parentContextPath)
+            const targetAddress = addressFromContextPath(
+              message.parentContextPath,
+            )
             const sourceAddress = message.sourceParentContextPath
               ? addressFromContextPath(message.sourceParentContextPath)
               : null
@@ -216,7 +248,9 @@ export function PreviewPane({
                 onNodeEditedRef.current?.(parents)
               })
               .catch((e: unknown) =>
-                setSaveError(`Moving failed: ${e instanceof Error ? e.message : String(e)}`),
+                setSaveError(
+                  `Moving failed: ${e instanceof Error ? e.message : String(e)}`,
+                ),
               )
           } catch {
             /* malformed contextpath - ignore the drop */
@@ -238,7 +272,10 @@ export function PreviewPane({
     if (!frame) return
     const send = (drag: CreationDrag) => {
       const message: HostToGuestMessage = drag
-        ? { type: 'neos-studio/creation-drag-start', nodeTypeName: drag.nodeTypeName }
+        ? {
+            type: 'neos-studio/creation-drag-start',
+            nodeTypeName: drag.nodeTypeName,
+          }
         : { type: 'neos-studio/creation-drag-end' }
       frame.postMessage(message, window.location.origin)
     }
@@ -254,7 +291,10 @@ export function PreviewPane({
     if (!frame) return
     const message: HostToGuestMessage = {
       type: 'neos-studio/select-node',
-      aggregateId: selectedAddress === null ? null : decodeNodeAddress(selectedAddress).aggregateId,
+      aggregateId:
+        selectedAddress === null
+          ? null
+          : decodeNodeAddress(selectedAddress).aggregateId,
     }
     frame.postMessage(message, window.location.origin)
   }, [guestReady, selectedAddress])
@@ -262,7 +302,9 @@ export function PreviewPane({
   if (!document || !src) {
     return (
       <div className="grid flex-1 place-items-center p-6">
-        <p className="text-sm text-muted-foreground">Select a document to preview it.</p>
+        <p className="text-sm text-muted-foreground">
+          Select a document to preview it.
+        </p>
       </div>
     )
   }
@@ -293,8 +335,11 @@ export function PreviewPane({
           // data to inspect anymore.
           setReloadCount((count) => count + 1)
           if (action === 'delete') {
-            if (target.parentAddress) onSelectNodeRef.current(target.parentAddress)
-            onNodeEditedRef.current?.(target.parentAddress ? [target.parentAddress] : [])
+            if (target.parentAddress)
+              onSelectNodeRef.current(target.parentAddress)
+            onNodeEditedRef.current?.(
+              target.parentAddress ? [target.parentAddress] : [],
+            )
           } else {
             onNodeEditedRef.current?.(target.address)
             onSelectNodeRef.current(target.address)
@@ -307,7 +352,9 @@ export function PreviewPane({
           request={pendingCreation}
           nodeTypes={nodeTypes}
           onCreated={(address) => {
-            const parentAddress = addressFromContextPath(pendingCreation.parentContextPath)
+            const parentAddress = addressFromContextPath(
+              pendingCreation.parentContextPath,
+            )
             setPendingCreation(null)
             // The new node only renders after a reload; the shell then
             // refreshes the outliner below the collection and inspects the

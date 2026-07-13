@@ -39,7 +39,10 @@ export interface InspectorTab {
  * (loaded at boot, see lib/i18n.ts); anything untranslatable falls back to a
  * humanized key: "metaDescription" -> "Meta description".
  */
-export function humanizeLabel(label: string | null | undefined, key: string): string {
+export function humanizeLabel(
+  label: string | null | undefined,
+  key: string,
+): string {
   if (label && label !== 'i18n') {
     if (!looksLikeI18nId(label)) return label
     const translated = translateLabel(label)
@@ -58,7 +61,10 @@ function looksLikeI18nId(label: string): boolean {
 }
 
 /** A plain (or translated) editor option; an untranslatable i18n id is worse than none - drop it. */
-export function plainEditorOption(options: Record<string, unknown>, name: string): string | undefined {
+export function plainEditorOption(
+  options: Record<string, unknown>,
+  name: string,
+): string | undefined {
   const value = options[name]
   if (typeof value !== 'string' || value === '') return undefined
   if (looksLikeI18nId(value)) return translateLabel(value) ?? undefined
@@ -95,12 +101,17 @@ const DATA_TYPE_EDITOR_OPTIONS: Record<string, Record<string, unknown>> = {
  * properties assigned to a group appear (the Neos rule for inspector
  * visibility); groups without properties and tabs without groups are dropped.
  */
-export function buildInspectorSchema(schema: NodeTypeSchemaDto): InspectorTab[] {
+export function buildInspectorSchema(
+  schema: NodeTypeSchemaDto,
+): InspectorTab[] {
   const properties = schema.configuration.properties ?? {}
   const tabsConfig = schema.configuration.ui?.inspector?.tabs ?? {}
   const groupsConfig = schema.configuration.ui?.inspector?.groups ?? {}
 
-  const propertiesByGroup = new Map<string, { name: string; config: PropertyConfig }[]>()
+  const propertiesByGroup = new Map<
+    string,
+    { name: string; config: PropertyConfig }[]
+  >()
   for (const [name, config] of Object.entries(properties)) {
     const group = config?.ui?.inspector?.group
     if (!group) continue
@@ -109,10 +120,16 @@ export function buildInspectorSchema(schema: NodeTypeSchemaDto): InspectorTab[] 
   }
 
   // Groups referenced by a property but never configured still render.
-  const groupIds = new Set([...Object.keys(groupsConfig), ...propertiesByGroup.keys()])
+  const groupIds = new Set([
+    ...Object.keys(groupsConfig),
+    ...propertiesByGroup.keys(),
+  ])
   const groupsByTab = new Map<string, InspectorGroup[]>()
   const orderedGroupIds = sortByPosition(
-    [...groupIds].map((id) => ({ key: id, position: groupsConfig[id]?.position })),
+    [...groupIds].map((id) => ({
+      key: id,
+      position: groupsConfig[id]?.position,
+    })),
   )
   for (const groupId of orderedGroupIds) {
     const config: InspectorGroupConfig = groupsConfig[groupId] ?? {}
@@ -120,9 +137,14 @@ export function buildInspectorSchema(schema: NodeTypeSchemaDto): InspectorTab[] 
     if (groupProperties.length === 0) continue
 
     const orderedProperties = sortByPosition(
-      groupProperties.map((p) => ({ key: p.name, position: p.config.ui?.inspector?.position })),
+      groupProperties.map((p) => ({
+        key: p.name,
+        position: p.config.ui?.inspector?.position,
+      })),
     ).map((name): InspectorProperty => {
-      const propertyConfig = groupProperties.find((p) => p.name === name)!.config
+      const propertyConfig = groupProperties.find(
+        (p) => p.name === name,
+      )!.config
       const type = propertyConfig.type ?? 'string'
       const defaultEditor = DATA_TYPE_EDITORS[type] ?? null
       const editor = propertyConfig.ui?.inspector?.editor ?? defaultEditor
@@ -132,7 +154,9 @@ export function buildInspectorSchema(schema: NodeTypeSchemaDto): InspectorTab[] 
         label: humanizeLabel(propertyConfig.ui?.label, name),
         editor,
         editorOptions: {
-          ...(editor === defaultEditor ? DATA_TYPE_EDITOR_OPTIONS[type] : undefined),
+          ...(editor === defaultEditor
+            ? DATA_TYPE_EDITOR_OPTIONS[type]
+            : undefined),
           ...propertyConfig.ui?.inspector?.editorOptions,
         },
       }
@@ -150,7 +174,9 @@ export function buildInspectorSchema(schema: NodeTypeSchemaDto): InspectorTab[] 
   }
 
   const tabIds = new Set([...Object.keys(tabsConfig), ...groupsByTab.keys()])
-  return sortByPosition([...tabIds].map((id) => ({ key: id, position: tabsConfig[id]?.position })))
+  return sortByPosition(
+    [...tabIds].map((id) => ({ key: id, position: tabsConfig[id]?.position })),
+  )
     .filter((tabId) => (groupsByTab.get(tabId) ?? []).length > 0)
     .map((tabId): InspectorTab => {
       const config: InspectorTabConfig = tabsConfig[tabId] ?? {}

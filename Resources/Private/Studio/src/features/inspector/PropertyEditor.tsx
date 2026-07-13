@@ -1,16 +1,27 @@
 import { useState } from 'react'
 import type { SerializedPropertyValue } from '@/api/nodes'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
-import { humanizeLabel, plainEditorOption, type InspectorProperty } from './inspectorSchema'
+import {
+  humanizeLabel,
+  plainEditorOption,
+  type InspectorProperty,
+} from './inspectorSchema'
 
 const TEXT_FIELD_EDITOR = 'Neos.Neos/Inspector/Editors/TextFieldEditor'
 const TEXT_AREA_EDITOR = 'Neos.Neos/Inspector/Editors/TextAreaEditor'
 // A text field with a sync button in the classic UI - plain text for now.
-const URI_PATH_SEGMENT_EDITOR = 'Neos.Neos/Inspector/Editors/UriPathSegmentEditor'
+const URI_PATH_SEGMENT_EDITOR =
+  'Neos.Neos/Inspector/Editors/UriPathSegmentEditor'
 const SELECT_BOX_EDITOR = 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
 
 /**
@@ -50,7 +61,10 @@ function TextEditor({
   value: SerializedPropertyValue | undefined
   onSave: (propertyName: string, value: unknown) => void
 }) {
-  const initial = value?.value === null || value?.value === undefined ? '' : String(value.value)
+  const initial =
+    value?.value === null || value?.value === undefined
+      ? ''
+      : String(value.value)
   const [draft, setDraft] = useState(initial)
   const placeholder = plainEditorOption(property.editorOptions, 'placeholder')
   const isNumeric = property.type === 'integer' || property.type === 'float'
@@ -71,7 +85,9 @@ function TextEditor({
   }
 
   const keyHandlers = {
-    onKeyDown: (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    onKeyDown: (
+      event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
       if (event.key === 'Escape') {
         // preventDefault keeps the inspector panel open - Escape here only
         // cancels the draft.
@@ -80,7 +96,10 @@ function TextEditor({
         event.currentTarget.blur()
       }
       // Enter commits via blur, but must keep inserting newlines in textareas.
-      if (event.key === 'Enter' && event.currentTarget instanceof HTMLInputElement) {
+      if (
+        event.key === 'Enter' &&
+        event.currentTarget instanceof HTMLInputElement
+      ) {
         event.currentTarget.blur()
       }
     },
@@ -132,27 +151,39 @@ function SelectEditor({
   value: SerializedPropertyValue | undefined
   onSave: (propertyName: string, value: unknown) => void
 }) {
-  const valuesConfig = (property.editorOptions.values ?? {}) as Record<string, SelectBoxValueConfig | null>
+  const valuesConfig = (property.editorOptions.values ?? {}) as Record<
+    string,
+    SelectBoxValueConfig | null
+  >
   const multiple = property.editorOptions.multiple === true
   const allowEmpty = property.editorOptions.allowEmpty === true
-  const placeholder = plainEditorOption(property.editorOptions, 'placeholder') ?? '–'
+  const placeholder =
+    plainEditorOption(property.editorOptions, 'placeholder') ?? '–'
 
   const options = sortByPosition(
-    Object.entries(valuesConfig).map(([key, config]) => ({ key, position: config?.position })),
+    Object.entries(valuesConfig).map(([key, config]) => ({
+      key,
+      position: config?.position,
+    })),
   ).map((key) => ({
     value: key,
     label: humanizeLabel(valuesConfig[key]?.label, key),
     icon: valuesConfig[key]?.icon ?? null,
   }))
-  const labelFor = (key: string) => options.find((option) => option.value === key)?.label ?? key
+  const labelFor = (key: string) =>
+    options.find((option) => option.value === key)?.label ?? key
 
   // Draft state so the dropdown reflects a save instantly, without waiting
   // for the node refetch (the mount key resets it per node + property).
   const [selected, setSelected] = useState<string | string[] | null>(() => {
     if (multiple) {
-      return Array.isArray(value?.value) ? value.value.filter((v): v is string => typeof v === 'string') : []
+      return Array.isArray(value?.value)
+        ? value.value.filter((v): v is string => typeof v === 'string')
+        : []
     }
-    return typeof value?.value === 'string' && value.value !== '' ? value.value : null
+    return typeof value?.value === 'string' && value.value !== ''
+      ? value.value
+      : null
   })
 
   const items = (
@@ -213,7 +244,11 @@ function SelectEditor({
       <SelectTrigger className="w-full">
         <SelectValue>
           {(current: string | null) =>
-            current !== null ? labelFor(current) : <span className="text-muted-foreground">{placeholder}</span>
+            current !== null ? (
+              labelFor(current)
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )
           }
         </SelectValue>
       </SelectTrigger>

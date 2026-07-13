@@ -39,7 +39,8 @@ export const DOCUMENT_NODE_TYPE = 'Neos.Neos:Document'
  * The content structure below a document: collections (e.g. "main") are not
  * Neos.Neos:Content subtypes, so both types are needed to outline content.
  */
-export const CONTENT_NODE_TYPES = 'Neos.Neos:Content,Neos.Neos:ContentCollection'
+export const CONTENT_NODE_TYPES =
+  'Neos.Neos:Content,Neos.Neos:ContentCollection'
 
 /**
  * Whether the node itself is hidden (tagged "disabled" on the node, not
@@ -47,7 +48,10 @@ export const CONTENT_NODE_TYPES = 'Neos.Neos:Content,Neos.Neos:ContentCollection
  * change anything.
  */
 export function isExplicitlyHidden(node: NodeDto): boolean {
-  return node.tags.all.includes('disabled') && !node.tags.inherited.includes('disabled')
+  return (
+    node.tags.all.includes('disabled') &&
+    !node.tags.inherited.includes('disabled')
+  )
 }
 
 export function nodeLabel(node: NodeDto): string {
@@ -100,7 +104,10 @@ export function fetchNodeVariants(address: string): Promise<NodeVariantsDto> {
 }
 
 /** Ancestors, closest first (parent, grandparent, ... up to the root). */
-export function fetchAncestors(address: string, nodeTypes?: string): Promise<NodeDto[]> {
+export function fetchAncestors(
+  address: string,
+  nodeTypes?: string,
+): Promise<NodeDto[]> {
   return queryClient
     .fetchQuery({
       queryKey: queryKeys.nodes.ancestors(address, nodeTypes),
@@ -116,7 +123,10 @@ export function fetchAncestors(address: string, nodeTypes?: string): Promise<Nod
  * Fetches child nodes and seeds each child into its own node query cache, so
  * a later fetchNode()/useNode() for a child resolves without a request.
  */
-export async function fetchChildren(address: string, nodeTypes?: string): Promise<NodeDto[]> {
+export async function fetchChildren(
+  address: string,
+  nodeTypes?: string,
+): Promise<NodeDto[]> {
   const { nodes } = await queryClient.fetchQuery({
     queryKey: queryKeys.nodes.children(address, nodeTypes),
     queryFn: () =>

@@ -30,7 +30,8 @@ export function nodeDecor(
   const hiddenInMenu = node.properties['hiddenInMenu']?.value === true
   const dimmed = hidden || hiddenInMenu
   const isDirty = changed !== null && changed.ids.has(node.aggregateId)
-  const containsDirty = !isDirty && changed !== null && changed.documentIds.has(node.aggregateId)
+  const containsDirty =
+    !isDirty && changed !== null && changed.documentIds.has(node.aggregateId)
 
   const markers: ReactNode[] = []
   if (isDirty) {
@@ -64,7 +65,11 @@ export function nodeDecor(
     icon: (
       <span className="relative" title={iconTitle}>
         {/* Dim the type icon with the label; the alert badge stays crisp. */}
-        <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} className={cn(dimmed && 'opacity-50')} />
+        <NodeTypeIcon
+          nodeTypes={nodeTypes}
+          nodeTypeName={node.nodeType}
+          className={cn(dimmed && 'opacity-50')}
+        />
         {hidden && (
           <i
             className="fas fa-circle-xmark absolute -bottom-1 -right-1 rounded-full bg-card text-[0.6rem] text-destructive"

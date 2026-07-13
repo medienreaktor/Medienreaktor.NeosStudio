@@ -1,5 +1,11 @@
 import type { Site } from '@/api/sites'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 /**
  * Topbar dropdown selecting the active site; all site-scoped views (document
@@ -23,12 +29,22 @@ export function SiteSwitcher({
       // Lets SelectValue render the site name for the selected nodeName.
       items={sites.map((site) => ({ value: site.nodeName, label: site.name }))}
     >
-      <SelectTrigger className="w-48" title="Active site" size="sm">
-        <SelectValue placeholder="Select site…" />
+      <SelectTrigger title="Active site">
+        <div className="flex items-center gap-2">
+          <i
+            className={`fa fa-globe fa-fw text-[0.7rem] text-muted-foreground`}
+            aria-hidden
+          />
+          <SelectValue placeholder="Select site…" />
+        </div>
       </SelectTrigger>
       <SelectContent>
         {sites.map((site) => (
-          <SelectItem key={site.nodeName} value={site.nodeName} disabled={site.nodeAddress === null}>
+          <SelectItem
+            key={site.nodeName}
+            value={site.nodeName}
+            disabled={site.nodeAddress === null}
+          >
             {site.name}
           </SelectItem>
         ))}

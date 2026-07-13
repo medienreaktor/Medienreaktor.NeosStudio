@@ -9,7 +9,10 @@ import { mergeProps } from '@base-ui/react/merge-props'
  */
 function SlotRoot({ children, ...props }: React.HTMLAttributes<HTMLElement>) {
   if (React.isValidElement(children)) {
-    return React.cloneElement(children, mergeProps(props, children.props as Record<string, unknown>))
+    return React.cloneElement(
+      children,
+      mergeProps(props, children.props as Record<string, unknown>),
+    )
   }
   return null
 }

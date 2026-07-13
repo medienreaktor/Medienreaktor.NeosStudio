@@ -1,7 +1,13 @@
 import { PlusIcon } from 'lucide-react'
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
 import { dimensionSpacePointEquals } from '@/api/dimensions'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 /**
  * Picks the dimension space point to switch to when one coordinate changes:
@@ -17,12 +23,17 @@ function resolveSwitch(
   allowedPoints: DimensionSpacePoint[],
 ): DimensionSpacePoint | null {
   const verbatim = { ...current, [dimensionId]: value }
-  if (allowedPoints.some((point) => dimensionSpacePointEquals(point, verbatim))) return verbatim
+  if (allowedPoints.some((point) => dimensionSpacePointEquals(point, verbatim)))
+    return verbatim
 
   const overlap = (point: DimensionSpacePoint) =>
-    Object.keys(current).filter((key) => key !== dimensionId && point[key] === current[key]).length
+    Object.keys(current).filter(
+      (key) => key !== dimensionId && point[key] === current[key],
+    ).length
 
-  const candidates = allowedPoints.filter((point) => point[dimensionId] === value)
+  const candidates = allowedPoints.filter(
+    (point) => point[dimensionId] === value,
+  )
   candidates.sort((a, b) => overlap(b) - overlap(a))
   return candidates[0] ?? null
 }
@@ -58,22 +69,35 @@ export function DimensionSwitcher({
   onCreateVariant?: (point: DimensionSpacePoint) => void
 }) {
   const documentExistsAt = (point: DimensionSpacePoint) =>
-    documentCoverage === undefined || documentCoverage.some((covered) => dimensionSpacePointEquals(covered, point))
+    documentCoverage === undefined ||
+    documentCoverage.some((covered) =>
+      dimensionSpacePointEquals(covered, point),
+    )
 
   return (
     <>
       {dimensions.map((dimension) => {
         // A value may be configured but unreachable (e.g. every combination
         // with it is constrained away) - offer only reachable ones enabled.
-        const reachable = new Set(allowedPoints.map((point) => point[dimension.id]))
-        const items = dimension.values.map((v) => ({ value: v.value, label: v.label }))
+        const reachable = new Set(
+          allowedPoints.map((point) => point[dimension.id]),
+        )
+        const items = dimension.values.map((v) => ({
+          value: v.value,
+          label: v.label,
+        }))
 
         return (
           <Select
             key={dimension.id}
             value={value[dimension.id] ?? undefined}
             onValueChange={(v) => {
-              const next = resolveSwitch(value, dimension.id, v as string, allowedPoints)
+              const next = resolveSwitch(
+                value,
+                dimension.id,
+                v as string,
+                allowedPoints,
+              )
               if (!next || dimensionSpacePointEquals(next, value)) return
               if (!documentExistsAt(next) && onCreateVariant) {
                 onCreateVariant(next)
@@ -84,31 +108,50 @@ export function DimensionSwitcher({
             // Lets SelectValue render the label for the selected value.
             items={items}
           >
-            <SelectTrigger className="w-44" title={dimension.label} size="sm">
-              {dimension.icon && (
-                <i className={`fas fa-${dimension.icon} fa-fw text-[0.7rem] text-muted-foreground`} aria-hidden />
-              )}
-              <SelectValue placeholder={dimension.label} />
+            <SelectTrigger title={dimension.label}>
+              <div className="flex items-center gap-2">
+                {dimension.icon && (
+                  <i
+                    className={`fa fa-${dimension.icon} fa-fw text-[0.7rem] text-muted-foreground`}
+                    aria-hidden
+                  />
+                )}
+                <SelectValue placeholder={dimension.label} />
+              </div>
             </SelectTrigger>
             <SelectContent>
               {dimension.values.map((dimensionValue) => {
-                const target = resolveSwitch(value, dimension.id, dimensionValue.value, allowedPoints)
-                const missingVariant = target !== null && !documentExistsAt(target)
+                const target = resolveSwitch(
+                  value,
+                  dimension.id,
+                  dimensionValue.value,
+                  allowedPoints,
+                )
+                const missingVariant =
+                  target !== null && !documentExistsAt(target)
                 return (
                   <SelectItem
                     key={dimensionValue.value}
                     value={dimensionValue.value}
                     disabled={!reachable.has(dimensionValue.value)}
-                    title={missingVariant ? 'The selected document does not exist here yet - create it?' : undefined}
+                    title={
+                      missingVariant
+                        ? 'The selected document does not exist here yet - create it?'
+                        : undefined
+                    }
                   >
                     {/* Specializations are listed right after their generalization;
                         indentation makes the hierarchy visible. */}
                     <span
                       className={`inline-flex items-center gap-1.5${missingVariant ? ' text-muted-foreground' : ''}`}
-                      style={{ paddingLeft: `${dimensionValue.specializationDepth * 0.75}rem` }}
+                      style={{
+                        paddingLeft: `${dimensionValue.specializationDepth * 0.75}rem`,
+                      }}
                     >
                       {dimensionValue.label}
-                      {missingVariant && <PlusIcon className="size-3.5" aria-hidden />}
+                      {missingVariant && (
+                        <PlusIcon className="size-3.5" aria-hidden />
+                      )}
                     </span>
                   </SelectItem>
                 )

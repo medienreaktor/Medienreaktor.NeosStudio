@@ -22,19 +22,38 @@ export interface SitesResponse {
  * the same subgraph. With dimensions=null the backend picks its default (the
  * first root generalization) and reports it as dimensionSpacePoint.
  */
-function sitesQuery(workspace: string, dimensions: Record<string, string> | null) {
-  const dimensionsParam = dimensions !== null ? `&dimensions=${encodeURIComponent(JSON.stringify(dimensions))}` : ''
+function sitesQuery(
+  workspace: string,
+  dimensions: Record<string, string> | null,
+) {
+  const dimensionsParam =
+    dimensions !== null
+      ? `&dimensions=${encodeURIComponent(JSON.stringify(dimensions))}`
+      : ''
   return {
     queryKey: queryKeys.sites(workspace, dimensions),
-    queryFn: () => apiFetch<SitesResponse>(`/sites?workspace=${encodeURIComponent(workspace)}${dimensionsParam}`),
+    queryFn: () =>
+      apiFetch<SitesResponse>(
+        `/sites?workspace=${encodeURIComponent(workspace)}${dimensionsParam}`,
+      ),
   }
 }
 
-export function useSites(workspace: string | null, dimensions: Record<string, string> | null, enabled = true) {
-  return useQuery({ ...sitesQuery(workspace ?? '', dimensions), enabled: enabled && workspace !== null })
+export function useSites(
+  workspace: string | null,
+  dimensions: Record<string, string> | null,
+  enabled = true,
+) {
+  return useQuery({
+    ...sitesQuery(workspace ?? '', dimensions),
+    enabled: enabled && workspace !== null,
+  })
 }
 
 /** Imperative variant for non-hook contexts. */
-export function fetchSites(workspace: string, dimensions: Record<string, string> | null = null): Promise<SitesResponse> {
+export function fetchSites(
+  workspace: string,
+  dimensions: Record<string, string> | null = null,
+): Promise<SitesResponse> {
   return queryClient.fetchQuery(sitesQuery(workspace, dimensions))
 }

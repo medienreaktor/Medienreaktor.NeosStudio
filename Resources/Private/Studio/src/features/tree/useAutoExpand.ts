@@ -20,7 +20,8 @@ export function useAutoExpand<T>(tree: TreeInstance<T>, depth: number) {
     for (const item of items) {
       if (depth !== 0 && item.getItemMeta().level >= depth) continue
       const id = item.getId()
-      if (!item.isFolder() || item.isExpanded() || autoExpanded.current.has(id)) continue
+      if (!item.isFolder() || item.isExpanded() || autoExpanded.current.has(id))
+        continue
       autoExpanded.current.add(id)
       item.expand()
     }

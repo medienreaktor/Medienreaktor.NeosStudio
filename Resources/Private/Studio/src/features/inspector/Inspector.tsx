@@ -28,7 +28,10 @@ export function InspectorPanel({
 }) {
   const { data: nodeTypes } = useNodeTypes()
   const { data: schema } = useNodeTypeSchema(node?.nodeType ?? null)
-  const tabs = useMemo(() => (schema ? buildInspectorSchema(schema) : null), [schema])
+  const tabs = useMemo(
+    () => (schema ? buildInspectorSchema(schema) : null),
+    [schema],
+  )
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const save = (propertyName: string, value: unknown) => {
@@ -36,11 +39,17 @@ export function InspectorPanel({
     setSaveError(null)
     persistPropertyChange(node.address, propertyName, value)
       .then(() => onNodeEdited?.(node.address))
-      .catch((e: unknown) => setSaveError(e instanceof Error ? e.message : String(e)))
+      .catch((e: unknown) =>
+        setSaveError(e instanceof Error ? e.message : String(e)),
+      )
   }
 
   if (!node) {
-    return <p className="p-4 text-xs text-muted-foreground">Select a node in the preview or the trees to inspect it.</p>
+    return (
+      <p className="p-4 text-xs text-muted-foreground">
+        Select a node in the preview or the trees to inspect it.
+      </p>
+    )
   }
 
   return (
@@ -53,14 +62,18 @@ export function InspectorPanel({
         <p className="text-muted-foreground">{node.nodeType}</p>
       </div>
       <div className="space-y-4 p-4">
-        {saveError && <p className="text-xs text-destructive">Saving failed: {saveError}</p>}
+        {saveError && (
+          <p className="text-xs text-destructive">Saving failed: {saveError}</p>
+        )}
         {tabs === null ? (
           <div className="space-y-2">
             <Skeleton className="h-9 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
         ) : tabs.length === 0 ? (
-          <p className="text-xs text-muted-foreground">This node type has no inspector properties.</p>
+          <p className="text-xs text-muted-foreground">
+            This node type has no inspector properties.
+          </p>
         ) : (
           // Remount on node type change: the available tabs differ, and
           // the initially selected tab resets to the first one.
@@ -76,7 +89,12 @@ export function InspectorPanel({
             {tabs.map((tab) => (
               <TabsContent key={tab.id} value={tab.id} className="space-y-4">
                 {tab.groups.map((group) => (
-                  <PropertyGroup key={group.id} group={group} node={node} onSave={save} />
+                  <PropertyGroup
+                    key={group.id}
+                    group={group}
+                    node={node}
+                    onSave={save}
+                  />
                 ))}
               </TabsContent>
             ))}
@@ -124,12 +142,16 @@ function PropertyGroup({
       <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground select-none [&::-webkit-details-marker]:hidden">
         {group.icon && <FaIcon icon={group.icon} />}
         {group.label}
-        <span className="ml-auto transition-transform group-open/inspector-group:rotate-90">›</span>
+        <span className="ml-auto transition-transform group-open/inspector-group:rotate-90">
+          ›
+        </span>
       </summary>
       <div className="mt-2 space-y-3">
         {group.properties.map((property) => (
           <div key={property.name}>
-            <label className="mb-1 block text-xs text-muted-foreground">{property.label}</label>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              {property.label}
+            </label>
             <PropertyEditor
               // Reset drafts when the inspected node changes, keep them
               // across the refetch after a save.
@@ -145,10 +167,18 @@ function PropertyGroup({
   )
 }
 
-function InspectorRow({ label, children }: { label: string; children: React.ReactNode }) {
+function InspectorRow({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
       <dd>{children}</dd>
     </div>
   )

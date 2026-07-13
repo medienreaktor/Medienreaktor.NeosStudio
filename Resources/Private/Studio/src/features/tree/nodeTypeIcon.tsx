@@ -11,23 +11,39 @@ import { cn } from '@/lib/utils'
 export function faClassName(configured: string): string {
   const icon = configured.trim()
   // Full FA class list ("fas fa-file", "fa-solid fa-file") - use as-is.
-  if (icon.includes(' ')) return icon
+  if (icon.includes(' ')) return icon.replace('fas', 'fa')
   // Legacy Neos "icon-file" syntax (FA3/4 era) - the v4 shims resolve names.
   if (icon.startsWith('icon-')) return `fa fa-${icon.slice(5)}`
   // Bare name with or without fa- prefix.
-  return icon.startsWith('fa-') ? `fas ${icon}` : `fas fa-${icon}`
+  return icon.startsWith('fa-') ? `fa ${icon}` : `fa fa-${icon}`
 }
 
 /** A Font Awesome icon from a configured name (node type, tab, select value...). */
-export function FaIcon({ icon, className }: { icon: string; className?: string }) {
-  return <i className={cn(faClassName(icon), 'fa-fw text-[0.75rem]', className)} aria-hidden />
+export function FaIcon({
+  icon,
+  className,
+}: {
+  icon: string
+  className?: string
+}) {
+  return (
+    <i
+      className={cn(faClassName(icon), 'fa-fw text-[0.75rem]', className)}
+      aria-hidden
+    />
+  )
 }
 
-export function resolveNodeTypeIconClass(map: NodeTypeMap | undefined, nodeTypeName: string): string {
+export function resolveNodeTypeIconClass(
+  map: NodeTypeMap | undefined,
+  nodeTypeName: string,
+): string {
   const configured = map?.get(nodeTypeName)?.icon
   if (configured) return faClassName(configured)
-  if (map && isOfType(map, nodeTypeName, DOCUMENT_NODE_TYPE)) return 'fas fa-file'
-  if (map && isOfType(map, nodeTypeName, 'Neos.Neos:ContentCollection')) return 'fas fa-folder'
+  if (map && isOfType(map, nodeTypeName, DOCUMENT_NODE_TYPE))
+    return 'fas fa-file'
+  if (map && isOfType(map, nodeTypeName, 'Neos.Neos:ContentCollection'))
+    return 'fas fa-folder'
   return 'fas fa-cube'
 }
 
@@ -42,7 +58,11 @@ export function NodeTypeIcon({
 }) {
   return (
     <i
-      className={cn(resolveNodeTypeIconClass(nodeTypes, nodeTypeName), 'fa-fw text-[0.75rem]', className)}
+      className={cn(
+        resolveNodeTypeIconClass(nodeTypes, nodeTypeName),
+        'fa-fw text-[0.75rem]',
+        className,
+      )}
       aria-hidden
     />
   )

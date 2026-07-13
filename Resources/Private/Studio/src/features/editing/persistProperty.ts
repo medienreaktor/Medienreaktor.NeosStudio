@@ -10,16 +10,24 @@ import { queryClient } from '@/app/queryClient'
  * - varying the closest non-tethered ancestor if the edited node is tethered
  * - so the edit never writes through to the other variant.
  */
-export async function persistPropertyChange(address: string, property: string, value: unknown): Promise<void> {
+export async function persistPropertyChange(
+  address: string,
+  property: string,
+  value: unknown,
+): Promise<void> {
   const node = await fetchNode(address)
   const commands: Command[] = []
 
-  const isShineThrough = JSON.stringify(node.dimensionSpacePoint) !== JSON.stringify(node.originDimensionSpacePoint)
+  const isShineThrough =
+    JSON.stringify(node.dimensionSpacePoint) !==
+    JSON.stringify(node.originDimensionSpacePoint)
   if (isShineThrough) {
     let nodeToVary: NodeDto = node
     if (node.classification === 'tethered') {
       const chain = [node, ...(await fetchAncestors(address))]
-      const firstUntethered = chain.findIndex((n) => n.classification !== 'tethered')
+      const firstUntethered = chain.findIndex(
+        (n) => n.classification !== 'tethered',
+      )
       let candidate = chain[firstUntethered] ?? node
       // Root nodes cannot vary, but their tethered children can.
       if (candidate.classification === 'root' && firstUntethered > 0) {
@@ -44,7 +52,9 @@ export async function persistPropertyChange(address: string, property: string, v
       workspaceName: node.workspace,
       nodeAggregateId: node.aggregateId,
       // After a transparent variant creation the viewed dimension is occupied.
-      originDimensionSpacePoint: isShineThrough ? node.dimensionSpacePoint : node.originDimensionSpacePoint,
+      originDimensionSpacePoint: isShineThrough
+        ? node.dimensionSpacePoint
+        : node.originDimensionSpacePoint,
       propertyValues: { [property]: value },
     },
   })
@@ -55,7 +65,9 @@ export async function persistPropertyChange(address: string, property: string, v
     // A new variant changes coverage everywhere - drop all node reads.
     await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
   } else {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.byAddress(address) })
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.nodes.byAddress(address),
+    })
   }
   // Refresh the pending-changes badges.
   void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })

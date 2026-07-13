@@ -52,12 +52,17 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
   const documentId = selectedDocument?.aggregateId ?? null
   // "This page" = changes on or within the selected document.
   const pageChangeCount = documentId
-    ? changes.filter((c) => c.documentAggregateId === documentId || c.nodeAggregateId === documentId).length
+    ? changes.filter(
+        (c) =>
+          c.documentAggregateId === documentId ||
+          c.nodeAggregateId === documentId,
+      ).length
     : 0
 
   const operation = useMutation({
     mutationFn: async (op: Operation): Promise<void> => {
-      if (op.kind === 'publish') await publishWorkspace(workspaceName, op.filter)
+      if (op.kind === 'publish')
+        await publishWorkspace(workspaceName, op.filter)
       else await discardWorkspace(workspaceName, op.filter)
     },
     onSuccess: () => {
@@ -74,14 +79,20 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
   })
 
   const hasChanges = changeCount > 0
-  const segmentClasses = hasChanges ? 'bg-orange-500 text-white hover:bg-orange-600' : undefined
-  const segmentVariant = hasChanges ? ('default' as const) : ('secondary' as const)
+  const segmentClasses = hasChanges
+    ? 'bg-orange-500 text-white hover:bg-orange-600'
+    : undefined
+  const segmentVariant = hasChanges
+    ? ('default' as const)
+    : ('secondary' as const)
 
   return (
     <div className="flex items-center gap-3">
       {operation.isError && (
         <span className="text-sm text-destructive">
-          {operation.variables?.kind === 'discard' ? 'Discarding failed' : 'Publishing failed'}
+          {operation.variables?.kind === 'discard'
+            ? 'Discarding failed'
+            : 'Publishing failed'}
         </span>
       )}
       {/* gap-px splits the segments with a hairline of header background */}
@@ -101,7 +112,7 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
             className={`fas fa-fw ${operation.isPending ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
             aria-hidden
           />
-          Publish all
+          Publish all changes
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -119,7 +130,12 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               disabled={pageChangeCount === 0}
-              onClick={() => operation.mutate({ kind: 'publish', filter: { document: documentId! } })}
+              onClick={() =>
+                operation.mutate({
+                  kind: 'publish',
+                  filter: { document: documentId! },
+                })
+              }
             >
               <i className="fas fa-fw fa-file-arrow-up" aria-hidden />
               Publish this page
@@ -136,10 +152,15 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
             <DropdownMenuItem
               variant="destructive"
               disabled={pageChangeCount === 0}
-              onClick={() => setPendingDiscard({ kind: 'discard', filter: { document: documentId! } })}
+              onClick={() =>
+                setPendingDiscard({
+                  kind: 'discard',
+                  filter: { document: documentId! },
+                })
+              }
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Discard this page
+              Discard
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -153,11 +174,16 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
         )}
       </div>
 
-      <Dialog open={pendingDiscard !== null} onOpenChange={(open) => !open && setPendingDiscard(null)}>
+      <Dialog
+        open={pendingDiscard !== null}
+        onOpenChange={(open) => !open && setPendingDiscard(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {pendingDiscard?.filter?.document ? 'Discard changes on this page?' : 'Discard all changes?'}
+              {pendingDiscard?.filter?.document
+                ? 'Discard changes on this page?'
+                : 'Discard all changes?'}
             </DialogTitle>
             <DialogDescription>
               {pendingDiscard?.filter?.document

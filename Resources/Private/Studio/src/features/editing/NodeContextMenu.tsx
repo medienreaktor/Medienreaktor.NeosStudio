@@ -59,9 +59,14 @@ export function NodeContextMenu({
   onError: (message: string) => void
 }) {
   // A delete waiting for confirmation; the dialog is open while set.
-  const [pendingDelete, setPendingDelete] = useState<NodeMenuTarget | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<NodeMenuTarget | null>(
+    null,
+  )
 
-  const runVisibilityAction = (menuTarget: NodeMenuTarget, action: 'hide' | 'unhide') => {
+  const runVisibilityAction = (
+    menuTarget: NodeMenuTarget,
+    action: 'hide' | 'unhide',
+  ) => {
     onClose()
     const run = action === 'hide' ? hideNode : unhideNode
     run(menuTarget.address)
@@ -77,7 +82,9 @@ export function NodeContextMenu({
     deleteNode(deleteTarget.address)
       .then(() => onDone('delete', deleteTarget))
       .catch((e: unknown) =>
-        onError(`Deleting failed: ${e instanceof Error ? e.message : String(e)}`),
+        onError(
+          `Deleting failed: ${e instanceof Error ? e.message : String(e)}`,
+        ),
       )
   }
 
@@ -132,13 +139,16 @@ export function NodeContextMenu({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      <Dialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete this {entityLabel}?</DialogTitle>
             <DialogDescription>
-              The {entityLabel} and everything inside it will be removed. This is undone by discarding the change from
-              the workspace.
+              The {entityLabel} and everything inside it will be removed. This
+              is undone by discarding the change from the workspace.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

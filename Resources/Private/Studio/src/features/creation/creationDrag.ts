@@ -25,7 +25,9 @@ export function getCreationDrag(): CreationDrag {
   return current
 }
 
-export function subscribeCreationDrag(listener: (drag: CreationDrag) => void): () => void {
+export function subscribeCreationDrag(
+  listener: (drag: CreationDrag) => void,
+): () => void {
   listeners.add(listener)
   return () => listeners.delete(listener)
 }

@@ -1,6 +1,10 @@
 import { executeCommands } from '@/api/commands'
 import { queryKeys } from '@/api/keys'
-import { addressFromContextPath, decodeNodeAddress, encodeNodeAddress } from '@/api/nodeAddress'
+import {
+  addressFromContextPath,
+  decodeNodeAddress,
+  encodeNodeAddress,
+} from '@/api/nodeAddress'
 import { queryClient } from '@/app/queryClient'
 
 export interface CreateNodeRequest {
@@ -21,7 +25,9 @@ export async function createNode(
   request: CreateNodeRequest,
   initialPropertyValues: Record<string, unknown> = {},
 ): Promise<string> {
-  const parent = decodeNodeAddress(addressFromContextPath(request.parentContextPath))
+  const parent = decodeNodeAddress(
+    addressFromContextPath(request.parentContextPath),
+  )
   const nodeAggregateId = crypto.randomUUID()
 
   const payload: Record<string, unknown> = {

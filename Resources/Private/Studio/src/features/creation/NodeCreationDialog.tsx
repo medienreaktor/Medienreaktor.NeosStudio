@@ -13,7 +13,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { humanizeLabel } from '@/features/inspector/inspectorSchema'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
@@ -54,7 +60,9 @@ export function CreateNodeFlow({
   /** The user cancelled, or creation failed after the dialog was skipped. */
   onCancel: (error?: string) => void
 }) {
-  const { data: schema, error: schemaError } = useNodeTypeSchema(request.nodeTypeName)
+  const { data: schema, error: schemaError } = useNodeTypeSchema(
+    request.nodeTypeName,
+  )
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,7 +70,10 @@ export function CreateNodeFlow({
     if (!schema) return null
     const configured = schema.configuration.ui?.creationDialog?.elements ?? {}
     const order = sortByPosition(
-      Object.entries(configured).map(([key, config]) => ({ key, position: config?.position })),
+      Object.entries(configured).map(([key, config]) => ({
+        key,
+        position: config?.position,
+      })),
     )
     return order
       .map((name): CreationElement | null => {
@@ -71,7 +82,9 @@ export function CreateNodeFlow({
         return {
           name,
           label: humanizeLabel(config.ui?.label, name),
-          required: config.validation?.['Neos.Neos/Validation/NotEmptyValidator'] !== undefined,
+          required:
+            config.validation?.['Neos.Neos/Validation/NotEmptyValidator'] !==
+            undefined,
           config,
         }
       })
@@ -87,7 +100,8 @@ export function CreateNodeFlow({
     const properties = schema?.configuration.properties ?? {}
     const defaults: Record<string, unknown> = {}
     for (const element of elements) {
-      const defaultValue = element.config.defaultValue ?? properties[element.name]?.defaultValue
+      const defaultValue =
+        element.config.defaultValue ?? properties[element.name]?.defaultValue
       if (defaultValue !== undefined) defaults[element.name] = defaultValue
     }
     setValues(defaults)
@@ -121,13 +135,19 @@ export function CreateNodeFlow({
   // No creation dialog configured - create right away (exactly once).
   const autoSubmitted = useRef(false)
   useEffect(() => {
-    if (elements === null || elements.length > 0 || autoSubmitted.current) return
+    if (elements === null || elements.length > 0 || autoSubmitted.current)
+      return
     autoSubmitted.current = true
     void submit({})
   }, [elements])
 
   useEffect(() => {
-    if (schemaError) onCancel(schemaError instanceof Error ? schemaError.message : String(schemaError))
+    if (schemaError)
+      onCancel(
+        schemaError instanceof Error
+          ? schemaError.message
+          : String(schemaError),
+      )
   }, [schemaError])
 
   if (elements === null || elements.length === 0) return null
@@ -138,7 +158,10 @@ export function CreateNodeFlow({
   )
   const missingRequired = elements.some((element) => {
     const value = values[element.name]
-    return element.required && (value === undefined || value === null || value === '')
+    return (
+      element.required &&
+      (value === undefined || value === null || value === '')
+    )
   })
 
   return (
@@ -146,7 +169,11 @@ export function CreateNodeFlow({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={request.nodeTypeName} className="text-[1rem]" />
+            <NodeTypeIcon
+              nodeTypes={nodeTypes}
+              nodeTypeName={request.nodeTypeName}
+              className="text-[1rem]"
+            />
             Create {typeLabel}
           </DialogTitle>
         </DialogHeader>
@@ -162,25 +189,41 @@ export function CreateNodeFlow({
             <label key={element.name} className="flex flex-col gap-1.5 text-sm">
               <span className="text-xs font-medium text-muted-foreground">
                 {element.label}
-                {element.required && <span className="text-destructive"> *</span>}
+                {element.required && (
+                  <span className="text-destructive"> *</span>
+                )}
               </span>
               <ElementEditor
                 element={element}
                 autoFocus={index === 0}
                 value={values[element.name]}
-                onChange={(value) => setValues((previous) => ({ ...previous, [element.name]: value }))}
+                onChange={(value) =>
+                  setValues((previous) => ({
+                    ...previous,
+                    [element.name]: value,
+                  }))
+                }
               />
             </label>
           ))}
         </form>
 
-        {error && <p className="text-sm text-destructive">Creating failed: {error}</p>}
+        {error && (
+          <p className="text-sm text-destructive">Creating failed: {error}</p>
+        )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onCancel()} disabled={creating}>
+          <Button
+            variant="ghost"
+            onClick={() => onCancel()}
+            disabled={creating}
+          >
             Cancel
           </Button>
-          <Button onClick={() => void submit(values)} disabled={creating || missingRequired}>
+          <Button
+            onClick={() => void submit(values)}
+            disabled={creating || missingRequired}
+          >
             {creating ? 'Creating…' : 'Create'}
           </Button>
         </DialogFooter>
@@ -227,21 +270,31 @@ function ElementEditor({
   }
 
   if (editor === SELECT_BOX_EDITOR) {
-    const valuesConfig = (editorOptions.values ?? {}) as Record<string, SelectBoxValueConfig | null>
+    const valuesConfig = (editorOptions.values ?? {}) as Record<
+      string,
+      SelectBoxValueConfig | null
+    >
     const options = sortByPosition(
-      Object.entries(valuesConfig).map(([key, config]) => ({ key, position: config?.position })),
+      Object.entries(valuesConfig).map(([key, config]) => ({
+        key,
+        position: config?.position,
+      })),
     ).map((key) => ({
       value: key,
       label: humanizeLabel(valuesConfig[key]?.label, key),
       icon: valuesConfig[key]?.icon ?? null,
     }))
     return (
-      <Select value={typeof value === 'string' ? value : null} onValueChange={(next) => onChange(next)}>
+      <Select
+        value={typeof value === 'string' ? value : null}
+        onValueChange={(next) => onChange(next)}
+      >
         <SelectTrigger className="w-full">
           <SelectValue>
             {(current: string | null) =>
               current !== null ? (
-                (options.find((option) => option.value === current)?.label ?? current)
+                (options.find((option) => option.value === current)?.label ??
+                current)
               ) : (
                 <span className="text-muted-foreground">–</span>
               )
