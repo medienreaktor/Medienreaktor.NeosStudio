@@ -11,18 +11,45 @@ export interface NodeTypeDto {
   label: string | null
   /** ui.icon as configured - a Font Awesome name by Neos convention. */
   icon: string | null
+  /** ui.group - only node types with a group are user-creatable (Neos convention). */
+  group: string | null
+  /** ui.position within the group. */
+  position: string | number | null
 }
 
 export type NodeTypeMap = Map<string, NodeTypeDto>
 
+/** A node type group (Neos.Neos.nodeTypes.groups): general, structure, ... */
+export interface NodeTypeGroup {
+  label?: string | null
+  position?: string | number | null
+  collapsed?: boolean
+}
+
+interface NodeTypesResponse {
+  nodeTypes: NodeTypeDto[]
+  groups: Record<string, NodeTypeGroup | null>
+}
+
 export function useNodeTypes(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.all,
-    queryFn: () => apiFetch<{ nodeTypes: NodeTypeDto[] }>('/nodetypes'),
+    queryFn: () => apiFetch<NodeTypesResponse>('/nodetypes'),
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled,
     select: (data): NodeTypeMap => new Map(data.nodeTypes.map((nt) => [nt.name, nt])),
+  })
+}
+
+/** The group definitions from the same query, for creation UIs. */
+export function useNodeTypeGroups(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.nodeTypes.all,
+    queryFn: () => apiFetch<NodeTypesResponse>('/nodetypes'),
+    staleTime: Infinity,
+    enabled,
+    select: (data) => data.groups ?? {},
   })
 }
 
@@ -61,8 +88,25 @@ export interface PropertyConfig {
 }
 
 /**
+ * One element of a node type's ui.creationDialog - a value asked from the
+ * editor before the node is created.
+ */
+export interface CreationDialogElementConfig {
+  type?: string
+  defaultValue?: unknown
+  position?: string | number
+  ui?: {
+    label?: string | null
+    hidden?: boolean
+    editor?: string
+    editorOptions?: Record<string, unknown>
+  } | null
+  validation?: Record<string, unknown> | null
+}
+
+/**
  * The full (merged, supertypes included) configuration of one node type -
- * only the parts the inspector consumes are typed.
+ * only the parts the inspector and the creation dialog consume are typed.
  */
 export interface NodeTypeSchemaDto {
   name: string
@@ -71,6 +115,9 @@ export interface NodeTypeSchemaDto {
   configuration: {
     ui?: {
       label?: string | null
+      creationDialog?: {
+        elements?: Record<string, CreationDialogElementConfig | null>
+      } | null
       inspector?: {
         tabs?: Record<string, InspectorTabConfig | null>
         groups?: Record<string, InspectorGroupConfig | null>

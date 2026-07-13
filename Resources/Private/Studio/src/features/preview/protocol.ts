@@ -19,7 +19,25 @@ export type GuestToHostMessage =
   | { type: 'neos-studio/navigate-to-node'; contextPath: string }
   /** An inline edit was committed (blur with changed content). */
   | { type: 'neos-studio/property-changed'; contextPath: string; property: string; value: string }
+  /**
+   * A node type dragged from the creation panel was dropped into a content
+   * collection. The new node goes before the succeeding sibling, or to the
+   * end of the collection when the sibling is null.
+   */
+  | {
+      type: 'neos-studio/create-node-request'
+      nodeTypeName: string
+      parentContextPath: string
+      succeedingSiblingContextPath: string | null
+    }
 
 export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */
   | { type: 'neos-studio/select-node'; aggregateId: string | null }
+  /**
+   * A node type drag from the creation panel started - the guest marks the
+   * collections that allow this type as drop targets.
+   */
+  | { type: 'neos-studio/creation-drag-start'; nodeTypeName: string }
+  /** The drag ended (dropped or cancelled anywhere) - clear the drop UI. */
+  | { type: 'neos-studio/creation-drag-end' }

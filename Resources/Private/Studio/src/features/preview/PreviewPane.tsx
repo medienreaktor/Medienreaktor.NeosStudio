@@ -2,8 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, Eye, Pencil, RotateCw } from 'lucide-react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import type { NodeDto } from '@/api/nodes'
+import { useNodeTypes } from '@/api/nodeTypes'
 import { Button } from '@/components/ui/button'
 import { config } from '@/config'
+import type { CreateNodeRequest } from '@/features/creation/createNode'
+import { type CreationDrag, getCreationDrag, subscribeCreationDrag } from '@/features/creation/creationDrag'
+import { CreateNodeFlow } from '@/features/creation/NodeCreationDialog'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
@@ -53,6 +57,10 @@ export function PreviewPane({
   const [editing, setEditing] = useState(true)
   const [guestReady, setGuestReady] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  // A drop from the creation panel landed in the preview - the creation flow
+  // (optional creation dialog + command) runs for this insertion point.
+  const [pendingCreation, setPendingCreation] = useState<CreateNodeRequest | null>(null)
+  const { data: nodeTypes } = useNodeTypes()
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   // Latest-callback refs keep the message listener subscription stable.
@@ -98,14 +106,40 @@ export function PreviewPane({
           setSaveError(null)
           persistPropertyChange(address, message.property, message.value)
             .then(() => onNodeEditedRef.current?.(address))
-            .catch((e: unknown) => setSaveError(e instanceof Error ? e.message : String(e)))
+            .catch((e: unknown) => setSaveError(`Saving failed: ${e instanceof Error ? e.message : String(e)}`))
           break
         }
+        case 'neos-studio/create-node-request':
+          setSaveError(null)
+          setPendingCreation({
+            nodeTypeName: message.nodeTypeName,
+            parentContextPath: message.parentContextPath,
+            succeedingSiblingContextPath: message.succeedingSiblingContextPath,
+          })
+          break
       }
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
   }, [])
+
+  // Announce node-type drags from the creation panel to the guest, which
+  // marks the collections allowing that type as drop targets. A drag can
+  // already be underway when the guest (re)boots - push the current state.
+  useEffect(() => {
+    if (!guestReady) return
+    const frame = iframeRef.current?.contentWindow
+    if (!frame) return
+    const send = (drag: CreationDrag) => {
+      const message: HostToGuestMessage = drag
+        ? { type: 'neos-studio/creation-drag-start', nodeTypeName: drag.nodeTypeName }
+        : { type: 'neos-studio/creation-drag-end' }
+      frame.postMessage(message, window.location.origin)
+    }
+    const current = getCreationDrag()
+    if (current) send(current)
+    return subscribeCreationDrag(send)
+  }, [guestReady])
 
   // Push the shell's selection into the guest (also right after it boots).
   useEffect(() => {
@@ -132,7 +166,7 @@ export function PreviewPane({
       <div className="flex items-center justify-end gap-1 border-b px-2 py-1">
         {saveError && (
           <span className="mr-auto overflow-hidden text-ellipsis whitespace-nowrap px-2 text-xs text-destructive">
-            Saving failed: {saveError}
+            {saveError}
           </span>
         )}
         <Button
@@ -164,6 +198,26 @@ export function PreviewPane({
         title="Page preview"
         className="min-h-0 w-full flex-1 border-0 bg-white"
       />
+      {pendingCreation && (
+        <CreateNodeFlow
+          request={pendingCreation}
+          nodeTypes={nodeTypes}
+          onCreated={(address) => {
+            const parentAddress = addressFromContextPath(pendingCreation.parentContextPath)
+            setPendingCreation(null)
+            // The new node only renders after a reload; the shell then
+            // refreshes the outliner below the collection and inspects the
+            // new node (which also outlines it in the reloaded preview).
+            setReloadCount((count) => count + 1)
+            onNodeEditedRef.current?.(parentAddress)
+            onSelectNodeRef.current(address)
+          }}
+          onCancel={(error) => {
+            setPendingCreation(null)
+            if (error) setSaveError(`Creating failed: ${error}`)
+          }}
+        />
+      )}
     </div>
   )
 }

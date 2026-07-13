@@ -9,6 +9,7 @@ import { addressInDimension } from '@/api/nodeAddress'
 import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
+import { loadTranslations } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { SidebarResizeHandle, useResizableSidebar } from '@/components/ui/sidebar-resize'
 import {
@@ -103,6 +104,9 @@ export function App() {
 
   useEffect(() => {
     ;(async () => {
+      // Label translations must be in place before anything renders labels;
+      // browser-cached for a week, so this rarely costs a request.
+      await loadTranslations()
       let callbackFailed = false
       try {
         await handleRedirectCallback()

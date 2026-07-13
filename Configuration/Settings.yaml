@@ -18,6 +18,12 @@ Neos:
         icon: 'fas fa-rocket'
         mainStylesheet: 'Lite'
 
+  Fusion:
+    defaultContext:
+      # Allowed-child-node-type lookup for the collection drop-target markup
+      # (see Root.fusion).
+      'MedienreaktorStudio': 'Medienreaktor\NeosStudio\Eel\StudioHelper'
+
   Flow:
     mvc:
       routes:

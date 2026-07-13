@@ -7,7 +7,25 @@ prototype(Neos.Neos:ContentElementWrapping) {
   additionalAttributes {
     data-__neos-studio-collection = 'true'
     data-__neos-studio-collection.@if.isCollection = ${q(node).is('[instanceof Neos.Neos:ContentCollection]')}
+    # Which content node types may be created inside this collection - the
+    # guest script matches the dragged node type against this list to mark
+    # valid drop targets. Server-computed, so tethered-collection constraints
+    # (declared on the parent's childNodes) are handled correctly.
+    data-__neos-studio-allowed-types = ${Json.stringify(MedienreaktorStudio.allowedChildNodeTypes(node))}
+    data-__neos-studio-allowed-types.@if.isCollection = ${q(node).is('[instanceof Neos.Neos:ContentCollection]')}
   }
+}
+
+# Inline-editable properties carry their configured placeholder
+# (properties.<name>.ui.inline.editorOptions.placeholder), translated
+# server-side for the backend user's interface language - the guest script
+# shows it on empty properties, so freshly created nodes are visible and
+# invite editing. Only for Studio preview requests; the classic UI brings its
+# own placeholder rendering (CKEditor) and its markup stays untouched. The
+# GlobalCacheIdentifiers discriminator below keeps the cached variants apart.
+prototype(Neos.Neos:Editable) {
+  renderer.editable.renderer.attributes.data-__neos-studio-placeholder = ${MedienreaktorStudio.inlinePlaceholder(props.node, props.property)}
+  renderer.editable.renderer.attributes.data-__neos-studio-placeholder.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
 }
 
 # The Studio preview must not depend on Neos.Neos.Ui: when it is installed,

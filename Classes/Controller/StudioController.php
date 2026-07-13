@@ -9,6 +9,7 @@ use Medienreaktor\NeosApi\Domain\Repository\OAuthClientRepository;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\Neos\Service\UserService;
 
 /**
  * Serves the Neos Studio single-page application and lazily provisions its
@@ -28,6 +29,9 @@ class StudioController extends ActionController
 
     #[Flow\Inject]
     protected PersistenceManagerInterface $persistenceManager;
+
+    #[Flow\Inject]
+    protected UserService $userService;
 
     /**
      * @var array<string, string>
@@ -70,6 +74,10 @@ class StudioController extends ActionController
                 // 0 means unlimited, per the Neos.Neos setting's contract
                 'loadingDepth' => (int)($this->structureTreeLoadingDepth ?? 4),
             ],
+            // Label translations: the SPA loads the core's XLIFF-as-JSON
+            // bundle for the backend user's interface language at boot.
+            'interfaceLanguage' => $this->userService->getInterfaceLanguage(),
+            'xliffEndpoint' => $origin . '/neos/xliff.json',
         ];
 
         return $this->renderSpa($config);

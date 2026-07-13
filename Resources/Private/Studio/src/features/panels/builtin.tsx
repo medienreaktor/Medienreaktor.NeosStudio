@@ -1,4 +1,5 @@
 import { useStudio } from '@/app/StudioContext'
+import { NodeCreationPanel } from '@/features/creation/NodeCreationPanel'
 import { InspectorPanel } from '@/features/inspector/Inspector'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
@@ -72,6 +73,12 @@ export function registerBuiltinPanels(): void {
     id: 'outline',
     title: 'Outline',
     component: OutlinePanel,
+    defaultPlacement: { kind: 'dock' },
+  })
+  panelRegistry.register({
+    id: 'create',
+    title: 'Create',
+    component: NodeCreationPanel,
     defaultPlacement: { kind: 'dock' },
   })
   panelRegistry.register({

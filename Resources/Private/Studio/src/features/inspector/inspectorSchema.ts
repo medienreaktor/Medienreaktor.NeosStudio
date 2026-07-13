@@ -4,6 +4,7 @@ import type {
   NodeTypeSchemaDto,
   PropertyConfig,
 } from '@/api/nodeTypes'
+import { translateLabel } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
 
 export interface InspectorProperty {
@@ -34,12 +35,16 @@ export interface InspectorTab {
 /**
  * Labels in node type configuration are almost always untranslated XLIFF ids
  * ("Neos.Seo:NodeTypes.SeoMetaTagsMixin:properties.metaDescription") or the
- * magic value "i18n". Studio has no translation endpoint yet, so anything
- * id-shaped falls back to a humanized key: "metaDescription" -> "Meta
- * description".
+ * magic value "i18n". Id-shaped labels resolve against the XLIFF bundle
+ * (loaded at boot, see lib/i18n.ts); anything untranslatable falls back to a
+ * humanized key: "metaDescription" -> "Meta description".
  */
 export function humanizeLabel(label: string | null | undefined, key: string): string {
-  if (label && label !== 'i18n' && !looksLikeI18nId(label)) return label
+  if (label && label !== 'i18n') {
+    if (!looksLikeI18nId(label)) return label
+    const translated = translateLabel(label)
+    if (translated !== null) return translated
+  }
   const words = key
     .replace(/^_/, '')
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -52,10 +57,11 @@ function looksLikeI18nId(label: string): boolean {
   return /^[\w.]+:[\w.-]+:[\w.-]+$/.test(label)
 }
 
-/** An i18n-id placeholder is worse than none - drop it. */
+/** A plain (or translated) editor option; an untranslatable i18n id is worse than none - drop it. */
 export function plainEditorOption(options: Record<string, unknown>, name: string): string | undefined {
   const value = options[name]
-  if (typeof value !== 'string' || value === '' || looksLikeI18nId(value)) return undefined
+  if (typeof value !== 'string' || value === '') return undefined
+  if (looksLikeI18nId(value)) return translateLabel(value) ?? undefined
   return value
 }
 

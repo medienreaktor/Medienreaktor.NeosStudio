@@ -11,6 +11,10 @@ export interface StudioConfig {
   nodeTree: { loadingDepth: number }
   /** Mirrors ...navigateComponent.structureTree; loadingDepth 0 = unlimited */
   structureTree: { loadingDepth: number }
+  /** The backend user's interface language preference (e.g. "en", "de"). */
+  interfaceLanguage: string
+  /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */
+  xliffEndpoint: string
 }
 
 declare global {
@@ -29,6 +33,8 @@ const fallback: StudioConfig = {
   scopes: 'neos.read neos.write neos.publish',
   nodeTree: { loadingDepth: 4 },
   structureTree: { loadingDepth: 4 },
+  interfaceLanguage: 'en',
+  xliffEndpoint: '/neos/xliff.json',
 }
 
 // Merge so a shell built before a config field existed still works.

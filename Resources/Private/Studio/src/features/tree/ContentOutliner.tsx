@@ -113,13 +113,15 @@ function OutlinerTree({
   // down to the node and highlight it.
   useRevealSelection(tree, selectedAddress, CONTENT_NODE_TYPES)
 
-  // After an inline edit, re-fetch that item so its label (usually derived
-  // from the edited text) stays in sync. The node query was invalidated by
-  // the save, so invalidating the tree item triggers a fresh request.
+  // After an edit, re-fetch that item so its label (usually derived from the
+  // edited text) stays in sync, and its children so structural edits (a node
+  // created in the collection) appear. The queries were invalidated by the
+  // save; unchanged children resolve from the still-fresh cache.
   useEffect(() => {
     if (lastEdit === null) return
     const item = tree.getItems().find((candidate) => candidate.getId() === lastEdit.address)
     void item?.invalidateItemData()
+    void item?.invalidateChildrenIds()
   }, [lastEdit, tree])
 
   return (
