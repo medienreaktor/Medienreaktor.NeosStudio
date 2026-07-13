@@ -1,0 +1,36 @@
+# Marks content collections in the edit-mode metadata markup so the Studio
+# guest script can present structural containers differently from regular
+# content elements. Neos.Neos:ContentElementWrapping only renders in edit
+# mode, so frontend output is unaffected; the classic UI ignores the extra
+# attribute.
+prototype(Neos.Neos:ContentElementWrapping) {
+  additionalAttributes {
+    data-__neos-studio-collection = 'true'
+    data-__neos-studio-collection.@if.isCollection = ${q(node).is('[instanceof Neos.Neos:ContentCollection]')}
+  }
+}
+
+# The Studio preview must not depend on Neos.Neos.Ui: when it is installed,
+# its auto-included Page.fusion augments every edit/preview render with the
+# classic UI's guest-frame additions - the DocumentInformation script, the
+# Guest.html template (window.parent.neos alias + Host.css, whose
+# [data-__neos-property] outline rules would fight the Studio guest styles),
+# the backend container div and the notification script. None of them are
+# wanted in the Studio iframe, so they are switched off for requests served
+# by the Studio's own PreviewController. Classic UI requests come through
+# other controllers and keep rendering them; if Neos.Neos.Ui is not
+# installed, these are conditions on never-rendered paths and do nothing.
+prototype(Neos.Neos:Page) {
+  head.javascriptBackendInformation.@if.notForStudioPreview = ${request.controllerPackageKey != 'Medienreaktor.NeosStudio'}
+  head.guestFrameApplication.@if.notForStudioPreview = ${request.controllerPackageKey != 'Medienreaktor.NeosStudio'}
+  neosBackendContainer.@if.notForStudioPreview = ${request.controllerPackageKey != 'Medienreaktor.NeosStudio'}
+  neosBackendNotification.@if.notForStudioPreview = ${request.controllerPackageKey != 'Medienreaktor.NeosStudio'}
+}
+
+# The conditions above make the rendered page differ between Studio preview
+# requests and classic UI / frontend requests for the same node - the content
+# cache must not serve one variant for the other, so every cache identifier
+# carries the discriminator.
+prototype(Neos.Fusion:GlobalCacheIdentifiers) {
+  studioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+}

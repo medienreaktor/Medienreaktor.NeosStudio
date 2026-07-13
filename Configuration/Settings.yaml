@@ -1,5 +1,11 @@
 Neos:
   Neos:
+    fusion:
+      autoInclude:
+        # Extends Neos.Neos:ContentElementWrapping with the collection marker
+        # attribute the Studio guest script styles (see Root.fusion).
+        'Medienreaktor.NeosStudio': true
+
     modules:
       # Main-level backend menu entry, placed above "Content" (which declares
       # position 'start'). The module controller redirects to the standalone

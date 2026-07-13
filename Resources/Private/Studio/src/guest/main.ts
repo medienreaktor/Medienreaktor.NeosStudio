@@ -8,6 +8,9 @@
  *   content element and carries its NodeAddress as JSON
  * - data-__neos-property (ContentElementEditableService / Neos.Neos:Editable)
  *   marks the rendered value of an inline-editable property
+ * - data-__neos-studio-collection (this package's ContentElementWrapping
+ *   extension, see Root.fusion) marks content collections, which are styled
+ *   as structural containers instead of content elements
  *
  * It handles click-to-select (blue outline, reported to the host so the
  * content outliner follows) and plain contentEditable inline editing
@@ -20,6 +23,7 @@ import type {
 } from '../features/preview/protocol'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
+const COLLECTION_ATTRIBUTE = 'data-__neos-studio-collection'
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const EDITABLE_NODE_ATTRIBUTE = 'data-__neos-editable-node-contextpath'
 
@@ -43,12 +47,31 @@ function injectStyles(): void {
   const style = document.createElement('style')
   style.textContent = `
     [${WRAPPER_ATTRIBUTE}].${HOVER_CLASS}:not(.${SELECTED_CLASS}) {
-      outline: 2px dashed rgba(0, 173, 238, 0.5);
+      outline: 2px dashed rgba(0, 173, 238, 1.0);
       outline-offset: 5px;
     }
     [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} {
-      outline: 2px solid #00adee;
+      outline: 2px solid rgba(0, 173, 238, 1.0);
       outline-offset: 5px;
+    }
+    /* Content collections are structural containers, not content: their
+       bounds stay faintly visible at all times, hover and selection render
+       dashed purple instead of the content-element blue, and a minimum
+       height keeps empty collections visible and clickable. */
+    [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}] {
+      outline: none !important;
+    }
+    [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}].${HOVER_CLASS}:not(.${SELECTED_CLASS})  {
+      background-color: rgba(0, 173, 238, 0.1);
+      outline: none !important;
+    }
+    [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}] {
+      background-color: rgba(0, 173, 238, 0.1);
+      outline: none !important;
+    }
+    [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}].${SELECTED_CLASS} {
+      background-color: rgba(0, 173, 238, 0.2);
+      outline: none !important;
     }
     [${PROPERTY_ATTRIBUTE}] {
       cursor: text;
