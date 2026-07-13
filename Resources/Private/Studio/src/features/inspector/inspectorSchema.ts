@@ -68,9 +68,19 @@ const DATA_TYPE_EDITORS: Record<string, string> = {
   string: 'Neos.Neos/Inspector/Editors/TextFieldEditor',
   integer: 'Neos.Neos/Inspector/Editors/TextFieldEditor',
   boolean: 'Neos.Neos/Inspector/Editors/BooleanEditor',
+  array: 'Neos.Neos/Inspector/Editors/SelectBoxEditor',
   DateTime: 'Neos.Neos/Inspector/Editors/DateTimeEditor',
   reference: 'Neos.Neos/Inspector/Editors/ReferenceEditor',
   references: 'Neos.Neos/Inspector/Editors/ReferencesEditor',
+}
+
+/**
+ * Default editor options per property type, applied when the property keeps
+ * its type's default editor (mirroring how the dataTypes settings merge in
+ * Neos): array properties are a multi-select unless configured otherwise.
+ */
+const DATA_TYPE_EDITOR_OPTIONS: Record<string, Record<string, unknown>> = {
+  array: { multiple: true },
 }
 
 /**
@@ -108,12 +118,17 @@ export function buildInspectorSchema(schema: NodeTypeSchemaDto): InspectorTab[] 
     ).map((name): InspectorProperty => {
       const propertyConfig = groupProperties.find((p) => p.name === name)!.config
       const type = propertyConfig.type ?? 'string'
+      const defaultEditor = DATA_TYPE_EDITORS[type] ?? null
+      const editor = propertyConfig.ui?.inspector?.editor ?? defaultEditor
       return {
         name,
         type,
         label: humanizeLabel(propertyConfig.ui?.label, name),
-        editor: propertyConfig.ui?.inspector?.editor ?? DATA_TYPE_EDITORS[type] ?? null,
-        editorOptions: propertyConfig.ui?.inspector?.editorOptions ?? {},
+        editor,
+        editorOptions: {
+          ...(editor === defaultEditor ? DATA_TYPE_EDITOR_OPTIONS[type] : undefined),
+          ...propertyConfig.ui?.inspector?.editorOptions,
+        },
       }
     })
 

@@ -18,6 +18,11 @@ export function faClassName(configured: string): string {
   return icon.startsWith('fa-') ? `fas ${icon}` : `fas fa-${icon}`
 }
 
+/** A Font Awesome icon from a configured name (node type, tab, select value...). */
+export function FaIcon({ icon, className }: { icon: string; className?: string }) {
+  return <i className={cn(faClassName(icon), 'fa-fw text-[0.75rem]', className)} aria-hidden />
+}
+
 export function resolveNodeTypeIconClass(map: NodeTypeMap | undefined, nodeTypeName: string): string {
   const configured = map?.get(nodeTypeName)?.icon
   if (configured) return faClassName(configured)

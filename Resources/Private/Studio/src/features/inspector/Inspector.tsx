@@ -14,8 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
-import { faClassName, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
-import { cn } from '@/lib/utils'
+import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyEditor } from './PropertyEditor'
 
@@ -89,7 +88,7 @@ export function Inspector({
                   <TabsList className="w-full">
                     {tabs.map((tab) => (
                       <TabsTrigger key={tab.id} value={tab.id} title={tab.label}>
-                        {tab.icon && <TabIcon icon={tab.icon} />}
+                        {tab.icon && <FaIcon icon={tab.icon} />}
                         {tab.label}
                       </TabsTrigger>
                     ))}
@@ -146,7 +145,7 @@ function PropertyGroup({
   return (
     <details open={!group.collapsed} className="group/inspector-group">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground select-none [&::-webkit-details-marker]:hidden">
-        {group.icon && <TabIcon icon={group.icon} />}
+        {group.icon && <FaIcon icon={group.icon} />}
         {group.label}
         <span className="ml-auto transition-transform group-open/inspector-group:rotate-90">›</span>
       </summary>
@@ -167,10 +166,6 @@ function PropertyGroup({
       </div>
     </details>
   )
-}
-
-function TabIcon({ icon, className }: { icon: string; className?: string }) {
-  return <i className={cn(faClassName(icon), 'fa-fw text-[0.75rem]', className)} aria-hidden />
 }
 
 function InspectorRow({ label, children }: { label: string; children: React.ReactNode }) {
