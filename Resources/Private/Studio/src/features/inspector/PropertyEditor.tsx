@@ -73,6 +73,9 @@ function TextEditor({
   const keyHandlers = {
     onKeyDown: (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (event.key === 'Escape') {
+        // preventDefault keeps the inspector panel open - Escape here only
+        // cancels the draft.
+        event.preventDefault()
         setDraft(initial)
         event.currentTarget.blur()
       }
