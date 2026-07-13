@@ -43,7 +43,10 @@ export function publishWorkspace(
   workspaceName: string,
   filter?: WorkspaceOperationFilter,
 ): Promise<{ workspace: string; publishedChanges: number }> {
-  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/publish`, { method: 'POST', body: filter })
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/publish`, {
+    method: 'POST',
+    body: filter,
+  })
 }
 
 /** Discard pending changes of the workspace. */
@@ -51,16 +54,38 @@ export function discardWorkspace(
   workspaceName: string,
   filter?: WorkspaceOperationFilter,
 ): Promise<{ workspace: string; discardedChanges: number }> {
-  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/discard`, { method: 'POST', body: filter })
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/discard`, {
+    method: 'POST',
+    body: filter,
+  })
+}
+
+/**
+ * Rebase the workspace onto a different base workspace - what "switching the
+ * workspace" means in Neos: editing always happens in the personal workspace,
+ * this only retargets where its changes get published. Rejected with a 409
+ * and error code "workspace_not_empty" while the workspace still has
+ * publishable changes.
+ */
+export function changeBaseWorkspace(
+  workspaceName: string,
+  baseWorkspace: string,
+): Promise<{ workspace: string; baseWorkspace: string }> {
+  return apiFetch(
+    `/workspaces/${encodeURIComponent(workspaceName)}/base-workspace`,
+    { method: 'POST', body: { baseWorkspace } },
+  )
 }
 
 export function useWorkspaceChanges(workspaceName: string | null) {
   return useQuery({
     queryKey: queryKeys.workspaces.changes(workspaceName ?? ''),
     queryFn: () =>
-      apiFetch<{ workspace: string; baseWorkspace: string | null; changes: WorkspaceChange[] }>(
-        `/workspaces/${encodeURIComponent(workspaceName!)}/changes`,
-      ),
+      apiFetch<{
+        workspace: string
+        baseWorkspace: string | null
+        changes: WorkspaceChange[]
+      }>(`/workspaces/${encodeURIComponent(workspaceName!)}/changes`),
     enabled: workspaceName !== null,
     // Dirty markers should feel current while editing elsewhere.
     staleTime: 10_000,

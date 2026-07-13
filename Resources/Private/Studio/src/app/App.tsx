@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { beginLogin, getTokens, handleRedirectCallback, logout } from '@/auth/oauth'
+import {
+  beginLogin,
+  getTokens,
+  handleRedirectCallback,
+  logout,
+} from '@/auth/oauth'
 import { ApiError } from '@/api/client'
-import { type DimensionSpacePoint, dimensionSpacePointEquals, useDimensions } from '@/api/dimensions'
+import {
+  type DimensionSpacePoint,
+  dimensionSpacePointEquals,
+  useDimensions,
+} from '@/api/dimensions'
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
 import { fetchNode, type NodeDto, useNodeVariants } from '@/api/nodes'
@@ -11,7 +20,10 @@ import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { loadTranslations } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
-import { SidebarResizeHandle, useResizableSidebar } from '@/components/ui/sidebar-resize'
+import {
+  SidebarResizeHandle,
+  useResizableSidebar,
+} from '@/components/ui/sidebar-resize'
 import {
   Sidebar,
   SidebarContent,
@@ -58,35 +70,42 @@ export function App() {
   const { sidebarWidth, isResizing, resizeHandleProps } = useResizableSidebar()
   const { data: workspacesResponse } = useWorkspaces(auth === 'authenticated')
 
-  // Editors never browse live (ROOT) directly - only their personal
-  // workspace or shared ones. Default to the personal workspace.
-  const workspaces = (workspacesResponse?.workspaces ?? []).filter(
-    (w) => w.classification === 'PERSONAL' || w.classification === 'SHARED',
-  )
-  const [workspaceName, setWorkspaceName] = useState<string | null>(null)
+  // Editing always happens in the personal workspace, as in the classic UI.
+  // The workspace switcher never changes this - it rebases the personal
+  // workspace onto a different base (live or a shared workspace) and thereby
+  // retargets where a publish goes.
+  const workspaces = workspacesResponse?.workspaces ?? []
   const activeWorkspace =
-    workspaces.find((w) => w.name === workspaceName) ??
-    workspaces.find((w) => w.classification === 'PERSONAL') ??
-    workspaces[0] ??
-    null
+    workspaces.find((w) => w.classification === 'PERSONAL') ?? null
+  const baseTargets = workspaces.filter(
+    (w) => w.classification === 'ROOT' || w.classification === 'SHARED',
+  )
 
   const { data: dimensionsResponse } = useDimensions(auth === 'authenticated')
   const dimensions = dimensionsResponse?.dimensions ?? []
   // null = let the backend pick its default dimension space point; the sites
   // response reports the point actually in effect, which the switcher shows.
-  const [dimensionSpacePoint, setDimensionSpacePoint] = useState<DimensionSpacePoint | null>(null)
+  const [dimensionSpacePoint, setDimensionSpacePoint] =
+    useState<DimensionSpacePoint | null>(null)
   // Set when the user picked a dimension the selected document does not exist
   // in - the create-variant dialog is open for this target point.
-  const [variantRequest, setVariantRequest] = useState<DimensionSpacePoint | null>(null)
+  const [variantRequest, setVariantRequest] =
+    useState<DimensionSpacePoint | null>(null)
   // Where the selected document exists; drives the switcher's muted "+" items.
-  const { data: documentVariants } = useNodeVariants(selectedDocument?.address ?? null, auth === 'authenticated')
+  const { data: documentVariants } = useNodeVariants(
+    selectedDocument?.address ?? null,
+    auth === 'authenticated',
+  )
 
   // Keep the user on the same document across a dimension switch: fetch the
   // node at its address in the target point and reselect it once it resolves.
   // The counter drops stale responses when dimensions change in quick
   // succession, so a slow earlier fetch cannot override the latest switch.
   const followDocumentRequest = useRef(0)
-  const followDocumentInto = (previousAddress: string, point: DimensionSpacePoint) => {
+  const followDocumentInto = (
+    previousAddress: string,
+    point: DimensionSpacePoint,
+  ) => {
     const request = ++followDocumentRequest.current
     fetchNode(addressInDimension(previousAddress, point))
       .then((node) => {
@@ -99,12 +118,18 @@ export function App() {
       })
   }
 
-  const { data: sitesResponse } = useSites(activeWorkspace?.name ?? null, dimensionSpacePoint, auth === 'authenticated')
+  const { data: sitesResponse } = useSites(
+    activeWorkspace?.name ?? null,
+    dimensionSpacePoint,
+    auth === 'authenticated',
+  )
 
   const sites = sitesResponse?.sites ?? []
   const [siteNodeName, setSiteNodeName] = useState<string | null>(null)
   const activeSite =
-    sites.find((s) => s.nodeName === siteNodeName) ?? sites.find((s) => s.nodeAddress !== null) ?? null
+    sites.find((s) => s.nodeName === siteNodeName) ??
+    sites.find((s) => s.nodeAddress !== null) ??
+    null
 
   useEffect(() => {
     ;(async () => {
@@ -140,7 +165,11 @@ export function App() {
   }, [meError])
 
   if (auth === 'checking') {
-    return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading Neos Studio…</div>
+    return (
+      <div className="grid min-h-screen place-items-center text-muted-foreground">
+        Loading Neos Studio…
+      </div>
+    )
   }
 
   if (auth === 'anonymous') {
@@ -148,7 +177,9 @@ export function App() {
       <div className="grid min-h-screen place-items-center">
         <div className="rounded-lg border bg-card px-12 py-10 text-center">
           <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
-          <p className="mb-6 text-muted-foreground">Editing environment for Neos</p>
+          <p className="mb-6 text-muted-foreground">
+            Editing environment for Neos
+          </p>
           {error && <p className="mb-4 text-destructive">{error}</p>}
           <Button onClick={() => beginLogin()}>Connect to the API</Button>
         </div>
@@ -172,7 +203,10 @@ export function App() {
     },
     inspectNode: setInspectedNode,
     nodeEdited: (address) => {
-      setLastEdit((prev) => ({ addresses: [address], token: (prev?.token ?? 0) + 1 }))
+      setLastEdit((prev) => ({
+        addresses: [address],
+        token: (prev?.token ?? 0) + 1,
+      }))
       setPreviewReloadToken((token) => token + 1)
       // The inspected-node snapshot is stale now - the save already
       // invalidated the cache, so this refetches fresh values.
@@ -183,7 +217,10 @@ export function App() {
         })
     },
     workspaceContentChanged: () => {
-      setLastEdit((prev) => ({ addresses: [ALL_NODES], token: (prev?.token ?? 0) + 1 }))
+      setLastEdit((prev) => ({
+        addresses: [ALL_NODES],
+        token: (prev?.token ?? 0) + 1,
+      }))
       setPreviewReloadToken((token) => token + 1)
       // The snapshots held in app state are re-read as well; a node that no
       // longer exists (created in the workspace, then discarded) is dropped.
@@ -225,7 +262,7 @@ export function App() {
             </SidebarContent>
             <SidebarResizeHandle {...resizeHandleProps} />
           </Sidebar>
-    
+
           <SidebarInset>
             <header className="flex items-center justify-between border-b px-4 py-2.5">
               <div className="flex items-center gap-3">
@@ -244,44 +281,53 @@ export function App() {
                 {dimensions.length > 0 && sitesResponse && (
                   <DimensionSwitcher
                     dimensions={dimensions}
-                    allowedPoints={dimensionsResponse?.allowedDimensionSpacePoints ?? []}
-                    value={dimensionSpacePoint ?? sitesResponse.dimensionSpacePoint}
-                    documentCoverage={selectedDocument ? documentVariants?.coveredDimensionSpacePoints : undefined}
+                    allowedPoints={
+                      dimensionsResponse?.allowedDimensionSpacePoints ?? []
+                    }
+                    value={
+                      dimensionSpacePoint ?? sitesResponse.dimensionSpacePoint
+                    }
+                    documentCoverage={
+                      selectedDocument
+                        ? documentVariants?.coveredDimensionSpacePoints
+                        : undefined
+                    }
                     onCreateVariant={setVariantRequest}
                     onChange={(point) => {
                       const previousAddress = selectedDocument?.address ?? null
                       setDimensionSpacePoint(point)
                       setSelectedDocument(null)
                       setInspectedNode(null)
-                      if (previousAddress) followDocumentInto(previousAddress, point)
+                      if (previousAddress)
+                        followDocumentInto(previousAddress, point)
                     }}
                   />
                 )}
-                {workspaces.length > 0 && (
-                  <WorkspaceSwitcher
-                    workspaces={workspaces}
-                    value={activeWorkspace?.name ?? null}
-                    onChange={(name) => {
-                      setWorkspaceName(name)
-                      setSelectedDocument(null)
-                      setInspectedNode(null)
-                    }}
-                  />
-                )}
-              </div>
-              <div className="flex items-center gap-2">
+
                 <PreviewToolbar
                   document={selectedDocument}
                   editing={previewEditing}
                   onToggleEditing={() => setPreviewEditing((value) => !value)}
                   onReload={() => setPreviewReloadToken((token) => token + 1)}
                 />
-                {activeWorkspace && <PublishButton workspaceName={activeWorkspace.name} />}
+              </div>
+              <div className="flex items-center gap-2">
+                {activeWorkspace && baseTargets.length > 0 && (
+                  <WorkspaceSwitcher
+                    personalWorkspace={activeWorkspace}
+                    targets={baseTargets}
+                  />
+                )}
+                {activeWorkspace && (
+                  <PublishButton workspaceName={activeWorkspace.name} />
+                )}
               </div>
             </header>
-    
-            {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
-    
+
+            {error && (
+              <div className="px-4 py-2.5 text-destructive">{error}</div>
+            )}
+
             <PreviewPane
               document={selectedDocument}
               editing={previewEditing}
@@ -302,8 +348,15 @@ export function App() {
                 // trees browse the same dimension as the preview.
                 fetchNode(address)
                   .then((node) => {
-                    const currentPoint = dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
-                    if (currentPoint && !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)) {
+                    const currentPoint =
+                      dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
+                    if (
+                      currentPoint &&
+                      !dimensionSpacePointEquals(
+                        node.dimensionSpacePoint,
+                        currentPoint,
+                      )
+                    ) {
                       setDimensionSpacePoint(node.dimensionSpacePoint)
                     }
                     setSelectedDocument(node)
@@ -321,7 +374,7 @@ export function App() {
               }
               reloadToken={previewReloadToken}
             />
-    
+
             {variantRequest && selectedDocument && activeWorkspace && (
               <CreateVariantDialog
                 document={selectedDocument}
@@ -334,8 +387,12 @@ export function App() {
                   const previousAddress = selectedDocument.address
                   // The new variants exist now - drop every cached node read and
                   // the pending-changes badge state before anything refetches.
-                  void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-                  void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+                  void queryClient.invalidateQueries({
+                    queryKey: queryKeys.nodes.all,
+                  })
+                  void queryClient.invalidateQueries({
+                    queryKey: queryKeys.workspaces.all,
+                  })
                   setDimensionSpacePoint(point)
                   setSelectedDocument(null)
                   setInspectedNode(null)
