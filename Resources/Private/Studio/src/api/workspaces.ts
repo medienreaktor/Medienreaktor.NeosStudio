@@ -32,9 +32,26 @@ export function useWorkspaces(enabled = true) {
   })
 }
 
-/** Publish all pending changes of the workspace to its base workspace. */
-export function publishWorkspace(workspaceName: string): Promise<{ workspace: string; publishedChanges: number }> {
-  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/publish`, { method: 'POST' })
+/** Scopes a publish/discard to one site or one document; empty = whole workspace. */
+export interface WorkspaceOperationFilter {
+  site?: string
+  document?: string
+}
+
+/** Publish pending changes of the workspace to its base workspace. */
+export function publishWorkspace(
+  workspaceName: string,
+  filter?: WorkspaceOperationFilter,
+): Promise<{ workspace: string; publishedChanges: number }> {
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/publish`, { method: 'POST', body: filter })
+}
+
+/** Discard pending changes of the workspace. */
+export function discardWorkspace(
+  workspaceName: string,
+  filter?: WorkspaceOperationFilter,
+): Promise<{ workspace: string; discardedChanges: number }> {
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/discard`, { method: 'POST', body: filter })
 }
 
 export function useWorkspaceChanges(workspaceName: string | null) {
