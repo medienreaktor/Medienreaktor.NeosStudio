@@ -14,7 +14,10 @@
  * (committed to the host on blur, Escape reverts). Selection pushed by the
  * host (outliner clicks) is outlined and scrolled into view.
  */
-import type { GuestToHostMessage, HostToGuestMessage } from '../features/preview/protocol'
+import type {
+  GuestToHostMessage,
+  HostToGuestMessage,
+} from '../features/preview/protocol'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
@@ -40,42 +43,51 @@ function injectStyles(): void {
   const style = document.createElement('style')
   style.textContent = `
     [${WRAPPER_ATTRIBUTE}].${HOVER_CLASS}:not(.${SELECTED_CLASS}) {
-      outline: 1px dashed rgba(0, 173, 238, 0.65) !important;
-      outline-offset: -1px;
+      outline: 2px dashed rgba(0, 173, 238, 0.5);
+      outline-offset: 5px;
     }
     [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} {
-      outline: 2px solid #00adee !important;
-      outline-offset: -2px;
+      outline: 2px solid #00adee;
+      outline-offset: 5px;
     }
     [${PROPERTY_ATTRIBUTE}] {
       cursor: text;
+      outline: none !important;
     }
     [${PROPERTY_ATTRIBUTE}]:focus {
-      outline: 1px dashed rgba(0, 173, 238, 0.65);
-      outline-offset: 2px;
+      outline: none !important;
     }
   `
   document.head.appendChild(style)
 }
 
 function indexWrappedElements(): void {
-  for (const element of document.querySelectorAll<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)) {
+  for (const element of document.querySelectorAll<HTMLElement>(
+    `[${WRAPPER_ATTRIBUTE}]`,
+  )) {
     try {
-      const address = JSON.parse(element.getAttribute(WRAPPER_ATTRIBUTE) ?? '') as { aggregateId?: string }
-      if (typeof address.aggregateId === 'string') elementsByAggregateId.set(address.aggregateId, element)
+      const address = JSON.parse(
+        element.getAttribute(WRAPPER_ATTRIBUTE) ?? '',
+      ) as { aggregateId?: string }
+      if (typeof address.aggregateId === 'string')
+        elementsByAggregateId.set(address.aggregateId, element)
     } catch {
       /* malformed attribute - skip the element */
     }
   }
 }
 
-function select(element: HTMLElement | null, options: { notifyHost: boolean; reveal?: boolean }): void {
+function select(
+  element: HTMLElement | null,
+  options: { notifyHost: boolean; reveal?: boolean },
+): void {
   if (selectedElement === element) return
   selectedElement?.classList.remove(SELECTED_CLASS)
   selectedElement = element
   if (element === null) return
   element.classList.add(SELECTED_CLASS)
-  if (options.reveal) element.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  if (options.reveal)
+    element.scrollIntoView({ block: 'center', behavior: 'smooth' })
   if (options.notifyHost) {
     const contextPath = element.getAttribute(WRAPPER_ATTRIBUTE)
     if (contextPath) post({ type: 'neos-studio/node-selected', contextPath })
@@ -83,7 +95,9 @@ function select(element: HTMLElement | null, options: { notifyHost: boolean; rev
 }
 
 function makeEditable(): void {
-  for (const element of document.querySelectorAll<HTMLElement>(`[${PROPERTY_ATTRIBUTE}]`)) {
+  for (const element of document.querySelectorAll<HTMLElement>(
+    `[${PROPERTY_ATTRIBUTE}]`,
+  )) {
     element.contentEditable = 'true'
   }
 }
@@ -98,7 +112,9 @@ function commitEdit(): void {
   // The editable wrapping carries the node identity itself; property markup
   // rendered without it falls back to the enclosing content element wrapper.
   const contextPath =
-    element.closest(`[${EDITABLE_NODE_ATTRIBUTE}]`)?.getAttribute(EDITABLE_NODE_ATTRIBUTE) ??
+    element
+      .closest(`[${EDITABLE_NODE_ATTRIBUTE}]`)
+      ?.getAttribute(EDITABLE_NODE_ATTRIBUTE) ??
     element.closest(`[${WRAPPER_ATTRIBUTE}]`)?.getAttribute(WRAPPER_ATTRIBUTE)
   if (property && contextPath) {
     post({ type: 'neos-studio/property-changed', contextPath, property, value })
@@ -120,7 +136,10 @@ function onClick(event: MouseEvent): void {
  * the click is handled entirely (a navigation); false when it should still
  * select the containing content element.
  */
-function handleLinkClick(event: MouseEvent, anchor: HTMLAnchorElement): boolean {
+function handleLinkClick(
+  event: MouseEvent,
+  anchor: HTMLAnchorElement,
+): boolean {
   const href = anchor.getAttribute('href') ?? ''
   // Same-page anchors keep their default scroll behavior.
   if (href.startsWith('#')) return false
@@ -141,7 +160,10 @@ function handleLinkClick(event: MouseEvent, anchor: HTMLAnchorElement): boolean 
   // and carry the target's NodeAddress (NodeUriBuilder::previewUriFor) - let
   // the host navigate, so the document tree follows and the preview reloads
   // through the Studio's own edit-mode endpoint.
-  if (url.origin === window.location.origin && url.pathname.endsWith('/neos/preview')) {
+  if (
+    url.origin === window.location.origin &&
+    url.pathname.endsWith('/neos/preview')
+  ) {
     const contextPath = url.searchParams.get('node')
     if (contextPath) {
       post({ type: 'neos-studio/navigate-to-node', contextPath })
@@ -156,7 +178,9 @@ function handleLinkClick(event: MouseEvent, anchor: HTMLAnchorElement): boolean 
 
 function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
-  const wrapper = target?.closest ? target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`) : null
+  const wrapper = target?.closest
+    ? target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
+    : null
   if (wrapper === hoveredElement) return
   hoveredElement?.classList.remove(HOVER_CLASS)
   hoveredElement = wrapper
@@ -180,10 +204,14 @@ function onKeyDown(event: KeyboardEvent): void {
 }
 
 function onHostMessage(event: MessageEvent): void {
-  if (event.origin !== window.location.origin || event.source !== window.parent) return
+  if (event.origin !== window.location.origin || event.source !== window.parent)
+    return
   const message = event.data as HostToGuestMessage
   if (message?.type === 'neos-studio/select-node') {
-    const element = message.aggregateId === null ? null : (elementsByAggregateId.get(message.aggregateId) ?? null)
+    const element =
+      message.aggregateId === null
+        ? null
+        : (elementsByAggregateId.get(message.aggregateId) ?? null)
     select(element, { notifyHost: false, reveal: true })
   }
 }
