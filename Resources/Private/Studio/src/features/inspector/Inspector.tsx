@@ -3,12 +3,6 @@ import type { NodeDto } from '@/api/nodes'
 import { nodeLabel } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { Badge } from '@/components/ui/badge'
-import {
-  FloatingPanel,
-  FloatingPanelDescription,
-  FloatingPanelHeader,
-  FloatingPanelTitle,
-} from '@/components/ui/floating-panel'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,30 +12,17 @@ import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyEditor } from './PropertyEditor'
 
 /**
- * The inspector: a floating palette panel, draggable by its header and
- * resizable from every edge (position and size persist to localStorage). The
- * trees and the page preview in <main> stay interactive while it is open.
- * The node type's inspector configuration drives the structure - tabs
- * containing groups containing properties. Text properties are editable;
- * other editors render their value read-only until implemented.
+ * The inspector panel's content (the panel chrome - tab, dragging, floating -
+ * comes from the panel system). The node type's inspector configuration
+ * drives the structure: tabs containing groups containing properties. Text
+ * properties are editable; other editors render their value read-only until
+ * implemented.
  */
-const PANEL_STORAGE_KEY = 'neos-studio.inspector_panel'
-
-/** Where the drawer used to sit: right edge, lower half of the viewport. */
-const defaultPanelRect = () => ({
-  width: 384,
-  height: Math.round(window.innerHeight / 2) - 16,
-  x: window.innerWidth - 384 - 16,
-  y: Math.round(window.innerHeight / 2) + 8,
-})
-
-export function Inspector({
+export function InspectorPanel({
   node,
-  onClose,
   onNodeEdited,
 }: {
   node: NodeDto | null
-  onClose: () => void
   /** A property edit for this address was persisted. */
   onNodeEdited?: (address: string) => void
 }) {
@@ -58,80 +39,74 @@ export function Inspector({
       .catch((e: unknown) => setSaveError(e instanceof Error ? e.message : String(e)))
   }
 
+  if (!node) {
+    return <p className="p-4 text-xs text-muted-foreground">Select a node in the preview or the trees to inspect it.</p>
+  }
+
   return (
-    <FloatingPanel
-      open={node !== null}
-      onClose={onClose}
-      storageKey={PANEL_STORAGE_KEY}
-      defaultRect={defaultPanelRect}
-      aria-label="Node inspector"
-    >
-      {node && (
-        <>
-          <FloatingPanelHeader>
-            <FloatingPanelTitle className="flex items-center gap-2">
-              <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
-              {nodeLabel(node)}
-            </FloatingPanelTitle>
-            <FloatingPanelDescription>{node.nodeType}</FloatingPanelDescription>
-          </FloatingPanelHeader>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 text-sm">
-            {saveError && <p className="text-xs text-destructive">Saving failed: {saveError}</p>}
-            {tabs === null ? (
-              <div className="space-y-2">
-                <Skeleton className="h-9 w-full" />
-                <Skeleton className="h-24 w-full" />
-              </div>
-            ) : tabs.length === 0 ? (
-              <p className="text-xs text-muted-foreground">This node type has no inspector properties.</p>
-            ) : (
-              // Remount on node type change: the available tabs differ, and
-              // the initially selected tab resets to the first one.
-              <Tabs key={node.nodeType} defaultValue={tabs[0].id}>
-                <TabsList className="w-full">
-                  {tabs.map((tab) => (
-                    <TabsTrigger key={tab.id} value={tab.id} title={tab.label}>
-                      {tab.icon && <FaIcon icon={tab.icon} />}
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                {tabs.map((tab) => (
-                  <TabsContent key={tab.id} value={tab.id} className="space-y-4">
-                    {tab.groups.map((group) => (
-                      <PropertyGroup key={group.id} group={group} node={node} onSave={save} />
-                    ))}
-                  </TabsContent>
-                ))}
-              </Tabs>
-            )}
-            <Separator />
-            <dl className="space-y-2">
-              <InspectorRow label="Aggregate ID">
-                <span className="font-mono text-xs">{node.aggregateId}</span>
-              </InspectorRow>
-              <InspectorRow label="Workspace">{node.workspace}</InspectorRow>
-              <InspectorRow label="Dimensions">
-                {Object.entries(node.dimensionSpacePoint)
-                  .map(([dimension, value]) => `${dimension}: ${value}`)
-                  .join(', ') || '–'}
-              </InspectorRow>
-              {node.tags.all.length > 0 && (
-                <InspectorRow label="Tags">
-                  <span className="flex flex-wrap gap-1">
-                    {node.tags.all.map((tag) => (
-                      <Badge key={tag} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </span>
-                </InspectorRow>
-              )}
-            </dl>
+    <div className="text-sm">
+      <div className="border-b p-4">
+        <h2 className="flex items-center gap-2 font-semibold">
+          <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
+          {nodeLabel(node)}
+        </h2>
+        <p className="text-muted-foreground">{node.nodeType}</p>
+      </div>
+      <div className="space-y-4 p-4">
+        {saveError && <p className="text-xs text-destructive">Saving failed: {saveError}</p>}
+        {tabs === null ? (
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-24 w-full" />
           </div>
-        </>
-      )}
-    </FloatingPanel>
+        ) : tabs.length === 0 ? (
+          <p className="text-xs text-muted-foreground">This node type has no inspector properties.</p>
+        ) : (
+          // Remount on node type change: the available tabs differ, and
+          // the initially selected tab resets to the first one.
+          <Tabs key={node.nodeType} defaultValue={tabs[0].id}>
+            <TabsList className="w-full">
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id} title={tab.label}>
+                  {tab.icon && <FaIcon icon={tab.icon} />}
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {tabs.map((tab) => (
+              <TabsContent key={tab.id} value={tab.id} className="space-y-4">
+                {tab.groups.map((group) => (
+                  <PropertyGroup key={group.id} group={group} node={node} onSave={save} />
+                ))}
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
+        <Separator />
+        <dl className="space-y-2">
+          <InspectorRow label="Aggregate ID">
+            <span className="font-mono text-xs">{node.aggregateId}</span>
+          </InspectorRow>
+          <InspectorRow label="Workspace">{node.workspace}</InspectorRow>
+          <InspectorRow label="Dimensions">
+            {Object.entries(node.dimensionSpacePoint)
+              .map(([dimension, value]) => `${dimension}: ${value}`)
+              .join(', ') || '–'}
+          </InspectorRow>
+          {node.tags.all.length > 0 && (
+            <InspectorRow label="Tags">
+              <span className="flex flex-wrap gap-1">
+                {node.tags.all.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
+              </span>
+            </InspectorRow>
+          )}
+        </dl>
+      </div>
+    </div>
   )
 }
 

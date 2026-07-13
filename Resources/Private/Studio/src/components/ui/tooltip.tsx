@@ -49,7 +49,7 @@ function TooltipContent({
   if (hidden) return null
   return (
     <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Positioner side={side} align={align} sideOffset={sideOffset} className="z-50">
+      <TooltipPrimitive.Positioner side={side} align={align} sideOffset={sideOffset} className="z-200">
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
@@ -59,7 +59,7 @@ function TooltipContent({
           {...props}
         >
           {children}
-          <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground data-[side=bottom]:-top-1 data-[side=top]:-bottom-1" />
+          <TooltipPrimitive.Arrow className="z-200 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground data-[side=bottom]:-top-1 data-[side=top]:-bottom-1" />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>

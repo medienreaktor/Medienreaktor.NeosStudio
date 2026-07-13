@@ -47,7 +47,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Backdrop
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0",
+        "fixed inset-0 z-200 bg-black/50 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0",
         className
       )}
       {...props}
@@ -67,7 +67,7 @@ function DrawerContent({
   return (
     <DrawerPortal>
       {showOverlay && <DrawerOverlay />}
-      <DrawerPrimitive.Viewport className="pointer-events-none fixed inset-0 z-50 flex items-stretch justify-end">
+      <DrawerPrimitive.Viewport className="pointer-events-none fixed inset-0 z-200 flex items-stretch justify-end">
         <DrawerPrimitive.Popup
           data-slot="drawer-content"
           className={cn(

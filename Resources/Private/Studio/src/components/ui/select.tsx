@@ -70,7 +70,7 @@ function SelectContent({
         side={side}
         align={align}
         sideOffset={sideOffset}
-        className="z-50 outline-none select-none"
+        className="z-200 outline-none select-none"
       >
         <SelectPrimitive.ScrollUpArrow className="flex w-full cursor-default items-center justify-center py-1">
           <ChevronUpIcon className="size-4" />
