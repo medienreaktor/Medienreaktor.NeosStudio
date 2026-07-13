@@ -302,8 +302,10 @@ function GroupTabBar({ group, floating = false }: { group: PanelGroup; floating?
       data-panel-drop="tabs"
       data-group-id={group.id}
       className={cn(
-        'flex h-9 shrink-0 items-center gap-0.5 px-1',
-        !group.collapsed && 'border-b',
+        // The border stays in the layout when collapsed (only its color goes)
+        // so the centered tabs don't shift by the border width on toggle.
+        'flex h-9 shrink-0 items-center gap-0.5 border-b px-1',
+        group.collapsed && 'border-b-transparent',
         dropIndex !== null && 'bg-accent/40',
       )}
     >
