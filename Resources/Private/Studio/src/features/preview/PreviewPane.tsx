@@ -25,6 +25,46 @@ export function previewUrl(address: string, mode?: string): string {
 }
 
 /**
+ * Preview controls for the topbar: toggle in-place editing, reload the
+ * iframe and open the page in a new tab. The external link always uses the
+ * plain preview rendering - the content-element metadata of the "inPlace"
+ * mode only makes sense inside the shell's iframe.
+ */
+export function PreviewToolbar({
+  document,
+  editing,
+  onToggleEditing,
+  onReload,
+}: {
+  document: NodeDto | null
+  editing: boolean
+  onToggleEditing: () => void
+  onReload: () => void
+}) {
+  if (!document) return null
+  return (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        title={editing ? 'Preview without editing' : 'Edit in place'}
+        onClick={onToggleEditing}
+      >
+        {editing ? <Eye /> : <Pencil />}
+      </Button>
+      <Button variant="ghost" size="icon-xs" title="Reload preview" onClick={onReload}>
+        <RotateCw />
+      </Button>
+      <Button asChild variant="ghost" size="icon-xs" title="Open page in a new tab">
+        <a href={previewUrl(document.address)} target="_blank" rel="noreferrer">
+          <ExternalLink />
+        </a>
+      </Button>
+    </div>
+  )
+}
+
+/**
  * Renders the selected document in an iframe and bridges it to the shell:
  * clicks on content elements surface as onSelectNode (the outliner follows),
  * the shell's selection is pushed back as an outline, and inline edits are
@@ -33,6 +73,7 @@ export function previewUrl(address: string, mode?: string): string {
  */
 export function PreviewPane({
   document,
+  editing,
   selectedAddress,
   onSelectNode,
   onNavigateToNode,
@@ -40,6 +81,8 @@ export function PreviewPane({
   reloadToken = 0,
 }: {
   document: NodeDto | null
+  /** Render with in-place editing (owned by the shell's PreviewToolbar). */
+  editing: boolean
   /** Address outlined in the preview - the node inspected in the shell. */
   selectedAddress: string | null
   /** A content element was clicked in the preview. */
@@ -54,7 +97,6 @@ export function PreviewPane({
   // Remount key: bumping it reloads the iframe even though the src string is
   // unchanged (e.g. after edits in the same document).
   const [reloadCount, setReloadCount] = useState(0)
-  const [editing, setEditing] = useState(true)
   const [guestReady, setGuestReady] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   // A drop from the creation panel landed in the preview - the creation flow
@@ -163,34 +205,11 @@ export function PreviewPane({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-end gap-1 border-b px-2 py-1">
-        {saveError && (
-          <span className="mr-auto overflow-hidden text-ellipsis whitespace-nowrap px-2 text-xs text-destructive">
-            {saveError}
-          </span>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          title={editing ? 'Preview without editing' : 'Edit in place'}
-          onClick={() => setEditing((value) => !value)}
-        >
-          {editing ? <Eye /> : <Pencil />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          title="Reload preview"
-          onClick={() => setReloadCount((count) => count + 1)}
-        >
-          <RotateCw />
-        </Button>
-        <Button asChild variant="ghost" size="icon-xs" title="Open preview in a new tab">
-          <a href={src} target="_blank" rel="noreferrer">
-            <ExternalLink />
-          </a>
-        </Button>
-      </div>
+      {saveError && (
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap border-b px-4 py-1 text-xs text-destructive">
+          {saveError}
+        </div>
+      )}
       <iframe
         ref={iframeRef}
         key={`${src}:${reloadCount}:${reloadToken}`}

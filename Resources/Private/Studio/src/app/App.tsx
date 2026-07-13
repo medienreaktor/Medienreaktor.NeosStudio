@@ -24,7 +24,7 @@ import { StudioProvider, type StudioContextValue } from '@/app/StudioContext'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { PanelDock, PanelsProvider } from '@/features/panels/PanelSystem'
-import { PreviewPane } from '@/features/preview/PreviewPane'
+import { PreviewPane, PreviewToolbar } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { PublishButton } from '@/features/workspaces/PublishButton'
@@ -48,6 +48,8 @@ export function App() {
   // Bumped after inspector edits so the preview shows them (inline edits
   // already render live inside the iframe and need no reload).
   const [previewReloadToken, setPreviewReloadToken] = useState(0)
+  // Whether the preview renders with in-place editing; toggled in the topbar.
+  const [previewEditing, setPreviewEditing] = useState(true)
 
   // The identity itself is not displayed, but the me-query doubles as the
   // token check: a 401 drives the logout below.
@@ -247,13 +249,22 @@ export function App() {
                   />
                 )}
               </div>
-              {activeWorkspace && <PublishButton workspaceName={activeWorkspace.name} />}
+              <div className="flex items-center gap-2">
+                <PreviewToolbar
+                  document={selectedDocument}
+                  editing={previewEditing}
+                  onToggleEditing={() => setPreviewEditing((value) => !value)}
+                  onReload={() => setPreviewReloadToken((token) => token + 1)}
+                />
+                {activeWorkspace && <PublishButton workspaceName={activeWorkspace.name} />}
+              </div>
             </header>
     
             {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}
     
             <PreviewPane
               document={selectedDocument}
+              editing={previewEditing}
               selectedAddress={inspectedNode?.address ?? null}
               onSelectNode={(address) => {
                 // A click in the preview: inspect the node and reveal it in the
