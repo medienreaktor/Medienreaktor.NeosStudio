@@ -3,6 +3,13 @@ import ReactDOM from 'react-dom/client'
 import { AppProviders } from './app/providers'
 import { App } from './app/App'
 import './styles.css'
+// Noto Sans (SIL OFL) self-hosted so the shell matches the classic Neos UI
+// typeface without a request to Google. Weights: 400 body, 500/600 for
+// font-medium/font-semibold, 700 for bold text.
+import '@fontsource/noto-sans/400.css'
+import '@fontsource/noto-sans/500.css'
+import '@fontsource/noto-sans/600.css'
+import '@fontsource/noto-sans/700.css'
 // Font Awesome free webfonts: node type icons are configured as FA names in
 // Neos, so ship the fonts and render configured names verbatim. v4 shims
 // cover legacy names from old node type definitions. Brands are omitted -
