@@ -88,7 +88,7 @@ export function NodeCreationPanel() {
     .filter((group) => group.nodeTypes.length > 0)
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div className="@container flex flex-col gap-2 p-2">
       <Input
         type="search"
         placeholder="Filter node types…"
@@ -115,13 +115,13 @@ export function NodeCreationPanel() {
               {group.label}
             </button>
             {!isCollapsed && (
-              <ul className="flex flex-col">
+              <ul className="grid grid-cols-2 gap-1 @[18rem]:grid-cols-3">
                 {group.nodeTypes.map((nodeType) => (
                   <li key={nodeType.name}>
                     <div
                       draggable
                       title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
-                      className="flex cursor-grab items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent active:cursor-grabbing"
+                      className="flex h-full cursor-grab flex-col items-center justify-center gap-1.5 rounded border border-border bg-muted/40 px-1 py-3 text-center hover:bg-accent active:cursor-grabbing"
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = 'copy'
                         event.dataTransfer.setData(NODE_TYPE_DATA_TRANSFER, nodeType.name)
@@ -129,8 +129,10 @@ export function NodeCreationPanel() {
                       }}
                       onDragEnd={() => endCreationDrag()}
                     >
-                      <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={nodeType.name} />
-                      <span className="truncate">{nodeType.label}</span>
+                      <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={nodeType.name} className="text-base" />
+                      <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                        {nodeType.label}
+                      </span>
                     </div>
                   </li>
                 ))}
