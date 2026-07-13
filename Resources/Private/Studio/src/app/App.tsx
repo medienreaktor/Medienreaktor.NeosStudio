@@ -27,6 +27,7 @@ import { PanelDock, PanelsProvider } from '@/features/panels/PanelSystem'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
+import { PublishButton } from '@/features/workspaces/PublishButton'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
@@ -246,6 +247,7 @@ export function App() {
                   />
                 )}
               </div>
+              {activeWorkspace && <PublishButton workspaceName={activeWorkspace.name} />}
             </header>
     
             {error && <div className="px-4 py-2.5 text-destructive">{error}</div>}

@@ -32,6 +32,11 @@ export function useWorkspaces(enabled = true) {
   })
 }
 
+/** Publish all pending changes of the workspace to its base workspace. */
+export function publishWorkspace(workspaceName: string): Promise<{ workspace: string; publishedChanges: number }> {
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/publish`, { method: 'POST' })
+}
+
 export function useWorkspaceChanges(workspaceName: string | null) {
   return useQuery({
     queryKey: queryKeys.workspaces.changes(workspaceName ?? ''),
