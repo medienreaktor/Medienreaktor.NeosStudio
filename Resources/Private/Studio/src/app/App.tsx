@@ -171,7 +171,7 @@ export function App() {
     },
     inspectNode: setInspectedNode,
     nodeEdited: (address) => {
-      setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))
+      setLastEdit((prev) => ({ addresses: [address], token: (prev?.token ?? 0) + 1 }))
       setPreviewReloadToken((token) => token + 1)
       // The inspected-node snapshot is stale now - the save already
       // invalidated the cache, so this refetches fresh values.
@@ -293,7 +293,12 @@ export function App() {
                     /* fine - e.g. the linked document is not visible in this workspace */
                   })
               }}
-              onNodeEdited={(address) => setLastEdit((prev) => ({ address, token: (prev?.token ?? 0) + 1 }))}
+              onNodeEdited={(address) =>
+                setLastEdit((prev) => ({
+                  addresses: Array.isArray(address) ? address : [address],
+                  token: (prev?.token ?? 0) + 1,
+                }))
+              }
               reloadToken={previewReloadToken}
             />
     

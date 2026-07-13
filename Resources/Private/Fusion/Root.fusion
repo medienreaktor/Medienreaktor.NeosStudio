@@ -5,6 +5,18 @@
 # attribute.
 prototype(Neos.Neos:ContentElementWrapping) {
   additionalAttributes {
+    # The node's concrete type - the guest script matches it against a
+    # collection's allowed-types list when an existing element is dragged to
+    # a new position.
+    data-__neos-studio-node-type = ${node.nodeTypeName.value}
+    # Marks plain content elements (not collections) - only they get the
+    # "..." element handle with the hide/delete menu and move-drag.
+    data-__neos-studio-content = 'true'
+    data-__neos-studio-content.@if.isContent = ${q(node).is('[instanceof Neos.Neos:Content]')}
+    # Explicitly hidden nodes (tagged "disabled") render dimmed in the guest
+    # and their element menu offers "Unhide" instead of "Hide".
+    data-__neos-studio-hidden = 'true'
+    data-__neos-studio-hidden.@if.isHidden = ${MedienreaktorStudio.isHidden(node)}
     data-__neos-studio-collection = 'true'
     data-__neos-studio-collection.@if.isCollection = ${q(node).is('[instanceof Neos.Neos:ContentCollection]')}
     # Which content node types may be created inside this collection - the

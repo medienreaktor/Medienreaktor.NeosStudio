@@ -16,6 +16,13 @@
  * content outliner follows) and plain contentEditable inline editing
  * (committed to the host on blur, Escape reverts). Selection pushed by the
  * host (outliner clicks) is outlined and scrolled into view.
+ *
+ * A selected content element (instanceof Neos.Neos:Content, marked by
+ * data-__neos-studio-content) gets a floating "..." handle at its top right:
+ * clicking it asks the host to open the element menu (hide/delete, rendered
+ * by the host over the iframe), dragging it moves the element - the same
+ * drop machinery the creation drag uses, so the server-computed allowed-types
+ * lists are respected.
  */
 import type {
   GuestToHostMessage,
@@ -24,6 +31,9 @@ import type {
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
 const COLLECTION_ATTRIBUTE = 'data-__neos-studio-collection'
+const CONTENT_ATTRIBUTE = 'data-__neos-studio-content'
+const HIDDEN_ATTRIBUTE = 'data-__neos-studio-hidden'
+const NODE_TYPE_ATTRIBUTE = 'data-__neos-studio-node-type'
 const ALLOWED_TYPES_ATTRIBUTE = 'data-__neos-studio-allowed-types'
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const EDITABLE_NODE_ATTRIBUTE = 'data-__neos-editable-node-contextpath'
@@ -35,6 +45,7 @@ const DROPPABLE_CLASS = 'neos-studio-droppable'
 const DROP_TARGET_CLASS = 'neos-studio-drop-target'
 const EMPTY_CLASS = 'neos-studio-empty'
 const INDICATOR_ID = 'neos-studio-drop-indicator'
+const HANDLE_ID = 'neos-studio-element-handle'
 
 function post(message: GuestToHostMessage): void {
   window.parent.postMessage(message, window.location.origin)
@@ -79,6 +90,11 @@ function injectStyles(): void {
       background-color: rgba(0, 173, 238, 0.2);
       outline: none !important;
     }
+    /* Explicitly hidden elements stay editable but read as invisible-to-
+       visitors; the opacity dims their whole subtree. */
+    [${WRAPPER_ATTRIBUTE}][${HIDDEN_ATTRIBUTE}] {
+      opacity: 0.5;
+    }
     [${PROPERTY_ATTRIBUTE}] {
       cursor: text;
       outline: none !important;
@@ -115,6 +131,28 @@ function injectStyles(): void {
       pointer-events: none;
       display: none;
     }
+    /* The "..." handle of the selected content element: opens the element
+       menu on click, moves the element on drag. */
+    #${HANDLE_ID} {
+      position: fixed;
+      z-index: 2147483647;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: rgb(0, 173, 238);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #${HANDLE_ID}:active {
+      cursor: grabbing;
+    }
   `
   document.head.appendChild(style)
 }
@@ -142,6 +180,7 @@ function select(
   if (selectedElement === element) return
   selectedElement?.classList.remove(SELECTED_CLASS)
   selectedElement = element
+  scheduleHandleUpdate()
   if (element === null) return
   element.classList.add(SELECTED_CLASS)
   if (options.reveal)
@@ -150,6 +189,110 @@ function select(
     const contextPath = element.getAttribute(WRAPPER_ATTRIBUTE)
     if (contextPath) post({ type: 'neos-studio/node-selected', contextPath })
   }
+}
+
+/**
+ * The "..." handle: a single floating button pinned to the top right of the
+ * selected content element (only Neos.Neos:Content elements - collections
+ * are structure, hidden/deleted/moved through their content). Click asks the
+ * host to open the element menu at the handle's position; dragging it starts
+ * a move of the element.
+ */
+function elementHandle(): HTMLElement {
+  let handle = document.getElementById(HANDLE_ID)
+  if (!handle) {
+    handle = document.createElement('div')
+    handle.id = HANDLE_ID
+    handle.setAttribute('role', 'button')
+    handle.setAttribute('aria-label', 'Element options')
+    handle.draggable = true
+    handle.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+      '<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>'
+    handle.addEventListener('click', onHandleClick)
+    handle.addEventListener('dragstart', onHandleDragStart)
+    handle.addEventListener('dragend', () => endDrag())
+    document.body.appendChild(handle)
+  }
+  return handle
+}
+
+let handleUpdateScheduled = false
+
+/** Reposition on the next frame - scroll and input events fire in bursts. */
+function scheduleHandleUpdate(): void {
+  if (handleUpdateScheduled) return
+  handleUpdateScheduled = true
+  requestAnimationFrame(() => {
+    handleUpdateScheduled = false
+    positionHandle()
+  })
+}
+
+function positionHandle(): void {
+  const handle = elementHandle()
+  const target =
+    selectedElement?.hasAttribute(CONTENT_ATTRIBUTE) === true
+      ? selectedElement
+      : null
+  if (target === null || !target.isConnected) {
+    handle.style.display = 'none'
+    return
+  }
+  const rect = target.getBoundingClientRect()
+  // Right-aligned with the selection outline (2px at offset 5), floating just
+  // above it; falls inside the element when that would leave the viewport.
+  let top = rect.top - 34
+  if (top < 2) top = rect.top + 9
+  handle.style.display = 'flex'
+  handle.style.left = `${rect.right + 7 - 24}px`
+  handle.style.top = `${top}px`
+}
+
+function onHandleClick(): void {
+  const element = selectedElement
+  const contextPath = element?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (!element || !contextPath) return
+  const rect = elementHandle().getBoundingClientRect()
+  post({
+    type: 'neos-studio/element-menu-request',
+    contextPath,
+    parentContextPath: parentCollectionContextPath(element),
+    hidden: element.hasAttribute(HIDDEN_ATTRIBUTE),
+    buttonRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+  })
+}
+
+function onHandleDragStart(event: DragEvent): void {
+  const element = selectedElement
+  const nodeTypeName = element?.getAttribute(NODE_TYPE_ATTRIBUTE)
+  if (!element || !nodeTypeName) {
+    event.preventDefault()
+    return
+  }
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    // Firefox refuses to start a drag without data.
+    event.dataTransfer.setData('text/plain', nodeTypeName)
+    // The handle floats slightly outside the element - clamp the ghost's
+    // grab point into its bounds.
+    const rect = element.getBoundingClientRect()
+    event.dataTransfer.setDragImage(
+      element,
+      Math.min(Math.max(event.clientX - rect.left, 0), rect.width),
+      Math.min(Math.max(event.clientY - rect.top, 0), rect.height),
+    )
+  }
+  startDrag(nodeTypeName, element)
+}
+
+/** NodeAddress JSON of the collection containing the element, if any. */
+function parentCollectionContextPath(element: HTMLElement): string | null {
+  return (
+    element.parentElement
+      ?.closest(`[${COLLECTION_ATTRIBUTE}]`)
+      ?.getAttribute(WRAPPER_ATTRIBUTE) ?? null
+  )
 }
 
 function makeEditable(): void {
@@ -282,16 +425,24 @@ function onInput(event: Event): void {
     ? target.closest<HTMLElement>(`[${PLACEHOLDER_ATTRIBUTE}]`)
     : null
   if (property) updateEmptyState(property)
+  // Typing changes the layout below the caret - keep the handle attached.
+  scheduleHandleUpdate()
 }
 
 /**
- * Node creation by drag and drop: the host announces the dragged node type
- * (creation-drag-start), collections whose server-computed allowed-types
- * list includes it become drop targets, dragover positions an insertion
- * indicator between the hovered collection's children, and drop reports the
- * insertion point back to the host, which runs the creation.
+ * Drag and drop into content collections, serving two drags with the same
+ * drop machinery: node creation (the host announces the dragged node type
+ * via creation-drag-start) and moving an existing element (started locally
+ * from its "..." handle). Collections whose server-computed allowed-types
+ * list includes the dragged type become drop targets, dragover positions an
+ * insertion indicator between the hovered collection's children, and drop
+ * reports the insertion point to the host, which runs the command.
  */
-let creationDragType: string | null = null
+let activeDrag: {
+  nodeTypeName: string
+  /** The element being moved; null for a creation drag. */
+  movingElement: HTMLElement | null
+} | null = null
 
 /** The insertion point under the pointer; before === null appends. */
 let currentDrop: { collection: HTMLElement; before: HTMLElement | null } | null =
@@ -311,18 +462,23 @@ function collectionAllows(
   }
 }
 
-function startCreationDrag(nodeTypeName: string): void {
-  creationDragType = nodeTypeName
+function startDrag(
+  nodeTypeName: string,
+  movingElement: HTMLElement | null = null,
+): void {
+  activeDrag = { nodeTypeName, movingElement }
   for (const collection of document.querySelectorAll<HTMLElement>(
     `[${COLLECTION_ATTRIBUTE}]`,
   )) {
+    // An element cannot be moved into its own subtree.
+    if (movingElement?.contains(collection)) continue
     if (collectionAllows(collection, nodeTypeName))
       collection.classList.add(DROPPABLE_CLASS)
   }
 }
 
-function endCreationDrag(): void {
-  creationDragType = null
+function endDrag(): void {
+  activeDrag = null
   setDropTarget(null)
   for (const collection of document.querySelectorAll<HTMLElement>(
     `.${DROPPABLE_CLASS}`,
@@ -333,16 +489,35 @@ function endCreationDrag(): void {
 
 /**
  * The collection's own child content elements (not those of nested
- * collections) - the elements the new node can be inserted between.
+ * collections) - the elements the dragged node can be inserted between. A
+ * moved element is not its own sibling, so it never counts.
  */
 function childElementsOf(collection: HTMLElement): HTMLElement[] {
   return Array.from(
     collection.querySelectorAll<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`),
   ).filter(
     (element) =>
+      element !== activeDrag?.movingElement &&
       element.parentElement?.closest(`[${COLLECTION_ATTRIBUTE}]`) ===
-      collection,
+        collection,
   )
+}
+
+/** Whether dropping the element at this insertion point changes nothing. */
+function isNoOpMove(
+  element: HTMLElement,
+  collection: HTMLElement,
+  before: HTMLElement | null,
+): boolean {
+  if (element.parentElement?.closest(`[${COLLECTION_ATTRIBUTE}]`) !== collection)
+    return false
+  const next =
+    childElementsOf(collection).find(
+      (sibling) =>
+        element.compareDocumentPosition(sibling) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ) ?? null
+  return before === next
 }
 
 /** The child to insert before, from the pointer position; null appends. */
@@ -435,7 +610,7 @@ function setDropTarget(
 }
 
 function onDragOver(event: DragEvent): void {
-  if (creationDragType === null) return
+  if (activeDrag === null) return
   const target = event.target as HTMLElement | null
   const collection = target?.closest
     ? target.closest<HTMLElement>(`.${DROPPABLE_CLASS}`)
@@ -446,7 +621,8 @@ function onDragOver(event: DragEvent): void {
   }
   // preventDefault marks the spot as a valid drop location.
   event.preventDefault()
-  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+  if (event.dataTransfer)
+    event.dataTransfer.dropEffect = activeDrag.movingElement ? 'move' : 'copy'
   setDropTarget({
     collection,
     before: findInsertBefore(collection, event.clientX, event.clientY),
@@ -454,31 +630,43 @@ function onDragOver(event: DragEvent): void {
 }
 
 function onDrop(event: DragEvent): void {
-  if (creationDragType === null || currentDrop === null) return
+  if (activeDrag === null || currentDrop === null) return
   event.preventDefault()
-  const parentContextPath = currentDrop.collection.getAttribute(
-    WRAPPER_ATTRIBUTE,
-  )
+  const drag = activeDrag
+  const { collection, before } = currentDrop
+  const parentContextPath = collection.getAttribute(WRAPPER_ATTRIBUTE)
   const succeedingSiblingContextPath =
-    currentDrop.before?.getAttribute(WRAPPER_ATTRIBUTE) ?? null
-  if (parentContextPath) {
-    post({
+    before?.getAttribute(WRAPPER_ATTRIBUTE) ?? null
+  let message: GuestToHostMessage | null = null
+  if (parentContextPath && drag.movingElement === null) {
+    message = {
       type: 'neos-studio/create-node-request',
-      nodeTypeName: creationDragType,
+      nodeTypeName: drag.nodeTypeName,
       parentContextPath,
       succeedingSiblingContextPath,
-    })
+    }
+  } else if (parentContextPath && drag.movingElement !== null) {
+    const nodeContextPath = drag.movingElement.getAttribute(WRAPPER_ATTRIBUTE)
+    if (nodeContextPath && !isNoOpMove(drag.movingElement, collection, before)) {
+      message = {
+        type: 'neos-studio/move-node-request',
+        nodeContextPath,
+        sourceParentContextPath: parentCollectionContextPath(drag.movingElement),
+        parentContextPath,
+        succeedingSiblingContextPath,
+      }
+    }
   }
   // The host also sends creation-drag-end (panel dragend), but clear
   // immediately so the indicator never outlives the drop.
-  endCreationDrag()
+  endDrag()
+  if (message) post(message)
 }
 
 function onDragLeaveDocument(event: DragEvent): void {
   // Leaving the iframe entirely: keep the droppable highlights (the drag is
   // still alive), but the insertion indicator has no valid position anymore.
-  if (creationDragType !== null && event.relatedTarget === null)
-    setDropTarget(null)
+  if (activeDrag !== null && event.relatedTarget === null) setDropTarget(null)
 }
 
 function onHostMessage(event: MessageEvent): void {
@@ -493,8 +681,8 @@ function onHostMessage(event: MessageEvent): void {
     select(element, { notifyHost: false, reveal: true })
   }
   if (message?.type === 'neos-studio/creation-drag-start')
-    startCreationDrag(message.nodeTypeName)
-  if (message?.type === 'neos-studio/creation-drag-end') endCreationDrag()
+    startDrag(message.nodeTypeName)
+  if (message?.type === 'neos-studio/creation-drag-end') endDrag()
 }
 
 function init(): void {
@@ -510,6 +698,11 @@ function init(): void {
   document.addEventListener('dragover', onDragOver)
   document.addEventListener('drop', onDrop)
   document.addEventListener('dragleave', onDragLeaveDocument)
+  // The element handle floats at fixed coordinates - follow the selected
+  // element through scrolling (capture catches nested scroll containers)
+  // and layout changes from resizes or inline edits.
+  window.addEventListener('scroll', scheduleHandleUpdate, true)
+  window.addEventListener('resize', scheduleHandleUpdate)
   window.addEventListener('message', onHostMessage)
   post({ type: 'neos-studio/guest-ready' })
 }

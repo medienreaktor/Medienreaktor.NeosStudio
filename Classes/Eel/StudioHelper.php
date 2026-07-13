@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Eel;
 
+use Neos\ContentRepository\Core\Feature\SubtreeTagging\Dto\SubtreeTag;
 use Neos\ContentRepository\Core\NodeType\NodeType;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateClassification;
@@ -72,6 +73,17 @@ class StudioHelper implements ProtectedContextAwareInterface
         }
 
         return $allowedNodeTypeNames;
+    }
+
+    /**
+     * Whether the node itself is hidden (explicitly tagged "disabled", not
+     * merely inside a hidden subtree). Rendered into the wrapping markup so
+     * the guest can dim the element, and the element menu offers "Unhide" -
+     * which only works where the tag was actually set.
+     */
+    public function isHidden(Node $node): bool
+    {
+        return $node->tags->withoutInherited()->contain(SubtreeTag::disabled());
     }
 
     /**

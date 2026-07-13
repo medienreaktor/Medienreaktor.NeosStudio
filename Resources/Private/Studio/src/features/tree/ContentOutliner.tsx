@@ -10,9 +10,12 @@ import { useAutoExpand } from './useAutoExpand'
 import { usePendingChanges } from './usePendingChanges'
 import { useRevealSelection } from './useRevealSelection'
 
-/** An inline edit that happened in the preview; token distinguishes repeats. */
+/**
+ * An edit that happened in the preview; token distinguishes repeats. Usually
+ * one address; structural edits (a move) touch several nodes at once.
+ */
 export interface NodeEdit {
-  address: string
+  addresses: string[]
   token: number
 }
 
@@ -119,9 +122,11 @@ function OutlinerTree({
   // save; unchanged children resolve from the still-fresh cache.
   useEffect(() => {
     if (lastEdit === null) return
-    const item = tree.getItems().find((candidate) => candidate.getId() === lastEdit.address)
-    void item?.invalidateItemData()
-    void item?.invalidateChildrenIds()
+    for (const address of lastEdit.addresses) {
+      const item = tree.getItems().find((candidate) => candidate.getId() === address)
+      void item?.invalidateItemData()
+      void item?.invalidateChildrenIds()
+    }
   }, [lastEdit, tree])
 
   return (

@@ -10,9 +10,12 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFi
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
+use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Domain\Model\RenderingMode;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Domain\Service\RenderingModeService;
+use Neos\Neos\Domain\SubtreeTagging\NeosVisibilityConstraints;
+use Neos\Neos\Security\Authorization\ContentRepositoryAuthorizationService;
 use Neos\Neos\View\FusionView;
 use Psr\Http\Message\ResponseInterface;
 
@@ -52,6 +55,12 @@ class PreviewController extends ActionController
     #[Flow\Inject]
     protected RenderingModeService $renderingModeService;
 
+    #[Flow\Inject]
+    protected ContentRepositoryAuthorizationService $contentRepositoryAuthorizationService;
+
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
+
     public function showAction(string $node, string $mode = RenderingMode::FRONTEND): ResponseInterface|string
     {
         try {
@@ -67,12 +76,27 @@ class PreviewController extends ActionController
         }
 
         $contentRepository = $this->contentRepositoryRegistry->get($nodeAddress->contentRepositoryId);
-        // Security-aware subgraph: the CR applies the current user's
-        // visibility constraints, so this cannot leak inaccessible content.
-        $subgraph = $contentRepository->getContentSubgraph(
-            $nodeAddress->workspaceName,
-            $nodeAddress->dimensionSpacePoint
-        );
+        if ($renderingMode->isEdit) {
+            // Security-aware subgraph: the CR applies the current user's
+            // visibility constraints, so this cannot leak inaccessible
+            // content. Backend users may see disabled nodes - wanted here, so
+            // hidden elements stay editable (rendered dimmed by the guest).
+            $subgraph = $contentRepository->getContentSubgraph(
+                $nodeAddress->workspaceName,
+                $nodeAddress->dimensionSpacePoint
+            );
+        } else {
+            // Frontend rendering shows the page as visitors would see it:
+            // disabled nodes are excluded even though the backend user could
+            // see them (mirrors the core frontend NodeController).
+            // getContentGraph() still enforces workspace read access.
+            $visibilityConstraints = $this->contentRepositoryAuthorizationService
+                ->getVisibilityConstraints($contentRepository->id, $this->securityContext->getRoles())
+                ->merge(NeosVisibilityConstraints::excludeDisabled());
+            $subgraph = $contentRepository
+                ->getContentGraph($nodeAddress->workspaceName)
+                ->getSubgraph($nodeAddress->dimensionSpacePoint, $visibilityConstraints);
+        }
 
         $nodeInstance = $subgraph->findNodeById($nodeAddress->aggregateId);
         if ($nodeInstance === null) {

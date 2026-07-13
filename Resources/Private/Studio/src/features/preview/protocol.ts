@@ -30,6 +30,34 @@ export type GuestToHostMessage =
       parentContextPath: string
       succeedingSiblingContextPath: string | null
     }
+  /**
+   * The "..." handle of the selected content element was clicked - the host
+   * shows the element menu (hide/delete, or unhide for hidden elements)
+   * anchored at the handle's position (viewport coordinates within the
+   * iframe).
+   */
+  | {
+      type: 'neos-studio/element-menu-request'
+      contextPath: string
+      /** NodeAddress JSON of the enclosing collection, for post-delete focus. */
+      parentContextPath: string | null
+      /** The element is explicitly hidden (tagged "disabled"). */
+      hidden: boolean
+      buttonRect: { left: number; top: number; width: number; height: number }
+    }
+  /**
+   * A content element was dragged by its handle onto a new insertion point.
+   * The element goes before the succeeding sibling, or to the end of the
+   * collection when the sibling is null.
+   */
+  | {
+      type: 'neos-studio/move-node-request'
+      nodeContextPath: string
+      /** The collection the element came from - it needs refreshing too. */
+      sourceParentContextPath: string | null
+      parentContextPath: string
+      succeedingSiblingContextPath: string | null
+    }
 
 export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */
