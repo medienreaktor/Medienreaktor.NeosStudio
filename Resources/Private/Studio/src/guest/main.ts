@@ -149,7 +149,8 @@ function injectStyles(): void {
        menu on click, moves the element on drag. */
     #${HANDLE_ID} {
       position: fixed;
-      z-index: 2147483647;
+      /* One below the max so the richtext toolbars (2147483647) sit above it. */
+      z-index: 2147483646;
       display: none;
       align-items: center;
       justify-content: center;

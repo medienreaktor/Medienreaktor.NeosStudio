@@ -160,6 +160,10 @@ export function extensionsFor(config: Formatting): Extensions {
   // document to a single block so Enter cannot add paragraphs.
   return [
     StarterKit.configure({
+      // No drop cursor: Neos node drags (element handle / creation panel) must
+      // never target the editor, so it must not present a drop position. The
+      // editor also blocks drag/drop DOM events (see richtext.ts).
+      dropcursor: false,
       // Disable StarterKit's document for single-line properties; a custom
       // single-block Document is added below. undefined keeps the default.
       document: config.multiline ? undefined : false,

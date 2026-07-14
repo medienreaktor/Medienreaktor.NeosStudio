@@ -23,7 +23,7 @@ import {
   parseFormatting,
   setEditorFormatting,
 } from './formatting'
-import { hideToolbar, updateToolbar } from './toolbar'
+import { hideToolbars, updateToolbars } from './toolbar'
 
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const PLACEHOLDER_ATTRIBUTE = 'data-__neos-studio-placeholder'
@@ -65,6 +65,16 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     content: initialContent,
     extensions: extensionsFor(config),
     editorProps: {
+      // Neos node drags (from the element handle or the creation panel) must
+      // never drop into a rich-text editor. Returning true (without
+      // preventDefault) keeps the editor from becoming a drop target, so the
+      // drag resolves against the enclosing content collection (main.ts's
+      // drop machinery) instead. This also disables ProseMirror's own
+      // internal drag-drop, which the Studio does not use.
+      handleDOMEvents: {
+        dragover: () => true,
+        drop: () => true,
+      },
       handleKeyDown: (_view, event) => {
         if (event.key === 'Escape') {
           editor.commands.setContent(committedHtml)
@@ -78,15 +88,18 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       committedHtml = editor.getHTML()
       refreshEmptyState(element, editor)
     },
-    onFocus: () => hooks.activity(),
-    onSelectionUpdate: ({ editor }) => updateToolbar(editor),
+    onFocus: ({ editor }) => {
+      updateToolbars(editor)
+      hooks.activity()
+    },
+    onSelectionUpdate: ({ editor }) => updateToolbars(editor),
     onUpdate: ({ editor }) => {
       refreshEmptyState(element, editor)
-      updateToolbar(editor)
+      updateToolbars(editor)
       hooks.activity()
     },
     onBlur: ({ editor }) => {
-      hideToolbar()
+      hideToolbars()
       refreshEmptyState(element, editor)
       const html = editor.getHTML()
       if (html === committedHtml) return
