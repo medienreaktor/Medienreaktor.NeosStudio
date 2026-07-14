@@ -84,6 +84,24 @@ export function PreviewToolbar({
 }
 
 /**
+ * One stacked preview iframe. Navigations and reloads mount a fresh layer on
+ * top of the current one and fade it in once its guest is ready, so a page
+ * swap crossfades instead of flashing white through a torn-down iframe.
+ */
+type PreviewLayer = {
+  /** Stable identity, so React keeps (never remounts) the element. */
+  id: number
+  src: string
+  /** src plus the reload counters - a change means "load a fresh frame". */
+  loadKey: string
+  /** The guest booted; the layer is faded in and takes over the bridge. */
+  ready: boolean
+}
+
+/** Matches the iframe's opacity transition - lower layers retire after it. */
+const CROSSFADE_MS = 50
+
+/**
  * Renders the selected document in an iframe and bridges it to the shell:
  * clicks on content elements surface as onSelectNode (the outliner follows),
  * the shell's selection is pushed back as an outline, and inline edits are
@@ -113,8 +131,8 @@ export function PreviewPane({
   /** Bump to reload the iframe after edits made outside of it (e.g. the inspector). */
   reloadToken?: number
 }) {
-  // Remount key: bumping it reloads the iframe even though the src string is
-  // unchanged (e.g. after edits in the same document).
+  // Bumping this reloads the preview even when the src is unchanged (e.g.
+  // after edits in the same document); it feeds into a layer's load key.
   const [reloadCount, setReloadCount] = useState(0)
   const [guestReady, setGuestReady] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -126,7 +144,17 @@ export function PreviewPane({
   // the guest, anchored at the handle's viewport position over the iframe.
   const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
   const { data: nodeTypes } = useNodeTypes()
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  // Double-buffered iframes stacked front-to-back: the last layer is the
+  // incoming/active one, earlier layers are the outgoing page still painted
+  // beneath it during the crossfade.
+  const [layers, setLayers] = useState<PreviewLayer[]>([])
+  // Live iframe elements by layer id, for identifying message senders and
+  // for posting to the active frame.
+  const framesRef = useRef(new Map<number, HTMLIFrameElement>())
+  // The topmost ready frame - the one the shell bridges to.
+  const activeFrameRef = useRef<HTMLIFrameElement | null>(null)
+  const nextLayerIdRef = useRef(0)
 
   // Latest-callback refs keep the message listener subscription stable.
   const onSelectNodeRef = useRef(onSelectNode)
@@ -139,26 +167,65 @@ export function PreviewPane({
   const src = document
     ? previewUrl(document.address, editing ? 'inPlace' : undefined)
     : null
+  const loadKey = src ? `${src}#${reloadCount}#${reloadToken}` : null
 
-  // A new iframe document means a new guest lifecycle; a menu anchored in
-  // the previous document has nothing to point at anymore.
+  // A new load means a new guest lifecycle; a menu anchored in the previous
+  // document has nothing to point at anymore.
   useEffect(() => {
     setGuestReady(false)
     setElementMenu(null)
-  }, [src, reloadCount, reloadToken])
+  }, [loadKey])
+
+  // Start a new frame whenever the load key changes. We keep only the most
+  // recent ready layer as the fading-out background plus the new incoming
+  // layer, so at most two iframes are ever live.
+  useEffect(() => {
+    if (!loadKey || !src) return
+    const id = ++nextLayerIdRef.current
+    setLayers((previous) => {
+      if (previous[previous.length - 1]?.loadKey === loadKey) return previous
+      const background = previous.filter((layer) => layer.ready).slice(-1)
+      return [...background, { id, src, loadKey, ready: false }]
+    })
+  }, [loadKey, src])
+
+  // Once the incoming (topmost) layer's guest is ready it becomes the bridge
+  // target and fades in; after the crossfade the layers beneath it retire.
+  useEffect(() => {
+    const top = layers[layers.length - 1]
+    if (!top?.ready) return
+    activeFrameRef.current = framesRef.current.get(top.id) ?? null
+    setGuestReady(true)
+    if (layers.length <= 1) return
+    const timer = setTimeout(() => {
+      setLayers((previous) => {
+        const index = previous.findIndex((layer) => layer.id === top.id)
+        return index > 0 ? previous.slice(index) : previous
+      })
+    }, CROSSFADE_MS)
+    return () => clearTimeout(timer)
+  }, [layers])
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return
-      if (
-        !iframeRef.current ||
-        event.source !== iframeRef.current.contentWindow
-      )
-        return
+      // Only messages from one of our live preview frames are trusted.
+      let sourceId: number | null = null
+      for (const [id, frame] of framesRef.current) {
+        if (frame.contentWindow === event.source) {
+          sourceId = id
+          break
+        }
+      }
+      if (sourceId === null) return
       const message = event.data as GuestToHostMessage
       switch (message?.type) {
         case 'neos-studio/guest-ready':
-          setGuestReady(true)
+          setLayers((previous) =>
+            previous.map((layer) =>
+              layer.id === sourceId ? { ...layer, ready: true } : layer,
+            ),
+          )
           break
         case 'neos-studio/node-selected':
           try {
@@ -197,7 +264,7 @@ export function PreviewPane({
           })
           break
         case 'neos-studio/element-menu-request': {
-          const frameRect = iframeRef.current?.getBoundingClientRect()
+          const frameRect = activeFrameRef.current?.getBoundingClientRect()
           if (!frameRect) break
           try {
             const address = addressFromContextPath(message.contextPath)
@@ -268,7 +335,7 @@ export function PreviewPane({
   // already be underway when the guest (re)boots - push the current state.
   useEffect(() => {
     if (!guestReady) return
-    const frame = iframeRef.current?.contentWindow
+    const frame = activeFrameRef.current?.contentWindow
     if (!frame) return
     const send = (drag: CreationDrag) => {
       const message: HostToGuestMessage = drag
@@ -287,7 +354,7 @@ export function PreviewPane({
   // Push the shell's selection into the guest (also right after it boots).
   useEffect(() => {
     if (!guestReady) return
-    const frame = iframeRef.current?.contentWindow
+    const frame = activeFrameRef.current?.contentWindow
     if (!frame) return
     const message: HostToGuestMessage = {
       type: 'neos-studio/select-node',
@@ -316,13 +383,26 @@ export function PreviewPane({
           {saveError}
         </div>
       )}
-      <iframe
-        ref={iframeRef}
-        key={`${src}:${reloadCount}:${reloadToken}`}
-        src={src}
-        title="Page preview"
-        className="min-h-0 w-full flex-1 border-0 bg-white"
-      />
+      <div className="relative min-h-0 w-full flex-1">
+        {layers.map((layer) => (
+          <iframe
+            key={layer.id}
+            ref={(element) => {
+              if (element) framesRef.current.set(layer.id, element)
+              else framesRef.current.delete(layer.id)
+            }}
+            src={layer.src}
+            title="Page preview"
+            // Until it is ready the incoming frame is invisible on top - keep
+            // clicks flowing to the outgoing frame still painted beneath it.
+            style={{
+              opacity: layer.ready ? 1 : 0,
+              pointerEvents: layer.ready ? 'auto' : 'none',
+            }}
+            className="absolute inset-0 h-full w-full border-0 bg-white transition-opacity duration-50 ease-out"
+          />
+        ))}
+      </div>
       <NodeContextMenu
         target={elementMenu}
         entityLabel="element"
