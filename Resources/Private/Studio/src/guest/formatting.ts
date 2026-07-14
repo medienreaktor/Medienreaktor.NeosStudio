@@ -23,6 +23,7 @@ import { HardBreak } from '@tiptap/extension-hard-break'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { TextAlign } from '@tiptap/extension-text-align'
+import { TableKit } from '@tiptap/extension-table'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
 
@@ -44,6 +45,7 @@ export interface Formatting {
   blockquote: boolean
   bulletList: boolean
   orderedList: boolean
+  table: boolean
   alignment: boolean
   // Actions
   removeFormat: boolean
@@ -71,6 +73,7 @@ const DEFAULT_FORMATTING: Formatting = {
   blockquote: true,
   bulletList: true,
   orderedList: true,
+  table: false,
   alignment: false,
   removeFormat: true,
   horizontalRule: true,
@@ -104,7 +107,8 @@ export function parseFormatting(element: HTMLElement): Formatting {
     on('pre') ||
     on('blockquote') ||
     on('ol') ||
-    on('ul')
+    on('ul') ||
+    on('table')
   return {
     bold: on('strong'),
     italic: on('em'),
@@ -120,6 +124,7 @@ export function parseFormatting(element: HTMLElement): Formatting {
     blockquote: on('blockquote'),
     bulletList: on('ul'),
     orderedList: on('ol'),
+    table: on('table'),
     alignment,
     removeFormat: on('removeFormat'),
     // Neos has no dedicated hr flag; offer it wherever the schema has blocks.
@@ -184,6 +189,9 @@ export function extensionsFor(config: Formatting): Extensions {
     ...(config.multiline ? [] : [Document.extend({ content: 'block' })]),
     ...(config.alignment
       ? [TextAlign.configure({ types: ['heading', 'paragraph'] })]
+      : []),
+    ...(config.table
+      ? [TableKit.configure({ table: { resizable: true } })]
       : []),
     ...marks,
   ]

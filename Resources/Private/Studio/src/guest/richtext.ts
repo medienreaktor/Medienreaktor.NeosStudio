@@ -42,6 +42,62 @@ function refreshEmptyState(element: HTMLElement, editor: Editor): void {
   element.classList.toggle(EMPTY_CLASS, editor.isEmpty)
 }
 
+let stylesInjected = false
+
+/**
+ * Editing affordances the rendered site does not style: the cell borders that
+ * keep an in-progress table legible, the selected-cell highlight and the
+ * column-resize handle ProseMirror's table view draws. Scoped to the editor
+ * (.tiptap inside a property) so the site's own table styling is untouched.
+ */
+function injectEditorStyles(): void {
+  if (stylesInjected) return
+  stylesInjected = true
+  const style = document.createElement('style')
+  style.textContent = `
+    [${PROPERTY_ATTRIBUTE}] .tiptap .tableWrapper {
+      overflow-x: auto;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 100%;
+      margin: 0;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap :is(td, th) {
+      position: relative;
+      min-width: 2em;
+      border: 1px solid rgba(0, 0, 0, 0.25);
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap th {
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.04);
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap .selectedCell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 173, 238, 0.15);
+      pointer-events: none;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap .column-resize-handle {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      bottom: -2px;
+      width: 4px;
+      background: rgb(0, 173, 238);
+      pointer-events: none;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap.resize-cursor {
+      cursor: col-resize;
+    }
+  `
+  document.head.appendChild(style)
+}
+
 const editorsByElement = new Map<HTMLElement, Editor>()
 
 function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
@@ -116,6 +172,7 @@ export function mountRichTextEditors(
   root: ParentNode,
   hooks: RichTextHooks,
 ): void {
+  injectEditorStyles()
   for (const element of root.querySelectorAll<HTMLElement>(
     `[${PROPERTY_ATTRIBUTE}]`,
   )) {

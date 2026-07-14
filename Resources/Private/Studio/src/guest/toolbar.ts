@@ -18,6 +18,7 @@
  * selection and hide the toolbar before the command ran.
  */
 import type { Editor } from '@tiptap/core'
+import { CellSelection } from '@tiptap/pm/tables'
 import { editorFormatting } from './formatting'
 
 export type ToolbarKind = 'inline' | 'block'
@@ -126,7 +127,8 @@ class Toolbar {
   private element: HTMLElement | null = null
   private buttons = new Map<string, HTMLButtonElement>()
   private currentEditor: Editor | null = null
-  private renderedForEditor: Editor | null = null
+  /** The available-item set the buttons were last built for. */
+  private renderedSignature: string | null = null
 
   constructor(
     private readonly kind: ToolbarKind,
@@ -135,6 +137,19 @@ class Toolbar {
 
   private itemsForKind(): ToolbarItem[] {
     return items.filter((item) => item.kind === this.kind)
+  }
+
+  /**
+   * The ids of the items available for `editor`, in order. Availability can
+   * change within one editor as the caret moves (e.g. table ops appear only
+   * inside a table), so the buttons rebuild whenever this set changes - not
+   * just when the editor changes.
+   */
+  private availabilitySignature(editor: Editor): string {
+    return this.itemsForKind()
+      .filter((item) => !item.isAvailable || item.isAvailable(editor))
+      .map((item) => item.id)
+      .join(',')
   }
 
   private ensureElement(): HTMLElement {
@@ -178,7 +193,7 @@ class Toolbar {
       this.buttons.set(item.id, button)
       element.appendChild(button)
     }
-    this.renderedForEditor = editor
+    this.renderedSignature = this.availabilitySignature(editor)
   }
 
   private refreshActiveStates(): void {
@@ -193,7 +208,8 @@ class Toolbar {
   show(editor: Editor): void {
     const element = this.ensureElement()
     this.currentEditor = editor
-    if (this.renderedForEditor !== editor) this.renderButtons(editor)
+    if (this.renderedSignature !== this.availabilitySignature(editor))
+      this.renderButtons(editor)
     if (this.buttons.size === 0) {
       this.hide()
       return
@@ -261,7 +277,11 @@ const blockToolbar = new Toolbar('block', positionBlock)
  * block bar at the caret's block, nothing when the two coincide.
  */
 export function updateToolbars(editor: Editor): void {
-  if (editor.state.selection.empty) {
+  const { selection } = editor.state
+  // A cell selection (dragging across table cells) is non-empty but is not a
+  // text range - it drives the table ops (merge, ...), so route it to the
+  // block toolbar alongside the collapsed-caret case, not the inline bubble.
+  if (selection.empty || selection instanceof CellSelection) {
     inlineToolbar.hide()
     blockToolbar.show(editor)
   } else {
@@ -417,6 +437,113 @@ registerToolbarItem({
   isAvailable: (editor) => editorFormatting(editor).horizontalRule,
   isActive: () => false,
   run: (editor) => editor.chain().focus().setHorizontalRule().run(),
+})
+
+// Tables. Insert is offered outside a table; the row/column/merge/header
+// operations only inside one. Column resizing is built in (drag the cell
+// borders); cell/table properties and captions are follow-ups.
+registerToolbarItem({
+  id: 'insertTable',
+  kind: 'block',
+  group: 'table',
+  label: 'Insert table',
+  icon: svg('<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>'),
+  isAvailable: (editor) => editorFormatting(editor).table && !editor.isActive('table'),
+  isActive: () => false,
+  run: (editor) =>
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+})
+const inTable = (editor: Editor): boolean =>
+  editorFormatting(editor).table && editor.isActive('table')
+registerToolbarItem({
+  id: 'addColumnBefore',
+  kind: 'block',
+  group: 'table',
+  label: 'Add column before',
+  icon: svg('<rect x="9" y="4" width="12" height="16" rx="1"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="4" y1="10" x2="4" y2="14"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().addColumnBefore().run(),
+})
+registerToolbarItem({
+  id: 'addColumnAfter',
+  kind: 'block',
+  group: 'table',
+  label: 'Add column after',
+  icon: svg('<rect x="3" y="4" width="12" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="20" y1="10" x2="20" y2="14"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().addColumnAfter().run(),
+})
+registerToolbarItem({
+  id: 'deleteColumn',
+  kind: 'block',
+  group: 'table',
+  label: 'Delete column',
+  icon: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="15" y1="9" x2="21" y2="15"/><line x1="21" y1="9" x2="15" y2="15"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().deleteColumn().run(),
+})
+registerToolbarItem({
+  id: 'addRowBefore',
+  kind: 'block',
+  group: 'table',
+  label: 'Add row before',
+  icon: svg('<rect x="4" y="9" width="16" height="11" rx="1"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="10" y1="4" x2="14" y2="4"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().addRowBefore().run(),
+})
+registerToolbarItem({
+  id: 'addRowAfter',
+  kind: 'block',
+  group: 'table',
+  label: 'Add row after',
+  icon: svg('<rect x="4" y="4" width="16" height="11" rx="1"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="10" y1="20" x2="14" y2="20"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().addRowAfter().run(),
+})
+registerToolbarItem({
+  id: 'deleteRow',
+  kind: 'block',
+  group: 'table',
+  label: 'Delete row',
+  icon: svg('<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="9" y1="15" x2="15" y2="21"/><line x1="15" y1="15" x2="9" y2="21"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().deleteRow().run(),
+})
+registerToolbarItem({
+  id: 'mergeOrSplit',
+  kind: 'block',
+  group: 'table',
+  label: 'Merge or split cells',
+  icon: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="4" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="20"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().mergeOrSplit().run(),
+})
+registerToolbarItem({
+  id: 'toggleHeaderRow',
+  kind: 'block',
+  group: 'table',
+  label: 'Toggle header row',
+  icon: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18" fill="none"/><rect x="3" y="4" width="18" height="5" fill="currentColor" stroke="none"/>'),
+  isAvailable: inTable,
+  isActive: (editor) => editor.isActive('tableHeader'),
+  run: (editor) => editor.chain().focus().toggleHeaderRow().run(),
+})
+registerToolbarItem({
+  id: 'deleteTable',
+  kind: 'block',
+  group: 'table',
+  label: 'Delete table',
+  icon: svg('<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>'),
+  isAvailable: inTable,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().deleteTable().run(),
 })
 
 // --- Inline items (inline toolbar) -----------------------------------------
