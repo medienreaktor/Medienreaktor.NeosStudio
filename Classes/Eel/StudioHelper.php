@@ -127,6 +127,36 @@ class StudioHelper implements ProtectedContextAwareInterface
         return $translation !== null ? strip_tags($translation) : null;
     }
 
+    /**
+     * The inline-editing formatting configuration of a property
+     * (properties.<name>.ui.inline.editorOptions), rendered into the editable
+     * markup so the guest can build the rich-text schema and toolbar from the
+     * NodeType definition: the `formatting` flags (strong, em, h1..h6, ol, ul,
+     * a, ...) plus `autoparagraph`, which decides single-line vs multi-block.
+     * Returns null when the property carries no editor options (the guest then
+     * falls back to a permissive default schema).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function inlineFormatting(Node $node, string $property): ?array
+    {
+        $nodeType = $this->contentRepositoryRegistry->get($node->contentRepositoryId)
+            ->getNodeTypeManager()
+            ->getNodeType($node->nodeTypeName);
+        $editorOptions = $nodeType?->getConfiguration(
+            'properties.' . $property . '.ui.inline.editorOptions'
+        );
+        if (!is_array($editorOptions)) {
+            return null;
+        }
+        $formatting = $editorOptions['formatting'] ?? [];
+
+        return [
+            'formatting' => is_array($formatting) ? $formatting : [],
+            'autoparagraph' => $editorOptions['autoparagraph'] ?? null,
+        ];
+    }
+
     public function allowsCallOfMethod($methodName): bool
     {
         return true;

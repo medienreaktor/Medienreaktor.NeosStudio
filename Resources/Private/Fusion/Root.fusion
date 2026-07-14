@@ -38,6 +38,14 @@ prototype(Neos.Neos:ContentElementWrapping) {
 prototype(Neos.Neos:Editable) {
   renderer.editable.renderer.attributes.data-__neos-studio-placeholder = ${MedienreaktorStudio.inlinePlaceholder(props.node, props.property)}
   renderer.editable.renderer.attributes.data-__neos-studio-placeholder.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+
+  # The property's NodeType inline-editing config, so the guest can constrain
+  # the editor schema and toolbar to what the property allows (see
+  # richtext.ts / formatting.ts). Only for Studio preview requests, and only
+  # when the property actually declares editor options.
+  renderer.editable.renderer.attributes.data-__neos-studio-formatting = ${Json.stringify(MedienreaktorStudio.inlineFormatting(props.node, props.property))}
+  renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+  renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.hasConfig = ${MedienreaktorStudio.inlineFormatting(props.node, props.property) != null}
 }
 
 # The Studio preview must not depend on Neos.Neos.Ui: when it is installed,

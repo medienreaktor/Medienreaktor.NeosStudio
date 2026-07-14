@@ -13,9 +13,10 @@
  *   as structural containers instead of content elements
  *
  * It handles click-to-select (blue outline, reported to the host so the
- * content outliner follows) and plain contentEditable inline editing
- * (committed to the host on blur, Escape reverts). Selection pushed by the
- * host (outliner clicks) is outlined and scrolled into view.
+ * content outliner follows) and rich-text inline editing (a TipTap editor
+ * mounted on each property, see richtext.ts; committed to the host on blur,
+ * Escape reverts). Selection pushed by the host (outliner clicks) is outlined
+ * and scrolled into view.
  *
  * A selected content element (instanceof Neos.Neos:Content, marked by
  * data-__neos-studio-content) gets a floating "..." handle at its top right:
@@ -28,6 +29,7 @@ import type {
   GuestToHostMessage,
   HostToGuestMessage,
 } from '../features/preview/protocol'
+import { mountRichTextEditors } from './richtext'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
 const COLLECTION_ATTRIBUTE = 'data-__neos-studio-collection'
@@ -56,9 +58,6 @@ const elementsByAggregateId = new Map<string, HTMLElement>()
 
 let selectedElement: HTMLElement | null = null
 let hoveredElement: HTMLElement | null = null
-
-/** The inline edit in progress; initialHtml enables Escape-revert and the dirty check. */
-let editSession: { element: HTMLElement; initialHtml: string } | null = null
 
 function injectStyles(): void {
   const style = document.createElement('style')
@@ -101,6 +100,21 @@ function injectStyles(): void {
     }
     [${PROPERTY_ATTRIBUTE}]:focus {
       outline: none !important;
+    }
+    /* TipTap mounts its own contenteditable (.tiptap) inside the property
+       element; it must inherit the host typography, not add a focus ring or
+       stray block margins that the plain host markup never had. */
+    [${PROPERTY_ATTRIBUTE}] .tiptap {
+      outline: none !important;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap:focus {
+      outline: none !important;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap > :first-child {
+      margin-top: 0;
+    }
+    [${PROPERTY_ATTRIBUTE}] .tiptap > :last-child {
+      margin-bottom: 0;
     }
     /* Empty inline-editable properties show their configured placeholder
        (translated server-side into the markup), so new nodes are visible
@@ -300,39 +314,14 @@ function parentCollectionContextPath(element: HTMLElement): string | null {
   )
 }
 
-function makeEditable(): void {
-  for (const element of document.querySelectorAll<HTMLElement>(
-    `[${PROPERTY_ATTRIBUTE}]`,
-  )) {
-    element.contentEditable = 'true'
-    updateEmptyState(element)
-  }
-}
-
 /**
- * Toggles the placeholder: a property is "empty" when it has no text and no
- * visual content (a lone <br> or empty <p> from a previous edit still counts
- * as empty, which CSS :empty would miss).
+ * Report a committed inline edit to the host (the rich-text engine calls this
+ * on blur with the property's serialized HTML). Resolves the node identity the
+ * same way the old contentEditable path did: the editable wrapping carries it
+ * directly, otherwise it falls back to the enclosing content element wrapper.
  */
-function updateEmptyState(element: HTMLElement): void {
-  if (!element.hasAttribute(PLACEHOLDER_ATTRIBUTE)) return
-  const empty =
-    (element.textContent ?? '').trim() === '' &&
-    element.querySelector(
-      'img,picture,video,audio,iframe,svg,object,embed,hr,table',
-    ) === null
-  element.classList.toggle(EMPTY_CLASS, empty)
-}
-
-function commitEdit(): void {
-  if (editSession === null) return
-  const { element, initialHtml } = editSession
-  editSession = null
-  const value = element.innerHTML
-  if (value === initialHtml) return
+function commitProperty(element: HTMLElement, value: string): void {
   const property = element.getAttribute(PROPERTY_ATTRIBUTE)
-  // The editable wrapping carries the node identity itself; property markup
-  // rendered without it falls back to the enclosing content element wrapper.
   const contextPath =
     element
       .closest(`[${EDITABLE_NODE_ATTRIBUTE}]`)
@@ -407,33 +396,6 @@ function onMouseOver(event: MouseEvent): void {
   hoveredElement?.classList.remove(HOVER_CLASS)
   hoveredElement = wrapper
   hoveredElement?.classList.add(HOVER_CLASS)
-}
-
-function onFocusIn(event: FocusEvent): void {
-  const target = event.target as HTMLElement | null
-  if (target?.getAttribute?.(PROPERTY_ATTRIBUTE) && target.isContentEditable) {
-    editSession = { element: target, initialHtml: target.innerHTML }
-  }
-}
-
-function onKeyDown(event: KeyboardEvent): void {
-  if (event.key === 'Escape' && editSession !== null) {
-    const { element, initialHtml } = editSession
-    element.innerHTML = initialHtml
-    element.blur() // focusout commits, but the content equals initialHtml again
-    updateEmptyState(element) // programmatic reset fires no input event
-    event.preventDefault()
-  }
-}
-
-function onInput(event: Event): void {
-  const target = event.target as HTMLElement | null
-  const property = target?.closest
-    ? target.closest<HTMLElement>(`[${PLACEHOLDER_ATTRIBUTE}]`)
-    : null
-  if (property) updateEmptyState(property)
-  // Typing changes the layout below the caret - keep the handle attached.
-  scheduleHandleUpdate()
 }
 
 /**
@@ -704,13 +666,15 @@ function onHostMessage(event: MessageEvent): void {
 function init(): void {
   injectStyles()
   indexWrappedElements()
-  makeEditable()
+  // Rich-text inline editing: mount a TipTap editor on every editable
+  // property. Commit-on-blur posts the change to the host; typing and focus
+  // keep the floating element handle attached as the layout shifts.
+  mountRichTextEditors(document, {
+    commit: commitProperty,
+    activity: scheduleHandleUpdate,
+  })
   document.addEventListener('click', onClick, true)
   document.addEventListener('mouseover', onMouseOver)
-  document.addEventListener('focusin', onFocusIn)
-  document.addEventListener('focusout', commitEdit)
-  document.addEventListener('keydown', onKeyDown)
-  document.addEventListener('input', onInput)
   document.addEventListener('dragover', onDragOver)
   document.addEventListener('drop', onDrop)
   document.addEventListener('dragleave', onDragLeaveDocument)
