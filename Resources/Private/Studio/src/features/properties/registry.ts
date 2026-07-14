@@ -69,6 +69,13 @@ export interface PropertyEditorDefinition {
   id: string
   /** The control. */
   component: PropertyEditorComponent
+  /**
+   * Whether the editor renders the property label itself - e.g. a checkbox
+   * with its label beside it. When true, the host omits its own label and
+   * leaves label placement to the editor, which reads subject.label. Defaults
+   * to false: the host renders the label above the control.
+   */
+  rendersOwnLabel?: boolean
 }
 
 export class PropertyEditorRegistry {
@@ -88,8 +95,15 @@ export class PropertyEditorRegistry {
 
   /** The component registered for an editor id, or undefined - the host renders a read-only fallback for unknown editors. */
   get(id: string | null | undefined): PropertyEditorComponent | undefined {
+    return this.getDefinition(id)?.component
+  }
+
+  /** The full definition for an editor id (component + metadata), or undefined. */
+  getDefinition(
+    id: string | null | undefined,
+  ): PropertyEditorDefinition | undefined {
     if (!id) return undefined
-    return this.definitions.get(id)?.component
+    return this.definitions.get(id)
   }
 
   /** Stable snapshot in registration order - changes identity only on (un)register. */
@@ -111,15 +125,16 @@ export class PropertyEditorRegistry {
 export const propertyEditorRegistry = new PropertyEditorRegistry()
 
 /**
- * Subscribe to the registry and resolve an editor component by id, re-rendering
- * when the registered set changes (a plugin registering an editor, HMR). The
- * two hosts share this hook so neither has to reimplement the subscription.
+ * Subscribe to the registry and resolve an editor definition by id,
+ * re-rendering when the registered set changes (a plugin registering an editor,
+ * HMR). The two hosts share this hook so neither has to reimplement the
+ * subscription; each reads `.component` and `.rendersOwnLabel` off the result.
  */
-export function usePropertyEditorComponent(
+export function usePropertyEditor(
   id: string | null | undefined,
-): PropertyEditorComponent | undefined {
+): PropertyEditorDefinition | undefined {
   return React.useSyncExternalStore(
     (onChange) => propertyEditorRegistry.subscribe(onChange),
-    () => propertyEditorRegistry.get(id),
+    () => propertyEditorRegistry.getDefinition(id),
   )
 }

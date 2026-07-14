@@ -18,7 +18,7 @@ import {
   humanizeLabel,
 } from '@/features/inspector/inspectorSchema'
 import { TEXT_FIELD_EDITOR } from '@/features/properties/editors'
-import { usePropertyEditorComponent } from '@/features/properties/registry'
+import { usePropertyEditor } from '@/features/properties/registry'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
 import { createNode, type CreateNodeRequest } from './createNode'
@@ -179,25 +179,18 @@ export function CreateNodeFlow({
           }}
         >
           {elements.map((element, index) => (
-            <label key={element.name} className="flex flex-col gap-1.5 text-sm">
-              <span className="text-xs font-medium text-muted-foreground">
-                {element.label}
-                {element.required && (
-                  <span className="text-destructive"> *</span>
-                )}
-              </span>
-              <ElementEditor
-                element={element}
-                autoFocus={index === 0}
-                value={values[element.name]}
-                onChange={(value) =>
-                  setValues((previous) => ({
-                    ...previous,
-                    [element.name]: value,
-                  }))
-                }
-              />
-            </label>
+            <ElementEditor
+              key={element.name}
+              element={element}
+              autoFocus={index === 0}
+              value={values[element.name]}
+              onChange={(value) =>
+                setValues((previous) => ({
+                  ...previous,
+                  [element.name]: value,
+                }))
+              }
+            />
           ))}
         </form>
 
@@ -226,10 +219,12 @@ export function CreateNodeFlow({
 }
 
 /**
- * One creation-dialog field, rendered by the editor the element configures (or
- * its type's default), resolved through the shared property editor registry -
- * the same editors the inspector uses. An unregistered editor degrades to a
- * plain text field: unlike the inspector, the creation form must stay editable.
+ * One creation-dialog field: the label plus the control, rendered by the editor
+ * the element configures (or its type's default), resolved through the shared
+ * property editor registry - the same editors the inspector uses. The label
+ * sits above the control, unless the editor renders its own (a checkbox puts
+ * its label beside the box). An unregistered editor degrades to a plain text
+ * field: unlike the inspector, the creation form must stay editable.
  */
 function ElementEditor({
   element,
@@ -245,19 +240,10 @@ function ElementEditor({
   const type = element.config.type ?? 'string'
   const editorId =
     element.config.ui?.editor ?? defaultEditorForType(type) ?? TEXT_FIELD_EDITOR
-  const Editor = usePropertyEditorComponent(editorId)
+  const definition = usePropertyEditor(editorId)
+  const Editor = definition?.component
 
-  if (!Editor) {
-    return (
-      <Input
-        autoFocus={autoFocus}
-        value={typeof value === 'string' ? value : ''}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    )
-  }
-
-  return (
+  const control = Editor ? (
     <Editor
       subject={{ name: element.name, type, label: element.label }}
       value={value}
@@ -269,5 +255,27 @@ function ElementEditor({
       onChange={onChange}
       onCommit={onChange}
     />
+  ) : (
+    <Input
+      autoFocus={autoFocus}
+      value={typeof value === 'string' ? value : ''}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  )
+
+  // The editor renders its own label (e.g. a checkbox): show it as-is, without
+  // wrapping in a <label> (which would nest labels) or adding one above.
+  if (definition?.rendersOwnLabel) {
+    return <div className="text-sm">{control}</div>
+  }
+
+  return (
+    <label className="flex flex-col gap-1.5 text-sm">
+      <span className="text-xs font-medium text-muted-foreground">
+        {element.label}
+        {element.required && <span className="text-destructive"> *</span>}
+      </span>
+      {control}
+    </label>
   )
 }

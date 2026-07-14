@@ -202,9 +202,6 @@ function PropertyGroup({
       <div className="mt-2 space-y-3">
         {group.properties.map((property) => (
           <div key={property.name}>
-            <label className="mb-1 block text-xs text-muted-foreground">
-              {property.label}
-            </label>
             <PropertyEditor
               // Reset drafts when the inspected node changes, keep them
               // across the refetch after a save.

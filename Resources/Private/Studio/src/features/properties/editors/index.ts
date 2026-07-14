@@ -47,6 +47,8 @@ export function registerBuiltinPropertyEditors(): void {
   propertyEditorRegistry.register({
     id: BOOLEAN_EDITOR,
     component: BooleanEditor,
+    // The checkbox renders its own label beside the box.
+    rendersOwnLabel: true,
   })
   propertyEditorRegistry.register({
     id: SELECT_BOX_EDITOR,
