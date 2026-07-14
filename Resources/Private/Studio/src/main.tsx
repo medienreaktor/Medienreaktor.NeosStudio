@@ -28,10 +28,12 @@ import '@fortawesome/fontawesome-free/css/regular.min.css'
 import '@fortawesome/fontawesome-free/css/v4-shims.min.css'
 import '@fortawesome/fontawesome-free/css/v4-font-face.min.css'
 import { registerBuiltinPanels } from './features/panels/builtin'
+import { registerBuiltinPropertyEditors } from './features/properties/editors'
 
-// Built-in panels register before mount, exactly like third-party panels
-// would from a plugin entry point.
+// Built-in panels and property editors register before mount, exactly like
+// third-party ones would from a plugin entry point.
 registerBuiltinPanels()
+registerBuiltinPropertyEditors()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

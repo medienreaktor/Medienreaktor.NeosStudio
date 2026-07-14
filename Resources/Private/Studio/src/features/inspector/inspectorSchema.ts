@@ -86,6 +86,11 @@ const DATA_TYPE_EDITORS: Record<string, string> = {
   references: 'Neos.Neos/Inspector/Editors/ReferencesEditor',
 }
 
+/** The editor a property of this type gets when it configures none itself, or null if the type has no default. */
+export function defaultEditorForType(type: string): string | null {
+  return DATA_TYPE_EDITORS[type] ?? null
+}
+
 /**
  * Default editor options per property type, applied when the property keeps
  * its type's default editor (mirroring how the dataTypes settings merge in

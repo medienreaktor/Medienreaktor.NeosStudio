@@ -14,21 +14,14 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { humanizeLabel } from '@/features/inspector/inspectorSchema'
-import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
+  defaultEditorForType,
+  humanizeLabel,
+} from '@/features/inspector/inspectorSchema'
+import { TEXT_FIELD_EDITOR } from '@/features/properties/editors'
+import { usePropertyEditorComponent } from '@/features/properties/registry'
+import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
 import { createNode, type CreateNodeRequest } from './createNode'
-
-const TEXT_AREA_EDITOR = 'Neos.Neos/Inspector/Editors/TextAreaEditor'
-const SELECT_BOX_EDITOR = 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
-const BOOLEAN_EDITOR = 'Neos.Neos/Inspector/Editors/BooleanEditor'
 
 interface CreationElement {
   name: string
@@ -232,17 +225,11 @@ export function CreateNodeFlow({
   )
 }
 
-/** One selectable option from editorOptions.values. */
-interface SelectBoxValueConfig {
-  label?: string | null
-  icon?: string | null
-  position?: string | number
-}
-
 /**
- * The editors the creation dialog implements: text field (default), text
- * area, boolean and static select box - covering the typical "title before
- * creating" cases. Unknown editors degrade to a text field.
+ * One creation-dialog field, rendered by the editor the element configures (or
+ * its type's default), resolved through the shared property editor registry -
+ * the same editors the inspector uses. An unregistered editor degrades to a
+ * plain text field: unlike the inspector, the creation form must stay editable.
  */
 function ElementEditor({
   element,
@@ -255,67 +242,14 @@ function ElementEditor({
   value: unknown
   onChange: (value: unknown) => void
 }) {
-  const editor = element.config.ui?.editor ?? ''
-  const editorOptions = element.config.ui?.editorOptions ?? {}
+  const type = element.config.type ?? 'string'
+  const editorId =
+    element.config.ui?.editor ?? defaultEditorForType(type) ?? TEXT_FIELD_EDITOR
+  const Editor = usePropertyEditorComponent(editorId)
 
-  if (editor === BOOLEAN_EDITOR || element.config.type === 'boolean') {
+  if (!Editor) {
     return (
-      <input
-        type="checkbox"
-        className="size-4 self-start accent-primary"
-        checked={value === true}
-        onChange={(event) => onChange(event.target.checked)}
-      />
-    )
-  }
-
-  if (editor === SELECT_BOX_EDITOR) {
-    const valuesConfig = (editorOptions.values ?? {}) as Record<
-      string,
-      SelectBoxValueConfig | null
-    >
-    const options = sortByPosition(
-      Object.entries(valuesConfig).map(([key, config]) => ({
-        key,
-        position: config?.position,
-      })),
-    ).map((key) => ({
-      value: key,
-      label: humanizeLabel(valuesConfig[key]?.label, key),
-      icon: valuesConfig[key]?.icon ?? null,
-    }))
-    return (
-      <Select
-        value={typeof value === 'string' ? value : null}
-        onValueChange={(next) => onChange(next)}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue>
-            {(current: string | null) =>
-              current !== null ? (
-                (options.find((option) => option.value === current)?.label ??
-                current)
-              ) : (
-                <span className="text-muted-foreground">–</span>
-              )
-            }
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.icon && <FaIcon icon={option.icon} />}
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    )
-  }
-
-  if (editor === TEXT_AREA_EDITOR) {
-    return (
-      <Textarea
+      <Input
         autoFocus={autoFocus}
         value={typeof value === 'string' ? value : ''}
         onChange={(event) => onChange(event.target.value)}
@@ -324,10 +258,16 @@ function ElementEditor({
   }
 
   return (
-    <Input
+    <Editor
+      subject={{ name: element.name, type, label: element.label }}
+      value={value}
+      options={element.config.ui?.editorOptions ?? {}}
       autoFocus={autoFocus}
-      value={typeof value === 'string' ? value : ''}
-      onChange={(event) => onChange(event.target.value)}
+      // The dialog keeps a live draft it submits on Create, so it tracks both
+      // per-keystroke changes and commits (its required-field validation gates
+      // the Create button and must stay current as the user types).
+      onChange={onChange}
+      onCommit={onChange}
     />
   )
 }
