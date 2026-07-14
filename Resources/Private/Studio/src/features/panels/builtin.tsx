@@ -43,6 +43,7 @@ function DocumentsPanel() {
     selectDocument,
     lastEdit,
     nodeEdited,
+    nodesEdited,
   } = useStudio()
   if (!site || !workspaceName) {
     return (
@@ -59,6 +60,7 @@ function DocumentsPanel() {
         selectedAddress={selectedDocument?.address ?? null}
         lastEdit={lastEdit}
         onSelect={selectDocument}
+        onMoved={nodesEdited}
         onNodeAction={(action, target) => {
           reportNodeAction(nodeEdited, action, target)
           // The deleted document cannot stay selected - browse its parent.
@@ -87,6 +89,7 @@ function OutlinePanel() {
     lastEdit,
     inspectNode,
     nodeEdited,
+    nodesEdited,
   } = useStudio()
   return (
     <div className="p-2">
@@ -96,6 +99,7 @@ function OutlinePanel() {
         selectedAddress={inspectedNode?.address ?? null}
         lastEdit={lastEdit}
         onSelect={inspectNode}
+        onMoved={nodesEdited}
         onNodeAction={(action, target) =>
           reportNodeAction(nodeEdited, action, target)
         }

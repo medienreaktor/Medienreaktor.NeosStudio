@@ -3,6 +3,14 @@ import { cn } from '@/lib/utils'
 import type { TreeRowDecor } from './nodeDecor'
 
 /**
+ * The drag-and-drop feature's additions to the tree/item instances, absent
+ * from the core types the generic TreeList is written against. Present only
+ * when a tree registers `dragAndDropFeature`; guarded before use.
+ */
+type DndTree = { getDragLineStyle: () => React.CSSProperties }
+type DndItem = { isUnorderedDragTarget: () => boolean }
+
+/**
  * Shared presentational renderer for headless-tree instances: flat item list
  * with indentation, expand arrows, selection/focus states, and optional row
  * decorations (type icon, state markers, dimming).
@@ -24,6 +32,8 @@ export function TreeList<T>({
   onItemContextMenu?: (item: ItemInstance<T>, event: React.MouseEvent) => void
 }) {
   const items = tree.getItems()
+  // Present only when the tree registered the drag-and-drop feature.
+  const dnd = 'getDragLineStyle' in tree ? (tree as unknown as DndTree) : null
 
   return (
     <div
@@ -32,6 +42,14 @@ export function TreeList<T>({
     >
       {items.length === 0 && (
         <div className="text-xs text-muted-foreground">{emptyText}</div>
+      )}
+      {dnd && (
+        // Reorder indicator between rows; getDragLineStyle hides it (display:
+        // none) when the current drop target is "into" a folder instead.
+        <div
+          className="pointer-events-none z-10 h-0.5 rounded-full bg-primary"
+          style={dnd.getDragLineStyle()}
+        />
       )}
       {items.map((item) => {
         const decor = decorate?.(item.getItemData()) ?? null
@@ -43,6 +61,11 @@ export function TreeList<T>({
         const level = item.getItemMeta().level
         const isRoot = level === 0
         const indentLevel = Math.max(level - 1, 0)
+        // Highlight a folder being dropped directly onto ("make child"); the
+        // between-rows case is shown by the drag line instead.
+        const isDropTarget =
+          'isUnorderedDragTarget' in item &&
+          (item as unknown as DndItem).isUnorderedDragTarget()
         return (
           <button
             {...item.getProps()}
@@ -80,6 +103,7 @@ export function TreeList<T>({
               'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm hover:bg-secondary',
               item.isSelected() && 'border-primary bg-secondary',
               item.isFocused() && 'outline-0',
+              isDropTarget && 'border-primary bg-primary/10',
             )}
             style={{ paddingLeft: `${indentLevel * 14 + 2}px` }}
           >

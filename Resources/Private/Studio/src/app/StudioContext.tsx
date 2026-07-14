@@ -27,6 +27,13 @@ export type StudioContextValue = {
   /** Report that a property edit for this address was persisted. */
   nodeEdited: (address: string) => void
   /**
+   * Report a structural change (e.g. a drag-and-drop move) affecting several
+   * addresses at once - their child lists are refreshed in the trees and the
+   * preview reloads, without the single-address inspector refetch nodeEdited
+   * does.
+   */
+  nodesEdited: (addresses: string[]) => void
+  /**
    * Report that the workspace's content changed wholesale (published -
    * which rebases the workspace - or discarded): every cached node read,
    * tree item and the preview are refreshed.

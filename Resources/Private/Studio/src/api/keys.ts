@@ -37,5 +37,7 @@ export const queryKeys = {
         { nodeTypes: nodeTypes ?? null },
       ] as const,
     variants: (address: string) => ['nodes', address, 'variants'] as const,
+    allowedChildNodeTypes: (address: string) =>
+      ['nodes', address, 'allowed-child-node-types'] as const,
   },
 }

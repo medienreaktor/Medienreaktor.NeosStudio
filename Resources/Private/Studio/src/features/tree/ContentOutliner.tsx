@@ -21,6 +21,7 @@ import {
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { nodeDecor } from './nodeDecor'
+import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
 import { type NodeEdit, useNodeEditRefresh } from './useNodeEditRefresh'
@@ -40,6 +41,7 @@ export function ContentOutliner({
   lastEdit = null,
   onSelect,
   onNodeAction,
+  onMoved,
 }: {
   document: NodeDto | null
   workspaceName: string | null
@@ -50,6 +52,8 @@ export function ContentOutliner({
   onSelect?: (node: NodeDto) => void
   /** A context-menu action (hide/unhide/delete) succeeded for this target. */
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  /** A drag-and-drop move succeeded; addresses whose children changed. */
+  onMoved?: (affectedAddresses: string[]) => void
 }) {
   if (document === null) {
     return (
@@ -70,6 +74,7 @@ export function ContentOutliner({
       lastEdit={lastEdit}
       onSelect={onSelect}
       onNodeAction={onNodeAction}
+      onMoved={onMoved}
     />
   )
 }
@@ -90,6 +95,7 @@ function OutlinerTree({
   lastEdit,
   onSelect,
   onNodeAction,
+  onMoved,
 }: {
   document: NodeDto
   workspaceName: string | null
@@ -97,6 +103,7 @@ function OutlinerTree({
   lastEdit: NodeEdit | null
   onSelect?: (node: NodeDto) => void
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  onMoved?: (affectedAddresses: string[]) => void
 }) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -104,7 +111,14 @@ function OutlinerTree({
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
 
+  const dnd = buildTreeDnd<TreeItemData>({
+    getNode: (data) => (data === ROOT_ID || data === null ? null : data),
+    onMoved: (addresses) => onMoved?.(addresses),
+    onError: setActionError,
+  })
+
   const tree = useTree<TreeItemData>({
+    ...dnd.config,
     rootItemId: ROOT_ID,
     getItemName: (item) => {
       const data = item.getItemData()
@@ -166,7 +180,12 @@ function OutlinerTree({
         }
       },
     },
-    features: [asyncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
+    features: [
+      asyncDataLoaderFeature,
+      selectionFeature,
+      hotkeysCoreFeature,
+      dnd.feature,
+    ],
   })
 
   // The visible root is the document (level 0), so the document itself plus

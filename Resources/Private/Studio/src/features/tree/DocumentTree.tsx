@@ -23,6 +23,7 @@ import {
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { nodeDecor } from './nodeDecor'
+import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
 import { useAutoExpand } from './useAutoExpand'
 import { type NodeEdit, useNodeEditRefresh } from './useNodeEditRefresh'
@@ -48,6 +49,7 @@ export function DocumentTree({
   lastEdit = null,
   onSelect,
   onNodeAction,
+  onMoved,
 }: {
   site: Site
   workspaceName: string
@@ -58,6 +60,8 @@ export function DocumentTree({
   onSelect?: (node: NodeDto) => void
   /** A context-menu action (hide/unhide/delete) succeeded for this target. */
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  /** A drag-and-drop move succeeded; addresses whose children changed. */
+  onMoved?: (affectedAddresses: string[]) => void
 }) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -65,7 +69,14 @@ export function DocumentTree({
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
 
+  const dnd = buildTreeDnd<TreeItemData>({
+    getNode: (data) => (data === ROOT_ID || data === null ? null : data),
+    onMoved: (addresses) => onMoved?.(addresses),
+    onError: setActionError,
+  })
+
   const tree = useTree<TreeItemData>({
+    ...dnd.config,
     rootItemId: ROOT_ID,
     getItemName: (item) => {
       const data = item.getItemData()
@@ -113,7 +124,12 @@ export function DocumentTree({
         }
       },
     },
-    features: [asyncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
+    features: [
+      asyncDataLoaderFeature,
+      selectionFeature,
+      hotkeysCoreFeature,
+      dnd.feature,
+    ],
   })
 
   // The visible root is the site node (level 0), so the site itself plus

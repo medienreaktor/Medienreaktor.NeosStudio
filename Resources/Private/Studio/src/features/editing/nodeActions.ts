@@ -20,6 +20,16 @@ export interface MoveNodeRequest {
   succeedingSiblingContextPath: string | null
 }
 
+/** One move for {@link moveNodesByAddress}, in encoded NodeAddress terms. */
+export interface MoveByAddress {
+  /** Encoded address of the node being moved. */
+  nodeAddress: string
+  /** Encoded address of the new parent. */
+  newParentAddress: string
+  /** Encoded address of the sibling to insert before; null appends. */
+  succeedingSiblingAddress: string | null
+}
+
 export async function hideNode(address: string): Promise<void> {
   const node = decodeNodeAddress(address)
   await executeCommands([
@@ -89,6 +99,41 @@ export async function moveNode(request: MoveNodeRequest): Promise<void> {
     ).aggregateId
   }
   await executeCommands([{ type: 'MoveNodeAggregate', payload }])
+  await invalidateAfterStructureChange()
+}
+
+/**
+ * Moves one or more nodes in a single batch, addressing them by their encoded
+ * NodeAddress (what the trees carry as item ids) rather than the guest's JSON
+ * context paths. Commands run in order, each placing its node before the same
+ * succeeding sibling, so a multi-selection keeps its relative order at the
+ * target ([A, B] before S becomes ...A, B, S). The viewed dimension is moved
+ * with "gatherAll", like the preview's single-node move.
+ */
+export async function moveNodesByAddress(
+  moves: MoveByAddress[],
+): Promise<void> {
+  if (moves.length === 0) return
+  const commands = moves.map(
+    ({ nodeAddress, newParentAddress, succeedingSiblingAddress }) => {
+      const node = decodeNodeAddress(nodeAddress)
+      const parent = decodeNodeAddress(newParentAddress)
+      const payload: Record<string, unknown> = {
+        workspaceName: node.workspaceName,
+        dimensionSpacePoint: node.dimensionSpacePoint,
+        nodeAggregateId: node.aggregateId,
+        newParentNodeAggregateId: parent.aggregateId,
+        relationDistributionStrategy: 'gatherAll',
+      }
+      if (succeedingSiblingAddress !== null) {
+        payload.newSucceedingSiblingNodeAggregateId = decodeNodeAddress(
+          succeedingSiblingAddress,
+        ).aggregateId
+      }
+      return { type: 'MoveNodeAggregate', payload }
+    },
+  )
+  await executeCommands(commands)
   await invalidateAfterStructureChange()
 }
 

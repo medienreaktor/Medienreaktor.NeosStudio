@@ -216,6 +216,16 @@ export function App() {
           /* fine - keep showing the previous snapshot */
         })
     },
+    nodesEdited: (addresses) => {
+      if (addresses.length === 0) return
+      setLastEdit((prev) => ({
+        addresses,
+        token: (prev?.token ?? 0) + 1,
+      }))
+      // A move relocates rendered content - reload the preview so the element
+      // appears in its new place.
+      setPreviewReloadToken((token) => token + 1)
+    },
     workspaceContentChanged: () => {
       setLastEdit((prev) => ({
         addresses: [ALL_NODES],

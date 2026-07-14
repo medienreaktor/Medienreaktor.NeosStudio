@@ -114,6 +114,29 @@ export function fetchNodeVariants(address: string): Promise<NodeVariantsDto> {
   })
 }
 
+/**
+ * The node types the content model allows as children of this node (honoring
+ * tethered-collection constraints server-side). Used to validate tree
+ * drag-and-drop targets. Cached for the session - a node's constraints follow
+ * from its (immutable) node type and tethered position, so they never change
+ * mid-session; only a deployment could, like the node type model itself.
+ */
+export function fetchAllowedChildNodeTypes(address: string): Promise<string[]> {
+  // Unwrap inside the queryFn so the cache holds the string[] itself - the
+  // DnD canDrop reads it back synchronously with getQueryData and calls
+  // .includes() on it, so the cached shape must be the array, not { nodeTypes }.
+  return queryClient.fetchQuery({
+    queryKey: queryKeys.nodes.allowedChildNodeTypes(address),
+    queryFn: async () => {
+      const { nodeTypes } = await apiFetch<{ nodeTypes: string[] }>(
+        `/nodes/${address}/allowed-child-node-types`,
+      )
+      return nodeTypes
+    },
+    staleTime: Infinity,
+  })
+}
+
 /** Ancestors, closest first (parent, grandparent, ... up to the root). */
 export function fetchAncestors(
   address: string,
