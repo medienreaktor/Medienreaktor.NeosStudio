@@ -1,13 +1,39 @@
 import { useMemo, useState } from 'react'
-import type { NodeDto } from '@/api/nodes'
+import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
 import { nodeLabel } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { hideNode, unhideNode } from '@/features/editing/nodeActions'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyEditor } from './PropertyEditor'
+
+/**
+ * The visibility flag from the Neos.Neos:Hidable mixin. Configured as a
+ * boolean property, but in Neos 9 it is not a real content-repository property
+ * - it is the "disabled" subtree tag. So its value comes from the node's tags,
+ * and toggling it goes through the enable/disable commands rather than
+ * SetNodeProperties (see the save routing below). hiddenInMenu, by contrast,
+ * is an ordinary boolean property and takes the normal property path.
+ */
+const HIDDEN_PROPERTY = '_hidden'
+
+/**
+ * The value to feed a property's editor. Ordinary properties read straight from
+ * node.properties; _hidden is synthesized from the "disabled" subtree tag,
+ * since it has no property value of its own.
+ */
+function propertyValue(
+  node: NodeDto,
+  name: string,
+): SerializedPropertyValue | undefined {
+  if (name === HIDDEN_PROPERTY) {
+    return { value: node.tags.all.includes('disabled'), type: 'boolean' }
+  }
+  return node.properties[name]
+}
 
 /**
  * The inspector panel's content (the panel chrome - tab, dragging, floating -
@@ -35,7 +61,15 @@ export function InspectorPanel({
   const save = (propertyName: string, value: unknown) => {
     if (!node) return
     setSaveError(null)
-    persistPropertyChange(node.address, propertyName, value)
+    // _hidden is the "disabled" subtree tag, not a property: toggle it with
+    // the enable/disable commands (like the tree/preview hide actions).
+    const persist =
+      propertyName === HIDDEN_PROPERTY
+        ? value === true
+          ? hideNode(node.address)
+          : unhideNode(node.address)
+        : persistPropertyChange(node.address, propertyName, value)
+    persist
       .then(() => onNodeEdited?.(node.address))
       .catch((e: unknown) =>
         setSaveError(e instanceof Error ? e.message : String(e)),
@@ -176,7 +210,7 @@ function PropertyGroup({
               // across the refetch after a save.
               key={`${node.address}:${property.name}`}
               property={property}
-              value={node.properties[property.name]}
+              value={propertyValue(node, property.name)}
               onSave={onSave}
             />
           </div>
