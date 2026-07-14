@@ -35,6 +35,14 @@ export function TreeList<T>({
       )}
       {items.map((item) => {
         const decor = decorate?.(item.getItemData()) ?? null
+        // The tree's visible root (the site or the outlined document) isn't
+        // collapsible - it has no sibling to collapse to, so no arrow, and
+        // its row starts flush left instead of leaving room for one. Its
+        // level costs no indentation, so the rest of the tree shifts left
+        // by one level too, rather than sitting an extra step in from it.
+        const level = item.getItemMeta().level
+        const isRoot = level === 0
+        const indentLevel = Math.max(level - 1, 0)
         return (
           <button
             {...item.getProps()}
@@ -73,39 +81,41 @@ export function TreeList<T>({
               item.isSelected() && 'border-primary bg-secondary',
               item.isFocused() && 'outline-0',
             )}
-            style={{ paddingLeft: `${item.getItemMeta().level * 14 + 2}px` }}
+            style={{ paddingLeft: `${indentLevel * 14 + 2}px` }}
           >
-            <span
-              className={cn(
-                'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-muted-foreground',
-                item.isFolder() && 'hover:bg-accent hover:text-foreground',
-              )}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (!item.isFolder()) return
-                if (item.isExpanded()) {
-                  item.collapse()
-                } else {
-                  item.expand()
-                }
-              }}
-            >
-              {item.isFolder() ? (
-                item.isExpanded() ? (
-                  <i
-                    className={'fas fa-caret-down fa-fw text-[0.75rem]'}
-                    aria-hidden
-                  />
+            {!isRoot && (
+              <span
+                className={cn(
+                  'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-muted-foreground',
+                  item.isFolder() && 'hover:bg-accent hover:text-foreground',
+                )}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!item.isFolder()) return
+                  if (item.isExpanded()) {
+                    item.collapse()
+                  } else {
+                    item.expand()
+                  }
+                }}
+              >
+                {item.isFolder() ? (
+                  item.isExpanded() ? (
+                    <i
+                      className={'fas fa-caret-down fa-fw text-[0.75rem]'}
+                      aria-hidden
+                    />
+                  ) : (
+                    <i
+                      className={'fas fa-caret-right fa-fw text-[0.75rem]'}
+                      aria-hidden
+                    />
+                  )
                 ) : (
-                  <i
-                    className={'fas fa-caret-right fa-fw text-[0.75rem]'}
-                    aria-hidden
-                  />
-                )
-              ) : (
-                ''
-              )}
-            </span>
+                  ''
+                )}
+              </span>
+            )}
             {decor?.icon && (
               <span className="shrink-0 text-foreground">{decor.icon}</span>
             )}
