@@ -296,12 +296,12 @@ export function PanelDock() {
           <div
             data-panel-group
             className={cn(
-              'flex min-h-0 flex-col overflow-hidden rounded-md border bg-card text-card-foreground',
+              'flex min-h-0 flex-col overflow-hidden bg-card text-card-foreground',
               !group.collapsed && 'flex-1',
             )}
           >
             <GroupTabBar group={group} />
-            {!group.collapsed && <GroupBody group={group} />}
+            <GroupBody group={group} collapsed={group.collapsed} />
           </div>
         </React.Fragment>
       ))}
@@ -326,7 +326,7 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
       aria-label={group.panels
         .map((panel) => definitions.get(panel)?.title ?? panel)
         .join(', ')}
-      className="fixed z-100 flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg"
+      className="fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-card text-card-foreground shadow-lg"
       style={{
         left: group.rect.x,
         top: group.rect.y,
@@ -336,7 +336,7 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
       onPointerDownCapture={() => toFront(group.id)}
     >
       <GroupTabBar group={group} floating />
-      {!group.collapsed && <GroupBody group={group} />}
+      <GroupBody group={group} collapsed={group.collapsed} />
       {handles.map(({ direction, className }) => (
         <div
           key={direction}
@@ -369,7 +369,7 @@ function GroupTabBar({
       className={cn(
         // The border stays in the layout when collapsed (only its color goes)
         // so the centered tabs don't shift by the border width on toggle.
-        'flex h-9 shrink-0 items-center gap-0.5 border-b px-1',
+        'flex shrink-0 items-center',
         group.collapsed && 'border-b-transparent',
         dropIndex !== null && 'bg-accent/40',
       )}
@@ -382,10 +382,10 @@ function GroupTabBar({
             data-panel-tab
             onPointerDown={(e) => onTabPointerDown(e, group.id, panel)}
             className={cn(
-              'cursor-grab touch-none rounded px-2 py-1 text-xs font-medium select-none',
+              'cursor-grab touch-none px-2 py-1 text-xs font-medium select-none border-t',
               panel === group.active
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground hover:text-foreground',
+                ? 'bg-background text-accent-foreground border-primary'
+                : 'text-muted-foreground hover:text-foreground border-transparent',
               drag?.panel === panel && 'opacity-50',
             )}
           >
@@ -412,7 +412,7 @@ function GroupTabBar({
           group.collapsed ? 'Expand panel group' : 'Collapse panel group'
         }
         onClick={() => toggle(group.id)}
-        className="rounded p-1 text-muted-foreground hover:text-foreground"
+        className="p-1 text-muted-foreground hover:text-foreground"
       >
         <ChevronDownIcon
           className={cn(
@@ -425,15 +425,26 @@ function GroupTabBar({
   )
 }
 
-function GroupBody({ group }: { group: PanelGroup }) {
+function GroupBody({
+  group,
+  collapsed = false,
+}: {
+  group: PanelGroup
+  collapsed?: boolean
+}) {
   const { definitions } = usePanels()
   return (
     // The body doubles as a drop zone that appends to this group's tabs.
+    // Collapsed groups keep the body mounted (hidden) so every panel's
+    // component - and its state - survives a collapse, just like tab switches.
     <div
       data-panel-drop="tabs"
       data-group-id={group.id}
       data-append
-      className="flex min-h-0 flex-1 flex-col"
+      className={cn(
+        'flex min-h-0 flex-1 flex-col bg-background',
+        collapsed && 'hidden',
+      )}
     >
       {group.panels.map((panel) => {
         // Unregistered ids only exist for the render before the layout
@@ -472,7 +483,7 @@ function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
 // Negative margins cancel the marker's own footprint (its box plus the extra
 // flex gap), so showing it does not shift the layout being hit-tested.
 const TabDropMarker = () => (
-  <div className="-mx-0.5 h-5 w-0.5 shrink-0 rounded bg-primary" />
+  <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-primary" />
 )
 const DockGapMarker = () => (
   <div className="-my-1.25 h-0.5 shrink-0 rounded bg-primary" />

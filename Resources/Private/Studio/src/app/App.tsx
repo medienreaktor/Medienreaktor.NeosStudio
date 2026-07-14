@@ -263,7 +263,22 @@ export function App() {
         <PanelsProvider>
           <Sidebar>
             <SidebarHeader>
-              <div className="px-2 py-1 text-lg">
+              <div className="flex items-center gap-2 px-2 py-1 text-lg">
+                <svg
+                  viewBox="0 0 111.48 124.45"
+                  className="h-6 w-auto shrink-0"
+                  role="img"
+                  aria-label="Neos"
+                >
+                  <path
+                    fill="#009fe3"
+                    d="M88.83 0L68.12 15.1v31.57l20.71 29.28V0zM88.83 112.57L9.22 0 0 6.74v117.71l20.71-15.1V51.06l51.78 73.39h22.65l16.34-11.88H88.83z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M20.71 51.06v58.29L0 124.45h22.65l20.71-15.1V83.17L20.71 51.06zM88.83 75.95V0h22.65v112.57H88.83L9.22 0h25.89l53.72 75.95z"
+                  />
+                </svg>
                 Neos <strong>Studio</strong>
               </div>
             </SidebarHeader>
