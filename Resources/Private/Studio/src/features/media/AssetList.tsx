@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 
 import type { MediaAsset } from '@/api/media'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { AssetThumb } from './AssetThumb'
 import { formatBytes, formatDate } from './format'
@@ -13,6 +12,8 @@ interface AssetListProps {
   view: MediaViewMode
   activeKey: string | null
   onSelect: (asset: MediaAsset) => void
+  /** Double-click / Enter: open details (manage) or pick (picker). */
+  onActivate: (asset: MediaAsset) => void
   isLoading: boolean
   isFetchingNextPage: boolean
   hasNextPage: boolean
@@ -24,6 +25,7 @@ export function AssetList({
   view,
   activeKey,
   onSelect,
+  onActivate,
   isLoading,
   isFetchingNextPage,
   hasNextPage,
@@ -45,17 +47,7 @@ export function AssetList({
     return () => observer.disconnect()
   }, [hasNextPage, onLoadMore, assets.length])
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 gap-3 p-4 @2xl:grid-cols-4 @5xl:grid-cols-6">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-square" />
-        ))}
-      </div>
-    )
-  }
-
-  if (assets.length === 0) {
+  if (assets.length === 0 && !isLoading) {
     return (
       <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-500">
         No assets match the current filters.
@@ -66,13 +58,14 @@ export function AssetList({
   return (
     <div className="min-h-0 flex-1 overflow-y-auto @container">
       {view === 'grid' ? (
-        <div className="grid grid-cols-2 gap-3 p-4 @2xl:grid-cols-4 @5xl:grid-cols-6">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3 p-4">
           {assets.map((asset) => (
             <GridCard
               key={assetKey(asset)}
               asset={asset}
               active={assetKey(asset) === activeKey}
               onClick={() => onSelect(asset)}
+              onActivate={() => onActivate(asset)}
             />
           ))}
         </div>
@@ -93,6 +86,7 @@ export function AssetList({
                 asset={asset}
                 active={assetKey(asset) === activeKey}
                 onClick={() => onSelect(asset)}
+                onActivate={() => onActivate(asset)}
               />
             ))}
           </tbody>
@@ -113,15 +107,21 @@ function GridCard({
   asset,
   active,
   onClick,
+  onActivate,
 }: {
   asset: MediaAsset
   active: boolean
   onClick: () => void
+  onActivate: () => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      onDoubleClick={onActivate}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onActivate()
+      }}
       title={asset.label}
       className={cn(
         'group flex flex-col overflow-hidden rounded-md border bg-neutral-900 text-left transition-colors',
@@ -147,14 +147,17 @@ function ListRow({
   asset,
   active,
   onClick,
+  onActivate,
 }: {
   asset: MediaAsset
   active: boolean
   onClick: () => void
+  onActivate: () => void
 }) {
   return (
     <tr
       onClick={onClick}
+      onDoubleClick={onActivate}
       className={cn(
         'cursor-pointer border-b border-neutral-800/60',
         active ? 'bg-blue-500/15' : 'hover:bg-neutral-800/50',

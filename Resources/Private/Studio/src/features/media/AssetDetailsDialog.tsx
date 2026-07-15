@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckIcon, DownloadIcon, Trash2Icon, XIcon } from 'lucide-react'
+import { DownloadIcon, Trash2Icon, XIcon } from 'lucide-react'
 
 import { ApiError } from '@/api/client'
 import {
@@ -15,6 +15,13 @@ import {
   type MediaTag,
 } from '@/api/media'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -30,22 +37,25 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { formatBytes, formatDate } from './format'
 import { UsageTable } from './UsageTable'
 
-interface AssetDetailsPaneProps {
+interface AssetDetailsDialogProps {
   /** The asset selected in the list (list DTO; may lack the editable block for detail freshness). */
   asset: MediaAsset
-  mode: 'manage' | 'picker'
-  onClose: () => void
+  /** Called with `false` when the dialog should close. */
+  onOpenChange: (open: boolean) => void
+  /** Called after the asset is deleted (also closes the dialog). */
   onDeleted: () => void
-  onPick?: (asset: MediaAsset) => void
 }
 
-export function AssetDetailsPane({
+/**
+ * The asset metadata editing screen, shown as a modal dialog. Opened by
+ * double-clicking an asset in the manage module. Reads the canonical detail so
+ * the form, tags and collections are always fresh.
+ */
+export function AssetDetailsDialog({
   asset: listAsset,
-  mode,
-  onClose,
+  onOpenChange,
   onDeleted,
-  onPick,
-}: AssetDetailsPaneProps) {
+}: AssetDetailsDialogProps) {
   // Always read the canonical detail (fresh metadata, tags, collections).
   const detail = useAsset(listAsset.assetSource, listAsset.identifier)
   const asset = detail.data ?? listAsset
@@ -53,85 +63,67 @@ export function AssetDetailsPane({
   const localId = asset.localAssetIdentifier
 
   return (
-    <div className="flex h-full w-80 shrink-0 flex-col border-l border-neutral-800 bg-neutral-950">
-      <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
-        <h2 className="truncate text-sm font-medium text-neutral-200">
-          {asset.label}
-        </h2>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={onClose}
-          aria-label="Close details"
-        >
-          <XIcon className="size-4" />
-        </Button>
-      </div>
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="truncate pr-6">{asset.label}</DialogTitle>
+        </DialogHeader>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-        <div className="grid aspect-video place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
-          <AssetThumb asset={asset} preview />
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+          <div className="grid aspect-video place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
+            <AssetThumb asset={asset} preview />
+          </div>
+
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            <Meta label="Type">{asset.assetType}</Meta>
+            <Meta label="Format">{asset.mediaType}</Meta>
+            <Meta label="Size">{formatBytes(asset.fileSize)}</Meta>
+            {asset.width && asset.height ? (
+              <Meta label="Dimensions">
+                {asset.width} × {asset.height}
+              </Meta>
+            ) : null}
+            <Meta label="Modified">{formatDate(asset.lastModified)}</Meta>
+            <Meta label="Filename">{asset.filename}</Meta>
+          </dl>
+
+          {!asset.isImported && asset.isRemote && <RemoteImport asset={asset} />}
+
+          {editable && localId ? (
+            <MetadataForm key={localId} asset={asset} localId={localId} />
+          ) : (
+            !asset.isRemote && (
+              <p className="text-xs text-neutral-500">This asset is read-only.</p>
+            )
+          )}
+
+          {editable && localId && (
+            <>
+              <TagAssignment localId={localId} assigned={asset.tags ?? []} />
+              <CollectionAssignment
+                localId={localId}
+                assigned={asset.collections ?? []}
+              />
+            </>
+          )}
+
+          {localId && (
+            <Field label="Usage">
+              <UsageTable
+                assetSource={asset.assetSource}
+                identifier={asset.identifier}
+              />
+            </Field>
+          )}
         </div>
-
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-          <Meta label="Type">{asset.assetType}</Meta>
-          <Meta label="Format">{asset.mediaType}</Meta>
-          <Meta label="Size">{formatBytes(asset.fileSize)}</Meta>
-          {asset.width && asset.height ? (
-            <Meta label="Dimensions">
-              {asset.width} × {asset.height}
-            </Meta>
-          ) : null}
-          <Meta label="Modified">{formatDate(asset.lastModified)}</Meta>
-          <Meta label="Filename">{asset.filename}</Meta>
-        </dl>
-
-        {!asset.isImported && asset.isRemote && <RemoteImport asset={asset} />}
-
-        {editable && localId ? (
-          <MetadataForm key={localId} asset={asset} localId={localId} />
-        ) : (
-          !asset.isRemote && (
-            <p className="text-xs text-neutral-500">This asset is read-only.</p>
-          )
-        )}
 
         {editable && localId && (
-          <>
-            <TagAssignment localId={localId} assigned={asset.tags ?? []} />
-            <CollectionAssignment
-              localId={localId}
-              assigned={asset.collections ?? []}
-            />
-          </>
-        )}
-
-        {localId && (
-          <Field label="Usage">
-            <UsageTable
-              assetSource={asset.assetSource}
-              identifier={asset.identifier}
-            />
-          </Field>
-        )}
-      </div>
-
-      {mode === 'picker' ? (
-        <div className="border-t border-neutral-800 p-3">
-          <Button className="w-full" onClick={() => onPick?.(asset)}>
-            <CheckIcon className="size-4" />
-            Use this asset
-          </Button>
-        </div>
-      ) : (
-        editable &&
-        localId && (
-          <div className="border-t border-neutral-800 p-3">
+          <DialogFooter>
             <DeleteButton localId={localId} onDeleted={onDeleted} />
-          </div>
-        )
-      )}
-    </div>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -329,7 +321,6 @@ function DeleteButton({
       <Button
         variant="destructive"
         size="sm"
-        className="w-full"
         onClick={() => setConfirming(true)}
       >
         <Trash2Icon className="size-4" />

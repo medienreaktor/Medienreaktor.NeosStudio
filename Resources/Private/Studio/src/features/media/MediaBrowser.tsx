@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { useAssets, type MediaAsset } from '@/api/media'
-import { AssetDetailsPane } from './AssetDetailsPane'
+import { AssetDetailsDialog } from './AssetDetailsDialog'
 import { AssetList } from './AssetList'
 import { MediaSidebar } from './MediaSidebar'
 import { MediaToolbar } from './MediaToolbar'
@@ -22,9 +22,10 @@ export interface MediaBrowserProps {
 }
 
 /**
- * The reusable three-pane asset browser: sources/collections/tags rail, the
- * filtered/paginated grid or list, and a details pane. Both the manage module
- * and a future picker dialog mount this same component.
+ * The reusable asset browser: sources/collections/tags rail plus the
+ * filtered/paginated grid or list. Both the manage module and a future picker
+ * dialog mount this same component. Double-clicking an asset opens its metadata
+ * in a modal (manage) or inserts it into the editor (picker).
  */
 export function MediaBrowser({
   mode = 'manage',
@@ -33,6 +34,13 @@ export function MediaBrowser({
 }: MediaBrowserProps) {
   const state = useMediaBrowserState(initialSource)
   const [uploaderOpen, setUploaderOpen] = useState(false)
+  // Manage mode only: the asset whose metadata dialog is open.
+  const [detailsAsset, setDetailsAsset] = useState<MediaAsset | null>(null)
+
+  const activate = (asset: MediaAsset) => {
+    if (mode === 'picker') onPick?.(asset)
+    else setDetailsAsset(asset)
+  }
 
   const query = useAssets(state.filter)
   const assets = useMemo(
@@ -58,6 +66,7 @@ export function MediaBrowser({
           view={state.view}
           activeKey={activeKey}
           onSelect={state.setActive}
+          onActivate={activate}
           isLoading={query.isLoading}
           isFetchingNextPage={query.isFetchingNextPage}
           hasNextPage={query.hasNextPage}
@@ -65,13 +74,11 @@ export function MediaBrowser({
         />
       </div>
 
-      {state.active && (
-        <AssetDetailsPane
-          asset={state.active}
-          mode={mode}
-          onClose={() => state.setActive(null)}
-          onDeleted={() => state.setActive(null)}
-          onPick={onPick}
+      {detailsAsset && (
+        <AssetDetailsDialog
+          asset={detailsAsset}
+          onOpenChange={(open) => !open && setDetailsAsset(null)}
+          onDeleted={() => setDetailsAsset(null)}
         />
       )}
 
