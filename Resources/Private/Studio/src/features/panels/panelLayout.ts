@@ -136,9 +136,11 @@ export function normalizeLayout(
   const known = new Map(definitions.map((d) => [d.id, d]))
   const seenPanels = new Set<PanelId>()
   const usedIds = new Set<string>()
-  const s = stored as
-    | { docks?: unknown; dock?: unknown; floating?: unknown }
-    | null
+  const s = stored as {
+    docks?: unknown
+    dock?: unknown
+    floating?: unknown
+  } | null
 
   const sanitizeGroup = (value: unknown): PanelGroup | null => {
     const g = value as Partial<PanelGroup> | null
@@ -219,7 +221,8 @@ function mapGroups(
   update: <T extends PanelGroup>(g: T) => T,
 ): PanelLayout {
   const docks = emptyDocks()
-  for (const region of DOCK_REGIONS) docks[region] = layout.docks[region].map(update)
+  for (const region of DOCK_REGIONS)
+    docks[region] = layout.docks[region].map(update)
   return { docks, floating: layout.floating.map(update) }
 }
 
@@ -321,7 +324,8 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
       return { ...g, panels, active: panel, collapsed: false }
     }
     const next = { docks: emptyDocks(), floating: floating.map(insert) }
-    for (const region of DOCK_REGIONS) next.docks[region] = docks[region].map(insert)
+    for (const region of DOCK_REGIONS)
+      next.docks[region] = docks[region].map(insert)
     const landed = [
       ...DOCK_REGIONS.flatMap((region) => next.docks[region]),
       ...next.floating,

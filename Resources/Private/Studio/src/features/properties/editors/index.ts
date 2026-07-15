@@ -1,5 +1,7 @@
 import { propertyEditorRegistry } from '../registry'
+import { ASSET_EDITOR, AssetEditor } from './AssetEditor'
 import { BOOLEAN_EDITOR, BooleanEditor } from './BooleanEditor'
+import { IMAGE_EDITOR, ImageEditor } from './ImageEditor'
 import { NODE_TYPE_EDITOR, NodeTypeEditor } from './NodeTypeEditor'
 import { SELECT_BOX_EDITOR, SelectBoxEditor } from './SelectBoxEditor'
 import { TEXT_AREA_EDITOR, TextAreaEditor } from './TextAreaEditor'
@@ -17,8 +19,12 @@ import {
  */
 
 export {
+  ASSET_EDITOR,
+  AssetEditor,
   BOOLEAN_EDITOR,
   BooleanEditor,
+  IMAGE_EDITOR,
+  ImageEditor,
   NODE_TYPE_EDITOR,
   NodeTypeEditor,
   SELECT_BOX_EDITOR,
@@ -35,6 +41,14 @@ export {
  * like third-party editors would be registered from a plugin entry point.
  */
 export function registerBuiltinPropertyEditors(): void {
+  propertyEditorRegistry.register({
+    id: ASSET_EDITOR,
+    component: AssetEditor,
+  })
+  propertyEditorRegistry.register({
+    id: IMAGE_EDITOR,
+    component: ImageEditor,
+  })
   propertyEditorRegistry.register({
     id: TEXT_FIELD_EDITOR,
     component: TextFieldEditor,

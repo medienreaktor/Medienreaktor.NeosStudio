@@ -15,6 +15,7 @@ import {
   bringToFront,
   clampFloating,
   type DockRegion,
+  DOCK_REGIONS,
   type DropTarget,
   type FloatingGroup,
   isTabRegion,
@@ -57,6 +58,8 @@ type PanelsContextValue = {
   ) => void
   toggle: (groupId: string) => void
   toFront: (groupId: string) => void
+  /** Make `panel` the active tab of whichever group holds it, wherever it is docked or floating. */
+  activate: (panel: PanelId) => void
   trackFloatingDrag: (
     e: React.PointerEvent<HTMLElement>,
     groupId: string,
@@ -75,6 +78,21 @@ function usePanels(): PanelsContextValue {
   if (!context)
     throw new Error('Panel components must live inside <PanelsProvider>')
   return context
+}
+
+/**
+ * The public handle for programmatically switching panels - the seed of a
+ * plugin API for panels that hand off to one another (an inspector editor that
+ * jumps to the Media Library to pick an asset, say). `activate` focuses a panel
+ * wherever it lives; `activeMainPanel` is the main area's current tab, so a
+ * caller can restore it after the hand-off.
+ */
+export function usePanelSwitcher(): {
+  activate: (panel: PanelId) => void
+  activeMainPanel: PanelId | null
+} {
+  const { activate, layout } = usePanels()
+  return { activate, activeMainPanel: layout.docks.main[0]?.active ?? null }
 }
 
 /**
@@ -137,7 +155,8 @@ function findDropTarget(x: number, y: number): DropTarget {
       const horizontal = REGION_ORIENTATION[region] === 'horizontal'
       const r = zone.getBoundingClientRect()
       const along = horizontal ? (x - r.left) / r.width : (y - r.top) / r.height
-      if (along < BODY_EDGE) return { kind: 'dock-gap', region, index: groupIndex }
+      if (along < BODY_EDGE)
+        return { kind: 'dock-gap', region, index: groupIndex }
       if (along > 1 - BODY_EDGE)
         return { kind: 'dock-gap', region, index: groupIndex + 1 }
     }
@@ -317,6 +336,18 @@ export function PanelsProvider({
     ),
     toFront: React.useCallback(
       (groupId) => setLayout((l) => bringToFront(l, groupId)),
+      [],
+    ),
+    activate: React.useCallback(
+      (panel) =>
+        setLayout((l) => {
+          for (const region of DOCK_REGIONS) {
+            const group = l.docks[region].find((g) => g.panels.includes(panel))
+            if (group) return activatePanel(l, group.id, panel)
+          }
+          const floating = l.floating.find((g) => g.panels.includes(panel))
+          return floating ? activatePanel(l, floating.id, panel) : l
+        }),
       [],
     ),
     trackFloatingDrag: React.useCallback(

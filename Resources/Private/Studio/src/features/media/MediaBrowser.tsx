@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { useAssets, type MediaAsset } from '@/api/media'
+import { Button } from '@/components/ui/button'
 import { AssetDetailsDialog } from './AssetDetailsDialog'
 import { AssetList } from './AssetList'
 import { MediaFooter } from './MediaFooter'
@@ -17,6 +18,10 @@ export interface MediaBrowserProps {
   mode?: 'manage' | 'picker'
   /** Called in picker mode when the user confirms an asset. */
   onPick?: (asset: MediaAsset) => void
+  /** Called in picker mode when the user abandons the pick (dismisses the banner). */
+  onCancel?: () => void
+  /** What the pick is for, shown in the picker banner (e.g. the target property label). */
+  pickerTitle?: string
   /** Restrict the initial source (e.g. a picker constrained to one DAM). */
   initialSource?: string
 }
@@ -30,6 +35,8 @@ export interface MediaBrowserProps {
 export function MediaBrowser({
   mode = 'manage',
   onPick,
+  onCancel,
+  pickerTitle,
   initialSource = 'neos',
 }: MediaBrowserProps) {
   const state = useMediaBrowserState(initialSource)
@@ -53,6 +60,27 @@ export function MediaBrowser({
 
   return (
     <div className="relative flex h-full min-h-0 flex-col">
+      {mode === 'picker' && (
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-blue-500/40 bg-blue-500/10 px-3 py-2 text-xs">
+          <span className="min-w-0 truncate text-neutral-200">
+            Pick an asset
+            {pickerTitle && (
+              <>
+                {' '}
+                for{' '}
+                <span className="font-medium text-white">{pickerTitle}</span>
+              </>
+            )}{' '}
+            — double-click to choose.
+          </span>
+          {onCancel && (
+            <Button variant="ghost" size="xs" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      )}
+
       <MediaHeader state={state} />
 
       <AssetList

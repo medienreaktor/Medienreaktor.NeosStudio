@@ -6,6 +6,7 @@ import type {
   NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { InspectorPanel } from '@/features/inspector/Inspector'
+import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
@@ -146,8 +147,24 @@ function VisualEditorPanel() {
   )
 }
 
-/** The Media Library: the reusable asset browser in its full manage mode. */
+/**
+ * The Media Library: the reusable asset browser. Normally its full manage
+ * module; while an inspector editor has an asset pick in flight (see
+ * AssetPicker) it flips to picker mode, so double-clicking an asset hands it
+ * back to the editor instead of opening its metadata dialog.
+ */
 function MediaLibraryPanel() {
+  const { session, resolve, cancel } = useAssetPicker()
+  if (session) {
+    return (
+      <MediaBrowser
+        mode="picker"
+        onPick={resolve}
+        onCancel={cancel}
+        pickerTitle={session.title}
+      />
+    )
+  }
   return <MediaBrowser mode="manage" />
 }
 

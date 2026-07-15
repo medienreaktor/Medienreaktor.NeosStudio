@@ -84,6 +84,10 @@ const DATA_TYPE_EDITORS: Record<string, string> = {
   DateTime: 'Neos.Neos/Inspector/Editors/DateTimeEditor',
   reference: 'Neos.Neos/Inspector/Editors/ReferenceEditor',
   references: 'Neos.Neos/Inspector/Editors/ReferencesEditor',
+  'Neos\\Media\\Domain\\Model\\ImageInterface':
+    'Neos.Neos/Inspector/Editors/ImageEditor',
+  'Neos\\Media\\Domain\\Model\\Asset':
+    'Neos.Neos/Inspector/Editors/AssetEditor',
 }
 
 /** The editor a property of this type gets when it configures none itself, or null if the type has no default. */
