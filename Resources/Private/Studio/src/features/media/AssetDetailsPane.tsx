@@ -26,6 +26,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { AssetThumb } from './AssetThumb'
+import { ConfirmDialog } from './ConfirmDialog'
 import { formatBytes, formatDate } from './format'
 import { UsageTable } from './UsageTable'
 
@@ -305,43 +306,43 @@ function DeleteButton({
   localId: string
   onDeleted: () => void
 }) {
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   async function remove() {
-    setError(null)
-    setBusy(true)
     try {
       await deleteAsset(localId)
-      onDeleted()
     } catch (e) {
+      // Surface the server's in-use guard as a readable message in the dialog.
       if (
         e instanceof ApiError &&
         (e.body as { error?: string } | null)?.error === 'asset_in_use'
       ) {
-        setError('This asset is in use and cannot be deleted.')
-      } else {
-        setError('Deleting the asset failed.')
+        throw new Error('This asset is in use and cannot be deleted.')
       }
-    } finally {
-      setBusy(false)
+      throw new Error('Deleting the asset failed.')
     }
+    onDeleted()
   }
 
   return (
-    <div className="space-y-1">
+    <>
       <Button
         variant="destructive"
         size="sm"
         className="w-full"
-        onClick={remove}
-        disabled={busy}
+        onClick={() => setConfirming(true)}
       >
         <Trash2Icon className="size-4" />
         Delete asset
       </Button>
-      {error && <p className="text-xs text-red-500">{error}</p>}
-    </div>
+      <ConfirmDialog
+        open={confirming}
+        title="Delete this asset?"
+        description="The asset will be permanently removed. Assets that are still in use cannot be deleted."
+        onOpenChange={setConfirming}
+        onConfirm={remove}
+      />
+    </>
   )
 }
 

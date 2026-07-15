@@ -1,19 +1,47 @@
-import { useState } from 'react'
-import { CircleSlashIcon, FolderIcon, LayersIcon, PlusIcon } from 'lucide-react'
+import { useRef, useState } from 'react'
+import {
+  CircleSlashIcon,
+  FolderIcon,
+  LayersIcon,
+  PlusIcon,
+  TagIcon,
+} from 'lucide-react'
 
 import {
   createCollection,
   createTag,
+  updateTag,
   useAssetCollections,
   useAssetSources,
   useTags,
   type AssetSource,
+  type MediaCollection,
+  type MediaTag,
 } from '@/api/media'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { TagTree } from './TagTree'
+import { MediaItemActions, type MediaMenuTarget } from './MediaItemMenu'
+import { MediaTree, type MediaTreeNode } from './MediaTree'
 import type { MediaBrowserController } from './useMediaBrowserState'
+
+/** Map the API's nested tag / flat collection shapes onto MediaTree nodes. */
+function tagToNode(tag: MediaTag): MediaTreeNode {
+  return {
+    id: tag.identifier,
+    label: tag.label,
+    count: tag.assetCount,
+    children: tag.children.map(tagToNode),
+  }
+}
+function collectionToNode(collection: MediaCollection): MediaTreeNode {
+  return {
+    id: collection.identifier,
+    label: collection.title,
+    count: collection.assetCount,
+    children: [],
+  }
+}
 
 /** Left rail: asset-source switcher, collections list, and the tag tree. */
 export function MediaSidebar({ state }: { state: MediaBrowserController }) {
@@ -21,6 +49,16 @@ export function MediaSidebar({ state }: { state: MediaBrowserController }) {
   const collections = useAssetCollections()
   const tags = useTags()
   const { filter } = state
+
+  // The collection/tag the right-click context menu is open for.
+  const [menuTarget, setMenuTarget] = useState<MediaMenuTarget | null>(null)
+  const openMenu = (
+    target: Omit<MediaMenuTarget, 'anchor'>,
+    event: React.MouseEvent,
+  ) => {
+    event.preventDefault()
+    setMenuTarget({ ...target, anchor: { x: event.clientX, y: event.clientY } })
+  }
 
   const activeSource = sources.data?.find(
     (s) => s.identifier === filter.assetSource,
@@ -47,44 +85,72 @@ export function MediaSidebar({ state }: { state: MediaBrowserController }) {
 
       {supportsCollections && (
         <Section title="Collections" action={<AddCollection />}>
-          <ul className="space-y-0.5">
-            <RailButton
-              icon={<LayersIcon className="size-3.5" />}
-              label="All assets"
-              active={filter.collection === null}
-              onClick={() => state.selectCollection(null)}
-            />
-            {collections.data?.map((collection) => (
-              <RailButton
-                key={collection.identifier}
-                icon={<FolderIcon className="size-3.5" />}
-                label={collection.title}
-                count={collection.assetCount}
-                active={filter.collection === collection.identifier}
-                onClick={() => state.selectCollection(collection.identifier)}
-              />
-            ))}
-          </ul>
+          <RailButton
+            icon={<LayersIcon className="size-3.5" />}
+            label="All assets"
+            active={filter.collection === null}
+            onClick={() => state.selectCollection(null)}
+          />
+          <MediaTree
+            label="Collections"
+            emptyText="No collections yet"
+            roots={(collections.data ?? []).map(collectionToNode)}
+            selectedId={filter.collection}
+            onSelect={(id) =>
+              state.selectCollection(filter.collection === id ? null : id)
+            }
+            icon={() => <FolderIcon className="size-3.5" />}
+            onItemContextMenu={(node, e) =>
+              openMenu(
+                { kind: 'collection', id: node.id, label: node.label },
+                e,
+              )
+            }
+          />
         </Section>
       )}
 
       {supportsTagging && (
         <Section title="Tags" action={<AddTag />}>
           <RailButton
+            icon={<TagIcon className="size-3.5" />}
+            label="All tags"
+            active={filter.tagMode === 'given' && filter.tag === null}
+            onClick={() => state.selectTag(null)}
+          />
+          <RailButton
             icon={<CircleSlashIcon className="size-3.5" />}
             label="Untagged"
             active={filter.tagMode === 'none'}
             onClick={() => state.showUntagged()}
           />
-          <div className="mt-0.5">
-            <TagTree
-              tags={tags.data ?? []}
-              selectedTag={filter.tag}
-              onSelect={state.selectTag}
-            />
-          </div>
+          <MediaTree
+            label="Tags"
+            emptyText="No tags yet"
+            roots={(tags.data ?? []).map(tagToNode)}
+            selectedId={filter.tagMode === 'given' ? filter.tag : null}
+            onSelect={(id) =>
+              state.selectTag(
+                filter.tagMode === 'given' && filter.tag === id ? null : id,
+              )
+            }
+            icon={() => <TagIcon className="size-3.5" />}
+            onItemContextMenu={(node, e) =>
+              openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
+            }
+            onReparent={(tagId, newParentId) =>
+              // The API treats parent:null as "unchanged" and '' as "move to
+              // root", so a top-level drop sends the empty string.
+              void updateTag(tagId, { parent: newParentId ?? '' })
+            }
+          />
         </Section>
       )}
+
+      <MediaItemActions
+        target={menuTarget}
+        onClose={() => setMenuTarget(null)}
+      />
     </div>
   )
 }
@@ -153,18 +219,21 @@ function RailButton({
   count,
   active,
   onClick,
+  onContextMenu,
 }: {
   icon: React.ReactNode
   label: string
   count?: number
   active: boolean
   onClick: () => void
+  onContextMenu?: (event: React.MouseEvent) => void
 }) {
   return (
     <li className="list-none">
       <button
         type="button"
         onClick={onClick}
+        onContextMenu={onContextMenu}
         className={cn(
           'flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-sm',
           active
@@ -195,15 +264,27 @@ function InlineCreate({
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
   const [busy, setBusy] = useState(false)
+  // Guards against a double create: pressing Enter submits and closes the
+  // input, whose unmount fires onBlur with a stale `value` that would submit
+  // again. The ref is reset each time the field is (re)opened.
+  const handledRef = useRef(false)
 
   async function submit() {
+    if (handledRef.current) return
     const trimmed = value.trim()
-    if (!trimmed) return
+    if (!trimmed) {
+      setOpen(false)
+      return
+    }
+    handledRef.current = true
     setBusy(true)
     try {
       await onCreate(trimmed)
       setValue('')
       setOpen(false)
+    } catch {
+      // Let the user retry on failure.
+      handledRef.current = false
     } finally {
       setBusy(false)
     }
@@ -214,7 +295,10 @@ function InlineCreate({
       <Button
         variant="ghost"
         size="icon-xs"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          handledRef.current = false
+          setOpen(true)
+        }}
         title={placeholder}
       >
         <PlusIcon className="size-3.5" />

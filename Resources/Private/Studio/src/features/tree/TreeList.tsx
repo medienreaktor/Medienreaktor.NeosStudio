@@ -21,6 +21,7 @@ export function TreeList<T>({
   emptyText,
   decorate,
   onItemContextMenu,
+  rootless = false,
 }: {
   tree: TreeInstance<T>
   /** Accessible tree label (aria-label on the container). */
@@ -30,6 +31,12 @@ export function TreeList<T>({
   decorate?: (data: T) => TreeRowDecor | null
   /** Right-click on a row; when set, the browser menu is suppressed. */
   onItemContextMenu?: (item: ItemInstance<T>, event: React.MouseEvent) => void
+  /**
+   * For forests (many top-level items) rather than a single visible root:
+   * level-0 rows keep their expand arrow and indent from level 0, instead of
+   * the root special-casing the document tree/outliner rely on.
+   */
+  rootless?: boolean
 }) {
   const items = tree.getItems()
   // Present only when the tree registered the drag-and-drop feature.
@@ -59,8 +66,8 @@ export function TreeList<T>({
         // level costs no indentation, so the rest of the tree shifts left
         // by one level too, rather than sitting an extra step in from it.
         const level = item.getItemMeta().level
-        const isRoot = level === 0
-        const indentLevel = Math.max(level - 1, 0)
+        const isRoot = !rootless && level === 0
+        const indentLevel = rootless ? level : Math.max(level - 1, 0)
         // Highlight a folder being dropped directly onto ("make child"); the
         // between-rows case is shown by the drag line instead.
         const isDropTarget =
