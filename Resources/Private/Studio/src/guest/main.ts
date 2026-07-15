@@ -96,10 +96,12 @@ function injectStyles(): void {
     }
     [${PROPERTY_ATTRIBUTE}] {
       cursor: text;
-      outline: none !important;
     }
-    [${PROPERTY_ATTRIBUTE}]:focus {
-      outline: none !important;
+    [${PROPERTY_ATTRIBUTE}]:hover,
+    [${PROPERTY_ATTRIBUTE}]:focus,
+    [${PROPERTY_ATTRIBUTE}]:focus-within {
+      outline: 2px dashed rgba(0, 173, 238, 1.0);
+      outline-offset: 5px;
     }
     /* TipTap mounts its own contenteditable (.tiptap) inside the property
        element; it must inherit the host typography, not add a focus ring or
