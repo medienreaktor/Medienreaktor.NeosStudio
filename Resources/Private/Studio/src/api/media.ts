@@ -1,4 +1,8 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query'
 
 import { queryClient } from '@/app/queryClient'
 import { apiFetch, apiUpload } from './client'
@@ -156,6 +160,9 @@ export function useAssets(filter: AssetListFilter, enabled = true) {
       const next = last.pagination.offset + last.pagination.limit
       return next < last.pagination.total ? next : undefined
     },
+    // Keep the previous results on screen while a new search/filter loads, so
+    // the grid updates in place instead of flickering through an empty state.
+    placeholderData: keepPreviousData,
     enabled,
   })
 }
