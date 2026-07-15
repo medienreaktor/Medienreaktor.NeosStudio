@@ -31,7 +31,8 @@ export function TextEditorBody({
   const parse = (raw: string): { ok: boolean; value: unknown } => {
     if (!isNumeric) return { ok: true, value: raw }
     const parsed = raw.trim() === '' ? null : Number(raw)
-    if (parsed !== null && Number.isNaN(parsed)) return { ok: false, value: null }
+    if (parsed !== null && Number.isNaN(parsed))
+      return { ok: false, value: null }
     return { ok: true, value: parsed }
   }
 

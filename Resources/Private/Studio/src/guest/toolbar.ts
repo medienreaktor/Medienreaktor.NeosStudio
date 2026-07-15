@@ -328,7 +328,8 @@ for (const level of [1, 2, 3, 4, 5, 6] as const) {
     group: 'block',
     label: `Heading ${level}`,
     icon: `H${level}`,
-    isAvailable: (editor) => editorFormatting(editor).headingLevels.includes(level),
+    isAvailable: (editor) =>
+      editorFormatting(editor).headingLevels.includes(level),
     isActive: (editor) => editor.isActive('heading', { level }),
     run: (editor) => editor.chain().focus().toggleHeading({ level }).run(),
   })
@@ -340,7 +341,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'list',
   label: 'Bullet list',
-  icon: svg('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>'),
+  icon: svg(
+    '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).bulletList,
   isActive: (editor) => editor.isActive('bulletList'),
   run: (editor) => editor.chain().focus().toggleBulletList().run(),
@@ -350,7 +353,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'list',
   label: 'Ordered list',
-  icon: svg('<line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>'),
+  icon: svg(
+    '<line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).orderedList,
   isActive: (editor) => editor.isActive('orderedList'),
   run: (editor) => editor.chain().focus().toggleOrderedList().run(),
@@ -360,7 +365,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'list',
   label: 'Indent',
-  icon: svg('<polyline points="3 8 7 12 3 16"/><line x1="11" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/>'),
+  icon: svg(
+    '<polyline points="3 8 7 12 3 16"/><line x1="11" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/>',
+  ),
   isAvailable: (editor) =>
     editorFormatting(editor).bulletList || editorFormatting(editor).orderedList,
   isActive: () => false,
@@ -371,7 +378,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'list',
   label: 'Outdent',
-  icon: svg('<polyline points="7 8 3 12 7 16"/><line x1="11" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/>'),
+  icon: svg(
+    '<polyline points="7 8 3 12 7 16"/><line x1="11" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/>',
+  ),
   isAvailable: (editor) =>
     editorFormatting(editor).bulletList || editorFormatting(editor).orderedList,
   isActive: () => false,
@@ -384,7 +393,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'quote',
   label: 'Blockquote',
-  icon: svg('<path d="M6 17h3l2-4V7H5v6h3z"/><path d="M14 17h3l2-4V7h-6v6h3z"/>'),
+  icon: svg(
+    '<path d="M6 17h3l2-4V7H5v6h3z"/><path d="M14 17h3l2-4V7h-6v6h3z"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).blockquote,
   isActive: (editor) => editor.isActive('blockquote'),
   run: (editor) => editor.chain().focus().toggleBlockquote().run(),
@@ -394,7 +405,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'quote',
   label: 'Code block',
-  icon: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="9 10 7 12 9 14"/><polyline points="15 10 17 12 15 14"/>'),
+  icon: svg(
+    '<rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="9 10 7 12 9 14"/><polyline points="15 10 17 12 15 14"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).codeBlock,
   isActive: (editor) => editor.isActive('codeBlock'),
   run: (editor) => editor.chain().focus().toggleCodeBlock().run(),
@@ -402,10 +415,26 @@ registerToolbarItem({
 
 // Text alignment.
 const alignments = [
-  { id: 'left', label: 'Align left', lines: ['3 6 21 6', '3 12 15 12', '3 18 21 18'] },
-  { id: 'center', label: 'Align center', lines: ['3 6 21 6', '6 12 18 12', '3 18 21 18'] },
-  { id: 'right', label: 'Align right', lines: ['3 6 21 6', '9 12 21 12', '3 18 21 18'] },
-  { id: 'justify', label: 'Justify', lines: ['3 6 21 6', '3 12 21 12', '3 18 21 18'] },
+  {
+    id: 'left',
+    label: 'Align left',
+    lines: ['3 6 21 6', '3 12 15 12', '3 18 21 18'],
+  },
+  {
+    id: 'center',
+    label: 'Align center',
+    lines: ['3 6 21 6', '6 12 18 12', '3 18 21 18'],
+  },
+  {
+    id: 'right',
+    label: 'Align right',
+    lines: ['3 6 21 6', '9 12 21 12', '3 18 21 18'],
+  },
+  {
+    id: 'justify',
+    label: 'Justify',
+    lines: ['3 6 21 6', '3 12 21 12', '3 18 21 18'],
+  },
 ] as const
 for (const align of alignments) {
   registerToolbarItem({
@@ -447,11 +476,18 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Insert table',
-  icon: svg('<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>'),
-  isAvailable: (editor) => editorFormatting(editor).table && !editor.isActive('table'),
+  icon: svg(
+    '<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>',
+  ),
+  isAvailable: (editor) =>
+    editorFormatting(editor).table && !editor.isActive('table'),
   isActive: () => false,
   run: (editor) =>
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run(),
 })
 const inTable = (editor: Editor): boolean =>
   editorFormatting(editor).table && editor.isActive('table')
@@ -460,7 +496,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Add column before',
-  icon: svg('<rect x="9" y="4" width="12" height="16" rx="1"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="4" y1="10" x2="4" y2="14"/>'),
+  icon: svg(
+    '<rect x="9" y="4" width="12" height="16" rx="1"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="4" y1="10" x2="4" y2="14"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().addColumnBefore().run(),
@@ -470,7 +508,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Add column after',
-  icon: svg('<rect x="3" y="4" width="12" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="20" y1="10" x2="20" y2="14"/>'),
+  icon: svg(
+    '<rect x="3" y="4" width="12" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="20" y1="10" x2="20" y2="14"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().addColumnAfter().run(),
@@ -480,7 +520,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Delete column',
-  icon: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="15" y1="9" x2="21" y2="15"/><line x1="21" y1="9" x2="15" y2="15"/>'),
+  icon: svg(
+    '<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="15" y1="9" x2="21" y2="15"/><line x1="21" y1="9" x2="15" y2="15"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().deleteColumn().run(),
@@ -490,7 +532,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Add row before',
-  icon: svg('<rect x="4" y="9" width="16" height="11" rx="1"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="10" y1="4" x2="14" y2="4"/>'),
+  icon: svg(
+    '<rect x="4" y="9" width="16" height="11" rx="1"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="10" y1="4" x2="14" y2="4"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().addRowBefore().run(),
@@ -500,7 +544,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Add row after',
-  icon: svg('<rect x="4" y="4" width="16" height="11" rx="1"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="10" y1="20" x2="14" y2="20"/>'),
+  icon: svg(
+    '<rect x="4" y="4" width="16" height="11" rx="1"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="10" y1="20" x2="14" y2="20"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().addRowAfter().run(),
@@ -510,7 +556,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Delete row',
-  icon: svg('<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="9" y1="15" x2="15" y2="21"/><line x1="15" y1="15" x2="9" y2="21"/>'),
+  icon: svg(
+    '<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="9" y1="15" x2="15" y2="21"/><line x1="15" y1="15" x2="9" y2="21"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().deleteRow().run(),
@@ -520,7 +568,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Merge or split cells',
-  icon: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="4" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="20"/>'),
+  icon: svg(
+    '<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="4" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="20"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().mergeOrSplit().run(),
@@ -530,7 +580,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Toggle header row',
-  icon: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18" fill="none"/><rect x="3" y="4" width="18" height="5" fill="currentColor" stroke="none"/>'),
+  icon: svg(
+    '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18" fill="none"/><rect x="3" y="4" width="18" height="5" fill="currentColor" stroke="none"/>',
+  ),
   isAvailable: inTable,
   isActive: (editor) => editor.isActive('tableHeader'),
   run: (editor) => editor.chain().focus().toggleHeaderRow().run(),
@@ -540,7 +592,9 @@ registerToolbarItem({
   kind: 'block',
   group: 'table',
   label: 'Delete table',
-  icon: svg('<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>'),
+  icon: svg(
+    '<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+  ),
   isAvailable: inTable,
   isActive: () => false,
   run: (editor) => editor.chain().focus().deleteTable().run(),
@@ -553,7 +607,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Bold',
-  icon: svg('<path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/>'),
+  icon: svg(
+    '<path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).bold,
   isActive: (editor) => editor.isActive('bold'),
   run: (editor) => editor.chain().focus().toggleBold().run(),
@@ -563,7 +619,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Italic',
-  icon: svg('<line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/>'),
+  icon: svg(
+    '<line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).italic,
   isActive: (editor) => editor.isActive('italic'),
   run: (editor) => editor.chain().focus().toggleItalic().run(),
@@ -573,7 +631,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Underline',
-  icon: svg('<path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/>'),
+  icon: svg(
+    '<path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).underline,
   isActive: (editor) => editor.isActive('underline'),
   run: (editor) => editor.chain().focus().toggleUnderline().run(),
@@ -583,7 +643,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Strikethrough',
-  icon: svg('<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/>'),
+  icon: svg(
+    '<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).strike,
   isActive: (editor) => editor.isActive('strike'),
   run: (editor) => editor.chain().focus().toggleStrike().run(),
@@ -593,7 +655,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Subscript',
-  icon: svg('<path d="M4 5l8 10"/><path d="M12 5l-8 10"/><path d="M20 19h-4c0-1.5 3-2 3-3.5a1.5 1.5 0 0 0-3-.5"/>'),
+  icon: svg(
+    '<path d="M4 5l8 10"/><path d="M12 5l-8 10"/><path d="M20 19h-4c0-1.5 3-2 3-3.5a1.5 1.5 0 0 0-3-.5"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).subscript,
   isActive: (editor) => editor.isActive('subscript'),
   run: (editor) => editor.chain().focus().toggleSubscript().run(),
@@ -603,7 +667,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Superscript',
-  icon: svg('<path d="M4 9l8 10"/><path d="M12 9l-8 10"/><path d="M20 9h-4c0-1.5 3-2 3-3.5a1.5 1.5 0 0 0-3-.5"/>'),
+  icon: svg(
+    '<path d="M4 9l8 10"/><path d="M12 9l-8 10"/><path d="M20 9h-4c0-1.5 3-2 3-3.5a1.5 1.5 0 0 0-3-.5"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).superscript,
   isActive: (editor) => editor.isActive('superscript'),
   run: (editor) => editor.chain().focus().toggleSuperscript().run(),
@@ -613,7 +679,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'mark',
   label: 'Inline code',
-  icon: svg('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'),
+  icon: svg(
+    '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).code,
   isActive: (editor) => editor.isActive('code'),
   run: (editor) => editor.chain().focus().toggleCode().run(),
@@ -625,7 +693,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'link',
   label: 'Link',
-  icon: svg('<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>'),
+  icon: svg(
+    '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).link,
   isActive: (editor) => editor.isActive('link'),
   run: (editor) => {
@@ -642,7 +712,9 @@ registerToolbarItem({
   kind: 'inline',
   group: 'clear',
   label: 'Clear formatting',
-  icon: svg('<path d="M6 4h12v3"/><path d="M9 20h6"/><path d="M13 7l-3 13"/><line x1="4" y1="4" x2="20" y2="20"/>'),
+  icon: svg(
+    '<path d="M6 4h12v3"/><path d="M9 20h6"/><path d="M13 7l-3 13"/><line x1="4" y1="4" x2="20" y2="20"/>',
+  ),
   isAvailable: (editor) => editorFormatting(editor).removeFormat,
   isActive: () => false,
   run: (editor) => editor.chain().focus().unsetAllMarks().run(),

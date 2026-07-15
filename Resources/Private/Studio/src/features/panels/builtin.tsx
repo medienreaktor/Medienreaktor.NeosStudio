@@ -46,9 +46,7 @@ function DocumentsPanel() {
     nodesEdited,
   } = useStudio()
   if (!site || !workspaceName) {
-    return (
-      <div className="p-4 text-xs text-neutral-400">Loading sites…</div>
-    )
+    return <div className="p-4 text-xs text-neutral-400">Loading sites…</div>
   }
   return (
     <div className="p-2">

@@ -97,9 +97,7 @@ export function NodeCreationPanel() {
 
   if (groups === null) {
     return (
-      <div className="p-4 text-xs text-neutral-400">
-        Loading node types…
-      </div>
+      <div className="p-4 text-xs text-neutral-400">Loading node types…</div>
     )
   }
 

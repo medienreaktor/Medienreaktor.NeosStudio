@@ -223,9 +223,7 @@ function OutlinerTree({
   return (
     <>
       {loadError && <div className="text-xs text-red-500">{loadError}</div>}
-      {actionError && (
-        <div className="text-xs text-red-500">{actionError}</div>
-      )}
+      {actionError && <div className="text-xs text-red-500">{actionError}</div>}
       <TreeList
         tree={tree}
         label="Content outliner"
@@ -250,4 +248,3 @@ function OutlinerTree({
     </>
   )
 }
-
