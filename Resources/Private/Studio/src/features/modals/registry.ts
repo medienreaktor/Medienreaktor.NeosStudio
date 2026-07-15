@@ -108,6 +108,19 @@ export interface SettingsDialogDefinition extends RegistryDefinition {
   icon?: ModalIcon
   /** The section body. Propless - reads app state via context, like a settings screen. */
   component: React.ComponentType
+  /**
+   * A hook deciding whether this section is reachable right now (e.g. a
+   * permission check reading useMe()). When it returns false the section still
+   * appears in the subnavigation but disabled and unclickable - the host keeps
+   * it visible so users see the capability exists. Omit for always-enabled.
+   *
+   * It is a hook: the host calls it from a component dedicated to this section
+   * (one per subnav entry, and a remounted one for the body), so calling other
+   * hooks inside stays within the rules of hooks.
+   */
+  useEnabled?: () => boolean
+  /** Tooltip shown on the disabled subnav entry, e.g. "Administrators only". */
+  disabledReason?: string
 }
 
 export const modalDialogRegistry = new ModalRegistry<ModalDialogDefinition>()

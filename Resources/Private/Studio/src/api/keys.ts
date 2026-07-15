@@ -21,6 +21,7 @@ export const queryKeys = {
     schema: (name: string) => ['nodeTypes', 'schema', name] as const,
   },
   dimensions: ['dimensions'] as const,
+  users: ['users'] as const,
   nodes: {
     all: ['nodes'] as const,
     /** Prefix covering every cached variant (any nodeTypes filter) of one address - for invalidation, not for reading. */

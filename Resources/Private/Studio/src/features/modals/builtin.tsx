@@ -1,5 +1,6 @@
 import { ImageIcon, UsersIcon } from 'lucide-react'
 
+import { useMe } from '@/api/me'
 import { MediaModule } from '@/features/media/MediaModule'
 import { UserAdministration } from '@/features/users/UserAdministration'
 import { modalDialogRegistry, settingsDialogRegistry } from './registry'
@@ -34,5 +35,9 @@ export function registerBuiltinModals(): void {
     icon: UsersIcon,
     component: UserAdministration,
     order: 10,
+    // User administration is administrators only (the /users endpoint 403s
+    // otherwise); non-admins still see the entry, disabled.
+    useEnabled: () => useMe().data?.permissions.users ?? false,
+    disabledReason: 'Administrators only',
   })
 }

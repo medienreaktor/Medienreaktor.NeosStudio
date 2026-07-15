@@ -3,7 +3,11 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { XIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { modalDialogRegistry, useSettingsDialogs } from './registry'
+import {
+  modalDialogRegistry,
+  type SettingsDialogDefinition,
+  useSettingsDialogs,
+} from './registry'
 
 /**
  * The modal host: one place that owns "which modal is open" and renders it
@@ -164,10 +168,11 @@ function SettingsModal({
 }) {
   const sections = useSettingsDialogs()
   // Default to the first section when none was requested, or when the
-  // requested one is not (or no longer) registered.
+  // requested one is not (or no longer) registered. A disabled section can
+  // still be the active one (it is shown selected); its body handles the
+  // no-access case itself.
   const active =
     sections.find((section) => section.id === sectionId) ?? sections[0] ?? null
-  const Body = active?.component
 
   return (
     <>
@@ -182,29 +187,82 @@ function SettingsModal({
               No settings available
             </p>
           )}
-          {sections.map((section) => {
-            const Icon = section.icon
-            const isActive = section.id === active?.id
-            return (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => onSelect(section.id)}
-                className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors',
-                  isActive
-                    ? 'bg-neutral-800 text-white'
-                    : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white',
-                )}
-              >
-                {Icon && <Icon className="size-4 shrink-0" />}
-                {section.title}
-              </button>
-            )
-          })}
+          {sections.map((section) => (
+            <SettingsNavItem
+              key={section.id}
+              section={section}
+              isActive={section.id === active?.id}
+              onSelect={onSelect}
+            />
+          ))}
         </nav>
-        <div className="min-h-0 flex-1 overflow-auto">{Body && <Body />}</div>
+        <div className="min-h-0 flex-1 overflow-auto">
+          {/* Keyed by section id so switching sections remounts the body -
+              each section's optional useEnabled() hook then runs on a fresh
+              component, keeping hook order stable across a section change. */}
+          {active && <SettingsSectionBody key={active.id} section={active} />}
+        </div>
       </div>
     </>
   )
+}
+
+/**
+ * One entry in the settings subnavigation. A dedicated component so the
+ * section's optional useEnabled() hook (and whatever hooks it calls) runs in a
+ * stable position - one instance per section id.
+ */
+function SettingsNavItem({
+  section,
+  isActive,
+  onSelect,
+}: {
+  section: SettingsDialogDefinition
+  isActive: boolean
+  onSelect: (sectionId: string) => void
+}) {
+  const enabled = section.useEnabled ? section.useEnabled() : true
+  const Icon = section.icon
+  return (
+    <button
+      type="button"
+      disabled={!enabled}
+      title={!enabled ? section.disabledReason : undefined}
+      onClick={() => onSelect(section.id)}
+      className={cn(
+        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors',
+        !enabled
+          ? 'cursor-not-allowed text-neutral-600'
+          : isActive
+            ? 'bg-neutral-800 text-white'
+            : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white',
+      )}
+    >
+      {Icon && <Icon className="size-4 shrink-0" />}
+      {section.title}
+    </button>
+  )
+}
+
+/**
+ * The body of the active settings section. When the section is disabled (no
+ * access) it shows a neutral placeholder rather than the section component,
+ * so a defaulted-to disabled section never renders its content or fires its
+ * requests.
+ */
+function SettingsSectionBody({
+  section,
+}: {
+  section: SettingsDialogDefinition
+}) {
+  const enabled = section.useEnabled ? section.useEnabled() : true
+  if (!enabled) {
+    return (
+      <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-400">
+        {section.disabledReason ?? 'You do not have access to this section.'}
+      </div>
+    )
+  }
+  const Body = section.component
+  return <Body />
 }
