@@ -405,10 +405,11 @@ export function App() {
 
               {/* The main area and the optional right-hand sidebar. The Visual
                   Editor (preview) and Media Library live here as panels; the
-                  secondary dock only appears once it holds a panel. */}
+                  secondary dock belongs to the Visual Editor, so it only shows
+                  while that is the active main tab - not for the Media Library. */}
               <div className="flex min-h-0 flex-1">
                 <PanelDock region="main" />
-                <SecondaryDock />
+                <SecondaryDock visibleForMainPanel="visual-editor" />
               </div>
 
               {variantRequest && selectedDocument && activeWorkspace && (

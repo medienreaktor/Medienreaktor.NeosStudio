@@ -394,12 +394,36 @@ export function PanelDock({ region }: { region: DockRegion }) {
  * The optional right-hand sidebar. It stays hidden (so the main area is full
  * width) until it holds panels, and is revealed while a drag is in progress so
  * a panel can be dropped into it even when empty.
+ *
+ * Pass `visibleForMainPanel` to make it contextual to the main area's active
+ * tab: the dock then belongs to that one main panel (the Visual Editor) and
+ * hides while another main panel (the Media Library) is showing. It keeps its
+ * own docked panels mounted across the switch - hidden via CSS, not unmounted -
+ * so their state survives, and a display:none dock stays out of drop
+ * hit-testing so nothing can be dropped into it while it is hidden.
  */
-export function SecondaryDock() {
+export function SecondaryDock({
+  visibleForMainPanel,
+}: {
+  visibleForMainPanel?: PanelId
+}) {
   const { layout, drag } = usePanels()
-  if (layout.docks.secondary.length === 0 && !drag) return null
+  const hasPanels = layout.docks.secondary.length > 0
+  // The main area is a tab region, so it coalesces to a single group; its
+  // active tab decides whether this contextual dock is showing.
+  const hidden =
+    visibleForMainPanel !== undefined &&
+    layout.docks.main[0]?.active !== visibleForMainPanel
+  // Empty and neither worth keeping mounted nor being dropped into: render
+  // nothing. (A hidden contextual dock never reveals for a drag.)
+  if (!hasPanels && (hidden || !drag)) return null
   return (
-    <div className="flex w-80 shrink-0 flex-col border-l bg-neutral-900">
+    <div
+      className={cn(
+        'flex w-80 shrink-0 flex-col border-l bg-neutral-900',
+        hidden && 'hidden',
+      )}
+    >
       <PanelDock region="secondary" />
     </div>
   )
