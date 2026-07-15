@@ -63,6 +63,16 @@ export type GuestToHostMessage =
       parentContextPath: string
       succeedingSiblingContextPath: string | null
     }
+  /**
+   * The image-select button of a rendered image was clicked - the host opens
+   * the Media Library picker and, on pick, sets the image property. contextPath
+   * is the owning node's NodeAddress JSON, property the image property name.
+   */
+  | {
+      type: 'neos-studio/image-select-request'
+      contextPath: string
+      property: string
+    }
 
 export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */

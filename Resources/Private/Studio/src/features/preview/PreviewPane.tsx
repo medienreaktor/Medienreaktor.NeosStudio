@@ -18,6 +18,11 @@ import {
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
+import { useAssetPicker } from '@/features/media/AssetPicker'
+import {
+  imageReference,
+  localIdentifierFor,
+} from '@/features/properties/editors/assetValue'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
 /**
@@ -144,6 +149,10 @@ export function PreviewPane({
   // the guest, anchored at the handle's viewport position over the iframe.
   const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
   const { data: nodeTypes } = useNodeTypes()
+  // Opening the Media Library picker for an image clicked in the preview.
+  const { requestPick } = useAssetPicker()
+  const requestPickRef = useRef(requestPick)
+  requestPickRef.current = requestPick
 
   // Double-buffered iframes stacked front-to-back: the last layer is the
   // incoming/active one, earlier layers are the outgoing page still painted
@@ -291,6 +300,42 @@ export function PreviewPane({
           } catch {
             /* malformed contextpath - ignore the request */
           }
+          break
+        }
+        case 'neos-studio/image-select-request': {
+          let address: string
+          try {
+            address = addressFromContextPath(message.contextPath)
+          } catch {
+            break
+          }
+          const property = message.property
+          setSaveError(null)
+          // Hand off to the Media Library picker; on pick, resolve the chosen
+          // asset to a local identifier, set the image property, and reload the
+          // preview so the new image renders.
+          requestPickRef.current({
+            title: property,
+            onPick: (asset) => {
+              localIdentifierFor(asset)
+                .then((id) =>
+                  persistPropertyChange(address, property, imageReference(id)),
+                )
+                .then(() => {
+                  setReloadCount((count) => count + 1)
+                  onNodeEditedRef.current?.(address)
+                  // Inspect the edited node so the reloaded preview scrolls it
+                  // into view (the shell pushes the selection to the fresh
+                  // guest, which reveals it) - as an inspector edit does.
+                  onSelectNodeRef.current(address)
+                })
+                .catch((e: unknown) =>
+                  setSaveError(
+                    `Setting image failed: ${e instanceof Error ? e.message : String(e)}`,
+                  ),
+                )
+            },
+          })
           break
         }
         case 'neos-studio/move-node-request': {

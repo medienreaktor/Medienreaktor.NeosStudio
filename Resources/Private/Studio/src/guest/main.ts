@@ -40,6 +40,7 @@ const ALLOWED_TYPES_ATTRIBUTE = 'data-__neos-studio-allowed-types'
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const EDITABLE_NODE_ATTRIBUTE = 'data-__neos-editable-node-contextpath'
 const PLACEHOLDER_ATTRIBUTE = 'data-__neos-studio-placeholder'
+const IMAGE_PROPERTY_ATTRIBUTE = 'data-__neos-studio-image-property'
 
 const HOVER_CLASS = 'neos-studio-hover'
 const SELECTED_CLASS = 'neos-studio-selected'
@@ -48,6 +49,7 @@ const DROP_TARGET_CLASS = 'neos-studio-drop-target'
 const EMPTY_CLASS = 'neos-studio-empty'
 const INDICATOR_ID = 'neos-studio-drop-indicator'
 const HANDLE_ID = 'neos-studio-element-handle'
+const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
 
 function post(message: GuestToHostMessage): void {
   window.parent.postMessage(message, window.location.origin)
@@ -58,6 +60,8 @@ const elementsByAggregateId = new Map<string, HTMLElement>()
 
 let selectedElement: HTMLElement | null = null
 let hoveredElement: HTMLElement | null = null
+/** The image currently under the in-place image-picker overlay, if any. */
+let hoveredImage: HTMLElement | null = null
 
 function injectStyles(): void {
   const style = document.createElement('style')
@@ -169,6 +173,34 @@ function injectStyles(): void {
     }
     #${HANDLE_ID}:active {
       cursor: grabbing;
+    }
+    /* In-place image picker: hovering a rendered image (whose content element
+       or ImageTag declares its image property) washes it blue and offers a
+       "Select image" button. Sits above the image but below the richtext
+       toolbars and the element handle. */
+    #${IMAGE_OVERLAY_ID} {
+      position: fixed;
+      z-index: 2147483645;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 173, 238, 0.35);
+      outline: 2px solid rgba(0, 173, 238, 1);
+      outline-offset: -2px;
+      cursor: pointer;
+    }
+    #${IMAGE_OVERLAY_ID} button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font: 500 13px/1.2 system-ui, -apple-system, sans-serif;
+      color: #fff;
+      background: rgb(0, 173, 238);
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
     }
   `
   document.head.appendChild(style)
@@ -308,6 +340,90 @@ function onHandleDragStart(event: DragEvent): void {
   startDrag(nodeTypeName, element)
 }
 
+/**
+ * The picker target for a rendered image: which property of which node it is.
+ * The property name comes from the nearest element carrying it - the <img>
+ * itself when rendered via Neos.Neos:ImageTag, otherwise the enclosing content
+ * element (a node with a single image property, see Root.fusion). The node
+ * identity is always the enclosing content element wrapper. Images inside an
+ * inline-editable rich text are content, not an image property - skipped.
+ */
+function resolveImageTarget(
+  img: HTMLElement,
+): { property: string; contextPath: string } | null {
+  if (img.closest(`[${PROPERTY_ATTRIBUTE}]`)) return null
+  const property = img
+    .closest<HTMLElement>(`[${IMAGE_PROPERTY_ATTRIBUTE}]`)
+    ?.getAttribute(IMAGE_PROPERTY_ATTRIBUTE)
+  const contextPath = img
+    .closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
+    ?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (!property || !contextPath) return null
+  return { property, contextPath }
+}
+
+function imageOverlay(): HTMLElement {
+  let overlay = document.getElementById(IMAGE_OVERLAY_ID)
+  if (!overlay) {
+    overlay = document.createElement('div')
+    overlay.id = IMAGE_OVERLAY_ID
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' +
+      '<path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L6 20"/></svg>Select image'
+    overlay.appendChild(button)
+    // The whole overlay is the hit target (the button is just the affordance),
+    // so a click anywhere over the image opens the picker.
+    overlay.addEventListener('click', onImageSelect)
+    // Leaving the overlay (which sits on top of the image) hides it; re-entering
+    // another image re-shows it via the document mouseover handler.
+    overlay.addEventListener('mouseleave', hideImageOverlay)
+    document.body.appendChild(overlay)
+  }
+  return overlay
+}
+
+function showImageOverlay(img: HTMLElement): void {
+  hoveredImage = img
+  const overlay = imageOverlay()
+  const rect = img.getBoundingClientRect()
+  overlay.style.display = 'flex'
+  overlay.style.left = `${rect.left}px`
+  overlay.style.top = `${rect.top}px`
+  overlay.style.width = `${rect.width}px`
+  overlay.style.height = `${rect.height}px`
+}
+
+function hideImageOverlay(): void {
+  hoveredImage = null
+  const overlay = document.getElementById(IMAGE_OVERLAY_ID)
+  if (overlay) overlay.style.display = 'none'
+}
+
+/** Reposition (or drop) the overlay after scroll/resize, throttled to a frame. */
+let imageOverlayUpdateScheduled = false
+function scheduleImageOverlayUpdate(): void {
+  if (imageOverlayUpdateScheduled || hoveredImage === null) return
+  imageOverlayUpdateScheduled = true
+  requestAnimationFrame(() => {
+    imageOverlayUpdateScheduled = false
+    if (hoveredImage === null) return
+    if (hoveredImage.isConnected) showImageOverlay(hoveredImage)
+    else hideImageOverlay()
+  })
+}
+
+function onImageSelect(event: MouseEvent): void {
+  // Take precedence over node-select / link handling and never submit a form.
+  event.preventDefault()
+  event.stopPropagation()
+  if (hoveredImage === null) return
+  const target = resolveImageTarget(hoveredImage)
+  if (target) post({ type: 'neos-studio/image-select-request', ...target })
+}
+
 /** NodeAddress JSON of the collection containing the element, if any. */
 function parentCollectionContextPath(element: HTMLElement): string | null {
   return (
@@ -392,6 +508,18 @@ function handleLinkClick(
 
 function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
+  // Over the image overlay itself (it sits on top of the image): keep it shown.
+  if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
+
+  // In-place image picker: a rendered image whose property is known gets the
+  // hover overlay; anything else hides it.
+  const image = target?.closest ? target.closest<HTMLElement>('img') : null
+  if (image && resolveImageTarget(image)) {
+    if (image !== hoveredImage) showImageOverlay(image)
+  } else {
+    hideImageOverlay()
+  }
+
   const wrapper = target?.closest
     ? target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
     : null
@@ -686,6 +814,10 @@ function init(): void {
   // and layout changes from resizes or inline edits.
   window.addEventListener('scroll', scheduleHandleUpdate, true)
   window.addEventListener('resize', scheduleHandleUpdate)
+  // The image-picker overlay floats at fixed coordinates too - follow its
+  // image through scrolling and layout changes.
+  window.addEventListener('scroll', scheduleImageOverlayUpdate, true)
+  window.addEventListener('resize', scheduleImageOverlayUpdate)
   window.addEventListener('message', onHostMessage)
   post({ type: 'neos-studio/guest-ready' })
 }

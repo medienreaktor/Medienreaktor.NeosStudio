@@ -13,6 +13,7 @@ use Neos\Eel\ProtectedContextAwareInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Locale;
 use Neos\Flow\I18n\Translator;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Service\UserService;
 
@@ -33,6 +34,19 @@ class StudioHelper implements ProtectedContextAwareInterface
 
     #[Flow\Inject]
     protected UserService $userService;
+
+    #[Flow\Inject]
+    protected PersistenceManagerInterface $persistenceManager;
+
+    /**
+     * The concrete/interface Media classes an image-typed property may declare.
+     * Both the interface (the usual NodeType declaration) and the concrete
+     * class are matched, with or without a leading backslash.
+     */
+    private const IMAGE_PROPERTY_TYPES = [
+        'Neos\Media\Domain\Model\ImageInterface',
+        'Neos\Media\Domain\Model\Image',
+    ];
 
     /**
      * Names of the non-abstract content node types allowed as children of the
@@ -155,6 +169,69 @@ class StudioHelper implements ProtectedContextAwareInterface
             'formatting' => is_array($formatting) ? $formatting : [],
             'autoparagraph' => $editorOptions['autoparagraph'] ?? null,
         ];
+    }
+
+    /**
+     * The name of the node's single image-typed property, or null when it has
+     * none or more than one. Rendered onto the content-element wrapping so the
+     * guest can offer in-place image selection on the rendered <img> even when
+     * the image is emitted as a bare src (Neos.Neos:ImageUri + a plain <img>,
+     * as the Neos.Demo does) - the <img> itself carries no node/property, but
+     * its enclosing content element does. Left unset for nodes with several
+     * image properties, where a single <img> cannot be attributed to one of
+     * them from the wrapping alone (use the Neos.Neos:ImageTag path for those).
+     */
+    public function singleImageProperty(Node $node): ?string
+    {
+        $nodeType = $this->contentRepositoryRegistry->get($node->contentRepositoryId)
+            ->getNodeTypeManager()
+            ->getNodeType($node->nodeTypeName);
+        if ($nodeType === null) {
+            return null;
+        }
+
+        $imageProperties = [];
+        foreach ($nodeType->getProperties() as $name => $configuration) {
+            if ($this->isImageType($configuration['type'] ?? null)) {
+                $imageProperties[] = $name;
+            }
+        }
+
+        return count($imageProperties) === 1 ? $imageProperties[0] : null;
+    }
+
+    /**
+     * The name of the node property whose value is the given asset - used to
+     * annotate a rendered Neos.Neos:ImageTag with the property it came from
+     * (the tag receives the asset object, not the property name). Matches by
+     * persistence identifier across the node's object-valued properties, so an
+     * image among several image properties is attributed precisely. Returns
+     * null when the asset is not held by any property (e.g. a menu thumbnail).
+     */
+    public function imageProperty(?Node $node, mixed $asset): ?string
+    {
+        if ($node === null || !is_object($asset)) {
+            return null;
+        }
+        $assetIdentifier = $this->persistenceManager->getIdentifierByObject($asset);
+        if ($assetIdentifier === null) {
+            return null;
+        }
+        foreach ($node->properties as $name => $value) {
+            if (is_object($value)
+                && $this->persistenceManager->getIdentifierByObject($value) === $assetIdentifier) {
+                return $name;
+            }
+        }
+        return null;
+    }
+
+    private function isImageType(?string $type): bool
+    {
+        if ($type === null) {
+            return false;
+        }
+        return in_array(ltrim($type, '\\'), self::IMAGE_PROPERTY_TYPES, true);
     }
 
     public function allowsCallOfMethod($methodName): bool

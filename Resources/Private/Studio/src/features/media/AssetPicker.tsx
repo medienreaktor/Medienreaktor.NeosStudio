@@ -95,29 +95,50 @@ export function AssetPickerProvider({
 
 /**
  * Drives the panel switch for the picker. Mount once inside <PanelsProvider>
- * (which is inside <AssetPickerProvider>): when a session opens it focuses the
- * Media Library, and when it closes it restores the main tab that was active
- * before - unless the Media Library already was it (e.g. torn out to float),
- * in which case there is nothing to switch back to.
+ * (which is inside <AssetPickerProvider>):
+ *
+ * - opening a session focuses the Media Library and remembers the main tab
+ *   that was active, to restore on close;
+ * - closing it (a pick or Cancel) restores that tab - unless the Media Library
+ *   already was it (e.g. torn out to float), where there is nothing to switch
+ *   back to;
+ * - if the user navigates away from the Media Library while a session is still
+ *   open (switching the main tab back by hand instead of picking or
+ *   cancelling), the session is cancelled, so it never leaks into the next
+ *   pick. `reachedLibrary` gates this so our own activation - during which the
+ *   Media Library is not the active tab yet - does not self-cancel.
  */
 export function AssetPickerPanelBridge() {
-  const { session } = useAssetPicker()
+  const { session, cancel } = useAssetPicker()
   const { activate, activeMainPanel } = usePanelSwitcher()
   const active = session !== null
+  const atLibrary = activeMainPanel === MEDIA_LIBRARY_PANEL
   const wasActive = useRef(false)
   const returnTo = useRef<string | null>(null)
+  // Whether the Media Library has become the active tab for the current
+  // session - only then does leaving it cancel the pick.
+  const reachedLibrary = useRef(false)
 
   useEffect(() => {
     if (active && !wasActive.current) {
-      returnTo.current = activeMainPanel
+      // Session just opened: focus the Media Library, remember where to return.
+      returnTo.current = atLibrary ? null : activeMainPanel
+      reachedLibrary.current = atLibrary
       activate(MEDIA_LIBRARY_PANEL)
+    } else if (active && wasActive.current) {
+      // Session ongoing: note when the Library takes focus, and cancel if the
+      // user leaves it again without picking.
+      if (atLibrary) reachedLibrary.current = true
+      else if (reachedLibrary.current) cancel()
     } else if (!active && wasActive.current) {
+      // Session closed (pick or cancel): restore the previous main tab.
       if (returnTo.current && returnTo.current !== MEDIA_LIBRARY_PANEL)
         activate(returnTo.current)
       returnTo.current = null
+      reachedLibrary.current = false
     }
     wasActive.current = active
-  }, [active, activate, activeMainPanel])
+  }, [active, atLibrary, activate, activeMainPanel, cancel])
 
   return null
 }

@@ -25,7 +25,29 @@ prototype(Neos.Neos:ContentElementWrapping) {
     # (declared on the parent's childNodes) are handled correctly.
     data-__neos-studio-allowed-types = ${Json.stringify(MedienreaktorStudio.allowedChildNodeTypes(node))}
     data-__neos-studio-allowed-types.@if.isCollection = ${q(node).is('[instanceof Neos.Neos:ContentCollection]')}
+    # The name of the node's single image property, if it has exactly one. The
+    # guest offers in-place image selection on the rendered <img> inside this
+    # element (Neos.Demo renders images as a bare Neos.Neos:ImageUri src, so
+    # the <img> itself carries no property - its content element does). Nodes
+    # with several image properties are left to the Neos.Neos:ImageTag path
+    # below, which attributes each <img> precisely. Studio preview only; null
+    # renders no attribute.
+    data-__neos-studio-image-property = ${MedienreaktorStudio.singleImageProperty(node)}
+    data-__neos-studio-image-property.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
   }
+}
+
+# Images rendered with Neos.Neos:ImageTag get the source property name stamped
+# directly on the <img> (resolved from the asset object, so several image
+# properties on one node are still told apart). The guest reads the nearest
+# data-__neos-studio-image-property, so this per-image attribute wins over the
+# content element's single-property one above. Studio preview only; null (a
+# thumbnail not backed by a node property, or no node in context) renders no
+# attribute, and the GlobalCacheIdentifiers discriminator keeps the cached
+# Studio variant apart from the classic/frontend one.
+prototype(Neos.Neos:ImageTag) {
+  attributes.data-__neos-studio-image-property = ${MedienreaktorStudio.imageProperty(node, this.asset)}
+  attributes.data-__neos-studio-image-property.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
 }
 
 # Inline-editable properties carry their configured placeholder
