@@ -41,6 +41,7 @@ import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
 import { PublishButton } from '@/features/workspaces/PublishButton'
+import { SyncWorkspaceButton } from '@/features/workspaces/SyncWorkspaceButton'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 type AuthState = 'checking' | 'authenticated' | 'anonymous'
@@ -347,7 +348,10 @@ export function App() {
                   />
                 )}
                 {activeWorkspace && (
-                  <PublishButton workspaceName={activeWorkspace.name} />
+                  <>
+                    <SyncWorkspaceButton workspaceName={activeWorkspace.name} />
+                    <PublishButton workspaceName={activeWorkspace.name} />
+                  </>
                 )}
               </div>
             </header>

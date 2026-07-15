@@ -10,6 +10,8 @@ export interface Workspace {
   classification: string
   owner: string | null
   hasPublishableChanges: boolean
+  /** OUTDATED = the base workspace has newer changes; a rebase would pull them in. */
+  status: 'UP_TO_DATE' | 'OUTDATED'
   permissions: { read: boolean; write: boolean; manage: boolean }
 }
 
@@ -49,6 +51,23 @@ export function publishWorkspace(
   })
 }
 
+/**
+ * Rebase the workspace onto the current state of its base workspace - what
+ * the classic UI calls "synchronize": changes published by others flow in
+ * underneath the workspace's own pending changes. Rejected with a 409 and
+ * error code "rebase_conflicts" when own changes collide with the incoming
+ * ones; retrying with force drops the conflicting own changes.
+ */
+export function rebaseWorkspace(
+  workspaceName: string,
+  strategy?: 'force',
+): Promise<{ workspace: string; rebased: boolean }> {
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceName)}/rebase`, {
+    method: 'POST',
+    body: strategy ? { strategy } : {},
+  })
+}
+
 /** Discard pending changes of the workspace. */
 export function discardWorkspace(
   workspaceName: string,
@@ -84,6 +103,7 @@ export function useWorkspaceChanges(workspaceName: string | null) {
       apiFetch<{
         workspace: string
         baseWorkspace: string | null
+        status: 'UP_TO_DATE' | 'OUTDATED'
         changes: WorkspaceChange[]
       }>(`/workspaces/${encodeURIComponent(workspaceName!)}/changes`),
     enabled: workspaceName !== null,
