@@ -1,5 +1,6 @@
 import type * as React from 'react'
 import type { PanelRect } from './geometry'
+import type { DockRegion } from './panelLayout'
 
 /**
  * The panel registry: every panel - built-in or third-party - registers here
@@ -11,8 +12,8 @@ import type { PanelRect } from './geometry'
  */
 
 export type PanelPlacement =
-  /** Docked in the sidebar, appended below existing groups. */
-  | { kind: 'dock' }
+  /** Docked in a region (sidebar/main/secondary), appended below existing groups. */
+  | { kind: 'dock'; region: DockRegion }
   /** Floating; `rect` is evaluated lazily against the live viewport. */
   | { kind: 'floating'; rect: () => PanelRect }
 

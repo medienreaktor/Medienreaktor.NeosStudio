@@ -6,6 +6,8 @@ import type {
   NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { InspectorPanel } from '@/features/inspector/Inspector'
+import { MediaBrowser } from '@/features/media/MediaBrowser'
+import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { clampToViewport, type PanelRect } from './geometry'
@@ -111,6 +113,44 @@ function NodeInspectorPanel() {
   return <InspectorPanel node={inspectedNode} onNodeEdited={nodeEdited} />
 }
 
+/**
+ * The Visual Editor: the page preview with in-place editing. All of its wiring
+ * (selected document, editing mode, reload token, selection/navigation
+ * callbacks) comes from the studio context, so the panel is self-contained.
+ * The preview toolbar itself stays in the app header.
+ */
+function VisualEditorPanel() {
+  const {
+    selectedDocument,
+    previewEditing,
+    previewReloadToken,
+    inspectedNode,
+    inspectAddress,
+    navigateToNode,
+    reportInlineEdit,
+  } = useStudio()
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <PreviewPane
+        document={selectedDocument}
+        editing={previewEditing}
+        selectedAddress={inspectedNode?.address ?? null}
+        onSelectNode={inspectAddress}
+        onNavigateToNode={navigateToNode}
+        onNodeEdited={(address) =>
+          reportInlineEdit(Array.isArray(address) ? address : [address])
+        }
+        reloadToken={previewReloadToken}
+      />
+    </div>
+  )
+}
+
+/** The Media Library: the reusable asset browser in its full manage mode. */
+function MediaLibraryPanel() {
+  return <MediaBrowser mode="manage" />
+}
+
 /** Where the inspector historically sat: right edge, lower half. */
 function inspectorDefaultRect(): PanelRect {
   return clampToViewport({
@@ -123,23 +163,37 @@ function inspectorDefaultRect(): PanelRect {
 
 /** Call once before the app mounts. */
 export function registerBuiltinPanels(): void {
+  // The Visual Editor registers first so it is the default-active tab in the
+  // main area, with Media Library alongside it.
+  panelRegistry.register({
+    id: 'visual-editor',
+    title: 'Visual Editor',
+    component: VisualEditorPanel,
+    defaultPlacement: { kind: 'dock', region: 'main' },
+  })
+  panelRegistry.register({
+    id: 'media-library',
+    title: 'Media Library',
+    component: MediaLibraryPanel,
+    defaultPlacement: { kind: 'dock', region: 'main' },
+  })
   panelRegistry.register({
     id: 'documents',
     title: 'Documents',
     component: DocumentsPanel,
-    defaultPlacement: { kind: 'dock' },
+    defaultPlacement: { kind: 'dock', region: 'sidebar' },
   })
   panelRegistry.register({
     id: 'outline',
     title: 'Outline',
     component: OutlinePanel,
-    defaultPlacement: { kind: 'dock' },
+    defaultPlacement: { kind: 'dock', region: 'sidebar' },
   })
   panelRegistry.register({
     id: 'create',
     title: 'Create',
     component: NodeCreationPanel,
-    defaultPlacement: { kind: 'dock' },
+    defaultPlacement: { kind: 'dock', region: 'sidebar' },
   })
   panelRegistry.register({
     id: 'inspector',

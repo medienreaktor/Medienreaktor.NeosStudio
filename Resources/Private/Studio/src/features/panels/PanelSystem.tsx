@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDownIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import {
@@ -15,8 +14,10 @@ import {
   applyDrop,
   bringToFront,
   clampFloating,
+  type DockRegion,
   type DropTarget,
   type FloatingGroup,
+  isTabRegion,
   loadLayout,
   normalizeLayout,
   type PanelGroup,
@@ -76,13 +77,44 @@ function usePanels(): PanelsContextValue {
   return context
 }
 
+/**
+ * How each dock region arranges its groups: the sidebars stack vertically, the
+ * main area lays its groups side by side (Visual Editor left, Media Library
+ * right by default). This drives both the flex direction and which axis the
+ * drop-gap hit-testing measures.
+ */
+const REGION_ORIENTATION: Record<DockRegion, 'horizontal' | 'vertical'> = {
+  sidebar: 'vertical',
+  // The main area is a single tab group, so its orientation is moot; the
+  // sidebars stack their groups vertically.
+  main: 'vertical',
+  secondary: 'vertical',
+}
+
+/** The index of the group containing `el` among its region's docked groups. */
+function indexOfGroup(el: HTMLElement): number | null {
+  const groupEl = el.closest<HTMLElement>('[data-panel-group]')
+  const regionEl = groupEl?.parentElement ?? null
+  if (!groupEl || !regionEl) return null
+  const groups = Array.from(
+    regionEl.querySelectorAll<HTMLElement>(':scope > [data-panel-group]'),
+  )
+  return groups.indexOf(groupEl)
+}
+
+/** Portion of a group's body along the axis that docks a new group vs. tabs in. */
+const BODY_EDGE = 0.25
+
 /** Hit-test the pointer against the drop zones in the DOM. */
 function findDropTarget(x: number, y: number): DropTarget {
   const zone = document
     .elementFromPoint(x, y)
     ?.closest<HTMLElement>('[data-panel-drop]')
-  if (zone?.dataset.panelDrop === 'tabs' && zone.dataset.groupId) {
-    // A group's body appends; its tab bar inserts at the pointer's position.
+  const kind = zone?.dataset.panelDrop
+
+  // A tab bar (or a floating group's body, which appends): join the group as a
+  // tab at the pointer's position.
+  if (kind === 'tabs' && zone?.dataset.groupId) {
     if ('append' in zone.dataset)
       return { kind: 'tabs', groupId: zone.dataset.groupId, index: Infinity }
     const tabs = Array.from(
@@ -94,15 +126,40 @@ function findDropTarget(x: number, y: number): DropTarget {
     }).length
     return { kind: 'tabs', groupId: zone.dataset.groupId, index }
   }
-  if (zone?.dataset.panelDrop === 'dock') {
+
+  // A docked group's body in a stacking region: its leading/trailing edge docks
+  // a new group before/after it, while its middle merges the panel in as a tab.
+  // (Tab regions like the main area render their body as a plain 'tabs' zone.)
+  if (kind === 'body' && zone?.dataset.region && zone.dataset.groupId) {
+    const region = zone.dataset.region as DockRegion
+    const groupId = zone.dataset.groupId
+    const groupIndex = indexOfGroup(zone)
+    if (groupIndex !== null) {
+      const horizontal = REGION_ORIENTATION[region] === 'horizontal'
+      const r = zone.getBoundingClientRect()
+      const along = horizontal ? (x - r.left) / r.width : (y - r.top) / r.height
+      if (along < BODY_EDGE) return { kind: 'dock-gap', region, index: groupIndex }
+      if (along > 1 - BODY_EDGE)
+        return { kind: 'dock-gap', region, index: groupIndex + 1 }
+    }
+    return { kind: 'tabs', groupId, index: Infinity }
+  }
+
+  // A region's own area - the gaps between slots, an empty region, or a
+  // tabbar-region tab bar (whose drops route here): dock a new group at the
+  // pointer's position along the region's axis.
+  if (kind === 'dock' && zone?.dataset.region) {
+    const region = zone.dataset.region as DockRegion
+    const horizontal = REGION_ORIENTATION[region] === 'horizontal'
     const groups = Array.from(
       zone.querySelectorAll<HTMLElement>('[data-panel-group]'),
     )
     const index = groups.filter((group) => {
       const r = group.getBoundingClientRect()
-      return r.top + r.height / 2 < y
+      // Count the groups the pointer sits past, along the region's axis.
+      return horizontal ? r.left + r.width / 2 < x : r.top + r.height / 2 < y
     }).length
-    return { kind: 'dock-gap', index }
+    return { kind: 'dock-gap', region, index }
   }
   return { kind: 'float' }
 }
@@ -281,36 +338,70 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** The docked groups, stacked vertically. Render inside the sidebar. */
-export function PanelDock() {
+/** The docked groups of one region, stacked vertically. */
+export function PanelDock({ region }: { region: DockRegion }) {
   const { layout, drag } = usePanels()
-  const gapIndex = drag?.target.kind === 'dock-gap' ? drag.target.index : null
+  const gapIndex =
+    drag?.target.kind === 'dock-gap' && drag.target.region === region
+      ? drag.target.index
+      : null
+  const groups = layout.docks[region]
+  const horizontal = REGION_ORIENTATION[region] === 'horizontal'
   return (
     <div
       data-panel-drop="dock"
-      className="flex min-h-0 flex-1 flex-col gap-2 p-2"
+      data-region={region}
+      className={cn(
+        'flex min-h-0 min-w-0 flex-1 gap-2',
+        horizontal ? 'flex-row' : 'flex-col',
+      )}
     >
-      {layout.dock.map((group, index) => (
+      {groups.map((group, index) => (
         <React.Fragment key={group.id}>
-          {gapIndex === index && <DockGapMarker />}
+          {gapIndex === index && <DockGapMarker horizontal={horizontal} />}
           <div
             data-panel-group
             className={cn(
-              'flex min-h-0 flex-col overflow-hidden bg-neutral-900 text-white',
+              'flex min-h-0 min-w-0 flex-col overflow-hidden bg-neutral-900 text-white',
               !group.collapsed && 'flex-1',
             )}
           >
             <GroupTabBar group={group} />
-            <GroupBody group={group} collapsed={group.collapsed} />
+            <GroupBody
+              group={group}
+              collapsed={group.collapsed}
+              region={region}
+            />
           </div>
         </React.Fragment>
       ))}
-      {gapIndex !== null && gapIndex >= layout.dock.length && <DockGapMarker />}
-      {layout.dock.length === 0 && (
-        <div className="grid flex-1 place-items-center text-xs text-neutral-400">
+      {gapIndex !== null && gapIndex >= groups.length && (
+        <DockGapMarker horizontal={horizontal} />
+      )}
+      {groups.length === 0 && (
+        <div
+          data-panel-drop="dock"
+          data-region={region}
+          className="grid flex-1 place-items-center text-xs text-neutral-400"
+        >
           Drag panels here
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * The optional right-hand sidebar. It stays hidden (so the main area is full
+ * width) until it holds panels, and is revealed while a drag is in progress so
+ * a panel can be dropped into it even when empty.
+ */
+export function SecondaryDock() {
+  const { layout, drag } = usePanels()
+  if (layout.docks.secondary.length === 0 && !drag) return null
+  return (
+    <div className="flex w-80 shrink-0 flex-col border-l bg-neutral-900">
+      <PanelDock region="secondary" />
     </div>
   )
 }
@@ -356,8 +447,7 @@ function GroupTabBar({
   group: PanelGroup
   floating?: boolean
 }) {
-  const { definitions, drag, onTabPointerDown, toggle, trackFloatingDrag } =
-    usePanels()
+  const { definitions, drag, onTabPointerDown, trackFloatingDrag } = usePanels()
   const dropIndex =
     drag?.target.kind === 'tabs' && drag.target.groupId === group.id
       ? Math.min(drag.target.index, group.panels.length)
@@ -406,21 +496,6 @@ function GroupTabBar({
           floating ? (e) => trackFloatingDrag(e, group.id) : undefined
         }
       />
-      <button
-        type="button"
-        aria-label={
-          group.collapsed ? 'Expand panel group' : 'Collapse panel group'
-        }
-        onClick={() => toggle(group.id)}
-        className="p-1 text-neutral-400 hover:text-white"
-      >
-        <ChevronDownIcon
-          className={cn(
-            'size-3.5 transition-transform',
-            group.collapsed && '-rotate-90',
-          )}
-        />
-      </button>
     </div>
   )
 }
@@ -428,19 +503,29 @@ function GroupTabBar({
 function GroupBody({
   group,
   collapsed = false,
+  region,
 }: {
   group: PanelGroup
   collapsed?: boolean
+  /**
+   * The docked region this group sits in, if any. In a stacking region the
+   * body is a 'body' drop zone (edge docks a new stacked group, middle tabs
+   * in). Floating groups and tab regions (the main area) render a plain 'tabs'
+   * append zone instead, so a drop just tabs the panel in.
+   */
+  region?: DockRegion
 }) {
   const { definitions } = usePanels()
+  const stacking = region !== undefined && !isTabRegion(region)
   return (
-    // The body doubles as a drop zone that appends to this group's tabs.
-    // Collapsed groups keep the body mounted (hidden) so every panel's
-    // component - and its state - survives a collapse, just like tab switches.
+    // The body doubles as a drop zone. Collapsed groups keep the body mounted
+    // (hidden) so every panel's component - and its state - survives a
+    // collapse, like tab switches.
     <div
-      data-panel-drop="tabs"
+      data-panel-drop={stacking ? 'body' : 'tabs'}
+      data-region={stacking ? region : undefined}
       data-group-id={group.id}
-      data-append
+      data-append={stacking ? undefined : true}
       className={cn(
         'flex min-h-0 flex-1 flex-col bg-neutral-950',
         collapsed && 'hidden',
@@ -485,6 +570,9 @@ function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
 const TabDropMarker = () => (
   <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-blue-500" />
 )
-const DockGapMarker = () => (
-  <div className="-my-1.25 h-0.5 shrink-0 rounded bg-blue-500" />
-)
+const DockGapMarker = ({ horizontal = false }: { horizontal?: boolean }) =>
+  horizontal ? (
+    <div className="-mx-1.25 w-0.5 shrink-0 self-stretch rounded bg-blue-500" />
+  ) : (
+    <div className="-my-1.25 h-0.5 shrink-0 rounded bg-blue-500" />
+  )

@@ -20,10 +20,27 @@ export type StudioContextValue = {
   inspectedNode: NodeDto | null
   /** The last inline edit from the preview; refreshes outliner labels. */
   lastEdit: NodeEdit | null
+  /** Whether the preview (Visual Editor panel) renders with in-place editing. */
+  previewEditing: boolean
+  /** Bumped to reload the preview iframe after edits made outside of it. */
+  previewReloadToken: number
   /** Select a document (also inspects it). */
   selectDocument: (node: NodeDto) => void
   /** Inspect a node without changing the selected document. */
   inspectNode: (node: NodeDto) => void
+  /** Fetch and inspect the node at this address (e.g. a preview click). */
+  inspectAddress: (address: string) => void
+  /**
+   * Follow a link to another document (a preview navigation): show the target
+   * document, switching the active dimension to match it when they differ.
+   */
+  navigateToNode: (address: string) => void
+  /**
+   * Report inline edits made inside the preview: bumps outliner labels without
+   * the refetch/reload the inspector path needs (the iframe already rendered
+   * the change live).
+   */
+  reportInlineEdit: (addresses: string[]) => void
   /** Report that a property edit for this address was persisted. */
   nodeEdited: (address: string) => void
   /**

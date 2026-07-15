@@ -37,8 +37,12 @@ import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { ModalLauncher } from '@/features/modals/ModalLauncher'
 import { ModalProvider } from '@/features/modals/ModalHost'
-import { PanelDock, PanelsProvider } from '@/features/panels/PanelSystem'
-import { PreviewPane, PreviewToolbar } from '@/features/preview/PreviewPane'
+import {
+  PanelDock,
+  PanelsProvider,
+  SecondaryDock,
+} from '@/features/panels/PanelSystem'
+import { PreviewToolbar } from '@/features/preview/PreviewPane'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
@@ -198,11 +202,47 @@ export function App() {
     selectedDocument,
     inspectedNode,
     lastEdit,
+    previewEditing,
+    previewReloadToken,
     selectDocument: (node) => {
       setSelectedDocument(node)
       setInspectedNode(node)
     },
     inspectNode: setInspectedNode,
+    inspectAddress: (address) => {
+      // A click in the preview: inspect the node and reveal it in the outliner
+      // (via inspectedNode). Fine to fail - e.g. the node vanished meanwhile.
+      fetchNode(address)
+        .then(setInspectedNode)
+        .catch(() => {})
+    },
+    navigateToNode: (address) => {
+      // A followed link: show the target document; trees reveal and select it.
+      // Links can cross dimensions (e.g. a language menu) - follow the switch so
+      // the trees browse the same dimension as the preview.
+      fetchNode(address)
+        .then((node) => {
+          const currentPoint =
+            dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
+          if (
+            currentPoint &&
+            !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)
+          ) {
+            setDimensionSpacePoint(node.dimensionSpacePoint)
+          }
+          setSelectedDocument(node)
+          setInspectedNode(node)
+        })
+        .catch(() => {
+          /* fine - e.g. the linked document is not visible in this workspace */
+        })
+    },
+    reportInlineEdit: (addresses) => {
+      setLastEdit((prev) => ({
+        addresses,
+        token: (prev?.token ?? 0) + 1,
+      }))
+    },
     nodeEdited: (address) => {
       setLastEdit((prev) => ({
         addresses: [address],
@@ -287,8 +327,8 @@ export function App() {
                   </svg>
                 </div>
               </SidebarHeader>
-              <SidebarContent className="overflow-hidden">
-                <PanelDock />
+              <SidebarContent className="overflow-hidden p-2">
+                <PanelDock region="sidebar" />
               </SidebarContent>
               <SidebarResizeHandle {...resizeHandleProps} />
             </Sidebar>
@@ -363,53 +403,13 @@ export function App() {
 
               {error && <div className="px-4 py-2.5 text-red-500">{error}</div>}
 
-              <PreviewPane
-                document={selectedDocument}
-                editing={previewEditing}
-                selectedAddress={inspectedNode?.address ?? null}
-                onSelectNode={(address) => {
-                  // A click in the preview: inspect the node and reveal it in the
-                  // outliner (via selectedAddress above).
-                  fetchNode(address)
-                    .then(setInspectedNode)
-                    .catch(() => {
-                      /* fine - e.g. the node vanished from this workspace meanwhile */
-                    })
-                }}
-                onNavigateToNode={(address) => {
-                  // A followed link: show the target document; the document tree
-                  // reveals and selects it via selectedAddress. Links can cross
-                  // dimensions (e.g. a language menu) - follow the switch so the
-                  // trees browse the same dimension as the preview.
-                  fetchNode(address)
-                    .then((node) => {
-                      const currentPoint =
-                        dimensionSpacePoint ??
-                        sitesResponse?.dimensionSpacePoint
-                      if (
-                        currentPoint &&
-                        !dimensionSpacePointEquals(
-                          node.dimensionSpacePoint,
-                          currentPoint,
-                        )
-                      ) {
-                        setDimensionSpacePoint(node.dimensionSpacePoint)
-                      }
-                      setSelectedDocument(node)
-                      setInspectedNode(node)
-                    })
-                    .catch(() => {
-                      /* fine - e.g. the linked document is not visible in this workspace */
-                    })
-                }}
-                onNodeEdited={(address) =>
-                  setLastEdit((prev) => ({
-                    addresses: Array.isArray(address) ? address : [address],
-                    token: (prev?.token ?? 0) + 1,
-                  }))
-                }
-                reloadToken={previewReloadToken}
-              />
+              {/* The main area and the optional right-hand sidebar. The Visual
+                  Editor (preview) and Media Library live here as panels; the
+                  secondary dock only appears once it holds a panel. */}
+              <div className="flex min-h-0 flex-1">
+                <PanelDock region="main" />
+                <SecondaryDock />
+              </div>
 
               {variantRequest && selectedDocument && activeWorkspace && (
                 <CreateVariantDialog

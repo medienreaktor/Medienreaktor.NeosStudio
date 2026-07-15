@@ -3,16 +3,33 @@ import type { PanelDefinition } from './registry'
 
 /**
  * The panel layout model: every registered panel lives in exactly one group;
- * a group is either docked in the sidebar (vertical stack) or floating (free
- * rect, array order = z-order, last on top). Panels in a group render as
- * tabs. The whole layout persists to localStorage and is normalized against
- * the registered panel set - on load and whenever the set changes - so
- * unknown panels drop out and missing ones appear at their default
- * placement.
+ * a group is either docked in one of the dock regions (a vertical stack) or
+ * floating (free rect, array order = z-order, last on top). Panels in a group
+ * render as tabs. The whole layout persists to localStorage and is normalized
+ * against the registered panel set - on load and whenever the set changes - so
+ * unknown panels drop out and missing ones appear at their default placement.
  */
 
 /** A registered panel's id. */
 export type PanelId = string
+
+/**
+ * The docked homes a group can occupy: the left `sidebar`, the big center
+ * `main` area, and the optional right `secondary` sidebar. Each is an
+ * independent vertical stack of groups.
+ */
+export type DockRegion = 'sidebar' | 'main' | 'secondary'
+export const DOCK_REGIONS: DockRegion[] = ['sidebar', 'main', 'secondary']
+
+/**
+ * Regions rendered as a single tab group: they never split or stack, so any
+ * groups they hold coalesce into one and their panels become tabs. The main
+ * area is one of these - it "just works like tabs".
+ */
+export const TAB_REGIONS: DockRegion[] = ['main']
+export function isTabRegion(region: DockRegion): boolean {
+  return TAB_REGIONS.includes(region)
+}
 
 export type PanelGroup = {
   id: string
@@ -24,15 +41,15 @@ export type PanelGroup = {
 export type FloatingGroup = PanelGroup & { rect: PanelRect }
 
 export type PanelLayout = {
-  dock: PanelGroup[]
+  docks: Record<DockRegion, PanelGroup[]>
   floating: FloatingGroup[]
 }
 
 export type DropTarget =
   /** Join a group as a tab at `index` (Infinity = append). */
   | { kind: 'tabs'; groupId: string; index: number }
-  /** Become a new dock group inserted at `index`. */
-  | { kind: 'dock-gap'; index: number }
+  /** Become a new dock group inserted at `index` in `region`. */
+  | { kind: 'dock-gap'; region: DockRegion; index: number }
   /** Tear out into a new floating group. */
   | { kind: 'float' }
 
@@ -73,11 +90,44 @@ export function saveLayout(storageKey: string, layout: PanelLayout): void {
   localStorage.setItem(storageKey, JSON.stringify(layout))
 }
 
+function emptyDocks(): Record<DockRegion, PanelGroup[]> {
+  return { sidebar: [], main: [], secondary: [] }
+}
+
+/** Merge every group of each tab-region into one, so those regions stay single-group. */
+function coalesceTabRegions(
+  docks: Record<DockRegion, PanelGroup[]>,
+): Record<DockRegion, PanelGroup[]> {
+  let changed = false
+  const result = { ...docks }
+  for (const region of TAB_REGIONS) {
+    const groups = docks[region]
+    if (groups.length <= 1) continue
+    changed = true
+    result[region] = [
+      {
+        id: groups[0].id,
+        panels: groups.flatMap((g) => g.panels),
+        active: groups[0].active,
+        collapsed: false,
+      },
+    ]
+  }
+  return changed ? result : docks
+}
+
+/** A layout with every tab-region collapsed to a single group. */
+function coalesceLayout(layout: PanelLayout): PanelLayout {
+  const docks = coalesceTabRegions(layout.docks)
+  return docks === layout.docks ? layout : { ...layout, docks }
+}
+
 /**
  * Reconcile a stored (or live) layout with the registered panels: drop
  * unregistered and duplicate panels, drop empty groups, repair active tabs
  * and rects, then place registered panels the layout does not contain at
- * their default placement. Accepts arbitrary junk for `stored`.
+ * their default placement. Accepts arbitrary junk for `stored`, and migrates
+ * the legacy single-`dock` shape into the `sidebar` region.
  */
 export function normalizeLayout(
   stored: unknown,
@@ -86,7 +136,9 @@ export function normalizeLayout(
   const known = new Map(definitions.map((d) => [d.id, d]))
   const seenPanels = new Set<PanelId>()
   const usedIds = new Set<string>()
-  const s = stored as { dock?: unknown; floating?: unknown } | null
+  const s = stored as
+    | { docks?: unknown; dock?: unknown; floating?: unknown }
+    | null
 
   const sanitizeGroup = (value: unknown): PanelGroup | null => {
     const g = value as Partial<PanelGroup> | null
@@ -111,10 +163,21 @@ export function normalizeLayout(
     }
   }
 
-  const dock: PanelGroup[] = []
-  for (const value of Array.isArray(s?.dock) ? s.dock : []) {
-    const group = sanitizeGroup(value)
-    if (group) dock.push(group)
+  const docks = emptyDocks()
+  const storedDocks = s?.docks as Record<string, unknown> | undefined
+  for (const region of DOCK_REGIONS) {
+    // New shape: docks[region]. Legacy shape: a single `dock` array, migrated
+    // into the sidebar so existing arrangements survive the upgrade.
+    const source =
+      storedDocks && region in storedDocks
+        ? storedDocks[region]
+        : region === 'sidebar'
+          ? s?.dock
+          : undefined
+    for (const value of Array.isArray(source) ? source : []) {
+      const group = sanitizeGroup(value)
+      if (group) docks[region].push(group)
+    }
   }
 
   const floating: FloatingGroup[] = []
@@ -138,7 +201,7 @@ export function normalizeLayout(
   for (const definition of definitions) {
     if (seenPanels.has(definition.id)) continue
     if (definition.defaultPlacement.kind === 'dock') {
-      dock.push(newGroup(definition.id))
+      docks[definition.defaultPlacement.region].push(newGroup(definition.id))
     } else {
       floating.push({
         ...newGroup(definition.id),
@@ -147,7 +210,17 @@ export function normalizeLayout(
     }
   }
 
-  return { dock, floating }
+  return coalesceLayout({ docks, floating })
+}
+
+/** Apply a per-group update across every dock region and the floating groups. */
+function mapGroups(
+  layout: PanelLayout,
+  update: <T extends PanelGroup>(g: T) => T,
+): PanelLayout {
+  const docks = emptyDocks()
+  for (const region of DOCK_REGIONS) docks[region] = layout.docks[region].map(update)
+  return { docks, floating: layout.floating.map(update) }
 }
 
 export function activatePanel(
@@ -155,24 +228,18 @@ export function activatePanel(
   groupId: string,
   panel: PanelId,
 ): PanelLayout {
-  const update = <T extends PanelGroup>(g: T): T =>
-    g.id === groupId && g.panels.includes(panel) ? { ...g, active: panel } : g
-  return {
-    dock: layout.dock.map(update),
-    floating: layout.floating.map(update),
-  }
+  return mapGroups(layout, (g) =>
+    g.id === groupId && g.panels.includes(panel) ? { ...g, active: panel } : g,
+  )
 }
 
 export function toggleCollapsed(
   layout: PanelLayout,
   groupId: string,
 ): PanelLayout {
-  const update = <T extends PanelGroup>(g: T): T =>
-    g.id === groupId ? { ...g, collapsed: !g.collapsed } : g
-  return {
-    dock: layout.dock.map(update),
-    floating: layout.floating.map(update),
-  }
+  return mapGroups(layout, (g) =>
+    g.id === groupId ? { ...g, collapsed: !g.collapsed } : g,
+  )
 }
 
 export function setFloatingRect(
@@ -218,6 +285,7 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
   // Remove the panel; empty groups vanish. Track what the removal shifted so
   // indices measured against the pre-drop DOM stay correct.
   let removedTabIndex = -1
+  let removedRegion: DockRegion | null = null
   let removedDockGroupIndex = -1
   const strip = <T extends PanelGroup>(g: T): T => {
     if (g.id !== fromGroupId) return g
@@ -225,11 +293,15 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
     const panels = g.panels.filter((p) => p !== panel)
     return { ...g, panels, active: g.active === panel ? panels[0] : g.active }
   }
-  const dock = layout.dock.map(strip).filter((g, i) => {
-    if (g.panels.length > 0) return true
-    removedDockGroupIndex = i
-    return false
-  })
+  const docks = emptyDocks()
+  for (const region of DOCK_REGIONS) {
+    docks[region] = layout.docks[region].map(strip).filter((g, i) => {
+      if (g.panels.length > 0) return true
+      removedRegion = region
+      removedDockGroupIndex = i
+      return false
+    })
+  }
   const floating = layout.floating.map(strip).filter((g) => g.panels.length > 0)
 
   if (target.kind === 'tabs') {
@@ -248,20 +320,30 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
       // Expand so the dropped panel is visible right away.
       return { ...g, panels, active: panel, collapsed: false }
     }
-    const next = { dock: dock.map(insert), floating: floating.map(insert) }
-    const landed = [...next.dock, ...next.floating].some((g) =>
-      g.panels.includes(panel),
-    )
+    const next = { docks: emptyDocks(), floating: floating.map(insert) }
+    for (const region of DOCK_REGIONS) next.docks[region] = docks[region].map(insert)
+    const landed = [
+      ...DOCK_REGIONS.flatMap((region) => next.docks[region]),
+      ...next.floating,
+    ].some((g) => g.panels.includes(panel))
     // Target vanished (it was the emptied source group) - treat as a no-op.
-    return landed ? next : layout
+    return landed ? coalesceLayout(next) : layout
   }
 
   if (target.kind === 'dock-gap') {
-    let index = Math.min(target.index, dock.length)
-    if (removedDockGroupIndex >= 0 && removedDockGroupIndex < index) index -= 1
-    const nextDock = [...dock]
-    nextDock.splice(index, 0, newGroup(panel))
-    return { dock: nextDock, floating }
+    // `target.index` is a gap in the pre-strip order. A removal earlier in the
+    // *same* region shifted later groups up, so adjust first, then clamp to the
+    // stripped array (adjusting after clamping would misplace an end drop).
+    let index = target.index
+    if (
+      removedRegion === target.region &&
+      removedDockGroupIndex >= 0 &&
+      removedDockGroupIndex < index
+    )
+      index -= 1
+    index = Math.min(index, docks[target.region].length)
+    docks[target.region].splice(index, 0, newGroup(panel))
+    return coalesceLayout({ docks, floating })
   }
 
   // Tear out: keep the size it had when it floated alone, position the tab
@@ -272,5 +354,8 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
     x: pointer.x - 48,
     y: pointer.y - 18,
   })
-  return { dock, floating: [...floating, { ...newGroup(panel), rect }] }
+  return coalesceLayout({
+    docks,
+    floating: [...floating, { ...newGroup(panel), rect }],
+  })
 }
