@@ -307,7 +307,7 @@ export function App() {
     >
       <StudioProvider value={studio}>
         <ModalProvider>
-          <PanelsProvider>
+          <PanelsProvider floatingVisibleForMainPanel="visual-editor">
             <Sidebar>
               <SidebarHeader>
                 <div className="flex items-center gap-2.5 px-2 py-1 text-lg">

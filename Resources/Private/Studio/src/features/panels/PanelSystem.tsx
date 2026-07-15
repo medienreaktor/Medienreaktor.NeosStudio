@@ -163,7 +163,19 @@ function findDropTarget(x: number, y: number): DropTarget {
   return { kind: 'float' }
 }
 
-export function PanelsProvider({ children }: { children: React.ReactNode }) {
+export function PanelsProvider({
+  children,
+  floatingVisibleForMainPanel,
+}: {
+  children: React.ReactNode
+  /**
+   * When set, floating groups are contextual to the main area's active tab -
+   * same as SecondaryDock's `visibleForMainPanel`: they show only while this
+   * panel (the Visual Editor) is the active main tab, and hide (via CSS, so
+   * their state survives and they stay out of drop hit-testing) otherwise.
+   */
+  floatingVisibleForMainPanel?: PanelId
+}) {
   const registered = React.useSyncExternalStore(
     (onChange) => panelRegistry.subscribe(onChange),
     () => panelRegistry.getAll(),
@@ -203,6 +215,13 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('resize', onWindowResize)
     return () => window.removeEventListener('resize', onWindowResize)
   }, [])
+
+  // Floating groups are hidden while the main area shows a tab other than the
+  // one they belong to (the main region coalesces to a single group, so its
+  // active tab decides). Kept mounted-but-hidden so their state survives.
+  const floatingHidden =
+    floatingVisibleForMainPanel !== undefined &&
+    layout.docks.main[0]?.active !== floatingVisibleForMainPanel
 
   const isDragging = drag !== null
   React.useEffect(() => {
@@ -322,7 +341,11 @@ export function PanelsProvider({ children }: { children: React.ReactNode }) {
       {createPortal(
         <>
           {layout.floating.map((group) => (
-            <FloatingGroupWindow key={group.id} group={group} />
+            <FloatingGroupWindow
+              key={group.id}
+              group={group}
+              hidden={floatingHidden}
+            />
           ))}
           {drag && (
             <DragGhost
@@ -429,7 +452,13 @@ export function SecondaryDock({
   )
 }
 
-function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
+function FloatingGroupWindow({
+  group,
+  hidden = false,
+}: {
+  group: FloatingGroup
+  hidden?: boolean
+}) {
   const { definitions, toFront, trackFloatingResize } = usePanels()
   const handles = group.collapsed
     ? RESIZE_HANDLES.filter((h) => h.direction === 'e' || h.direction === 'w')
@@ -440,7 +469,10 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
       aria-label={group.panels
         .map((panel) => definitions.get(panel)?.title ?? panel)
         .join(', ')}
-      className="fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-900 text-white shadow-lg"
+      className={cn(
+        'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-900 text-white shadow-lg',
+        hidden && 'hidden',
+      )}
       style={{
         left: group.rect.x,
         top: group.rect.y,
