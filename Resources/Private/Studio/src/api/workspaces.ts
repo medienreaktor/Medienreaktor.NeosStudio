@@ -12,7 +12,18 @@ export interface Workspace {
   hasPublishableChanges: boolean
   /** OUTDATED = the base workspace has newer changes; a rebase would pull them in. */
   status: 'UP_TO_DATE' | 'OUTDATED'
-  permissions: { read: boolean; write: boolean; manage: boolean }
+  /**
+   * The account's permissions on this workspace. `manage` covers workspace
+   * metadata and role changes (not publishing); `publish` is derived - it
+   * means write access on the base workspace, which is what the content
+   * repository checks when publishing.
+   */
+  permissions: {
+    read: boolean
+    write: boolean
+    manage: boolean
+    publish: boolean
+  }
 }
 
 export interface WorkspaceChange {

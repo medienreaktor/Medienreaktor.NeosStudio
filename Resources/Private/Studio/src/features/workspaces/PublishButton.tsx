@@ -4,6 +4,7 @@ import {
   discardWorkspace,
   publishWorkspace,
   useWorkspaceChanges,
+  type Workspace,
   type WorkspaceOperationFilter,
 } from '@/api/workspaces'
 import { queryKeys } from '@/api/keys'
@@ -39,8 +40,13 @@ interface Operation {
  * selected document ("this page") and offers discarding (behind a
  * confirmation - discards are irreversible). Orange with a change-count
  * bubble while there is something to publish, muted and disabled otherwise.
+ * Without publish permission on the base workspace (a non-LivePublisher
+ * editor) the publish actions are disabled with an explanation - discarding
+ * stays available, it only touches the own workspace.
  */
-export function PublishButton({ workspaceName }: { workspaceName: string }) {
+export function PublishButton({ workspace }: { workspace: Workspace }) {
+  const workspaceName = workspace.name
+  const canPublish = workspace.permissions.publish
   // Same query the trees' dirty markers use, so button and badges agree.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
   const { selectedDocument, workspaceContentChanged } = useStudio()
@@ -79,12 +85,15 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
   })
 
   const hasChanges = changeCount > 0
-  const segmentClasses = hasChanges
-    ? 'bg-orange-500 text-white hover:bg-orange-600'
-    : undefined
-  const segmentVariant = hasChanges
-    ? ('default' as const)
-    : ('secondary' as const)
+  // Only invite the click when it can succeed: orange needs changes AND
+  // publish permission on the base workspace.
+  const segmentClasses =
+    hasChanges && canPublish
+      ? 'bg-orange-500 text-white hover:bg-orange-600'
+      : undefined
+  const segmentVariant =
+    hasChanges && canPublish ? ('default' as const) : ('secondary' as const)
+  const publishDeniedHint = `You are not allowed to publish to "${workspace.baseWorkspace ?? 'the base workspace'}"`
 
   return (
     <div className="flex items-center gap-3">
@@ -100,12 +109,14 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
         <Button
           className={cn('rounded-r-none', segmentClasses)}
           variant={segmentVariant}
-          disabled={!hasChanges || operation.isPending}
+          disabled={!hasChanges || !canPublish || operation.isPending}
           onClick={() => operation.mutate({ kind: 'publish' })}
           title={
-            hasChanges
-              ? `Publish ${changeCount} pending ${changeCount === 1 ? 'change' : 'changes'}`
-              : 'No pending changes'
+            !canPublish
+              ? publishDeniedHint
+              : hasChanges
+                ? `Publish ${changeCount} pending ${changeCount === 1 ? 'change' : 'changes'}`
+                : 'No pending changes'
           }
         >
           <i
@@ -129,7 +140,8 @@ export function PublishButton({ workspaceName }: { workspaceName: string }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              disabled={pageChangeCount === 0}
+              disabled={pageChangeCount === 0 || !canPublish}
+              title={canPublish ? undefined : publishDeniedHint}
               onClick={() =>
                 operation.mutate({
                   kind: 'publish',

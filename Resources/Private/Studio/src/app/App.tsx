@@ -350,7 +350,7 @@ export function App() {
                 {activeWorkspace && (
                   <>
                     <SyncWorkspaceButton workspaceName={activeWorkspace.name} />
-                    <PublishButton workspaceName={activeWorkspace.name} />
+                    <PublishButton workspace={activeWorkspace} />
                   </>
                 )}
               </div>

@@ -79,6 +79,17 @@ export function WorkspaceSwitcher({
           {targets.map((workspace) => (
             <SelectItem key={workspace.name} value={workspace.name}>
               {workspaceLabel(workspace)}
+              {/* No write access on the target = the user could retarget
+                  here (that only needs read) but never publish. Selectable
+                  for reviewing, but flagged. */}
+              {!workspace.permissions.write && (
+                <span
+                  className="ml-1.5 text-xs text-muted-foreground"
+                  title="You cannot publish to this workspace"
+                >
+                  <i className="fas fa-lock" aria-hidden /> read-only
+                </span>
+              )}
             </SelectItem>
           ))}
         </SelectContent>
