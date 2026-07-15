@@ -19,12 +19,12 @@ import '@fontsource/noto-sans/latin-ext-600.css'
 import '@fontsource/noto-sans/latin-ext-700.css'
 // Font Awesome free webfonts: node type icons are configured as FA names in
 // Neos, so ship the fonts and render configured names verbatim. v4 shims
-// cover legacy names from old node type definitions. Brands are omitted -
-// add '@fortawesome/fontawesome-free/css/brands.min.css' if a project needs
-// brand icons on node types.
+// cover legacy names from old node type definitions. Brands cover "fab"
+// icons configured on node types.
 import '@fortawesome/fontawesome-free/css/fontawesome.min.css'
 import '@fortawesome/fontawesome-free/css/solid.min.css'
 import '@fortawesome/fontawesome-free/css/regular.min.css'
+import '@fortawesome/fontawesome-free/css/brands.min.css'
 import '@fortawesome/fontawesome-free/css/v4-shims.min.css'
 import '@fortawesome/fontawesome-free/css/v4-font-face.min.css'
 import { registerBuiltinPanels } from './features/panels/builtin'
