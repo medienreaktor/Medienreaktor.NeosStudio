@@ -112,11 +112,9 @@ function findDropTarget(x: number, y: number): DropTarget {
     ?.closest<HTMLElement>('[data-panel-drop]')
   const kind = zone?.dataset.panelDrop
 
-  // A tab bar (or a floating group's body, which appends): join the group as a
-  // tab at the pointer's position.
+  // A tab bar: join the group as a tab at the pointer's position. This is the
+  // only way to merge a panel in as a tab now that bodies are inert.
   if (kind === 'tabs' && zone?.dataset.groupId) {
-    if ('append' in zone.dataset)
-      return { kind: 'tabs', groupId: zone.dataset.groupId, index: Infinity }
     const tabs = Array.from(
       zone.querySelectorAll<HTMLElement>('[data-panel-tab]'),
     )
@@ -127,12 +125,13 @@ function findDropTarget(x: number, y: number): DropTarget {
     return { kind: 'tabs', groupId: zone.dataset.groupId, index }
   }
 
-  // A docked group's body in a stacking region: its leading/trailing edge docks
-  // a new group before/after it, while its middle merges the panel in as a tab.
-  // (Tab regions like the main area render their body as a plain 'tabs' zone.)
-  if (kind === 'body' && zone?.dataset.region && zone.dataset.groupId) {
+  // A docked group's body in a stacking region: only its leading/trailing edge
+  // is a drop zone - it docks a new group before/after (i.e. above/below). The
+  // wide middle is deliberately inert so it falls through to a float (tear-out),
+  // and merging as a tab is done on the tab bar. (Tab regions and floating
+  // groups render an inert 'none' body, so their whole body falls through too.)
+  if (kind === 'body' && zone?.dataset.region) {
     const region = zone.dataset.region as DockRegion
-    const groupId = zone.dataset.groupId
     const groupIndex = indexOfGroup(zone)
     if (groupIndex !== null) {
       const horizontal = REGION_ORIENTATION[region] === 'horizontal'
@@ -142,7 +141,7 @@ function findDropTarget(x: number, y: number): DropTarget {
       if (along > 1 - BODY_EDGE)
         return { kind: 'dock-gap', region, index: groupIndex + 1 }
     }
-    return { kind: 'tabs', groupId, index: Infinity }
+    return { kind: 'float' }
   }
 
   // A region's own area - the gaps between slots, an empty region, or a
@@ -509,9 +508,10 @@ function GroupBody({
   collapsed?: boolean
   /**
    * The docked region this group sits in, if any. In a stacking region the
-   * body is a 'body' drop zone (edge docks a new stacked group, middle tabs
-   * in). Floating groups and tab regions (the main area) render a plain 'tabs'
-   * append zone instead, so a drop just tabs the panel in.
+   * body is a 'body' drop zone whose edges dock a new stacked group above/below
+   * (its wide middle stays inert and falls through to a float). Floating groups
+   * and tab regions (the main area) render an inert 'none' body, so their whole
+   * body falls through - merging into them is done on their tab bar instead.
    */
   region?: DockRegion
 }) {
@@ -522,10 +522,9 @@ function GroupBody({
     // (hidden) so every panel's component - and its state - survives a
     // collapse, like tab switches.
     <div
-      data-panel-drop={stacking ? 'body' : 'tabs'}
+      data-panel-drop={stacking ? 'body' : 'none'}
       data-region={stacking ? region : undefined}
       data-group-id={group.id}
-      data-append={stacking ? undefined : true}
       className={cn(
         'flex min-h-0 flex-1 flex-col bg-neutral-950',
         collapsed && 'hidden',
