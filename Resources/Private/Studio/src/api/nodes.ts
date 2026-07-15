@@ -13,6 +13,13 @@ export interface NodeDto {
   aggregateId: string
   nodeType: string
   name: string | null
+  /**
+   * Display label computed server-side (the canonical Neos node label: node
+   * type label expression, tethered-collection label, or nodeType/name
+   * fallback), with HTML entities decoded to plain text. Prefer this over
+   * deriving a label from properties on the client.
+   */
+  label: string
   classification: string
   /**
    * Whether the node has visible children; when the response came from a
@@ -54,10 +61,13 @@ export function isExplicitlyHidden(node: NodeDto): boolean {
   )
 }
 
+/**
+ * The node's display label. The server computes the canonical Neos label and
+ * ships it as `label`; the aggregate id is only a last resort for older/partial
+ * data that predates the field.
+ */
 export function nodeLabel(node: NodeDto): string {
-  const title = node.properties['title']?.value
-  if (typeof title === 'string' && title !== '') return title
-  return node.name ?? node.aggregateId
+  return node.label !== '' ? node.label : node.aggregateId
 }
 
 export function useNode(address: string, enabled = true) {

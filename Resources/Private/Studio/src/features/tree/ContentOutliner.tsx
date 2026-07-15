@@ -11,6 +11,7 @@ import {
   fetchChildren,
   fetchNode,
   isExplicitlyHidden,
+  nodeLabel,
   type NodeDto,
 } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
@@ -123,7 +124,7 @@ function OutlinerTree({
     getItemName: (item) => {
       const data = item.getItemData()
       if (data === ROOT_ID) return '…'
-      return data === null ? '…' : contentLabel(data)
+      return data === null ? '…' : nodeLabel(data)
     },
     // hasChildren of outliner items comes from content-filtered children
     // responses, so it means "has content children" here.
@@ -250,19 +251,3 @@ function OutlinerTree({
   )
 }
 
-/**
- * Content elements rarely have a title; fall back to their text (tags
- * stripped), node name, or the unqualified node type ("Text", "Image", …).
- */
-function contentLabel(node: NodeDto): string {
-  const title = node.properties['title']?.value
-  if (typeof title === 'string' && title !== '') return title
-  const text = node.properties['text']?.value
-  if (typeof text === 'string') {
-    const stripped = text.replace(/<[^>]*>/g, '').trim()
-    if (stripped !== '')
-      return stripped.length > 40 ? `${stripped.slice(0, 40)}…` : stripped
-  }
-  if (node.name) return node.name
-  return node.nodeType.split(':').pop() ?? node.nodeType
-}
