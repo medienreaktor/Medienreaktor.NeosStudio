@@ -195,7 +195,7 @@ export function CreateNodeFlow({
         </form>
 
         {error && (
-          <p className="text-sm text-destructive">Creating failed: {error}</p>
+          <p className="text-sm text-red-500">Creating failed: {error}</p>
         )}
 
         <DialogFooter>
@@ -271,9 +271,9 @@ function ElementEditor({
 
   return (
     <label className="flex flex-col gap-1.5 text-sm">
-      <span className="text-xs font-medium text-muted-foreground">
+      <span className="text-xs font-medium text-neutral-400">
         {element.label}
-        {element.required && <span className="text-destructive"> *</span>}
+        {element.required && <span className="text-red-500"> *</span>}
       </span>
       {control}
     </label>

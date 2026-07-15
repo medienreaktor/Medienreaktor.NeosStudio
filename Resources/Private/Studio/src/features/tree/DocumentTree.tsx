@@ -164,10 +164,10 @@ export function DocumentTree({
   return (
     <>
       {loadError && (
-        <div className="px-2 text-xs text-destructive">{loadError}</div>
+        <div className="px-2 text-xs text-red-500">{loadError}</div>
       )}
       {actionError && (
-        <div className="px-2 text-xs text-destructive">{actionError}</div>
+        <div className="px-2 text-xs text-red-500">{actionError}</div>
       )}
       <TreeList
         tree={tree}

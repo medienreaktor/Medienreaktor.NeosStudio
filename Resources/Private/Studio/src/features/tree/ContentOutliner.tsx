@@ -58,7 +58,7 @@ export function ContentOutliner({
 }) {
   if (document === null) {
     return (
-      <div className="px-2 text-xs text-muted-foreground">
+      <div className="px-2 text-xs text-neutral-400">
         Select a document to outline its content.
       </div>
     )
@@ -222,9 +222,9 @@ function OutlinerTree({
 
   return (
     <>
-      {loadError && <div className="text-xs text-destructive">{loadError}</div>}
+      {loadError && <div className="text-xs text-red-500">{loadError}</div>}
       {actionError && (
-        <div className="text-xs text-destructive">{actionError}</div>
+        <div className="text-xs text-red-500">{actionError}</div>
       )}
       <TreeList
         tree={tree}

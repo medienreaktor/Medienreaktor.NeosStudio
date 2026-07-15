@@ -6,92 +6,94 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Official Neos UI palette (Neos.Neos.Ui/cssVariables.css) mapped onto the
- * shadcn/Tailwind token contract. Studio is dark-only, so the dark values
- * live directly on :root - no .dark toggle.
+ * The Neos brand palette expressed as standard Tailwind color ramps (50-950).
+ * Components use these directly (bg-neutral-950, text-blue-500, ...) - there is
+ * no semantic abstraction layer on top. The greys map onto the old Neos UI
+ * "Contrast" tokens at the shades we actually use:
+ *   neutral-400 #999999 (ContrastBright)   neutral-700 #3f3f3f (ContrastDark)
+ *   neutral-800 #323232 (ContrastNeutral)  neutral-900 #222222 (ContrastDarker)
+ *   neutral-950 #141414 (ContrastDarkest)  white #ffffff (ContrastBrightest)
+ * The brand hues are anchored on the official Neos colors at shade 500:
+ *   blue #00adee (Primary)  orange #ff8700  green #00a338  red #ff460d (Error)
  */
-:root {
-  --background: #141414; /* ContrastDarkest */
-  --foreground: #ffffff; /* ContrastBrightest */
-  --card: #222222; /* ContrastDarker */
-  --card-foreground: #ffffff;
-  --popover: #222222;
-  --popover-foreground: #ffffff;
-  --primary: #00adee; /* PrimaryBlue */
-  --primary-hover: #35c3f8; /* PrimaryBlueHover */
-  --primary-foreground: #ffffff;
-  --secondary: #323232; /* ContrastNeutral */
-  --secondary-foreground: #ffffff;
-  --muted: #323232;
-  --muted-foreground: #999999; /* ContrastBright */
-  --accent: #323232;
-  --accent-foreground: #ffffff;
-  --destructive: #ff460d; /* Error */
-  --destructive-hover: #ff6a3c;
-  --success: #00a338;
-  --warn: #ff8700;
-  --border: #3f3f3f; /* ContrastDark */
-  --input: #3f3f3f;
-  --ring: #00adee;
+@theme {
+  --color-neutral-50: #f7f7f7;
+  --color-neutral-100: #ededed;
+  --color-neutral-200: #dddddd;
+  --color-neutral-300: #c2c2c2;
+  --color-neutral-400: #999999;
+  --color-neutral-500: #707070;
+  --color-neutral-600: #545454;
+  --color-neutral-700: #3f3f3f;
+  --color-neutral-800: #323232;
+  --color-neutral-900: #222222;
+  --color-neutral-950: #141414;
+
+  --color-blue-50: #ecf8fe;
+  --color-blue-100: #d0f0fd;
+  --color-blue-200: #a6e4fb;
+  --color-blue-300: #6dd4fa;
+  --color-blue-400: #35c3f8;
+  --color-blue-500: #00adee;
+  --color-blue-600: #008cc4;
+  --color-blue-700: #006e9c;
+  --color-blue-800: #005879;
+  --color-blue-900: #073f56;
+  --color-blue-950: #052838;
+
+  --color-orange-50: #fff5e8;
+  --color-orange-100: #ffe6c4;
+  --color-orange-200: #ffce8a;
+  --color-orange-300: #ffb04d;
+  --color-orange-400: #ff9a24;
+  --color-orange-500: #ff8700;
+  --color-orange-600: #db6c00;
+  --color-orange-700: #b35400;
+  --color-orange-800: #8a4100;
+  --color-orange-900: #703600;
+  --color-orange-950: #401e00;
+
+  --color-green-50: #e8faee;
+  --color-green-100: #c4f2d2;
+  --color-green-200: #8ce4a8;
+  --color-green-300: #4dd07e;
+  --color-green-400: #1fbb5e;
+  --color-green-500: #00a338;
+  --color-green-600: #00852d;
+  --color-green-700: #006a24;
+  --color-green-800: #00541d;
+  --color-green-900: #08421a;
+  --color-green-950: #04260e;
+
+  --color-red-50: #fff1ec;
+  --color-red-100: #ffdccf;
+  --color-red-200: #ffbba3;
+  --color-red-300: #ff8f6b;
+  --color-red-400: #ff6a3c;
+  --color-red-500: #ff460d;
+  --color-red-600: #db3400;
+  --color-red-700: #b32900;
+  --color-red-800: #8a2100;
+  --color-red-900: #701c00;
+  --color-red-950: #400f00;
+
   /* Neos UI is deliberately sharp-cornered */
   --radius: 0.25rem;
-  /* Sidebar tokens follow the same Neos palette (dark-only, like the rest) */
-  --sidebar: #222222; /* ContrastDarker, same as card */
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #00adee;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #323232; /* ContrastNeutral */
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #3f3f3f; /* ContrastDark */
-  --sidebar-ring: #00adee;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-hover: var(--destructive-hover);
-  --color-success: var(--success);
-  --color-warn: var(--warn);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 6px);
   --font-sans: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-neutral-700 outline-blue-500/50;
   }
   html {
     font-size: 15px;
   }
   body {
-    @apply bg-background font-sans text-foreground;
+    @apply bg-neutral-950 font-sans text-white;
   }
 }

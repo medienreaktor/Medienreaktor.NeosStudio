@@ -369,7 +369,7 @@ export function PreviewPane({
   if (!document || !src) {
     return (
       <div className="grid flex-1 place-items-center p-6">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-neutral-400">
           Select a document to preview it.
         </p>
       </div>
@@ -379,7 +379,7 @@ export function PreviewPane({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {saveError && (
-        <div className="overflow-hidden text-ellipsis whitespace-nowrap border-b px-4 py-1 text-xs text-destructive">
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap border-b px-4 py-1 text-xs text-red-500">
           {saveError}
         </div>
       )}

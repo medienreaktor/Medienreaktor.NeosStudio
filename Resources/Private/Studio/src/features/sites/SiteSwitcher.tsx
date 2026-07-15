@@ -32,7 +32,7 @@ export function SiteSwitcher({
       <SelectTrigger title="Active site">
         <div className="flex items-center gap-2">
           <i
-            className={`fa fa-globe fa-fw text-[0.7rem] text-muted-foreground`}
+            className={`fa fa-globe fa-fw text-[0.7rem] text-neutral-400`}
             aria-hidden
           />
           <SelectValue placeholder="Select site…" />

@@ -167,7 +167,7 @@ export function App() {
 
   if (auth === 'checking') {
     return (
-      <div className="grid min-h-screen place-items-center text-muted-foreground">
+      <div className="grid min-h-screen place-items-center text-neutral-400">
         Loading Neos Studio…
       </div>
     )
@@ -176,12 +176,12 @@ export function App() {
   if (auth === 'anonymous') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <div className="rounded-lg border bg-card px-12 py-10 text-center">
+        <div className="rounded-lg border bg-neutral-900 px-12 py-10 text-center">
           <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
-          <p className="mb-6 text-muted-foreground">
+          <p className="mb-6 text-neutral-400">
             Editing environment for Neos
           </p>
-          {error && <p className="mb-4 text-destructive">{error}</p>}
+          {error && <p className="mb-4 text-red-500">{error}</p>}
           <Button onClick={() => beginLogin()}>Connect to the API</Button>
         </div>
       </div>
@@ -357,7 +357,7 @@ export function App() {
             </header>
 
             {error && (
-              <div className="px-4 py-2.5 text-destructive">{error}</div>
+              <div className="px-4 py-2.5 text-red-500">{error}</div>
             )}
 
             <PreviewPane

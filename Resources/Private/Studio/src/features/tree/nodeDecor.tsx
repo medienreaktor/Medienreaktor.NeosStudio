@@ -39,7 +39,7 @@ export function nodeDecor(
       <span
         key="dirty"
         title={`Modified in workspace "${changed.workspace}"`}
-        className="size-1.5 rounded-full bg-warn"
+        className="size-1.5 rounded-full bg-orange-500"
       />,
     )
   }
@@ -48,7 +48,7 @@ export function nodeDecor(
       <span
         key="containsDirty"
         title={`Contains changes in workspace "${changed.workspace}"`}
-        className="size-1.5 rounded-full border border-warn"
+        className="size-1.5 rounded-full border border-orange-500"
       />,
     )
   }
@@ -72,7 +72,7 @@ export function nodeDecor(
         />
         {hidden && (
           <i
-            className="fas fa-circle-xmark absolute -bottom-1 -right-1 rounded-full bg-card text-[0.6rem] text-destructive"
+            className="fas fa-circle-xmark absolute -bottom-1 -right-1 rounded-full bg-neutral-900 text-[0.6rem] text-red-500"
             aria-hidden
           />
         )}

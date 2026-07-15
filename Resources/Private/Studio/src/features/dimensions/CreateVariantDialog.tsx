@@ -186,7 +186,7 @@ export function CreateVariantDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
         <DialogFooter>
           <Button

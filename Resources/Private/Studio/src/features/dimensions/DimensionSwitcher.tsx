@@ -112,7 +112,7 @@ export function DimensionSwitcher({
               <div className="flex items-center gap-2">
                 {dimension.icon && (
                   <i
-                    className={`fa fa-${dimension.icon} fa-fw text-[0.7rem] text-muted-foreground`}
+                    className={`fa fa-${dimension.icon} fa-fw text-[0.7rem] text-neutral-400`}
                     aria-hidden
                   />
                 )}
@@ -143,7 +143,7 @@ export function DimensionSwitcher({
                     {/* Specializations are listed right after their generalization;
                         indentation makes the hierarchy visible. */}
                     <span
-                      className={`inline-flex items-center gap-1.5${missingVariant ? ' text-muted-foreground' : ''}`}
+                      className={`inline-flex items-center gap-1.5${missingVariant ? ' text-neutral-400' : ''}`}
                       style={{
                         paddingLeft: `${dimensionValue.specializationDepth * 0.75}rem`,
                       }}

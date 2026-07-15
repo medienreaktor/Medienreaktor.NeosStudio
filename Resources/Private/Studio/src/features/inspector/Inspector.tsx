@@ -98,7 +98,7 @@ export function InspectorPanel({
 
   if (!node) {
     return (
-      <p className="p-4 text-xs text-muted-foreground">
+      <p className="p-4 text-xs text-neutral-400">
         Select a node in the preview or the trees to inspect it.
       </p>
     )
@@ -114,12 +114,12 @@ export function InspectorPanel({
       </div>
       <div className="">
         {saveError && (
-          <p className="text-xs text-destructive">Saving failed: {saveError}</p>
+          <p className="text-xs text-red-500">Saving failed: {saveError}</p>
         )}
         {tabs && (
           <>
             {tabs.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-neutral-400">
                 This node type has no inspector properties.
               </p>
             ) : (
@@ -212,7 +212,7 @@ function PropertyGroup({
 }) {
   return (
     <details open={!group.collapsed} className="group/inspector-group">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground select-none [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400 select-none [&::-webkit-details-marker]:hidden">
         {group.icon && <FaIcon icon={group.icon} />}
         {group.label}
         <span className="ml-auto transition-transform group-open/inspector-group:rotate-90">
@@ -247,7 +247,7 @@ function InspectorRow({
 }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+      <dt className="text-xs uppercase tracking-wide text-neutral-400">
         {label}
       </dt>
       <dd>{children}</dd>

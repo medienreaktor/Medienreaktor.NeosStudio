@@ -72,13 +72,13 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            'w-fit rounded-md bg-foreground px-3 py-1.5 text-xs text-balance text-background transition-[opacity,scale] duration-150 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
+            'w-fit rounded-md bg-white px-3 py-1.5 text-xs text-balance text-neutral-950 transition-[opacity,scale] duration-150 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
             className,
           )}
           {...props}
         >
           {children}
-          <TooltipPrimitive.Arrow className="z-200 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground data-[side=bottom]:-top-1 data-[side=top]:-bottom-1" />
+          <TooltipPrimitive.Arrow className="z-200 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-white data-[side=bottom]:-top-1 data-[side=top]:-bottom-1" />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>

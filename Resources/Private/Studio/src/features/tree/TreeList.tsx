@@ -41,13 +41,13 @@ export function TreeList<T>({
       className="flex flex-col outline-none select-none"
     >
       {items.length === 0 && (
-        <div className="text-xs text-muted-foreground">{emptyText}</div>
+        <div className="text-xs text-neutral-400">{emptyText}</div>
       )}
       {dnd && (
         // Reorder indicator between rows; getDragLineStyle hides it (display:
         // none) when the current drop target is "into" a folder instead.
         <div
-          className="pointer-events-none z-10 h-0.5 rounded-full bg-primary"
+          className="pointer-events-none z-10 h-0.5 rounded-full bg-blue-500"
           style={dnd.getDragLineStyle()}
         />
       )}
@@ -100,18 +100,18 @@ export function TreeList<T>({
               })
             }
             className={cn(
-              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm hover:bg-secondary',
-              item.isSelected() && 'border-primary bg-secondary',
+              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm hover:bg-neutral-800',
+              item.isSelected() && 'border-blue-500 bg-neutral-800',
               item.isFocused() && 'outline-0',
-              isDropTarget && 'border-primary bg-primary/10',
+              isDropTarget && 'border-blue-500 bg-blue-500/10',
             )}
             style={{ paddingLeft: `${indentLevel * 14 + 2}px` }}
           >
             {!isRoot && (
               <span
                 className={cn(
-                  'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-muted-foreground',
-                  item.isFolder() && 'hover:bg-accent hover:text-foreground',
+                  'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-neutral-400',
+                  item.isFolder() && 'hover:bg-neutral-800 hover:text-white',
                 )}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -141,7 +141,7 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.icon && (
-              <span className="shrink-0 text-foreground">{decor.icon}</span>
+              <span className="shrink-0 text-white">{decor.icon}</span>
             )}
             <span
               className={cn(
@@ -152,7 +152,7 @@ export function TreeList<T>({
               {item.isLoading() ? '…' : item.getItemName()}
             </span>
             {decor?.markers && (
-              <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-muted-foreground">
+              <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-neutral-400">
                 {decor.markers}
               </span>
             )}

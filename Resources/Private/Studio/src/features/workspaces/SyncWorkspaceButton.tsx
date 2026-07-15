@@ -66,7 +66,7 @@ export function SyncWorkspaceButton({
   return (
     <>
       {showError && (
-        <span className="text-sm text-destructive">Synchronizing failed</span>
+        <span className="text-sm text-red-500">Synchronizing failed</span>
       )}
       <Button
         variant="secondary"

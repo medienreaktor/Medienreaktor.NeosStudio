@@ -296,7 +296,7 @@ export function PanelDock() {
           <div
             data-panel-group
             className={cn(
-              'flex min-h-0 flex-col overflow-hidden bg-card text-card-foreground',
+              'flex min-h-0 flex-col overflow-hidden bg-neutral-900 text-white',
               !group.collapsed && 'flex-1',
             )}
           >
@@ -307,7 +307,7 @@ export function PanelDock() {
       ))}
       {gapIndex !== null && gapIndex >= layout.dock.length && <DockGapMarker />}
       {layout.dock.length === 0 && (
-        <div className="grid flex-1 place-items-center text-xs text-muted-foreground">
+        <div className="grid flex-1 place-items-center text-xs text-neutral-400">
           Drag panels here
         </div>
       )}
@@ -326,7 +326,7 @@ function FloatingGroupWindow({ group }: { group: FloatingGroup }) {
       aria-label={group.panels
         .map((panel) => definitions.get(panel)?.title ?? panel)
         .join(', ')}
-      className="fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-card text-card-foreground shadow-lg"
+      className="fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-900 text-white shadow-lg"
       style={{
         left: group.rect.x,
         top: group.rect.y,
@@ -371,7 +371,7 @@ function GroupTabBar({
         // so the centered tabs don't shift by the border width on toggle.
         'flex shrink-0 items-center',
         group.collapsed && 'border-b-transparent',
-        dropIndex !== null && 'bg-accent/40',
+        dropIndex !== null && 'bg-neutral-800/40',
       )}
     >
       {group.panels.map((panel, index) => (
@@ -384,8 +384,8 @@ function GroupTabBar({
             className={cn(
               'cursor-grab touch-none px-2 py-1 text-xs font-medium select-none border-t',
               panel === group.active
-                ? 'bg-background text-accent-foreground border-primary'
-                : 'text-muted-foreground hover:text-foreground border-transparent',
+                ? 'bg-neutral-950 text-white border-blue-500'
+                : 'text-neutral-400 hover:text-white border-transparent',
               drag?.panel === panel && 'opacity-50',
             )}
           >
@@ -412,7 +412,7 @@ function GroupTabBar({
           group.collapsed ? 'Expand panel group' : 'Collapse panel group'
         }
         onClick={() => toggle(group.id)}
-        className="p-1 text-muted-foreground hover:text-foreground"
+        className="p-1 text-neutral-400 hover:text-white"
       >
         <ChevronDownIcon
           className={cn(
@@ -442,7 +442,7 @@ function GroupBody({
       data-group-id={group.id}
       data-append
       className={cn(
-        'flex min-h-0 flex-1 flex-col bg-background',
+        'flex min-h-0 flex-1 flex-col bg-neutral-950',
         collapsed && 'hidden',
       )}
     >
@@ -472,7 +472,7 @@ function GroupBody({
 function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
   return (
     <div
-      className="pointer-events-none fixed z-120 rounded-md border bg-card px-2 py-1 text-xs shadow-md"
+      className="pointer-events-none fixed z-120 rounded-md border bg-neutral-900 px-2 py-1 text-xs shadow-md"
       style={{ left: drag.pointer.x + 12, top: drag.pointer.y + 12 }}
     >
       {title}
@@ -483,8 +483,8 @@ function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
 // Negative margins cancel the marker's own footprint (its box plus the extra
 // flex gap), so showing it does not shift the layout being hit-tested.
 const TabDropMarker = () => (
-  <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-primary" />
+  <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-blue-500" />
 )
 const DockGapMarker = () => (
-  <div className="-my-1.25 h-0.5 shrink-0 rounded bg-primary" />
+  <div className="-my-1.25 h-0.5 shrink-0 rounded bg-blue-500" />
 )

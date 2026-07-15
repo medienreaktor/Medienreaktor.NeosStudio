@@ -72,7 +72,7 @@ export const SelectBoxEditor: PropertyEditorComponent = ({
           user clear the value. */}
       {!multiple && allowEmpty && (
         <SelectItem value={null}>
-          <span className="text-muted-foreground">{placeholder}</span>
+          <span className="text-neutral-400">{placeholder}</span>
         </SelectItem>
       )}
       {items.map((item) => (
@@ -101,7 +101,7 @@ export const SelectBoxEditor: PropertyEditorComponent = ({
               current.length > 0 ? (
                 current.map(labelFor).join(', ')
               ) : (
-                <span className="text-muted-foreground">{placeholder}</span>
+                <span className="text-neutral-400">{placeholder}</span>
               )
             }
           </SelectValue>
@@ -127,7 +127,7 @@ export const SelectBoxEditor: PropertyEditorComponent = ({
             current !== null ? (
               labelFor(current)
             ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-neutral-400">{placeholder}</span>
             )
           }
         </SelectValue>

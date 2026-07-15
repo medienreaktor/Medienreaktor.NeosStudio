@@ -78,7 +78,7 @@ function DrawerContent({
           data-slot="drawer-content"
           className={cn(
             // mr-4 keeps the drawer clear of the page's scrollbar.
-            'pointer-events-auto mt-2 mr-4 mb-2 flex w-96 max-w-[calc(100vw-3rem)] flex-col overflow-y-auto overscroll-contain rounded-lg border bg-card text-card-foreground shadow-lg outline-none',
+            'pointer-events-auto mt-2 mr-4 mb-2 flex w-96 max-w-[calc(100vw-3rem)] flex-col overflow-y-auto overscroll-contain rounded-lg border bg-neutral-900 text-white shadow-lg outline-none',
             // Swipe follows the pointer; open/close slide via the
             // starting/ending styles, close duration scaled by swipe strength.
             // The extra 1rem clears the right margin so the closed drawer
@@ -125,7 +125,7 @@ function DrawerTitle({
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn('font-semibold text-foreground', className)}
+      className={cn('font-semibold text-white', className)}
       {...props}
     />
   )
@@ -138,7 +138,7 @@ function DrawerDescription({
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn('text-sm text-muted-foreground', className)}
+      className={cn('text-sm text-neutral-400', className)}
       {...props}
     />
   )

@@ -69,7 +69,7 @@ export function WorkspaceSwitcher({
         <SelectTrigger title="Workspace to publish to">
           <div className="flex items-center gap-2">
             <i
-              className={`fa fa-fw text-[0.7rem] text-muted-foreground ${switchBase.isPending ? 'fa-spinner fa-spin' : 'fa-code-branch'}`}
+              className={`fa fa-fw text-[0.7rem] text-neutral-400 ${switchBase.isPending ? 'fa-spinner fa-spin' : 'fa-code-branch'}`}
               aria-hidden
             />
             <SelectValue placeholder="Select workspace…" />
@@ -84,7 +84,7 @@ export function WorkspaceSwitcher({
                   for reviewing, but flagged. */}
               {!workspace.permissions.write && (
                 <span
-                  className="ml-1.5 text-xs text-muted-foreground"
+                  className="ml-1.5 text-xs text-neutral-400"
                   title="You cannot publish to this workspace"
                 >
                   <i className="fas fa-lock" aria-hidden /> read-only
@@ -95,7 +95,7 @@ export function WorkspaceSwitcher({
         </SelectContent>
       </Select>
       {switchBase.isError && (
-        <span className="text-sm text-destructive">
+        <span className="text-sm text-red-500">
           {notEmpty
             ? 'Publish or discard your changes first'
             : 'Switching the workspace failed'}

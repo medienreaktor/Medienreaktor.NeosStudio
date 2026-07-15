@@ -58,7 +58,7 @@ export function SidebarResizeHandle(props: {
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize sidebar"
-      className="absolute inset-y-0 right-0 z-20 hidden w-1.5 cursor-col-resize transition-colors hover:bg-primary/40 active:bg-primary/60 md:block"
+      className="absolute inset-y-0 right-0 z-20 hidden w-1.5 cursor-col-resize transition-colors hover:bg-blue-500/40 active:bg-blue-500/60 md:block"
       {...props}
     />
   )

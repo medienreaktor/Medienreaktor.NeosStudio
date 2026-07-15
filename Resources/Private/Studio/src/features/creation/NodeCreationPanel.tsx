@@ -97,7 +97,7 @@ export function NodeCreationPanel() {
 
   if (groups === null) {
     return (
-      <div className="p-4 text-xs text-muted-foreground">
+      <div className="p-4 text-xs text-neutral-400">
         Loading node types…
       </div>
     )
@@ -127,7 +127,7 @@ export function NodeCreationPanel() {
         className="h-8"
       />
       {visibleGroups.length === 0 && (
-        <p className="px-1 text-xs text-muted-foreground">
+        <p className="px-1 text-xs text-neutral-400">
           {groups.length === 0
             ? 'No creatable content node types.'
             : 'No node types match the filter.'}
@@ -141,7 +141,7 @@ export function NodeCreationPanel() {
           <section key={group.name}>
             <button
               type="button"
-              className="flex w-full items-center gap-1 rounded px-1 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              className="flex w-full items-center gap-1 rounded px-1 py-1 text-xs font-semibold text-neutral-400 hover:text-white"
               onClick={() =>
                 setToggled((previous) => ({
                   ...previous,
@@ -163,7 +163,7 @@ export function NodeCreationPanel() {
                     <div
                       draggable
                       title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
-                      className="flex h-full cursor-grab flex-col items-center justify-center gap-1.5 rounded border border-border bg-muted/40 px-1 py-3 text-center hover:bg-accent active:cursor-grabbing"
+                      className="flex h-full cursor-grab flex-col items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800/40 px-1 py-3 text-center hover:bg-neutral-800 active:cursor-grabbing"
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = 'copy'
                         event.dataTransfer.setData(

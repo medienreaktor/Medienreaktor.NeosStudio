@@ -98,7 +98,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   return (
     <div className="flex items-center gap-3">
       {operation.isError && (
-        <span className="text-sm text-destructive">
+        <span className="text-sm text-red-500">
           {operation.variables?.kind === 'discard'
             ? 'Discarding failed'
             : 'Publishing failed'}
@@ -178,7 +178,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
         </DropdownMenu>
         {hasChanges && (
           <span
-            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full border border-orange-500 bg-background px-1 text-xs font-semibold text-orange-600 tabular-nums"
+            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full border border-orange-500 bg-neutral-950 px-1 text-xs font-semibold text-orange-600 tabular-nums"
             aria-label={`${changeCount} pending changes`}
           >
             {changeCount}

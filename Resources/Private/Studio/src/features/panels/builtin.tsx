@@ -47,7 +47,7 @@ function DocumentsPanel() {
   } = useStudio()
   if (!site || !workspaceName) {
     return (
-      <div className="p-4 text-xs text-muted-foreground">Loading sites…</div>
+      <div className="p-4 text-xs text-neutral-400">Loading sites…</div>
     )
   }
   return (

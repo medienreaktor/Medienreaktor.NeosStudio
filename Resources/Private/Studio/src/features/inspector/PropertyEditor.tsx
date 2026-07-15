@@ -64,7 +64,7 @@ function Labeled({
 }) {
   return (
     <>
-      <label className="mb-1 block text-xs text-muted-foreground">{label}</label>
+      <label className="mb-1 block text-xs text-neutral-400">{label}</label>
       {children}
     </>
   )
@@ -80,7 +80,7 @@ function ReadOnlyValue({
 }) {
   return (
     <div
-      className="min-h-9 rounded-md border border-dashed border-input px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap text-muted-foreground"
+      className="min-h-9 rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-400"
       title={`Editor not supported yet: ${property.editor ?? property.type}`}
     >
       {formatValue(value)}
