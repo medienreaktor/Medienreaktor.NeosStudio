@@ -24,7 +24,11 @@ import {
 } from '@/api/media'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -51,8 +55,18 @@ const SORTS: Array<{
   sortBy: 'modified' | 'name'
   dir: 'asc' | 'desc'
 }> = [
-  { value: 'modified-desc', label: 'Newest first', sortBy: 'modified', dir: 'desc' },
-  { value: 'modified-asc', label: 'Oldest first', sortBy: 'modified', dir: 'asc' },
+  {
+    value: 'modified-desc',
+    label: 'Newest first',
+    sortBy: 'modified',
+    dir: 'desc',
+  },
+  {
+    value: 'modified-asc',
+    label: 'Oldest first',
+    sortBy: 'modified',
+    dir: 'asc',
+  },
   { value: 'name-asc', label: 'Name A–Z', sortBy: 'name', dir: 'asc' },
   { value: 'name-desc', label: 'Name Z–A', sortBy: 'name', dir: 'desc' },
 ]
@@ -477,6 +491,9 @@ function AddCollection() {
 
 function AddTag() {
   return (
-    <InlineCreate placeholder="New tag" onCreate={(label) => createTag(label)} />
+    <InlineCreate
+      placeholder="New tag"
+      onCreate={(label) => createTag(label)}
+    />
   )
 }

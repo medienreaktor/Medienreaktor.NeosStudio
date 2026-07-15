@@ -87,13 +87,17 @@ export function AssetDetailsDialog({
             <Meta label="Filename">{asset.filename}</Meta>
           </dl>
 
-          {!asset.isImported && asset.isRemote && <RemoteImport asset={asset} />}
+          {!asset.isImported && asset.isRemote && (
+            <RemoteImport asset={asset} />
+          )}
 
           {editable && localId ? (
             <MetadataForm key={localId} asset={asset} localId={localId} />
           ) : (
             !asset.isRemote && (
-              <p className="text-xs text-neutral-500">This asset is read-only.</p>
+              <p className="text-xs text-neutral-500">
+                This asset is read-only.
+              </p>
             )
           )}
 
