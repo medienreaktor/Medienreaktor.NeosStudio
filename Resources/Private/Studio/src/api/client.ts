@@ -41,3 +41,49 @@ export async function apiFetch<T>(
   if (!response.ok) throw new ApiError(response.status, parsed)
   return parsed as T
 }
+
+/**
+ * Multipart upload with progress. apiFetch is JSON-only; file uploads need
+ * FormData and a real progress signal, so this drops to XMLHttpRequest (fetch
+ * has no upload-progress event). Same bearer auth and base URL as apiFetch;
+ * resolves with the parsed 2xx body and rejects with ApiError otherwise.
+ */
+export function apiUpload<T>(
+  path: string,
+  formData: FormData,
+  options?: { method?: string; onProgress?: (fraction: number) => void },
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open(options?.method ?? 'POST', config.apiBase + path)
+
+    const tokens = getTokens()
+    if (tokens)
+      xhr.setRequestHeader('Authorization', `Bearer ${tokens.access_token}`)
+    // Do NOT set Content-Type - the browser adds the multipart boundary.
+
+    if (options?.onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable)
+          options.onProgress!(event.loaded / event.total)
+      }
+    }
+
+    xhr.onload = () => {
+      let parsed: unknown = xhr.responseText
+      try {
+        parsed = JSON.parse(xhr.responseText)
+      } catch {
+        /* keep raw text */
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(parsed as T)
+      } else {
+        reject(new ApiError(xhr.status, parsed))
+      }
+    }
+    xhr.onerror = () => reject(new ApiError(0, 'Network error during upload'))
+
+    xhr.send(formData)
+  })
+}

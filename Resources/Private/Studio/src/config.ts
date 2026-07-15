@@ -30,7 +30,7 @@ const fallback: StudioConfig = {
   apiBase: '/api',
   previewBase: '/neos/studio/preview',
   redirectUri: window.location.origin + '/neos/studio',
-  scopes: 'neos.read neos.write neos.publish',
+  scopes: 'neos.read neos.write neos.publish neos.media',
   nodeTree: { loadingDepth: 4 },
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',

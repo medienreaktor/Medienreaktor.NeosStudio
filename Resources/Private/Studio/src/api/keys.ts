@@ -41,4 +41,18 @@ export const queryKeys = {
     allowedChildNodeTypes: (address: string) =>
       ['nodes', address, 'allowed-child-node-types'] as const,
   },
+  media: {
+    /** Broad prefix - invalidate after any asset/collection/tag write. */
+    all: ['media'] as const,
+    sources: ['media', 'asset-sources'] as const,
+    /** The paginated asset list; the filter object keys the infinite query. */
+    assets: (filter: Record<string, unknown>) =>
+      ['media', 'assets', filter] as const,
+    asset: (assetSource: string, identifier: string) =>
+      ['media', 'asset', assetSource, identifier] as const,
+    assetUsage: (assetSource: string, identifier: string) =>
+      ['media', 'asset', assetSource, identifier, 'usage'] as const,
+    collections: ['media', 'collections'] as const,
+    tags: ['media', 'tags'] as const,
+  },
 }
