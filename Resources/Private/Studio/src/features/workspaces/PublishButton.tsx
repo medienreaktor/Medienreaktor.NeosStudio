@@ -89,7 +89,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // publish permission on the base workspace.
   const segmentClasses =
     hasChanges && canPublish
-      ? 'bg-orange-500 text-white hover:bg-orange-600'
+      ? 'bg-green-500 text-white hover:bg-green-600'
       : undefined
   const segmentVariant =
     hasChanges && canPublish ? ('default' as const) : ('secondary' as const)
@@ -178,7 +178,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
         </DropdownMenu>
         {hasChanges && (
           <span
-            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full border border-orange-500 bg-neutral-950 px-1 text-xs font-semibold text-orange-600 tabular-nums"
+            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white tabular-nums"
             aria-label={`${changeCount} pending changes`}
           >
             {changeCount}
