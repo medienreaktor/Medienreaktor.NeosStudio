@@ -56,6 +56,14 @@ export interface PropertyEditorProps {
   options: Record<string, unknown>
   /** Focus on mount; the host sets this for the first field of a form. */
   autoFocus?: boolean
+  /**
+   * The address of the node being edited, when it already exists (the
+   * inspector). Absent in the node creation dialog, where the node does not
+   * exist yet. Editors that operate on the node itself - e.g. the node type
+   * switcher, which resolves the parent's allowed child types - need it, and
+   * degrade gracefully without it.
+   */
+  nodeAddress?: string
 }
 
 export type PropertyEditorComponent = React.ComponentType<PropertyEditorProps>

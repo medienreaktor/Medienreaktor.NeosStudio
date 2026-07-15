@@ -1,5 +1,6 @@
 import { propertyEditorRegistry } from '../registry'
 import { BOOLEAN_EDITOR, BooleanEditor } from './BooleanEditor'
+import { NODE_TYPE_EDITOR, NodeTypeEditor } from './NodeTypeEditor'
 import { SELECT_BOX_EDITOR, SelectBoxEditor } from './SelectBoxEditor'
 import { TEXT_AREA_EDITOR, TextAreaEditor } from './TextAreaEditor'
 import {
@@ -18,6 +19,8 @@ import {
 export {
   BOOLEAN_EDITOR,
   BooleanEditor,
+  NODE_TYPE_EDITOR,
+  NodeTypeEditor,
   SELECT_BOX_EDITOR,
   SelectBoxEditor,
   TEXT_AREA_EDITOR,
@@ -53,5 +56,9 @@ export function registerBuiltinPropertyEditors(): void {
   propertyEditorRegistry.register({
     id: SELECT_BOX_EDITOR,
     component: SelectBoxEditor,
+  })
+  propertyEditorRegistry.register({
+    id: NODE_TYPE_EDITOR,
+    component: NodeTypeEditor,
   })
 }

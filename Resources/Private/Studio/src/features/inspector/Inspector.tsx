@@ -4,7 +4,11 @@ import { nodeLabel } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { hideNode, unhideNode } from '@/features/editing/nodeActions'
+import {
+  changeNodeType,
+  hideNode,
+  unhideNode,
+} from '@/features/editing/nodeActions'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
@@ -21,9 +25,18 @@ import { PropertyEditor } from './PropertyEditor'
 const HIDDEN_PROPERTY = '_hidden'
 
 /**
+ * The node type, exposed by Neos core as the "_nodeType" inspector property
+ * (the "Change Type" group, NodeTypeEditor). Like _hidden it is not a real
+ * content-repository property: its value is the node's type, and changing it is
+ * a ChangeNodeAggregateType command, so it is special-cased below rather than
+ * written with SetNodeProperties.
+ */
+const NODE_TYPE_PROPERTY = '_nodeType'
+
+/**
  * The value to feed a property's editor. Ordinary properties read straight from
- * node.properties; _hidden is synthesized from the "disabled" subtree tag,
- * since it has no property value of its own.
+ * node.properties; _hidden and _nodeType are pseudo-properties synthesized from
+ * the node's tags and type, since they have no property value of their own.
  */
 function propertyValue(
   node: NodeDto,
@@ -31,6 +44,9 @@ function propertyValue(
 ): SerializedPropertyValue | undefined {
   if (name === HIDDEN_PROPERTY) {
     return { value: node.tags.all.includes('disabled'), type: 'boolean' }
+  }
+  if (name === NODE_TYPE_PROPERTY) {
+    return { value: node.nodeType, type: 'string' }
   }
   return node.properties[name]
 }
@@ -61,14 +77,18 @@ export function InspectorPanel({
   const save = (propertyName: string, value: unknown) => {
     if (!node) return
     setSaveError(null)
-    // _hidden is the "disabled" subtree tag, not a property: toggle it with
-    // the enable/disable commands (like the tree/preview hide actions).
+    // Two "properties" are not real properties and route to their own
+    // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
+    // tree/preview hide actions), and the node type is changed with
+    // ChangeNodeAggregateType.
     const persist =
       propertyName === HIDDEN_PROPERTY
         ? value === true
           ? hideNode(node.address)
           : unhideNode(node.address)
-        : persistPropertyChange(node.address, propertyName, value)
+        : propertyName === NODE_TYPE_PROPERTY
+          ? changeNodeType(node.address, String(value))
+          : persistPropertyChange(node.address, propertyName, value)
     persist
       .then(() => onNodeEdited?.(node.address))
       .catch((e: unknown) =>
@@ -208,6 +228,7 @@ function PropertyGroup({
               key={`${node.address}:${property.name}`}
               property={property}
               value={propertyValue(node, property.name)}
+              nodeAddress={node.address}
               onSave={onSave}
             />
           </div>

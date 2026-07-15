@@ -15,10 +15,13 @@ import type { InspectorProperty } from './inspectorSchema'
 export function PropertyEditor({
   property,
   value,
+  nodeAddress,
   onSave,
 }: {
   property: InspectorProperty
   value: SerializedPropertyValue | undefined
+  /** Address of the node being edited, passed to editors that operate on the node itself (e.g. the node type switcher). */
+  nodeAddress: string
   onSave: (propertyName: string, value: unknown) => void
 }) {
   const definition = usePropertyEditor(property.editor)
@@ -40,6 +43,7 @@ export function PropertyEditor({
       }}
       value={value?.value}
       options={property.editorOptions}
+      nodeAddress={nodeAddress}
       // The inspector auto-saves: persist on commit, ignore live pre-commit
       // changes (they would be a save per keystroke).
       onCommit={(next) => onSave(property.name, next)}
