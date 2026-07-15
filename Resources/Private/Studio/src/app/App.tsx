@@ -19,6 +19,7 @@ import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { loadTranslations } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   SidebarResizeHandle,
@@ -294,11 +295,15 @@ export function App() {
   return (
     <SidebarProvider
       style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
-      className={
-        isResizing
-          ? 'select-none **:data-[slot=sidebar-container]:transition-none! **:data-[slot=sidebar-gap]:transition-none!'
-          : undefined
-      }
+      // The shell fills the viewport exactly and never scrolls as a whole: this
+      // bounds the height so every flex-1/min-h-0 chain below resolves against
+      // it, and scrolling happens inside the panels (and the preview iframe),
+      // not on the outer page.
+      className={cn(
+        'h-svh overflow-hidden',
+        isResizing &&
+          'select-none **:data-[slot=sidebar-container]:transition-none! **:data-[slot=sidebar-gap]:transition-none!',
+      )}
     >
       <StudioProvider value={studio}>
         <ModalProvider>
