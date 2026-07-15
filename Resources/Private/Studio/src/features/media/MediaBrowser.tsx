@@ -3,8 +3,8 @@ import { useMemo, useState } from 'react'
 import { useAssets, type MediaAsset } from '@/api/media'
 import { AssetDetailsDialog } from './AssetDetailsDialog'
 import { AssetList } from './AssetList'
-import { MediaSidebar } from './MediaSidebar'
-import { MediaToolbar } from './MediaToolbar'
+import { MediaFooter } from './MediaFooter'
+import { MediaHeader } from './MediaHeader'
 import { MediaUploader } from './MediaUploader'
 import { assetKey, useMediaBrowserState } from './useMediaBrowserState'
 
@@ -52,27 +52,26 @@ export function MediaBrowser({
   const activeKey = state.active ? assetKey(state.active) : null
 
   return (
-    <div className="relative flex h-full min-h-0">
-      <MediaSidebar state={state} />
+    <div className="relative flex h-full min-h-0 flex-col">
+      <MediaHeader state={state} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <MediaToolbar
-          state={state}
-          total={total}
-          onUpload={() => setUploaderOpen(true)}
-        />
-        <AssetList
-          assets={assets}
-          view={state.view}
-          activeKey={activeKey}
-          onSelect={state.setActive}
-          onActivate={activate}
-          isLoading={query.isLoading}
-          isFetchingNextPage={query.isFetchingNextPage}
-          hasNextPage={query.hasNextPage}
-          onLoadMore={() => query.fetchNextPage()}
-        />
-      </div>
+      <AssetList
+        assets={assets}
+        view={state.view}
+        activeKey={activeKey}
+        onSelect={state.setActive}
+        onActivate={activate}
+        isLoading={query.isLoading}
+        isFetchingNextPage={query.isFetchingNextPage}
+        hasNextPage={query.hasNextPage}
+        onLoadMore={() => query.fetchNextPage()}
+      />
+
+      <MediaFooter
+        state={state}
+        total={total}
+        onUpload={() => setUploaderOpen(true)}
+      />
 
       {detailsAsset && (
         <AssetDetailsDialog
