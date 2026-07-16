@@ -52,12 +52,58 @@ export function useNodeEditRefresh<T>(
       }
       return
     }
+    const childrenIds =
+      tree.getDataRef<AsyncDataLoaderDataRef>().current.childrenIds ?? {}
     for (const address of lastEdit.addresses) {
-      // getItemInstance also resolves the root item, so edits reported for
-      // the tree root refresh its direct children.
+      // A subtree-tag change (hiding/unhiding via the "hidden" property)
+      // rewrites the inherited tags of the ENTIRE subtree, not just the node
+      // and its direct children - so levels 2+ would otherwise keep their
+      // stale cached tags. Re-fetch the children list of the edited node and
+      // of every already-loaded descendant that has one: each parent's
+      // getChildrenWithData re-seeds its children with fresh data and fires a
+      // loading state update that re-renders that level, cascading down to the
+      // leaves.
+      //
+      // Snapshot the parent list BEFORE invalidating anything: a non-optimistic
+      // invalidateChildrenIds deletes childrenIds[itemId] synchronously (before
+      // its first await), so walking the map after the edited node's own
+      // invalidation would find its entry already gone and stop at level 1 -
+      // which is exactly the "only the top two levels update" bug.
+      const parents = loadedParentsInSubtree(address, childrenIds)
       const item = tree.getItemInstance(address)
+      // The node's own data (label, tags) - its parent isn't in `parents`, so
+      // refresh it directly. getItemInstance also resolves the tree root, so
+      // edits reported for the root still refresh its direct children below.
       void item?.invalidateItemData()
-      void item?.invalidateChildrenIds()
+      for (const parentId of parents) {
+        void tree.getItemInstance(parentId)?.invalidateChildrenIds()
+      }
     }
   }, [lastEdit, tree, rootId])
+}
+
+/**
+ * `rootId` plus every already-loaded descendant of it that has a loaded
+ * children list, walked from the data loader's cached children map (so it
+ * covers collapsed branches too, not just the expanded rows tree.getItems()
+ * would return). Re-fetching each one's children list refreshes the data of
+ * the level directly below it, so refreshing all of them cascades fresh data
+ * to every loaded level. Reads the map without mutating it - the caller must
+ * capture the result before invalidating, since invalidation deletes entries.
+ */
+function loadedParentsInSubtree(
+  rootId: string,
+  childrenIds: Record<string, string[]>,
+): string[] {
+  const result: string[] = []
+  const stack = [rootId]
+  while (stack.length > 0) {
+    const id = stack.pop() as string
+    const children = childrenIds[id]
+    if (children) {
+      result.push(id)
+      stack.push(...children)
+    }
+  }
+  return result
 }

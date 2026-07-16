@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { NodeTypeMap } from '@/api/nodeTypes'
-import type { NodeDto } from '@/api/nodes'
+import { isExplicitlyHidden, type NodeDto } from '@/api/nodes'
 import { cn } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
 import type { PendingChanges } from './usePendingChanges'
@@ -14,9 +14,11 @@ export interface TreeRowDecor {
 /**
  * Row decorations shared by the document tree and the content outliner.
  *
- * Visibility states dim the whole row (icon + label); hidden nodes (the
- * disabled subtree tag, as opposed to merely hidden-in-menus) additionally
- * get a red x badge layered onto the type icon. Dirty markers on the right:
+ * Visibility states dim the whole row (icon + label), including nodes only
+ * hidden by inheritance from a hidden ancestor. A red x badge is layered onto
+ * the type icon only for explicitly hidden nodes (the disabled tag set on the
+ * node itself) - not for descendants that merely inherit the subtree tag.
+ * Dirty markers on the right:
  * filled dot for changes on the node itself, hollow dot for documents that
  * contain changed content.
  */
@@ -27,6 +29,7 @@ export function nodeDecor(
 ): TreeRowDecor {
   const hidden = node.tags.all.includes('disabled')
   const hiddenInherited = node.tags.inherited.includes('disabled')
+  const hiddenExplicitly = isExplicitlyHidden(node)
   const hiddenInMenu = node.properties['hiddenInMenu']?.value === true
   const dimmed = hidden || hiddenInMenu
   const isDirty = changed !== null && changed.ids.has(node.aggregateId)
@@ -70,7 +73,7 @@ export function nodeDecor(
           nodeTypeName={node.nodeType}
           className={cn(dimmed && 'opacity-50')}
         />
-        {hidden && (
+        {hiddenExplicitly && (
           <i
             className="fas fa-circle-xmark absolute -bottom-1 -right-1 rounded-full bg-neutral-900 text-[0.6rem] text-red-500"
             aria-hidden
