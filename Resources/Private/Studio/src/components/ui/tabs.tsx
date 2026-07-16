@@ -55,10 +55,7 @@ function TabsContent({
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn(
-        'flex-1 outline-none bg-linear-to-b from-neutral-900 to-neutral-950 p-2',
-        className,
-      )}
+      className={cn('flex-1 outline-none bg-neutral-900', className)}
       {...props}
     />
   )

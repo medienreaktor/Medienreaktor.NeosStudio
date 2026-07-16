@@ -64,7 +64,7 @@ function Labeled({
 }) {
   return (
     <>
-      <label className="mb-1 block text-xs text-neutral-400">{label}</label>
+      <label className="mb-1 block text-xs text-white">{label}</label>
       {children}
     </>
   )

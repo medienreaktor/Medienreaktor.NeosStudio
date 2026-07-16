@@ -77,27 +77,13 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
       .sort((a, b) => a.label.localeCompare(b.label))
   }, [nodeTypes, allowedTypes, currentType])
 
-  const current = nodeTypes?.get(currentType)
-
-  // Not an existing node, a structural node, or no real alternative to switch
-  // to: read-only.
-  if (nodeAddress === undefined || !switchable || options.length <= 1) {
-    return (
-      <span className="flex items-center gap-2">
-        {nodeTypes && (
-          <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={currentType} />
-        )}
-        {current ? typeLabel(current) : currentType}
-      </span>
-    )
-  }
-
   return (
     <Select
       value={currentType}
       onValueChange={(next) => {
         const selected = next as string | null
-        if (selected && selected !== currentType) onCommit(selected)
+        if (selected && selected !== currentType && switchable)
+          onCommit(selected)
       }}
     >
       <SelectTrigger className="w-full">

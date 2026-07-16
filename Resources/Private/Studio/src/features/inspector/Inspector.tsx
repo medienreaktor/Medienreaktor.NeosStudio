@@ -138,7 +138,7 @@ export function InspectorPanel({
                   <TabsContent
                     key={tab.id}
                     value={tab.id}
-                    className="space-y-4 py-2"
+                    className="space-y-4"
                   >
                     {tab.groups.map((group) => (
                       <PropertyGroup
@@ -153,7 +153,7 @@ export function InspectorPanel({
                 <TabsContent
                   key={'__nodeData'}
                   value={'__nodeData'}
-                  className="space-y-4 py-2"
+                  className="space-y-4"
                 >
                   <dl className="space-y-2">
                     <InspectorRow label="Node Type">
@@ -204,15 +204,18 @@ function PropertyGroup({
   onSave: (propertyName: string, value: unknown) => void
 }) {
   return (
-    <details open={!group.collapsed} className="group/inspector-group">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400 select-none [&::-webkit-details-marker]:hidden">
+    <details
+      open={!group.collapsed}
+      className="group/inspector-group border-b border-neutral-700 p-2 m-0"
+    >
+      <summary className="flex py-2 cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-white select-none [&::-webkit-details-marker]:hidden">
         {group.icon && <FaIcon icon={group.icon} />}
         {group.label}
         <span className="ml-auto transition-transform group-open/inspector-group:rotate-90">
-          ›
+          <FaIcon icon="chevron-right" />
         </span>
       </summary>
-      <div className="mt-2 space-y-3">
+      <div className="py-2 space-y-4">
         {group.properties.map((property) => (
           <div key={property.name}>
             <PropertyEditor
