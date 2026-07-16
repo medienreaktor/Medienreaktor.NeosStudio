@@ -12,6 +12,7 @@ import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { clampToViewport, type PanelRect } from './geometry'
+import { useRequestAttention } from './PanelSystem'
 import { panelRegistry } from './registry'
 
 /**
@@ -155,6 +156,10 @@ function VisualEditorPanel() {
  */
 function MediaLibraryPanel() {
   const { session, resolve, cancel } = useAssetPicker()
+  // While a pick is in flight the Media Library has taken over a task the user
+  // must finish, so it asks the panel system to spotlight it (blue ring/tab,
+  // other panels dimmed).
+  useRequestAttention(session !== null)
   if (session) {
     return (
       <MediaBrowser

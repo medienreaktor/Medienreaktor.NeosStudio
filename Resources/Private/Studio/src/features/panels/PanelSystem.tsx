@@ -51,6 +51,10 @@ type PanelsContextValue = {
   layout: PanelLayout
   definitions: Map<PanelId, PanelDefinition>
   drag: TabDrop | null
+  /** Panels currently requesting attention (see useRequestAttention). */
+  attention: ReadonlySet<PanelId>
+  /** Toggle a panel's attention request; called by useRequestAttention. */
+  setPanelAttention: (panel: PanelId, active: boolean) => void
   onTabPointerDown: (
     e: React.PointerEvent<HTMLElement>,
     groupId: string,
@@ -78,6 +82,31 @@ function usePanels(): PanelsContextValue {
   if (!context)
     throw new Error('Panel components must live inside <PanelsProvider>')
   return context
+}
+
+/**
+ * The id of the panel a component is rendered as. GroupBody provides it around
+ * each panel's component so the panel can identify itself to the panel system
+ * (e.g. request attention) without being handed props.
+ */
+const PanelIdContext = React.createContext<PanelId | null>(null)
+
+/**
+ * Let a panel flag that it needs the user's attention while `active` is true:
+ * the panel system draws a blue ring around its group, tints its tab, and dims
+ * every other panel so the eye lands on this one. Use it for a panel that has
+ * momentarily taken over a task the user must finish - the Media Library in
+ * asset-picker mode, say. The flag clears when `active` goes false or the panel
+ * unmounts. A no-op outside a panel body (no PanelIdContext).
+ */
+export function useRequestAttention(active: boolean): void {
+  const panel = React.useContext(PanelIdContext)
+  const { setPanelAttention } = usePanels()
+  React.useEffect(() => {
+    if (!panel || !active) return
+    setPanelAttention(panel, true)
+    return () => setPanelAttention(panel, false)
+  }, [panel, active, setPanelAttention])
 }
 
 /**
@@ -207,8 +236,24 @@ export function PanelsProvider({
     loadLayout(STORAGE_KEY, panelRegistry.getAll()),
   )
   const [drag, setDrag] = React.useState<TabDrop | null>(null)
+  const [attention, setAttention] = React.useState<ReadonlySet<PanelId>>(
+    () => new Set(),
+  )
   const layoutRef = React.useRef(layout)
   layoutRef.current = layout
+
+  const setPanelAttention = React.useCallback(
+    (panel: PanelId, active: boolean) => {
+      setAttention((prev) => {
+        if (active === prev.has(panel)) return prev
+        const next = new Set(prev)
+        if (active) next.add(panel)
+        else next.delete(panel)
+        return next
+      })
+    },
+    [],
+  )
 
   // Panels registered or unregistered after mount (plugins): reconcile the
   // layout - new panels appear at their default placement, unloaded panels'
@@ -329,6 +374,8 @@ export function PanelsProvider({
     layout,
     definitions,
     drag,
+    attention,
+    setPanelAttention,
     onTabPointerDown,
     toggle: React.useCallback(
       (groupId) => setLayout((l) => toggleCollapsed(l, groupId)),
@@ -391,9 +438,32 @@ export function PanelsProvider({
   )
 }
 
+/** Whether this group holds a panel currently requesting attention. */
+function groupNeedsAttention(
+  group: PanelGroup,
+  attention: ReadonlySet<PanelId>,
+): boolean {
+  return group.panels.some((panel) => attention.has(panel))
+}
+
+/**
+ * How a group's outer frame reacts to an attention request somewhere in the
+ * app: every group that is *not* the one asking dims, so the eye lands on the
+ * one that is. The blue border itself goes on the asking group's body (its tab
+ * content), not here - see GroupBody. Empty when nothing is asking, so the
+ * normal look is untouched.
+ */
+function attentionDimClasses(
+  group: PanelGroup,
+  attention: ReadonlySet<PanelId>,
+): string {
+  if (attention.size === 0 || groupNeedsAttention(group, attention)) return ''
+  return 'opacity-20 transition-opacity duration-200'
+}
+
 /** The docked groups of one region, stacked vertically. */
 export function PanelDock({ region }: { region: DockRegion }) {
-  const { layout, drag } = usePanels()
+  const { layout, drag, attention } = usePanels()
   const gapIndex =
     drag?.target.kind === 'dock-gap' && drag.target.region === region
       ? drag.target.index
@@ -417,6 +487,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
             className={cn(
               'flex min-h-0 min-w-0 flex-col overflow-hidden bg-neutral-900 text-white',
               !group.collapsed && 'flex-1',
+              attentionDimClasses(group, attention),
             )}
           >
             <GroupTabBar group={group} />
@@ -490,7 +561,7 @@ function FloatingGroupWindow({
   group: FloatingGroup
   hidden?: boolean
 }) {
-  const { definitions, toFront, trackFloatingResize } = usePanels()
+  const { definitions, attention, toFront, trackFloatingResize } = usePanels()
   const handles = group.collapsed
     ? RESIZE_HANDLES.filter((h) => h.direction === 'e' || h.direction === 'w')
     : RESIZE_HANDLES
@@ -503,6 +574,7 @@ function FloatingGroupWindow({
       className={cn(
         'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-900 text-white shadow-lg',
         hidden && 'hidden',
+        attentionDimClasses(group, attention),
       )}
       style={{
         left: group.rect.x,
@@ -533,7 +605,8 @@ function GroupTabBar({
   group: PanelGroup
   floating?: boolean
 }) {
-  const { definitions, drag, onTabPointerDown, trackFloatingDrag } = usePanels()
+  const { definitions, drag, attention, onTabPointerDown, trackFloatingDrag } =
+    usePanels()
   const dropIndex =
     drag?.target.kind === 'tabs' && drag.target.groupId === group.id
       ? Math.min(drag.target.index, group.panels.length)
@@ -562,6 +635,10 @@ function GroupTabBar({
               panel === group.active
                 ? 'bg-neutral-950 text-white border-blue-500'
                 : 'text-neutral-400 hover:text-white border-transparent',
+              // A panel asking for attention gets a solid blue tab so it reads
+              // as the place to look, whether or not it is the active tab.
+              attention.has(panel) &&
+                'bg-blue-500 text-white border-blue-500 hover:text-white',
               drag?.panel === panel && 'opacity-50',
             )}
           >
@@ -602,7 +679,7 @@ function GroupBody({
    */
   region?: DockRegion
 }) {
-  const { definitions } = usePanels()
+  const { definitions, attention } = usePanels()
   const stacking = region !== undefined && !isTabRegion(region)
   return (
     // The body doubles as a drop zone. Collapsed groups keep the body mounted
@@ -615,6 +692,9 @@ function GroupBody({
       className={cn(
         'flex min-h-0 flex-1 flex-col bg-neutral-950',
         collapsed && 'hidden',
+        // A panel asking for attention frames its content (not the tab bar) in
+        // blue, tying together with its blue tab above.
+        groupNeedsAttention(group, attention) && 'border-2 border-blue-500',
       )}
     >
       {group.panels.map((panel) => {
@@ -632,7 +712,9 @@ function GroupBody({
               panel !== group.active && 'hidden',
             )}
           >
-            <definition.component />
+            <PanelIdContext.Provider value={panel}>
+              <definition.component />
+            </PanelIdContext.Provider>
           </div>
         )
       })}
