@@ -1,5 +1,5 @@
 import { config } from '@/config'
-import { getTokens } from '@/auth/oauth'
+import { forceRefreshAccessToken, getValidAccessToken } from '@/auth/oauth'
 
 export class ApiError extends Error {
   constructor(
@@ -23,12 +23,22 @@ export async function apiFetch<T>(
   const method = init?.method ?? 'GET'
   const body = init?.body !== undefined ? JSON.stringify(init.body) : undefined
 
-  const headers: Record<string, string> = {}
-  const tokens = getTokens()
-  if (tokens) headers['Authorization'] = `Bearer ${tokens.access_token}`
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const send = (token: string | null): Promise<Response> => {
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    return fetch(config.apiBase + path, { method, headers, body })
+  }
 
-  const response = await fetch(config.apiBase + path, { method, headers, body })
+  const token = await getValidAccessToken()
+  let response = await send(token)
+  // A token we believed valid can still be rejected (revoked server-side, or
+  // clock skew). Refresh once and retry before surfacing the error.
+  if (response.status === 401 && token) {
+    const refreshed = await forceRefreshAccessToken()
+    if (refreshed) response = await send(refreshed)
+  }
+
   const raw = await response.text()
 
   let parsed: unknown = raw
@@ -48,42 +58,49 @@ export async function apiFetch<T>(
  * has no upload-progress event). Same bearer auth and base URL as apiFetch;
  * resolves with the parsed 2xx body and rejects with ApiError otherwise.
  */
-export function apiUpload<T>(
+export async function apiUpload<T>(
   path: string,
   formData: FormData,
   options?: { method?: string; onProgress?: (fraction: number) => void },
 ): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open(options?.method ?? 'POST', config.apiBase + path)
+  const method = options?.method ?? 'POST'
 
-    const tokens = getTokens()
-    if (tokens)
-      xhr.setRequestHeader('Authorization', `Bearer ${tokens.access_token}`)
-    // Do NOT set Content-Type - the browser adds the multipart boundary.
+  const attempt = (token: string | null) =>
+    new Promise<{ status: number; parsed: unknown }>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open(method, config.apiBase + path)
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      // Do NOT set Content-Type - the browser adds the multipart boundary.
 
-    if (options?.onProgress) {
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable)
-          options.onProgress!(event.loaded / event.total)
+      if (options?.onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable)
+            options.onProgress!(event.loaded / event.total)
+        }
       }
-    }
 
-    xhr.onload = () => {
-      let parsed: unknown = xhr.responseText
-      try {
-        parsed = JSON.parse(xhr.responseText)
-      } catch {
-        /* keep raw text */
+      xhr.onload = () => {
+        let parsed: unknown = xhr.responseText
+        try {
+          parsed = JSON.parse(xhr.responseText)
+        } catch {
+          /* keep raw text */
+        }
+        resolve({ status: xhr.status, parsed })
       }
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(parsed as T)
-      } else {
-        reject(new ApiError(xhr.status, parsed))
-      }
-    }
-    xhr.onerror = () => reject(new ApiError(0, 'Network error during upload'))
+      xhr.onerror = () => reject(new ApiError(0, 'Network error during upload'))
 
-    xhr.send(formData)
-  })
+      xhr.send(formData)
+    })
+
+  const token = await getValidAccessToken()
+  let result = await attempt(token)
+  // Refresh once and retry on rejection, mirroring apiFetch.
+  if (result.status === 401 && token) {
+    const refreshed = await forceRefreshAccessToken()
+    if (refreshed) result = await attempt(refreshed)
+  }
+
+  if (result.status >= 200 && result.status < 300) return result.parsed as T
+  throw new ApiError(result.status, result.parsed)
 }
