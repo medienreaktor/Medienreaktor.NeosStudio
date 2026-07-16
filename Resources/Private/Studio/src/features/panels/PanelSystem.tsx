@@ -1,3 +1,4 @@
+import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 
@@ -45,7 +46,21 @@ import { type PanelDefinition, panelRegistry } from './registry'
  */
 
 const STORAGE_KEY = 'neos-studio.panel_layout'
+const SECONDARY_COLLAPSED_KEY = 'neos-studio.secondary_collapsed'
 const DRAG_THRESHOLD = 5
+
+/** A boolean flag persisted to localStorage under `key`. */
+function usePersistedFlag(
+  key: string,
+): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
+  const [value, setValue] = React.useState(
+    () => localStorage.getItem(key) === 'true',
+  )
+  React.useEffect(() => {
+    localStorage.setItem(key, String(value))
+  }, [key, value])
+  return [value, setValue]
+}
 
 type PanelsContextValue = {
   layout: PanelLayout
@@ -533,6 +548,7 @@ export function SecondaryDock({
   visibleForMainPanel?: PanelId
 }) {
   const { layout, drag } = usePanels()
+  const [collapsed, setCollapsed] = usePersistedFlag(SECONDARY_COLLAPSED_KEY)
   const hasPanels = layout.docks.secondary.length > 0
   // The main area is a tab region, so it coalesces to a single group; its
   // active tab decides whether this contextual dock is showing.
@@ -542,14 +558,46 @@ export function SecondaryDock({
   // Empty and neither worth keeping mounted nor being dropped into: render
   // nothing. (A hidden contextual dock never reveals for a drag.)
   if (!hasPanels && (hidden || !drag)) return null
+  // A drag in progress force-expands so a panel can be dropped in even when the
+  // user has collapsed the region. Collapsing is only offered once it holds
+  // panels - an empty dock only ever shows to receive a drop.
+  const showCollapsed = collapsed && hasPanels && !drag
   return (
     <div
       className={cn(
-        'flex w-80 shrink-0 flex-col border-l bg-neutral-900',
+        'relative flex shrink-0 flex-col bg-neutral-900',
+        // Collapsed: take no width and drop the border so no bar shows - only
+        // the expand button, overlaid on the top-right of the main region.
+        showCollapsed ? 'w-0' : 'w-80 border-l',
         hidden && 'hidden',
       )}
     >
-      <PanelDock region="secondary" />
+      {showCollapsed ? (
+        <button
+          type="button"
+          aria-label="Expand panel"
+          onClick={() => setCollapsed(false)}
+          className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
+        >
+          <ChevronsLeftIcon className="size-4" />
+        </button>
+      ) : (
+        <>
+          <PanelDock region="secondary" />
+          {/* Overlaid on the tab bar's spare area (top-right) so the tabs still
+            start at the very top instead of being pushed down by a header. */}
+          {hasPanels && (
+            <button
+              type="button"
+              aria-label="Collapse panel"
+              onClick={() => setCollapsed(true)}
+              className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
+            >
+              <ChevronsRightIcon className="size-4" />
+            </button>
+          )}
+        </>
+      )}
     </div>
   )
 }
