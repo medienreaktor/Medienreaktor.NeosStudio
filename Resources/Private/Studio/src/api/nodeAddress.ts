@@ -50,3 +50,23 @@ export function addressInDimension(
     dimensionSpacePoint,
   })
 }
+
+/**
+ * The address of a different node aggregate in the same subgraph (workspace and
+ * dimension space point) as the given one. Used to resolve a persisted node id
+ * against the current site's context after a reload.
+ */
+export function addressWithAggregateId(
+  encoded: string,
+  aggregateId: string,
+): string {
+  return encodeNodeAddress({
+    ...decodeNodeAddress(encoded),
+    aggregateId,
+  })
+}
+
+/** The aggregate id encoded in a node address. */
+export function aggregateIdOf(encoded: string): string {
+  return decodeNodeAddress(encoded).aggregateId
+}

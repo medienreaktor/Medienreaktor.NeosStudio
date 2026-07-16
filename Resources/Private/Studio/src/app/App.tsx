@@ -14,7 +14,11 @@ import {
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
 import { fetchNode, type NodeDto, useNodeVariants } from '@/api/nodes'
-import { addressInDimension } from '@/api/nodeAddress'
+import {
+  addressInDimension,
+  addressWithAggregateId,
+  aggregateIdOf,
+} from '@/api/nodeAddress'
 import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
@@ -60,6 +64,11 @@ type AuthState = 'checking' | 'authenticated' | 'anonymous'
 // Guards against a redirect loop if the silent auto-login ever fails:
 // set before redirecting, cleared once tokens arrive.
 const AUTO_LOGIN_KEY = 'neos-studio.auto_login_attempted'
+
+// Remembers the selected document across reloads. Only the aggregate id is
+// stored - the full address is bound to a workspace and dimension, so on reload
+// the id is re-resolved against the current site's subgraph instead.
+const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
@@ -175,6 +184,47 @@ export function App() {
       setAuth('anonymous')
     }
   }, [meError])
+
+  // Remember the selected document so a reload lands on it again. Persist just
+  // the aggregate id; the address itself is workspace/dimension-bound.
+  useEffect(() => {
+    if (!selectedDocument) return
+    localStorage.setItem(
+      SELECTED_DOCUMENT_KEY,
+      aggregateIdOf(selectedDocument.address),
+    )
+  }, [selectedDocument])
+
+  // Restore the remembered document once the active site is known (its address
+  // carries the current workspace and dimension). A stored id that no longer
+  // resolves, and the no-stored-id case, both fall back to the site's root
+  // document node. Runs once per load - dimension and site switches drive their
+  // own reselection and must not be overridden here.
+  const didRestoreSelection = useRef(false)
+  const siteAddress = activeSite?.nodeAddress ?? null
+  useEffect(() => {
+    if (didRestoreSelection.current || !siteAddress) return
+    didRestoreSelection.current = true
+    const select = (node: NodeDto) => {
+      setSelectedDocument(node)
+      setInspectedNode(node)
+    }
+    const selectRoot = () => {
+      fetchNode(siteAddress)
+        .then(select)
+        .catch(() => {
+          /* fine - the tree simply starts unselected */
+        })
+    }
+    const storedId = localStorage.getItem(SELECTED_DOCUMENT_KEY)
+    if (!storedId) {
+      selectRoot()
+      return
+    }
+    fetchNode(addressWithAggregateId(siteAddress, storedId))
+      .then(select)
+      .catch(selectRoot)
+  }, [siteAddress])
 
   if (auth === 'checking') {
     return (
