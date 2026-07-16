@@ -398,7 +398,9 @@ export function App() {
               </Sidebar>
 
               <SidebarInset>
-                <header className="flex items-center justify-between border-b px-4 py-2.5">
+                {/* Fixed height so the bar does not jump as the switchers and
+                    workspace buttons resolve and render after load. */}
+                <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
                   <div className="flex items-center gap-3">
                     <SidebarTrigger />
                     <ModalLauncher />
