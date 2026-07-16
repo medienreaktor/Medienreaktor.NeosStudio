@@ -11,7 +11,6 @@ import { useAsset, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
-import { formatBytes } from '@/features/media/format'
 import type { PropertyEditorProps } from '../registry'
 import {
   assetReference,
@@ -198,11 +197,6 @@ export function AssetFieldEditor({
         <div className="truncate text-sm" title={asset?.label}>
           {asset ? asset.label : missing ? 'Asset not found' : 'Loading…'}
         </div>
-        {asset && (
-          <div className="truncate text-xs text-neutral-400">
-            {formatBytes(asset.fileSize)}
-          </div>
-        )}
       </div>
       <Button variant="outline" size="sm" onClick={select}>
         Select…

@@ -11,7 +11,6 @@ import { useAsset, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
-import { formatBytes } from '@/features/media/format'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorProps } from '../registry'
 import {
@@ -95,7 +94,7 @@ export function MultiAssetFieldEditor({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       {refs.map((ref, index) => (
         <AssetRow
           key={ref.__identifier}
@@ -184,11 +183,6 @@ function AssetRow({
         <div className="truncate text-sm" title={asset?.label}>
           {asset ? asset.label : missing ? 'Asset not found' : 'Loading…'}
         </div>
-        {asset && (
-          <div className="truncate text-xs text-neutral-400">
-            {formatBytes(asset.fileSize)}
-          </div>
-        )}
       </div>
       <Button variant="ghost" size="icon-sm" onClick={onRemove} title="Remove">
         <XIcon />
