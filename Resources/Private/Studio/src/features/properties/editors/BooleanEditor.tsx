@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Checkbox } from '@/components/ui/checkbox'
 import type { PropertyEditorComponent } from '../registry'
 
 export const BOOLEAN_EDITOR = 'Neos.Neos/Inspector/Editors/BooleanEditor'
@@ -26,13 +27,11 @@ export const BooleanEditor: PropertyEditorComponent = ({
   }
   return (
     <label className="flex cursor-pointer items-center gap-2 text-sm">
-      <input
-        type="checkbox"
-        className="size-4 accent-primary"
+      <Checkbox
         checked={checked}
-        onChange={(event) => {
-          setChecked(event.target.checked)
-          onCommit(event.target.checked)
+        onCheckedChange={(next) => {
+          setChecked(next)
+          onCommit(next)
         }}
       />
       {subject.label}
