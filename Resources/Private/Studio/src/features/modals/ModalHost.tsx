@@ -3,19 +3,13 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { XIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import {
-  modalDialogRegistry,
-  type SettingsDialogDefinition,
-  useSettingsDialogs,
-} from './registry'
+import { type SettingsDialogDefinition, useSettingsDialogs } from './registry'
 
 /**
  * The modal host: one place that owns "which modal is open" and renders it
- * near-screen-filling above the app. Two kinds live here (see registry.ts):
- *
- *  - a single-module dialog (Media, ...) resolved from modalDialogRegistry, and
- *  - the shared Settings modal, whose subnavigation lists every section
- *    registered in settingsDialogRegistry and whose body shows the active one.
+ * near-screen-filling above the app. It hosts the shared Settings modal, whose
+ * subnavigation lists every section registered in settingsDialogRegistry and
+ * whose body shows the active one.
  *
  * Components anywhere below <ModalProvider> open and close modals through
  * useModals(); the host is rendered once by the provider. Only one modal is
@@ -26,18 +20,13 @@ import {
 
 type OpenState =
   | { kind: 'none' }
-  | { kind: 'module'; id: string }
   | { kind: 'settings'; sectionId: string | null }
 
 interface ModalContextValue {
-  /** Open a single-module dialog by its registered id. */
-  openModal: (id: string) => void
   /** Open the Settings modal, optionally on a specific section. */
   openSettings: (sectionId?: string) => void
   /** Close whatever modal is open. */
   close: () => void
-  /** The single-module dialog currently open, or null. */
-  activeModalId: string | null
   /** Whether the Settings modal is open. */
   settingsOpen: boolean
 }
@@ -55,11 +44,9 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
   const context = React.useMemo<ModalContextValue>(
     () => ({
-      openModal: (id) => setOpen({ kind: 'module', id }),
       openSettings: (sectionId) =>
         setOpen({ kind: 'settings', sectionId: sectionId ?? null }),
       close: () => setOpen({ kind: 'none' }),
-      activeModalId: open.kind === 'module' ? open.id : null,
       settingsOpen: open.kind === 'settings',
     }),
     [open],
@@ -96,9 +83,8 @@ function ModalHost({
         />
         <DialogPrimitive.Popup
           data-slot="modal-content"
-          className="fixed inset-4 z-200 flex flex-col overflow-hidden rounded-lg border bg-neutral-950 text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0 md:inset-8"
+          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border bg-neutral-950 text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
         >
-          {open.kind === 'module' && <ModuleModal id={open.id} />}
           {open.kind === 'settings' && (
             <SettingsModal
               sectionId={open.sectionId}
@@ -136,25 +122,6 @@ function ModalHeader({
         </DialogPrimitive.Close>
       </div>
     </header>
-  )
-}
-
-/** A single-module dialog: full modal filled by one registered module. */
-function ModuleModal({ id }: { id: string }) {
-  const definition = modalDialogRegistry.get(id)
-  if (!definition) {
-    // The module unregistered while open (a plugin reload); show nothing
-    // rather than crash - the user can close the empty modal.
-    return <ModalHeader title="Unavailable" />
-  }
-  const Body = definition.component
-  return (
-    <>
-      <ModalHeader title={definition.title} />
-      <div className="min-h-0 flex-1 overflow-auto">
-        <Body />
-      </div>
-    </>
   )
 }
 

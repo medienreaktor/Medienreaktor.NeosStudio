@@ -5,15 +5,10 @@ import { UserAdministration } from '@/features/users/UserAdministration'
 import { settingsDialogRegistry } from './registry'
 
 /**
- * Studio's built-in modal screens, registered exactly like a third-party
- * plugin would register them: single-module dialogs go in the modal-dialog
- * registry, settings sections in the settings-dialog registry. Each screen is
- * a propless component that reads app state via context.
- *
- * Media moved out to a dockable panel (see features/panels/builtin.tsx), so no
- * built-in single-module dialogs remain - the modalDialogRegistry stays as an
- * extension point for third-party full-screen modules. Sites, workspaces and
- * the rest register here as their settings screens land.
+ * Studio's built-in settings screens, registered exactly like a third-party
+ * plugin would register them: each is a settings section in the settings-dialog
+ * registry, a propless component that reads app state via context. Sites,
+ * workspaces and the rest register here as their settings screens land.
  */
 
 /** Well-known built-in ids, namespaced under the Neos vendor. */
