@@ -23,6 +23,18 @@ const MEDIA_MODEL_NAMESPACE = 'Neos\\Media\\Domain\\Model\\'
 /** The concrete Media entity class an image property stores. */
 export const IMAGE_CLASS = `${MEDIA_MODEL_NAMESPACE}Image`
 
+/** The base Media entity class - the fallback when a stored item omits its concrete type. */
+export const ASSET_CLASS = `${MEDIA_MODEL_NAMESPACE}Asset`
+
+/**
+ * Whether a node property type is a collection (`array<...>`), as multi-asset
+ * properties are declared - e.g. `array<Neos\Media\Domain\Model\Asset>`. Such a
+ * property stores a list of references and edits with the multiple-asset UI.
+ */
+export function isCollectionType(type: string): boolean {
+  return /^array<.+>$/.test(type)
+}
+
 /** The concrete Media entity class for an asset of the given type. */
 export function assetClassFor(assetType: AssetType): string {
   return `${MEDIA_MODEL_NAMESPACE}${assetType}`
@@ -37,6 +49,37 @@ export function referenceIdentifier(value: unknown): string | null {
     if (typeof id === 'string' && id !== '') return id
   }
   return null
+}
+
+/**
+ * One stored item to a full reference, or null if it carries no identifier.
+ * Keeps the item's concrete `__flow_object_type` when present (round-tripped
+ * data always has it), falling back to the base Asset class otherwise.
+ */
+function toReference(value: unknown): AssetReference | null {
+  const id = referenceIdentifier(value)
+  if (!id) return null
+  const type =
+    value && typeof value === 'object'
+      ? (value as Record<string, unknown>).__flow_object_type
+      : undefined
+  return {
+    __flow_object_type: typeof type === 'string' && type ? type : ASSET_CLASS,
+    __identifier: id,
+  }
+}
+
+/**
+ * A stored multi-asset value as a list of references, tolerant of the shapes
+ * the API may hand back. A non-array value (unset, or a single reference) reads
+ * as empty - a collection property is only ever seeded from a list.
+ */
+export function referenceList(value: unknown): AssetReference[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    const ref = toReference(item)
+    return ref ? [ref] : []
+  })
 }
 
 export function imageReference(identifier: string): AssetReference {
