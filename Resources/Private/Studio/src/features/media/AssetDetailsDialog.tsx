@@ -70,7 +70,7 @@ export function AssetDetailsDialog({
         </DialogHeader>
 
         <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
-          <div className="grid aspect-video place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
+          <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
             <AssetThumb asset={asset} preview />
           </div>
 

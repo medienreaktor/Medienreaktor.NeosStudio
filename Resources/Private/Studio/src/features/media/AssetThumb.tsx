@@ -32,7 +32,7 @@ export function AssetThumb({
         src={uri}
         alt={asset.label}
         loading="lazy"
-        className={cn('max-h-full max-w-full object-contain', className)}
+        className={cn('h-full w-full aspect-square object-contain', className)}
       />
     )
   }
