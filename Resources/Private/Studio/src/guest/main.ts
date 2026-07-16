@@ -67,7 +67,7 @@ function injectStyles(): void {
   const style = document.createElement('style')
   style.textContent = `
     [${WRAPPER_ATTRIBUTE}].${HOVER_CLASS}:not(.${SELECTED_CLASS}) {
-      outline: 2px dashed rgba(0, 173, 238, 1.0);
+      outline: 2px solid rgba(0, 173, 238, 0.3);
       outline-offset: 5px;
     }
     [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} {
@@ -104,8 +104,8 @@ function injectStyles(): void {
     [${PROPERTY_ATTRIBUTE}]:hover,
     [${PROPERTY_ATTRIBUTE}]:focus,
     [${PROPERTY_ATTRIBUTE}]:focus-within {
-      outline: 2px dashed rgba(0, 173, 238, 1.0);
-      outline-offset: 5px;
+      outline: 1px dotted rgba(0, 173, 238, 1.0);
+      outline-offset: 1px;
     }
     /* TipTap mounts its own contenteditable (.tiptap) inside the property
        element; it must inherit the host typography, not add a focus ring or
