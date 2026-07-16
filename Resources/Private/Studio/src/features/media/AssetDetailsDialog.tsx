@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DownloadIcon, Trash2Icon, XIcon } from 'lucide-react'
 
 import { ApiError } from '@/api/client'
@@ -62,63 +62,79 @@ export function AssetDetailsDialog({
   const editable = !asset.isReadOnly && asset.localAssetIdentifier !== null
   const localId = asset.localAssetIdentifier
 
+  // The parent mounts us only while an asset is selected, so drive `open` from
+  // local state: flip it true on mount for the enter transition, and defer the
+  // parent's unmount until `onOpenChangeComplete` so the exit transition plays.
+  const [open, setOpen] = useState(false)
+  useEffect(() => setOpen(true), [])
+
   return (
-    <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+      onOpenChangeComplete={(nextOpen) => !nextOpen && onOpenChange(false)}
+    >
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="truncate pr-6">{asset.label}</DialogTitle>
         </DialogHeader>
 
-        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
-          <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
-            <AssetThumb asset={asset} preview />
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Left: preview + read-only metadata. */}
+          <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
+            <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
+              <AssetThumb asset={asset} preview />
+            </div>
+
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+              <Meta label="Type">{asset.assetType}</Meta>
+              <Meta label="Format">{asset.mediaType}</Meta>
+              <Meta label="Size">{formatBytes(asset.fileSize)}</Meta>
+              {asset.width && asset.height ? (
+                <Meta label="Dimensions">
+                  {asset.width} × {asset.height}
+                </Meta>
+              ) : null}
+              <Meta label="Modified">{formatDate(asset.lastModified)}</Meta>
+              <Meta label="Filename">{asset.filename}</Meta>
+            </dl>
           </div>
 
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-            <Meta label="Type">{asset.assetType}</Meta>
-            <Meta label="Format">{asset.mediaType}</Meta>
-            <Meta label="Size">{formatBytes(asset.fileSize)}</Meta>
-            {asset.width && asset.height ? (
-              <Meta label="Dimensions">
-                {asset.width} × {asset.height}
-              </Meta>
-            ) : null}
-            <Meta label="Modified">{formatDate(asset.lastModified)}</Meta>
-            <Meta label="Filename">{asset.filename}</Meta>
-          </dl>
+          {/* Right: editable metadata, tags, collections and usage. */}
+          <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
+            {!asset.isImported && asset.isRemote && (
+              <RemoteImport asset={asset} />
+            )}
 
-          {!asset.isImported && asset.isRemote && (
-            <RemoteImport asset={asset} />
-          )}
+            {editable && localId ? (
+              <MetadataForm key={localId} asset={asset} localId={localId} />
+            ) : (
+              !asset.isRemote && (
+                <p className="text-xs text-neutral-500">
+                  This asset is read-only.
+                </p>
+              )
+            )}
 
-          {editable && localId ? (
-            <MetadataForm key={localId} asset={asset} localId={localId} />
-          ) : (
-            !asset.isRemote && (
-              <p className="text-xs text-neutral-500">
-                This asset is read-only.
-              </p>
-            )
-          )}
+            {editable && localId && (
+              <>
+                <TagAssignment localId={localId} assigned={asset.tags ?? []} />
+                <CollectionAssignment
+                  localId={localId}
+                  assigned={asset.collections ?? []}
+                />
+              </>
+            )}
 
-          {editable && localId && (
-            <>
-              <TagAssignment localId={localId} assigned={asset.tags ?? []} />
-              <CollectionAssignment
-                localId={localId}
-                assigned={asset.collections ?? []}
-              />
-            </>
-          )}
-
-          {localId && (
-            <Field label="Usage">
-              <UsageTable
-                assetSource={asset.assetSource}
-                identifier={asset.identifier}
-              />
-            </Field>
-          )}
+            {localId && (
+              <Field label="Usage">
+                <UsageTable
+                  assetSource={asset.assetSource}
+                  identifier={asset.identifier}
+                />
+              </Field>
+            )}
+          </div>
         </div>
 
         {editable && localId && (
