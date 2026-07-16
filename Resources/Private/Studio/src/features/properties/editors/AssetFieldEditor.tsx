@@ -27,7 +27,7 @@ import {
  * `value` and thereafter owned here - the inspector remounts the editor (keyed
  * by node + property) when the edited subject changes, which resets it.
  */
-export function AssetField({
+export function AssetFieldEditor({
   subject,
   value,
   onCommit,

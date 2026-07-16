@@ -24,9 +24,10 @@ import {
 
 /**
  * A collection asset/image property (`array<Neos\Media\Domain\Model\Asset>`).
- * Sibling to AssetField (the single-value case): the difference is the stored
- * value is a *list* of references, so committing a single reference object - as
- * AssetField does - is rejected by the CR ("must be of type array<Asset>").
+ * Sibling to AssetFieldEditor (the single-value case): the difference is the
+ * stored value is a *list* of references, so committing a single reference
+ * object - as AssetFieldEditor does - is rejected by the CR ("must be of type
+ * array<Asset>").
  *
  * Picking is one-at-a-time (the Media Library owns the screen for a pick, one
  * session live at a time), so this appends the chosen asset to the list. Order
@@ -36,7 +37,7 @@ import {
  * from `value` and thereafter owned here - the inspector remounts the editor
  * (keyed by node + property) when the edited subject changes, which resets it.
  */
-export function MultiAssetField({
+export function MultiAssetFieldEditor({
   subject,
   value,
   onCommit,

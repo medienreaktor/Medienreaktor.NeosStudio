@@ -1,6 +1,6 @@
 import type { PropertyEditorComponent } from '../registry'
-import { AssetField } from './AssetField'
-import { MultiAssetField } from './MultiAssetField'
+import { AssetFieldEditor } from './AssetFieldEditor'
+import { MultiAssetFieldEditor } from './MultiAssetFieldEditor'
 import { isCollectionType } from './assetValue'
 
 export const IMAGE_EDITOR = 'Neos.Neos/Inspector/Editors/ImageEditor'
@@ -14,7 +14,7 @@ export const IMAGE_EDITOR = 'Neos.Neos/Inspector/Editors/ImageEditor'
  */
 export const ImageEditor: PropertyEditorComponent = (props) =>
   isCollectionType(props.subject.type) ? (
-    <MultiAssetField {...props} kind="image" />
+    <MultiAssetFieldEditor {...props} kind="image" />
   ) : (
-    <AssetField {...props} kind="image" />
+    <AssetFieldEditor {...props} kind="image" />
   )
