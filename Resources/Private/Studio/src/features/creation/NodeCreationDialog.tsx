@@ -17,6 +17,7 @@ import {
   defaultEditorForType,
   humanizeLabel,
 } from '@/features/inspector/inspectorSchema'
+import { useAssetPicker } from '@/features/media/AssetPicker'
 import { TEXT_FIELD_EDITOR } from '@/features/properties/editors'
 import { usePropertyEditor } from '@/features/properties/registry'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
@@ -58,6 +59,13 @@ export function CreateNodeFlow({
   )
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // An asset/image element hands off to the Media Library, which takes over the
+  // main area. This dialog is a modal overlaying everything (portalled to
+  // <body>), so it must step aside for the pick or it covers the picker. It
+  // stays mounted - only visually closed - so the in-progress draft survives,
+  // and reopens when the pick resolves or is cancelled.
+  const { session: pickerSession } = useAssetPicker()
+  const picking = pickerSession !== null
 
   const elements = useMemo(() => {
     if (!schema) return null
@@ -158,7 +166,10 @@ export function CreateNodeFlow({
   })
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !creating && onCancel()}>
+    <Dialog
+      open={!picking}
+      onOpenChange={(open) => !open && !picking && !creating && onCancel()}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
