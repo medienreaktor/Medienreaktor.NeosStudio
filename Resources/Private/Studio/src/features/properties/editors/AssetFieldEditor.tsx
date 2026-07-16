@@ -1,5 +1,11 @@
-import { useState } from 'react'
-import { ImageIcon, Loader2Icon, PaperclipIcon, XIcon } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import {
+  CropIcon,
+  ImageIcon,
+  Loader2Icon,
+  PaperclipIcon,
+  XIcon,
+} from 'lucide-react'
 
 import { useAsset, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
@@ -10,9 +16,12 @@ import type { PropertyEditorProps } from '../registry'
 import {
   assetReference,
   imageReference,
+  imageVariantReference,
   localIdentifierFor,
   referenceIdentifier,
-} from './assetValue'
+} from '@/api/assetValue'
+import { parseCropConfig } from './cropOptions'
+import { ImageCropDialog } from './ImageCropDialog'
 
 /**
  * The shared body of the Asset and Image editors: shows the currently
@@ -31,15 +40,40 @@ export function AssetFieldEditor({
   subject,
   value,
   onCommit,
+  options,
   kind,
 }: PropertyEditorProps & { kind: 'image' | 'asset' }) {
   const { requestPick } = useAssetPicker()
   const [identifier, setIdentifier] = useState(() => referenceIdentifier(value))
   const [picked, setPicked] = useState<MediaAsset | null>(null)
+  const [cropOpen, setCropOpen] = useState(false)
 
   // Stored identifiers are always local, so they resolve against 'neos'.
   const query = useAsset('neos', identifier)
   const asset = picked ?? query.data ?? null
+
+  const cropConfig = useMemo(() => parseCropConfig(options), [options])
+
+  // Cropping edits the original image, not a variant, so re-cropping never
+  // compounds. When the current value is already a variant, resolve its
+  // original; otherwise the current asset is itself the original.
+  const originalIdentifier = asset?.originalAssetIdentifier ?? identifier
+  const isVariant =
+    originalIdentifier !== null && originalIdentifier !== identifier
+  const originalQuery = useAsset('neos', originalIdentifier, isVariant)
+  const originalAsset = isVariant ? (originalQuery.data ?? null) : asset
+  const canCrop =
+    kind === 'image' &&
+    cropConfig.enabled &&
+    asset !== null &&
+    asset.assetType === 'Image'
+
+  const applyCrop = (variant: MediaAsset) => {
+    const id = variant.localAssetIdentifier ?? variant.identifier
+    setPicked(variant)
+    setIdentifier(id)
+    onCommit(imageVariantReference(id))
+  }
 
   const select = () => {
     requestPick({
@@ -106,15 +140,26 @@ export function AssetFieldEditor({
               Select…
             </span>
           </button>
-          <Button
-            variant="secondary"
-            size="icon-xs"
-            onClick={clear}
-            title="Remove"
-            className="absolute top-1 right-1 z-10"
-          >
-            <XIcon />
-          </Button>
+          <div className="absolute top-1 right-1 z-10 flex gap-1">
+            {canCrop && (
+              <Button
+                variant="secondary"
+                size="icon-xs"
+                onClick={() => setCropOpen(true)}
+                title="Crop"
+              >
+                <CropIcon />
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              size="icon-xs"
+              onClick={clear}
+              title="Remove"
+            >
+              <XIcon />
+            </Button>
+          </div>
         </div>
         {asset && (
           <div
@@ -123,6 +168,16 @@ export function AssetFieldEditor({
           >
             {asset.label}
           </div>
+        )}
+        {canCrop && (
+          <ImageCropDialog
+            open={cropOpen}
+            onOpenChange={setCropOpen}
+            original={originalAsset}
+            initialCrop={asset?.crop ?? null}
+            config={cropConfig}
+            onApply={applyCrop}
+          />
         )}
       </div>
     )

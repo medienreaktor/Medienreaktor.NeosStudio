@@ -1,4 +1,4 @@
-import { importProxyAsset, type AssetType, type MediaAsset } from '@/api/media'
+import { importProxyAsset, type AssetType, type MediaAsset } from './media'
 
 /**
  * The value an asset- or image-typed node property stores. It is the Content
@@ -22,6 +22,9 @@ const MEDIA_MODEL_NAMESPACE = 'Neos\\Media\\Domain\\Model\\'
 
 /** The concrete Media entity class an image property stores. */
 export const IMAGE_CLASS = `${MEDIA_MODEL_NAMESPACE}Image`
+
+/** The concrete Media entity class a cropped image (an image variant) stores. */
+export const IMAGE_VARIANT_CLASS = `${MEDIA_MODEL_NAMESPACE}ImageVariant`
 
 /** The base Media entity class - the fallback when a stored item omits its concrete type. */
 export const ASSET_CLASS = `${MEDIA_MODEL_NAMESPACE}Asset`
@@ -84,6 +87,15 @@ export function referenceList(value: unknown): AssetReference[] {
 
 export function imageReference(identifier: string): AssetReference {
   return { __flow_object_type: IMAGE_CLASS, __identifier: identifier }
+}
+
+/**
+ * A reference to a cropped image, i.e. a persisted ImageVariant. The value has
+ * the same shape as any asset reference - only the concrete class differs - so
+ * it round-trips through the read/commands APIs exactly like an Image does.
+ */
+export function imageVariantReference(identifier: string): AssetReference {
+  return { __flow_object_type: IMAGE_VARIANT_CLASS, __identifier: identifier }
 }
 
 export function assetReference(

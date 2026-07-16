@@ -21,6 +21,14 @@ export interface AssetCollectionRef {
   title: string
 }
 
+/** A crop rectangle in the original image's pixel coordinates. */
+export interface CropRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 /**
  * An asset as returned by the API, across all asset sources. The editable
  * metadata block (title/caption/copyrightNotice, tags, collections) is only
@@ -49,6 +57,11 @@ export interface MediaAsset {
   copyrightNotice?: string
   tags?: AssetTagRef[]
   collections?: AssetCollectionRef[]
+  // Image variants (a cropped image) only: the original image this was cropped
+  // from, and the current crop rectangle in the original's pixel coordinates.
+  // Let the crop editor re-crop the original and prefill the last crop.
+  originalAssetIdentifier?: string | null
+  crop?: CropRect | null
   // Remote proxies only:
   iptc?: {
     title: string | null
@@ -298,6 +311,25 @@ export async function replaceAssetResource(
     `/media/assets/${encodeURIComponent(identifier)}/resource`,
     form,
     { onProgress },
+  )
+  await invalidateMedia()
+  return result.asset
+}
+
+/**
+ * Create a cropped variant of a local image and return it as an asset. Pass the
+ * *original* image's identifier (not a variant's) and the crop in the
+ * original's pixel coordinates; the server persists a new ImageVariant and
+ * returns it. The caller stores a reference to the returned variant's
+ * identifier as the image property value.
+ */
+export async function createImageVariant(
+  originalIdentifier: string,
+  crop: CropRect,
+): Promise<MediaAsset> {
+  const result = await apiFetch<{ asset: MediaAsset }>(
+    `/media/assets/${encodeURIComponent(originalIdentifier)}/variants`,
+    { method: 'POST', body: { crop } },
   )
   await invalidateMedia()
   return result.asset

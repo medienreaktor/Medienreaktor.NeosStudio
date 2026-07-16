@@ -20,7 +20,7 @@ import {
   localIdentifierFor,
   referenceList,
   type AssetReference,
-} from './assetValue'
+} from '@/api/assetValue'
 
 /**
  * A collection asset/image property (`array<Neos\Media\Domain\Model\Asset>`).

@@ -22,7 +22,7 @@ import { useAssetPicker } from '@/features/media/AssetPicker'
 import {
   imageReference,
   localIdentifierFor,
-} from '@/features/properties/editors/assetValue'
+} from '@/api/assetValue'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
 /**
