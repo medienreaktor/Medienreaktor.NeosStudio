@@ -24,6 +24,7 @@ import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { loadTranslations } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   SidebarResizeHandle,
@@ -72,7 +73,6 @@ const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
-  const [error, setError] = useState<string | null>(null)
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
   // The node shown in the inspector drawer - a document or a content node.
   // Also the node outlined in the preview and revealed in the outliner.
@@ -162,7 +162,7 @@ export function App() {
         await handleRedirectCallback()
       } catch (e) {
         callbackFailed = true
-        setError(e instanceof Error ? e.message : String(e))
+        toast.error(e, { title: 'Login failed' })
       }
       if (getTokens()) {
         sessionStorage.removeItem(AUTO_LOGIN_KEY)
@@ -240,7 +240,6 @@ export function App() {
         <div className="rounded-lg border bg-neutral-900 px-12 py-10 text-center">
           <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
           <p className="mb-6 text-neutral-400">Editing environment for Neos</p>
-          {error && <p className="mb-4 text-red-500">{error}</p>}
           <Button onClick={() => beginLogin()}>Connect to the API</Button>
         </div>
       </div>
@@ -471,10 +470,6 @@ export function App() {
                     )}
                   </div>
                 </header>
-
-                {error && (
-                  <div className="px-4 py-2.5 text-red-500">{error}</div>
-                )}
 
                 {/* The main area and the optional right-hand sidebar. The Visual
                   Editor (preview) and Media Library live here as panels; the

@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -53,21 +54,19 @@ export function SyncWorkspaceButton({
       void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
       workspaceContentChanged()
       setConflictDialogOpen(false)
+      toast.success('Workspace synchronized.')
     },
     onError: (error) => {
+      // Conflicts aren't a failure — they route to the force-discard dialog.
       if (isRebaseConflict(error)) setConflictDialogOpen(true)
+      else toast.error(error, { title: 'Synchronizing failed' })
     },
   })
 
   if (changesResponse?.status !== 'OUTDATED') return null
 
-  const showError = rebase.isError && !isRebaseConflict(rebase.error)
-
   return (
     <>
-      {showError && (
-        <span className="text-sm text-red-500">Synchronizing failed</span>
-      )}
       <Button
         variant="secondary"
         disabled={rebase.isPending}

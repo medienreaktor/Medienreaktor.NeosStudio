@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
 import { nodeLabel } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
+import { toast } from '@/components/ui/toast'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -72,11 +73,8 @@ export function InspectorPanel({
     () => (schema ? buildInspectorSchema(schema) : null),
     [schema],
   )
-  const [saveError, setSaveError] = useState<string | null>(null)
-
   const save = (propertyName: string, value: unknown) => {
     if (!node) return
-    setSaveError(null)
     // Two "properties" are not real properties and route to their own
     // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
     // tree/preview hide actions), and the node type is changed with
@@ -91,9 +89,7 @@ export function InspectorPanel({
           : persistPropertyChange(node.address, propertyName, value)
     persist
       .then(() => onNodeEdited?.(node.address))
-      .catch((e: unknown) =>
-        setSaveError(e instanceof Error ? e.message : String(e)),
-      )
+      .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))
   }
 
   if (!node) {
@@ -113,9 +109,6 @@ export function InspectorPanel({
         </h2>
       </div>
       <div className="">
-        {saveError && (
-          <p className="text-xs text-red-500">Saving failed: {saveError}</p>
-        )}
         {tabs && (
           <>
             {tabs.length === 0 ? (

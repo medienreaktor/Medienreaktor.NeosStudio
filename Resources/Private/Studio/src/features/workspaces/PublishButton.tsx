@@ -10,6 +10,7 @@ import {
 import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -71,7 +72,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
         await publishWorkspace(workspaceName, op.filter)
       else await discardWorkspace(workspaceName, op.filter)
     },
-    onSuccess: () => {
+    onSuccess: (_data, op) => {
       // Covers the changes query (this bubble, tree badges) and the workspace
       // list's hasPublishableChanges flag.
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
@@ -81,6 +82,15 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
       // re-read (per-item caches in the trees never expire on their own).
       void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
       workspaceContentChanged()
+      toast.success(
+        op.kind === 'discard' ? 'Changes discarded.' : 'Changes published.',
+      )
+    },
+    onError: (error, op) => {
+      toast.error(error, {
+        title:
+          op.kind === 'discard' ? 'Discarding failed' : 'Publishing failed',
+      })
     },
   })
 
@@ -97,13 +107,6 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
 
   return (
     <div className="flex items-center gap-3">
-      {operation.isError && (
-        <span className="text-sm text-red-500">
-          {operation.variables?.kind === 'discard'
-            ? 'Discarding failed'
-            : 'Publishing failed'}
-        </span>
-      )}
       {/* gap-px splits the segments with a hairline of header background */}
       <div className="relative flex gap-px">
         <Button

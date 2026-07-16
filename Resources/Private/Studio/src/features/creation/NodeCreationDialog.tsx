@@ -4,6 +4,7 @@ import {
   type NodeTypeMap,
   useNodeTypeSchema,
 } from '@/api/nodeTypes'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -58,7 +59,6 @@ export function CreateNodeFlow({
     request.nodeTypeName,
   )
   const [creating, setCreating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   // An asset/image element hands off to the Media Library, which takes over the
   // main area. This dialog is a modal overlaying everything (portalled to
   // <body>), so it must step aside for the pick or it covers the picker. It
@@ -110,7 +110,6 @@ export function CreateNodeFlow({
 
   const submit = async (submittedValues: Record<string, unknown>) => {
     setCreating(true)
-    setError(null)
     const properties = schema?.configuration.properties ?? {}
     const initialPropertyValues: Record<string, unknown> = {}
     for (const [name, value] of Object.entries(submittedValues)) {
@@ -125,7 +124,7 @@ export function CreateNodeFlow({
       // With a dialog open the user can retry or cancel; without one the
       // flow is invisible - surface the failure through onCancel.
       if (elements !== null && elements.length > 0) {
-        setError(message)
+        toast.error(message, { title: 'Creating failed' })
         setCreating(false)
       } else {
         onCancel(message)
@@ -204,10 +203,6 @@ export function CreateNodeFlow({
             />
           ))}
         </form>
-
-        {error && (
-          <p className="text-sm text-red-500">Creating failed: {error}</p>
-        )}
 
         <DialogFooter>
           <Button

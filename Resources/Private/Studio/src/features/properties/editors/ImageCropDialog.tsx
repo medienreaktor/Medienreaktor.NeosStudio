@@ -8,6 +8,7 @@ import 'react-image-crop/dist/ReactCrop.css'
 import { Loader2Icon } from 'lucide-react'
 
 import { createImageVariant, type CropRect, type MediaAsset } from '@/api/media'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -81,7 +82,6 @@ export function ImageCropDialog({
   const [selected, setSelected] = useState<string>(FREE)
   const [crop, setCrop] = useState<PercentCrop | undefined>()
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const width = original?.width ?? null
   const height = original?.height ?? null
@@ -162,7 +162,6 @@ export function ImageCropDialog({
           ? centeredAspectCrop(aspect, width!, height!)
           : { unit: '%', x: 5, y: 5, width: 90, height: 90 }),
     )
-    setError(null)
     // Re-run when a different image is loaded into the dialog.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, original?.identifier, dimsKnown])
@@ -184,18 +183,19 @@ export function ImageCropDialog({
       height: Math.round((crop.height / 100) * height!),
     }
     if (pixels.width <= 0 || pixels.height <= 0) {
-      setError('Draw a crop area first.')
+      toast.info('Draw a crop area first.')
       return
     }
     setBusy(true)
-    setError(null)
     try {
       const originalId = original.localAssetIdentifier ?? original.identifier
       const variant = await createImageVariant(originalId, pixels)
       onApply(variant)
       onOpenChange(false)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Cropping failed.')
+      toast.error(e instanceof Error ? e : 'Cropping failed.', {
+        title: 'Cropping failed',
+      })
     } finally {
       setBusy(false)
     }
@@ -260,8 +260,6 @@ export function ImageCropDialog({
             </ReactCrop>
           )}
         </div>
-
-        {error && <p className="text-sm text-red-500">{error}</p>}
 
         <DialogFooter>
           <Button

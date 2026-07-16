@@ -6,6 +6,7 @@ import {
 import { queryKeys } from '@/api/keys'
 import { fetchAllowedChildNodeTypes, type NodeDto } from '@/api/nodes'
 import { queryClient } from '@/app/queryClient'
+import { toast } from '@/components/ui/toast'
 import {
   type MoveByAddress,
   moveNodesByAddress,
@@ -26,12 +27,10 @@ import {
 export function buildTreeDnd<T>({
   getNode,
   onMoved,
-  onError,
 }: {
   getNode: (data: T) => NodeDto | null
   /** Addresses whose child lists changed (old + new parents) - refresh them. */
   onMoved: (affectedAddresses: string[]) => void
-  onError: (message: string | null) => void
 }) {
   const nodeOf = (item: ItemInstance<T>): NodeDto | null =>
     getNode(item.getItemData())
@@ -152,11 +151,10 @@ export function buildTreeDnd<T>({
         if (moves.length === 0) return
 
         try {
-          onError(null)
           await moveNodesByAddress(moves)
           onMoved([...affected])
         } catch (e) {
-          onError(String(e))
+          toast.error(e, { title: 'Moving failed' })
         }
       },
     },

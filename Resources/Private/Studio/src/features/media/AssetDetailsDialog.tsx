@@ -14,6 +14,7 @@ import {
   type MediaAsset,
   type MediaTag,
 } from '@/api/media'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -158,7 +159,6 @@ function MetadataForm({
   const [caption, setCaption] = useState(asset.caption ?? '')
   const [copyright, setCopyright] = useState(asset.copyrightNotice ?? '')
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
 
   const dirty =
     title !== (asset.title ?? '') ||
@@ -167,10 +167,11 @@ function MetadataForm({
 
   async function save() {
     setSaving(true)
-    setSaved(false)
     try {
       await updateAsset(localId, { title, caption, copyrightNotice: copyright })
-      setSaved(true)
+      toast.success('Metadata saved.')
+    } catch (e) {
+      toast.error(e, { title: 'Saving the metadata failed' })
     } finally {
       setSaving(false)
     }
@@ -200,7 +201,7 @@ function MetadataForm({
         />
       </Field>
       <Button size="sm" onClick={save} disabled={!dirty || saving}>
-        {saving ? 'Saving…' : saved && !dirty ? 'Saved' : 'Save metadata'}
+        {saving ? 'Saving…' : 'Save metadata'}
       </Button>
     </div>
   )
@@ -225,7 +226,11 @@ function TagAssignment({
           <Chip
             key={tag.identifier}
             label={tag.label}
-            onRemove={() => void setAssetTag(localId, tag.identifier, false)}
+            onRemove={() =>
+              void setAssetTag(localId, tag.identifier, false).catch((e) =>
+                toast.error(e, { title: 'Removing the tag failed' }),
+              )
+            }
           />
         ))}
         {assigned.length === 0 && (
@@ -239,7 +244,11 @@ function TagAssignment({
             value: t.identifier,
             label: t.label,
           }))}
-          onAdd={(id) => void setAssetTag(localId, id, true)}
+          onAdd={(id) =>
+            void setAssetTag(localId, id, true).catch((e) =>
+              toast.error(e, { title: 'Adding the tag failed' }),
+            )
+          }
         />
       )}
     </Field>
@@ -267,7 +276,13 @@ function CollectionAssignment({
             key={collection.identifier}
             label={collection.title}
             onRemove={() =>
-              void setAssetCollection(localId, collection.identifier, false)
+              void setAssetCollection(
+                localId,
+                collection.identifier,
+                false,
+              ).catch((e) =>
+                toast.error(e, { title: 'Removing from collection failed' }),
+              )
             }
           />
         ))}
@@ -282,7 +297,11 @@ function CollectionAssignment({
             value: c.identifier,
             label: c.title,
           }))}
-          onAdd={(id) => void setAssetCollection(localId, id, true)}
+          onAdd={(id) =>
+            void setAssetCollection(localId, id, true).catch((e) =>
+              toast.error(e, { title: 'Adding to collection failed' }),
+            )
+          }
         />
       )}
     </Field>
@@ -300,6 +319,9 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
         setBusy(true)
         try {
           await importProxyAsset(asset.assetSource, asset.identifier)
+          toast.success('Asset imported to Neos.')
+        } catch (e) {
+          toast.error(e, { title: 'Importing the asset failed' })
         } finally {
           setBusy(false)
         }

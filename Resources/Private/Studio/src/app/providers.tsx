@@ -2,6 +2,7 @@ import type { PropsWithChildren } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { queryClient } from './queryClient'
+import { Toaster } from '@/components/ui/toast'
 
 /**
  * All app-wide providers in one place; future ones (router, theme, …) nest
@@ -12,6 +13,7 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      <Toaster />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

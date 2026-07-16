@@ -3,6 +3,7 @@ import { ExternalLink, Eye, Pencil, RotateCw } from 'lucide-react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import type { NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { config } from '@/config'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
@@ -19,10 +20,7 @@ import {
 } from '@/features/editing/NodeContextMenu'
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import { useAssetPicker } from '@/features/media/AssetPicker'
-import {
-  imageReference,
-  localIdentifierFor,
-} from '@/api/assetValue'
+import { imageReference, localIdentifierFor } from '@/api/assetValue'
 import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
 
 /**
@@ -140,7 +138,6 @@ export function PreviewPane({
   // after edits in the same document); it feeds into a layer's load key.
   const [reloadCount, setReloadCount] = useState(0)
   const [guestReady, setGuestReady] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
   // A drop from the creation panel landed in the preview - the creation flow
   // (optional creation dialog + command) runs for this insertion point.
   const [pendingCreation, setPendingCreation] =
@@ -254,18 +251,12 @@ export function PreviewPane({
           break
         case 'neos-studio/property-changed': {
           const address = addressFromContextPath(message.contextPath)
-          setSaveError(null)
           persistPropertyChange(address, message.property, message.value)
             .then(() => onNodeEditedRef.current?.(address))
-            .catch((e: unknown) =>
-              setSaveError(
-                `Saving failed: ${e instanceof Error ? e.message : String(e)}`,
-              ),
-            )
+            .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))
           break
         }
         case 'neos-studio/create-node-request':
-          setSaveError(null)
           setPendingCreation({
             nodeTypeName: message.nodeTypeName,
             parentContextPath: message.parentContextPath,
@@ -310,7 +301,6 @@ export function PreviewPane({
             break
           }
           const property = message.property
-          setSaveError(null)
           // Hand off to the Media Library picker; on pick, resolve the chosen
           // asset to a local identifier, set the image property, and reload the
           // preview so the new image renders.
@@ -330,16 +320,13 @@ export function PreviewPane({
                   onSelectNodeRef.current(address)
                 })
                 .catch((e: unknown) =>
-                  setSaveError(
-                    `Setting image failed: ${e instanceof Error ? e.message : String(e)}`,
-                  ),
+                  toast.error(e, { title: 'Setting image failed' }),
                 )
             },
           })
           break
         }
         case 'neos-studio/move-node-request': {
-          setSaveError(null)
           try {
             const targetAddress = addressFromContextPath(
               message.parentContextPath,
@@ -359,11 +346,7 @@ export function PreviewPane({
                     : [targetAddress]
                 onNodeEditedRef.current?.(parents)
               })
-              .catch((e: unknown) =>
-                setSaveError(
-                  `Moving failed: ${e instanceof Error ? e.message : String(e)}`,
-                ),
-              )
+              .catch((e: unknown) => toast.error(e, { title: 'Moving failed' }))
           } catch {
             /* malformed contextpath - ignore the drop */
           }
@@ -423,11 +406,6 @@ export function PreviewPane({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {saveError && (
-        <div className="overflow-hidden text-ellipsis whitespace-nowrap border-b px-4 py-1 text-xs text-red-500">
-          {saveError}
-        </div>
-      )}
       <div className="relative min-h-0 w-full flex-1">
         {layers.map((layer) => (
           <iframe
@@ -453,7 +431,6 @@ export function PreviewPane({
         entityLabel="element"
         onClose={() => setElementMenu(null)}
         onDone={(action, target) => {
-          setSaveError(null)
           // Every action renders only after a reload. Hide/unhide keep the
           // node inspected (with a fresh snapshot); a delete moves the
           // inspection to the enclosing collection - the deleted node has no
@@ -470,7 +447,6 @@ export function PreviewPane({
             onSelectNodeRef.current(target.address)
           }
         }}
-        onError={setSaveError}
       />
       {pendingCreation && (
         <CreateNodeFlow
@@ -490,7 +466,7 @@ export function PreviewPane({
           }}
           onCancel={(error) => {
             setPendingCreation(null)
-            if (error) setSaveError(`Creating failed: ${error}`)
+            if (error) toast.error(error, { title: 'Creating failed' })
           }}
         />
       )}

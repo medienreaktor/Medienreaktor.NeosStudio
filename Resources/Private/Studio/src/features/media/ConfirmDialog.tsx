@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -38,16 +39,14 @@ export function ConfirmDialog({
   onConfirm,
 }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function confirm() {
     setBusy(true)
-    setError(null)
     try {
       await onConfirm()
       onOpenChange(false)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'The action failed.')
+      toast.error(e instanceof Error ? e : 'The action failed.')
     } finally {
       setBusy(false)
     }
@@ -57,10 +56,7 @@ export function ConfirmDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!busy) {
-          setError(null)
-          onOpenChange(next)
-        }
+        if (!busy) onOpenChange(next)
       }}
     >
       <DialogContent>
@@ -68,7 +64,6 @@ export function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {error && <p className="text-sm text-red-500">{error}</p>}
         <DialogFooter>
           <Button
             variant="secondary"

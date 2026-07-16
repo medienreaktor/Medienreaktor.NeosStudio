@@ -10,6 +10,7 @@ import {
   type NodeDto,
   nodeLabel,
 } from '@/api/nodes'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -103,7 +104,6 @@ export function CreateVariantDialog({
 }) {
   const [phase, setPhase] = useState<Phase>('analyzing')
   const [missingAncestors, setMissingAncestors] = useState<NodeDto[]>([])
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -132,7 +132,7 @@ export function CreateVariantDialog({
         }
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : String(e))
+          toast.error(e, { title: 'Checking parent documents failed' })
           setPhase('ready')
         }
       }
@@ -144,7 +144,6 @@ export function CreateVariantDialog({
 
   const create = async (copyContent: boolean) => {
     setPhase('creating')
-    setError(null)
     try {
       const commands: Command[] = []
       for (const doc of [...missingAncestors, document]) {
@@ -159,9 +158,10 @@ export function CreateVariantDialog({
         }
       }
       await executeCommands(commands)
+      toast.success('Document variant created.')
       onCreated(targetPoint)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      toast.error(e, { title: 'Creating the variant failed' })
       setPhase('ready')
     }
   }
@@ -185,8 +185,6 @@ export function CreateVariantDialog({
               ` ${missingAncestors.length} missing parent document${missingAncestors.length === 1 ? '' : 's'} will be created as well.`}
           </DialogDescription>
         </DialogHeader>
-
-        {error && <p className="text-sm text-red-500">{error}</p>}
 
         <DialogFooter>
           <Button

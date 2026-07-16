@@ -6,6 +6,7 @@ import {
   type ItemInstance,
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
+import { toast } from '@/components/ui/toast'
 import {
   CONTENT_NODE_TYPES,
   fetchChildren,
@@ -106,8 +107,6 @@ function OutlinerTree({
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
   onMoved?: (affectedAddresses: string[]) => void
 }) {
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
@@ -115,7 +114,6 @@ function OutlinerTree({
   const dnd = buildTreeDnd<TreeItemData>({
     getNode: (data) => (data === ROOT_ID || data === null ? null : data),
     onMoved: (addresses) => onMoved?.(addresses),
-    onError: setActionError,
   })
 
   const tree = useTree<TreeItemData>({
@@ -143,7 +141,10 @@ function OutlinerTree({
         try {
           return await fetchNode(itemId, CONTENT_NODE_TYPES)
         } catch (e) {
-          setLoadError(String(e))
+          toast.error(e, {
+            title: 'Loading the outline failed',
+            id: 'outliner-load',
+          })
           throw e
         }
       },
@@ -165,7 +166,10 @@ function OutlinerTree({
               },
             ]
           } catch (e) {
-            setLoadError(String(e))
+            toast.error(e, {
+              title: 'Loading the outline failed',
+              id: 'outliner-load',
+            })
             return []
           }
         }
@@ -176,7 +180,10 @@ function OutlinerTree({
             data: node as TreeItemData,
           }))
         } catch (e) {
-          setLoadError(String(e))
+          toast.error(e, {
+            title: 'Loading the outline failed',
+            id: 'outliner-load',
+          })
           return []
         }
       },
@@ -222,8 +229,6 @@ function OutlinerTree({
 
   return (
     <>
-      {loadError && <div className="text-xs text-red-500">{loadError}</div>}
-      {actionError && <div className="text-xs text-red-500">{actionError}</div>}
       <TreeList
         tree={tree}
         label="Content outliner"
@@ -239,11 +244,7 @@ function OutlinerTree({
         target={menuTarget}
         entityLabel="element"
         onClose={() => setMenuTarget(null)}
-        onDone={(action, target) => {
-          setActionError(null)
-          onNodeAction?.(action, target)
-        }}
-        onError={setActionError}
+        onDone={(action, target) => onNodeAction?.(action, target)}
       />
     </>
   )

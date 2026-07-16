@@ -6,6 +6,7 @@ import {
   type ItemInstance,
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
+import { toast } from '@/components/ui/toast'
 import {
   DOCUMENT_NODE_TYPE,
   fetchChildren,
@@ -63,8 +64,6 @@ export function DocumentTree({
   /** A drag-and-drop move succeeded; addresses whose children changed. */
   onMoved?: (affectedAddresses: string[]) => void
 }) {
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
@@ -72,7 +71,6 @@ export function DocumentTree({
   const dnd = buildTreeDnd<TreeItemData>({
     getNode: (data) => (data === ROOT_ID || data === null ? null : data),
     onMoved: (addresses) => onMoved?.(addresses),
-    onError: setActionError,
   })
 
   const tree = useTree<TreeItemData>({
@@ -99,7 +97,7 @@ export function DocumentTree({
         try {
           return await fetchNode(itemId, DOCUMENT_NODE_TYPE)
         } catch (e) {
-          setLoadError(String(e))
+          toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
           throw e
         }
       },
@@ -119,7 +117,7 @@ export function DocumentTree({
             data: node as TreeItemData,
           }))
         } catch (e) {
-          setLoadError(String(e))
+          toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
           return []
         }
       },
@@ -163,12 +161,6 @@ export function DocumentTree({
 
   return (
     <>
-      {loadError && (
-        <div className="px-2 text-xs text-red-500">{loadError}</div>
-      )}
-      {actionError && (
-        <div className="px-2 text-xs text-red-500">{actionError}</div>
-      )}
       <TreeList
         tree={tree}
         label="Document tree"
@@ -184,11 +176,7 @@ export function DocumentTree({
         target={menuTarget}
         entityLabel="document"
         onClose={() => setMenuTarget(null)}
-        onDone={(action, target) => {
-          setActionError(null)
-          onNodeAction?.(action, target)
-        }}
-        onError={setActionError}
+        onDone={(action, target) => onNodeAction?.(action, target)}
       />
     </>
   )

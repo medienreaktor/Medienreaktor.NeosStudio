@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Trash2 } from 'lucide-react'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -39,15 +40,15 @@ export type NodeMenuAction = 'hide' | 'unhide' | 'delete'
  * Shared node context menu: hide (or unhide for explicitly hidden nodes) and
  * delete behind a confirmation dialog. Runs the commands itself and reports
  * success through onDone - what to refresh and select afterwards is the
- * caller's business. Render unconditionally: the confirmation dialog must
- * survive the menu (target) being closed.
+ * caller's business. Failures are surfaced as toasts here. Render
+ * unconditionally: the confirmation dialog must survive the menu (target)
+ * being closed.
  */
 export function NodeContextMenu({
   target,
   entityLabel = 'element',
   onClose,
   onDone,
-  onError,
 }: {
   target: NodeMenuTarget | null
   /** Noun used in the delete confirmation ("element", "document"). */
@@ -56,7 +57,6 @@ export function NodeContextMenu({
   onClose: () => void
   /** A command succeeded for this target. */
   onDone: (action: NodeMenuAction, target: NodeMenuTarget) => void
-  onError: (message: string) => void
 }) {
   // A delete waiting for confirmation; the dialog is open while set.
   const [pendingDelete, setPendingDelete] = useState<NodeMenuTarget | null>(
@@ -72,20 +72,16 @@ export function NodeContextMenu({
     run(menuTarget.address)
       .then(() => onDone(action, menuTarget))
       .catch((e: unknown) =>
-        onError(
-          `${action === 'hide' ? 'Hiding' : 'Unhiding'} failed: ${e instanceof Error ? e.message : String(e)}`,
-        ),
+        toast.error(e, {
+          title: action === 'hide' ? 'Hiding failed' : 'Unhiding failed',
+        }),
       )
   }
 
   const runDelete = (deleteTarget: NodeMenuTarget) => {
     deleteNode(deleteTarget.address)
       .then(() => onDone('delete', deleteTarget))
-      .catch((e: unknown) =>
-        onError(
-          `Deleting failed: ${e instanceof Error ? e.message : String(e)}`,
-        ),
-      )
+      .catch((e: unknown) => toast.error(e, { title: 'Deleting failed' }))
   }
 
   return (

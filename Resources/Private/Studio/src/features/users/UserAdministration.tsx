@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useUsers, type User } from '@/api/users'
+import { toast } from '@/components/ui/toast'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -16,6 +17,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 export function UserAdministration() {
   const { data, isLoading, error } = useUsers()
 
+  useEffect(() => {
+    if (error) toast.error(error, { title: 'Could not load users' })
+  }, [error])
+
   return (
     <div className="p-6">
       <header className="mb-4">
@@ -24,8 +29,8 @@ export function UserAdministration() {
       </header>
 
       {error && (
-        <p className="text-sm text-red-500">
-          Could not load users. {error instanceof Error ? error.message : ''}
+        <p className="text-sm text-neutral-400">
+          Users are currently unavailable.
         </p>
       )}
 

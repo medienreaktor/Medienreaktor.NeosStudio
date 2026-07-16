@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { UploadCloudIcon, XIcon } from 'lucide-react'
 
 import { uploadAsset } from '@/api/media'
+import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -58,13 +59,14 @@ export function MediaUploader({
               ),
             ),
           )
-          .catch(() =>
+          .catch((e: unknown) => {
             setItems((current) =>
               current.map((item) =>
                 item.id === id ? { ...item, status: 'error' } : item,
               ),
-            ),
-          )
+            )
+            toast.error(e, { title: `Uploading "${file.name}" failed` })
+          })
       }
     },
     [collection, tag],

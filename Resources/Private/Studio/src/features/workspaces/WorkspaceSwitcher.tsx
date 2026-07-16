@@ -4,6 +4,7 @@ import { changeBaseWorkspace, type Workspace } from '@/api/workspaces'
 import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
+import { toast } from '@/components/ui/toast'
 import {
   Select,
   SelectContent,
@@ -40,6 +41,18 @@ export function WorkspaceSwitcher({
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
       void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
       workspaceContentChanged()
+      toast.success('Workspace switched.')
+    },
+    onError: (error) => {
+      // The CR refuses the rebase while the personal workspace still has
+      // publishable changes — guide the user to clear them first.
+      const notEmpty =
+        error instanceof ApiError &&
+        (error.body as { error?: string } | null)?.error ===
+          'workspace_not_empty'
+      toast.error(notEmpty ? 'Publish or discard your changes first.' : error, {
+        title: 'Switching the workspace failed',
+      })
     },
   })
 
@@ -47,11 +60,6 @@ export function WorkspaceSwitcher({
     workspace.classification === 'ROOT'
       ? 'Live'
       : workspace.title || workspace.name
-
-  const notEmpty =
-    switchBase.error instanceof ApiError &&
-    (switchBase.error.body as { error?: string } | null)?.error ===
-      'workspace_not_empty'
 
   return (
     <div className="flex items-center gap-3">
@@ -94,13 +102,6 @@ export function WorkspaceSwitcher({
           ))}
         </SelectContent>
       </Select>
-      {switchBase.isError && (
-        <span className="text-sm text-red-500">
-          {notEmpty
-            ? 'Publish or discard your changes first'
-            : 'Switching the workspace failed'}
-        </span>
-      )}
     </div>
   )
 }
