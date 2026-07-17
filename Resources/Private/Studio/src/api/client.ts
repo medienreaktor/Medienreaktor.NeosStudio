@@ -12,6 +12,15 @@ export class ApiError extends Error {
 }
 
 /**
+ * A 404 from a node endpoint means the node no longer exists - routine after a
+ * node is deleted and the workspace published/synchronized, so callers (the
+ * trees, the outliner) treat it as "gone" rather than a loading error.
+ */
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404
+}
+
+/**
  * Typed request for query/mutation hooks: resolves with the parsed body on
  * 2xx and throws ApiError otherwise, so TanStack Query sees proper error
  * states (and the retry logic can distinguish 4xx from 5xx).

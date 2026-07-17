@@ -15,6 +15,7 @@ import {
   nodeLabel,
   type NodeDto,
 } from '@/api/nodes'
+import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
 import { config } from '@/config'
@@ -97,7 +98,12 @@ export function DocumentTree({
         try {
           return await fetchNode(itemId, DOCUMENT_NODE_TYPE)
         } catch (e) {
-          toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
+          // A deleted node (gone after a publish/sync) is expected, not a
+          // loading failure - stay quiet; the parent's children list refresh
+          // drops the row.
+          if (!isNotFound(e)) {
+            toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
+          }
           throw e
         }
       },
@@ -117,7 +123,11 @@ export function DocumentTree({
             data: node as TreeItemData,
           }))
         } catch (e) {
-          toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
+          // The node was deleted out from under us (e.g. published) - no
+          // children to show, and no error worth reporting.
+          if (!isNotFound(e)) {
+            toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
+          }
           return []
         }
       },

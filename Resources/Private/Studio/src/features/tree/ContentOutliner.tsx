@@ -15,6 +15,7 @@ import {
   nodeLabel,
   type NodeDto,
 } from '@/api/nodes'
+import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
 import {
@@ -141,10 +142,14 @@ function OutlinerTree({
         try {
           return await fetchNode(itemId, CONTENT_NODE_TYPES)
         } catch (e) {
-          toast.error(e, {
-            title: 'Loading the outline failed',
-            id: 'outliner-load',
-          })
+          // Deleted node (gone after a publish/sync) - expected, not a failure;
+          // the parent's children refresh drops the row.
+          if (!isNotFound(e)) {
+            toast.error(e, {
+              title: 'Loading the outline failed',
+              id: 'outliner-load',
+            })
+          }
           throw e
         }
       },
@@ -180,10 +185,14 @@ function OutlinerTree({
             data: node as TreeItemData,
           }))
         } catch (e) {
-          toast.error(e, {
-            title: 'Loading the outline failed',
-            id: 'outliner-load',
-          })
+          // The document/node was deleted out from under us (e.g. published) -
+          // no children to show, and no error worth reporting.
+          if (!isNotFound(e)) {
+            toast.error(e, {
+              title: 'Loading the outline failed',
+              id: 'outliner-load',
+            })
+          }
           return []
         }
       },
