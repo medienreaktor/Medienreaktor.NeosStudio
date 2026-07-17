@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   discardWorkspace,
+  getRebaseConflicts,
   publishWorkspace,
+  rebaseWorkspace,
   useWorkspaceChanges,
+  type RebaseConflicts,
   type Workspace,
   type WorkspaceOperationFilter,
 } from '@/api/workspaces'
@@ -12,6 +15,7 @@ import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
+import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import {
   Dialog,
   DialogContent,
@@ -50,9 +54,16 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   const canPublish = workspace.permissions.publish
   // Same query the trees' dirty markers use, so button and badges agree.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
-  const { site, selectedDocument, workspaceContentChanged } = useStudio()
+  const { site, selectedDocument, workspaceContentChanged, navigateToNode } =
+    useStudio()
   // A discard waiting for confirmation; the dialog is open while set.
   const [pendingDiscard, setPendingDiscard] = useState<Operation | null>(null)
+  // A publish that hit a conflict, plus the operation that triggered it (so the
+  // resolution can retry it). The conflict dialog is open while set.
+  const [pendingConflict, setPendingConflict] = useState<{
+    conflicts: RebaseConflicts
+    op: Operation
+  } | null>(null)
 
   const allChanges = changesResponse?.changes ?? []
   // A workspace spans every site the account edited; scope everything (the
@@ -105,10 +116,62 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
       )
     },
     onError: (error, op) => {
+      // A publish that collides with the base is not a plain failure - route it
+      // to the resolution dialog. Everything else is a toast.
+      const conflicts = getRebaseConflicts(error)
+      if (conflicts && op.kind === 'publish') {
+        setPendingConflict({ conflicts, op })
+        return
+      }
       toast.error(error, {
         title:
           op.kind === 'discard' ? 'Discarding failed' : 'Publishing failed',
       })
+    },
+  })
+
+  const invalidateWorkspace = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    workspaceContentChanged()
+  }
+
+  // Resolves a publish conflict: "force" drops the conflicting changes (a
+  // forced rebase) and retries the original publish; "discardAll" throws the
+  // scope's changes away. Another conflict on retry re-opens the dialog.
+  const resolve = useMutation({
+    mutationFn: async (action: 'force' | 'discardAll'): Promise<void> => {
+      if (action === 'discardAll') {
+        await discardWorkspace(workspaceName, pendingConflict?.op.filter)
+        return
+      }
+      await rebaseWorkspace(workspaceName, 'force')
+      // Retry the publish now that the conflicting changes are gone. If nothing
+      // is left to publish (they were all conflicting), that is success, not an
+      // error - only a fresh conflict is worth re-surfacing.
+      try {
+        await publishWorkspace(workspaceName, pendingConflict?.op.filter)
+      } catch (error) {
+        if (getRebaseConflicts(error)) throw error
+      }
+    },
+    onSuccess: (_data, action) => {
+      invalidateWorkspace()
+      setPendingConflict(null)
+      toast.success(
+        action === 'discardAll'
+          ? 'Changes discarded.'
+          : 'Conflicting changes discarded; the rest was published.',
+      )
+    },
+    onError: (error) => {
+      const conflicts = getRebaseConflicts(error)
+      if (conflicts && pendingConflict) {
+        setPendingConflict({ conflicts, op: pendingConflict.op })
+        return
+      }
+      setPendingConflict(null)
+      toast.error(error, { title: 'Resolving conflicts failed' })
     },
   })
 
@@ -241,6 +304,22 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConflictResolutionDialog
+        open={pendingConflict !== null}
+        conflicts={pendingConflict?.conflicts.conflicts ?? []}
+        partial={
+          pendingConflict?.conflicts.code === 'partial_publish_conflicts'
+        }
+        busy={resolve.isPending}
+        onCancel={() => setPendingConflict(null)}
+        onForce={() => resolve.mutate('force')}
+        onDiscardAll={() => resolve.mutate('discardAll')}
+        onNavigate={(address) => {
+          setPendingConflict(null)
+          navigateToNode(address)
+        }}
+      />
     </div>
   )
 }

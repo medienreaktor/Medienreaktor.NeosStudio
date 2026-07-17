@@ -1,37 +1,26 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { rebaseWorkspace, useWorkspaceChanges } from '@/api/workspaces'
-import { ApiError } from '@/api/client'
+import {
+  discardWorkspace,
+  getRebaseConflicts,
+  rebaseWorkspace,
+  useWorkspaceChanges,
+  type RebaseConflicts,
+} from '@/api/workspaces'
 import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-
-function isRebaseConflict(error: unknown): boolean {
-  return (
-    error instanceof ApiError &&
-    typeof error.body === 'object' &&
-    error.body !== null &&
-    (error.body as { error?: string }).error === 'rebase_conflicts'
-  )
-}
+import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 
 /**
  * Topbar button that appears when the workspace is OUTDATED - someone
  * published to the base workspace since the last rebase - and synchronizes
  * it (a workspace rebase: incoming changes flow in underneath the own
  * pending ones). When own changes conflict with the incoming ones the rebase
- * fails and a dialog offers to force it, which discards the conflicting own
- * changes.
+ * fails and the conflict dialog offers to force it (dropping the conflicting
+ * changes) or discard the workspace entirely.
  */
 export function SyncWorkspaceButton({
   workspaceName,
@@ -41,29 +30,49 @@ export function SyncWorkspaceButton({
   // Same query the publish button uses; its status field tells us whether
   // the base workspace has moved on.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
-  const { workspaceContentChanged } = useStudio()
-  const [conflictDialogOpen, setConflictDialogOpen] = useState(false)
+  const { workspaceContentChanged, navigateToNode } = useStudio()
+  const [conflicts, setConflicts] = useState<RebaseConflicts | null>(null)
+
+  const invalidateWorkspace = () => {
+    // The rebase/discard rewrote the workspace's content stream: the status
+    // flag, every cached node read and all loaded tree items are stale now.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    workspaceContentChanged()
+  }
 
   const rebase = useMutation({
     mutationFn: (strategy?: 'force') =>
       rebaseWorkspace(workspaceName, strategy),
     onSuccess: () => {
-      // The rebase rewrote the workspace's content stream: the status flag,
-      // every cached node read and all loaded tree items are stale now.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-      workspaceContentChanged()
-      setConflictDialogOpen(false)
+      invalidateWorkspace()
+      setConflicts(null)
       toast.success('Workspace synchronized.')
     },
     onError: (error) => {
-      // Conflicts aren't a failure — they route to the force-discard dialog.
-      if (isRebaseConflict(error)) setConflictDialogOpen(true)
+      // Conflicts aren't a failure - they route to the resolution dialog.
+      const conflict = getRebaseConflicts(error)
+      if (conflict) setConflicts(conflict)
       else toast.error(error, { title: 'Synchronizing failed' })
     },
   })
 
+  const discardAll = useMutation({
+    mutationFn: () => discardWorkspace(workspaceName),
+    onSuccess: () => {
+      invalidateWorkspace()
+      setConflicts(null)
+      toast.success('Changes discarded.')
+    },
+    onError: (error) => {
+      setConflicts(null)
+      toast.error(error, { title: 'Discarding failed' })
+    },
+  })
+
   if (changesResponse?.status !== 'OUTDATED') return null
+
+  const busy = rebase.isPending || discardAll.isPending
 
   return (
     <>
@@ -80,33 +89,19 @@ export function SyncWorkspaceButton({
         Synchronize
       </Button>
 
-      <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Conflicting changes</DialogTitle>
-            <DialogDescription>
-              Some of your pending changes conflict with changes that were
-              published to the base workspace. To synchronize anyway, your
-              conflicting changes have to be discarded. This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="secondary"
-              onClick={() => setConflictDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={rebase.isPending}
-              onClick={() => rebase.mutate('force')}
-            >
-              Discard conflicting changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConflictResolutionDialog
+        open={conflicts !== null}
+        conflicts={conflicts?.conflicts ?? []}
+        partial={conflicts?.code === 'partial_publish_conflicts'}
+        busy={busy}
+        onCancel={() => setConflicts(null)}
+        onForce={() => rebase.mutate('force')}
+        onDiscardAll={() => discardAll.mutate()}
+        onNavigate={(address) => {
+          setConflicts(null)
+          navigateToNode(address)
+        }}
+      />
     </>
   )
 }

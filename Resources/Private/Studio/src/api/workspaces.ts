@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { apiFetch, ApiError } from './client'
 import { queryKeys } from './keys'
 
 export interface Workspace {
@@ -110,6 +110,48 @@ export function changeBaseWorkspace(
     `/workspaces/${encodeURIComponent(workspaceName)}/base-workspace`,
     { method: 'POST', body: { baseWorkspace } },
   )
+}
+
+/** One conflicting change surfaced by a failed rebase/publish (see the API's
+ * 409 response). Labels/address are best-effort and may be null. */
+export interface RebaseConflict {
+  nodeAggregateId: string | null
+  nodeLabel: string | null
+  documentAggregateId: string | null
+  documentLabel: string | null
+  /** Encoded node address of the affected document, for navigation. */
+  documentAddress: string | null
+  siteAggregateId: string | null
+  typeOfChange: 'created' | 'changed' | 'moved' | 'deleted' | null
+  reason: 'node_has_been_deleted' | null
+  /** Raw exception message from the content repository, as a fallback. */
+  message: string
+}
+
+export interface RebaseConflicts {
+  /**
+   * 'rebase_conflicts' - own changes collide with the base; forcing drops them.
+   * 'partial_publish_conflicts' - the scoped selection can't be reordered out
+   * of the rest; forcing does not help, a different scope / full publish does.
+   */
+  code: 'rebase_conflicts' | 'partial_publish_conflicts'
+  conflicts: RebaseConflict[]
+}
+
+/**
+ * Extract the structured conflicts from a 409 ApiError, or null if the error is
+ * not a workspace conflict (so callers can fall back to a generic error toast).
+ */
+export function getRebaseConflicts(error: unknown): RebaseConflicts | null {
+  if (!(error instanceof ApiError) || error.status !== 409) return null
+  const body = error.body
+  if (typeof body !== 'object' || body === null) return null
+  const code = (body as { error?: string }).error
+  if (code !== 'rebase_conflicts' && code !== 'partial_publish_conflicts') {
+    return null
+  }
+  const conflicts = (body as { conflicts?: RebaseConflict[] }).conflicts ?? []
+  return { code, conflicts }
 }
 
 export function useWorkspaceChanges(workspaceName: string | null) {
