@@ -6,6 +6,11 @@ import { queryKeys } from './keys'
 export interface Site {
   name: string
   nodeName: string
+  /**
+   * The site node's aggregate id - used to scope workspace publish/discard to
+   * this site. null if the site node does not exist in the current subgraph.
+   */
+  aggregateId: string | null
   /** null if the site node does not exist in the current subgraph */
   nodeAddress: string | null
 }

@@ -30,6 +30,11 @@ export interface WorkspaceChange {
   nodeAggregateId: string
   /** Closest containing document (the node itself if it is a document). */
   documentAggregateId: string | null
+  /**
+   * Closest containing site, for scoping counts/publish to one site. null for
+   * deleted nodes (no longer resolvable in the subgraph).
+   */
+  siteAggregateId: string | null
   originDimensionSpacePoint: Record<string, string> | null
   created: boolean
   changed: boolean

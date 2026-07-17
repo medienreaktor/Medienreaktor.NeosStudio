@@ -50,11 +50,23 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   const canPublish = workspace.permissions.publish
   // Same query the trees' dirty markers use, so button and badges agree.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
-  const { selectedDocument, workspaceContentChanged } = useStudio()
+  const { site, selectedDocument, workspaceContentChanged } = useStudio()
   // A discard waiting for confirmation; the dialog is open while set.
   const [pendingDiscard, setPendingDiscard] = useState<Operation | null>(null)
 
-  const changes = changesResponse?.changes ?? []
+  const allChanges = changesResponse?.changes ?? []
+  // A workspace spans every site the account edited; scope everything (the
+  // count, the badge, "all" publish/discard) to the active site so multi-site
+  // setups don't cross-publish. Fall back to the whole workspace only while
+  // the site is unknown (loading, or a site node absent from the subgraph).
+  const siteId = site?.aggregateId ?? null
+  const changes = siteId
+    ? allChanges.filter((c) => c.siteAggregateId === siteId)
+    : allChanges
+  // Omitted filter = whole workspace; present = this site only.
+  const siteFilter: WorkspaceOperationFilter | undefined = siteId
+    ? { site: siteId }
+    : undefined
   const changeCount = changes.length
   const documentId = selectedDocument?.aggregateId ?? null
   // "This page" = changes on or within the selected document.
@@ -113,7 +125,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           className={cn('rounded-r-none', segmentClasses)}
           variant={segmentVariant}
           disabled={!hasChanges || !canPublish || operation.isPending}
-          onClick={() => operation.mutate({ kind: 'publish' })}
+          onClick={() => operation.mutate({ kind: 'publish', filter: siteFilter })}
           title={
             !canPublish
               ? publishDeniedHint
@@ -159,7 +171,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
             <DropdownMenuItem
               variant="destructive"
               disabled={!hasChanges}
-              onClick={() => setPendingDiscard({ kind: 'discard' })}
+              onClick={() => setPendingDiscard({ kind: 'discard', filter: siteFilter })}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
               Discard all
@@ -203,7 +215,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
             <DialogDescription>
               {pendingDiscard?.filter?.document
                 ? `${pageChangeCount} pending ${pageChangeCount === 1 ? 'change' : 'changes'} on this page will be discarded.`
-                : `All ${changeCount} pending ${changeCount === 1 ? 'change' : 'changes'} in this workspace will be discarded.`}{' '}
+                : `All ${changeCount} pending ${changeCount === 1 ? 'change' : 'changes'} will be discarded.`}{' '}
               This cannot be undone.
             </DialogDescription>
           </DialogHeader>
