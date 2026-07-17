@@ -60,8 +60,14 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // setups don't cross-publish. Fall back to the whole workspace only while
   // the site is unknown (loading, or a site node absent from the subgraph).
   const siteId = site?.aggregateId ?? null
+  // Keep changes of the active site, plus any whose site could not be resolved
+  // (siteAggregateId === null) - never silently hide a pending change, or a
+  // deletion the backend couldn't attribute to a site would look like it never
+  // happened. Errs toward showing over hiding.
   const changes = siteId
-    ? allChanges.filter((c) => c.siteAggregateId === siteId)
+    ? allChanges.filter(
+        (c) => c.siteAggregateId === siteId || c.siteAggregateId === null,
+      )
     : allChanges
   // Omitted filter = whole workspace; present = this site only.
   const siteFilter: WorkspaceOperationFilter | undefined = siteId
