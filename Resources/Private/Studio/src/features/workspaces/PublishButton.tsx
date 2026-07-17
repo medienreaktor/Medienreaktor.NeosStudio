@@ -1,21 +1,17 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import {
-  discardWorkspace,
-  getRebaseConflicts,
-  publishWorkspace,
-  rebaseWorkspace,
   useWorkspaceChanges,
-  type RebaseConflicts,
   type Workspace,
   type WorkspaceOperationFilter,
 } from '@/api/workspaces'
-import { queryKeys } from '@/api/keys'
-import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
-import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
+import { ReviewChangesDialog } from './ReviewChangesDialog'
+import {
+  useWorkspacePublishing,
+  type WorkspaceOperation,
+} from './useWorkspacePublishing'
 import {
   Dialog,
   DialogContent,
@@ -33,37 +29,30 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-interface Operation {
-  kind: 'publish' | 'discard'
-  /** Scope; omitted = the whole workspace. */
-  filter?: WorkspaceOperationFilter
-}
-
 /**
  * Topbar split button for the active workspace: primary action publishes all
  * pending changes to the base workspace, the attached dropdown scopes to the
- * selected document ("this page") and offers discarding (behind a
- * confirmation - discards are irreversible). Orange with a change-count
- * bubble while there is something to publish, muted and disabled otherwise.
- * Without publish permission on the base workspace (a non-LivePublisher
- * editor) the publish actions are disabled with an explanation - discarding
- * stays available, it only touches the own workspace.
+ * selected document ("this page"), opens the review dialog, and offers
+ * discarding (behind a confirmation - discards are irreversible). Orange with a
+ * change-count bubble while there is something to publish, muted and disabled
+ * otherwise. Without publish permission on the base workspace (a non-
+ * LivePublisher editor) the publish actions are disabled with an explanation -
+ * discarding stays available, it only touches the own workspace.
  */
 export function PublishButton({ workspace }: { workspace: Workspace }) {
   const workspaceName = workspace.name
   const canPublish = workspace.permissions.publish
   // Same query the trees' dirty markers use, so button and badges agree.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
-  const { site, selectedDocument, workspaceContentChanged, navigateToNode } =
-    useStudio()
+  const { site, selectedDocument, navigateToNode } = useStudio()
+  const { operation, resolve, pendingConflict, setPendingConflict } =
+    useWorkspacePublishing(workspaceName)
   // A discard waiting for confirmation; the dialog is open while set.
-  const [pendingDiscard, setPendingDiscard] = useState<Operation | null>(null)
-  // A publish that hit a conflict, plus the operation that triggered it (so the
-  // resolution can retry it). The conflict dialog is open while set.
-  const [pendingConflict, setPendingConflict] = useState<{
-    conflicts: RebaseConflicts
-    op: Operation
-  } | null>(null)
+  const [pendingDiscard, setPendingDiscard] = useState<WorkspaceOperation | null>(
+    null,
+  )
+  // The review dialog open state.
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   const allChanges = changesResponse?.changes ?? []
   // A workspace spans every site the account edited; scope everything (the
@@ -94,86 +83,6 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           c.nodeAggregateId === documentId,
       ).length
     : 0
-
-  const operation = useMutation({
-    mutationFn: async (op: Operation): Promise<void> => {
-      if (op.kind === 'publish')
-        await publishWorkspace(workspaceName, op.filter)
-      else await discardWorkspace(workspaceName, op.filter)
-    },
-    onSuccess: (_data, op) => {
-      // Covers the changes query (this bubble, tree badges) and the workspace
-      // list's hasPublishableChanges flag.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-      // Publishing rebases the workspace onto the new base (changes published
-      // by others flow in) and discarding rewrites its content - cached node
-      // reads are stale either way, and every loaded tree item needs a
-      // re-read (per-item caches in the trees never expire on their own).
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-      workspaceContentChanged()
-      toast.success(
-        op.kind === 'discard' ? 'Changes discarded.' : 'Changes published.',
-      )
-    },
-    onError: (error, op) => {
-      // A publish that collides with the base is not a plain failure - route it
-      // to the resolution dialog. Everything else is a toast.
-      const conflicts = getRebaseConflicts(error)
-      if (conflicts && op.kind === 'publish') {
-        setPendingConflict({ conflicts, op })
-        return
-      }
-      toast.error(error, {
-        title:
-          op.kind === 'discard' ? 'Discarding failed' : 'Publishing failed',
-      })
-    },
-  })
-
-  const invalidateWorkspace = () => {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-    workspaceContentChanged()
-  }
-
-  // Resolves a publish conflict: "force" drops the conflicting changes (a
-  // forced rebase) and retries the original publish; "discardAll" throws the
-  // scope's changes away. Another conflict on retry re-opens the dialog.
-  const resolve = useMutation({
-    mutationFn: async (action: 'force' | 'discardAll'): Promise<void> => {
-      if (action === 'discardAll') {
-        await discardWorkspace(workspaceName, pendingConflict?.op.filter)
-        return
-      }
-      await rebaseWorkspace(workspaceName, 'force')
-      // Retry the publish now that the conflicting changes are gone. If nothing
-      // is left to publish (they were all conflicting), that is success, not an
-      // error - only a fresh conflict is worth re-surfacing.
-      try {
-        await publishWorkspace(workspaceName, pendingConflict?.op.filter)
-      } catch (error) {
-        if (getRebaseConflicts(error)) throw error
-      }
-    },
-    onSuccess: (_data, action) => {
-      invalidateWorkspace()
-      setPendingConflict(null)
-      toast.success(
-        action === 'discardAll'
-          ? 'Changes discarded.'
-          : 'Conflicting changes discarded; the rest was published.',
-      )
-    },
-    onError: (error) => {
-      const conflicts = getRebaseConflicts(error)
-      if (conflicts && pendingConflict) {
-        setPendingConflict({ conflicts, op: pendingConflict.op })
-        return
-      }
-      setPendingConflict(null)
-      toast.error(error, { title: 'Resolving conflicts failed' })
-    },
-  })
 
   const hasChanges = changeCount > 0
   // Only invite the click when it can succeed: orange needs changes AND
@@ -223,6 +132,14 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
             <i className="fas fa-chevron-down text-xs" aria-hidden />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              disabled={!hasChanges}
+              onClick={() => setReviewOpen(true)}
+            >
+              <i className="fas fa-fw fa-list-check" aria-hidden />
+              Review changes
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={pageChangeCount === 0 || !canPublish}
               title={canPublish ? undefined : publishDeniedHint}
@@ -304,6 +221,12 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReviewChangesDialog
+        workspace={workspace}
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+      />
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}

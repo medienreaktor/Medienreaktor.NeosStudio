@@ -50,10 +50,16 @@ export function useWorkspaces(enabled = true) {
   })
 }
 
-/** Scopes a publish/discard to one site or one document; empty = whole workspace. */
+/**
+ * Scopes a publish/discard; empty = whole workspace. `site` / `document` scope
+ * to one aggregate; `documents` scopes to a selection of documents (the review
+ * dialog) - published/discarded one by one on the server. When several are set
+ * the server prefers `documents`, then `site`, then `document`.
+ */
 export interface WorkspaceOperationFilter {
   site?: string
   document?: string
+  documents?: string[]
 }
 
 /** Publish pending changes of the workspace to its base workspace. */
@@ -152,6 +158,52 @@ export function getRebaseConflicts(error: unknown): RebaseConflicts | null {
   }
   const conflicts = (body as { conflicts?: RebaseConflict[] }).conflicts ?? []
   return { code, conflicts }
+}
+
+/**
+ * A changed document as the review dialog lists it: the changes of a workspace
+ * grouped by their containing document, enriched for display. The four change
+ * flags describe the document node's own change (a page created/moved/deleted);
+ * `changed` is also true when only content inside the page changed.
+ */
+export interface WorkspaceDocumentChange {
+  documentAggregateId: string
+  /** Encoded node address for navigation; null for a deleted (non-navigable) document. */
+  documentAddress: string | null
+  siteAggregateId: string | null
+  siteLabel: string | null
+  label: string
+  nodeType: string | null
+  /** Configured Font Awesome icon name, or null to fall back to a type icon. */
+  icon: string | null
+  /** Document ancestor labels from the site down to this document (inclusive). */
+  breadcrumb: string[]
+  created: boolean
+  changed: boolean
+  moved: boolean
+  deleted: boolean
+  hidden: boolean
+  /** Number of pending changes grouped under this document. */
+  changeCount: number
+}
+
+export function useWorkspaceDocumentChanges(
+  workspaceName: string | null,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: queryKeys.workspaces.documentChanges(workspaceName ?? ''),
+    queryFn: () =>
+      apiFetch<{
+        workspace: string
+        baseWorkspace: string | null
+        status: 'UP_TO_DATE' | 'OUTDATED'
+        documents: WorkspaceDocumentChange[]
+      }>(
+        `/workspaces/${encodeURIComponent(workspaceName!)}/document-changes`,
+      ),
+    enabled: workspaceName !== null && enabled,
+  })
 }
 
 export function useWorkspaceChanges(workspaceName: string | null) {
