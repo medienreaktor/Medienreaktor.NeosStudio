@@ -98,6 +98,23 @@ export function fetchNode(
 }
 
 /**
+ * Builds a URL path segment (slug) for the node from the given text - or from
+ * the node's label when the text is empty - using the server's language-aware
+ * transliteration. This is the same generator the classic UI's uriPathSegment
+ * "sync" button calls, so German umlauts and the like slugify identically
+ * (ä→ae, ö→oe, ü→ue, ß→ss).
+ */
+export function generateUriPathSegment(
+  address: string,
+  text: string,
+): Promise<string> {
+  const query = text ? `?text=${encodeURIComponent(text)}` : ''
+  return apiFetch<{ slug: string }>(
+    `/nodes/${address}/uri-path-segment${query}`,
+  ).then(({ slug }) => slug)
+}
+
+/**
  * Where a node aggregate exists: its own variants (occupied origins) and all
  * dimension space points it is reachable in, including specialization
  * shine-through (covered). A point outside "covered" needs a

@@ -6,11 +6,11 @@ import { IMAGE_EDITOR, ImageEditor } from './ImageEditor'
 import { NODE_TYPE_EDITOR, NodeTypeEditor } from './NodeTypeEditor'
 import { SELECT_BOX_EDITOR, SelectBoxEditor } from './SelectBoxEditor'
 import { TEXT_AREA_EDITOR, TextAreaEditor } from './TextAreaEditor'
+import { TEXT_FIELD_EDITOR, TextFieldEditor } from './TextFieldEditor'
 import {
-  TEXT_FIELD_EDITOR,
-  TextFieldEditor,
   URI_PATH_SEGMENT_EDITOR,
-} from './TextFieldEditor'
+  UriPathSegmentEditor,
+} from './UriPathSegmentEditor'
 
 /**
  * Studio's built-in property editors: one file per editor, each conforming to
@@ -37,6 +37,7 @@ export {
   TEXT_FIELD_EDITOR,
   TextFieldEditor,
   URI_PATH_SEGMENT_EDITOR,
+  UriPathSegmentEditor,
 }
 
 /**
@@ -58,7 +59,7 @@ export function registerBuiltinPropertyEditors(): void {
   })
   propertyEditorRegistry.register({
     id: URI_PATH_SEGMENT_EDITOR,
-    component: TextFieldEditor,
+    component: UriPathSegmentEditor,
   })
   propertyEditorRegistry.register({
     id: TEXT_AREA_EDITOR,
