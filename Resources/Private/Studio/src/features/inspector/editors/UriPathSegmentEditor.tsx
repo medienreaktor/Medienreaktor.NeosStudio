@@ -3,7 +3,7 @@ import { generateUriPathSegment, useNode } from '@/api/nodes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 
 export const URI_PATH_SEGMENT_EDITOR =
   'Neos.Neos/Inspector/Editors/UriPathSegmentEditor'

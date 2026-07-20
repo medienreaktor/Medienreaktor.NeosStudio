@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { usePropertyEditor } from '@/features/properties/registry'
+import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { InspectorProperty } from './inspectorSchema'

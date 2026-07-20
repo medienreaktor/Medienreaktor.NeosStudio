@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 
 export const DATE_TIME_EDITOR = 'Neos.Neos/Inspector/Editors/DateTimeEditor'
 

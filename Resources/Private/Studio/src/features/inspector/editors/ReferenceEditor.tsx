@@ -21,7 +21,7 @@ import {
   resolveNodeTypeIconClass,
 } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorComponent, PropertyEditorProps } from '../registry'
+import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const REFERENCE_EDITOR = 'Neos.Neos/Inspector/Editors/ReferenceEditor'
 export const REFERENCES_EDITOR = 'Neos.Neos/Inspector/Editors/ReferencesEditor'

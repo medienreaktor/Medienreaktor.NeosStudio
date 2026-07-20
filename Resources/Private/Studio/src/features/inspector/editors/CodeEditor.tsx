@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorComponent, PropertyEditorProps } from '../registry'
+import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 import { highlight, resolveHighlightMode } from './codeHighlight'
 
 export const CODE_EDITOR = 'Neos.Neos/Inspector/Editors/CodeEditor'

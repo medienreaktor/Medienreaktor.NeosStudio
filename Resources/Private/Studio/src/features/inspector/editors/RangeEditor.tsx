@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Slider } from '@/components/ui/slider'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorComponent, PropertyEditorProps } from '../registry'
+import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const RANGE_EDITOR = 'Neos.Neos/Inspector/Editors/RangeEditor'
 

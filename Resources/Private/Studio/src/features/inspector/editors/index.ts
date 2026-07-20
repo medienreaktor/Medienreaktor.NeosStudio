@@ -1,4 +1,4 @@
-import { propertyEditorRegistry } from '../registry'
+import { propertyEditorRegistry } from './registry'
 import { ASSET_EDITOR, AssetEditor } from './AssetEditor'
 import { BOOLEAN_EDITOR, BooleanEditor } from './BooleanEditor'
 import { CODE_EDITOR, CodeEditor } from './CodeEditor'

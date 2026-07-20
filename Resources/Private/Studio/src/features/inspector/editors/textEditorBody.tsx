@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
-import type { PropertyEditorProps } from '../registry'
+import type { PropertyEditorProps } from './registry'
 
 /**
  * The shared implementation behind the single-line and multi-line text

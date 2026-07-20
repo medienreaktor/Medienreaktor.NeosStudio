@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorProps } from '../registry'
+import type { PropertyEditorProps } from './registry'
 import {
   assetReference,
   imageReference,

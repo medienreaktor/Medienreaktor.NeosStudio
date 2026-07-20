@@ -34,7 +34,7 @@ import {
   type RawFormattingConfig,
 } from '@/guest/formatting'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorComponent, PropertyEditorProps } from '../registry'
+import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const RICH_TEXT_EDITOR = 'Neos.Neos/Inspector/Editors/RichTextEditor'
 
@@ -165,18 +165,26 @@ export const RichTextEditor: PropertyEditorComponent = ({
   )
 }
 
-/** One toolbar toggle; acts on mousedown so the editor never loses focus. */
+/**
+ * One toolbar toggle. Mousedown is always prevented so the editor never loses
+ * focus (and the selection survives); the action itself runs on mousedown by
+ * default. Actions that open a modal must run on click instead
+ * (`runOnClick`): opened during mousedown, the dialog would swallow the
+ * in-flight mouseup as an outside press and dismiss itself immediately.
+ */
 function ToolbarButton({
   label,
   active,
   disabled,
   onRun,
+  runOnClick,
   children,
 }: {
   label: string
   active?: boolean
   disabled?: boolean
   onRun: () => void
+  runOnClick?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -191,7 +199,10 @@ function ToolbarButton({
       className={cn(active && 'bg-neutral-800 text-blue-500')}
       onMouseDown={(event) => {
         event.preventDefault()
-        onRun()
+        if (!runOnClick) onRun()
+      }}
+      onClick={() => {
+        if (runOnClick) onRun()
       }}
     >
       {children}
@@ -378,6 +389,7 @@ function Toolbar({
           label="Link"
           active={editor.isActive('link')}
           onRun={openLinkDialog}
+          runOnClick
         >
           <LinkIcon />
         </ToolbarButton>

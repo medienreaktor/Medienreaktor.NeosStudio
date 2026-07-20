@@ -19,8 +19,8 @@ import {
   humanizeLabel,
 } from '@/features/inspector/inspectorSchema'
 import { useAssetPicker } from '@/features/media/AssetPicker'
-import { TEXT_FIELD_EDITOR } from '@/features/properties/editors'
-import { usePropertyEditor } from '@/features/properties/registry'
+import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors'
+import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
 import { createNode, type CreateNodeRequest } from './createNode'

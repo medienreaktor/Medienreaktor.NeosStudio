@@ -19,7 +19,7 @@ import {
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
 import { cn } from '@/lib/utils'
-import type { PropertyEditorComponent, PropertyEditorProps } from '../registry'
+import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const SELECT_BOX_EDITOR = 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
 

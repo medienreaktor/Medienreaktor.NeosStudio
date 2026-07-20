@@ -6,7 +6,7 @@ import type { NodeDto } from '@/api/nodes'
  * places between inspector properties (ui.inspector.views), registered under
  * the view identifier the configuration references (e.g.
  * "Neos.Neos/Inspector/Views/Data/TableView"). Modelled on the property
- * editor registry (features/properties/registry.ts): a small observable
+ * editor registry (features/inspector/editors/registry.ts): a small observable
  * store, register-replaces-by-id for idempotent HMR and plugin reloads, and a
  * stable snapshot for React - the same seam third-party views plug into.
  */

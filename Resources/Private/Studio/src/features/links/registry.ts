@@ -7,7 +7,7 @@ import * as React from 'react'
  * third-party plugin would register a tab for its own link source (an external
  * DAM, a shop's product catalogue, ...).
  *
- * Modelled on the property editor registry (see features/properties/
+ * Modelled on the property editor registry (see features/inspector/editors/
  * registry.ts): a small observable store, register-replaces-by-id for
  * idempotent HMR and plugin reloads, and a stable snapshot for React.
  */

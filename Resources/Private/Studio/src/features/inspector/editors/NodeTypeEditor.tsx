@@ -22,7 +22,7 @@ import {
 import { humanizeLabel } from '@/features/inspector/inspectorSchema'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 
 export const NODE_TYPE_EDITOR = 'Neos.Neos/Inspector/Editors/NodeTypeEditor'
 

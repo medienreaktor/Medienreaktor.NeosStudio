@@ -13,7 +13,7 @@ import {
   type LinkValue,
 } from '@/features/links/linkValue'
 import { linkEditorRegistry } from '@/features/links/registry'
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 
 export const LINK_EDITOR = 'Neos.Neos/Inspector/Editors/LinkEditor'
 

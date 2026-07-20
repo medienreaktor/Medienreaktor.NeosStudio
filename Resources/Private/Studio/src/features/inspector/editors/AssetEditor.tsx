@@ -1,4 +1,4 @@
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 import { AssetFieldEditor } from './AssetFieldEditor'
 import { MultiAssetFieldEditor } from './MultiAssetFieldEditor'
 import { isCollectionType } from '@/api/assetValue'

@@ -10,7 +10,7 @@ import * as React from 'react'
  * body. Built-ins and third-party plugins register the same way.
  *
  * It is modelled on the panel and property-editor registries (see
- * features/panels/registry.ts and features/properties/registry.ts): a small
+ * features/panels/registry.ts and features/inspector/editors/registry.ts): a small
  * observable store, register-replaces-by-id so HMR and plugin reloads stay
  * idempotent, and a stable snapshot for React's useSyncExternalStore.
  */

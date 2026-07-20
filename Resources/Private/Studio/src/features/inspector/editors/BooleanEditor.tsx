@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 
 export const BOOLEAN_EDITOR = 'Neos.Neos/Inspector/Editors/BooleanEditor'
 

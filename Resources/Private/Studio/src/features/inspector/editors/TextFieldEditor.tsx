@@ -1,4 +1,4 @@
-import type { PropertyEditorComponent } from '../registry'
+import type { PropertyEditorComponent } from './registry'
 import { TextEditorBody } from './textEditorBody'
 
 export const TEXT_FIELD_EDITOR = 'Neos.Neos/Inspector/Editors/TextFieldEditor'
