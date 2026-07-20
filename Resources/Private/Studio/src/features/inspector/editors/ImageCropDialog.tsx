@@ -210,7 +210,7 @@ export function ImageCropDialog({
         if (!busy) onOpenChange(next)
       }}
     >
-      <DialogContent className="max-w-2xl">
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>Crop image</DialogTitle>
         </DialogHeader>

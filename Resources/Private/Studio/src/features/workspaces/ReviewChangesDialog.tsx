@@ -154,7 +154,7 @@ export function ReviewChangesDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-        <DialogContent className="flex max-h-[85vh] w-full max-w-2xl flex-col">
+        <DialogContent size="lg" className="flex max-h-[85vh] flex-col">
           <DialogHeader>
             <DialogTitle>Review changes</DialogTitle>
             <DialogDescription>

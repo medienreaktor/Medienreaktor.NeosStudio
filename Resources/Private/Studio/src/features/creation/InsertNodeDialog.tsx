@@ -236,7 +236,10 @@ function OpenInsertNodeDialog({
         open={creation === null}
         onOpenChange={(open) => !open && onClose()}
       >
-        <DialogContent className="flex max-h-[80vh] flex-col gap-3 overflow-hidden sm:max-w-xl">
+        <DialogContent
+          size="lg"
+          className="flex max-h-[80vh] flex-col gap-3 overflow-hidden"
+        >
           <DialogHeader>
             <DialogTitle>Create new {noun}</DialogTitle>
             <DialogDescription>
@@ -277,15 +280,14 @@ function OpenInsertNodeDialog({
                 )
               })}
             </div>
+            <Input
+              type="search"
+              placeholder="Filter node types…"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              className="h-8"
+            />
           </div>
-
-          <Input
-            type="search"
-            placeholder="Filter node types…"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            className="h-8"
-          />
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {visibleGroups === null ? (

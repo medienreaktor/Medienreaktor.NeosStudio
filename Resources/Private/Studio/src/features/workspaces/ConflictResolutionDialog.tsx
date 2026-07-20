@@ -59,7 +59,7 @@ export function ConflictResolutionDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && !busy && onCancel()}>
-      <DialogContent>
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>
             {conflicts.length === 1

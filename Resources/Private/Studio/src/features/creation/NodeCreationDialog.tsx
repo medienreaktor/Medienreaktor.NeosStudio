@@ -207,7 +207,7 @@ export function CreateNodeFlow({
       open={!picking}
       onOpenChange={(open) => !open && !picking && !creating && onCancel()}
     >
-      <DialogContent>
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <NodeTypeIcon

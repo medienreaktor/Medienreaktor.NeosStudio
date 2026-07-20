@@ -74,7 +74,7 @@ export function AssetDetailsDialog({
       onOpenChange={setOpen}
       onOpenChangeComplete={(nextOpen) => !nextOpen && onOpenChange(false)}
     >
-      <DialogContent className="max-w-4xl">
+      <DialogContent size="lg" className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="truncate pr-6">{asset.label}</DialogTitle>
         </DialogHeader>

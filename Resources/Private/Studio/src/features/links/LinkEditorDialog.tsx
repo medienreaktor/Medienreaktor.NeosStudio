@@ -90,7 +90,7 @@ export function LinkEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>
             {value !== null ? 'Edit link' : 'Insert link'}

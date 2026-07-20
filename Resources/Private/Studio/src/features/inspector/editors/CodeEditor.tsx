@@ -197,7 +197,7 @@ export const CodeEditor: PropertyEditorComponent = ({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent size="lg" className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <i className="fas fa-code text-[1rem]" aria-hidden />
