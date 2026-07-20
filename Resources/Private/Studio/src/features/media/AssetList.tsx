@@ -61,9 +61,9 @@ export function AssetList({
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto @container">
+    <div className="min-h-0 flex-1 pt-12 overflow-y-auto @container">
       {view === 'grid' ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3 p-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 p-2 pt-0">
           {assets.map((asset) => (
             <GridCard
               key={assetKey(asset)}

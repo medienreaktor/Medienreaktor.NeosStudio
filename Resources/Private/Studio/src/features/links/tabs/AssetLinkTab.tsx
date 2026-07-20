@@ -7,12 +7,12 @@ import {
   type MediaAsset,
 } from '@/api/media'
 import { localIdentifierFor } from '@/api/assetValue'
-import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
 import { AssetList } from '@/features/media/AssetList'
 import { assetKey } from '@/features/media/useMediaBrowserState'
 import { assetUri, parseAssetUri } from '../linkValue'
 import type { LinkTypeTabProps } from '../registry'
+import { SearchInput } from '@/components/ui/search-input'
 
 /**
  * "Link to an asset": a compact Media Library picker - search plus the shared
@@ -39,18 +39,15 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
-      <div className="relative">
-        <i
-          className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2.5 text-[1rem] -translate-y-1/2 text-neutral-500"
-          aria-hidden
-        />
-        <Input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search assets…"
-          className="h-8 pl-8 text-sm"
-        />
+    <div className="relative flex h-full min-h-0 flex-col gap-2">
+      <div className="absolute left-0 top-0 right-0 z-10 p-px">
+        <div className="relative w-full rounded-sm bg-neutral-950/70 p-2 backdrop-blur-xs">
+          <SearchInput
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search assets…"
+          />
+        </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-800 bg-neutral-950">
         <AssetList

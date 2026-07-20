@@ -14,6 +14,7 @@ import {
 } from '@/api/media'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import {
   Popover,
   PopoverContent,
@@ -136,29 +137,15 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             ?.label ?? 'Tag')
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-2">
-      <div className="relative min-w-40 flex-1">
-        <i
-          className="fas fa-magnifying-glass pointer-events-none absolute left-2 top-1/2 text-[1rem] -translate-y-1/2 text-neutral-500"
-          aria-hidden
-        />
-        <Input
-          value={filter.search}
-          onChange={(e) => state.setSearch(e.target.value)}
-          placeholder="Search assets…"
-          className="h-8 pl-8 pr-8"
-        />
-        {filter.search && (
-          <button
-            type="button"
-            onClick={() => state.setSearch('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
-            aria-label="Clear search"
-          >
-            <i className="fas fa-xmark text-[1rem]" aria-hidden />
-          </button>
-        )}
-      </div>
+    // Same fixed overlay toolbar as the documents/create panels.
+    <div className="absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-neutral-950/70 p-2 backdrop-blur-xs">
+      <SearchInput
+        value={filter.search}
+        onChange={(e) => state.setSearch(e.target.value)}
+        placeholder="Search assets…"
+        aria-label="Search assets"
+        wrapperClassName="min-w-40"
+      />
 
       <Select
         value={filter.type}
