@@ -75,7 +75,7 @@ export interface Formatting {
 }
 
 /** No config attribute → a permissive default matching a typical rich text. */
-const DEFAULT_FORMATTING: Formatting = {
+export const DEFAULT_FORMATTING: Formatting = {
   bold: true,
   italic: true,
   underline: true,
@@ -98,7 +98,7 @@ const DEFAULT_FORMATTING: Formatting = {
   multiline: true,
 }
 
-interface RawConfig {
+export interface RawFormattingConfig {
   formatting?: Record<string, unknown>
   autoparagraph?: unknown
 }
@@ -107,12 +107,21 @@ interface RawConfig {
 export function parseFormatting(element: HTMLElement): Formatting {
   const raw = element.getAttribute(FORMATTING_ATTRIBUTE)
   if (!raw) return DEFAULT_FORMATTING
-  let config: RawConfig
+  let config: RawFormattingConfig
   try {
-    config = JSON.parse(raw) as RawConfig
+    config = JSON.parse(raw) as RawFormattingConfig
   } catch {
     return DEFAULT_FORMATTING
   }
+  return normalizeFormatting(config)
+}
+
+/**
+ * Normalize raw Neos formatting flags into the capability set - shared by the
+ * inline editors (config from the edit-mode markup) and the inspector's
+ * RichTextEditor (config from ui.inspector.editorOptions).
+ */
+export function normalizeFormatting(config: RawFormattingConfig): Formatting {
   const f = config.formatting ?? {}
   const on = (key: string): boolean => f[key] === true
   const headingLevels = [1, 2, 3, 4, 5, 6].filter((level) => on(`h${level}`))

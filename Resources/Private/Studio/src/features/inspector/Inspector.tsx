@@ -4,7 +4,6 @@ import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
 import { isShineThrough, nodeLabel, useNodeAncestors } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   changeNodeType,
@@ -23,7 +22,9 @@ import {
   evaluateInspectorTabs,
 } from './clientEval'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
-import { Labeled, PropertyEditor } from './PropertyEditor'
+import { PropertyEditor } from './PropertyEditor'
+import { InspectorViewRenderer } from './views/InspectorViewRenderer'
+import { NodeInfoView } from './views'
 
 /**
  * The visibility flag from the Neos.Neos:Hidable mixin. Configured as a
@@ -154,7 +155,8 @@ export function InspectorPanel({
     // persist through SetNodeReferences (reference name = property name).
     const propertyType = tabs
       ?.flatMap((tab) => tab.groups)
-      .flatMap((group) => group.properties)
+      .flatMap((group) => group.items)
+      .flatMap((item) => (item.kind === 'property' ? [item.property] : []))
       .find((property) => property.name === propertyName)?.type
     // Two further "properties" are not real properties and route to their own
     // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
@@ -258,39 +260,11 @@ export function InspectorPanel({
                       Node Information
                     </summary>
                     <div className="py-2 space-y-4">
-                      <div>
-                        <Labeled label="Node Type">{node.nodeType}</Labeled>
-                      </div>
-                      <div>
-                        <Labeled label="Aggregate ID">
-                          {node.aggregateId}
-                        </Labeled>
-                      </div>
-                      <div>
-                        <Labeled label="Workspace">{node.workspace}</Labeled>
-                      </div>
-                      <div>
-                        <Labeled label="Dimensions">
-                          {Object.entries(node.dimensionSpacePoint)
-                            .map(
-                              ([dimension, value]) => `${dimension}: ${value}`,
-                            )
-                            .join(', ') || '–'}
-                        </Labeled>
-                      </div>
-                      {node.tags.all.length > 0 && (
-                        <div>
-                          <Labeled label="Tags">
-                            <span className="flex flex-wrap gap-1">
-                              {node.tags.all.map((tag) => (
-                                <Badge key={tag} variant="secondary">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </span>
-                          </Labeled>
-                        </div>
-                      )}
+                      <NodeInfoView
+                        label="Node Information"
+                        node={node}
+                        options={{}}
+                      />
                     </div>
                   </details>
                 </TabsContent>
@@ -356,20 +330,26 @@ function PropertyGroup({
         </span>
       </summary>
       <div className="py-2 space-y-4">
-        {group.properties.map((property) => (
-          <div key={property.name}>
-            <PropertyEditor
-              // Reset drafts when the inspected node changes, keep them
-              // across the refetch after a save.
-              key={`${node.address}:${property.name}`}
-              property={property}
-              value={propertyValue(node, property.name)}
-              nodeAddress={node.address}
-              onSave={onSave}
-              onLiveChange={onLiveChange}
-            />
-          </div>
-        ))}
+        {group.items.map((item) =>
+          item.kind === 'property' ? (
+            <div key={item.property.name}>
+              <PropertyEditor
+                // Reset drafts when the inspected node changes, keep them
+                // across the refetch after a save.
+                key={`${node.address}:${item.property.name}`}
+                property={item.property}
+                value={propertyValue(node, item.property.name)}
+                nodeAddress={node.address}
+                onSave={onSave}
+                onLiveChange={onLiveChange}
+              />
+            </div>
+          ) : (
+            <div key={item.view.name}>
+              <InspectorViewRenderer view={item.view} node={node} />
+            </div>
+          ),
+        )}
       </div>
     </details>
   )

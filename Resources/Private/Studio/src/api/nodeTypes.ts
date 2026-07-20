@@ -79,6 +79,22 @@ export interface PropertyInspectorConfig {
 }
 
 /**
+ * One entry of a node type's ui.inspector.views - a read-only widget shown
+ * between the properties of its group (e.g. the data-source-backed
+ * Table/Column/TimeSeries views, or the node info view).
+ */
+export interface InspectorViewConfig {
+  /** The view identifier, e.g. "Neos.Neos/Inspector/Views/Data/TableView". */
+  view?: string
+  label?: string | null
+  group?: string
+  position?: string | number
+  viewOptions?: Record<string, unknown>
+  /** True, or a "ClientEval:..." expression, like a property's hidden flag. */
+  hidden?: boolean | string
+}
+
+/**
  * How far a property write reaches across dimension variants: only the edited
  * variant ("node", the default), the variant and its specializations, or every
  * variant of the aggregate ("nodeAggregate" - the value is effectively shared
@@ -135,6 +151,7 @@ export interface NodeTypeSchemaDto {
       inspector?: {
         tabs?: Record<string, InspectorTabConfig | null>
         groups?: Record<string, InspectorGroupConfig | null>
+        views?: Record<string, InspectorViewConfig | null>
       } | null
     } | null
     properties?: Record<string, PropertyConfig | null>

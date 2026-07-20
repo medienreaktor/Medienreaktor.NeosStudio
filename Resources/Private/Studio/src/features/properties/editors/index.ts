@@ -6,6 +6,8 @@ import { DATE_TIME_EDITOR, DateTimeEditor } from './DateTimeEditor'
 import { IMAGE_EDITOR, ImageEditor } from './ImageEditor'
 import { LINK_EDITOR, LinkFieldEditor } from './LinkFieldEditor'
 import { NODE_TYPE_EDITOR, NodeTypeEditor } from './NodeTypeEditor'
+import { RANGE_EDITOR, RangeEditor } from './RangeEditor'
+import { RICH_TEXT_EDITOR, RichTextEditor } from './RichTextEditor'
 import {
   REFERENCE_EDITOR,
   REFERENCES_EDITOR,
@@ -42,6 +44,10 @@ export {
   LinkFieldEditor,
   NODE_TYPE_EDITOR,
   NodeTypeEditor,
+  RANGE_EDITOR,
+  RangeEditor,
+  RICH_TEXT_EDITOR,
+  RichTextEditor,
   REFERENCE_EDITOR,
   REFERENCES_EDITOR,
   ReferenceEditor,
@@ -114,5 +120,13 @@ export function registerBuiltinPropertyEditors(): void {
   propertyEditorRegistry.register({
     id: NODE_TYPE_EDITOR,
     component: NodeTypeEditor,
+  })
+  propertyEditorRegistry.register({
+    id: RANGE_EDITOR,
+    component: RangeEditor,
+  })
+  propertyEditorRegistry.register({
+    id: RICH_TEXT_EDITOR,
+    component: RichTextEditor,
   })
 }

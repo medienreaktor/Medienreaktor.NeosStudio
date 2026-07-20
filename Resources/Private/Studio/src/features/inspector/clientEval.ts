@@ -158,36 +158,60 @@ export function clientEvalUsesParentNode(value: unknown): boolean {
 }
 
 /**
- * Applies ClientEval to a built inspector schema: evaluates each property's
- * `hidden` flag and drops hidden properties, evaluates expressions inside
- * editor options, and prunes groups and tabs that end up empty.
+ * Applies ClientEval to a built inspector schema: evaluates each item's
+ * `hidden` flag and drops hidden properties/views, evaluates expressions
+ * inside editor and view options, and prunes groups and tabs that end up
+ * empty.
  */
 export function evaluateInspectorTabs(
   tabs: InspectorTab[],
   context: ClientEvalContext,
 ): InspectorTab[] {
+  const visible = (hidden: boolean | string): boolean => {
+    const evaluated = isClientEvalExpression(hidden)
+      ? evaluateClientEval(hidden, context)
+      : hidden
+    return !evaluated
+  }
   return tabs
     .map((tab) => ({
       ...tab,
       groups: tab.groups
         .map((group) => ({
           ...group,
-          properties: group.properties
-            .filter((property) => {
-              const hidden = isClientEvalExpression(property.hidden)
-                ? evaluateClientEval(property.hidden, context)
-                : property.hidden
-              return !hidden
-            })
-            .map((property) => ({
-              ...property,
-              editorOptions: preprocessClientEval(
-                property.editorOptions,
-                context,
+          items: group.items
+            .filter((item) =>
+              visible(
+                item.kind === 'property'
+                  ? item.property.hidden
+                  : item.view.hidden,
               ),
-            })),
+            )
+            .map((item) =>
+              item.kind === 'property'
+                ? {
+                    ...item,
+                    property: {
+                      ...item.property,
+                      editorOptions: preprocessClientEval(
+                        item.property.editorOptions,
+                        context,
+                      ),
+                    },
+                  }
+                : {
+                    ...item,
+                    view: {
+                      ...item.view,
+                      viewOptions: preprocessClientEval(
+                        item.view.viewOptions,
+                        context,
+                      ),
+                    },
+                  },
+            ),
         }))
-        .filter((group) => group.properties.length > 0),
+        .filter((group) => group.items.length > 0),
     }))
     .filter((tab) => tab.groups.length > 0)
 }

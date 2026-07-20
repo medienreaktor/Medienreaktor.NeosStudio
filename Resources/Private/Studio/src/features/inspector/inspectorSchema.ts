@@ -1,6 +1,7 @@
 import type {
   InspectorGroupConfig,
   InspectorTabConfig,
+  InspectorViewConfig,
   NodeTypeSchemaDto,
   PropertyConfig,
   PropertyScope,
@@ -25,12 +26,31 @@ export interface InspectorProperty {
   scope: PropertyScope
 }
 
+/**
+ * A read-only inspector view (ui.inspector.views entry) placed between the
+ * properties of its group - e.g. the data-source-backed widgets.
+ */
+export interface InspectorView {
+  name: string
+  label: string
+  /** Resolved view identifier, e.g. "Neos.Neos/Inspector/Views/Data/TableView". */
+  view: string | null
+  viewOptions: Record<string, unknown>
+  /** ui.inspector.views.*.hidden: true, or a "ClientEval:..." expression. */
+  hidden: boolean | string
+}
+
+/** One group entry, in configured position order: an editable property or a view. */
+export type InspectorItem =
+  | { kind: 'property'; property: InspectorProperty }
+  | { kind: 'view'; view: InspectorView }
+
 export interface InspectorGroup {
   id: string
   label: string
   icon: string | null
   collapsed: boolean
-  properties: InspectorProperty[]
+  items: InspectorItem[]
 }
 
 export interface InspectorTab {
@@ -114,9 +134,11 @@ const DATA_TYPE_EDITOR_OPTIONS: Record<string, Record<string, unknown>> = {
 
 /**
  * Builds the inspector structure for one node type: tabs containing groups
- * containing properties, each level sorted by its configured position. Only
- * properties assigned to a group appear (the Neos rule for inspector
- * visibility); groups without properties and tabs without groups are dropped.
+ * containing items (editable properties and read-only views, interleaved by
+ * their configured position - the old UI's ordering), each level sorted by
+ * position. Only properties/views assigned to a group appear (the Neos rule
+ * for inspector visibility); groups without items and tabs without groups are
+ * dropped.
  */
 export function buildInspectorSchema(
   schema: NodeTypeSchemaDto,
@@ -125,6 +147,7 @@ export function buildInspectorSchema(
   const references = schema.configuration.references ?? {}
   const tabsConfig = schema.configuration.ui?.inspector?.tabs ?? {}
   const groupsConfig = schema.configuration.ui?.inspector?.groups ?? {}
+  const viewsConfig = schema.configuration.ui?.inspector?.views ?? {}
 
   const propertiesByGroup = new Map<
     string,
@@ -153,10 +176,22 @@ export function buildInspectorSchema(
     })
   }
 
-  // Groups referenced by a property but never configured still render.
+  const viewsByGroup = new Map<
+    string,
+    { name: string; config: InspectorViewConfig }[]
+  >()
+  for (const [name, config] of Object.entries(viewsConfig)) {
+    const group = config?.group
+    if (!group) continue
+    if (!viewsByGroup.has(group)) viewsByGroup.set(group, [])
+    viewsByGroup.get(group)!.push({ name, config: config ?? {} })
+  }
+
+  // Groups referenced by a property or view but never configured still render.
   const groupIds = new Set([
     ...Object.keys(groupsConfig),
     ...propertiesByGroup.keys(),
+    ...viewsByGroup.keys(),
   ])
   const groupsByTab = new Map<string, InspectorGroup[]>()
   const orderedGroupIds = sortByPosition(
@@ -168,32 +203,59 @@ export function buildInspectorSchema(
   for (const groupId of orderedGroupIds) {
     const config: InspectorGroupConfig = groupsConfig[groupId] ?? {}
     const groupProperties = propertiesByGroup.get(groupId) ?? []
-    if (groupProperties.length === 0) continue
+    const groupViews = viewsByGroup.get(groupId) ?? []
+    if (groupProperties.length === 0 && groupViews.length === 0) continue
 
-    const orderedProperties = sortByPosition(
-      groupProperties.map((p) => ({
-        key: p.name,
-        position: p.config.ui?.inspector?.position,
-      })),
-    ).map((name): InspectorProperty => {
-      const propertyConfig = groupProperties.find(
-        (p) => p.name === name,
-      )!.config
-      const type = propertyConfig.type ?? 'string'
-      const defaultEditor = DATA_TYPE_EDITORS[type] ?? null
-      const editor = propertyConfig.ui?.inspector?.editor ?? defaultEditor
+    // Properties and views share one position space within the group (the
+    // old UI's items list); "before/after <name>" references work across both.
+    // A view named like a property is shadowed by it (names key the list).
+    const orderedItems = [
+      ...new Set(
+        sortByPosition([
+          ...groupProperties.map((p) => ({
+            key: p.name,
+            position: p.config.ui?.inspector?.position,
+          })),
+          ...groupViews.map((v) => ({
+            key: v.name,
+            position: v.config.position,
+          })),
+        ]),
+      ),
+    ].map((name): InspectorItem => {
+      const property = groupProperties.find((p) => p.name === name)
+      if (property) {
+        const propertyConfig = property.config
+        const type = propertyConfig.type ?? 'string'
+        const defaultEditor = DATA_TYPE_EDITORS[type] ?? null
+        const editor = propertyConfig.ui?.inspector?.editor ?? defaultEditor
+        return {
+          kind: 'property',
+          property: {
+            name,
+            type,
+            label: humanizeLabel(propertyConfig.ui?.label, name),
+            editor,
+            hidden: propertyConfig.ui?.inspector?.hidden ?? false,
+            scope: propertyConfig.scope ?? 'node',
+            editorOptions: {
+              ...(editor === defaultEditor
+                ? DATA_TYPE_EDITOR_OPTIONS[type]
+                : undefined),
+              ...propertyConfig.ui?.inspector?.editorOptions,
+            },
+          },
+        }
+      }
+      const viewConfig = groupViews.find((v) => v.name === name)!.config
       return {
-        name,
-        type,
-        label: humanizeLabel(propertyConfig.ui?.label, name),
-        editor,
-        hidden: propertyConfig.ui?.inspector?.hidden ?? false,
-        scope: propertyConfig.scope ?? 'node',
-        editorOptions: {
-          ...(editor === defaultEditor
-            ? DATA_TYPE_EDITOR_OPTIONS[type]
-            : undefined),
-          ...propertyConfig.ui?.inspector?.editorOptions,
+        kind: 'view',
+        view: {
+          name,
+          label: humanizeLabel(viewConfig.label, name),
+          view: viewConfig.view ?? null,
+          viewOptions: viewConfig.viewOptions ?? {},
+          hidden: viewConfig.hidden ?? false,
         },
       }
     })
@@ -205,7 +267,7 @@ export function buildInspectorSchema(
       label: humanizeLabel(config.label, groupId),
       icon: config.icon ?? null,
       collapsed: config.collapsed ?? false,
-      properties: orderedProperties,
+      items: orderedItems,
     })
   }
 
