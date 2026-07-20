@@ -7,6 +7,7 @@ import {
   useNodeAncestors,
 } from '@/api/nodes'
 import { toast } from '@/components/ui/toast'
+import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import {
   Dialog,
   DialogContent,
@@ -121,6 +122,8 @@ function OpenInsertNodeDialog({
     request.defaultMode ?? 'inside',
   )
   const [filter, setFilter] = useState('')
+  // Groups the user opened/closed by hand, overriding the configured default.
+  const [toggled, setToggled] = useState<Record<string, boolean>>({})
   // The picked type's creation flow is running; the picker steps aside.
   const [creation, setCreation] = useState<CreateNodeRequest | null>(null)
   // An "after" pick is looking up the reference's next sibling.
@@ -274,6 +277,7 @@ function OpenInsertNodeDialog({
             <Input
               type="search"
               placeholder="Filter node types…"
+              autoFocus={true}
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
               className="h-8"
@@ -295,10 +299,21 @@ function OpenInsertNodeDialog({
               />
             ) : (
               visibleGroups.map((group) => (
-                <section key={group.name} className="mb-2">
-                  <div className="px-1 py-1 text-xs font-semibold text-neutral-400">
-                    {group.label}
-                  </div>
+                <CollapsibleGroup
+                  key={group.name}
+                  label={group.label}
+                  // While filtering every group with matches stays open; the
+                  // default comes from the group's configured collapsed flag.
+                  open={
+                    query !== '' || !(toggled[group.name] ?? group.collapsed)
+                  }
+                  onOpenChange={(open) =>
+                    setToggled((previous) => ({
+                      ...previous,
+                      [group.name]: !open,
+                    }))
+                  }
+                >
                   <ul className="grid grid-cols-3 gap-1 sm:grid-cols-4">
                     {group.nodeTypes.map((nodeType) => (
                       <li key={nodeType.name}>
@@ -321,7 +336,7 @@ function OpenInsertNodeDialog({
                       </li>
                     ))}
                   </ul>
-                </section>
+                </CollapsibleGroup>
               ))
             )}
           </div>

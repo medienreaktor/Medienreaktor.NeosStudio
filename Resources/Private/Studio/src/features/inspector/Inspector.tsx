@@ -4,6 +4,7 @@ import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
 import { isShineThrough, nodeLabel, useNodeAncestors } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
+import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
@@ -317,39 +318,37 @@ function PropertyGroup({
   onLiveChange: (propertyName: string, value: unknown) => void
 }) {
   return (
-    <details
-      open={!group.collapsed}
-      className="group/inspector-group border-b border-neutral-700 p-2 m-0"
+    <CollapsibleGroup
+      defaultOpen={!group.collapsed}
+      className="border-b border-neutral-700 p-2"
+      label={
+        <>
+          {group.icon && <FaIcon icon={group.icon} />}
+          {group.label}
+        </>
+      }
+      bodyClassName="space-y-4"
     >
-      <summary className="flex py-2 cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-white select-none [&::-webkit-details-marker]:hidden">
-        {group.icon && <FaIcon icon={group.icon} />}
-        {group.label}
-        <span className="ml-auto transition-transform group-open/inspector-group:rotate-90">
-          <FaIcon icon="chevron-right" />
-        </span>
-      </summary>
-      <div className="py-2 space-y-4">
-        {group.items.map((item) =>
-          item.kind === 'property' ? (
-            <div key={item.property.name}>
-              <PropertyEditor
-                // Reset drafts when the inspected node changes, keep them
-                // across the refetch after a save.
-                key={`${node.address}:${item.property.name}`}
-                property={item.property}
-                value={propertyValue(node, item.property.name)}
-                nodeAddress={node.address}
-                onSave={onSave}
-                onLiveChange={onLiveChange}
-              />
-            </div>
-          ) : (
-            <div key={item.view.name}>
-              <InspectorViewRenderer view={item.view} node={node} />
-            </div>
-          ),
-        )}
-      </div>
-    </details>
+      {group.items.map((item) =>
+        item.kind === 'property' ? (
+          <div key={item.property.name}>
+            <PropertyEditor
+              // Reset drafts when the inspected node changes, keep them
+              // across the refetch after a save.
+              key={`${node.address}:${item.property.name}`}
+              property={item.property}
+              value={propertyValue(node, item.property.name)}
+              nodeAddress={node.address}
+              onSave={onSave}
+              onLiveChange={onLiveChange}
+            />
+          </div>
+        ) : (
+          <div key={item.view.name}>
+            <InspectorViewRenderer view={item.view} node={node} />
+          </div>
+        ),
+      )}
+    </CollapsibleGroup>
   )
 }

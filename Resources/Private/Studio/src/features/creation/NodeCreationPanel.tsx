@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { Input } from '@/components/ui/input'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
@@ -65,66 +66,48 @@ export function NodeCreationPanel() {
           className="py-10"
         />
       )}
-      {visibleGroups.map((group) => {
-        // While filtering every group with matches stays open.
-        const isCollapsed =
-          query === '' && (toggled[group.name] ?? group.collapsed)
-        return (
-          <section key={group.name}>
-            <button
-              type="button"
-              className="flex w-full items-center gap-1 rounded px-1 py-1 text-xs font-semibold text-neutral-400 hover:text-white"
-              onClick={() =>
-                setToggled((previous) => ({
-                  ...previous,
-                  [group.name]: !isCollapsed,
-                }))
-              }
-            >
-              {isCollapsed ? (
-                <i
-                  className="fas fa-chevron-right text-[0.75rem]"
-                  aria-hidden
-                />
-              ) : (
-                <i className="fas fa-chevron-down text-[0.75rem]" aria-hidden />
-              )}
-              {group.label}
-            </button>
-            {!isCollapsed && (
-              <ul className="grid grid-cols-2 gap-1 @[18rem]:grid-cols-3">
-                {group.nodeTypes.map((nodeType) => (
-                  <li key={nodeType.name}>
-                    <div
-                      draggable
-                      title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
-                      className="flex h-full cursor-grab flex-col items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800/40 px-1 py-3 text-center hover:bg-neutral-800 active:cursor-grabbing"
-                      onDragStart={(event) => {
-                        event.dataTransfer.effectAllowed = 'copy'
-                        event.dataTransfer.setData(
-                          NODE_TYPE_DATA_TRANSFER,
-                          nodeType.name,
-                        )
-                        startCreationDrag(nodeType.name)
-                      }}
-                      onDragEnd={() => endCreationDrag()}
-                    >
-                      <NodeTypeIcon
-                        nodeTypes={nodeTypes}
-                        nodeTypeName={nodeType.name}
-                        className="text-base"
-                      />
-                      <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
-                        {nodeType.label}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )
-      })}
+      {visibleGroups.map((group) => (
+        <CollapsibleGroup
+          key={group.name}
+          label={group.label}
+          // While filtering every group with matches stays open; the default
+          // comes from the group's configured collapsed flag.
+          open={query !== '' || !(toggled[group.name] ?? group.collapsed)}
+          onOpenChange={(open) =>
+            setToggled((previous) => ({ ...previous, [group.name]: !open }))
+          }
+        >
+          <ul className="grid grid-cols-2 gap-1 @[18rem]:grid-cols-3">
+            {group.nodeTypes.map((nodeType) => (
+              <li key={nodeType.name}>
+                <div
+                  draggable
+                  title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
+                  className="flex h-full cursor-grab flex-col items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800/40 px-1 py-3 text-center hover:bg-neutral-800 active:cursor-grabbing"
+                  onDragStart={(event) => {
+                    event.dataTransfer.effectAllowed = 'copy'
+                    event.dataTransfer.setData(
+                      NODE_TYPE_DATA_TRANSFER,
+                      nodeType.name,
+                    )
+                    startCreationDrag(nodeType.name)
+                  }}
+                  onDragEnd={() => endCreationDrag()}
+                >
+                  <NodeTypeIcon
+                    nodeTypes={nodeTypes}
+                    nodeTypeName={nodeType.name}
+                    className="text-base"
+                  />
+                  <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                    {nodeType.label}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CollapsibleGroup>
+      ))}
     </div>
   )
 }
