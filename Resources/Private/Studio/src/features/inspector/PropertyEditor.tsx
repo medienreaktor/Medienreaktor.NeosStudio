@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/tooltip'
 import { usePropertyEditor } from '@/features/properties/registry'
 import { translateLabel } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import type { InspectorProperty } from './inspectorSchema'
 
 /**
@@ -65,10 +66,11 @@ export function PropertyEditor({
 
   if (definition.rendersOwnLabel) {
     // The editor owns the label line (e.g. the checkbox label beside the box),
-    // so the scope hint sits next to the whole control instead.
+    // so the scope hint sits next to the whole control instead; the wrapper's
+    // text color tints the editor's own label text purple by inheritance.
     if (property.scope === 'node') return editor
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 text-purple-300">
         {editor}
         <ScopeHint scope={property.scope} />
       </div>
@@ -92,11 +94,18 @@ export function Labeled({
   scope?: PropertyScope
   children: React.ReactNode
 }) {
+  const spansVariants = scope !== undefined && scope !== 'node'
   return (
     <>
-      <label className="mb-1 flex items-center gap-1.5 text-xs text-white">
+      <label
+        className={cn(
+          'mb-1 flex items-center gap-1.5 text-xs',
+          // Purple marks dimension-spanning edits, matching the dimension UI.
+          spansVariants ? 'text-purple-300' : 'text-white',
+        )}
+      >
         {label}
-        {scope && scope !== 'node' && <ScopeHint scope={scope} />}
+        {spansVariants && <ScopeHint scope={scope} />}
       </label>
       {children}
     </>
@@ -123,7 +132,7 @@ function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
     <Tooltip>
       <TooltipTrigger
         aria-label={hint}
-        className="cursor-help text-neutral-400 hover:text-neutral-200"
+        className="cursor-help text-purple-300 hover:text-purple-200"
       >
         <ArrowLeftRightIcon aria-hidden className="size-3" />
       </TooltipTrigger>
