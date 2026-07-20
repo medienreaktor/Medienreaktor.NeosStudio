@@ -19,8 +19,7 @@ import { type SettingsDialogDefinition, useSettingsDialogs } from './registry'
  */
 
 type OpenState =
-  | { kind: 'none' }
-  | { kind: 'settings'; sectionId: string | null }
+  { kind: 'none' } | { kind: 'settings'; sectionId: string | null }
 
 interface ModalContextValue {
   /** Open the Settings modal, optionally on a specific section. */
@@ -79,7 +78,7 @@ function ModalHost({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
           data-slot="modal-overlay"
-          className="fixed inset-0 z-200 bg-neutral-950/80 backdrop-blur-sm transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
+          className="fixed inset-0 z-200 bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
         />
         <DialogPrimitive.Popup
           data-slot="modal-content"

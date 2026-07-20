@@ -33,7 +33,7 @@ function SheetOverlay({
     <SheetPrimitive.Backdrop
       data-slot="sheet-overlay"
       className={cn(
-        'fixed inset-0 z-200 bg-neutral-950/80 backdrop-blur-sm transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0',
+        'fixed inset-0 z-200 bg-neutral-950/80 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0',
         className,
       )}
       {...props}

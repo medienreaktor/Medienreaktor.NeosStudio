@@ -80,7 +80,7 @@ export function MediaUploader({
     items.length > 0 && items.every((item) => item.status !== 'uploading')
 
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center bg-neutral-950/80 p-8 backdrop-blur-sm">
+    <div className="absolute inset-0 z-20 grid place-items-center bg-neutral-950/80 p-8">
       <div className="w-full max-w-md rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl">
         <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
           <h2 className="text-sm font-medium text-neutral-200">
