@@ -66,7 +66,12 @@ export function WorkspaceSwitcher({
       <Select
         // Controlled by the workspace list, so a failed switch snaps back.
         value={personalWorkspace.baseWorkspace ?? undefined}
-        onValueChange={(v) => switchBase.mutate(v as string)}
+        onValueChange={(v) => {
+          // Re-selecting the current base is a no-op - the CR would reject
+          // the redundant rebase with an error.
+          if (v === personalWorkspace.baseWorkspace) return
+          switchBase.mutate(v as string)
+        }}
         disabled={switchBase.isPending}
         // Lets SelectValue render the label for the selected workspace name.
         items={targets.map((workspace) => ({
