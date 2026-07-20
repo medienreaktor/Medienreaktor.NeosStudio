@@ -2,6 +2,7 @@ import { propertyEditorRegistry } from '../registry'
 import { ASSET_EDITOR, AssetEditor } from './AssetEditor'
 import { BOOLEAN_EDITOR, BooleanEditor } from './BooleanEditor'
 import { CODE_EDITOR, CodeEditor } from './CodeEditor'
+import { DATE_TIME_EDITOR, DateTimeEditor } from './DateTimeEditor'
 import { IMAGE_EDITOR, ImageEditor } from './ImageEditor'
 import { NODE_TYPE_EDITOR, NodeTypeEditor } from './NodeTypeEditor'
 import { SELECT_BOX_EDITOR, SelectBoxEditor } from './SelectBoxEditor'
@@ -26,6 +27,8 @@ export {
   BooleanEditor,
   CODE_EDITOR,
   CodeEditor,
+  DATE_TIME_EDITOR,
+  DateTimeEditor,
   IMAGE_EDITOR,
   ImageEditor,
   NODE_TYPE_EDITOR,
@@ -68,6 +71,10 @@ export function registerBuiltinPropertyEditors(): void {
   propertyEditorRegistry.register({
     id: CODE_EDITOR,
     component: CodeEditor,
+  })
+  propertyEditorRegistry.register({
+    id: DATE_TIME_EDITOR,
+    component: DateTimeEditor,
   })
   propertyEditorRegistry.register({
     id: BOOLEAN_EDITOR,
