@@ -77,13 +77,13 @@ export function NodeCreationPanel() {
             setToggled((previous) => ({ ...previous, [group.name]: !open }))
           }
         >
-          <ul className="grid grid-cols-2 gap-1 @[18rem]:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-1 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6">
             {group.nodeTypes.map((nodeType) => (
               <li key={nodeType.name}>
                 <div
                   draggable
                   title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
-                  className="flex h-full cursor-grab flex-col items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800/40 px-1 py-3 text-center hover:bg-neutral-800 active:cursor-grabbing"
+                  className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-700 bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-800 active:cursor-grabbing"
                   onDragStart={(event) => {
                     event.dataTransfer.effectAllowed = 'copy'
                     event.dataTransfer.setData(
