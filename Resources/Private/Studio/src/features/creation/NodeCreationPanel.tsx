@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
@@ -47,67 +47,71 @@ export function NodeCreationPanel() {
     : groups
 
   return (
-    <div className="@container flex flex-col gap-2 p-2">
-      <Input
-        type="search"
-        placeholder="Filter node types…"
-        value={filter}
-        onChange={(event) => setFilter(event.target.value)}
-        className="h-8"
-      />
-      {visibleGroups.length === 0 && (
-        <Placeholder
-          icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}
-          title={
-            groups.length === 0
-              ? 'No creatable content node types.'
-              : 'No node types match the filter.'
-          }
-          className="py-10"
+    <div className="@container flex min-h-full flex-col">
+      {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
+      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950/50 p-2 backdrop-blur-xs">
+        <SearchInput
+          placeholder="Filter node types…"
+          aria-label="Filter node types"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
         />
-      )}
-      {visibleGroups.map((group) => (
-        <CollapsibleGroup
-          key={group.name}
-          label={group.label}
-          // While filtering every group with matches stays open; the default
-          // comes from the group's configured collapsed flag.
-          open={query !== '' || !(toggled[group.name] ?? group.collapsed)}
-          onOpenChange={(open) =>
-            setToggled((previous) => ({ ...previous, [group.name]: !open }))
-          }
-        >
-          <ul className="grid grid-cols-2 gap-1 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6">
-            {group.nodeTypes.map((nodeType) => (
-              <li key={nodeType.name}>
-                <div
-                  draggable
-                  title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
-                  className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-700 bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-800 active:cursor-grabbing"
-                  onDragStart={(event) => {
-                    event.dataTransfer.effectAllowed = 'copy'
-                    event.dataTransfer.setData(
-                      NODE_TYPE_DATA_TRANSFER,
-                      nodeType.name,
-                    )
-                    startCreationDrag(nodeType.name)
-                  }}
-                  onDragEnd={() => endCreationDrag()}
-                >
-                  <NodeTypeIcon
-                    nodeTypes={nodeTypes}
-                    nodeTypeName={nodeType.name}
-                    className="text-base"
-                  />
-                  <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
-                    {nodeType.label}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </CollapsibleGroup>
-      ))}
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 pt-0">
+        {visibleGroups.length === 0 && (
+          <Placeholder
+            icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}
+            title={
+              groups.length === 0
+                ? 'No creatable content node types.'
+                : 'No node types match the filter.'
+            }
+            className="py-10"
+          />
+        )}
+        {visibleGroups.map((group) => (
+          <CollapsibleGroup
+            key={group.name}
+            label={group.label}
+            // While filtering every group with matches stays open; the default
+            // comes from the group's configured collapsed flag.
+            open={query !== '' || !(toggled[group.name] ?? group.collapsed)}
+            onOpenChange={(open) =>
+              setToggled((previous) => ({ ...previous, [group.name]: !open }))
+            }
+          >
+            <ul className="grid grid-cols-2 gap-1 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6">
+              {group.nodeTypes.map((nodeType) => (
+                <li key={nodeType.name}>
+                  <div
+                    draggable
+                    title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
+                    className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-700 bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-800 active:cursor-grabbing"
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = 'copy'
+                      event.dataTransfer.setData(
+                        NODE_TYPE_DATA_TRANSFER,
+                        nodeType.name,
+                      )
+                      startCreationDrag(nodeType.name)
+                    }}
+                    onDragEnd={() => endCreationDrag()}
+                  >
+                    <NodeTypeIcon
+                      nodeTypes={nodeTypes}
+                      nodeTypeName={nodeType.name}
+                      className="text-base"
+                    />
+                    <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                      {nodeType.label}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CollapsibleGroup>
+        ))}
+      </div>
     </div>
   )
 }

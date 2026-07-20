@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { useCreatableNodeTypes } from '@/features/creation/creatableNodeTypes'
 import { cn } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
@@ -51,20 +51,12 @@ export function DocumentsToolbar({
 
   return (
     <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950/50 backdrop-blur-xs p-2">
-      <div className="relative min-w-0 flex-1">
-        <i
-          className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-neutral-400"
-          aria-hidden
-        />
-        <Input
-          type="search"
-          value={searchTerm}
-          onChange={(event) => onSearchTermChange(event.target.value)}
-          placeholder="Search documents…"
-          aria-label="Search documents by title"
-          className="h-8 pl-8"
-        />
-      </div>
+      <SearchInput
+        value={searchTerm}
+        onChange={(event) => onSearchTermChange(event.target.value)}
+        placeholder="Search documents…"
+        aria-label="Search documents by title"
+      />
       <DropdownMenu>
         <DropdownMenuTrigger
           render={

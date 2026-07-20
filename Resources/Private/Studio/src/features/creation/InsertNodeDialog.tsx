@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -274,13 +274,12 @@ function OpenInsertNodeDialog({
                 )
               })}
             </ToggleGroup>
-            <Input
-              type="search"
+            <SearchInput
               placeholder="Filter node types…"
+              aria-label="Filter node types"
               autoFocus={true}
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
-              className="h-8"
             />
           </div>
 
