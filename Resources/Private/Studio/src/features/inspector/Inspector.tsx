@@ -25,7 +25,6 @@ import {
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyEditor } from './PropertyEditor'
 import { InspectorViewRenderer } from './views/InspectorViewRenderer'
-import { NodeInfoView } from './views'
 
 /**
  * The visibility flag from the Neos.Neos:Hidable mixin. Configured as a
@@ -250,13 +249,6 @@ export function InspectorPanel({
                       {tab.label}
                     </TabsTrigger>
                   ))}
-                  <TabsTrigger
-                    key={'__nodeData'}
-                    value={'__nodeData'}
-                    title="Node Data"
-                  >
-                    <FaIcon icon={'info-circle'} />
-                  </TabsTrigger>
                 </TabsList>
                 {visibleTabs.map((tab) => (
                   <TabsContent
@@ -275,28 +267,6 @@ export function InspectorPanel({
                     ))}
                   </TabsContent>
                 ))}
-                <TabsContent
-                  key={'__nodeData'}
-                  value={'__nodeData'}
-                  className="space-y-4"
-                >
-                  <details
-                    open={true}
-                    className="group/inspector-group border-b border-neutral-700 p-2 m-0"
-                  >
-                    <summary className="flex py-2 cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-white select-none [&::-webkit-details-marker]:hidden">
-                      <FaIcon icon="info-circle" />
-                      Node Information
-                    </summary>
-                    <div className="py-2 space-y-4">
-                      <NodeInfoView
-                        label="Node Information"
-                        node={node}
-                        options={{}}
-                      />
-                    </div>
-                  </details>
-                </TabsContent>
               </Tabs>
             )}
           </>
