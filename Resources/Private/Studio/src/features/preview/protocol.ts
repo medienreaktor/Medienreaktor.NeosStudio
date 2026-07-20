@@ -106,6 +106,26 @@ export type GuestToHostMessage =
       type: 'neos-studio/link-edit-request'
       attributes: LinkAttributes | null
     }
+  /**
+   * Reply to element-info-request: where (and whether) the node is rendered
+   * on this page. fusionPath is the element's rendering entry point (the
+   * data-__neos-fusion-path attribute), null when the node has no rendered
+   * element here - the host then falls back to a full reload.
+   */
+  | {
+      type: 'neos-studio/element-info'
+      requestId: number
+      fusionPath: string | null
+    }
+  /**
+   * Reply to replace-element: whether the swap happened. false (element gone,
+   * unparseable fragment) tells the host to fall back to a full reload.
+   */
+  | {
+      type: 'neos-studio/element-replaced'
+      requestId: number
+      ok: boolean
+    }
 
 export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */
@@ -125,3 +145,24 @@ export type HostToGuestMessage =
   | { type: 'neos-studio/link-apply'; attributes: LinkAttributes | null }
   /** The Link Editor dialog was dismissed - drop the pending link edit. */
   | { type: 'neos-studio/link-cancel' }
+  /**
+   * Ask where the node is rendered on this page (its fusion path), for an
+   * out-of-band re-render. The guest answers with element-info.
+   */
+  | {
+      type: 'neos-studio/element-info-request'
+      requestId: number
+      aggregateId: string
+    }
+  /**
+   * Swap the node's rendered element for freshly rendered markup (an
+   * out-of-band render after an edit): the guest replaces the DOM element,
+   * re-indexes the subtree and remounts inline editing, then answers with
+   * element-replaced.
+   */
+  | {
+      type: 'neos-studio/replace-element'
+      requestId: number
+      aggregateId: string
+      html: string
+    }

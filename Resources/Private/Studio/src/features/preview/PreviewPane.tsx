@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, RotateCw } from 'lucide-react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
-import type { NodeDto } from '@/api/nodes'
+import { renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
@@ -118,6 +118,7 @@ export function PreviewPane({
   onNavigateToNode,
   onNodeEdited,
   reloadToken = 0,
+  elementUpdate = null,
 }: {
   document: NodeDto | null
   /** Address outlined in the preview - the node inspected in the shell. */
@@ -130,6 +131,14 @@ export function PreviewPane({
   onNodeEdited?: (address: string | string[]) => void
   /** Bump to reload the iframe after edits made outside of it (e.g. the inspector). */
   reloadToken?: number
+  /**
+   * Bump the token to refresh just this node's rendered element in place
+   * (an inspector edit with ui.reloadIfChanged): the element is re-rendered
+   * out-of-band and swapped into the live page - no iframe reload, scroll
+   * position and inline editing elsewhere survive. Falls back to a full
+   * reload whenever the element cannot be updated in place.
+   */
+  elementUpdate?: { address: string; token: number } | null
 }) {
   // Bumping this reloads the preview even when the src is unchanged (e.g.
   // after edits in the same document); it feeds into a layer's load key.
@@ -171,6 +180,28 @@ export function PreviewPane({
   onNavigateToNodeRef.current = onNavigateToNode
   const onNodeEditedRef = useRef(onNodeEdited)
   onNodeEditedRef.current = onNodeEdited
+
+  // Replies (element-info / element-replaced) to requests the shell sent
+  // into the guest, resolved by requestId from the message listener below.
+  const pendingGuestRepliesRef = useRef(
+    new Map<number, (message: GuestToHostMessage) => void>(),
+  )
+  const nextRequestIdRef = useRef(0)
+  const awaitGuestReply = (
+    requestId: number,
+    timeoutMs: number,
+  ): Promise<GuestToHostMessage | null> =>
+    new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        pendingGuestRepliesRef.current.delete(requestId)
+        resolve(null)
+      }, timeoutMs)
+      pendingGuestRepliesRef.current.set(requestId, (message) => {
+        clearTimeout(timer)
+        pendingGuestRepliesRef.current.delete(requestId)
+        resolve(message)
+      })
+    })
 
   const src = document ? previewUrl(document.address, 'inPlace') : null
   const loadKey = src ? `${src}#${reloadCount}#${reloadToken}` : null
@@ -296,6 +327,10 @@ export function PreviewPane({
         }
         case 'neos-studio/link-edit-request':
           setLinkEdit({ attributes: message.attributes })
+          break
+        case 'neos-studio/element-info':
+        case 'neos-studio/element-replaced':
+          pendingGuestRepliesRef.current.get(message.requestId)?.(message)
           break
         case 'neos-studio/create-variant-request': {
           // The "Create variant" button over a shine-through element: run the
@@ -429,6 +464,63 @@ export function PreviewPane({
     frame.postMessage(message, window.location.origin)
   }, [guestReady, selectedAddress])
 
+  // Out-of-band element update: re-render one node's element on the server
+  // and swap it into the live page instead of reloading the iframe (the
+  // ui.reloadIfChanged semantics; also hide/unhide of content elements).
+  // Every failure along the way - guest not ready, node not rendered on this
+  // page (e.g. a document), render error, swap failure, timeout - falls back
+  // to a full reload: correctness first, the optimization is best-effort.
+  const updateElementOutOfBand = async (address: string): Promise<void> => {
+    const fallback = () => setReloadCount((count) => count + 1)
+    const frame = activeFrameRef.current?.contentWindow
+    if (!frame || !guestReady) return fallback()
+    let aggregateId: string
+    try {
+      aggregateId = decodeNodeAddress(address).aggregateId
+    } catch {
+      return fallback()
+    }
+    const infoRequestId = ++nextRequestIdRef.current
+    const infoRequest: HostToGuestMessage = {
+      type: 'neos-studio/element-info-request',
+      requestId: infoRequestId,
+      aggregateId,
+    }
+    frame.postMessage(infoRequest, window.location.origin)
+    const info = await awaitGuestReply(infoRequestId, 3000)
+    if (info?.type !== 'neos-studio/element-info' || !info.fusionPath) {
+      return fallback()
+    }
+    let html: string
+    try {
+      html = await renderNodeElement(address, info.fusionPath)
+    } catch {
+      return fallback()
+    }
+    const replaceRequestId = ++nextRequestIdRef.current
+    const replaceRequest: HostToGuestMessage = {
+      type: 'neos-studio/replace-element',
+      requestId: replaceRequestId,
+      aggregateId,
+      html,
+    }
+    activeFrameRef.current?.contentWindow?.postMessage(
+      replaceRequest,
+      window.location.origin,
+    )
+    const ack = await awaitGuestReply(replaceRequestId, 3000)
+    if (ack?.type !== 'neos-studio/element-replaced' || !ack.ok) fallback()
+  }
+
+  const update = elementUpdate ?? undefined
+  useEffect(() => {
+    if (!update) return
+    void updateElementOutOfBand(update.address)
+    // Only a new update (token) triggers a pass - the other values are read
+    // fresh when it runs; a re-run on guestReady flips would replay old edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [update?.token])
+
   if (!document || !src) {
     return (
       <div className="grid flex-1 place-items-center p-6">
@@ -466,18 +558,21 @@ export function PreviewPane({
         entityLabel="element"
         onClose={() => setElementMenu(null)}
         onDone={(action, target) => {
-          // Every action renders only after a reload. Hide/unhide keep the
-          // node inspected (with a fresh snapshot); a delete moves the
-          // inspection to the enclosing collection - the deleted node has no
-          // data to inspect anymore.
-          setReloadCount((count) => count + 1)
           if (action === 'delete') {
+            // The element disappears only after a reload; the inspection
+            // moves to the enclosing collection - the deleted node has no
+            // data to inspect anymore.
+            setReloadCount((count) => count + 1)
             if (target.parentAddress)
               onSelectNodeRef.current(target.parentAddress)
             onNodeEditedRef.current?.(
               target.parentAddress ? [target.parentAddress] : [],
             )
           } else {
+            // Hide/unhide: the dimming attribute is server-rendered, so the
+            // element re-renders out-of-band (with full-reload fallback).
+            // The node stays inspected, with a fresh snapshot.
+            void updateElementOutOfBand(target.address)
             onNodeEditedRef.current?.(target.address)
             onSelectNodeRef.current(target.address)
           }

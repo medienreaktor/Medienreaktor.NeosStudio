@@ -33,6 +33,7 @@ import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
 import { mountRichTextEditors } from './richtext'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
+const FUSION_PATH_ATTRIBUTE = 'data-__neos-fusion-path'
 const COLLECTION_ATTRIBUTE = 'data-__neos-studio-collection'
 const CONTENT_ATTRIBUTE = 'data-__neos-studio-content'
 const HIDDEN_ATTRIBUTE = 'data-__neos-studio-hidden'
@@ -941,16 +942,85 @@ function onDragLeaveDocument(event: DragEvent): void {
   if (activeDrag !== null && event.relatedTarget === null) setDropTarget(null)
 }
 
+/**
+ * Swap a node's rendered element for freshly rendered markup (an out-of-band
+ * re-render after an edit). The document-level event delegation keeps working
+ * on the new DOM by itself; what needs re-running for the subtree is the
+ * aggregate-id index, the rich-text editor mounts, and the selection decor
+ * when the swapped element (or something inside it) was selected. Returns
+ * false when the swap cannot happen - the host falls back to a full reload.
+ */
+function replaceElement(aggregateId: string, html: string): boolean {
+  const element = elementsByAggregateId.get(aggregateId)
+  if (!element || !element.isConnected) return false
+  const template = document.createElement('template')
+  template.innerHTML = html
+  const replacement = template.content.querySelector<HTMLElement>(
+    `[${WRAPPER_ATTRIBUTE}]`,
+  )
+  if (!replacement) return false
+
+  const wasSelected =
+    selectedElement !== null &&
+    (selectedElement === element || element.contains(selectedElement))
+  if (
+    hoveredElement !== null &&
+    (hoveredElement === element || element.contains(hoveredElement))
+  ) {
+    hoveredElement.classList.remove(HOVER_CLASS)
+    hoveredElement = null
+  }
+  // Floating overlays anchored inside the old subtree have nothing to point
+  // at anymore; hovering the new markup brings them back.
+  hideImageOverlay()
+  hideShineVariantButton()
+
+  element.replaceWith(replacement)
+  // Re-run the full index: the swapped subtree's elements (including nested
+  // ones) re-map to their fresh DOM nodes; ids that vanished with the old
+  // markup simply keep a stale, disconnected entry - reads check isConnected.
+  indexWrappedElements()
+  mountRichTextEditors(replacement, {
+    commit: commitProperty,
+    activity: scheduleHandleUpdate,
+  })
+  if (wasSelected) {
+    selectedElement = null
+    select(replacement, { notifyHost: false })
+  }
+  scheduleHandleUpdate()
+  return true
+}
+
 function onHostMessage(event: MessageEvent): void {
   if (event.origin !== window.location.origin || event.source !== window.parent)
     return
   const message = event.data as HostToGuestMessage
   if (message?.type === 'neos-studio/select-node') {
-    const element =
+    const indexed =
       message.aggregateId === null
         ? null
         : (elementsByAggregateId.get(message.aggregateId) ?? null)
+    // An element replaced out-of-band can leave stale index entries behind.
+    const element = indexed?.isConnected ? indexed : null
     select(element, { notifyHost: false, reveal: true })
+  }
+  if (message?.type === 'neos-studio/element-info-request') {
+    const element = elementsByAggregateId.get(message.aggregateId)
+    post({
+      type: 'neos-studio/element-info',
+      requestId: message.requestId,
+      fusionPath: element?.isConnected
+        ? (element.getAttribute(FUSION_PATH_ATTRIBUTE) ?? null)
+        : null,
+    })
+  }
+  if (message?.type === 'neos-studio/replace-element') {
+    post({
+      type: 'neos-studio/element-replaced',
+      requestId: message.requestId,
+      ok: replaceElement(message.aggregateId, message.html),
+    })
   }
   if (message?.type === 'neos-studio/creation-drag-start')
     startDrag(message.nodeTypeName)

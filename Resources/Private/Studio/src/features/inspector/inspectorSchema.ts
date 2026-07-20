@@ -25,12 +25,13 @@ export interface InspectorProperty {
   /** Any non-"node" scope makes edits span dimension variants - flagged next to the label. */
   scope: PropertyScope
   /**
-   * ui.reloadIfChanged / ui.reloadPageIfChanged: a change to this property
-   * affects the rendered output, so the preview must refresh after a save.
-   * Studio has no per-element out-of-band rendering (yet), so both flags
-   * reload the whole preview; properties with neither flag leave it alone.
+   * How the preview refreshes after this property is saved:
+   * ui.reloadPageIfChanged reloads the whole page ('page'),
+   * ui.reloadIfChanged re-renders just the node's element out-of-band
+   * ('element'), and with neither flag the preview is left alone ('none') -
+   * the change does not affect the rendered output.
    */
-  reloadPreviewIfChanged: boolean
+  reload: 'none' | 'element' | 'page'
 }
 
 /**
@@ -245,9 +246,11 @@ export function buildInspectorSchema(
             editor,
             hidden: propertyConfig.ui?.inspector?.hidden ?? false,
             scope: propertyConfig.scope ?? 'node',
-            reloadPreviewIfChanged:
-              (propertyConfig.ui?.reloadIfChanged ?? false) ||
-              (propertyConfig.ui?.reloadPageIfChanged ?? false),
+            reload: propertyConfig.ui?.reloadPageIfChanged
+              ? 'page'
+              : propertyConfig.ui?.reloadIfChanged
+                ? 'element'
+                : 'none',
             editorOptions: {
               ...(editor === defaultEditor
                 ? DATA_TYPE_EDITOR_OPTIONS[type]

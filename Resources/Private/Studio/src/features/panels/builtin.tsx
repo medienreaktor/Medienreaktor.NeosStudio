@@ -25,17 +25,24 @@ import { panelRegistry } from './registry'
  * Shared refresh semantics after a tree context-menu action: hide/unhide
  * report the node itself (its decor and inspector snapshot refresh), a
  * delete reports the parent (its children list shrinks and the inspection
- * has to move somewhere that still exists).
+ * has to move somewhere that still exists). Hide/unhide ask for an
+ * element-level preview refresh: content elements re-render out-of-band,
+ * and nodes without a rendered element on the page (documents - whose
+ * hiding changes menus, or content of another document) fall back to the
+ * full reload automatically.
  */
 function reportNodeAction(
-  nodeEdited: (address: string) => void,
+  nodeEdited: (
+    address: string,
+    options?: { reload?: 'page' | 'element' | 'none' },
+  ) => void,
   action: NodeMenuAction,
   target: NodeMenuTarget,
 ): void {
   if (action === 'delete') {
     if (target.parentAddress) nodeEdited(target.parentAddress)
   } else {
-    nodeEdited(target.address)
+    nodeEdited(target.address, { reload: 'element' })
   }
 }
 
@@ -125,6 +132,7 @@ function VisualEditorPanel() {
   const {
     selectedDocument,
     previewReloadToken,
+    previewElementUpdate,
     inspectedNode,
     inspectAddress,
     navigateToNode,
@@ -141,6 +149,7 @@ function VisualEditorPanel() {
           reportInlineEdit(Array.isArray(address) ? address : [address])
         }
         reloadToken={previewReloadToken}
+        elementUpdate={previewElementUpdate}
       />
     </div>
   )

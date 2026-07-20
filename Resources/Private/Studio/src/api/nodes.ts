@@ -112,6 +112,23 @@ export function fetchNode(
 }
 
 /**
+ * Renders one content element out-of-band: the HTML fragment the page's
+ * Fusion produces for this node at the given rendering entry point (the
+ * data-__neos-fusion-path attribute of the currently rendered element).
+ * mode "inPlace" keeps the editing metadata attributes in the markup, so the
+ * fragment can replace the live element in the preview. Never cached - the
+ * point is a fresh render after an edit.
+ */
+export function renderNodeElement(
+  address: string,
+  fusionPath: string,
+): Promise<string> {
+  return apiFetch<string>(
+    `/nodes/${address}/render?mode=inPlace&fusionPath=${encodeURIComponent(fusionPath)}`,
+  )
+}
+
+/**
  * Builds a URL path segment (slug) for the node from the given text - or from
  * the node's label when the text is empty - using the server's language-aware
  * transliteration. This is the same generator the classic UI's uriPathSegment

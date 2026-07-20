@@ -88,13 +88,14 @@ export function InspectorPanel({
 }: {
   node: NodeDto | null
   /**
-   * A property edit for this address was persisted. reloadPreview reflects the
-   * property's ui.reloadIfChanged / ui.reloadPageIfChanged configuration -
-   * false means the change does not affect the rendered page.
+   * A property edit for this address was persisted. reload reflects the
+   * property's configuration: 'page' (ui.reloadPageIfChanged), 'element'
+   * (ui.reloadIfChanged - an out-of-band re-render of just this node's
+   * element), or 'none' - the change does not affect the rendered page.
    */
   onNodeEdited?: (
     address: string,
-    options?: { reloadPreview?: boolean },
+    options?: { reload?: 'page' | 'element' | 'none' },
   ) => void
 }) {
   const { data: nodeTypes } = useNodeTypes()
@@ -184,17 +185,26 @@ export function InspectorPanel({
                 referenceTargets(value),
               )
             : persistPropertyChange(node.address, propertyName, value)
-    // ui.reloadIfChanged / ui.reloadPageIfChanged decide whether the preview
-    // refreshes (both currently mean a full reload - Studio has no per-element
-    // out-of-band rendering). The pseudo-properties always reload: hiding and
-    // a type change always alter the rendered page. An unknown property (not
-    // in the schema) reloads too - better one reload than a stale preview.
-    const reloadPreview =
-      propertyName === HIDDEN_PROPERTY ||
-      propertyName === NODE_TYPE_PROPERTY ||
-      (propertySchema?.reloadPreviewIfChanged ?? true)
+    // How the preview refreshes follows ui.reloadPageIfChanged ('page') /
+    // ui.reloadIfChanged ('element': out-of-band re-render of just this
+    // node's element) / neither ('none'). Two exceptions: a type change
+    // always reloads the page, and _hidden never resolves to 'none' - the
+    // Hidable mixin configures no reload flag (the classic UI dims hidden
+    // elements client-side), but Studio's dimming attribute is server-
+    // rendered, so content elements re-render out-of-band. Documents keep
+    // the 'page' their Document-mixin reloadPageIfChanged resolves to (menus
+    // change), as does any unknown property (not in the schema) - better one
+    // reload than a stale preview.
+    const reload =
+      propertyName === NODE_TYPE_PROPERTY
+        ? 'page'
+        : propertyName === HIDDEN_PROPERTY
+          ? propertySchema?.reload === 'page'
+            ? 'page'
+            : 'element'
+          : (propertySchema?.reload ?? 'page')
     persist
-      .then(() => onNodeEdited?.(node.address, { reloadPreview }))
+      .then(() => onNodeEdited?.(node.address, { reload }))
       .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))
   }
 

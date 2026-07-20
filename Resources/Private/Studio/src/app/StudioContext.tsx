@@ -22,6 +22,12 @@ export type StudioContextValue = {
   lastEdit: NodeEdit | null
   /** Bumped to reload the preview iframe after edits made outside of it. */
   previewReloadToken: number
+  /**
+   * The last edit that wants just its node's element refreshed in the preview
+   * (out-of-band render + DOM swap instead of an iframe reload). The token
+   * distinguishes successive edits of the same address.
+   */
+  previewElementUpdate: { address: string; token: number } | null
   /** Select a document (also inspects it). */
   selectDocument: (node: NodeDto) => void
   /** Inspect a node without changing the selected document. */
@@ -40,12 +46,16 @@ export type StudioContextValue = {
    */
   reportInlineEdit: (addresses: string[]) => void
   /**
-   * Report that a property edit for this address was persisted. The preview
-   * reloads by default; pass reloadPreview: false when the property does not
-   * affect the rendered page (neither ui.reloadIfChanged nor
-   * ui.reloadPageIfChanged is set) - trees and the inspector still refresh.
+   * Report that a property edit for this address was persisted. reload
+   * mirrors the property's configuration and defaults to 'page' (full iframe
+   * reload); 'element' re-renders just the node's element out-of-band
+   * (ui.reloadIfChanged); 'none' leaves the preview alone - the change does
+   * not affect the rendered page. Trees and the inspector always refresh.
    */
-  nodeEdited: (address: string, options?: { reloadPreview?: boolean }) => void
+  nodeEdited: (
+    address: string,
+    options?: { reload?: 'page' | 'element' | 'none' },
+  ) => void
   /**
    * Report a structural change (e.g. a drag-and-drop move) affecting several
    * addresses at once - their child lists are refreshed in the trees and the

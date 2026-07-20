@@ -108,6 +108,12 @@ export function App() {
   // Bumped after inspector edits so the preview shows them (inline edits
   // already render live inside the iframe and need no reload).
   const [previewReloadToken, setPreviewReloadToken] = useState(0)
+  // Inspector edits of ui.reloadIfChanged properties: refresh just the node's
+  // element in the preview (out-of-band render) instead of a full reload.
+  const [previewElementUpdate, setPreviewElementUpdate] = useState<{
+    address: string
+    token: number
+  } | null>(null)
 
   // The identity itself is not displayed, but the me-query doubles as the
   // token check: a 401 drives the logout below.
@@ -312,6 +318,7 @@ export function App() {
     inspectedNode,
     lastEdit,
     previewReloadToken,
+    previewElementUpdate,
     selectDocument: (node) => {
       setSelectedDocument(node)
       setInspectedNode(node)
@@ -356,10 +363,19 @@ export function App() {
         addresses: [address],
         token: (prev?.token ?? 0) + 1,
       }))
-      // Inspector saves opt out for properties without ui.reloadIfChanged /
-      // ui.reloadPageIfChanged - they do not affect the rendered page.
-      if (options?.reloadPreview !== false) {
+      // How the preview refreshes follows the property's configuration:
+      // 'page' (ui.reloadPageIfChanged, and the default for anything not an
+      // inspector property save) reloads the iframe, 'element'
+      // (ui.reloadIfChanged) re-renders just the node's element out-of-band,
+      // 'none' (neither flag) leaves the preview alone.
+      const reload = options?.reload ?? 'page'
+      if (reload === 'page') {
         setPreviewReloadToken((token) => token + 1)
+      } else if (reload === 'element') {
+        setPreviewElementUpdate((prev) => ({
+          address,
+          token: (prev?.token ?? 0) + 1,
+        }))
       }
       // The inspected-node snapshot is stale now - the save already
       // invalidated the cache, so this refetches fresh values.
