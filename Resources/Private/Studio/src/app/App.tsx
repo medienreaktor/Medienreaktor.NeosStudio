@@ -525,9 +525,37 @@ export function App() {
 
                     <PreviewToolbar
                       document={selectedDocument}
-                      onReload={() =>
+                      onReload={() => {
+                        // Reload the preview, both trees and the inspector
+                        // together. Everything serves stale content while the
+                        // fresh data is in flight: drop the cached node reads,
+                        // then the trees invalidate optimistically (ALL_NODES
+                        // keeps existing rows until refetch resolves) and the
+                        // inspected-node / document snapshots are only swapped
+                        // once fetchNode resolves - so nothing blanks mid-reload.
+                        void queryClient.invalidateQueries({
+                          queryKey: queryKeys.nodes.all,
+                        })
+                        setLastEdit((prev) => ({
+                          addresses: [ALL_NODES],
+                          token: (prev?.token ?? 0) + 1,
+                        }))
                         setPreviewReloadToken((token) => token + 1)
-                      }
+                        if (selectedDocument) {
+                          fetchNode(selectedDocument.address)
+                            .then(setSelectedDocument)
+                            .catch(() => {
+                              /* keep showing the previous snapshot */
+                            })
+                        }
+                        if (inspectedNode) {
+                          fetchNode(inspectedNode.address)
+                            .then(setInspectedNode)
+                            .catch(() => {
+                              /* keep showing the previous snapshot */
+                            })
+                        }
+                      }}
                     />
                   </div>
                   <div className="flex items-center gap-2">
