@@ -18,12 +18,12 @@
  * Escape reverts). Selection pushed by the host (outliner clicks) is outlined
  * and scrolled into view.
  *
- * A selected content element (instanceof Neos.Neos:Content, marked by
- * data-__neos-studio-content) gets a floating "..." handle at its top right:
- * clicking it asks the host to open the element menu (hide/delete, rendered
- * by the host over the iframe), dragging it moves the element - the same
- * drop machinery the creation drag uses, so the server-computed allowed-types
- * lists are respected.
+ * A hovered or selected content element (instanceof Neos.Neos:Content, marked
+ * by data-__neos-studio-content) gets a floating "..." handle inside its top
+ * right corner: clicking it asks the host to open the element menu
+ * (hide/delete, rendered by the host over the iframe), dragging it moves the
+ * element - the same drop machinery the creation drag uses, so the
+ * server-computed allowed-types lists are respected.
  */
 import type {
   GuestToHostMessage,
@@ -31,6 +31,7 @@ import type {
 } from '../features/preview/protocol'
 import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
 import { mountRichTextEditors } from './richtext'
+import { TOOLBAR_CLASS } from './toolbar'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
 const FUSION_PATH_ATTRIBUTE = 'data-__neos-fusion-path'
@@ -225,8 +226,8 @@ function injectStyles(): void {
       pointer-events: none;
       display: none;
     }
-    /* The "..." handle of the selected content element: opens the element
-       menu on click, moves the element on drag. */
+    /* The "..." handle of the hovered/selected content element: opens the
+       element menu on click, moves the element on drag. */
     #${HANDLE_ID} {
       position: fixed;
       /* One below the max so the richtext toolbars (2147483647) sit above it. */
@@ -314,11 +315,12 @@ function select(
 }
 
 /**
- * The "..." handle: a single floating button pinned to the top right of the
- * selected content element (only Neos.Neos:Content elements - collections
- * are structure, hidden/deleted/moved through their content). Click asks the
- * host to open the element menu at the handle's position; dragging it starts
- * a move of the element.
+ * The "..." handle: a single floating button pinned inside the top right
+ * corner of the hovered - or, absent a hover, the selected - content element
+ * (only Neos.Neos:Content elements - collections are structure,
+ * hidden/deleted/moved through their content). Click asks the host to open
+ * the element menu at the handle's position; dragging it starts a move of
+ * the element.
  */
 function elementHandle(): HTMLElement {
   let handle = document.getElementById(HANDLE_ID)
@@ -339,6 +341,9 @@ function elementHandle(): HTMLElement {
   return handle
 }
 
+/** The element the handle is currently attached to (hovered or selected). */
+let handleTarget: HTMLElement | null = null
+
 let handleUpdateScheduled = false
 
 /** Reposition on the next frame - scroll and input events fire in bursts. */
@@ -353,28 +358,35 @@ function scheduleHandleUpdate(): void {
 
 function positionHandle(): void {
   const handle = elementHandle()
-  const target =
+  const hovered =
+    hoveredElement?.hasAttribute(CONTENT_ATTRIBUTE) === true
+      ? hoveredElement
+      : null
+  const selected =
     selectedElement?.hasAttribute(CONTENT_ATTRIBUTE) === true
       ? selectedElement
       : null
-  if (target === null || !target.isConnected) {
+  const target = hovered ?? selected
+  handleTarget = target !== null && target.isConnected ? target : null
+  if (handleTarget === null) {
     handle.style.display = 'none'
     return
   }
-  const rect = target.getBoundingClientRect()
-  // Right-aligned with the selection outline (2px at offset 5), floating just
-  // above it; falls inside the element when that would leave the viewport.
-  let top = rect.top - 34
-  if (top < 2) top = rect.top + 9
+  // Inside the element's top right corner, so it reads as part of it and
+  // scrolls away with it.
+  const rect = handleTarget.getBoundingClientRect()
   handle.style.display = 'flex'
-  handle.style.left = `${rect.right + 7 - 24}px`
-  handle.style.top = `${top}px`
+  handle.style.left = `${rect.right - 24 - 4}px`
+  handle.style.top = `${rect.top + 4}px`
 }
 
 function onHandleClick(): void {
-  const element = selectedElement
+  const element = handleTarget
   const contextPath = element?.getAttribute(WRAPPER_ATTRIBUTE)
   if (!element || !contextPath) return
+  // The menu acts on the element - make it the selection first, so the
+  // outliner and inspector show what the menu is about to change.
+  select(element, { notifyHost: true })
   const rect = elementHandle().getBoundingClientRect()
   post({
     type: 'neos-studio/element-menu-request',
@@ -391,7 +403,7 @@ function onHandleClick(): void {
 }
 
 function onHandleDragStart(event: DragEvent): void {
-  const element = selectedElement
+  const element = handleTarget
   const nodeTypeName = element?.getAttribute(NODE_TYPE_ATTRIBUTE)
   if (!element || !nodeTypeName) {
     event.preventDefault()
@@ -401,8 +413,7 @@ function onHandleDragStart(event: DragEvent): void {
     event.dataTransfer.effectAllowed = 'move'
     // Firefox refuses to start a drag without data.
     event.dataTransfer.setData('text/plain', nodeTypeName)
-    // The handle floats slightly outside the element - clamp the ghost's
-    // grab point into its bounds.
+    // Clamp the ghost's grab point into the element's bounds.
     const rect = element.getBoundingClientRect()
     event.dataTransfer.setDragImage(
       element,
@@ -600,13 +611,31 @@ function commitProperty(element: HTMLElement, value: string): void {
   }
 }
 
+/** The guest's own floating UI - clicks on it are not clicks on the page. */
+function isStudioUi(target: HTMLElement): boolean {
+  return (
+    target.closest(
+      `#${HANDLE_ID}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}`,
+    ) !== null
+  )
+}
+
 function onClick(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
   if (!target?.closest) return
   const anchor = target.closest<HTMLAnchorElement>('a[href]')
   if (anchor && handleLinkClick(event, anchor)) return
   const wrapper = target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
-  if (wrapper) select(wrapper, { notifyHost: true })
+  if (wrapper) {
+    select(wrapper, { notifyHost: true })
+    return
+  }
+  // A click outside every content element (and outside the guest's own
+  // floating controls, which act on their targets themselves): clear the
+  // element selection and let the shell inspect the current document.
+  if (isStudioUi(target)) return
+  select(null, { notifyHost: false })
+  post({ type: 'neos-studio/document-selected' })
 }
 
 /**
@@ -657,6 +686,9 @@ function handleLinkClick(
 
 function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
+  // Over the "..." handle itself (it sits inside its element): keep the
+  // hover state, so the handle does not vanish under the pointer.
+  if (target?.closest?.(`#${HANDLE_ID}`)) return
   // Over the image overlay itself (it sits on top of the image): keep it shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
   // Over the "Create variant" button (it floats over its element): keep it.
@@ -691,6 +723,9 @@ function onMouseOver(event: MouseEvent): void {
   hoveredElement?.classList.remove(HOVER_CLASS)
   hoveredElement = wrapper
   hoveredElement?.classList.add(HOVER_CLASS)
+  // The "..." handle follows the hovered content element (falling back to
+  // the selected one).
+  scheduleHandleUpdate()
 }
 
 /**

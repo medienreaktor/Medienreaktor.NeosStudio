@@ -29,6 +29,11 @@ export type GuestToHostMessage =
   | { type: 'neos-studio/guest-ready' }
   /** The user clicked a content element; contextPath is the NodeAddress JSON. */
   | { type: 'neos-studio/node-selected'; contextPath: string }
+  /**
+   * The user clicked outside of any content element - the shell inspects the
+   * current document instead (the guest does not know its address).
+   */
+  | { type: 'neos-studio/document-selected' }
   /** The user followed a link to another document (from its preview URI). */
   | { type: 'neos-studio/navigate-to-node'; contextPath: string }
   /** An inline edit was committed (blur with changed content). */

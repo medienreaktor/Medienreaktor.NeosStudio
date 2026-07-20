@@ -176,6 +176,8 @@ export function PreviewPane({
   // Latest-callback refs keep the message listener subscription stable.
   const onSelectNodeRef = useRef(onSelectNode)
   onSelectNodeRef.current = onSelectNode
+  const documentAddressRef = useRef(document?.address ?? null)
+  documentAddressRef.current = document?.address ?? null
   const onNavigateToNodeRef = useRef(onNavigateToNode)
   onNavigateToNodeRef.current = onNavigateToNode
   const onNodeEditedRef = useRef(onNodeEdited)
@@ -271,6 +273,12 @@ export function PreviewPane({
           } catch {
             /* malformed contextpath - ignore the click */
           }
+          break
+        case 'neos-studio/document-selected':
+          // A click outside every content element inspects the document
+          // itself - matching a click on the document in the tree.
+          if (documentAddressRef.current)
+            onSelectNodeRef.current(documentAddressRef.current)
           break
         case 'neos-studio/navigate-to-node':
           try {

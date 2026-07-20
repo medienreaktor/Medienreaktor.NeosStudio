@@ -44,7 +44,8 @@ export interface ToolbarItem {
 }
 
 const ACTIVE_CLASS = 'neos-studio-toolbar-active'
-const TOOLBAR_CLASS = 'neos-studio-toolbar'
+/** Exported so main.ts can tell toolbar clicks from clicks on page background. */
+export const TOOLBAR_CLASS = 'neos-studio-toolbar'
 const ACCENT = 'rgb(0, 173, 238)'
 
 const items: ToolbarItem[] = []
