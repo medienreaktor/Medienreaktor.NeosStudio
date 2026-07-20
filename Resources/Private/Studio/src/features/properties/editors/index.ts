@@ -6,6 +6,12 @@ import { DATE_TIME_EDITOR, DateTimeEditor } from './DateTimeEditor'
 import { IMAGE_EDITOR, ImageEditor } from './ImageEditor'
 import { LINK_EDITOR, LinkFieldEditor } from './LinkFieldEditor'
 import { NODE_TYPE_EDITOR, NodeTypeEditor } from './NodeTypeEditor'
+import {
+  REFERENCE_EDITOR,
+  REFERENCES_EDITOR,
+  ReferenceEditor,
+  ReferencesEditor,
+} from './ReferenceEditor'
 import { SELECT_BOX_EDITOR, SelectBoxEditor } from './SelectBoxEditor'
 import { TEXT_AREA_EDITOR, TextAreaEditor } from './TextAreaEditor'
 import { TEXT_FIELD_EDITOR, TextFieldEditor } from './TextFieldEditor'
@@ -36,6 +42,10 @@ export {
   LinkFieldEditor,
   NODE_TYPE_EDITOR,
   NodeTypeEditor,
+  REFERENCE_EDITOR,
+  REFERENCES_EDITOR,
+  ReferenceEditor,
+  ReferencesEditor,
   SELECT_BOX_EDITOR,
   SelectBoxEditor,
   TEXT_AREA_EDITOR,
@@ -92,6 +102,14 @@ export function registerBuiltinPropertyEditors(): void {
   propertyEditorRegistry.register({
     id: SELECT_BOX_EDITOR,
     component: SelectBoxEditor,
+  })
+  propertyEditorRegistry.register({
+    id: REFERENCE_EDITOR,
+    component: ReferenceEditor,
+  })
+  propertyEditorRegistry.register({
+    id: REFERENCES_EDITOR,
+    component: ReferencesEditor,
   })
   propertyEditorRegistry.register({
     id: NODE_TYPE_EDITOR,

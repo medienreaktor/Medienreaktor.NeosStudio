@@ -10,7 +10,10 @@ import {
   hideNode,
   unhideNode,
 } from '@/features/editing/nodeActions'
-import { persistPropertyChange } from '@/features/editing/persistProperty'
+import {
+  persistPropertyChange,
+  persistReferenceChange,
+} from '@/features/editing/persistProperty'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyEditor } from './PropertyEditor'
@@ -33,6 +36,18 @@ const HIDDEN_PROPERTY = '_hidden'
  * written with SetNodeProperties.
  */
 const NODE_TYPE_PROPERTY = '_nodeType'
+
+/**
+ * Normalize a reference editor's committed value to the target id list the
+ * SetNodeReferences transport expects: single editors commit a string or null,
+ * multi editors an array; empty means "clear the reference".
+ */
+function referenceTargets(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string' && v !== '')
+  }
+  return typeof value === 'string' && value !== '' ? [value] : []
+}
 
 /**
  * The value to feed a property's editor. Ordinary properties read straight from
@@ -75,7 +90,13 @@ export function InspectorPanel({
   )
   const save = (propertyName: string, value: unknown) => {
     if (!node) return
-    // Two "properties" are not real properties and route to their own
+    // Reference-typed "properties" are not node properties in Neos 9 - they
+    // persist through SetNodeReferences (reference name = property name).
+    const propertyType = tabs
+      ?.flatMap((tab) => tab.groups)
+      .flatMap((group) => group.properties)
+      .find((property) => property.name === propertyName)?.type
+    // Two further "properties" are not real properties and route to their own
     // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
     // tree/preview hide actions), and the node type is changed with
     // ChangeNodeAggregateType.
@@ -86,7 +107,13 @@ export function InspectorPanel({
           : unhideNode(node.address)
         : propertyName === NODE_TYPE_PROPERTY
           ? changeNodeType(node.address, String(value))
-          : persistPropertyChange(node.address, propertyName, value)
+          : propertyType === 'reference' || propertyType === 'references'
+            ? persistReferenceChange(
+                node.address,
+                propertyName,
+                referenceTargets(value),
+              )
+            : persistPropertyChange(node.address, propertyName, value)
     persist
       .then(() => onNodeEdited?.(node.address))
       .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))

@@ -180,6 +180,58 @@ export function fetchAncestors(
     .then(({ nodes }) => nodes)
 }
 
+/** One outgoing reference of a node, with the target node resolved. */
+export interface NodeReferenceDto {
+  /** The reference name = the property name in the node type configuration. */
+  referenceName: string
+  node: NodeDto
+  properties: Record<string, unknown> | null
+}
+
+/**
+ * All outgoing references of a node, in stored order. Reference "properties"
+ * are not part of node.properties in Neos 9 - this relation is where a
+ * reference editor reads its current value from. Invalidated by the
+ * nodes.node(address) prefix after every save.
+ */
+export function useNodeReferences(address: string | null, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.nodes.references(address ?? ''),
+    queryFn: () =>
+      apiFetch<{ references: NodeReferenceDto[] }>(
+        `/nodes/${address}/references`,
+      ),
+    enabled: enabled && address !== null,
+    select: (data) => data.references,
+  })
+}
+
+/** A search hit: a node plus the document breadcrumb that locates it. */
+export interface NodeSearchResult extends NodeDto {
+  /** Document labels from the site down to the node, e.g. ["Home", "Blog", "Post"]. */
+  breadcrumb: string[]
+}
+
+/**
+ * Fulltext search over the descendants of a context node (typically the site
+ * root) - what reference editors and pickers use for search-as-you-type.
+ */
+export function searchNodes(
+  contextAddress: string,
+  term: string,
+  nodeTypes: string,
+  limit = 20,
+): Promise<NodeSearchResult[]> {
+  const params = new URLSearchParams({
+    search: term,
+    nodeTypes,
+    limit: String(limit),
+  })
+  return apiFetch<{ nodes: NodeSearchResult[] }>(
+    `/nodes/${contextAddress}/descendants?${params.toString()}`,
+  ).then(({ nodes }) => nodes)
+}
+
 /**
  * Fetches child nodes and seeds each child into its own node query cache, so
  * a later fetchNode()/useNode() for a child resolves without a request.

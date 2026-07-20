@@ -51,6 +51,9 @@ export const queryKeys = {
     variants: (address: string) => ['nodes', address, 'variants'] as const,
     allowedChildNodeTypes: (address: string) =>
       ['nodes', address, 'allowed-child-node-types'] as const,
+    references: (address: string) => ['nodes', address, 'references'] as const,
+    search: (address: string, nodeTypes: string, term: string) =>
+      ['nodes', address, 'search', { nodeTypes, term }] as const,
   },
   media: {
     /** Broad prefix - invalidate after any asset/collection/tag write. */

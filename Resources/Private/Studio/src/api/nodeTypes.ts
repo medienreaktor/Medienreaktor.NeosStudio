@@ -79,6 +79,8 @@ export interface PropertyInspectorConfig {
 export interface PropertyConfig {
   type?: string
   defaultValue?: unknown
+  /** Reference declarations only: maxItems 1 marks a singular reference. */
+  constraints?: { maxItems?: number | null } | null
   ui?: {
     label?: string | null
     reloadIfChanged?: boolean
@@ -125,6 +127,13 @@ export interface NodeTypeSchemaDto {
       } | null
     } | null
     properties?: Record<string, PropertyConfig | null>
+    /**
+     * Reference declarations. Neos 9 separates them from properties in the
+     * node type model - legacy `type: reference(s)` property declarations
+     * arrive here too (the core migrates them, marking singular ones with
+     * constraints.maxItems = 1 and stripping the type).
+     */
+    references?: Record<string, PropertyConfig | null>
   }
 }
 

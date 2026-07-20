@@ -114,6 +114,7 @@ export function buildInspectorSchema(
   schema: NodeTypeSchemaDto,
 ): InspectorTab[] {
   const properties = schema.configuration.properties ?? {}
+  const references = schema.configuration.references ?? {}
   const tabsConfig = schema.configuration.ui?.inspector?.tabs ?? {}
   const groupsConfig = schema.configuration.ui?.inspector?.groups ?? {}
 
@@ -126,6 +127,22 @@ export function buildInspectorSchema(
     if (!group) continue
     if (!propertiesByGroup.has(group)) propertiesByGroup.set(group, [])
     propertiesByGroup.get(group)!.push({ name, config: config ?? {} })
+  }
+  // References live in their own configuration section in Neos 9 (the core
+  // even migrates legacy `type: reference(s)` properties there), but the
+  // inspector treats them as properties like the classic UI does. Synthesize
+  // the type the editor mapping keys on: constraints.maxItems 1 = singular.
+  for (const [name, config] of Object.entries(references)) {
+    const group = config?.ui?.inspector?.group
+    if (!group) continue
+    if (!propertiesByGroup.has(group)) propertiesByGroup.set(group, [])
+    propertiesByGroup.get(group)!.push({
+      name,
+      config: {
+        ...config,
+        type: config?.constraints?.maxItems === 1 ? 'reference' : 'references',
+      },
+    })
   }
 
   // Groups referenced by a property but never configured still render.
