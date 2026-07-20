@@ -101,6 +101,13 @@
   --font-sans: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-neutral-700 outline-blue-500/50;
