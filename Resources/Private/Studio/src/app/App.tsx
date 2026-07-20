@@ -71,6 +71,32 @@ const AUTO_LOGIN_KEY = 'neos-studio.auto_login_attempted'
 // the id is re-resolved against the current site's subgraph instead.
 const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
 
+// Remember the site and dimension the user was working in across reloads.
+const SELECTED_SITE_KEY = 'neos-studio.selected_site'
+const DIMENSION_SPACE_POINT_KEY = 'neos-studio.dimension_space_point'
+
+// The stored point, or null (= let the backend pick its default) if nothing
+// valid is stored. Structural check only - whether the point is still allowed
+// by the dimension configuration is verified once the dimensions load.
+function storedDimensionSpacePoint(): DimensionSpacePoint | null {
+  try {
+    const stored = localStorage.getItem(DIMENSION_SPACE_POINT_KEY)
+    if (!stored) return null
+    const parsed: unknown = JSON.parse(stored)
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      !Array.isArray(parsed) &&
+      Object.values(parsed).every((value) => typeof value === 'string')
+    ) {
+      return parsed as DimensionSpacePoint
+    }
+  } catch {
+    /* fall through to the backend default */
+  }
+  return null
+}
+
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
@@ -104,8 +130,31 @@ export function App() {
   const dimensions = dimensionsResponse?.dimensions ?? []
   // null = let the backend pick its default dimension space point; the sites
   // response reports the point actually in effect, which the switcher shows.
+  // Starts from the point remembered across reloads, if any.
   const [dimensionSpacePoint, setDimensionSpacePoint] =
-    useState<DimensionSpacePoint | null>(null)
+    useState<DimensionSpacePoint | null>(storedDimensionSpacePoint)
+
+  // Remember the dimension across reloads. A restored point that the current
+  // dimension configuration no longer allows (config changed since it was
+  // stored) is dropped in favor of the backend default.
+  const allowedPoints = dimensionsResponse?.allowedDimensionSpacePoints
+  useEffect(() => {
+    if (!dimensionSpacePoint) return
+    if (
+      allowedPoints &&
+      !allowedPoints.some((point) =>
+        dimensionSpacePointEquals(point, dimensionSpacePoint),
+      )
+    ) {
+      localStorage.removeItem(DIMENSION_SPACE_POINT_KEY)
+      setDimensionSpacePoint(null)
+      return
+    }
+    localStorage.setItem(
+      DIMENSION_SPACE_POINT_KEY,
+      JSON.stringify(dimensionSpacePoint),
+    )
+  }, [dimensionSpacePoint, allowedPoints])
   // Set when the user picked a dimension the selected document does not exist
   // in - the create-variant dialog is open for this target point.
   const [variantRequest, setVariantRequest] =
@@ -144,11 +193,19 @@ export function App() {
   )
 
   const sites = sitesResponse?.sites ?? []
-  const [siteNodeName, setSiteNodeName] = useState<string | null>(null)
+  // Starts from the site remembered across reloads; a stored name that no
+  // longer matches simply falls back to the first site below.
+  const [siteNodeName, setSiteNodeName] = useState<string | null>(() =>
+    localStorage.getItem(SELECTED_SITE_KEY),
+  )
   const activeSite =
     sites.find((s) => s.nodeName === siteNodeName) ??
     sites.find((s) => s.nodeAddress !== null) ??
     null
+
+  useEffect(() => {
+    if (siteNodeName) localStorage.setItem(SELECTED_SITE_KEY, siteNodeName)
+  }, [siteNodeName])
 
   useEffect(() => {
     ;(async () => {
@@ -408,6 +465,10 @@ export function App() {
                           setSiteNodeName(nodeName)
                           setSelectedDocument(null)
                           setInspectedNode(null)
+                          // The stored document belongs to the previous site -
+                          // a reload should land on the new site's root, not
+                          // re-resolve a document from the old one.
+                          localStorage.removeItem(SELECTED_DOCUMENT_KEY)
                         }}
                       />
                     )}
