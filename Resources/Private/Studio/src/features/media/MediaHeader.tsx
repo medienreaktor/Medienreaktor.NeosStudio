@@ -200,12 +200,9 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             <div className="min-w-56">
               <RailButton
                 icon={
-                  <i
-                    className="fas fa-layer-group text-[0.875rem]"
-                    aria-hidden
-                  />
+                  <i className="fas fa-folder text-[0.875rem]" aria-hidden />
                 }
-                label="All assets"
+                label="All collections"
                 active={filter.collection === null}
                 onClick={() => state.selectCollection(null)}
               />
@@ -338,13 +335,15 @@ function FilterButton({
     <Popover>
       <PopoverTrigger
         className={cn(
-          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm',
-          active
-            ? 'border-blue-500/50 bg-blue-500/15 text-white'
-            : 'border-neutral-700 text-neutral-300 hover:bg-neutral-800',
+          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm bg-neutral-700/30 hover:bg-neutral-700/50',
+          active ? 'text-white' : 'border-neutral-700 text-neutral-300 ',
         )}
       >
-        <span className="shrink-0 text-neutral-400">{icon}</span>
+        <span
+          className={cn('shrink-0', active ? 'text-white' : 'text-neutral-500')}
+        >
+          {icon}
+        </span>
         <span className="max-w-40 truncate">{label}</span>
         <i
           className="fas fa-chevron-down text-[0.875rem] shrink-0 text-neutral-500"
@@ -353,7 +352,7 @@ function FilterButton({
       </PopoverTrigger>
       <PopoverContent>
         {action && (
-          <div className="mb-1 flex items-center justify-end">{action}</div>
+          <div className="mb-2 flex items-center justify-end">{action}</div>
         )}
         {children}
       </PopoverContent>
@@ -416,13 +415,13 @@ function RailButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-sm',
+        'flex w-full items-center gap-1.5 border rounded-sm px-1.5 py-1 text-left text-sm',
         active
-          ? 'bg-blue-500/20 text-white'
-          : 'text-neutral-300 hover:bg-neutral-800',
+          ? 'bg-neutral-800 text-white border-blue-500'
+          : 'hover:bg-neutral-800 border-transparent',
       )}
     >
-      <span className="shrink-0 text-neutral-500">{icon}</span>
+      <span className="shrink-0">{icon}</span>
       <span className="truncate">{label}</span>
     </button>
   )
@@ -466,7 +465,7 @@ function InlineCreate({
   if (!open) {
     return (
       <Button
-        variant="ghost"
+        variant="default"
         size="icon-xs"
         onClick={() => {
           handledRef.current = false
