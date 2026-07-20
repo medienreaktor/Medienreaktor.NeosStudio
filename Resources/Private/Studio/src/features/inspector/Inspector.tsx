@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
-import { nodeLabel } from '@/api/nodes'
+import { nodeLabel, useNodeAncestors } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,12 @@ import {
   persistReferenceChange,
 } from '@/features/editing/persistProperty'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
+import {
+  clientEvalNode,
+  clientEvalUsesParentNode,
+  deepEqual,
+  evaluateInspectorTabs,
+} from './clientEval'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { Labeled, PropertyEditor } from './PropertyEditor'
 
@@ -88,8 +94,61 @@ export function InspectorPanel({
     () => (schema ? buildInspectorSchema(schema) : null),
     [schema],
   )
+
+  // Live, not-yet-committed editor input, overlaid on node.properties for
+  // ClientEval - dependent fields react while the user types, like the
+  // classic UI's transient values. Keyed by node address so switching the
+  // inspected node discards them; after a commit the refetched node carries
+  // the same values, so stale shadowing cannot occur.
+  const [transient, setTransient] = useState<{
+    address: string
+    values: Record<string, unknown>
+  } | null>(null)
+  const transientValues =
+    node && transient?.address === node.address ? transient.values : undefined
+  const reportLiveChange = (propertyName: string, value: unknown) => {
+    if (!node) return
+    setTransient((previous) => ({
+      address: node.address,
+      values: {
+        ...(previous?.address === node.address ? previous.values : undefined),
+        [propertyName]: value,
+      },
+    }))
+  }
+
+  // The parent node is only fetched when an expression actually mentions
+  // parentNode - most configurations never do.
+  const needsParentNode = useMemo(() => clientEvalUsesParentNode(tabs), [tabs])
+  const { data: ancestors } = useNodeAncestors(
+    node?.address ?? null,
+    needsParentNode,
+  )
+  const parentNode = ancestors?.[0] ?? null
+
+  // Evaluate ClientEval against the current node state (persisted values plus
+  // live edits): hides properties, resolves dynamic editor options. The deep
+  // compare keeps the schema's identity stable when a re-evaluation changes
+  // nothing, so editors do not re-render or refetch on every node refresh.
+  const evaluatedTabs = useMemo(() => {
+    if (!tabs || !node) return tabs
+    return evaluateInspectorTabs(tabs, {
+      node: clientEvalNode(node, transientValues),
+      parentNode: parentNode ? clientEvalNode(parentNode) : null,
+    })
+  }, [tabs, node, transientValues, parentNode])
+  const stableTabsRef = useRef(evaluatedTabs)
+  if (!deepEqual(stableTabsRef.current, evaluatedTabs)) {
+    stableTabsRef.current = evaluatedTabs
+  }
+  const visibleTabs = stableTabsRef.current
+
   const save = (propertyName: string, value: unknown) => {
     if (!node) return
+    // Reflect the commit in the ClientEval context right away - editors
+    // without an editing phase (checkbox, select) never report live changes,
+    // and dependent fields should not wait for the refetch roundtrip.
+    reportLiveChange(propertyName, value)
     // Reference-typed "properties" are not node properties in Neos 9 - they
     // persist through SetNodeReferences (reference name = property name).
     const propertyType = tabs
@@ -136,18 +195,23 @@ export function InspectorPanel({
         </h2>
       </div>
       <div className="">
-        {tabs && (
+        {visibleTabs && (
           <>
-            {tabs.length === 0 ? (
+            {visibleTabs.length === 0 ? (
               <p className="text-xs text-neutral-400">
                 This node type has no inspector properties.
               </p>
             ) : (
-              // Remount on node type change: the available tabs differ, and
-              // the initially selected tab resets to the first one.
-              <Tabs key={node.nodeType} defaultValue={tabs[0].id}>
+              // Remount on node type change and when ClientEval changes the
+              // set of visible tabs: the available tabs differ, and the
+              // initially selected tab resets to the first one (also rescues
+              // the selection when the selected tab was just hidden).
+              <Tabs
+                key={`${node.nodeType}:${visibleTabs.map((tab) => tab.id).join(',')}`}
+                defaultValue={visibleTabs[0].id}
+              >
                 <TabsList>
-                  {tabs.map((tab) => (
+                  {visibleTabs.map((tab) => (
                     <TabsTrigger key={tab.id} value={tab.id} title={tab.label}>
                       {tab.icon && <FaIcon icon={tab.icon} />}
                       {tab.label}
@@ -161,7 +225,7 @@ export function InspectorPanel({
                     <FaIcon icon={'info-circle'} />
                   </TabsTrigger>
                 </TabsList>
-                {tabs.map((tab) => (
+                {visibleTabs.map((tab) => (
                   <TabsContent
                     key={tab.id}
                     value={tab.id}
@@ -173,6 +237,7 @@ export function InspectorPanel({
                         group={group}
                         node={node}
                         onSave={save}
+                        onLiveChange={reportLiveChange}
                       />
                     ))}
                   </TabsContent>
@@ -240,10 +305,13 @@ function PropertyGroup({
   group,
   node,
   onSave,
+  onLiveChange,
 }: {
   group: InspectorGroup
   node: NodeDto
   onSave: (propertyName: string, value: unknown) => void
+  /** A keystroke-level (pre-commit) value change - feeds ClientEval. */
+  onLiveChange: (propertyName: string, value: unknown) => void
 }) {
   return (
     <details
@@ -268,6 +336,7 @@ function PropertyGroup({
               value={propertyValue(node, property.name)}
               nodeAddress={node.address}
               onSave={onSave}
+              onLiveChange={onLiveChange}
             />
           </div>
         ))}

@@ -74,6 +74,8 @@ export interface PropertyInspectorConfig {
   position?: string | number
   editor?: string
   editorOptions?: Record<string, unknown>
+  /** True, or a "ClientEval:..." expression evaluated in the browser (see features/inspector/clientEval.ts). */
+  hidden?: boolean | string
 }
 
 export interface PropertyConfig {

@@ -15,6 +15,11 @@ export interface InspectorProperty {
   /** Resolved editor identifier, e.g. "Neos.Neos/Inspector/Editors/TextFieldEditor". */
   editor: string | null
   editorOptions: Record<string, unknown>
+  /**
+   * ui.inspector.hidden, as configured: true, or a "ClientEval:..."
+   * expression - evaluated per node before rendering (see clientEval.ts).
+   */
+  hidden: boolean | string
 }
 
 export interface InspectorGroup {
@@ -179,6 +184,7 @@ export function buildInspectorSchema(
         type,
         label: humanizeLabel(propertyConfig.ui?.label, name),
         editor,
+        hidden: propertyConfig.ui?.inspector?.hidden ?? false,
         editorOptions: {
           ...(editor === defaultEditor
             ? DATA_TYPE_EDITOR_OPTIONS[type]

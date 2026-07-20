@@ -165,6 +165,17 @@ export function fetchAllowedChildNodeTypes(address: string): Promise<string[]> {
 }
 
 /** Ancestors, closest first (parent, grandparent, ... up to the root). */
+export function useNodeAncestors(address: string | null, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.nodes.ancestors(address ?? ''),
+    queryFn: () =>
+      apiFetch<{ nodes: NodeDto[] }>(`/nodes/${address}/ancestors`),
+    enabled: enabled && address !== null,
+    select: (data) => data.nodes,
+  })
+}
+
+/** Imperative variant for non-hook contexts (e.g. the tree breadcrumb loader). */
 export function fetchAncestors(
   address: string,
   nodeTypes?: string,

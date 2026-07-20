@@ -17,12 +17,15 @@ export function PropertyEditor({
   value,
   nodeAddress,
   onSave,
+  onLiveChange,
 }: {
   property: InspectorProperty
   value: SerializedPropertyValue | undefined
   /** Address of the node being edited, passed to editors that operate on the node itself (e.g. the node type switcher). */
   nodeAddress: string
   onSave: (propertyName: string, value: unknown) => void
+  /** A keystroke-level (pre-commit) value change; the inspector feeds these to ClientEval so dependent fields react while typing. */
+  onLiveChange?: (propertyName: string, value: unknown) => void
 }) {
   const definition = usePropertyEditor(property.editor)
   if (!definition) {
@@ -44,9 +47,11 @@ export function PropertyEditor({
       value={value?.value}
       options={property.editorOptions}
       nodeAddress={nodeAddress}
-      // The inspector auto-saves: persist on commit, ignore live pre-commit
-      // changes (they would be a save per keystroke).
+      // The inspector auto-saves: persist on commit. Live pre-commit changes
+      // are never persisted (that would be a save per keystroke), but they do
+      // feed ClientEval so dependent fields react while typing.
       onCommit={(next) => onSave(property.name, next)}
+      onChange={(next) => onLiveChange?.(property.name, next)}
     />
   )
 
