@@ -275,7 +275,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <i className="fas fa-table-columns" aria-hidden />
+      <i className="fas fa-bars" aria-hidden />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

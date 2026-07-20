@@ -475,8 +475,10 @@ export function App() {
                     workspace buttons resolve and render after load. */}
                 <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
                   <div className="flex items-center gap-3">
-                    <SidebarTrigger />
-                    <ModalLauncher />
+                    <div className="flex items-center gap-1">
+                      <SidebarTrigger />
+                      <ModalLauncher />
+                    </div>
                     {sites.length > 0 && (
                       <SiteSwitcher
                         sites={sites}

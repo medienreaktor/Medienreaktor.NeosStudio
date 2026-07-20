@@ -12,7 +12,8 @@ export function ModalLauncher() {
     <div className="flex items-center gap-1">
       <Button
         variant="ghost"
-        size="icon-sm"
+        size="icon"
+        className="size-7"
         aria-label="Settings"
         onClick={() => openSettings()}
       >
