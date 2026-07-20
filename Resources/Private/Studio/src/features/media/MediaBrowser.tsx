@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useAssets, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,14 @@ export function MediaBrowser({
 }: MediaBrowserProps) {
   const state = useMediaBrowserState(initialSource)
   const [uploaderOpen, setUploaderOpen] = useState(false)
+  // The Media Library panel keeps a single MediaBrowser instance and flips its
+  // mode when a pick starts (see MediaLibraryPanel), so any selection left over
+  // from manage mode would otherwise carry into the picker. A pick always opens
+  // with nothing selected.
+  const { setActive } = state
+  useEffect(() => {
+    if (mode === 'picker') setActive(null)
+  }, [mode, setActive])
   // Manage mode only: the asset whose metadata dialog is open.
   const [detailsAsset, setDetailsAsset] = useState<MediaAsset | null>(null)
 

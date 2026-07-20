@@ -82,8 +82,6 @@ export function App() {
   // Bumped after inspector edits so the preview shows them (inline edits
   // already render live inside the iframe and need no reload).
   const [previewReloadToken, setPreviewReloadToken] = useState(0)
-  // Whether the preview renders with in-place editing; toggled in the topbar.
-  const [previewEditing, setPreviewEditing] = useState(true)
 
   // The identity itself is not displayed, but the me-query doubles as the
   // token check: a 401 drives the logout below.
@@ -256,7 +254,6 @@ export function App() {
     selectedDocument,
     inspectedNode,
     lastEdit,
-    previewEditing,
     previewReloadToken,
     selectDocument: (node) => {
       setSelectedDocument(node)
@@ -444,10 +441,6 @@ export function App() {
 
                     <PreviewToolbar
                       document={selectedDocument}
-                      editing={previewEditing}
-                      onToggleEditing={() =>
-                        setPreviewEditing((value) => !value)
-                      }
                       onReload={() =>
                         setPreviewReloadToken((token) => token + 1)
                       }

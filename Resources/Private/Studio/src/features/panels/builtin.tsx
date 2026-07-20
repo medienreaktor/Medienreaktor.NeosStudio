@@ -117,14 +117,13 @@ function NodeInspectorPanel() {
 
 /**
  * The Visual Editor: the page preview with in-place editing. All of its wiring
- * (selected document, editing mode, reload token, selection/navigation
+ * (selected document, reload token, selection/navigation
  * callbacks) comes from the studio context, so the panel is self-contained.
  * The preview toolbar itself stays in the app header.
  */
 function VisualEditorPanel() {
   const {
     selectedDocument,
-    previewEditing,
     previewReloadToken,
     inspectedNode,
     inspectAddress,
@@ -135,7 +134,6 @@ function VisualEditorPanel() {
     <div className="flex h-full min-h-0 flex-col">
       <PreviewPane
         document={selectedDocument}
-        editing={previewEditing}
         selectedAddress={inspectedNode?.address ?? null}
         onSelectNode={inspectAddress}
         onNavigateToNode={navigateToNode}

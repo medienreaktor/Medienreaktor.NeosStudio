@@ -187,7 +187,6 @@ function injectStyles(): void {
       background: rgba(0, 173, 238, 0.35);
       outline: 2px solid rgba(0, 173, 238, 1);
       outline-offset: -2px;
-      cursor: pointer;
     }
     #${IMAGE_OVERLAY_ID} button {
       display: inline-flex;
@@ -374,9 +373,12 @@ function imageOverlay(): HTMLElement {
       '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' +
       '<path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L6 20"/></svg>Select image'
     overlay.appendChild(button)
-    // The whole overlay is the hit target (the button is just the affordance),
-    // so a click anywhere over the image opens the picker.
-    overlay.addEventListener('click', onImageSelect)
+    // Only the button opens the picker. A click on the washed-blue background
+    // still selects the node behind it (so it shows in the inspector) - the
+    // overlay covers the image, so the click would otherwise be swallowed. The
+    // button's onImageSelect stops propagation, so this never runs for it.
+    button.addEventListener('click', onImageSelect)
+    overlay.addEventListener('click', onImageOverlayClick)
     // Leaving the overlay (which sits on top of the image) hides it; re-entering
     // another image re-shows it via the document mouseover handler.
     overlay.addEventListener('mouseleave', hideImageOverlay)
@@ -413,6 +415,14 @@ function scheduleImageOverlayUpdate(): void {
     if (hoveredImage.isConnected) showImageOverlay(hoveredImage)
     else hideImageOverlay()
   })
+}
+
+/** Background click over an image: select its content element, as if the image
+ *  itself had been clicked (the overlay intercepts the native click). */
+function onImageOverlayClick(): void {
+  if (hoveredImage === null) return
+  const wrapper = hoveredImage.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
+  if (wrapper) select(wrapper, { notifyHost: true })
 }
 
 function onImageSelect(event: MouseEvent): void {

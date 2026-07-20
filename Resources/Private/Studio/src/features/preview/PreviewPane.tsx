@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ExternalLink, Eye, Pencil, RotateCw } from 'lucide-react'
+import { ExternalLink, RotateCw } from 'lucide-react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import type { NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
@@ -37,33 +37,21 @@ export function previewUrl(address: string, mode?: string): string {
 }
 
 /**
- * Preview controls for the topbar: toggle in-place editing, reload the
+ * Preview controls for the topbar: reload the
  * iframe and open the page in a new tab. The external link always uses the
  * plain preview rendering - the content-element metadata of the "inPlace"
  * mode only makes sense inside the shell's iframe.
  */
 export function PreviewToolbar({
   document,
-  editing,
-  onToggleEditing,
   onReload,
 }: {
   document: NodeDto | null
-  editing: boolean
-  onToggleEditing: () => void
   onReload: () => void
 }) {
   if (!document) return null
   return (
     <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        title={editing ? 'Preview without editing' : 'Edit in place'}
-        onClick={onToggleEditing}
-      >
-        {editing ? <Eye /> : <Pencil />}
-      </Button>
       <Button
         variant="ghost"
         size="icon-xs"
@@ -113,7 +101,6 @@ const CROSSFADE_MS = 50
  */
 export function PreviewPane({
   document,
-  editing,
   selectedAddress,
   onSelectNode,
   onNavigateToNode,
@@ -121,8 +108,6 @@ export function PreviewPane({
   reloadToken = 0,
 }: {
   document: NodeDto | null
-  /** Render with in-place editing (owned by the shell's PreviewToolbar). */
-  editing: boolean
   /** Address outlined in the preview - the node inspected in the shell. */
   selectedAddress: string | null
   /** A content element was clicked in the preview. */
@@ -170,9 +155,7 @@ export function PreviewPane({
   const onNodeEditedRef = useRef(onNodeEdited)
   onNodeEditedRef.current = onNodeEdited
 
-  const src = document
-    ? previewUrl(document.address, editing ? 'inPlace' : undefined)
-    : null
+  const src = document ? previewUrl(document.address, 'inPlace') : null
   const loadKey = src ? `${src}#${reloadCount}#${reloadToken}` : null
 
   // A new load means a new guest lifecycle; a menu anchored in the previous

@@ -20,8 +20,6 @@ export type StudioContextValue = {
   inspectedNode: NodeDto | null
   /** The last inline edit from the preview; refreshes outliner labels. */
   lastEdit: NodeEdit | null
-  /** Whether the preview (Visual Editor panel) renders with in-place editing. */
-  previewEditing: boolean
   /** Bumped to reload the preview iframe after edits made outside of it. */
   previewReloadToken: number
   /** Select a document (also inspects it). */
