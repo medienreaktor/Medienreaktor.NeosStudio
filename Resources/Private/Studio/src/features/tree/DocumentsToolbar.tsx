@@ -1,0 +1,129 @@
+import { DOCUMENT_NODE_TYPE } from '@/api/nodes'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { useCreatableNodeTypes } from '@/features/creation/creatableNodeTypes'
+import { cn } from '@/lib/utils'
+import { NodeTypeIcon } from './nodeTypeIcon'
+
+// Module-level so useCreatableNodeTypes' memo key stays stable across renders.
+const DOCUMENT_SUPER_TYPES = [DOCUMENT_NODE_TYPE]
+
+/**
+ * The documents panel's fixed toolbar: title search (grows), the node type
+ * filter menu and the "new document" button (both fixed-size). Search term
+ * and filter are owned by the panel - a non-empty term or filter switches the
+ * panel from the tree to the flat, depth-independent server-side result list
+ * (see DocumentSearchList).
+ */
+export function DocumentsToolbar({
+  searchTerm,
+  onSearchTermChange,
+  typeFilter,
+  onTypeFilterChange,
+  createDisabled,
+  onCreate,
+}: {
+  searchTerm: string
+  onSearchTermChange: (term: string) => void
+  /** Selected document node type names; empty means "no filter". */
+  typeFilter: string[]
+  onTypeFilterChange: (typeFilter: string[]) => void
+  createDisabled: boolean
+  onCreate: () => void
+}) {
+  const creatable = useCreatableNodeTypes(DOCUMENT_SUPER_TYPES)
+  // Flat, alphabetical - a filter menu wants quick scanning, not the creation
+  // dialog's group structure.
+  const documentTypes = (creatable?.groups ?? [])
+    .flatMap((group) => group.nodeTypes)
+    .sort((a, b) => a.label.localeCompare(b.label))
+  const filterActive = typeFilter.length > 0
+
+  return (
+    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950/50 backdrop-blur-xs p-2">
+      <div className="relative min-w-0 flex-1">
+        <i
+          className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-neutral-400"
+          aria-hidden
+        />
+        <Input
+          type="search"
+          value={searchTerm}
+          onChange={(event) => onSearchTermChange(event.target.value)}
+          placeholder="Search documents…"
+          aria-label="Search documents by title"
+          className="h-8 pl-8"
+        />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title="Filter by node type"
+              aria-label="Filter by node type"
+              disabled={creatable === null}
+              className={cn(filterActive && 'border-blue-500 text-blue-500')}
+            />
+          }
+        >
+          <i className="fas fa-filter" aria-hidden />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="max-h-80 w-64">
+          {/* GroupLabel must live inside a Group (Base UI error 31 otherwise). */}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Filter by node type</DropdownMenuLabel>
+            {documentTypes.map((nodeType) => (
+              <DropdownMenuCheckboxItem
+                key={nodeType.name}
+                checked={typeFilter.includes(nodeType.name)}
+                onCheckedChange={(checked) =>
+                  onTypeFilterChange(
+                    checked
+                      ? [...typeFilter, nodeType.name]
+                      : typeFilter.filter((name) => name !== nodeType.name),
+                  )
+                }
+              >
+                <NodeTypeIcon
+                  nodeTypes={creatable?.nodeTypes}
+                  nodeTypeName={nodeType.name}
+                />
+                <span className="truncate">{nodeType.label}</span>
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuGroup>
+          {filterActive && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onTypeFilterChange([])}>
+                <i className="fas fa-fw fa-xmark" aria-hidden />
+                Clear filter
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Button
+        size="icon-sm"
+        title="New document…"
+        aria-label="New document"
+        disabled={createDisabled}
+        onClick={onCreate}
+      >
+        <i className="fas fa-plus" aria-hidden />
+      </Button>
+    </div>
+  )
+}

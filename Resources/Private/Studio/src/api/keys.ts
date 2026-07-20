@@ -54,6 +54,9 @@ export const queryKeys = {
     references: (address: string) => ['nodes', address, 'references'] as const,
     search: (address: string, nodeTypes: string, term: string) =>
       ['nodes', address, 'search', { nodeTypes, term }] as const,
+    /** The document toolbar's filtered flat listing (title search + node type filter, unpaginated). */
+    filteredDescendants: (address: string, nodeTypes: string, term: string) =>
+      ['nodes', address, 'filtered-descendants', { nodeTypes, term }] as const,
   },
   media: {
     /** Broad prefix - invalidate after any asset/collection/tag write. */

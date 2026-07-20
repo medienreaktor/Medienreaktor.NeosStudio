@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchNode } from '@/api/nodes'
 import { useStudio } from '@/app/StudioContext'
-import { Button } from '@/components/ui/button'
 import {
   InsertNodeDialog,
   type InsertRequest,
@@ -16,8 +15,11 @@ import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
+import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
+import { DocumentsToolbar } from '@/features/tree/DocumentsToolbar'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { LoadingState } from '@/components/ui/spinner'
+import { cn } from '@/lib/utils'
 import { clampToViewport, type PanelRect } from './geometry'
 import { useRequestAttention } from './PanelSystem'
 import { panelRegistry } from './registry'
@@ -64,16 +66,29 @@ function DocumentsPanel() {
     nodesEdited,
   } = useStudio()
   const [insertRequest, setInsertRequest] = useState<InsertRequest | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedTerm, setDebouncedTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string[]>([])
+  // The reference pickers' search cadence: 300 ms debounce before the fetch.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
   if (!site || !workspaceName) {
     return <LoadingState label="Loading sites…" />
   }
+  // A term or an active node type filter switches from the tree to the flat
+  // server-side result list (all matching documents, regardless of depth).
+  const filtering = debouncedTerm !== '' || typeFilter.length > 0
   return (
-    <div className="flex flex-col gap-2 p-2">
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={!selectedDocument}
-        onClick={() =>
+    <div className="flex min-h-full flex-col">
+      <DocumentsToolbar
+        searchTerm={searchTerm}
+        onSearchTermChange={setSearchTerm}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+        createDisabled={!selectedDocument}
+        onCreate={() =>
           selectedDocument &&
           setInsertRequest({
             referenceAddress: selectedDocument.address,
@@ -84,42 +99,57 @@ function DocumentsPanel() {
             defaultMode: 'inside',
           })
         }
-      >
-        <i className="fas fa-plus" aria-hidden />
-        New document…
-      </Button>
-      {/* Remount per site so a site switch starts with fresh expansion state. */}
-      <DocumentTree
-        key={site.nodeAddress}
-        site={site}
-        workspaceName={workspaceName}
-        selectedAddress={selectedDocument?.address ?? null}
-        lastEdit={lastEdit}
-        onSelect={selectDocument}
-        onMoved={nodesEdited}
-        onCreateNew={(target) =>
-          setInsertRequest({
-            referenceAddress: target.address,
-            parentAddress: target.parentAddress,
-            defaultMode: 'inside',
-          })
-        }
-        onNodeAction={(action, target) => {
-          reportNodeAction(nodeEdited, action, target)
-          // The deleted document cannot stay selected - browse its parent.
-          if (
-            action === 'delete' &&
-            target.parentAddress &&
-            selectedDocument?.address === target.address
-          ) {
-            fetchNode(target.parentAddress)
-              .then(selectDocument)
-              .catch(() => {
-                /* fine - the tree simply keeps the stale selection */
-              })
-          }
-        }}
       />
+      <div className="flex min-h-0 flex-1 flex-col p-2">
+        {filtering && (
+          <DocumentSearchList
+            site={site}
+            workspaceName={workspaceName}
+            term={debouncedTerm}
+            nodeTypeFilter={typeFilter}
+            selectedAddress={selectedDocument?.address ?? null}
+            onSelect={selectDocument}
+          />
+        )}
+        {/* Remount per site so a site switch starts with fresh expansion
+            state; kept mounted (hidden) while filtering so clearing the
+            search returns to the tree exactly as it was left. */}
+        <div
+          className={cn('flex min-h-0 flex-1 flex-col', filtering && 'hidden')}
+        >
+          <DocumentTree
+            key={site.nodeAddress}
+            site={site}
+            workspaceName={workspaceName}
+            selectedAddress={selectedDocument?.address ?? null}
+            lastEdit={lastEdit}
+            onSelect={selectDocument}
+            onMoved={nodesEdited}
+            onCreateNew={(target) =>
+              setInsertRequest({
+                referenceAddress: target.address,
+                parentAddress: target.parentAddress,
+                defaultMode: 'inside',
+              })
+            }
+            onNodeAction={(action, target) => {
+              reportNodeAction(nodeEdited, action, target)
+              // The deleted document cannot stay selected - browse its parent.
+              if (
+                action === 'delete' &&
+                target.parentAddress &&
+                selectedDocument?.address === target.address
+              ) {
+                fetchNode(target.parentAddress)
+                  .then(selectDocument)
+                  .catch(() => {
+                    /* fine - the tree simply keeps the stale selection */
+                  })
+              }
+            }}
+          />
+        </div>
+      </div>
       <InsertNodeDialog
         request={insertRequest}
         role="document"

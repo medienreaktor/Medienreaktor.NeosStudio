@@ -294,6 +294,39 @@ export function searchNodes(
 }
 
 /**
+ * All matching descendants of a context node (typically the site root),
+ * regardless of tree depth and without pagination - the document toolbar's
+ * search/filter listing. A term matches against the title property
+ * (case-insensitive contains) rather than the fulltext search, and every
+ * result carries its document breadcrumb, term or not.
+ */
+export function useFilteredDescendants(
+  contextAddress: string | null,
+  term: string,
+  nodeTypes: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: queryKeys.nodes.filteredDescendants(
+      contextAddress ?? '',
+      nodeTypes,
+      term,
+    ),
+    queryFn: () => {
+      const params = new URLSearchParams({ nodeTypes, breadcrumbs: '1' })
+      if (term !== '') {
+        params.set('search', term)
+        params.set('searchProperty', 'title')
+      }
+      return apiFetch<{ nodes: NodeSearchResult[] }>(
+        `/nodes/${contextAddress}/descendants?${params.toString()}`,
+      ).then(({ nodes }) => nodes)
+    },
+    enabled: enabled && contextAddress !== null,
+  })
+}
+
+/**
  * Fetches child nodes and seeds each child into its own node query cache, so
  * a later fetchNode()/useNode() for a child resolves without a request.
  */
