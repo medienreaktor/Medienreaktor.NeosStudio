@@ -94,10 +94,10 @@ export function LinkEditorDialog({
         <DialogHeader>
           <DialogTitle>
             {value !== null ? 'Edit link' : 'Insert link'}
-            {subject ? ` – ${subject}` : ''}
           </DialogTitle>
           <DialogDescription>
-            Choose what to link to
+            Choose the link {subject ? ' for ' : ''}
+            {subject && <strong>{subject}</strong>}
             {withOptions ? ' and how the link behaves' : ''}.
           </DialogDescription>
         </DialogHeader>
@@ -111,7 +111,7 @@ export function LinkEditorDialog({
             value={activeId}
             onValueChange={(next) => setActiveId(String(next))}
           >
-            <TabsList className="w-full">
+            <TabsList>
               {types.map((type) => (
                 <TabsTrigger key={type.id} value={type.id}>
                   {type.icon}
@@ -123,7 +123,7 @@ export function LinkEditorDialog({
               <TabsContent
                 key={type.id}
                 value={type.id}
-                className="h-80 min-h-0 rounded-md rounded-tl-none border border-neutral-800 p-3"
+                className="h-80 min-h-0 p-3"
               >
                 <type.component
                   href={drafts[type.id] ?? null}
