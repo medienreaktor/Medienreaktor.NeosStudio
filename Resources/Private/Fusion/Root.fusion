@@ -17,6 +17,11 @@ prototype(Neos.Neos:ContentElementWrapping) {
     # and their element menu offers "Unhide" instead of "Hide".
     data-__neos-studio-hidden = 'true'
     data-__neos-studio-hidden.@if.isHidden = ${MedienreaktorStudio.isHidden(node)}
+    # Shine-through nodes exist here only via dimension fallback (their origin
+    # dimension differs from the viewed one) - the guest renders them dimmed
+    # under a diagonal pattern and offers explicit variant creation on hover.
+    data-__neos-studio-shine-through = 'true'
+    data-__neos-studio-shine-through.@if.isShineThrough = ${MedienreaktorStudio.isShineThrough(node)}
     data-__neos-studio-collection = 'true'
     data-__neos-studio-collection.@if.isCollection = ${q(node).is('[instanceof Neos.Neos:ContentCollection]')}
     # Which content node types may be created inside this collection - the

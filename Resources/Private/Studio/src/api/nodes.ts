@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
 import { apiFetch } from './client'
+import { dimensionSpacePointEquals } from './dimensions'
 import { queryKeys } from './keys'
 
 export interface SerializedPropertyValue {
@@ -58,6 +59,19 @@ export function isExplicitlyHidden(node: NodeDto): boolean {
   return (
     node.tags.all.includes('disabled') &&
     !node.tags.inherited.includes('disabled')
+  )
+}
+
+/**
+ * Whether the node only exists here through dimension fallback ("shines
+ * through"): it is viewed in a dimension it does not originate in. Editing
+ * such a node first creates a variant in the viewed dimension (see
+ * persistProperty's withVariantHandling).
+ */
+export function isShineThrough(node: NodeDto): boolean {
+  return !dimensionSpacePointEquals(
+    node.dimensionSpacePoint,
+    node.originDimensionSpacePoint,
   )
 }
 

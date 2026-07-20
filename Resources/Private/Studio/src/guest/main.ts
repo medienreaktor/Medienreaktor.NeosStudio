@@ -42,6 +42,7 @@ const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const EDITABLE_NODE_ATTRIBUTE = 'data-__neos-editable-node-contextpath'
 const PLACEHOLDER_ATTRIBUTE = 'data-__neos-studio-placeholder'
 const IMAGE_PROPERTY_ATTRIBUTE = 'data-__neos-studio-image-property'
+const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
 
 const HOVER_CLASS = 'neos-studio-hover'
 const SELECTED_CLASS = 'neos-studio-selected'
@@ -51,6 +52,11 @@ const EMPTY_CLASS = 'neos-studio-empty'
 const INDICATOR_ID = 'neos-studio-drop-indicator'
 const HANDLE_ID = 'neos-studio-element-handle'
 const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
+const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
+
+/** The Neos brand purple (purple-500 of the shell palette), for the
+ *  shine-through indicators - the guest styles are literal CSS, no Tailwind. */
+const PURPLE = '113, 97, 192'
 
 function post(message: GuestToHostMessage): void {
   window.parent.postMessage(message, window.location.origin)
@@ -63,6 +69,8 @@ let selectedElement: HTMLElement | null = null
 let hoveredElement: HTMLElement | null = null
 /** The image currently under the in-place image-picker overlay, if any. */
 let hoveredImage: HTMLElement | null = null
+/** The shine-through element currently offering its "Create variant" button. */
+let hoveredShineElement: HTMLElement | null = null
 
 function injectStyles(): void {
   const style = document.createElement('style')
@@ -99,6 +107,61 @@ function injectStyles(): void {
     [${WRAPPER_ATTRIBUTE}][${HIDDEN_ATTRIBUTE}] {
       opacity: 0.5;
     }
+    /* Shine-through content elements (visible only via dimension fallback)
+       read as "not really here yet": dimmed under a diagonal construction-
+       site pattern in the Neos purple. Only content elements are marked -
+       collections are structure, patterning them would wash the whole page
+       in one block. Content nested inside a shine-through content element
+       skips its own dimming and pattern - the outer one already covers the
+       area, stacking would darken unevenly. */
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}] {
+      position: relative;
+      opacity: 0.65;
+    }
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}]::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(${PURPLE}, 0.22) 0px,
+        rgba(${PURPLE}, 0.22) 10px,
+        transparent 10px,
+        transparent 20px
+      );
+    }
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}] [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}] {
+      opacity: 1;
+    }
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}] [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}]::after {
+      content: none;
+    }
+    /* Hidden elements keep their (stronger) dimming when they also shine. */
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}][${HIDDEN_ATTRIBUTE}] {
+      opacity: 0.5;
+    }
+    /* The "Create variant" button centered on the hovered shine-through
+       element: explicitly materializes it in the viewed dimension. Same
+       layer as the image overlay - below the richtext toolbars and the
+       element handle. */
+    #${SHINE_BUTTON_ID} {
+      position: fixed;
+      z-index: 2147483645;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      transform: translate(-50%, -50%);
+      padding: 6px 12px;
+      font: 500 13px/1.2 system-ui, -apple-system, sans-serif;
+      color: #fff;
+      background: rgb(${PURPLE});
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
     [${PROPERTY_ATTRIBUTE}] {
       cursor: text;
     }
@@ -107,6 +170,15 @@ function injectStyles(): void {
     [${PROPERTY_ATTRIBUTE}]:focus-within {
       outline: 1px dotted rgba(0, 173, 238, 1.0);
       outline-offset: 1px;
+    }
+    /* No inline editing on shine-through elements (richtext.ts skips
+       mounting there) - drop the editing affordances too, so the markup
+       does not promise what a click will not deliver. */
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}] [${PROPERTY_ATTRIBUTE}] {
+      cursor: default;
+    }
+    [${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}] [${PROPERTY_ATTRIBUTE}]:hover {
+      outline: none;
     }
     /* TipTap mounts its own contenteditable (.tiptap) inside the property
        element; it must inherit the host typography, not add a focus ring or
@@ -352,6 +424,10 @@ function resolveImageTarget(
   img: HTMLElement,
 ): { property: string; contextPath: string } | null {
   if (img.closest(`[${PROPERTY_ATTRIBUTE}]`)) return null
+  // Shine-through elements offer "Create variant" instead - the node should
+  // be materialized in the viewed dimension before editing pieces of it.
+  if (img.closest(`[${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}]`))
+    return null
   const property = img
     .closest<HTMLElement>(`[${IMAGE_PROPERTY_ATTRIBUTE}]`)
     ?.getAttribute(IMAGE_PROPERTY_ATTRIBUTE)
@@ -433,6 +509,67 @@ function onImageSelect(event: MouseEvent): void {
   if (hoveredImage === null) return
   const target = resolveImageTarget(hoveredImage)
   if (target) post({ type: 'neos-studio/image-select-request', ...target })
+}
+
+/**
+ * The "Create variant" button of shine-through content elements: hovering an
+ * element that exists here only via dimension fallback centers the button on
+ * it; clicking asks the host to explicitly materialize the node in the viewed
+ * dimension - the same CreateNodeVariant an edit would trigger implicitly.
+ * It takes the place of the in-place editing affordances (e.g. the image
+ * overlay), which stay hidden on shine-through elements.
+ */
+function shineVariantButton(): HTMLElement {
+  let button = document.getElementById(SHINE_BUTTON_ID)
+  if (!button) {
+    button = document.createElement('button')
+    ;(button as HTMLButtonElement).type = 'button'
+    button.id = SHINE_BUTTON_ID
+    button.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/></svg>Create variant'
+    button.addEventListener('click', onShineVariantClick)
+    document.body.appendChild(button)
+  }
+  return button
+}
+
+function showShineVariantButton(element: HTMLElement): void {
+  hoveredShineElement = element
+  const button = shineVariantButton()
+  const rect = element.getBoundingClientRect()
+  button.style.display = 'inline-flex'
+  button.style.left = `${rect.left + rect.width / 2}px`
+  button.style.top = `${rect.top + rect.height / 2}px`
+}
+
+function hideShineVariantButton(): void {
+  hoveredShineElement = null
+  const button = document.getElementById(SHINE_BUTTON_ID)
+  if (button) button.style.display = 'none'
+}
+
+/** Reposition (or drop) the button after scroll/resize, throttled to a frame. */
+let shineButtonUpdateScheduled = false
+function scheduleShineButtonUpdate(): void {
+  if (shineButtonUpdateScheduled || hoveredShineElement === null) return
+  shineButtonUpdateScheduled = true
+  requestAnimationFrame(() => {
+    shineButtonUpdateScheduled = false
+    if (hoveredShineElement === null) return
+    if (hoveredShineElement.isConnected)
+      showShineVariantButton(hoveredShineElement)
+    else hideShineVariantButton()
+  })
+}
+
+function onShineVariantClick(event: MouseEvent): void {
+  // Take precedence over node-select / link handling and never submit a form.
+  event.preventDefault()
+  event.stopPropagation()
+  const contextPath = hoveredShineElement?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (contextPath)
+    post({ type: 'neos-studio/create-variant-request', contextPath })
 }
 
 /** NodeAddress JSON of the collection containing the element, if any. */
@@ -521,6 +658,8 @@ function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
   // Over the image overlay itself (it sits on top of the image): keep it shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
+  // Over the "Create variant" button (it floats over its element): keep it.
+  if (target?.closest?.(`#${SHINE_BUTTON_ID}`)) return
 
   // In-place image picker: a rendered image whose property is known gets the
   // hover overlay; anything else hides it.
@@ -529,6 +668,19 @@ function onMouseOver(event: MouseEvent): void {
     if (image !== hoveredImage) showImageOverlay(image)
   } else {
     hideImageOverlay()
+  }
+
+  // Shine-through content elements offer explicit variant creation while
+  // hovered - matching the striped elements, not the collections around them.
+  const shine = target?.closest
+    ? target.closest<HTMLElement>(
+        `[${WRAPPER_ATTRIBUTE}][${SHINE_THROUGH_ATTRIBUTE}][${CONTENT_ATTRIBUTE}]`,
+      )
+    : null
+  if (shine) {
+    if (shine !== hoveredShineElement) showShineVariantButton(shine)
+  } else {
+    hideShineVariantButton()
   }
 
   const wrapper = target?.closest
@@ -833,6 +985,9 @@ function init(): void {
   // image through scrolling and layout changes.
   window.addEventListener('scroll', scheduleImageOverlayUpdate, true)
   window.addEventListener('resize', scheduleImageOverlayUpdate)
+  // ... as does the shine-through "Create variant" button.
+  window.addEventListener('scroll', scheduleShineButtonUpdate, true)
+  window.addEventListener('resize', scheduleShineButtonUpdate)
   window.addEventListener('message', onHostMessage)
   post({ type: 'neos-studio/guest-ready' })
 }

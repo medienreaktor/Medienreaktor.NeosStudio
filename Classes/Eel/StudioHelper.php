@@ -101,6 +101,17 @@ class StudioHelper implements ProtectedContextAwareInterface
     }
 
     /**
+     * Whether the node is only visible through dimension fallback ("shines
+     * through"): the dimension it is viewed in differs from its origin
+     * dimension space point. Rendered into the wrapping markup so the guest
+     * can pattern/dim the element and offer explicit variant creation.
+     */
+    public function isShineThrough(Node $node): bool
+    {
+        return $node->dimensionSpacePoint->coordinates !== $node->originDimensionSpacePoint->coordinates;
+    }
+
+    /**
      * The inline-editing placeholder for a property, translated for the
      * backend user's interface language - rendered into the editable markup
      * so the guest script can show it on empty properties. Node type loading

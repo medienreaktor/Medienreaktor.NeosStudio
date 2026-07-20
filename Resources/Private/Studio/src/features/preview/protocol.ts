@@ -88,6 +88,15 @@ export type GuestToHostMessage =
       property: string
     }
   /**
+   * The "Create variant" button over a shine-through element was clicked -
+   * the host materializes the node in the viewed dimension (the same
+   * CreateNodeVariant an edit would run implicitly) and reloads the preview.
+   */
+  | {
+      type: 'neos-studio/create-variant-request'
+      contextPath: string
+    }
+  /**
    * The link button of a rich-text toolbar was clicked - the host opens the
    * Link Editor dialog. attributes carry the existing link at the selection
    * (to edit), or null when a new link is being created. The guest keeps the

@@ -1,55 +1,66 @@
 import { type Command, executeCommands } from '@/api/commands'
 import { queryKeys } from '@/api/keys'
-import { fetchAncestors, fetchNode, type NodeDto } from '@/api/nodes'
+import {
+  fetchAncestors,
+  fetchNode,
+  isShineThrough,
+  type NodeDto,
+} from '@/api/nodes'
 import { queryClient } from '@/app/queryClient'
 
 /**
- * The shared write path for node edits (properties and references). Mirrors
- * the classic UI's semantics for shine-through nodes (origin dimension !=
- * viewed dimension): transparently create the variant at the viewed dimension
- * first - varying the closest non-tethered ancestor if the edited node is
- * tethered - so the edit never writes through to the other variant.
+ * The CreateNodeVariant commands that materialize a shine-through node in
+ * its viewed dimension, outermost-first: wrapping nodes must exist in the
+ * dimension before the nodes inside them, so every shine-through regular
+ * ancestor (the document, then containers - their tethered collections vary
+ * along automatically) is varied top-down before the node itself. Tethered
+ * nodes are skipped - the content repository varies them together with
+ * their parent - except when the node hangs tethered directly below a root
+ * (roots cannot vary, but their tethered children can). Empty when the node
+ * already originates in the viewed dimension.
+ */
+async function variantCommands(node: NodeDto): Promise<Command[]> {
+  if (!isShineThrough(node)) return []
+  const chain = [...(await fetchAncestors(node.address))].reverse()
+  chain.push(node)
+  let nodesToVary = chain.filter(
+    (n) => n.classification === 'regular' && isShineThrough(n),
+  )
+  if (nodesToVary.length === 0) {
+    const outermostTethered = chain.find((n) => n.classification === 'tethered')
+    nodesToVary = outermostTethered ? [outermostTethered] : []
+  }
+  return nodesToVary.map((n) => ({
+    type: 'CreateNodeVariant',
+    payload: {
+      workspaceName: n.workspace,
+      nodeAggregateId: n.aggregateId,
+      sourceOrigin: n.originDimensionSpacePoint,
+      targetOrigin: n.dimensionSpacePoint,
+    },
+  }))
+}
+
+/**
+ * The shared write path for node edits (properties and references). For
+ * shine-through nodes (origin dimension != viewed dimension) it transparently
+ * creates the variants at the viewed dimension first, wrapping ancestors
+ * before the edited node (see variantCommands), so the edit never writes
+ * through to the other variant.
  */
 async function withVariantHandling(
   address: string,
   buildCommand: (node: NodeDto, origin: Record<string, string>) => Command,
 ): Promise<void> {
   const node = await fetchNode(address)
-  const commands: Command[] = []
-
-  const isShineThrough =
-    JSON.stringify(node.dimensionSpacePoint) !==
-    JSON.stringify(node.originDimensionSpacePoint)
-  if (isShineThrough) {
-    let nodeToVary: NodeDto = node
-    if (node.classification === 'tethered') {
-      const chain = [node, ...(await fetchAncestors(address))]
-      const firstUntethered = chain.findIndex(
-        (n) => n.classification !== 'tethered',
-      )
-      let candidate = chain[firstUntethered] ?? node
-      // Root nodes cannot vary, but their tethered children can.
-      if (candidate.classification === 'root' && firstUntethered > 0) {
-        candidate = chain[firstUntethered - 1] ?? node
-      }
-      nodeToVary = candidate
-    }
-    commands.push({
-      type: 'CreateNodeVariant',
-      payload: {
-        workspaceName: nodeToVary.workspace,
-        nodeAggregateId: nodeToVary.aggregateId,
-        sourceOrigin: nodeToVary.originDimensionSpacePoint,
-        targetOrigin: node.dimensionSpacePoint,
-      },
-    })
-  }
+  const variants = await variantCommands(node)
+  const commands: Command[] = [...variants]
 
   // After a transparent variant creation the viewed dimension is occupied.
   commands.push(
     buildCommand(
       node,
-      isShineThrough
+      variants.length > 0
         ? node.dimensionSpacePoint
         : node.originDimensionSpacePoint,
     ),
@@ -57,7 +68,7 @@ async function withVariantHandling(
 
   await executeCommands(commands)
 
-  if (isShineThrough) {
+  if (variants.length > 0) {
     // A new variant changes coverage everywhere - drop all node reads.
     await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
   } else {
@@ -65,6 +76,23 @@ async function withVariantHandling(
       queryKey: queryKeys.nodes.node(address),
     })
   }
+  // Refresh the pending-changes badges.
+  void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+}
+
+/**
+ * Explicitly materializes a shine-through node in the viewed dimension (the
+ * preview's "Create variant" button), wrapping ancestors first - the same
+ * variant creation an edit would run implicitly, just without an edit.
+ * No-op when the node already originates in the viewed dimension.
+ */
+export async function createVariant(address: string): Promise<void> {
+  const node = await fetchNode(address)
+  const commands = await variantCommands(node)
+  if (commands.length === 0) return
+  await executeCommands(commands)
+  // A new variant changes coverage everywhere - drop all node reads.
+  await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
   // Refresh the pending-changes badges.
   void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
 }

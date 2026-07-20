@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { type Command, executeCommands } from '@/api/commands'
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
-import { dimensionSpacePointEquals } from '@/api/dimensions'
+import {
+  dimensionSpacePointEquals,
+  dimensionSpacePointLabel,
+} from '@/api/dimensions'
 import {
   DOCUMENT_NODE_TYPE,
   fetchAncestors,
@@ -20,21 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-
-/** "English (US)" or "English (US), Customers" for multiple dimensions. */
-function pointLabel(
-  point: DimensionSpacePoint,
-  dimensions: ContentDimension[],
-): string {
-  return dimensions
-    .map(
-      (dimension) =>
-        dimension.values.find((v) => v.value === point[dimension.id])?.label ??
-        point[dimension.id],
-    )
-    .filter(Boolean)
-    .join(', ')
-}
 
 function variantCommand(
   node: NodeDto,
@@ -174,11 +162,12 @@ export function CreateVariantDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Create document in {pointLabel(targetPoint, dimensions)}?
+            Create document in{' '}
+            {dimensionSpacePointLabel(targetPoint, dimensions)}?
           </DialogTitle>
           <DialogDescription>
             &ldquo;{nodeLabel(document)}&rdquo; does not exist in{' '}
-            {pointLabel(targetPoint, dimensions)} yet.
+            {dimensionSpacePointLabel(targetPoint, dimensions)} yet.
             {phase === 'analyzing' &&
               ' Checking which parent documents are missing…'}
             {missingAncestors.length > 0 &&

@@ -47,3 +47,24 @@ export function dimensionSpacePointEquals(
     aKeys.every((key) => a[key] === b[key])
   )
 }
+
+/**
+ * Human-readable label for a dimension space point: "English (US)", or
+ * "English (US), Customers" with several dimensions. Falls back to the raw
+ * coordinate values while the dimension configuration is not loaded (or a
+ * value is not configured).
+ */
+export function dimensionSpacePointLabel(
+  point: DimensionSpacePoint,
+  dimensions: ContentDimension[],
+): string {
+  if (dimensions.length === 0) return Object.values(point).join(', ')
+  return dimensions
+    .map(
+      (dimension) =>
+        dimension.values.find((v) => v.value === point[dimension.id])?.label ??
+        point[dimension.id],
+    )
+    .filter(Boolean)
+    .join(', ')
+}

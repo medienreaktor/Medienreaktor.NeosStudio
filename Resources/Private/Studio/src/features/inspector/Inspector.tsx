@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
+import { dimensionSpacePointLabel, useDimensions } from '@/api/dimensions'
 import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
-import { nodeLabel, useNodeAncestors } from '@/api/nodes'
+import { isShineThrough, nodeLabel, useNodeAncestors } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { Badge } from '@/components/ui/badge'
@@ -193,6 +194,7 @@ export function InspectorPanel({
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
           {nodeLabel(node)}
         </h2>
+        <ShineThroughNotice node={node} />
       </div>
       <div className="">
         {visibleTabs && (
@@ -297,6 +299,34 @@ export function InspectorPanel({
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Alert under the inspector header for shine-through nodes: the node is only
+ * visible because it falls back from another dimension. Names the origin
+ * dimension so the editor knows where the content actually lives; an edit
+ * (or the preview's "Create variant" button) materializes it here.
+ */
+function ShineThroughNotice({ node }: { node: NodeDto }) {
+  const { data: dimensionsResponse } = useDimensions()
+  if (!isShineThrough(node)) return null
+  const origin = dimensionSpacePointLabel(
+    node.originDimensionSpacePoint,
+    dimensionsResponse?.dimensions ?? [],
+  )
+  return (
+    <div
+      role="status"
+      className="mt-3 flex items-start gap-2 rounded-md border border-purple-500/60 bg-purple-900/60 p-2.5 text-xs text-purple-100"
+    >
+      <FaIcon icon="layer-group" className="mt-0.5 text-purple-300" />
+      <p>
+        Shines through from <strong className="text-white">{origin}</strong>.
+        This node does not exist in the current dimension yet - editing it
+        creates an independent variant here.
+      </p>
     </div>
   )
 }

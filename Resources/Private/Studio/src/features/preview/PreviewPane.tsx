@@ -18,7 +18,10 @@ import {
   NodeContextMenu,
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
-import { persistPropertyChange } from '@/features/editing/persistProperty'
+import {
+  createVariant,
+  persistPropertyChange,
+} from '@/features/editing/persistProperty'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { imageReference, localIdentifierFor } from '@/api/assetValue'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
@@ -294,6 +297,28 @@ export function PreviewPane({
         case 'neos-studio/link-edit-request':
           setLinkEdit({ attributes: message.attributes })
           break
+        case 'neos-studio/create-variant-request': {
+          // The "Create variant" button over a shine-through element: run the
+          // CreateNodeVariant an edit would trigger implicitly, then reload -
+          // the element renders without the fallback pattern afterwards.
+          let address: string
+          try {
+            address = addressFromContextPath(message.contextPath)
+          } catch {
+            break
+          }
+          createVariant(address)
+            .then(() => {
+              toast.success('Variant created in the current dimension.')
+              setReloadCount((count) => count + 1)
+              onNodeEditedRef.current?.(address)
+              onSelectNodeRef.current(address)
+            })
+            .catch((e: unknown) =>
+              toast.error(e, { title: 'Creating the variant failed' }),
+            )
+          break
+        }
         case 'neos-studio/image-select-request': {
           let address: string
           try {

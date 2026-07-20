@@ -27,6 +27,7 @@ import { hideToolbars, updateToolbars } from './toolbar'
 
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const PLACEHOLDER_ATTRIBUTE = 'data-__neos-studio-placeholder'
+const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
 const EMPTY_CLASS = 'neos-studio-empty'
 
 export interface RichTextHooks {
@@ -167,7 +168,13 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
   editorsByElement.set(element, editor)
 }
 
-/** Mount an editor on every inline-editable property under `root`. */
+/**
+ * Mount an editor on every inline-editable property under `root` - except
+ * inside shine-through elements (existing here only via dimension fallback):
+ * those are read-only until the editor explicitly creates the variant (the
+ * "Create variant" button); an implicit variant-on-edit would be too subtle
+ * for a consequence of that weight.
+ */
 export function mountRichTextEditors(
   root: ParentNode,
   hooks: RichTextHooks,
@@ -176,6 +183,7 @@ export function mountRichTextEditors(
   for (const element of root.querySelectorAll<HTMLElement>(
     `[${PROPERTY_ATTRIBUTE}]`,
   )) {
+    if (element.closest(`[${SHINE_THROUGH_ATTRIBUTE}]`)) continue
     mountEditor(element, hooks)
   }
 }
