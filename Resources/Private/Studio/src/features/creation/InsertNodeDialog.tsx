@@ -244,37 +244,39 @@ function OpenInsertNodeDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div
-            className="grid grid-cols-3 gap-1 rounded-md bg-neutral-800/60 p-1"
-            role="radiogroup"
-            aria-label="Insertion position"
-          >
-            {MODES.map(({ mode, label, icon }) => {
-              const loading = modeGroups[mode] === null
-              const available = (modeGroups[mode]?.length ?? 0) > 0
-              return (
-                <button
-                  key={mode}
-                  type="button"
-                  role="radio"
-                  aria-checked={mode === activeMode}
-                  disabled={!available && !loading}
-                  className={cn(
-                    'flex items-center justify-center gap-2 rounded px-2 py-1.5 text-sm',
-                    mode === activeMode
-                      ? 'bg-blue-500 text-white'
-                      : 'text-neutral-300 hover:bg-neutral-700',
-                    !available &&
-                      !loading &&
-                      'cursor-not-allowed text-neutral-600 hover:bg-transparent',
-                  )}
-                  onClick={() => setSelectedMode(mode)}
-                >
-                  <i className={`fas ${icon}`} aria-hidden />
-                  {label}
-                </button>
-              )
-            })}
+          <div>
+            <div
+              className="inline-flex flex-row gap-1 rounded-md bg-neutral-800/60 p-1"
+              role="radiogroup"
+              aria-label="Insertion position"
+            >
+              {MODES.map(({ mode, label, icon }) => {
+                const loading = modeGroups[mode] === null
+                const available = (modeGroups[mode]?.length ?? 0) > 0
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === activeMode}
+                    disabled={!available && !loading}
+                    className={cn(
+                      'flex items-center justify-center gap-2 rounded px-2 py-1.5 text-sm',
+                      mode === activeMode
+                        ? 'bg-blue-500 text-white'
+                        : 'text-neutral-300 hover:bg-neutral-700',
+                      !available &&
+                        !loading &&
+                        'cursor-not-allowed text-neutral-600 hover:bg-transparent',
+                    )}
+                    onClick={() => setSelectedMode(mode)}
+                  >
+                    <i className={`fas ${icon}`} aria-hidden />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <Input
