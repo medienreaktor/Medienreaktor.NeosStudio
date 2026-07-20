@@ -52,6 +52,7 @@ export function DocumentTree({
   onSelect,
   onNodeAction,
   onMoved,
+  onCreateNew,
 }: {
   site: Site
   workspaceName: string
@@ -64,6 +65,8 @@ export function DocumentTree({
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
   /** A drag-and-drop move succeeded; addresses whose children changed. */
   onMoved?: (affectedAddresses: string[]) => void
+  /** "Create new…" was picked in the context menu for this target. */
+  onCreateNew?: (target: NodeMenuTarget) => void
 }) {
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
   // Flips once the site node's children have resolved, so the tree can show a
@@ -205,6 +208,7 @@ export function DocumentTree({
         entityLabel="document"
         onClose={() => setMenuTarget(null)}
         onDone={(action, target) => onNodeAction?.(action, target)}
+        onCreateNew={onCreateNew}
       />
     </>
   )

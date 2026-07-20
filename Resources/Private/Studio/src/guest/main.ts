@@ -53,6 +53,8 @@ const DROP_TARGET_CLASS = 'neos-studio-drop-target'
 const EMPTY_CLASS = 'neos-studio-empty'
 const INDICATOR_ID = 'neos-studio-drop-indicator'
 const HANDLE_ID = 'neos-studio-element-handle'
+const ADD_BUTTON_ID = 'neos-studio-element-add-button'
+const COLLECTION_ADD_CLASS = 'neos-studio-collection-add'
 const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
 const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
 
@@ -249,6 +251,44 @@ function injectStyles(): void {
     #${HANDLE_ID}:active {
       cursor: grabbing;
     }
+    /* The "+" companion of the handle: opens the insertion dialog for the
+       element (create before/inside/after). Same look, click-only. */
+    #${ADD_BUTTON_ID} {
+      position: fixed;
+      z-index: 2147483646;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: rgb(0, 173, 238);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* The standing "add content" affordance inside empty collections - the
+       only way into a collection with nothing to hover. */
+    .${COLLECTION_ADD_CLASS} {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 6px auto;
+      padding: 5px 12px;
+      font: 500 13px/1.2 system-ui, -apple-system, sans-serif;
+      color: rgb(0, 173, 238);
+      background: transparent;
+      border: 1px dashed rgba(0, 173, 238, 0.6);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .${COLLECTION_ADD_CLASS}:hover {
+      background: rgba(0, 173, 238, 0.1);
+    }
     /* In-place image picker: hovering a rendered image (whose content element
        or ImageTag declares its image property) washes it blue and offers a
        "Select image" button. Sits above the image but below the richtext
@@ -341,6 +381,45 @@ function elementHandle(): HTMLElement {
   return handle
 }
 
+const PLUS_SVG =
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">' +
+  '<path d="M12 5v14M5 12h14"/></svg>'
+
+/**
+ * The "+" button pinned next to the "..." handle: opens the insertion
+ * dialog for the element (host-side; defaults to "after", the canvas way of
+ * thinking - "give me another one below this").
+ */
+function elementAddButton(): HTMLElement {
+  let button = document.getElementById(ADD_BUTTON_ID)
+  if (!button) {
+    button = document.createElement('div')
+    button.id = ADD_BUTTON_ID
+    button.setAttribute('role', 'button')
+    button.setAttribute('aria-label', 'Create new element')
+    button.title = 'Create new element'
+    button.innerHTML = PLUS_SVG
+    button.addEventListener('click', onAddClick)
+    document.body.appendChild(button)
+  }
+  return button
+}
+
+function onAddClick(): void {
+  const element = handleTarget
+  const contextPath = element?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (!element || !contextPath) return
+  // The dialog acts relative to the element - make it the selection first,
+  // so outliner and inspector show the reference point.
+  select(element, { notifyHost: true })
+  post({
+    type: 'neos-studio/insert-node-request',
+    contextPath,
+    parentContextPath: parentCollectionContextPath(element),
+    defaultMode: 'after',
+  })
+}
+
 /** The element the handle is currently attached to (hovered or selected). */
 let handleTarget: HTMLElement | null = null
 
@@ -358,6 +437,7 @@ function scheduleHandleUpdate(): void {
 
 function positionHandle(): void {
   const handle = elementHandle()
+  const addButton = elementAddButton()
   const hovered =
     hoveredElement?.hasAttribute(CONTENT_ATTRIBUTE) === true
       ? hoveredElement
@@ -370,14 +450,18 @@ function positionHandle(): void {
   handleTarget = target !== null && target.isConnected ? target : null
   if (handleTarget === null) {
     handle.style.display = 'none'
+    addButton.style.display = 'none'
     return
   }
   // Inside the element's top right corner, so it reads as part of it and
-  // scrolls away with it.
+  // scrolls away with it; the "+" sits directly left of the "..." handle.
   const rect = handleTarget.getBoundingClientRect()
   handle.style.display = 'flex'
   handle.style.left = `${rect.right - 24 - 4}px`
   handle.style.top = `${rect.top + 4}px`
+  addButton.style.display = 'flex'
+  addButton.style.left = `${rect.right - 24 - 4 - 24 - 4}px`
+  addButton.style.top = `${rect.top + 4}px`
 }
 
 function onHandleClick(): void {
@@ -615,7 +699,7 @@ function commitProperty(element: HTMLElement, value: string): void {
 function isStudioUi(target: HTMLElement): boolean {
   return (
     target.closest(
-      `#${HANDLE_ID}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}`,
+      `#${HANDLE_ID}, #${ADD_BUTTON_ID}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}, .${COLLECTION_ADD_CLASS}`,
     ) !== null
   )
 }
@@ -686,9 +770,9 @@ function handleLinkClick(
 
 function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
-  // Over the "..." handle itself (it sits inside its element): keep the
-  // hover state, so the handle does not vanish under the pointer.
-  if (target?.closest?.(`#${HANDLE_ID}`)) return
+  // Over the "..." handle or its "+" companion (they sit inside their
+  // element): keep the hover state, so they do not vanish under the pointer.
+  if (target?.closest?.(`#${HANDLE_ID}, #${ADD_BUTTON_ID}`)) return
   // Over the image overlay itself (it sits on top of the image): keep it shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
   // Over the "Create variant" button (it floats over its element): keep it.
@@ -802,6 +886,38 @@ function childElementsOf(collection: HTMLElement): HTMLElement[] {
       element.parentElement?.closest(`[${COLLECTION_ATTRIBUTE}]`) ===
         collection,
   )
+}
+
+/**
+ * Mounts a standing "Add content" button into every collection without any
+ * child content elements - the only entry point into an empty collection
+ * (there is nothing to hover for the element "+" button). Clicking opens the
+ * host's insertion dialog with the collection as the "inside" target. After
+ * the creation the preview reloads, so the buttons never need updating live.
+ */
+function mountCollectionAddButtons(): void {
+  for (const collection of document.querySelectorAll<HTMLElement>(
+    `[${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}]`,
+  )) {
+    const contextPath = collection.getAttribute(WRAPPER_ATTRIBUTE)
+    if (!contextPath || childElementsOf(collection).length > 0) continue
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = COLLECTION_ADD_CLASS
+    button.innerHTML = `${PLUS_SVG}<span>Add content</span>`
+    button.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      select(collection, { notifyHost: true })
+      post({
+        type: 'neos-studio/insert-node-request',
+        contextPath,
+        parentContextPath: parentCollectionContextPath(collection),
+        defaultMode: 'inside',
+      })
+    })
+    collection.appendChild(button)
+  }
 }
 
 /** Whether dropping the element at this insertion point changes nothing. */
@@ -1069,6 +1185,7 @@ function onHostMessage(event: MessageEvent): void {
 function init(): void {
   injectStyles()
   indexWrappedElements()
+  mountCollectionAddButtons()
   // Rich-text inline editing: mount a TipTap editor on every editable
   // property. Commit-on-blur posts the change to the host; typing and focus
   // keep the floating element handle attached as the layout shifts.

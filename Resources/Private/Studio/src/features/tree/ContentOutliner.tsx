@@ -46,6 +46,7 @@ export function ContentOutliner({
   onSelect,
   onNodeAction,
   onMoved,
+  onCreateNew,
 }: {
   document: NodeDto | null
   workspaceName: string | null
@@ -58,6 +59,8 @@ export function ContentOutliner({
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
   /** A drag-and-drop move succeeded; addresses whose children changed. */
   onMoved?: (affectedAddresses: string[]) => void
+  /** "Create new…" was picked in the context menu for this target. */
+  onCreateNew?: (target: NodeMenuTarget) => void
 }) {
   if (document === null) {
     return (
@@ -80,6 +83,7 @@ export function ContentOutliner({
       onSelect={onSelect}
       onNodeAction={onNodeAction}
       onMoved={onMoved}
+      onCreateNew={onCreateNew}
     />
   )
 }
@@ -101,6 +105,7 @@ function OutlinerTree({
   onSelect,
   onNodeAction,
   onMoved,
+  onCreateNew,
 }: {
   document: NodeDto
   workspaceName: string | null
@@ -109,6 +114,7 @@ function OutlinerTree({
   onSelect?: (node: NodeDto) => void
   onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
   onMoved?: (affectedAddresses: string[]) => void
+  onCreateNew?: (target: NodeMenuTarget) => void
 }) {
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
   // Flips once the document root has resolved, so the outliner shows a spinner
@@ -264,6 +270,7 @@ function OutlinerTree({
         entityLabel="element"
         onClose={() => setMenuTarget(null)}
         onDone={(action, target) => onNodeAction?.(action, target)}
+        onCreateNew={onCreateNew}
       />
     </>
   )

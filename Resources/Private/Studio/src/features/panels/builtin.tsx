@@ -1,5 +1,11 @@
+import { useState } from 'react'
 import { fetchNode } from '@/api/nodes'
 import { useStudio } from '@/app/StudioContext'
+import { Button } from '@/components/ui/button'
+import {
+  InsertNodeDialog,
+  type InsertRequest,
+} from '@/features/creation/InsertNodeDialog'
 import { NodeCreationPanel } from '@/features/creation/NodeCreationPanel'
 import type {
   NodeMenuAction,
@@ -57,11 +63,31 @@ function DocumentsPanel() {
     nodeEdited,
     nodesEdited,
   } = useStudio()
+  const [insertRequest, setInsertRequest] = useState<InsertRequest | null>(null)
   if (!site || !workspaceName) {
     return <LoadingState label="Loading sites…" />
   }
   return (
-    <div className="p-2">
+    <div className="flex flex-col gap-2 p-2">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={!selectedDocument}
+        onClick={() =>
+          selectedDocument &&
+          setInsertRequest({
+            referenceAddress: selectedDocument.address,
+            // The site node must not get siblings (that would be a new
+            // site); any other document's parent resolves in the dialog.
+            parentAddress:
+              selectedDocument.address === site.nodeAddress ? null : undefined,
+            defaultMode: 'inside',
+          })
+        }
+      >
+        <i className="fas fa-plus" aria-hidden />
+        New document…
+      </Button>
       {/* Remount per site so a site switch starts with fresh expansion state. */}
       <DocumentTree
         key={site.nodeAddress}
@@ -71,6 +97,13 @@ function DocumentsPanel() {
         lastEdit={lastEdit}
         onSelect={selectDocument}
         onMoved={nodesEdited}
+        onCreateNew={(target) =>
+          setInsertRequest({
+            referenceAddress: target.address,
+            parentAddress: target.parentAddress,
+            defaultMode: 'inside',
+          })
+        }
         onNodeAction={(action, target) => {
           reportNodeAction(nodeEdited, action, target)
           // The deleted document cannot stay selected - browse its parent.
@@ -87,6 +120,22 @@ function DocumentsPanel() {
           }
         }}
       />
+      <InsertNodeDialog
+        request={insertRequest}
+        role="document"
+        onCreated={(address, creation) => {
+          setInsertRequest(null)
+          // Refresh the insertion parent's children (the tree row) and the
+          // preview, then browse to the new document.
+          nodesEdited([creation.parentAddress])
+          fetchNode(address)
+            .then(selectDocument)
+            .catch(() => {
+              /* fine - the tree refresh alone shows the new document */
+            })
+        }}
+        onClose={() => setInsertRequest(null)}
+      />
     </div>
   )
 }
@@ -101,6 +150,7 @@ function OutlinePanel() {
     nodeEdited,
     nodesEdited,
   } = useStudio()
+  const [insertRequest, setInsertRequest] = useState<InsertRequest | null>(null)
   return (
     <div className="p-2">
       <ContentOutliner
@@ -110,9 +160,32 @@ function OutlinePanel() {
         lastEdit={lastEdit}
         onSelect={inspectNode}
         onMoved={nodesEdited}
+        onCreateNew={(target) =>
+          setInsertRequest({
+            referenceAddress: target.address,
+            parentAddress: target.parentAddress,
+            defaultMode: 'after',
+          })
+        }
         onNodeAction={(action, target) =>
           reportNodeAction(nodeEdited, action, target)
         }
+      />
+      <InsertNodeDialog
+        request={insertRequest}
+        role="content"
+        onCreated={(address, creation) => {
+          setInsertRequest(null)
+          // Refresh the collection's children and reload the preview, then
+          // inspect the new element (revealing it in outliner and preview).
+          nodesEdited([creation.parentAddress])
+          fetchNode(address)
+            .then(inspectNode)
+            .catch(() => {
+              /* fine - the outliner refresh alone shows the new element */
+            })
+        }}
+        onClose={() => setInsertRequest(null)}
       />
     </div>
   )

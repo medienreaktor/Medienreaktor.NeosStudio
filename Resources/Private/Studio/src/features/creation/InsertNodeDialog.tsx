@@ -1,0 +1,351 @@
+import { useState } from 'react'
+import {
+  fetchChildren,
+  nodeLabel,
+  useAllowedChildNodeTypes,
+  useNode,
+  useNodeAncestors,
+} from '@/api/nodes'
+import { toast } from '@/components/ui/toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { LoadingState } from '@/components/ui/spinner'
+import { Placeholder } from '@/components/ui/placeholder'
+import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
+import { cn } from '@/lib/utils'
+import {
+  type CreatableNodeTypeGroup,
+  filterCreatableGroups,
+  useCreatableNodeTypes,
+} from './creatableNodeTypes'
+import { CreateNodeFlow } from './NodeCreationDialog'
+import type { CreateNodeRequest } from './createNode'
+
+export type InsertMode = 'before' | 'inside' | 'after'
+
+/**
+ * What the insertion is relative to. Callers that know the parent (tree rows,
+ * the guest's element handle) pass parentAddress - null marks a node that
+ * must not get siblings (the site node). Callers that don't leave it
+ * undefined; the dialog resolves it via the ancestors relation.
+ */
+export interface InsertRequest {
+  referenceAddress: string
+  parentAddress?: string | null
+  defaultMode?: InsertMode
+}
+
+export type InsertRole = 'document' | 'content'
+
+const ROLES: Record<
+  InsertRole,
+  { superTypes: string[]; noun: string; icon: string }
+> = {
+  document: {
+    superTypes: ['Neos.Neos:Document'],
+    noun: 'document',
+    icon: 'fa-file',
+  },
+  content: {
+    // Collections are not Content subtypes but can be user-creatable
+    // (e.g. column containers); constraints still decide per position.
+    superTypes: ['Neos.Neos:Content', 'Neos.Neos:ContentCollection'],
+    noun: 'element',
+    icon: 'fa-cube',
+  },
+}
+
+const MODES: { mode: InsertMode; label: string; icon: string }[] = [
+  { mode: 'before', label: 'Before', icon: 'fa-arrow-up-long' },
+  { mode: 'inside', label: 'Inside', icon: 'fa-arrow-right-long' },
+  { mode: 'after', label: 'After', icon: 'fa-arrow-down-long' },
+]
+
+/**
+ * The "create a node here" dialog, the old UI's insertion flow: pick the
+ * insertion mode (before/after the reference node, or inside it as the last
+ * child), pick one of the node types the content model allows at that
+ * position, then run the regular creation flow (ui.creationDialog + command).
+ *
+ * Constraints come from the server's allowed-child-node-types relation -
+ * "inside" checks the reference node's own list, "before"/"after" check the
+ * parent's. Modes without a single allowed creatable type are disabled.
+ *
+ * Render unconditionally with request null while closed; a non-null request
+ * opens it (remounting per reference, so mode/filter state starts fresh).
+ */
+export function InsertNodeDialog({
+  request,
+  role,
+  onCreated,
+  onClose,
+}: {
+  request: InsertRequest | null
+  role: InsertRole
+  /** The node exists: its address, plus the creation request that made it. */
+  onCreated: (address: string, creation: CreateNodeRequest) => void
+  /** The dialog was dismissed. */
+  onClose: () => void
+}) {
+  if (request === null) return null
+  return (
+    <OpenInsertNodeDialog
+      key={request.referenceAddress}
+      request={request}
+      role={role}
+      onCreated={onCreated}
+      onClose={onClose}
+    />
+  )
+}
+
+function OpenInsertNodeDialog({
+  request,
+  role,
+  onCreated,
+  onClose,
+}: {
+  request: InsertRequest
+  role: InsertRole
+  onCreated: (address: string, creation: CreateNodeRequest) => void
+  onClose: () => void
+}) {
+  const { superTypes, noun } = ROLES[role]
+  const [selectedMode, setSelectedMode] = useState<InsertMode>(
+    request.defaultMode ?? 'inside',
+  )
+  const [filter, setFilter] = useState('')
+  // The picked type's creation flow is running; the picker steps aside.
+  const [creation, setCreation] = useState<CreateNodeRequest | null>(null)
+  // An "after" pick is looking up the reference's next sibling.
+  const [resolving, setResolving] = useState(false)
+
+  const { data: reference } = useNode(request.referenceAddress)
+
+  // The parent, for sibling insertion: as passed by the caller, or resolved
+  // through the ancestors relation. A root parent (the sites node) means no
+  // sibling creation - a sibling of the site would be a new site.
+  const needsParentResolution = request.parentAddress === undefined
+  const { data: ancestors } = useNodeAncestors(
+    needsParentResolution ? request.referenceAddress : null,
+  )
+  const parentAddress: string | null | undefined = !needsParentResolution
+    ? request.parentAddress
+    : ancestors === undefined
+      ? undefined // still resolving - sibling modes show as loading
+      : ancestors[0] && ancestors[0].classification !== 'root'
+        ? ancestors[0].address
+        : null
+
+  const { data: insideAllowed } = useAllowedChildNodeTypes(
+    request.referenceAddress,
+  )
+  const { data: siblingAllowed } = useAllowedChildNodeTypes(
+    parentAddress ?? null,
+  )
+
+  const creatable = useCreatableNodeTypes(superTypes)
+
+  // The creatable groups per mode, cut down to the types allowed at that
+  // insertion point; null while the lists load.
+  const groupsFor = (mode: InsertMode): CreatableNodeTypeGroup[] | null => {
+    const allowed =
+      mode === 'inside'
+        ? insideAllowed
+        : parentAddress === null
+          ? []
+          : siblingAllowed
+    if (creatable === null || allowed === undefined) return null
+    const allowedSet = new Set(allowed)
+    return filterCreatableGroups(creatable.groups, (nodeType) =>
+      allowedSet.has(nodeType.name),
+    )
+  }
+  const modeGroups: Record<InsertMode, CreatableNodeTypeGroup[] | null> = {
+    before: groupsFor('before'),
+    inside: groupsFor('inside'),
+    after: groupsFor('after'),
+  }
+  // The selected mode, or - once its list resolved empty - the first usable
+  // one, so the dialog opens on something creatable without an effect dance.
+  const activeMode =
+    (modeGroups[selectedMode]?.length ?? 0) > 0 ||
+    modeGroups[selectedMode] === null
+      ? selectedMode
+      : (MODES.map(({ mode }) => mode).find(
+          (mode) => (modeGroups[mode]?.length ?? 0) > 0,
+        ) ?? selectedMode)
+
+  const groups = modeGroups[activeMode]
+  const query = filter.trim().toLowerCase()
+  const visibleGroups =
+    groups !== null && query !== ''
+      ? filterCreatableGroups(
+          groups,
+          (nodeType) =>
+            nodeType.label.toLowerCase().includes(query) ||
+            nodeType.name.toLowerCase().includes(query),
+        )
+      : groups
+
+  const pick = async (nodeTypeName: string) => {
+    if (resolving) return
+    let parent = request.referenceAddress
+    let succeedingSibling: string | null = null
+    if (activeMode !== 'inside') {
+      if (!parentAddress) return
+      parent = parentAddress
+      if (activeMode === 'before') {
+        succeedingSibling = request.referenceAddress
+      } else {
+        // "After" needs the reference's next sibling (null appends at the
+        // end). Unfiltered children, so nodes of other roles between two
+        // siblings don't shift the insertion point.
+        setResolving(true)
+        try {
+          const siblings = await fetchChildren(parent)
+          const index = siblings.findIndex(
+            (node) => node.address === request.referenceAddress,
+          )
+          succeedingSibling =
+            index >= 0 ? (siblings[index + 1]?.address ?? null) : null
+        } catch (e) {
+          toast.error(e, { title: 'Creating failed' })
+          return
+        } finally {
+          setResolving(false)
+        }
+      }
+    }
+    setCreation({
+      nodeTypeName,
+      parentAddress: parent,
+      succeedingSiblingAddress: succeedingSibling,
+    })
+  }
+
+  return (
+    <>
+      <Dialog
+        open={creation === null}
+        onOpenChange={(open) => !open && onClose()}
+      >
+        <DialogContent className="flex max-h-[80vh] flex-col gap-3 overflow-hidden sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Create new {noun}</DialogTitle>
+            <DialogDescription>
+              {reference ? `Relative to “${nodeLabel(reference)}”.` : ' '}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div
+            className="grid grid-cols-3 gap-1 rounded-md bg-neutral-800/60 p-1"
+            role="radiogroup"
+            aria-label="Insertion position"
+          >
+            {MODES.map(({ mode, label, icon }) => {
+              const loading = modeGroups[mode] === null
+              const available = (modeGroups[mode]?.length ?? 0) > 0
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === activeMode}
+                  disabled={!available && !loading}
+                  className={cn(
+                    'flex items-center justify-center gap-2 rounded px-2 py-1.5 text-sm',
+                    mode === activeMode
+                      ? 'bg-blue-500 text-white'
+                      : 'text-neutral-300 hover:bg-neutral-700',
+                    !available &&
+                      !loading &&
+                      'cursor-not-allowed text-neutral-600 hover:bg-transparent',
+                  )}
+                  onClick={() => setSelectedMode(mode)}
+                >
+                  <i className={`fas ${icon}`} aria-hidden />
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+
+          <Input
+            type="search"
+            placeholder="Filter node types…"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            className="h-8"
+          />
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {visibleGroups === null ? (
+              <LoadingState label="Loading node types…" />
+            ) : visibleGroups.length === 0 ? (
+              <Placeholder
+                icon={query ? 'fa-magnifying-glass' : ROLES[role].icon}
+                title={
+                  query
+                    ? 'No node types match the filter.'
+                    : `No ${noun} types can be created here.`
+                }
+                className="py-10"
+              />
+            ) : (
+              visibleGroups.map((group) => (
+                <section key={group.name} className="mb-2">
+                  <div className="px-1 py-1 text-xs font-semibold text-neutral-400">
+                    {group.label}
+                  </div>
+                  <ul className="grid grid-cols-3 gap-1 sm:grid-cols-4">
+                    {group.nodeTypes.map((nodeType) => (
+                      <li key={nodeType.name}>
+                        <button
+                          type="button"
+                          disabled={resolving}
+                          title={`${nodeType.label} (${nodeType.name})`}
+                          className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800/40 px-1 py-3 text-center hover:bg-neutral-800 disabled:opacity-50"
+                          onClick={() => void pick(nodeType.name)}
+                        >
+                          <NodeTypeIcon
+                            nodeTypes={creatable?.nodeTypes}
+                            nodeTypeName={nodeType.name}
+                            className="text-base"
+                          />
+                          <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                            {nodeType.label}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {creation && (
+        <CreateNodeFlow
+          request={creation}
+          nodeTypes={creatable?.nodeTypes}
+          onCreated={(address) => onCreated(address, creation)}
+          onCancel={(error) => {
+            // Cancelling the creation form returns to the type selection; a
+            // failure without a visible form surfaces here as well.
+            if (error) toast.error(error, { title: 'Creating failed' })
+            setCreation(null)
+          }}
+        />
+      )}
+    </>
+  )
+}

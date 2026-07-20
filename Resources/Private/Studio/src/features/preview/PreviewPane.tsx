@@ -12,6 +12,10 @@ import {
   getCreationDrag,
   subscribeCreationDrag,
 } from '@/features/creation/creationDrag'
+import {
+  InsertNodeDialog,
+  type InsertRequest,
+} from '@/features/creation/InsertNodeDialog'
 import { CreateNodeFlow } from '@/features/creation/NodeCreationDialog'
 import { moveNode } from '@/features/editing/nodeActions'
 import {
@@ -154,6 +158,9 @@ export function PreviewPane({
   // The element menu (hide/unhide/delete) requested via the "..." handle in
   // the guest, anchored at the handle's viewport position over the iframe.
   const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
+  // "Create new…" was picked in the element menu - the insertion dialog
+  // (mode + node type selection) is open for that element.
+  const [insertRequest, setInsertRequest] = useState<InsertRequest | null>(null)
   // A pending rich-text link edit from the guest: the Link Editor dialog is
   // open for it, and the guest waits for link-apply / link-cancel.
   const [linkEdit, setLinkEdit] = useState<{
@@ -300,11 +307,35 @@ export function PreviewPane({
           break
         }
         case 'neos-studio/create-node-request':
-          setPendingCreation({
-            nodeTypeName: message.nodeTypeName,
-            parentContextPath: message.parentContextPath,
-            succeedingSiblingContextPath: message.succeedingSiblingContextPath,
-          })
+          try {
+            setPendingCreation({
+              nodeTypeName: message.nodeTypeName,
+              parentAddress: addressFromContextPath(message.parentContextPath),
+              succeedingSiblingAddress:
+                message.succeedingSiblingContextPath === null
+                  ? null
+                  : addressFromContextPath(
+                      message.succeedingSiblingContextPath,
+                    ),
+            })
+          } catch {
+            /* malformed contextpath - ignore the drop */
+          }
+          break
+        case 'neos-studio/insert-node-request':
+          // A "+" affordance in the preview: the element's companion button
+          // (insert after) or an empty collection's add button (inside).
+          try {
+            setInsertRequest({
+              referenceAddress: addressFromContextPath(message.contextPath),
+              parentAddress: message.parentContextPath
+                ? addressFromContextPath(message.parentContextPath)
+                : null,
+              defaultMode: message.defaultMode,
+            })
+          } catch {
+            /* malformed contextpath - ignore the request */
+          }
           break
         case 'neos-studio/element-menu-request': {
           const frameRect = activeFrameRef.current?.getBoundingClientRect()
@@ -567,6 +598,13 @@ export function PreviewPane({
         target={elementMenu}
         entityLabel="element"
         onClose={() => setElementMenu(null)}
+        onCreateNew={(target) =>
+          setInsertRequest({
+            referenceAddress: target.address,
+            parentAddress: target.parentAddress,
+            defaultMode: 'after',
+          })
+        }
         onDone={(action, target) => {
           if (action === 'delete') {
             // The element disappears only after a reload; the inspection
@@ -623,14 +661,26 @@ export function PreviewPane({
           }
         />
       )}
+      <InsertNodeDialog
+        request={insertRequest}
+        role="content"
+        onCreated={(address, creation) => {
+          setInsertRequest(null)
+          // Same follow-up as a drop from the creation panel: the new element
+          // renders after a reload, the outliner refreshes below the parent,
+          // and the new node is inspected (outlining it in the fresh page).
+          setReloadCount((count) => count + 1)
+          onNodeEditedRef.current?.(creation.parentAddress)
+          onSelectNodeRef.current(address)
+        }}
+        onClose={() => setInsertRequest(null)}
+      />
       {pendingCreation && (
         <CreateNodeFlow
           request={pendingCreation}
           nodeTypes={nodeTypes}
           onCreated={(address) => {
-            const parentAddress = addressFromContextPath(
-              pendingCreation.parentContextPath,
-            )
+            const parentAddress = pendingCreation.parentAddress
             setPendingCreation(null)
             // The new node only renders after a reload; the shell then
             // refreshes the outliner below the collection and inspects the

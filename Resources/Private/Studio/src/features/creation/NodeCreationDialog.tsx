@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { generateUriPathSegment } from '@/api/nodes'
 import {
   type CreationDialogElementConfig,
   type NodeTypeMap,
+  isOfType,
   useNodeTypeSchema,
 } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
@@ -30,6 +32,23 @@ interface CreationElement {
   label: string
   required: boolean
   config: CreationDialogElementConfig
+}
+
+const DOCUMENT_SUPER_TYPE = 'Neos.Neos:Document'
+
+/**
+ * Client-side fallback slug for when the server-side generator is
+ * unreachable: strip diacritics (NFD + combining marks), rough
+ * ASCII-fication - so the document still gets a URL.
+ */
+function fallbackSlug(text: string): string {
+  const stripped = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return (
+    stripped
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'document'
+  )
 }
 
 /**
@@ -108,6 +127,11 @@ export function CreateNodeFlow({
     setValues(defaults)
   }, [elements, schema])
 
+  const typeLabel = humanizeLabel(
+    nodeTypes?.get(request.nodeTypeName)?.label,
+    request.nodeTypeName.split(':').pop() ?? request.nodeTypeName,
+  )
+
   const submit = async (submittedValues: Record<string, unknown>) => {
     setCreating(true)
     const properties = schema?.configuration.properties ?? {}
@@ -118,6 +142,24 @@ export function CreateNodeFlow({
       initialPropertyValues[name] = value
     }
     try {
+      // Documents need a URL from birth: derive uriPathSegment from the
+      // entered title (or the type label) with the server's language-aware
+      // slug generator - unless a creation-dialog element already set one.
+      // The classic UI does the same in its server-side creation handler.
+      if (
+        nodeTypes !== undefined &&
+        isOfType(nodeTypes, request.nodeTypeName, DOCUMENT_SUPER_TYPE) &&
+        'uriPathSegment' in properties &&
+        initialPropertyValues.uriPathSegment === undefined
+      ) {
+        const title = initialPropertyValues.title
+        const text =
+          typeof title === 'string' && title !== '' ? title : typeLabel
+        initialPropertyValues.uriPathSegment = await generateUriPathSegment(
+          request.parentAddress,
+          text,
+        ).catch(() => fallbackSlug(text))
+      }
       onCreated(await createNode(request, initialPropertyValues))
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
@@ -152,10 +194,6 @@ export function CreateNodeFlow({
 
   if (elements === null || elements.length === 0) return null
 
-  const typeLabel = humanizeLabel(
-    nodeTypes?.get(request.nodeTypeName)?.label,
-    request.nodeTypeName.split(':').pop() ?? request.nodeTypeName,
-  )
   const missingRequired = elements.some((element) => {
     const value = values[element.name]
     return (

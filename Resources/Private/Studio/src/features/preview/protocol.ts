@@ -70,6 +70,19 @@ export type GuestToHostMessage =
       buttonRect: { left: number; top: number; width: number; height: number }
     }
   /**
+   * A "+" affordance in the preview was clicked - the host opens the
+   * insertion dialog (mode + node type selection) relative to this node:
+   * the element's "+" button (defaultMode "after") or the add button inside
+   * an empty collection (defaultMode "inside", contextPath = the collection).
+   */
+  | {
+      type: 'neos-studio/insert-node-request'
+      contextPath: string
+      /** NodeAddress JSON of the enclosing collection, for sibling modes. */
+      parentContextPath: string | null
+      defaultMode: 'inside' | 'after'
+    }
+  /**
    * A content element was dragged by its handle onto a new insertion point.
    * The element goes before the succeeding sibling, or to the end of the
    * collection when the sibling is null.

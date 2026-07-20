@@ -1,16 +1,12 @@
-import { useMemo, useState } from 'react'
-import {
-  isOfType,
-  useNodeTypeGroups,
-  useNodeTypes,
-  type NodeTypeDto,
-} from '@/api/nodeTypes'
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
-import { humanizeLabel } from '@/features/inspector/inspectorSchema'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
-import { sortByPosition } from '@/lib/positional'
+import {
+  filterCreatableGroups,
+  useCreatableNodeTypes,
+} from './creatableNodeTypes'
 import { endCreationDrag, startCreationDrag } from './creationDrag'
 
 const CONTENT_SUPER_TYPE = 'Neos.Neos:Content'
@@ -23,96 +19,31 @@ const CONTENT_SUPER_TYPE = 'Neos.Neos:Content'
  */
 export const NODE_TYPE_DATA_TRANSFER = 'application/x-neos-studio-nodetype'
 
-interface CreatableNodeType {
-  name: string
-  label: string
-  icon: string | null
-}
-
 /**
  * All creatable content node types, grouped like the classic UI's node
- * creation dialog: non-abstract Neos.Neos:Content subtypes with a ui.group,
- * ordered by the group definitions (Neos.Neos.nodeTypes.groups) and their
- * ui.position within the group. Items are dragged into the preview, where
- * content collections that allow the type light up as drop targets.
+ * creation dialog (see useCreatableNodeTypes). Items are dragged into the
+ * preview, where content collections that allow the type light up as drop
+ * targets.
  */
 export function NodeCreationPanel() {
-  const { data: nodeTypes } = useNodeTypes()
-  const { data: groupConfigs } = useNodeTypeGroups()
+  const creatable = useCreatableNodeTypes([CONTENT_SUPER_TYPE])
   const [filter, setFilter] = useState('')
   const [toggled, setToggled] = useState<Record<string, boolean>>({})
 
-  const groups = useMemo(() => {
-    if (!nodeTypes || !groupConfigs) return null
-    const byGroup = new Map<
-      string,
-      { nodeType: NodeTypeDto; label: string }[]
-    >()
-    for (const nodeType of nodeTypes.values()) {
-      if (nodeType.abstract || nodeType.group === null) continue
-      if (!isOfType(nodeTypes, nodeType.name, CONTENT_SUPER_TYPE)) continue
-      const label = humanizeLabel(
-        nodeType.label,
-        nodeType.name.split(':').pop() ?? nodeType.name,
-      )
-      const entries = byGroup.get(nodeType.group) ?? []
-      entries.push({ nodeType, label })
-      byGroup.set(nodeType.group, entries)
-    }
-
-    // Groups in configured position order; unconfigured groups (a node type
-    // referencing an unknown group) trail in name order.
-    const configuredOrder = sortByPosition(
-      Object.entries(groupConfigs).map(([key, config]) => ({
-        key,
-        position: config?.position,
-      })),
-    )
-    const unconfigured = [...byGroup.keys()]
-      .filter((name) => !configuredOrder.includes(name))
-      .sort()
-
-    return [...configuredOrder, ...unconfigured]
-      .filter((name) => byGroup.has(name))
-      .map((name) => ({
-        name,
-        label: humanizeLabel(groupConfigs[name]?.label, name),
-        collapsed: groupConfigs[name]?.collapsed === true,
-        nodeTypes: sortByPosition(
-          byGroup.get(name)!.map(({ nodeType }) => ({
-            key: nodeType.name,
-            position: nodeType.position,
-          })),
-        ).map((typeName): CreatableNodeType => {
-          const entry = byGroup
-            .get(name)!
-            .find((candidate) => candidate.nodeType.name === typeName)!
-          return {
-            name: typeName,
-            label: entry.label,
-            icon: entry.nodeType.icon,
-          }
-        }),
-      }))
-  }, [nodeTypes, groupConfigs])
-
-  if (groups === null) {
+  if (creatable === null) {
     return <LoadingState label="Loading node types…" />
   }
+  const { groups, nodeTypes } = creatable
 
   const query = filter.trim().toLowerCase()
-  const visibleGroups = groups
-    .map((group) => ({
-      ...group,
-      nodeTypes: query
-        ? group.nodeTypes.filter(
-            (nodeType) =>
-              nodeType.label.toLowerCase().includes(query) ||
-              nodeType.name.toLowerCase().includes(query),
-          )
-        : group.nodeTypes,
-    }))
-    .filter((group) => group.nodeTypes.length > 0)
+  const visibleGroups = query
+    ? filterCreatableGroups(
+        groups,
+        (nodeType) =>
+          nodeType.label.toLowerCase().includes(query) ||
+          nodeType.name.toLowerCase().includes(query),
+      )
+    : groups
 
   return (
     <div className="@container flex flex-col gap-2 p-2">

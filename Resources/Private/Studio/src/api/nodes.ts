@@ -195,6 +195,25 @@ export function fetchAllowedChildNodeTypes(address: string): Promise<string[]> {
   })
 }
 
+/**
+ * Hook variant of fetchAllowedChildNodeTypes, sharing its cache entries (same
+ * key, same unwrapped string[] shape). null disables the query - e.g. a
+ * sibling-insertion check while the parent is still unknown.
+ */
+export function useAllowedChildNodeTypes(address: string | null) {
+  return useQuery({
+    queryKey: queryKeys.nodes.allowedChildNodeTypes(address ?? ''),
+    queryFn: async () => {
+      const { nodeTypes } = await apiFetch<{ nodeTypes: string[] }>(
+        `/nodes/${address}/allowed-child-node-types`,
+      )
+      return nodeTypes
+    },
+    staleTime: Infinity,
+    enabled: address !== null,
+  })
+}
+
 /** Ancestors, closest first (parent, grandparent, ... up to the root). */
 export function useNodeAncestors(address: string | null, enabled = true) {
   return useQuery({

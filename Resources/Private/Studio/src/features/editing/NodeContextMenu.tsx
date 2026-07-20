@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { deleteNode, hideNode, unhideNode } from './nodeActions'
@@ -48,6 +49,7 @@ export function NodeContextMenu({
   entityLabel = 'element',
   onClose,
   onDone,
+  onCreateNew,
 }: {
   target: NodeMenuTarget | null
   /** Noun used in the delete confirmation ("element", "document"). */
@@ -56,6 +58,13 @@ export function NodeContextMenu({
   onClose: () => void
   /** A command succeeded for this target. */
   onDone: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  /**
+   * When set, the menu leads with a "Create new…" item that hands the target
+   * to the caller (which opens the insertion dialog). Offered for tethered
+   * nodes too - they can't be moved or deleted, but creating inside them (or
+   * next to them, where constraints permit) is fine.
+   */
+  onCreateNew?: (target: NodeMenuTarget) => void
 }) {
   // A delete waiting for confirmation; the dialog is open while set.
   const [pendingDelete, setPendingDelete] = useState<NodeMenuTarget | null>(
@@ -103,6 +112,20 @@ export function NodeContextMenu({
             }}
           />
           <DropdownMenuContent align="end">
+            {onCreateNew && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onClose()
+                    onCreateNew(target)
+                  }}
+                >
+                  <i className="fas fa-fw fa-plus" aria-hidden />
+                  Create new…
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             {target.hidden ? (
               <DropdownMenuItem
                 disabled={target.tethered}
