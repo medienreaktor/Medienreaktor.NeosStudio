@@ -29,6 +29,7 @@ import type {
   GuestToHostMessage,
   HostToGuestMessage,
 } from '../features/preview/protocol'
+import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
 import { mountRichTextEditors } from './richtext'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
@@ -802,6 +803,10 @@ function onHostMessage(event: MessageEvent): void {
   if (message?.type === 'neos-studio/creation-drag-start')
     startDrag(message.nodeTypeName)
   if (message?.type === 'neos-studio/creation-drag-end') endDrag()
+  // The Link Editor dialog's answer for a pending rich-text link edit.
+  if (message?.type === 'neos-studio/link-apply')
+    applyLinkEdit(message.attributes)
+  if (message?.type === 'neos-studio/link-cancel') cancelLinkEdit()
 }
 
 function init(): void {

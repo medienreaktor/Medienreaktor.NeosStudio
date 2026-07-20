@@ -18,7 +18,7 @@ import { Italic } from '@tiptap/extension-italic'
 import { Underline } from '@tiptap/extension-underline'
 import { Strike } from '@tiptap/extension-strike'
 import { Code } from '@tiptap/extension-code'
-import { Link } from '@tiptap/extension-link'
+import { Link, type LinkOptions } from '@tiptap/extension-link'
 import { HardBreak } from '@tiptap/extension-hard-break'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
@@ -26,6 +26,23 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
+
+/**
+ * The Link extension's Studio configuration, used by both schema branches.
+ * Neos stores document and asset links as node:// and asset:// URIs in the
+ * property HTML; TipTap validates hrefs against a protocol allow-list (when
+ * parsing existing content too), so without registering the custom schemes it
+ * would silently strip those link marks - and the next commit would save the
+ * content unlinked. The HTMLAttributes reset drops TipTap's defaults
+ * (target="_blank" rel="noopener noreferrer nofollow" on every link): what a
+ * link carries is exactly what was configured in the Link Editor, nothing is
+ * injected into the stored markup.
+ */
+const LINK_CONFIGURATION: Partial<LinkOptions> = {
+  openOnClick: false,
+  protocols: ['node', 'asset'],
+  HTMLAttributes: { target: null, rel: null },
+}
 
 /** The normalized set of what a property permits; drives schema and toolbar. */
 export interface Formatting {
@@ -153,7 +170,7 @@ export function extensionsFor(config: Formatting): Extensions {
       ...(config.underline ? [Underline] : []),
       ...(config.strike ? [Strike] : []),
       ...(config.code ? [Code] : []),
-      ...(config.link ? [Link.configure({ openOnClick: false })] : []),
+      ...(config.link ? [Link.configure(LINK_CONFIGURATION)] : []),
       ...marks,
     ]
   }
@@ -184,7 +201,7 @@ export function extensionsFor(config: Formatting): Extensions {
       blockquote: config.blockquote ? {} : false,
       bulletList: config.bulletList ? {} : false,
       orderedList: config.orderedList ? {} : false,
-      link: config.link ? { openOnClick: false } : false,
+      link: config.link ? LINK_CONFIGURATION : false,
     }),
     ...(config.multiline ? [] : [Document.extend({ content: 'block' })]),
     ...(config.alignment

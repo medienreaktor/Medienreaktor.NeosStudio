@@ -10,6 +10,20 @@
  * the aggregateId - within one rendered document it identifies the element.
  */
 
+/**
+ * The DOM attributes of an inline link (the <a> tag / TipTap link mark) as
+ * they travel between guest and host while the Link Editor edits one. The
+ * href is a Neos link URI (node://, asset://, https://, mailto:, ...); the
+ * rest are the shared link options, null when unset.
+ */
+export interface LinkAttributes {
+  href: string
+  target: string | null
+  rel: string | null
+  class: string | null
+  title: string | null
+}
+
 export type GuestToHostMessage =
   /** The guest script booted and the DOM is indexed - selection can be pushed. */
   | { type: 'neos-studio/guest-ready' }
@@ -73,6 +87,16 @@ export type GuestToHostMessage =
       contextPath: string
       property: string
     }
+  /**
+   * The link button of a rich-text toolbar was clicked - the host opens the
+   * Link Editor dialog. attributes carry the existing link at the selection
+   * (to edit), or null when a new link is being created. The guest keeps the
+   * pending selection and waits for link-apply / link-cancel.
+   */
+  | {
+      type: 'neos-studio/link-edit-request'
+      attributes: LinkAttributes | null
+    }
 
 export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */
@@ -84,3 +108,11 @@ export type HostToGuestMessage =
   | { type: 'neos-studio/creation-drag-start'; nodeTypeName: string }
   /** The drag ended (dropped or cancelled anywhere) - clear the drop UI. */
   | { type: 'neos-studio/creation-drag-end' }
+  /**
+   * The Link Editor dialog was confirmed for the pending link-edit-request:
+   * apply these attributes to the requesting selection - or remove the link
+   * there when attributes is null.
+   */
+  | { type: 'neos-studio/link-apply'; attributes: LinkAttributes | null }
+  /** The Link Editor dialog was dismissed - drop the pending link edit. */
+  | { type: 'neos-studio/link-cancel' }

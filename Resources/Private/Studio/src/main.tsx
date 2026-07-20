@@ -27,14 +27,16 @@ import '@fortawesome/fontawesome-free/css/regular.min.css'
 import '@fortawesome/fontawesome-free/css/brands.min.css'
 import '@fortawesome/fontawesome-free/css/v4-shims.min.css'
 import '@fortawesome/fontawesome-free/css/v4-font-face.min.css'
+import { registerBuiltinLinkTypes } from './features/links/builtin'
 import { registerBuiltinModals } from './features/modals/builtin'
 import { registerBuiltinPanels } from './features/panels/builtin'
 import { registerBuiltinPropertyEditors } from './features/properties/editors'
 
-// Built-in panels, property editors and modal screens register before mount,
-// exactly like third-party ones would from a plugin entry point.
+// Built-in panels, property editors, link types and modal screens register
+// before mount, exactly like third-party ones would from a plugin entry point.
 registerBuiltinPanels()
 registerBuiltinPropertyEditors()
+registerBuiltinLinkTypes()
 registerBuiltinModals()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

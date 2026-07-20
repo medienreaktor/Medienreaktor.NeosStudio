@@ -20,6 +20,7 @@
 import type { Editor } from '@tiptap/core'
 import { CellSelection } from '@tiptap/pm/tables'
 import { editorFormatting } from './formatting'
+import { requestLinkEdit } from './linkEditing'
 
 export type ToolbarKind = 'inline' | 'block'
 
@@ -686,26 +687,35 @@ registerToolbarItem({
   isActive: (editor) => editor.isActive('code'),
   run: (editor) => editor.chain().focus().toggleCode().run(),
 })
-// Link. The URL is collected with a prompt for now; a proper in-bubble input
-// popover is a follow-up.
+// Link. The dialog lives in the host shell (it needs the document tree and
+// the Media Library) - the guest hands off and applies the answer; see
+// linkEditing.ts.
+const LINK_ICON = svg(
+  '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+)
 registerToolbarItem({
   id: 'link',
   kind: 'inline',
   group: 'link',
   label: 'Link',
-  icon: svg(
-    '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
-  ),
+  icon: LINK_ICON,
   isAvailable: (editor) => editorFormatting(editor).link,
   isActive: (editor) => editor.isActive('link'),
-  run: (editor) => {
-    const current = (editor.getAttributes('link').href as string) ?? ''
-    const url = window.prompt('Link URL', current)
-    if (url === null) return
-    const chain = editor.chain().focus().extendMarkRange('link')
-    if (url === '') chain.unsetLink().run()
-    else chain.setLink({ href: url }).run()
-  },
+  run: (editor) => requestLinkEdit(editor),
+})
+// A collapsed caret inside a link shows the block toolbar (the inline bubble
+// needs a range) - offer editing the link there too, so a click into an
+// existing link can edit it without reselecting it.
+registerToolbarItem({
+  id: 'link-edit',
+  kind: 'block',
+  group: 'link',
+  label: 'Edit link',
+  icon: LINK_ICON,
+  isAvailable: (editor) =>
+    editorFormatting(editor).link && editor.isActive('link'),
+  isActive: (editor) => editor.isActive('link'),
+  run: (editor) => requestLinkEdit(editor),
 })
 registerToolbarItem({
   id: 'removeFormat',

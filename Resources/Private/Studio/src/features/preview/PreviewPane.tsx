@@ -21,7 +21,16 @@ import {
 import { persistPropertyChange } from '@/features/editing/persistProperty'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { imageReference, localIdentifierFor } from '@/api/assetValue'
-import type { GuestToHostMessage, HostToGuestMessage } from './protocol'
+import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
+import {
+  linkAttributesFrom,
+  linkValueFromAttributes,
+} from '@/features/links/linkValue'
+import type {
+  GuestToHostMessage,
+  HostToGuestMessage,
+  LinkAttributes,
+} from './protocol'
 
 /**
  * URL of the Studio's own preview endpoint for a node. The address already
@@ -130,6 +139,11 @@ export function PreviewPane({
   // The element menu (hide/unhide/delete) requested via the "..." handle in
   // the guest, anchored at the handle's viewport position over the iframe.
   const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
+  // A pending rich-text link edit from the guest: the Link Editor dialog is
+  // open for it, and the guest waits for link-apply / link-cancel.
+  const [linkEdit, setLinkEdit] = useState<{
+    attributes: LinkAttributes | null
+  } | null>(null)
   const { data: nodeTypes } = useNodeTypes()
   // Opening the Media Library picker for an image clicked in the preview.
   const { requestPick } = useAssetPicker()
@@ -159,10 +173,11 @@ export function PreviewPane({
   const loadKey = src ? `${src}#${reloadCount}#${reloadToken}` : null
 
   // A new load means a new guest lifecycle; a menu anchored in the previous
-  // document has nothing to point at anymore.
+  // document has nothing to point at anymore - nor has a pending link edit.
   useEffect(() => {
     setGuestReady(false)
     setElementMenu(null)
+    setLinkEdit(null)
   }, [loadKey])
 
   // Start a new frame whenever the load key changes. We keep only the most
@@ -276,6 +291,9 @@ export function PreviewPane({
           }
           break
         }
+        case 'neos-studio/link-edit-request':
+          setLinkEdit({ attributes: message.attributes })
+          break
         case 'neos-studio/image-select-request': {
           let address: string
           try {
@@ -362,6 +380,15 @@ export function PreviewPane({
     return subscribeCreationDrag(send)
   }, [guestReady])
 
+  // Answer the guest that asked for the Link Editor (the pending link edit
+  // lives in its rich-text editor).
+  const postToGuest = (message: HostToGuestMessage) => {
+    activeFrameRef.current?.contentWindow?.postMessage(
+      message,
+      window.location.origin,
+    )
+  }
+
   // Push the shell's selection into the guest (also right after it boots).
   useEffect(() => {
     if (!guestReady) return
@@ -431,6 +458,41 @@ export function PreviewPane({
           }
         }}
       />
+      {linkEdit && (
+        <LinkEditorDialog
+          open
+          onOpenChange={(open) => {
+            if (open) return
+            postToGuest({ type: 'neos-studio/link-cancel' })
+            setLinkEdit(null)
+          }}
+          value={
+            linkEdit.attributes !== null
+              ? linkValueFromAttributes(linkEdit.attributes)
+              : null
+          }
+          // Inline links carry the shared options as <a> attributes.
+          withOptions
+          onApply={(value) => {
+            postToGuest({
+              type: 'neos-studio/link-apply',
+              attributes: linkAttributesFrom(value),
+            })
+            setLinkEdit(null)
+          }}
+          onRemove={
+            linkEdit.attributes !== null
+              ? () => {
+                  postToGuest({
+                    type: 'neos-studio/link-apply',
+                    attributes: null,
+                  })
+                  setLinkEdit(null)
+                }
+              : undefined
+          }
+        />
+      )}
       {pendingCreation && (
         <CreateNodeFlow
           request={pendingCreation}
