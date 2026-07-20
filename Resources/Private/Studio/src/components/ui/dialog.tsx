@@ -4,9 +4,22 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { cn } from '@/lib/utils'
 
 function Dialog({
+  open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  // Base UI skips the enter transition when a dialog mounts with open
+  // already true (useTransitionStatus initializes mounted = open, so the
+  // starting-style state never applies). Render one closed frame first so
+  // dialogs that mount open still fade in.
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      open={open === undefined ? undefined : open && mounted}
+      {...props}
+    />
+  )
 }
 
 function DialogTrigger({
