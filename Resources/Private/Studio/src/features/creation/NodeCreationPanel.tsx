@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
 import {
   isOfType,
   useNodeTypeGroups,
@@ -148,9 +147,9 @@ export function NodeCreationPanel() {
               }
             >
               {isCollapsed ? (
-                <ChevronRight className="size-3" />
+                <i className="fas fa-chevron-right text-[0.75rem]" aria-hidden />
               ) : (
-                <ChevronDown className="size-3" />
+                <i className="fas fa-chevron-down text-[0.75rem]" aria-hidden />
               )}
               {group.label}
             </button>

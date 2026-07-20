@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
 import { Select as SelectPrimitive } from '@base-ui/react/select'
 
 import { cn } from '@/lib/utils'
@@ -46,7 +45,10 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon>
-        <ChevronDownIcon className="size-4 opacity-50" />
+        <i
+          className="fas fa-chevron-down text-[1rem] text-neutral-400 opacity-50"
+          aria-hidden
+        />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -73,7 +75,7 @@ function SelectContent({
         className="z-200 outline-none select-none"
       >
         <SelectPrimitive.ScrollUpArrow className="flex w-full cursor-default items-center justify-center py-1">
-          <ChevronUpIcon className="size-4" />
+          <i className="fas fa-chevron-up text-[1rem]" aria-hidden />
         </SelectPrimitive.ScrollUpArrow>
         <SelectPrimitive.Popup
           data-slot="select-content"
@@ -86,7 +88,7 @@ function SelectContent({
           {children}
         </SelectPrimitive.Popup>
         <SelectPrimitive.ScrollDownArrow className="flex w-full cursor-default items-center justify-center py-1">
-          <ChevronDownIcon className="size-4" />
+          <i className="fas fa-chevron-down text-[1rem]" aria-hidden />
         </SelectPrimitive.ScrollDownArrow>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>
@@ -125,7 +127,7 @@ function SelectItem({
         className="absolute right-2 flex size-3.5 items-center justify-center"
       >
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
+          <i className="fas fa-check text-[1rem]" aria-hidden />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText className="flex items-center gap-2">

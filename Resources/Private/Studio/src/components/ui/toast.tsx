@@ -1,12 +1,5 @@
 import * as React from 'react'
 import { Toast as ToastPrimitive } from '@base-ui/react/toast'
-import {
-  CheckCircle2Icon,
-  InfoIcon,
-  Loader2Icon,
-  TriangleAlertIcon,
-  XIcon,
-} from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -89,11 +82,29 @@ export const toast = {
 }
 
 const ICONS: Record<string, React.ReactNode> = {
-  success: <CheckCircle2Icon className="size-4 shrink-0 text-green-500" />,
-  error: <TriangleAlertIcon className="size-4 shrink-0 text-red-500" />,
-  info: <InfoIcon className="size-4 shrink-0 text-blue-500" />,
+  success: (
+    <i
+      className="fas fa-circle-check text-[1rem] shrink-0 text-green-500"
+      aria-hidden
+    />
+  ),
+  error: (
+    <i
+      className="fas fa-triangle-exclamation text-[1rem] shrink-0 text-red-500"
+      aria-hidden
+    />
+  ),
+  info: (
+    <i
+      className="fas fa-circle-info text-[1rem] shrink-0 text-blue-500"
+      aria-hidden
+    />
+  ),
   loading: (
-    <Loader2Icon className="size-4 shrink-0 animate-spin text-neutral-400" />
+    <i
+      className="fas fa-spinner fa-spin text-[1rem] shrink-0 text-neutral-400"
+      aria-hidden
+    />
   ),
 }
 
@@ -134,7 +145,7 @@ function ToastList() {
         aria-label="Close"
         className="absolute top-3 right-3 rounded-xs text-neutral-400 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
       >
-        <XIcon className="size-4" />
+        <i className="fas fa-xmark text-[1rem]" aria-hidden />
       </ToastPrimitive.Close>
     </ToastPrimitive.Root>
   ))

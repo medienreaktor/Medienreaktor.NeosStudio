@@ -1,4 +1,3 @@
-import { PlusIcon } from 'lucide-react'
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
 import { dimensionSpacePointEquals } from '@/api/dimensions'
 import {
@@ -150,7 +149,10 @@ export function DimensionSwitcher({
                     >
                       {dimensionValue.label}
                       {missingVariant && (
-                        <PlusIcon className="size-3.5" aria-hidden />
+                        <i
+                          className="fas fa-plus text-[0.875rem]"
+                          aria-hidden
+                        />
                       )}
                     </span>
                   </SelectItem>

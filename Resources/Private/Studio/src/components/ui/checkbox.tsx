@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Checkbox as CheckboxPrimitive } from '@base-ui/react/checkbox'
-import { CheckIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -25,7 +24,7 @@ function Checkbox({
         data-slot="checkbox-indicator"
         className="flex items-center justify-center text-current"
       >
-        <CheckIcon className="size-3.5" />
+        <i className="fas fa-check text-[0.875rem]" aria-hidden />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

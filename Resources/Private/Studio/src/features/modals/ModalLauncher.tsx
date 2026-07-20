@@ -1,5 +1,3 @@
-import { SettingsIcon } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import { useModals } from './ModalHost'
 
@@ -18,7 +16,7 @@ export function ModalLauncher() {
         aria-label="Settings"
         onClick={() => openSettings()}
       >
-        <SettingsIcon className="size-4" />
+        <i className="fas fa-gear" aria-hidden />
       </Button>
     </div>
   )

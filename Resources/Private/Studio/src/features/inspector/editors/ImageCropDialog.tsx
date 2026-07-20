@@ -5,7 +5,6 @@ import ReactCrop, {
   type PercentCrop,
 } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { Loader2Icon } from 'lucide-react'
 
 import { createImageVariant, type CropRect, type MediaAsset } from '@/api/media'
 import { toast } from '@/components/ui/toast'
@@ -239,7 +238,10 @@ export function ImageCropDialog({
 
         <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-neutral-700 bg-neutral-950">
           {!original ? (
-            <Loader2Icon className="size-6 animate-spin text-neutral-500" />
+            <i
+              className="fas fa-spinner fa-spin text-[1.5rem] text-neutral-500"
+              aria-hidden
+            />
           ) : !dimsKnown || !original.previewUri ? (
             <span className="py-12 text-sm text-neutral-500">
               This image cannot be cropped.

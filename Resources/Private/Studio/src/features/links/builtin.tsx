@@ -1,5 +1,3 @@
-import { FileTextIcon, GlobeIcon, MailIcon, PaperclipIcon } from 'lucide-react'
-
 import { isAssetUri, isDocumentUri } from './linkValue'
 import { linkEditorRegistry } from './registry'
 import { AssetLinkTab } from './tabs/AssetLinkTab'
@@ -21,21 +19,21 @@ export function registerBuiltinLinkTypes(): void {
   linkEditorRegistry.register({
     id: DOCUMENT_LINK_TYPE,
     label: 'Document',
-    icon: <FileTextIcon />,
+    icon: <i className="fas fa-file-lines" aria-hidden />,
     component: DocumentLinkTab,
     matches: isDocumentUri,
   })
   linkEditorRegistry.register({
     id: ASSET_LINK_TYPE,
     label: 'Asset',
-    icon: <PaperclipIcon />,
+    icon: <i className="fas fa-paperclip" aria-hidden />,
     component: AssetLinkTab,
     matches: isAssetUri,
   })
   linkEditorRegistry.register({
     id: EXTERNAL_LINK_TYPE,
     label: 'External',
-    icon: <GlobeIcon />,
+    icon: <i className="fas fa-globe" aria-hidden />,
     component: ExternalLinkTab,
     matches: (href) => /^https?:\/\//i.test(href),
     // Any href no type recognizes shows here verbatim, editable.
@@ -44,7 +42,7 @@ export function registerBuiltinLinkTypes(): void {
   linkEditorRegistry.register({
     id: EMAIL_LINK_TYPE,
     label: 'E-Mail',
-    icon: <MailIcon />,
+    icon: <i className="fas fa-envelope" aria-hidden />,
     component: EmailLinkTab,
     matches: (href) => /^mailto:/i.test(href),
   })

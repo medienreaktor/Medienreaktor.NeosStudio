@@ -1,5 +1,4 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { CodeIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -192,7 +191,7 @@ export const CodeEditor: PropertyEditorComponent = ({
           <span className="py-1 text-sm text-neutral-500">No content yet</span>
         )}
         <span className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 group-hover:text-white">
-          <CodeIcon className="size-3.5" />
+          <i className="fas fa-code text-[0.875rem]" aria-hidden />
           {buttonLabel}
         </span>
       </button>
@@ -201,7 +200,7 @@ export const CodeEditor: PropertyEditorComponent = ({
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CodeIcon className="size-4" />
+              <i className="fas fa-code text-[1rem]" aria-hidden />
               {subject.label}
             </DialogTitle>
           </DialogHeader>

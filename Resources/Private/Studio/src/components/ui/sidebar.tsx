@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { PanelLeftIcon } from 'lucide-react'
 import { Slot } from '@/lib/slot'
 
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -276,7 +275,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <i className="fas fa-table-columns" aria-hidden />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

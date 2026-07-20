@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { DownloadIcon, Trash2Icon, XIcon } from 'lucide-react'
 
 import { ApiError } from '@/api/client'
 import {
@@ -327,7 +326,7 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
         }
       }}
     >
-      <DownloadIcon className="size-4" />
+      <i className="fas fa-download text-[1rem]" aria-hidden />
       {busy ? 'Importing…' : 'Import to Neos'}
     </Button>
   )
@@ -365,7 +364,7 @@ function DeleteButton({
         size="sm"
         onClick={() => setConfirming(true)}
       >
-        <Trash2Icon className="size-4" />
+        <i className="fas fa-trash-can text-[1rem]" aria-hidden />
         Delete asset
       </Button>
       <ConfirmDialog
@@ -414,7 +413,7 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
         className="text-neutral-500 hover:text-neutral-200"
         aria-label={`Remove ${label}`}
       >
-        <XIcon className="size-3" />
+        <i className="fas fa-xmark text-[0.75rem]" aria-hidden />
       </button>
     </span>
   )

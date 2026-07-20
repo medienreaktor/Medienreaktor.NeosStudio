@@ -1,4 +1,3 @@
-import { CopyIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/toast'
 import type { InspectorViewComponent } from './registry'
@@ -43,7 +42,7 @@ export const NodeInfoView: InspectorViewComponent = ({ node }) => {
             className="-my-1 shrink-0"
             onClick={copyNodeType}
           >
-            <CopyIcon />
+            <i className="fas fa-copy" aria-hidden />
           </Button>
         </span>
       </InfoRow>

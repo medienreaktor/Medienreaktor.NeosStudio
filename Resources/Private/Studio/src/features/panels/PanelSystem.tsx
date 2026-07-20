@@ -1,4 +1,3 @@
-import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 
@@ -579,7 +578,7 @@ export function SecondaryDock({
           onClick={() => setCollapsed(false)}
           className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
         >
-          <ChevronsLeftIcon className="size-4" />
+          <i className="fas fa-angles-left text-[1rem]" aria-hidden />
         </button>
       ) : (
         <>
@@ -593,7 +592,7 @@ export function SecondaryDock({
               onClick={() => setCollapsed(true)}
               className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
             >
-              <ChevronsRightIcon className="size-4" />
+              <i className="fas fa-angles-right text-[1rem]" aria-hidden />
             </button>
           )}
         </>

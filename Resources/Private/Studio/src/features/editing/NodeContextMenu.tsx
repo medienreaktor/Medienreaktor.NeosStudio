@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Trash2 } from 'lucide-react'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -109,7 +108,7 @@ export function NodeContextMenu({
                 disabled={target.tethered}
                 onClick={() => runVisibilityAction(target, 'unhide')}
               >
-                <Eye />
+                <i className="fas fa-fw fa-eye" aria-hidden />
                 Unhide
               </DropdownMenuItem>
             ) : (
@@ -117,7 +116,7 @@ export function NodeContextMenu({
                 disabled={target.tethered}
                 onClick={() => runVisibilityAction(target, 'hide')}
               >
-                <EyeOff />
+                <i className="fas fa-fw fa-eye-slash" aria-hidden />
                 Hide
               </DropdownMenuItem>
             )}
@@ -129,7 +128,7 @@ export function NodeContextMenu({
                 onClose()
               }}
             >
-              <Trash2 />
+              <i className="fas fa-fw fa-trash-can" aria-hidden />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

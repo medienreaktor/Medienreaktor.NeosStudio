@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { CalendarIcon, ChevronLeft, ChevronRight, XIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -116,7 +115,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
             />
           }
         >
-          <CalendarIcon className="text-neutral-400" />
+          <i className="fas fa-calendar text-neutral-400" aria-hidden />
           {date ? (
             phpFormat(date, format)
           ) : (
@@ -131,7 +130,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
             className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-neutral-400 hover:bg-neutral-800 hover:text-white"
             onClick={() => commit(null)}
           >
-            <XIcon className="size-3.5" />
+            <i className="fas fa-xmark text-[0.875rem]" aria-hidden />
           </button>
         )}
       </div>
@@ -218,7 +217,7 @@ function MonthCalendar({
           aria-label="Previous month"
           onClick={() => onViewMonthChange(addMonths(viewMonth, -1))}
         >
-          <ChevronLeft />
+          <i className="fas fa-chevron-left" aria-hidden />
         </Button>
         <span className="text-sm font-medium">{monthLabel}</span>
         <Button
@@ -227,7 +226,7 @@ function MonthCalendar({
           aria-label="Next month"
           onClick={() => onViewMonthChange(addMonths(viewMonth, 1))}
         >
-          <ChevronRight />
+          <i className="fas fa-chevron-right" aria-hidden />
         </Button>
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">

@@ -1,6 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { GripVerticalIcon, Loader2Icon, SearchIcon, XIcon } from 'lucide-react'
 import { dataSourceSelectOptions, useDataSource } from '@/api/dataSources'
 import { queryKeys } from '@/api/keys'
 import { addressWithAggregateId } from '@/api/nodeAddress'
@@ -294,7 +293,10 @@ function ReferencePicker({
       </PopoverTrigger>
       <PopoverContent className="w-(--anchor-width) p-1">
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 text-neutral-400" />
+          <i
+            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 text-[1rem] -translate-y-1/2 text-neutral-400"
+            aria-hidden
+          />
           {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
           <Input
             autoFocus
@@ -354,7 +356,8 @@ function ReferencePicker({
         >
           {loading ? (
             <div className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-400">
-              <Loader2Icon className="size-3.5 animate-spin" /> Searching…
+              <i className="fas fa-spinner fa-spin text-[0.875rem]" aria-hidden />{' '}
+              Searching…
             </div>
           ) : options.length === 0 ? (
             <p className="px-2 py-2 text-xs text-neutral-400">
@@ -517,7 +520,7 @@ function ReferenceEditorBase({
             title="Remove"
             onClick={() => commit([])}
           >
-            <XIcon />
+            <i className="fas fa-xmark" aria-hidden />
           </Button>
         )}
       </div>
@@ -568,7 +571,10 @@ function ReferenceEditorBase({
             )}
           >
             {draggable && (
-              <GripVerticalIcon className="size-4 shrink-0 cursor-grab text-neutral-600" />
+              <i
+                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-600"
+                aria-hidden
+              />
             )}
             {display.iconClass && (
               <i
@@ -586,7 +592,7 @@ function ReferenceEditorBase({
               title="Remove"
               onClick={() => commit(selected.filter((other) => other !== id))}
             >
-              <XIcon />
+              <i className="fas fa-xmark" aria-hidden />
             </Button>
           </div>
         )

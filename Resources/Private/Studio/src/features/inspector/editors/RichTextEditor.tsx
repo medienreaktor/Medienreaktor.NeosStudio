@@ -1,20 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Editor } from '@tiptap/core'
-import {
-  BoldIcon,
-  CodeIcon,
-  ItalicIcon,
-  LinkIcon,
-  ListIcon,
-  ListOrderedIcon,
-  MinusIcon,
-  RemoveFormattingIcon,
-  StrikethroughIcon,
-  SubscriptIcon,
-  SuperscriptIcon,
-  TextQuoteIcon,
-  UnderlineIcon,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -327,7 +312,7 @@ function Toolbar({
           active={editor.isActive('bold')}
           onRun={() => chain().toggleBold().run()}
         >
-          <BoldIcon />
+          <i className="fas fa-bold text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.italic && (
@@ -336,7 +321,7 @@ function Toolbar({
           active={editor.isActive('italic')}
           onRun={() => chain().toggleItalic().run()}
         >
-          <ItalicIcon />
+          <i className="fas fa-italic text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.underline && (
@@ -345,7 +330,7 @@ function Toolbar({
           active={editor.isActive('underline')}
           onRun={() => chain().toggleUnderline().run()}
         >
-          <UnderlineIcon />
+          <i className="fas fa-underline text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.strike && (
@@ -354,7 +339,7 @@ function Toolbar({
           active={editor.isActive('strike')}
           onRun={() => chain().toggleStrike().run()}
         >
-          <StrikethroughIcon />
+          <i className="fas fa-strikethrough text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.code && (
@@ -363,7 +348,7 @@ function Toolbar({
           active={editor.isActive('code')}
           onRun={() => chain().toggleCode().run()}
         >
-          <CodeIcon />
+          <i className="fas fa-code text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.subscript && (
@@ -372,7 +357,7 @@ function Toolbar({
           active={editor.isActive('subscript')}
           onRun={() => chain().toggleSubscript().run()}
         >
-          <SubscriptIcon />
+          <i className="fas fa-subscript text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.superscript && (
@@ -381,7 +366,7 @@ function Toolbar({
           active={editor.isActive('superscript')}
           onRun={() => chain().toggleSuperscript().run()}
         >
-          <SuperscriptIcon />
+          <i className="fas fa-superscript text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.link && (
@@ -391,7 +376,7 @@ function Toolbar({
           onRun={openLinkDialog}
           runOnClick
         >
-          <LinkIcon />
+          <i className="fas fa-link text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.bulletList && (
@@ -400,7 +385,7 @@ function Toolbar({
           active={editor.isActive('bulletList')}
           onRun={() => chain().toggleBulletList().run()}
         >
-          <ListIcon />
+          <i className="fas fa-list text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.orderedList && (
@@ -409,7 +394,7 @@ function Toolbar({
           active={editor.isActive('orderedList')}
           onRun={() => chain().toggleOrderedList().run()}
         >
-          <ListOrderedIcon />
+          <i className="fas fa-list-ol text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.blockquote && (
@@ -418,7 +403,7 @@ function Toolbar({
           active={editor.isActive('blockquote')}
           onRun={() => chain().toggleBlockquote().run()}
         >
-          <TextQuoteIcon />
+          <i className="fas fa-quote-left text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.horizontalRule && formatting.multiline && (
@@ -426,7 +411,7 @@ function Toolbar({
           label="Horizontal rule"
           onRun={() => chain().setHorizontalRule().run()}
         >
-          <MinusIcon />
+          <i className="fas fa-minus text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.removeFormat && (
@@ -434,7 +419,7 @@ function Toolbar({
           label="Remove formatting"
           onRun={() => chain().unsetAllMarks().run()}
         >
-          <RemoveFormattingIcon />
+          <i className="fas fa-eraser text-xs" aria-hidden />
         </ToolbarButton>
       )}
       {linkEdit && (

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { PencilIcon, Trash2Icon } from 'lucide-react'
 
 import {
   deleteCollection,
@@ -81,7 +80,7 @@ export function MediaItemActions({
                 onClose()
               }}
             >
-              <PencilIcon />
+              <i className="fas fa-fw fa-pen" aria-hidden />
               Rename
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -91,7 +90,7 @@ export function MediaItemActions({
                 onClose()
               }}
             >
-              <Trash2Icon />
+              <i className="fas fa-fw fa-trash-can" aria-hidden />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

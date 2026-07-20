@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { SearchIcon } from 'lucide-react'
 
 import {
   DEFAULT_ASSET_FILTER,
@@ -42,7 +41,10 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-neutral-500" />
+        <i
+          className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2.5 text-[1rem] -translate-y-1/2 text-neutral-500"
+          aria-hidden
+        />
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}

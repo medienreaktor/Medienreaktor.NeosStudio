@@ -1,4 +1,3 @@
-import { TriangleAlertIcon } from 'lucide-react'
 import { useDataSource } from '@/api/dataSources'
 import type { NodeDto } from '@/api/nodes'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -68,7 +67,10 @@ export function DataSourceWidget({
 function WidgetNotice({ message }: { message: string }) {
   return (
     <p className="flex items-start gap-1.5 text-xs text-neutral-400">
-      <TriangleAlertIcon className="mt-0.5 size-3 shrink-0 text-red-500" />
+      <i
+        className="fas fa-triangle-exclamation mt-0.5 text-[0.75rem] shrink-0 text-red-500"
+        aria-hidden
+      />
       {message}
     </p>
   )

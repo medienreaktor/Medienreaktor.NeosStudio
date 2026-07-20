@@ -1,14 +1,4 @@
 import { useRef, useState } from 'react'
-import {
-  ChevronDownIcon,
-  CircleSlashIcon,
-  FolderIcon,
-  LayersIcon,
-  PlusIcon,
-  SearchIcon,
-  TagIcon,
-  XIcon,
-} from 'lucide-react'
 
 import {
   createCollection,
@@ -148,7 +138,10 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-2">
       <div className="relative min-w-40 flex-1">
-        <SearchIcon className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-neutral-500" />
+        <i
+          className="fas fa-magnifying-glass pointer-events-none absolute left-2 top-1/2 text-[1rem] -translate-y-1/2 text-neutral-500"
+          aria-hidden
+        />
         <Input
           value={filter.search}
           onChange={(e) => state.setSearch(e.target.value)}
@@ -162,7 +155,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
             aria-label="Clear search"
           >
-            <XIcon className="size-4" />
+            <i className="fas fa-xmark text-[1rem]" aria-hidden />
           </button>
         )}
       </div>
@@ -189,7 +182,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
       {hasSources && (
         <FilterButton
-          icon={<LayersIcon className="size-3.5" />}
+          icon={<i className="fas fa-layer-group text-[0.875rem]" aria-hidden />}
           label={activeSource?.label ?? 'Source'}
         >
           <ul className="min-w-48 space-y-0.5">
@@ -207,14 +200,14 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
       {supportsCollections && (
         <FilterButton
-          icon={<FolderIcon className="size-3.5" />}
+          icon={<i className="fas fa-folder text-[0.875rem]" aria-hidden />}
           label={collectionLabel}
           active={filter.collection !== null}
           action={<AddCollection />}
         >
           <div className="min-w-56">
             <RailButton
-              icon={<LayersIcon className="size-3.5" />}
+              icon={<i className="fas fa-layer-group text-[0.875rem]" aria-hidden />}
               label="All assets"
               active={filter.collection === null}
               onClick={() => state.selectCollection(null)}
@@ -227,7 +220,9 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
               onSelect={(id) =>
                 state.selectCollection(filter.collection === id ? null : id)
               }
-              icon={() => <FolderIcon className="size-3.5" />}
+              icon={() => (
+                <i className="fas fa-folder text-[0.875rem]" aria-hidden />
+              )}
               onItemContextMenu={(node, e) =>
                 openMenu(
                   { kind: 'collection', id: node.id, label: node.label },
@@ -241,20 +236,20 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
       {supportsTagging && (
         <FilterButton
-          icon={<TagIcon className="size-3.5" />}
+          icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
           label={tagLabel}
           active={filter.tagMode === 'none' || filter.tag !== null}
           action={<AddTag />}
         >
           <div className="min-w-56">
             <RailButton
-              icon={<TagIcon className="size-3.5" />}
+              icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
               label="All tags"
               active={filter.tagMode === 'given' && filter.tag === null}
               onClick={() => state.selectTag(null)}
             />
             <RailButton
-              icon={<CircleSlashIcon className="size-3.5" />}
+              icon={<i className="fas fa-ban text-[0.875rem]" aria-hidden />}
               label="Untagged"
               active={filter.tagMode === 'none'}
               onClick={() => state.showUntagged()}
@@ -269,7 +264,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                   filter.tagMode === 'given' && filter.tag === id ? null : id,
                 )
               }
-              icon={() => <TagIcon className="size-3.5" />}
+              icon={() => <i className="fas fa-tag text-[0.875rem]" aria-hidden />}
               onItemContextMenu={(node, e) =>
                 openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
               }
@@ -340,7 +335,10 @@ function FilterButton({
       >
         <span className="shrink-0 text-neutral-400">{icon}</span>
         <span className="max-w-40 truncate">{label}</span>
-        <ChevronDownIcon className="size-3.5 shrink-0 text-neutral-500" />
+        <i
+          className="fas fa-chevron-down text-[0.875rem] shrink-0 text-neutral-500"
+          aria-hidden
+        />
       </PopoverTrigger>
       <PopoverContent>
         {action && (
@@ -377,7 +375,10 @@ function SourceButton({
         {source.iconUri ? (
           <img src={source.iconUri} alt="" className="size-4 shrink-0" />
         ) : (
-          <LayersIcon className="size-4 shrink-0 text-neutral-500" />
+          <i
+            className="fas fa-layer-group text-[1rem] shrink-0 text-neutral-500"
+            aria-hidden
+          />
         )}
         <span className="truncate">{source.label}</span>
         {source.isReadOnly && (
@@ -462,7 +463,7 @@ function InlineCreate({
         }}
         title={placeholder}
       >
-        <PlusIcon className="size-3.5" />
+        <i className="fas fa-plus text-[0.875rem]" aria-hidden />
       </Button>
     )
   }

@@ -1,5 +1,3 @@
-import { LayoutGridIcon, ListIcon, UploadIcon } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { MediaBrowserController } from './useMediaBrowserState'
@@ -20,7 +18,7 @@ export function MediaFooter({
   return (
     <div className="flex items-center gap-2 border-t border-neutral-800 bg-neutral-900 px-3 py-2">
       <Button size="sm" onClick={onUpload}>
-        <UploadIcon className="size-4" />
+        <i className="fas fa-upload text-[1rem]" aria-hidden />
         Upload
       </Button>
 
@@ -34,14 +32,14 @@ export function MediaFooter({
           onClick={() => state.setView('grid')}
           label="Grid view"
         >
-          <LayoutGridIcon className="size-4" />
+          <i className="fas fa-table-cells-large text-[1rem]" aria-hidden />
         </ViewToggle>
         <ViewToggle
           active={state.view === 'list'}
           onClick={() => state.setView('list')}
           label="List view"
         >
-          <ListIcon className="size-4" />
+          <i className="fas fa-list text-[1rem]" aria-hidden />
         </ViewToggle>
       </div>
     </div>

@@ -1,4 +1,3 @@
-import { ArrowLeftRightIcon } from 'lucide-react'
 import type { PropertyScope } from '@/api/nodeTypes'
 import type { SerializedPropertyValue } from '@/api/nodes'
 import {
@@ -134,7 +133,7 @@ function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
         aria-label={hint}
         className="cursor-help text-purple-300 hover:text-purple-200"
       >
-        <ArrowLeftRightIcon aria-hidden className="size-3" />
+        <i className="fas fa-right-left text-[0.75rem]" aria-hidden />
       </TooltipTrigger>
       <TooltipContent>{hint}</TooltipContent>
     </Tooltip>

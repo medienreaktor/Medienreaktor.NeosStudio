@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { UploadCloudIcon, XIcon } from 'lucide-react'
 
 import { uploadAsset } from '@/api/media'
 import { toast } from '@/components/ui/toast'
@@ -93,7 +92,7 @@ export function MediaUploader({
             onClick={onClose}
             aria-label="Close uploader"
           >
-            <XIcon className="size-4" />
+            <i className="fas fa-xmark text-[1rem]" aria-hidden />
           </Button>
         </div>
 
@@ -108,7 +107,10 @@ export function MediaUploader({
             )}
           >
             <input {...getInputProps()} />
-            <UploadCloudIcon className="mb-2 size-8 text-neutral-500" />
+            <i
+              className="fas fa-cloud-arrow-up mb-2 text-[2rem] text-neutral-500"
+              aria-hidden
+            />
             <p className="text-sm text-neutral-300">Drag files here</p>
             <p className="mb-3 text-xs text-neutral-500">or</p>
             <Button variant="outline" size="sm" onClick={open}>

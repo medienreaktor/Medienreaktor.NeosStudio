@@ -73,8 +73,8 @@ class ModalRegistry<Def extends RegistryDefinition> {
   }
 }
 
-/** Icon type for a settings section - matches lucide-react icon components. */
-export type ModalIcon = React.ComponentType<{ className?: string }>
+/** Icon type for a settings section - a bare Font Awesome name (e.g. "users"), resolved via faClassName. */
+export type ModalIcon = string
 
 /**
  * A settings section: one entry in the shared Settings modal's subnavigation

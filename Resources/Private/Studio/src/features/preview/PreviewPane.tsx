@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { ExternalLink, RotateCw } from 'lucide-react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import { renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
@@ -70,7 +69,7 @@ export function PreviewToolbar({
         title="Reload preview"
         onClick={onReload}
       >
-        <RotateCw />
+        <i className="fas fa-rotate text-xs" aria-hidden />
       </Button>
       <Button
         asChild
@@ -79,7 +78,7 @@ export function PreviewToolbar({
         title="Open page in a new tab"
       >
         <a href={previewUrl(document.address)} target="_blank" rel="noreferrer">
-          <ExternalLink />
+          <i className="fas fa-arrow-up-right-from-square text-xs" aria-hidden />
         </a>
       </Button>
     </div>

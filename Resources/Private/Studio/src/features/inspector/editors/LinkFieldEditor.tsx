@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { LinkIcon, PencilIcon, XIcon } from 'lucide-react'
 
 import { useAsset } from '@/api/media'
 import { addressWithAggregateId } from '@/api/nodeAddress'
@@ -70,7 +69,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
         : href
 
   const icon = (href !== null && linkEditorRegistry.match(href)?.icon) || (
-    <LinkIcon />
+    <i className="fas fa-link" aria-hidden />
   )
 
   return (
@@ -81,14 +80,12 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
           onClick={() => setOpen(true)}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-700 bg-neutral-950 px-3 py-2.5 text-sm text-neutral-400 hover:border-neutral-500 hover:text-white"
         >
-          <LinkIcon className="size-4" />
+          <i className="fas fa-link text-[1rem]" aria-hidden />
           Set link…
         </button>
       ) : (
         <div className="flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 py-1 pr-1 pl-2.5">
-          <span className="shrink-0 text-neutral-400 [&_svg]:size-4">
-            {icon}
-          </span>
+          <span className="shrink-0 text-[1rem] text-neutral-400">{icon}</span>
           <span className="min-w-0 flex-1 truncate text-sm" title={href}>
             {label}
           </span>
@@ -98,7 +95,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
             onClick={() => setOpen(true)}
             title="Edit link"
           >
-            <PencilIcon />
+            <i className="fas fa-pen" aria-hidden />
           </Button>
           <Button
             variant="ghost"
@@ -106,7 +103,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
             onClick={() => commit(null)}
             title="Remove link"
           >
-            <XIcon />
+            <i className="fas fa-xmark" aria-hidden />
           </Button>
         </div>
       )}

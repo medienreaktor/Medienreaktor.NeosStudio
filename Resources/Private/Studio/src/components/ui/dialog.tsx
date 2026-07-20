@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { XIcon } from 'lucide-react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 
 import { cn } from '@/lib/utils'
@@ -66,7 +65,7 @@ function DialogContent({
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
-            <XIcon className="size-4" />
+            <i className="fas fa-xmark text-[1rem]" aria-hidden />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}

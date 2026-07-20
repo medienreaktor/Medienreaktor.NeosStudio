@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { GripVerticalIcon, XIcon } from 'lucide-react'
 import { dataSourceSelectOptions, useDataSource } from '@/api/dataSources'
 import { Button } from '@/components/ui/button'
 import {
@@ -394,7 +393,10 @@ function MultiSelectList({
             )}
           >
             {draggable && (
-              <GripVerticalIcon className="size-4 shrink-0 cursor-grab text-neutral-600" />
+              <i
+                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-600"
+                aria-hidden
+              />
             )}
             {item?.icon && <FaIcon icon={item.icon} />}
             <span className="min-w-0 flex-1 truncate">
@@ -409,7 +411,7 @@ function MultiSelectList({
                   commit(selected.filter((candidate) => candidate !== key))
                 }
               >
-                <XIcon />
+                <i className="fas fa-xmark" aria-hidden />
               </Button>
             )}
           </div>

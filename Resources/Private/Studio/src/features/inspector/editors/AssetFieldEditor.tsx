@@ -1,11 +1,4 @@
 import { useMemo, useState } from 'react'
-import {
-  CropIcon,
-  ImageIcon,
-  Loader2Icon,
-  PaperclipIcon,
-  XIcon,
-} from 'lucide-react'
 
 import { useAsset, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
@@ -95,14 +88,14 @@ export function AssetFieldEditor({
   }
 
   if (!identifier) {
-    const Icon = kind === 'image' ? ImageIcon : PaperclipIcon
+    const iconClass = kind === 'image' ? 'fa-image' : 'fa-paperclip'
     return (
       <button
         type="button"
         onClick={select}
         className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-700 bg-neutral-950 px-3 py-4 text-sm text-neutral-400 hover:border-neutral-500 hover:text-white"
       >
-        <Icon className="size-4" />
+        <i className={`fas ${iconClass} text-[1rem]`} aria-hidden />
         {kind === 'image' ? 'Select image…' : 'Select asset…'}
       </button>
     )
@@ -121,7 +114,10 @@ export function AssetFieldEditor({
             {asset ? (
               <AssetThumb asset={asset} preview className="max-h-48" />
             ) : loading ? (
-              <Loader2Icon className="size-5 animate-spin text-neutral-500" />
+              <i
+                className="fas fa-spinner fa-spin text-[1.25rem] text-neutral-500"
+                aria-hidden
+              />
             ) : (
               <span className="py-6 text-xs text-neutral-500">
                 Asset not found
@@ -147,7 +143,7 @@ export function AssetFieldEditor({
                 onClick={() => setCropOpen(true)}
                 title="Crop"
               >
-                <CropIcon />
+                <i className="fas fa-crop-simple" aria-hidden />
               </Button>
             )}
             <Button
@@ -156,7 +152,7 @@ export function AssetFieldEditor({
               onClick={clear}
               title="Remove"
             >
-              <XIcon />
+              <i className="fas fa-xmark" aria-hidden />
             </Button>
           </div>
         </div>
@@ -188,9 +184,15 @@ export function AssetFieldEditor({
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (
-          <Loader2Icon className="size-4 animate-spin text-neutral-500" />
+          <i
+            className="fas fa-spinner fa-spin text-[1rem] text-neutral-500"
+            aria-hidden
+          />
         ) : (
-          <PaperclipIcon className="size-5 text-neutral-600" />
+          <i
+            className="fas fa-paperclip text-[1.25rem] text-neutral-600"
+            aria-hidden
+          />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -202,7 +204,7 @@ export function AssetFieldEditor({
         Select…
       </Button>
       <Button variant="ghost" size="icon-sm" onClick={clear} title="Remove">
-        <XIcon />
+        <i className="fas fa-xmark" aria-hidden />
       </Button>
     </div>
   )

@@ -1,5 +1,3 @@
-import { UsersIcon } from 'lucide-react'
-
 import { useMe } from '@/api/me'
 import { UserAdministration } from '@/features/users/UserAdministration'
 import { settingsDialogRegistry } from './registry'
@@ -19,7 +17,7 @@ export function registerBuiltinModals(): void {
   settingsDialogRegistry.register({
     id: USERS_SETTINGS,
     title: 'Users',
-    icon: UsersIcon,
+    icon: 'users',
     component: UserAdministration,
     order: 10,
     // User administration is administrators only (the /users endpoint 403s

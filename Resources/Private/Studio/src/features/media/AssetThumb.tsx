@@ -1,13 +1,11 @@
-import { FileIcon, FileTextIcon, FilmIcon, MusicIcon } from 'lucide-react'
-
 import type { AssetType, MediaAsset } from '@/api/media'
 import { cn } from '@/lib/utils'
 
-const TYPE_ICON: Record<AssetType, typeof FileIcon> = {
-  Image: FileIcon,
-  Document: FileTextIcon,
-  Video: FilmIcon,
-  Audio: MusicIcon,
+const TYPE_ICON: Record<AssetType, string> = {
+  Image: 'fa-file',
+  Document: 'fa-file-lines',
+  Video: 'fa-film',
+  Audio: 'fa-music',
 }
 
 /**
@@ -36,6 +34,11 @@ export function AssetThumb({
       />
     )
   }
-  const Icon = TYPE_ICON[asset.assetType] ?? FileIcon
-  return <Icon className={cn('size-10 text-neutral-600', className)} />
+  const iconClass = TYPE_ICON[asset.assetType] ?? 'fa-file'
+  return (
+    <i
+      className={cn('fas', iconClass, 'text-[2.5rem] text-neutral-600', className)}
+      aria-hidden
+    />
+  )
 }

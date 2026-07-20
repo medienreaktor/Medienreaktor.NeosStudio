@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
-import { XIcon } from 'lucide-react'
 
+import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
 import { type SettingsDialogDefinition, useSettingsDialogs } from './registry'
 
@@ -118,7 +118,7 @@ function ModalHeader({
           className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
           aria-label="Close"
         >
-          <XIcon className="size-4" />
+          <i className="fas fa-xmark text-[1rem]" aria-hidden />
         </DialogPrimitive.Close>
       </div>
     </header>
@@ -189,7 +189,6 @@ function SettingsNavItem({
   onSelect: (sectionId: string) => void
 }) {
   const enabled = section.useEnabled ? section.useEnabled() : true
-  const Icon = section.icon
   return (
     <button
       type="button"
@@ -205,7 +204,12 @@ function SettingsNavItem({
             : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white',
       )}
     >
-      {Icon && <Icon className="size-4 shrink-0" />}
+      {section.icon && (
+        <i
+          className={cn(faClassName(section.icon), 'shrink-0 text-[1rem]')}
+          aria-hidden
+        />
+      )}
       {section.title}
     </button>
   )

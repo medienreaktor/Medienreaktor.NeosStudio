@@ -1,11 +1,4 @@
 import { useState } from 'react'
-import {
-  GripVerticalIcon,
-  Loader2Icon,
-  PaperclipIcon,
-  PlusIcon,
-  XIcon,
-} from 'lucide-react'
 
 import { useAsset, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
@@ -113,7 +106,7 @@ export function MultiAssetFieldEditor({
         onClick={add}
         className="justify-center"
       >
-        <PlusIcon className="size-4" />
+        <i className="fas fa-plus text-[1rem]" aria-hidden />
         {kind === 'image' ? 'Add image…' : 'Add asset…'}
       </Button>
     </div>
@@ -169,14 +162,23 @@ function AssetRow({
         dragging && 'opacity-50',
       )}
     >
-      <GripVerticalIcon className="size-4 shrink-0 cursor-grab text-neutral-600" />
+      <i
+        className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-600"
+        aria-hidden
+      />
       <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-900">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (
-          <Loader2Icon className="size-4 animate-spin text-neutral-500" />
+          <i
+            className="fas fa-spinner fa-spin text-[1rem] text-neutral-500"
+            aria-hidden
+          />
         ) : (
-          <PaperclipIcon className="size-5 text-neutral-600" />
+          <i
+            className="fas fa-paperclip text-[1.25rem] text-neutral-600"
+            aria-hidden
+          />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -185,7 +187,7 @@ function AssetRow({
         </div>
       </div>
       <Button variant="ghost" size="icon-sm" onClick={onRemove} title="Remove">
-        <XIcon />
+        <i className="fas fa-xmark" aria-hidden />
       </Button>
     </div>
   )
