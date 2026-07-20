@@ -10,6 +10,7 @@ import {
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 
+import type { MediaCollection, MediaTag } from '@/api/media'
 import type { TreeRowDecor } from '@/features/tree/nodeDecor'
 import { TreeList } from '@/features/tree/TreeList'
 
@@ -19,6 +20,24 @@ export interface MediaTreeNode {
   label: string
   count: number
   children: MediaTreeNode[]
+}
+
+export function tagToNode(tag: MediaTag): MediaTreeNode {
+  return {
+    id: tag.identifier,
+    label: tag.label,
+    count: tag.assetCount,
+    children: tag.children.map(tagToNode),
+  }
+}
+
+export function collectionToNode(collection: MediaCollection): MediaTreeNode {
+  return {
+    id: collection.identifier,
+    label: collection.title,
+    count: collection.assetCount,
+    children: [],
+  }
 }
 
 const ROOT_ID = '__media_tree_root__'

@@ -9,7 +9,6 @@ import {
   useTags,
   type AssetSource,
   type AssetType,
-  type MediaCollection,
   type MediaTag,
 } from '@/api/media'
 import { Button } from '@/components/ui/button'
@@ -29,7 +28,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { MediaItemActions, type MediaMenuTarget } from './MediaItemMenu'
-import { MediaTree, type MediaTreeNode } from './MediaTree'
+import { collectionToNode, MediaTree, tagToNode } from './MediaTree'
 import type { MediaBrowserController } from './useMediaBrowserState'
 
 const TYPES: Array<AssetType | 'All'> = [
@@ -61,23 +60,6 @@ const SORTS: Array<{
   { value: 'name-asc', label: 'Name A–Z', sortBy: 'name', dir: 'asc' },
   { value: 'name-desc', label: 'Name Z–A', sortBy: 'name', dir: 'desc' },
 ]
-
-function tagToNode(tag: MediaTag): MediaTreeNode {
-  return {
-    id: tag.identifier,
-    label: tag.label,
-    count: tag.assetCount,
-    children: tag.children.map(tagToNode),
-  }
-}
-function collectionToNode(collection: MediaCollection): MediaTreeNode {
-  return {
-    id: collection.identifier,
-    label: collection.title,
-    count: collection.assetCount,
-    children: [],
-  }
-}
 
 function flattenTags(tags: MediaTag[]): MediaTag[] {
   const out: MediaTag[] = []

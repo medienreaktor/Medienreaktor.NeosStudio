@@ -9,7 +9,6 @@ import {
   useAssetCollections,
   useTags,
   type MediaAsset,
-  type MediaTag,
 } from '@/api/media'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
@@ -22,18 +21,23 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
+import { Labeled } from '@/features/inspector/PropertyEditor'
 import { cn } from '@/lib/utils'
 import { removeAsset } from './AssetContextMenu'
 import { AssetThumb } from './AssetThumb'
 import { ConfirmDialog } from './ConfirmDialog'
 import { formatBytes, formatDate } from './format'
+import {
+  collectionToNode,
+  MediaTree,
+  tagToNode,
+  type MediaTreeNode,
+} from './MediaTree'
 import { UsageTable } from './UsageTable'
 
 interface AssetDetailsDialogProps {
@@ -176,28 +180,30 @@ function MetadataForm({
   }
 
   return (
-    <div className="space-y-2">
-      <Field label="Title">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="h-8"
-        />
-      </Field>
-      <Field label="Caption">
-        <Textarea
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-          rows={2}
-        />
-      </Field>
-      <Field label="Copyright">
-        <Input
-          value={copyright}
-          onChange={(e) => setCopyright(e.target.value)}
-          className="h-8"
-        />
-      </Field>
+    // Fields mirror the inspector's property layout (Labeled + plain
+    // Input/Textarea) so metadata editing looks the same everywhere.
+    <div className="space-y-4">
+      <div>
+        <Labeled label="Title">
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+        </Labeled>
+      </div>
+      <div>
+        <Labeled label="Caption">
+          <Textarea
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+          />
+        </Labeled>
+      </div>
+      <div>
+        <Labeled label="Copyright">
+          <Input
+            value={copyright}
+            onChange={(e) => setCopyright(e.target.value)}
+          />
+        </Labeled>
+      </div>
       <Button size="sm" onClick={save} disabled={!dirty || saving}>
         {saving ? 'Saving…' : 'Save metadata'}
       </Button>
@@ -214,8 +220,6 @@ function TagAssignment({
 }) {
   const tags = useTags()
   const assignedIds = new Set(assigned.map((t) => t.identifier))
-  const flat = flattenTags(tags.data ?? [])
-  const available = flat.filter((t) => !assignedIds.has(t.identifier))
 
   return (
     <Field label="Tags">
@@ -235,20 +239,25 @@ function TagAssignment({
           <span className="text-xs text-neutral-500">None</span>
         )}
       </div>
-      {available.length > 0 && (
-        <AddSelect
-          placeholder="Add tag…"
-          options={available.map((t) => ({
-            value: t.identifier,
-            label: t.label,
-          }))}
-          onAdd={(id) =>
-            void setAssetTag(localId, id, true).catch((e) =>
-              toast.error(e, { title: 'Adding the tag failed' }),
-            )
-          }
-        />
-      )}
+      <AssignTree
+        placeholder="Add tag…"
+        treeLabel="Tags"
+        emptyText="No tags yet"
+        emptyIcon="fa-tag"
+        icon="fa-tag"
+        loading={tags.isLoading}
+        roots={(tags.data ?? []).map(tagToNode)}
+        assignedIds={assignedIds}
+        onToggle={(id, isAssigned) =>
+          void setAssetTag(localId, id, !isAssigned).catch((e) =>
+            toast.error(e, {
+              title: isAssigned
+                ? 'Removing the tag failed'
+                : 'Adding the tag failed',
+            }),
+          )
+        }
+      />
     </Field>
   )
 }
@@ -262,9 +271,6 @@ function CollectionAssignment({
 }) {
   const collections = useAssetCollections()
   const assignedIds = new Set(assigned.map((c) => c.identifier))
-  const available = (collections.data ?? []).filter(
-    (c) => !assignedIds.has(c.identifier),
-  )
 
   return (
     <Field label="Collections">
@@ -288,20 +294,25 @@ function CollectionAssignment({
           <span className="text-xs text-neutral-500">None</span>
         )}
       </div>
-      {available.length > 0 && (
-        <AddSelect
-          placeholder="Add to collection…"
-          options={available.map((c) => ({
-            value: c.identifier,
-            label: c.title,
-          }))}
-          onAdd={(id) =>
-            void setAssetCollection(localId, id, true).catch((e) =>
-              toast.error(e, { title: 'Adding to collection failed' }),
-            )
-          }
-        />
-      )}
+      <AssignTree
+        placeholder="Add to collection…"
+        treeLabel="Collections"
+        emptyText="No collections yet"
+        emptyIcon="fa-folder-open"
+        icon="fa-folder"
+        loading={collections.isLoading}
+        roots={(collections.data ?? []).map(collectionToNode)}
+        assignedIds={assignedIds}
+        onToggle={(id, isAssigned) =>
+          void setAssetCollection(localId, id, !isAssigned).catch((e) =>
+            toast.error(e, {
+              title: isAssigned
+                ? 'Removing from collection failed'
+                : 'Adding to collection failed',
+            }),
+          )
+        }
+      />
     </Field>
   )
 }
@@ -366,28 +377,68 @@ function DeleteButton({
   )
 }
 
-function AddSelect({
+/**
+ * The "add to…" dropdown for tags and collections: the same tree popover as
+ * the media header's filter dropdowns. Clicking an unassigned entry assigns
+ * it, clicking an assigned one (marked with a check) removes it again; the
+ * popover stays open so several entries can be toggled in a row.
+ */
+function AssignTree({
   placeholder,
-  options,
-  onAdd,
+  treeLabel,
+  emptyText,
+  emptyIcon,
+  icon,
+  loading,
+  roots,
+  assignedIds,
+  onToggle,
 }: {
   placeholder: string
-  options: { value: string; label: string }[]
-  onAdd: (value: string) => void
+  treeLabel: string
+  emptyText: string
+  /** FontAwesome icon for the empty state. */
+  emptyIcon: string
+  /** FontAwesome icon for unassigned rows (tag / folder). */
+  icon: string
+  loading: boolean
+  roots: MediaTreeNode[]
+  assignedIds: Set<string>
+  onToggle: (id: string, assigned: boolean) => void
 }) {
   return (
-    <Select value="" onValueChange={(v) => onAdd(v as string)} items={options}>
-      <SelectTrigger size="sm" className="mt-1 h-7 w-full text-xs">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover>
+      <PopoverTrigger className="mt-1 flex h-7 w-full items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-700/30 px-2 text-xs text-neutral-300 hover:bg-neutral-700/50">
+        <span className="truncate">{placeholder}</span>
+        <i
+          className="fas fa-chevron-down ml-auto shrink-0 text-[0.75rem] text-neutral-500"
+          aria-hidden
+        />
+      </PopoverTrigger>
+      <PopoverContent>
+        <div className="min-w-56">
+          <MediaTree
+            label={treeLabel}
+            emptyText={emptyText}
+            emptyIcon={emptyIcon}
+            loading={loading}
+            roots={roots}
+            selectedId={null}
+            onSelect={(id) => onToggle(id, assignedIds.has(id))}
+            icon={(node) =>
+              assignedIds.has(node.id) ? (
+                <i
+                  className="fas fa-check text-[0.875rem] text-blue-500"
+                  aria-hidden
+                />
+              ) : (
+                <i className={cn('fas text-[0.875rem]', icon)} aria-hidden />
+              )
+            }
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -416,7 +467,7 @@ function Field({
 }) {
   return (
     <div>
-      <h3 className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">
+      <h3 className="mb-1 flex items-center gap-1.5 text-xs text-white">
         {label}
       </h3>
       {children}
@@ -437,16 +488,4 @@ function Meta({
       <dd className={cn('truncate text-right text-neutral-300')}>{children}</dd>
     </>
   )
-}
-
-function flattenTags(tags: MediaTag[]): MediaTag[] {
-  const out: MediaTag[] = []
-  const walk = (list: MediaTag[]) => {
-    for (const tag of list) {
-      out.push(tag)
-      walk(tag.children)
-    }
-  }
-  walk(tags)
-  return out
 }

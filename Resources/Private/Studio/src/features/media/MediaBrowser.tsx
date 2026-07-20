@@ -92,24 +92,30 @@ export function MediaBrowser({
         </div>
       )}
 
-      <MediaHeader state={state} />
+      {/* The header is an absolute frosted overlay over the scrolling list,
+          so both live in their own relative wrapper: in picker mode the
+          in-flow notice above pushes the pair down instead of being covered
+          by the overlay. */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <MediaHeader state={state} />
 
-      <AssetList
-        assets={assets}
-        view={state.view}
-        activeKey={activeKey}
-        onSelect={state.setActive}
-        onActivate={activate}
-        onContextMenu={
-          mode === 'manage'
-            ? (asset, anchor) => setMenuTarget({ asset, anchor })
-            : undefined
-        }
-        isLoading={query.isLoading}
-        isFetchingNextPage={query.isFetchingNextPage}
-        hasNextPage={query.hasNextPage}
-        onLoadMore={() => query.fetchNextPage()}
-      />
+        <AssetList
+          assets={assets}
+          view={state.view}
+          activeKey={activeKey}
+          onSelect={state.setActive}
+          onActivate={activate}
+          onContextMenu={
+            mode === 'manage'
+              ? (asset, anchor) => setMenuTarget({ asset, anchor })
+              : undefined
+          }
+          isLoading={query.isLoading}
+          isFetchingNextPage={query.isFetchingNextPage}
+          hasNextPage={query.hasNextPage}
+          onLoadMore={() => query.fetchNextPage()}
+        />
+      </div>
 
       <MediaFooter
         state={state}
