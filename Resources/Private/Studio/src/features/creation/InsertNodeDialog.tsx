@@ -17,8 +17,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
-import { cn } from '@/lib/utils'
 import {
   type CreatableNodeTypeGroup,
   filterCreatableGroups,
@@ -247,39 +247,30 @@ function OpenInsertNodeDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div>
-            <div
-              className="inline-flex flex-row gap-1 rounded-md bg-neutral-800/60 p-1"
-              role="radiogroup"
+          <div className="flex flex-row gap-4">
+            <ToggleGroup
+              size="sm"
+              value={[activeMode]}
+              onValueChange={([value]) => {
+                if (value) setSelectedMode(value as InsertMode)
+              }}
               aria-label="Insertion position"
             >
               {MODES.map(({ mode, label, icon }) => {
                 const loading = modeGroups[mode] === null
                 const available = (modeGroups[mode]?.length ?? 0) > 0
                 return (
-                  <button
+                  <ToggleGroupItem
                     key={mode}
-                    type="button"
-                    role="radio"
-                    aria-checked={mode === activeMode}
+                    value={mode}
                     disabled={!available && !loading}
-                    className={cn(
-                      'flex items-center justify-center gap-2 rounded px-2 py-1.5 text-sm',
-                      mode === activeMode
-                        ? 'bg-blue-500 text-white'
-                        : 'text-neutral-300 hover:bg-neutral-700',
-                      !available &&
-                        !loading &&
-                        'cursor-not-allowed text-neutral-600 hover:bg-transparent',
-                    )}
-                    onClick={() => setSelectedMode(mode)}
                   >
                     <i className={`fas ${icon}`} aria-hidden />
                     {label}
-                  </button>
+                  </ToggleGroupItem>
                 )
               })}
-            </div>
+            </ToggleGroup>
             <Input
               type="search"
               placeholder="Filter node types…"
