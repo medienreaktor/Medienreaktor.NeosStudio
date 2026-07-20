@@ -351,12 +351,16 @@ export function App() {
         token: (prev?.token ?? 0) + 1,
       }))
     },
-    nodeEdited: (address) => {
+    nodeEdited: (address, options) => {
       setLastEdit((prev) => ({
         addresses: [address],
         token: (prev?.token ?? 0) + 1,
       }))
-      setPreviewReloadToken((token) => token + 1)
+      // Inspector saves opt out for properties without ui.reloadIfChanged /
+      // ui.reloadPageIfChanged - they do not affect the rendered page.
+      if (options?.reloadPreview !== false) {
+        setPreviewReloadToken((token) => token + 1)
+      }
       // The inspected-node snapshot is stale now - the save already
       // invalidated the cache, so this refetches fresh values.
       fetchNode(address)

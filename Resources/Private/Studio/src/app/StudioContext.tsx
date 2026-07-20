@@ -39,8 +39,13 @@ export type StudioContextValue = {
    * the change live).
    */
   reportInlineEdit: (addresses: string[]) => void
-  /** Report that a property edit for this address was persisted. */
-  nodeEdited: (address: string) => void
+  /**
+   * Report that a property edit for this address was persisted. The preview
+   * reloads by default; pass reloadPreview: false when the property does not
+   * affect the rendered page (neither ui.reloadIfChanged nor
+   * ui.reloadPageIfChanged is set) - trees and the inspector still refresh.
+   */
+  nodeEdited: (address: string, options?: { reloadPreview?: boolean }) => void
   /**
    * Report a structural change (e.g. a drag-and-drop move) affecting several
    * addresses at once - their child lists are refreshed in the trees and the

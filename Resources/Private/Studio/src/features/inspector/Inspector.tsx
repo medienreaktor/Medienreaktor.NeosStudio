@@ -87,8 +87,15 @@ export function InspectorPanel({
   onNodeEdited,
 }: {
   node: NodeDto | null
-  /** A property edit for this address was persisted. */
-  onNodeEdited?: (address: string) => void
+  /**
+   * A property edit for this address was persisted. reloadPreview reflects the
+   * property's ui.reloadIfChanged / ui.reloadPageIfChanged configuration -
+   * false means the change does not affect the rendered page.
+   */
+  onNodeEdited?: (
+    address: string,
+    options?: { reloadPreview?: boolean },
+  ) => void
 }) {
   const { data: nodeTypes } = useNodeTypes()
   const { data: schema } = useNodeTypeSchema(node?.nodeType ?? null)
@@ -153,11 +160,12 @@ export function InspectorPanel({
     reportLiveChange(propertyName, value)
     // Reference-typed "properties" are not node properties in Neos 9 - they
     // persist through SetNodeReferences (reference name = property name).
-    const propertyType = tabs
+    const propertySchema = tabs
       ?.flatMap((tab) => tab.groups)
       .flatMap((group) => group.items)
       .flatMap((item) => (item.kind === 'property' ? [item.property] : []))
-      .find((property) => property.name === propertyName)?.type
+      .find((property) => property.name === propertyName)
+    const propertyType = propertySchema?.type
     // Two further "properties" are not real properties and route to their own
     // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
     // tree/preview hide actions), and the node type is changed with
@@ -176,8 +184,17 @@ export function InspectorPanel({
                 referenceTargets(value),
               )
             : persistPropertyChange(node.address, propertyName, value)
+    // ui.reloadIfChanged / ui.reloadPageIfChanged decide whether the preview
+    // refreshes (both currently mean a full reload - Studio has no per-element
+    // out-of-band rendering). The pseudo-properties always reload: hiding and
+    // a type change always alter the rendered page. An unknown property (not
+    // in the schema) reloads too - better one reload than a stale preview.
+    const reloadPreview =
+      propertyName === HIDDEN_PROPERTY ||
+      propertyName === NODE_TYPE_PROPERTY ||
+      (propertySchema?.reloadPreviewIfChanged ?? true)
     persist
-      .then(() => onNodeEdited?.(node.address))
+      .then(() => onNodeEdited?.(node.address, { reloadPreview }))
       .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))
   }
 
