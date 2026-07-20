@@ -24,6 +24,15 @@ export const queryKeys = {
   },
   dimensions: ['dimensions'] as const,
   users: ['users'] as const,
+  dataSources: {
+    all: ['dataSources'] as const,
+    /** One data source invocation - keyed by everything that reaches getData(). */
+    byIdentifier: (
+      identifier: string,
+      node: string | null,
+      additionalData: Record<string, unknown> | null,
+    ) => ['dataSources', identifier, { node, additionalData }] as const,
+  },
   nodes: {
     all: ['nodes'] as const,
     /** Prefix covering every cached variant (any nodeTypes filter) of one address - for invalidation, not for reading. */
