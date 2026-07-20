@@ -63,7 +63,7 @@ export function AssetList({
   return (
     <div className="min-h-0 flex-1 pt-12 overflow-y-auto @container">
       {view === 'grid' ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 p-2 pt-0">
+        <div className="grid grid-cols-2 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6 gap-2 p-2 pt-0">
           {assets.map((asset) => (
             <GridCard
               key={assetKey(asset)}
@@ -76,12 +76,12 @@ export function AssetList({
         </div>
       ) : (
         <table className="w-full border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-neutral-900 text-left text-xs text-neutral-500">
+          <thead className="sticky top-0 z-10 bg-neutral-900/50 backdrop-blur-sm text-left text-xs text-neutral-500">
             <tr>
-              <th className="px-4 py-2 font-medium">Name</th>
-              <th className="px-2 py-2 font-medium">Type</th>
-              <th className="px-2 py-2 font-medium">Size</th>
-              <th className="px-4 py-2 font-medium">Modified</th>
+              <th className="px-2 py-1 font-medium">Name</th>
+              <th className="px-2 py-1 font-medium">Type</th>
+              <th className="px-2 py-1 font-medium">Size</th>
+              <th className="px-2 py-1 font-medium">Modified</th>
             </tr>
           </thead>
           <tbody>
@@ -130,20 +130,17 @@ function GridCard({
       }}
       title={asset.label}
       className={cn(
-        'group flex flex-col overflow-hidden rounded-md border bg-neutral-900 text-left transition-colors',
+        'group flex flex-col overflow-hidden border rounded-md  text-left transition-colors',
         active
-          ? 'border-blue-500 ring-1 ring-blue-500'
-          : 'border-neutral-800 hover:border-neutral-600',
+          ? 'border-blue-500 bg-neutral-900'
+          : 'border-transparent hover:bg-neutral-900',
       )}
     >
-      <div className="grid aspect-square place-items-center overflow-hidden bg-neutral-950/50 p-2">
+      <div className="grid aspect-square place-items-center overflow-hidden p-2">
         <AssetThumb asset={asset} />
       </div>
-      <div className="border-t border-neutral-800 px-2 py-1.5">
+      <div className="px-2 py-1">
         <p className="truncate text-xs text-neutral-200">{asset.label}</p>
-        <p className="truncate text-[0.65rem] text-neutral-500">
-          {formatBytes(asset.fileSize)}
-        </p>
       </div>
     </button>
   )
@@ -166,10 +163,10 @@ function ListRow({
       onDoubleClick={onActivate}
       className={cn(
         'cursor-pointer border-b border-neutral-800/60',
-        active ? 'bg-blue-500/15' : 'hover:bg-neutral-800/50',
+        active ? 'bg-blue-500' : 'hover:bg-neutral-800/50',
       )}
     >
-      <td className="px-4 py-1.5">
+      <td className="px-2 py-1">
         <div className="flex items-center gap-2">
           <div className="grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-neutral-950/50">
             <AssetThumb asset={asset} className="size-5" />
@@ -177,11 +174,9 @@ function ListRow({
           <span className="truncate text-neutral-200">{asset.label}</span>
         </div>
       </td>
-      <td className="px-2 py-1.5 text-neutral-400">{asset.assetType}</td>
-      <td className="px-2 py-1.5 text-neutral-400">
-        {formatBytes(asset.fileSize)}
-      </td>
-      <td className="px-4 py-1.5 text-neutral-400">
+      <td className="px-2 py-1 text-white/50">{asset.assetType}</td>
+      <td className="px-2 py-1 text-white/50">{formatBytes(asset.fileSize)}</td>
+      <td className="px-2 py-1 text-white/50">
         {formatDate(asset.lastModified)}
       </td>
     </tr>

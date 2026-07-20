@@ -138,7 +138,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
-    <div className="absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-neutral-950/70 p-2 backdrop-blur-xs">
+    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-neutral-950/70 p-2 backdrop-blur-xs">
       <SearchInput
         value={filter.search}
         onChange={(e) => state.setSearch(e.target.value)}
@@ -168,131 +168,145 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       </Select>
 
       {hasSources && (
-        <FilterButton
-          icon={
-            <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
-          }
-          label={activeSource?.label ?? 'Source'}
-        >
-          <ul className="min-w-48 space-y-0.5">
-            {sources.data!.map((source) => (
-              <SourceButton
-                key={source.identifier}
-                source={source}
-                active={source.identifier === filter.assetSource}
-                onSelect={() => state.setAssetSource(source.identifier)}
-              />
-            ))}
-          </ul>
-        </FilterButton>
+        <div className="hidden @[64rem]:flex">
+          <FilterButton
+            icon={
+              <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
+            }
+            label={activeSource?.label ?? 'Source'}
+          >
+            <ul className="min-w-48 space-y-0.5">
+              {sources.data!.map((source) => (
+                <SourceButton
+                  key={source.identifier}
+                  source={source}
+                  active={source.identifier === filter.assetSource}
+                  onSelect={() => state.setAssetSource(source.identifier)}
+                />
+              ))}
+            </ul>
+          </FilterButton>
+        </div>
       )}
 
       {supportsCollections && (
-        <FilterButton
-          icon={<i className="fas fa-folder text-[0.875rem]" aria-hidden />}
-          label={collectionLabel}
-          active={filter.collection !== null}
-          action={<AddCollection />}
-        >
-          <div className="min-w-56">
-            <RailButton
-              icon={
-                <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
-              }
-              label="All assets"
-              active={filter.collection === null}
-              onClick={() => state.selectCollection(null)}
-            />
-            <MediaTree
-              label="Collections"
-              emptyText="No collections yet"
-              emptyIcon="fa-folder-open"
-              loading={collections.isLoading}
-              roots={(collections.data ?? []).map(collectionToNode)}
-              selectedId={filter.collection}
-              onSelect={(id) =>
-                state.selectCollection(filter.collection === id ? null : id)
-              }
-              icon={() => (
-                <i className="fas fa-folder text-[0.875rem]" aria-hidden />
-              )}
-              onItemContextMenu={(node, e) =>
-                openMenu(
-                  { kind: 'collection', id: node.id, label: node.label },
-                  e,
-                )
-              }
-            />
-          </div>
-        </FilterButton>
+        <div className="hidden @[48rem]:flex">
+          <FilterButton
+            icon={<i className="fas fa-folder text-[0.875rem]" aria-hidden />}
+            label={collectionLabel}
+            active={filter.collection !== null}
+            action={<AddCollection />}
+          >
+            <div className="min-w-56">
+              <RailButton
+                icon={
+                  <i
+                    className="fas fa-layer-group text-[0.875rem]"
+                    aria-hidden
+                  />
+                }
+                label="All assets"
+                active={filter.collection === null}
+                onClick={() => state.selectCollection(null)}
+              />
+              <MediaTree
+                label="Collections"
+                emptyText="No collections yet"
+                emptyIcon="fa-folder-open"
+                loading={collections.isLoading}
+                roots={(collections.data ?? []).map(collectionToNode)}
+                selectedId={filter.collection}
+                onSelect={(id) =>
+                  state.selectCollection(filter.collection === id ? null : id)
+                }
+                icon={() => (
+                  <i className="fas fa-folder text-[0.875rem]" aria-hidden />
+                )}
+                onItemContextMenu={(node, e) =>
+                  openMenu(
+                    { kind: 'collection', id: node.id, label: node.label },
+                    e,
+                  )
+                }
+              />
+            </div>
+          </FilterButton>
+        </div>
       )}
 
       {supportsTagging && (
-        <FilterButton
-          icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
-          label={tagLabel}
-          active={filter.tagMode === 'none' || filter.tag !== null}
-          action={<AddTag />}
-        >
-          <div className="min-w-56">
-            <RailButton
-              icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
-              label="All tags"
-              active={filter.tagMode === 'given' && filter.tag === null}
-              onClick={() => state.selectTag(null)}
-            />
-            <RailButton
-              icon={<i className="fas fa-ban text-[0.875rem]" aria-hidden />}
-              label="Untagged"
-              active={filter.tagMode === 'none'}
-              onClick={() => state.showUntagged()}
-            />
-            <MediaTree
-              label="Tags"
-              emptyText="No tags yet"
-              emptyIcon="fa-tag"
-              loading={tags.isLoading}
-              roots={(tags.data ?? []).map(tagToNode)}
-              selectedId={filter.tagMode === 'given' ? filter.tag : null}
-              onSelect={(id) =>
-                state.selectTag(
-                  filter.tagMode === 'given' && filter.tag === id ? null : id,
-                )
-              }
-              icon={() => (
-                <i className="fas fa-tag text-[0.875rem]" aria-hidden />
-              )}
-              onItemContextMenu={(node, e) =>
-                openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
-              }
-              onReparent={(tagId, newParentId) =>
-                // parent:null is "unchanged"; '' moves to root.
-                void updateTag(tagId, { parent: newParentId ?? '' })
-              }
-            />
-          </div>
-        </FilterButton>
+        <div className="hidden @[48rem]:flex">
+          <FilterButton
+            icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
+            label={tagLabel}
+            active={filter.tagMode === 'none' || filter.tag !== null}
+            action={<AddTag />}
+          >
+            <div className="min-w-56">
+              <RailButton
+                icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
+                label="All tags"
+                active={filter.tagMode === 'given' && filter.tag === null}
+                onClick={() => state.selectTag(null)}
+              />
+              <RailButton
+                icon={<i className="fas fa-ban text-[0.875rem]" aria-hidden />}
+                label="Untagged"
+                active={filter.tagMode === 'none'}
+                onClick={() => state.showUntagged()}
+              />
+              <MediaTree
+                label="Tags"
+                emptyText="No tags yet"
+                emptyIcon="fa-tag"
+                loading={tags.isLoading}
+                roots={(tags.data ?? []).map(tagToNode)}
+                selectedId={filter.tagMode === 'given' ? filter.tag : null}
+                onSelect={(id) =>
+                  state.selectTag(
+                    filter.tagMode === 'given' && filter.tag === id ? null : id,
+                  )
+                }
+                icon={() => (
+                  <i className="fas fa-tag text-[0.875rem]" aria-hidden />
+                )}
+                onItemContextMenu={(node, e) =>
+                  openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
+                }
+                onReparent={(tagId, newParentId) =>
+                  // parent:null is "unchanged"; '' moves to root.
+                  void updateTag(tagId, { parent: newParentId ?? '' })
+                }
+              />
+            </div>
+          </FilterButton>
+        </div>
       )}
 
-      <Select
-        value={sortValue}
-        onValueChange={(v) => {
-          const sort = SORTS.find((s) => s.value === v)!
-          state.setSort(sort.sortBy, sort.dir)
-        }}
-        items={SORTS.map((sort) => ({ value: sort.value, label: sort.label }))}
-      >
-        <SelectTrigger className="h-8 w-36" size="sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {SORTS.map((sort) => (
-            <SelectItem key={sort.value} value={sort.value}>
-              {sort.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="hidden @[48rem]:flex">
+        <Select
+          value={sortValue}
+          onValueChange={(v) => {
+            const sort = SORTS.find((s) => s.value === v)!
+            state.setSort(sort.sortBy, sort.dir)
+          }}
+          items={SORTS.map((sort) => ({
+            value: sort.value,
+            label: sort.label,
+          }))}
+        >
+          <SelectTrigger className="h-8 w-36" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORTS.map((sort) => (
+              <SelectItem key={sort.value} value={sort.value}>
+                {sort.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <MediaItemActions
         target={menuTarget}
