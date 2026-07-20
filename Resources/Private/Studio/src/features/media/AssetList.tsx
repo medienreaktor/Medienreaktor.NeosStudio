@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 
 import type { MediaAsset } from '@/api/media'
 import { cn } from '@/lib/utils'
+import { LoadingState, Spinner } from '@/components/ui/spinner'
+import { Placeholder } from '@/components/ui/placeholder'
 import { AssetThumb } from './AssetThumb'
 import { formatBytes, formatDate } from './format'
 import { assetKey } from './useMediaBrowserState'
@@ -47,11 +49,14 @@ export function AssetList({
     return () => observer.disconnect()
   }, [hasNextPage, onLoadMore, assets.length])
 
-  if (assets.length === 0 && !isLoading) {
-    return (
-      <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-500">
-        No assets match the current filters.
-      </div>
+  if (assets.length === 0) {
+    return isLoading ? (
+      <LoadingState label="Loading assets…" />
+    ) : (
+      <Placeholder
+        icon="fa-photo-film"
+        title="No assets match the current filters."
+      />
     )
   }
 
@@ -95,7 +100,8 @@ export function AssetList({
 
       <div ref={sentinelRef} />
       {isFetchingNextPage && (
-        <div className="p-4 text-center text-xs text-neutral-500">
+        <div className="flex items-center justify-center gap-2 p-4 text-xs text-neutral-500">
+          <Spinner className="text-[0.875rem]" />
           Loading more…
         </div>
       )}

@@ -6,6 +6,8 @@ import {
   type NodeTypeDto,
 } from '@/api/nodeTypes'
 import { Input } from '@/components/ui/input'
+import { LoadingState } from '@/components/ui/spinner'
+import { Placeholder } from '@/components/ui/placeholder'
 import { humanizeLabel } from '@/features/inspector/inspectorSchema'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
@@ -95,9 +97,7 @@ export function NodeCreationPanel() {
   }, [nodeTypes, groupConfigs])
 
   if (groups === null) {
-    return (
-      <div className="p-4 text-xs text-neutral-400">Loading node types…</div>
-    )
+    return <LoadingState label="Loading node types…" />
   }
 
   const query = filter.trim().toLowerCase()
@@ -124,11 +124,15 @@ export function NodeCreationPanel() {
         className="h-8"
       />
       {visibleGroups.length === 0 && (
-        <p className="px-1 text-xs text-neutral-400">
-          {groups.length === 0
-            ? 'No creatable content node types.'
-            : 'No node types match the filter.'}
-        </p>
+        <Placeholder
+          icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}
+          title={
+            groups.length === 0
+              ? 'No creatable content node types.'
+              : 'No node types match the filter.'
+          }
+          className="py-10"
+        />
       )}
       {visibleGroups.map((group) => {
         // While filtering every group with matches stays open.
@@ -147,7 +151,10 @@ export function NodeCreationPanel() {
               }
             >
               {isCollapsed ? (
-                <i className="fas fa-chevron-right text-[0.75rem]" aria-hidden />
+                <i
+                  className="fas fa-chevron-right text-[0.75rem]"
+                  aria-hidden
+                />
               ) : (
                 <i className="fas fa-chevron-down text-[0.75rem]" aria-hidden />
               )}

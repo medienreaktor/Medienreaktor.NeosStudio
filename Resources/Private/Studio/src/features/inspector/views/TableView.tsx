@@ -1,4 +1,5 @@
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
+import { Placeholder } from '@/components/ui/placeholder'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { DataSourceWidget } from './DataSourceWidget'
 import { dataCollection, dataPath, dataText } from './dataPath'
@@ -25,7 +26,9 @@ export const TableView: InspectorViewComponent = ({ node, options }) => {
       {(data) => {
         const rows = dataCollection(data, options.collection)
         if (rows.length === 0 || columns.length === 0) {
-          return <p className="text-xs text-neutral-400">No data.</p>
+          return (
+            <Placeholder icon="fa-table" title="No data." className="py-6" />
+          )
         }
         return (
           <Table className="text-xs">

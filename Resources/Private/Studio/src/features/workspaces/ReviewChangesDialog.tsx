@@ -7,6 +7,8 @@ import {
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { LoadingState } from '@/components/ui/spinner'
+import { Placeholder } from '@/components/ui/placeholder'
 import {
   Dialog,
   DialogContent,
@@ -54,7 +56,10 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
             badge.className,
           )}
         >
-          <i className={`fas fa-fw ${badge.icon} text-[0.625rem]`} aria-hidden />
+          <i
+            className={`fas fa-fw ${badge.icon} text-[0.625rem]`}
+            aria-hidden
+          />
           {badge.label}
         </span>
       ))}
@@ -128,7 +133,9 @@ export function ReviewChangesDialog({
 
   const toggleAll = (checked: boolean) => {
     setSelectedIds(
-      checked ? new Set(documents.map((d) => d.documentAggregateId)) : new Set(),
+      checked
+        ? new Set(documents.map((d) => d.documentAggregateId))
+        : new Set(),
     )
   }
 
@@ -170,13 +177,13 @@ export function ReviewChangesDialog({
 
           <div className="-mx-1 flex-1 overflow-y-auto px-1">
             {isLoading ? (
-              <p className="py-8 text-center text-sm text-neutral-400">
-                Loading changes…
-              </p>
+              <LoadingState label="Loading changes…" className="py-8" />
             ) : documents.length === 0 ? (
-              <p className="py-8 text-center text-sm text-neutral-400">
-                No pending changes.
-              </p>
+              <Placeholder
+                icon="fa-check"
+                title="No pending changes."
+                className="py-8"
+              />
             ) : (
               <ul className="flex flex-col gap-px">
                 {documents.map((document) => {
@@ -188,7 +195,9 @@ export function ReviewChangesDialog({
                       <label
                         className={cn(
                           'flex cursor-pointer items-start gap-3 rounded-sm px-3 py-2 transition-colors',
-                          isSelected ? 'bg-neutral-800' : 'hover:bg-neutral-900',
+                          isSelected
+                            ? 'bg-neutral-800'
+                            : 'hover:bg-neutral-900',
                         )}
                       >
                         <Checkbox
@@ -230,7 +239,9 @@ export function ReviewChangesDialog({
                             <ChangeBadges document={document} />
                             <span className="text-xs text-neutral-500">
                               {document.changeCount}{' '}
-                              {document.changeCount === 1 ? 'change' : 'changes'}
+                              {document.changeCount === 1
+                                ? 'change'
+                                : 'changes'}
                             </span>
                           </div>
                         </div>
@@ -311,8 +322,8 @@ export function ReviewChangesDialog({
             </DialogTitle>
             <DialogDescription>
               The pending changes on the selected{' '}
-              {selectedCount === 1 ? 'document' : 'documents'} will be discarded.
-              This cannot be undone.
+              {selectedCount === 1 ? 'document' : 'documents'} will be
+              discarded. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -338,7 +349,9 @@ export function ReviewChangesDialog({
       <ConflictResolutionDialog
         open={pendingConflict !== null}
         conflicts={pendingConflict?.conflicts.conflicts ?? []}
-        partial={pendingConflict?.conflicts.code === 'partial_publish_conflicts'}
+        partial={
+          pendingConflict?.conflicts.code === 'partial_publish_conflicts'
+        }
         busy={resolve.isPending}
         onCancel={() => setPendingConflict(null)}
         onForce={() => resolve.mutate('force')}

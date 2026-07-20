@@ -23,6 +23,7 @@ import {
   type NodeMenuAction,
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
+import { Placeholder } from '@/components/ui/placeholder'
 import { nodeDecor } from './nodeDecor'
 import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
@@ -60,9 +61,10 @@ export function ContentOutliner({
 }) {
   if (document === null) {
     return (
-      <div className="px-2 text-xs text-neutral-400">
-        Select a document to outline its content.
-      </div>
+      <Placeholder
+        icon="fa-list-tree"
+        title="Select a document to outline its content."
+      />
     )
   }
   // Key by document: a new document is a new tree (fresh root, fresh
@@ -109,6 +111,9 @@ function OutlinerTree({
   onMoved?: (affectedAddresses: string[]) => void
 }) {
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
+  // Flips once the document root has resolved, so the outliner shows a spinner
+  // while loading rather than a misleading "no content" state.
+  const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
 
@@ -164,6 +169,7 @@ function OutlinerTree({
               document.address,
               CONTENT_NODE_TYPES,
             )
+            setRootLoaded(true)
             return [
               {
                 id: contentDocument.address,
@@ -175,6 +181,7 @@ function OutlinerTree({
               title: 'Loading the outline failed',
               id: 'outliner-load',
             })
+            setRootLoaded(true)
             return []
           }
         }
@@ -241,7 +248,10 @@ function OutlinerTree({
       <TreeList
         tree={tree}
         label="Content outliner"
+        loading={!rootLoaded}
+        loadingText="Loading content…"
         emptyText="No content below this document."
+        emptyIcon="fa-list-tree"
         decorate={(data) =>
           data === null || data === ROOT_ID
             ? null

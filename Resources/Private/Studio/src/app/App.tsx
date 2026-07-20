@@ -26,6 +26,7 @@ import { loadTranslations } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
+import { LoadingState } from '@/components/ui/spinner'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -289,8 +290,8 @@ export function App() {
 
   if (auth === 'checking') {
     return (
-      <div className="grid min-h-screen place-items-center text-neutral-400">
-        Loading Neos Studio…
+      <div className="grid min-h-screen place-items-center">
+        <LoadingState label="Loading Neos Studio…" />
       </div>
     )
   }

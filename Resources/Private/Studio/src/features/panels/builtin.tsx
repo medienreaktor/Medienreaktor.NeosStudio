@@ -11,6 +11,7 @@ import { MediaBrowser } from '@/features/media/MediaBrowser'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentTree } from '@/features/tree/DocumentTree'
+import { LoadingState } from '@/components/ui/spinner'
 import { clampToViewport, type PanelRect } from './geometry'
 import { useRequestAttention } from './PanelSystem'
 import { panelRegistry } from './registry'
@@ -57,7 +58,7 @@ function DocumentsPanel() {
     nodesEdited,
   } = useStudio()
   if (!site || !workspaceName) {
-    return <div className="p-4 text-xs text-neutral-400">Loading sites…</div>
+    return <LoadingState label="Loading sites…" />
   }
   return (
     <div className="p-2">

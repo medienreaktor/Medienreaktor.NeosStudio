@@ -1,5 +1,7 @@
 import type { ItemInstance, TreeInstance } from '@headless-tree/core'
 import { cn } from '@/lib/utils'
+import { LoadingState } from '@/components/ui/spinner'
+import { Placeholder } from '@/components/ui/placeholder'
 import type { TreeRowDecor } from './nodeDecor'
 
 /**
@@ -19,6 +21,9 @@ export function TreeList<T>({
   tree,
   label,
   emptyText,
+  emptyIcon,
+  loading = false,
+  loadingText,
   decorate,
   onItemContextMenu,
   rootless = false,
@@ -26,7 +31,17 @@ export function TreeList<T>({
   tree: TreeInstance<T>
   /** Accessible tree label (aria-label on the container). */
   label: string
+  /** Message shown, centered, when the tree has no items and isn't loading. */
   emptyText: string
+  /** Optional FontAwesome icon (e.g. "fa-folder-open") for the empty state. */
+  emptyIcon?: string
+  /**
+   * While true, an empty tree shows a centered spinner instead of the empty
+   * placeholder - for trees whose root children are still loading in.
+   */
+  loading?: boolean
+  /** Label beneath the spinner while loading. */
+  loadingText?: string
   /** Row decorations for an item's data; return null for undecorated rows. */
   decorate?: (data: T) => TreeRowDecor | null
   /** Right-click on a row; when set, the browser menu is suppressed. */
@@ -39,17 +54,25 @@ export function TreeList<T>({
   rootless?: boolean
 }) {
   const items = tree.getItems()
+  const isEmpty = items.length === 0
   // Present only when the tree registered the drag-and-drop feature.
   const dnd = 'getDragLineStyle' in tree ? (tree as unknown as DndTree) : null
 
   return (
     <div
       {...tree.getContainerProps(label)}
-      className="flex flex-col outline-none select-none"
-    >
-      {items.length === 0 && (
-        <div className="text-xs text-neutral-400">{emptyText}</div>
+      className={cn(
+        'flex flex-col outline-none select-none',
+        // Fill the container so the empty/loading block centers vertically.
+        isEmpty && 'min-h-0 flex-1',
       )}
+    >
+      {isEmpty &&
+        (loading ? (
+          <LoadingState label={loadingText} />
+        ) : (
+          <Placeholder icon={emptyIcon} title={emptyText} />
+        ))}
       {dnd && (
         // Reorder indicator between rows; getDragLineStyle hides it (display:
         // none) when the current drop target is "into" a folder instead.

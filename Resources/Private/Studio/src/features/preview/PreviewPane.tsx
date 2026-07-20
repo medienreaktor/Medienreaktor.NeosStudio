@@ -4,6 +4,7 @@ import { renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
+import { Placeholder } from '@/components/ui/placeholder'
 import { config } from '@/config'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
@@ -78,7 +79,10 @@ export function PreviewToolbar({
         title="Open page in a new tab"
       >
         <a href={previewUrl(document.address)} target="_blank" rel="noreferrer">
-          <i className="fas fa-arrow-up-right-from-square text-xs" aria-hidden />
+          <i
+            className="fas fa-arrow-up-right-from-square text-xs"
+            aria-hidden
+          />
         </a>
       </Button>
     </div>
@@ -530,11 +534,10 @@ export function PreviewPane({
 
   if (!document || !src) {
     return (
-      <div className="grid flex-1 place-items-center p-6">
-        <p className="text-sm text-neutral-400">
-          Select a document to preview it.
-        </p>
-      </div>
+      <Placeholder
+        icon="fa-file-lines"
+        title="Select a document to preview it."
+      />
     )
   }
 

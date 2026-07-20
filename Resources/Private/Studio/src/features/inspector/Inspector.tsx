@@ -5,6 +5,7 @@ import { isShineThrough, nodeLabel, useNodeAncestors } from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Placeholder } from '@/components/ui/placeholder'
 import {
   changeNodeType,
   hideNode,
@@ -210,9 +211,10 @@ export function InspectorPanel({
 
   if (!node) {
     return (
-      <p className="p-4 text-xs text-neutral-400">
-        Select a node in the preview or the trees to inspect it.
-      </p>
+      <Placeholder
+        icon="fa-arrow-pointer"
+        title="Select a node in the preview or the trees to inspect it."
+      />
     )
   }
 

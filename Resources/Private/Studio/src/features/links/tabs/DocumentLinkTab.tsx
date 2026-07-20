@@ -16,6 +16,7 @@ import {
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
 import { Input } from '@/components/ui/input'
+import { Placeholder } from '@/components/ui/placeholder'
 import { useStudio } from '@/app/StudioContext'
 import { nodeDecor } from '@/features/tree/nodeDecor'
 import { TreeList } from '@/features/tree/TreeList'
@@ -46,6 +47,8 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
   // The anchor is owned here (typing must not wait for a picked document);
   // the picked document travels through the href draft.
   const [anchor, setAnchor] = useState(() => parsed?.anchor ?? '')
+  // Flips once the site node's children resolve (see DocumentTree).
+  const [rootLoaded, setRootLoaded] = useState(false)
 
   const selectedAddress =
     parsed !== null && site?.nodeAddress
@@ -81,11 +84,15 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
       getChildrenWithData: async (itemId) => {
         try {
           if (itemId === ROOT_ID) {
-            if (!site?.nodeAddress) return []
+            if (!site?.nodeAddress) {
+              setRootLoaded(true)
+              return []
+            }
             const siteNode = await fetchNode(
               site.nodeAddress,
               DOCUMENT_NODE_TYPE,
             )
+            setRootLoaded(true)
             return [{ id: siteNode.address, data: siteNode as TreeItemData }]
           }
           const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
@@ -95,6 +102,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
           }))
         } catch {
           // A vanished node just yields no children - the picker stays usable.
+          setRootLoaded(true)
           return []
         }
       },
@@ -107,9 +115,10 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   if (!site) {
     return (
-      <p className="text-sm text-neutral-400">
-        No site is active - there is no document tree to pick from.
-      </p>
+      <Placeholder
+        icon="fa-sitemap"
+        title="No site is active - there is no document tree to pick from."
+      />
     )
   }
 
@@ -119,7 +128,10 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
         <TreeList
           tree={tree}
           label="Link target document"
-          emptyText="Loading tree…"
+          loading={!rootLoaded}
+          loadingText="Loading documents…"
+          emptyText="This site has no documents yet."
+          emptyIcon="fa-sitemap"
           decorate={(data) =>
             data === ROOT_ID || data === null
               ? null

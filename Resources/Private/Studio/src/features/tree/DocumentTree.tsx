@@ -66,6 +66,9 @@ export function DocumentTree({
   onMoved?: (affectedAddresses: string[]) => void
 }) {
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
+  // Flips once the site node's children have resolved, so the tree can show a
+  // spinner while the root loads and a real empty state only afterwards.
+  const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
 
@@ -102,7 +105,10 @@ export function DocumentTree({
           // loading failure - stay quiet; the parent's children list refresh
           // drops the row.
           if (!isNotFound(e)) {
-            toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
+            toast.error(e, {
+              title: 'Loading the tree failed',
+              id: 'tree-load',
+            })
           }
           throw e
         }
@@ -110,11 +116,15 @@ export function DocumentTree({
       getChildrenWithData: async (itemId) => {
         try {
           if (itemId === ROOT_ID) {
-            if (site.nodeAddress === null) return []
+            if (site.nodeAddress === null) {
+              setRootLoaded(true)
+              return []
+            }
             const siteNode = await fetchNode(
               site.nodeAddress,
               DOCUMENT_NODE_TYPE,
             )
+            setRootLoaded(true)
             return [{ id: siteNode.address, data: siteNode as TreeItemData }]
           }
           const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
@@ -126,8 +136,13 @@ export function DocumentTree({
           // The node was deleted out from under us (e.g. published) - no
           // children to show, and no error worth reporting.
           if (!isNotFound(e)) {
-            toast.error(e, { title: 'Loading the tree failed', id: 'tree-load' })
+            toast.error(e, {
+              title: 'Loading the tree failed',
+              id: 'tree-load',
+            })
           }
+          // Whatever failed, stop showing the loading spinner.
+          setRootLoaded(true)
           return []
         }
       },
@@ -174,7 +189,10 @@ export function DocumentTree({
       <TreeList
         tree={tree}
         label="Document tree"
-        emptyText="Loading tree…"
+        loading={!rootLoaded}
+        loadingText="Loading documents…"
+        emptyText="This site has no documents yet."
+        emptyIcon="fa-sitemap"
         decorate={(data) =>
           data === ROOT_ID || data === null
             ? null

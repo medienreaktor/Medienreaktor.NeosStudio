@@ -3,6 +3,7 @@ import { useUsers, type User } from '@/api/users'
 import { toast } from '@/components/ui/toast'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Placeholder } from '@/components/ui/placeholder'
 
 /**
  * User administration, rendered as a section of the shared Settings modal (see
@@ -29,15 +30,21 @@ export function UserAdministration() {
       </header>
 
       {error && (
-        <p className="text-sm text-neutral-400">
-          Users are currently unavailable.
-        </p>
+        <Placeholder
+          icon="fa-triangle-exclamation"
+          title="Users are currently unavailable."
+          className="py-10"
+        />
       )}
 
       {isLoading && <UserTableSkeleton />}
 
       {data && data.users.length === 0 && (
-        <p className="text-sm text-neutral-400">No users found.</p>
+        <Placeholder
+          icon="fa-users"
+          title="No users found."
+          className="py-10"
+        />
       )}
 
       {data && data.users.length > 0 && (

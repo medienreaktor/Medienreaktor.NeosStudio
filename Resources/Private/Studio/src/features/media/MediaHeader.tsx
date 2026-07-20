@@ -182,7 +182,9 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
       {hasSources && (
         <FilterButton
-          icon={<i className="fas fa-layer-group text-[0.875rem]" aria-hidden />}
+          icon={
+            <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
+          }
           label={activeSource?.label ?? 'Source'}
         >
           <ul className="min-w-48 space-y-0.5">
@@ -207,7 +209,9 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         >
           <div className="min-w-56">
             <RailButton
-              icon={<i className="fas fa-layer-group text-[0.875rem]" aria-hidden />}
+              icon={
+                <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
+              }
               label="All assets"
               active={filter.collection === null}
               onClick={() => state.selectCollection(null)}
@@ -215,6 +219,8 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             <MediaTree
               label="Collections"
               emptyText="No collections yet"
+              emptyIcon="fa-folder-open"
+              loading={collections.isLoading}
               roots={(collections.data ?? []).map(collectionToNode)}
               selectedId={filter.collection}
               onSelect={(id) =>
@@ -257,6 +263,8 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             <MediaTree
               label="Tags"
               emptyText="No tags yet"
+              emptyIcon="fa-tag"
+              loading={tags.isLoading}
               roots={(tags.data ?? []).map(tagToNode)}
               selectedId={filter.tagMode === 'given' ? filter.tag : null}
               onSelect={(id) =>
@@ -264,7 +272,9 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                   filter.tagMode === 'given' && filter.tag === id ? null : id,
                 )
               }
-              icon={() => <i className="fas fa-tag text-[0.875rem]" aria-hidden />}
+              icon={() => (
+                <i className="fas fa-tag text-[0.875rem]" aria-hidden />
+              )}
               onItemContextMenu={(node, e) =>
                 openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
               }

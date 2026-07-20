@@ -42,6 +42,8 @@ export function MediaTree({
   roots,
   label,
   emptyText,
+  emptyIcon,
+  loading = false,
   selectedId,
   onSelect,
   onItemContextMenu,
@@ -51,6 +53,10 @@ export function MediaTree({
   roots: MediaTreeNode[]
   label: string
   emptyText: string
+  /** FontAwesome icon for the empty state. */
+  emptyIcon?: string
+  /** Show a spinner instead of the empty state while the source is loading. */
+  loading?: boolean
   selectedId: string | null
   /** Primary action on a row (toggles the filter in the caller). */
   onSelect: (id: string) => void
@@ -193,6 +199,8 @@ export function MediaTree({
       tree={tree}
       label={label}
       emptyText={emptyText}
+      emptyIcon={emptyIcon}
+      loading={loading}
       rootless
       decorate={decorate}
       onItemContextMenu={
