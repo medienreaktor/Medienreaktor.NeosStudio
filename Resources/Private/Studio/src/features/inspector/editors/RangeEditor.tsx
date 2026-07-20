@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { cn } from '@/lib/utils'
@@ -85,61 +86,66 @@ export const RangeEditor: PropertyEditorComponent = ({
     commitNumber(parsed)
   }
 
-  // Wide enough for the longest bound plus the step's decimals.
-  const decimals = String(opts.step).split('.')[1]?.length ?? 0
-  const inputWidth =
-    Math.max(String(opts.min).length, String(opts.max).length) + decimals
-
   return (
-    <div className={cn(opts.disabled && 'pointer-events-none opacity-50')}>
-      <Slider
-        min={opts.min}
-        max={opts.max}
-        step={opts.step}
-        disabled={opts.disabled}
-        value={parse(draft) ?? opts.min}
-        onValueChange={(next) => {
-          const single = Array.isArray(next) ? next[0] : next
-          setDraft(String(single))
-          onChange?.(single)
-        }}
-        onValueCommitted={(next) =>
-          commitNumber(Array.isArray(next) ? next[0] : next)
-        }
-      />
-      <div className="mt-1 flex items-center justify-between gap-2 text-xs text-neutral-400">
-        <span title="Minimum">
-          {opts.minLabel ?? `${opts.min}${opts.unit}`}
-        </span>
-        <span className="flex items-baseline gap-0.5 text-white">
-          <input
-            type="text"
-            inputMode="decimal"
-            value={draft}
+    <div
+      className={cn(
+        'flex items-start gap-4',
+        opts.disabled && 'pointer-events-none opacity-50',
+      )}
+    >
+      <span className="flex h-9 w-1/3 shrink-0 items-center gap-1.5">
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={draft}
+          disabled={opts.disabled}
+          onChange={(event) => {
+            setDraft(event.target.value)
+            const parsed = parse(event.target.value)
+            if (parsed !== null) onChange?.(parsed)
+          }}
+          onBlur={commitDraft}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur()
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              setDraft(committed === null ? '' : String(committed))
+              event.currentTarget.blur()
+            }
+          }}
+          className="min-w-0 flex-1 text-center"
+          title="Current value"
+        />
+        {opts.unit && (
+          <span className="text-xs pr-2 text-neutral-400">{opts.unit}</span>
+        )}
+      </span>
+      <div className="min-w-0 flex-1 pr-2">
+        <div className="flex h-9 items-center">
+          <Slider
+            min={opts.min}
+            max={opts.max}
+            step={opts.step}
             disabled={opts.disabled}
-            onChange={(event) => {
-              setDraft(event.target.value)
-              const parsed = parse(event.target.value)
-              if (parsed !== null) onChange?.(parsed)
+            value={parse(draft) ?? opts.min}
+            onValueChange={(next) => {
+              const single = Array.isArray(next) ? next[0] : next
+              setDraft(String(single))
+              onChange?.(single)
             }}
-            onBlur={commitDraft}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') event.currentTarget.blur()
-              if (event.key === 'Escape') {
-                event.preventDefault()
-                setDraft(committed === null ? '' : String(committed))
-                event.currentTarget.blur()
-              }
-            }}
-            style={{ width: `${inputWidth + 1}ch` }}
-            className="border-b border-neutral-700 bg-transparent text-center text-sm outline-none focus-visible:border-blue-500"
-            title="Current value"
+            onValueCommitted={(next) =>
+              commitNumber(Array.isArray(next) ? next[0] : next)
+            }
           />
-          {opts.unit}
-        </span>
-        <span title="Maximum">
-          {opts.maxLabel ?? `${opts.max}${opts.unit}`}
-        </span>
+        </div>
+        <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
+          <span title="Minimum">
+            {opts.minLabel ?? `${opts.min}${opts.unit}`}
+          </span>
+          <span title="Maximum">
+            {opts.maxLabel ?? `${opts.max}${opts.unit}`}
+          </span>
+        </div>
       </div>
     </div>
   )
