@@ -3,6 +3,7 @@ import type {
   InspectorTabConfig,
   NodeTypeSchemaDto,
   PropertyConfig,
+  PropertyScope,
 } from '@/api/nodeTypes'
 import { translateLabel } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
@@ -20,6 +21,8 @@ export interface InspectorProperty {
    * expression - evaluated per node before rendering (see clientEval.ts).
    */
   hidden: boolean | string
+  /** Any non-"node" scope makes edits span dimension variants - flagged next to the label. */
+  scope: PropertyScope
 }
 
 export interface InspectorGroup {
@@ -185,6 +188,7 @@ export function buildInspectorSchema(
         label: humanizeLabel(propertyConfig.ui?.label, name),
         editor,
         hidden: propertyConfig.ui?.inspector?.hidden ?? false,
+        scope: propertyConfig.scope ?? 'node',
         editorOptions: {
           ...(editor === defaultEditor
             ? DATA_TYPE_EDITOR_OPTIONS[type]

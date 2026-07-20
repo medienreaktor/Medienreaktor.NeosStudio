@@ -1,5 +1,13 @@
+import { ArrowLeftRightIcon } from 'lucide-react'
+import type { PropertyScope } from '@/api/nodeTypes'
 import type { SerializedPropertyValue } from '@/api/nodes'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { usePropertyEditor } from '@/features/properties/registry'
+import { translateLabel } from '@/lib/i18n'
 import type { InspectorProperty } from './inspectorSchema'
 
 /**
@@ -30,7 +38,7 @@ export function PropertyEditor({
   const definition = usePropertyEditor(property.editor)
   if (!definition) {
     return (
-      <Labeled label={property.label}>
+      <Labeled label={property.label} scope={property.scope}>
         <ReadOnlyValue property={property} value={value} />
       </Labeled>
     )
@@ -55,23 +63,72 @@ export function PropertyEditor({
     />
   )
 
-  if (definition.rendersOwnLabel) return editor
-  return <Labeled label={property.label}>{editor}</Labeled>
+  if (definition.rendersOwnLabel) {
+    // The editor owns the label line (e.g. the checkbox label beside the box),
+    // so the scope hint sits next to the whole control instead.
+    if (property.scope === 'node') return editor
+    return (
+      <div className="flex items-center gap-1.5">
+        {editor}
+        <ScopeHint scope={property.scope} />
+      </div>
+    )
+  }
+  return (
+    <Labeled label={property.label} scope={property.scope}>
+      {editor}
+    </Labeled>
+  )
 }
 
 /** The property label above its control - the default inspector field layout. */
 export function Labeled({
   label,
+  scope,
   children,
 }: {
   label: string
+  /** When given and not "node", the label carries the variant-spanning hint icon. */
+  scope?: PropertyScope
   children: React.ReactNode
 }) {
   return (
     <>
-      <label className="mb-1 block text-xs text-white">{label}</label>
+      <label className="mb-1 flex items-center gap-1.5 text-xs text-white">
+        {label}
+        {scope && scope !== 'node' && <ScopeHint scope={scope} />}
+      </label>
       {children}
     </>
+  )
+}
+
+/**
+ * English fallbacks for the classic UI's propertyScope.* hints, used when the
+ * XLIFF bundle does not carry them.
+ */
+const SCOPE_HINTS: Record<Exclude<PropertyScope, 'node'>, string> = {
+  nodeAggregate:
+    'The value of this property is shared across all dimension variants.',
+  specializations:
+    'Changes to this property will affect all specialization variants.',
+}
+
+/** A small icon flagging that edits to this property span dimension variants. */
+function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
+  const hint =
+    translateLabel(`Neos.Neos.Ui:Main:propertyScope.${scope}`) ??
+    SCOPE_HINTS[scope]
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        aria-label={hint}
+        className="cursor-help text-neutral-400 hover:text-neutral-200"
+      >
+        <ArrowLeftRightIcon aria-hidden className="size-3" />
+      </TooltipTrigger>
+      <TooltipContent>{hint}</TooltipContent>
+    </Tooltip>
   )
 }
 

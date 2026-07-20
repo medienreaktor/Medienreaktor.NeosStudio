@@ -78,9 +78,18 @@ export interface PropertyInspectorConfig {
   hidden?: boolean | string
 }
 
+/**
+ * How far a property write reaches across dimension variants: only the edited
+ * variant ("node", the default), the variant and its specializations, or every
+ * variant of the aggregate ("nodeAggregate" - the value is effectively shared
+ * across all dimensions).
+ */
+export type PropertyScope = 'node' | 'specializations' | 'nodeAggregate'
+
 export interface PropertyConfig {
   type?: string
   defaultValue?: unknown
+  scope?: PropertyScope
   /** Reference declarations only: maxItems 1 marks a singular reference. */
   constraints?: { maxItems?: number | null } | null
   ui?: {
