@@ -55,7 +55,7 @@ export function PropertyEditor({
 }
 
 /** The property label above its control - the default inspector field layout. */
-function Labeled({
+export function Labeled({
   label,
   children,
 }: {

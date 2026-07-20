@@ -16,7 +16,7 @@ import {
 } from '@/features/editing/persistProperty'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
-import { PropertyEditor } from './PropertyEditor'
+import { Labeled, PropertyEditor } from './PropertyEditor'
 
 /**
  * The visibility flag from the Neos.Neos:Hidable mixin. Configured as a
@@ -158,7 +158,7 @@ export function InspectorPanel({
                     value={'__nodeData'}
                     title="Node Data"
                   >
-                    <FaIcon icon={'database'} />
+                    <FaIcon icon={'info-circle'} />
                   </TabsTrigger>
                 </TabsList>
                 {tabs.map((tab) => (
@@ -182,35 +182,50 @@ export function InspectorPanel({
                   value={'__nodeData'}
                   className="space-y-4"
                 >
-                  <dl className="space-y-2">
-                    <InspectorRow label="Node Type">
-                      {node.nodeType}
-                    </InspectorRow>
-                    <InspectorRow label="Aggregate ID">
-                      <span className="font-mono text-xs">
-                        {node.aggregateId}
-                      </span>
-                    </InspectorRow>
-                    <InspectorRow label="Workspace">
-                      {node.workspace}
-                    </InspectorRow>
-                    <InspectorRow label="Dimensions">
-                      {Object.entries(node.dimensionSpacePoint)
-                        .map(([dimension, value]) => `${dimension}: ${value}`)
-                        .join(', ') || '–'}
-                    </InspectorRow>
-                    {node.tags.all.length > 0 && (
-                      <InspectorRow label="Tags">
-                        <span className="flex flex-wrap gap-1">
-                          {node.tags.all.map((tag) => (
-                            <Badge key={tag} variant="secondary">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </span>
-                      </InspectorRow>
-                    )}
-                  </dl>
+                  <details
+                    open={true}
+                    className="group/inspector-group border-b border-neutral-700 p-2 m-0"
+                  >
+                    <summary className="flex py-2 cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-white select-none [&::-webkit-details-marker]:hidden">
+                      <FaIcon icon="info-circle" />
+                      Node Information
+                    </summary>
+                    <div className="py-2 space-y-4">
+                      <div>
+                        <Labeled label="Node Type">{node.nodeType}</Labeled>
+                      </div>
+                      <div>
+                        <Labeled label="Aggregate ID">
+                          {node.aggregateId}
+                        </Labeled>
+                      </div>
+                      <div>
+                        <Labeled label="Workspace">{node.workspace}</Labeled>
+                      </div>
+                      <div>
+                        <Labeled label="Dimensions">
+                          {Object.entries(node.dimensionSpacePoint)
+                            .map(
+                              ([dimension, value]) => `${dimension}: ${value}`,
+                            )
+                            .join(', ') || '–'}
+                        </Labeled>
+                      </div>
+                      {node.tags.all.length > 0 && (
+                        <div>
+                          <Labeled label="Tags">
+                            <span className="flex flex-wrap gap-1">
+                              {node.tags.all.map((tag) => (
+                                <Badge key={tag} variant="secondary">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </span>
+                          </Labeled>
+                        </div>
+                      )}
+                    </div>
+                  </details>
                 </TabsContent>
               </Tabs>
             )}
@@ -258,22 +273,5 @@ function PropertyGroup({
         ))}
       </div>
     </details>
-  )
-}
-
-function InspectorRow({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-neutral-400">
-        {label}
-      </dt>
-      <dd>{children}</dd>
-    </div>
   )
 }
