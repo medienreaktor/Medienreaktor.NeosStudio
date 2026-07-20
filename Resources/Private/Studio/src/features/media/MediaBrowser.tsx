@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { useAssets, type MediaAsset } from '@/api/media'
 import { Button } from '@/components/ui/button'
+import { AssetContextMenu, type AssetMenuTarget } from './AssetContextMenu'
 import { AssetDetailsDialog } from './AssetDetailsDialog'
 import { AssetList } from './AssetList'
 import { MediaFooter } from './MediaFooter'
@@ -51,6 +52,8 @@ export function MediaBrowser({
   }, [mode, setActive])
   // Manage mode only: the asset whose metadata dialog is open.
   const [detailsAsset, setDetailsAsset] = useState<MediaAsset | null>(null)
+  // Manage mode only: the asset a right-click context menu is open for.
+  const [menuTarget, setMenuTarget] = useState<AssetMenuTarget | null>(null)
 
   const activate = (asset: MediaAsset) => {
     if (mode === 'picker') onPick?.(asset)
@@ -97,6 +100,11 @@ export function MediaBrowser({
         activeKey={activeKey}
         onSelect={state.setActive}
         onActivate={activate}
+        onContextMenu={
+          mode === 'manage'
+            ? (asset, anchor) => setMenuTarget({ asset, anchor })
+            : undefined
+        }
         isLoading={query.isLoading}
         isFetchingNextPage={query.isFetchingNextPage}
         hasNextPage={query.hasNextPage}
@@ -107,6 +115,12 @@ export function MediaBrowser({
         state={state}
         total={total}
         onUpload={() => setUploaderOpen(true)}
+      />
+
+      <AssetContextMenu
+        target={menuTarget}
+        onClose={() => setMenuTarget(null)}
+        onEdit={setDetailsAsset}
       />
 
       {detailsAsset && (

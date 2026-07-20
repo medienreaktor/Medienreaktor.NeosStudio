@@ -16,6 +16,8 @@ interface AssetListProps {
   onSelect: (asset: MediaAsset) => void
   /** Double-click / Enter: open details (manage) or pick (picker). */
   onActivate: (asset: MediaAsset) => void
+  /** Right-click: open the asset context menu (manage mode only). */
+  onContextMenu?: (asset: MediaAsset, anchor: { x: number; y: number }) => void
   isLoading: boolean
   isFetchingNextPage: boolean
   hasNextPage: boolean
@@ -28,6 +30,7 @@ export function AssetList({
   activeKey,
   onSelect,
   onActivate,
+  onContextMenu,
   isLoading,
   isFetchingNextPage,
   hasNextPage,
@@ -71,6 +74,9 @@ export function AssetList({
               active={assetKey(asset) === activeKey}
               onClick={() => onSelect(asset)}
               onActivate={() => onActivate(asset)}
+              onContextMenu={
+                onContextMenu && ((anchor) => onContextMenu(asset, anchor))
+              }
             />
           ))}
         </div>
@@ -92,6 +98,9 @@ export function AssetList({
                 active={assetKey(asset) === activeKey}
                 onClick={() => onSelect(asset)}
                 onActivate={() => onActivate(asset)}
+                onContextMenu={
+                  onContextMenu && ((anchor) => onContextMenu(asset, anchor))
+                }
               />
             ))}
           </tbody>
@@ -114,17 +123,27 @@ function GridCard({
   active,
   onClick,
   onActivate,
+  onContextMenu,
 }: {
   asset: MediaAsset
   active: boolean
   onClick: () => void
   onActivate: () => void
+  onContextMenu?: (anchor: { x: number; y: number }) => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       onDoubleClick={onActivate}
+      onContextMenu={
+        onContextMenu &&
+        ((e) => {
+          e.preventDefault()
+          onClick()
+          onContextMenu({ x: e.clientX, y: e.clientY })
+        })
+      }
       onKeyDown={(e) => {
         if (e.key === 'Enter') onActivate()
       }}
@@ -151,16 +170,26 @@ function ListRow({
   active,
   onClick,
   onActivate,
+  onContextMenu,
 }: {
   asset: MediaAsset
   active: boolean
   onClick: () => void
   onActivate: () => void
+  onContextMenu?: (anchor: { x: number; y: number }) => void
 }) {
   return (
     <tr
       onClick={onClick}
       onDoubleClick={onActivate}
+      onContextMenu={
+        onContextMenu &&
+        ((e) => {
+          e.preventDefault()
+          onClick()
+          onContextMenu({ x: e.clientX, y: e.clientY })
+        })
+      }
       className={cn(
         'cursor-pointer border-b border-neutral-800/60',
         active ? 'bg-blue-500' : 'hover:bg-neutral-800/50',

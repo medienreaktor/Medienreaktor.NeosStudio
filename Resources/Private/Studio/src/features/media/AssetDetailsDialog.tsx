@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { ApiError } from '@/api/client'
 import {
-  deleteAsset,
   importProxyAsset,
   setAssetCollection,
   setAssetTag,
@@ -32,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { removeAsset } from './AssetContextMenu'
 import { AssetThumb } from './AssetThumb'
 import { ConfirmDialog } from './ConfirmDialog'
 import { formatBytes, formatDate } from './format'
@@ -342,18 +341,7 @@ function DeleteButton({
   const [confirming, setConfirming] = useState(false)
 
   async function remove() {
-    try {
-      await deleteAsset(localId)
-    } catch (e) {
-      // Surface the server's in-use guard as a readable message in the dialog.
-      if (
-        e instanceof ApiError &&
-        (e.body as { error?: string } | null)?.error === 'asset_in_use'
-      ) {
-        throw new Error('This asset is in use and cannot be deleted.')
-      }
-      throw new Error('Deleting the asset failed.')
-    }
+    await removeAsset(localId)
     onDeleted()
   }
 
