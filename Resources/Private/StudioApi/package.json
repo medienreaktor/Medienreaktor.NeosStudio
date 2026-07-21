@@ -1,0 +1,27 @@
+{
+  "name": "@medienreaktor/neos-studio",
+  "version": "0.1.0",
+  "description": "Public plugin API type declarations for Neos Studio. Consumed by plugin packages; the shell provides the implementation at runtime on window.NeosStudio.",
+  "license": "GPL-3.0-or-later",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts"
+    }
+  },
+  "files": [
+    "index.d.ts"
+  ],
+  "comment": "index.d.ts is GENERATED from ../Studio/src/plugin-api/index.ts (the single source of truth) and committed so plugins can typecheck without a build step. Regenerate with `npm install && npm run build` here whenever the plugin API changes. The isolated toolchain pins classic TypeScript 5 because the shell builds with the TypeScript 7 native compiler, which the declaration bundler does not support.",
+  "scripts": {
+    "build": "dts-bundle-generator --project ../Studio/tsconfig.json --no-check --out-file index.d.ts ../Studio/src/plugin-api/index.ts"
+  },
+  "peerDependencies": {
+    "@types/react": ">=18",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "dts-bundle-generator": "^9.5.1",
+    "typescript": "^5.7.3"
+  }
+}

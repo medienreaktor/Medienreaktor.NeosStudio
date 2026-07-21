@@ -50,6 +50,16 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(package: 'Neos.Neos', path: 'userInterface.navigateComponent.structureTree.loadingDepth')]
     protected $structureTreeLoadingDepth;
 
+    /**
+     * Third-party plugin bundles to load into the shell. Each package that
+     * extends the Studio contributes an entry here (see Settings.yaml for the
+     * schema); the SPA build itself has no knowledge of them.
+     *
+     * @var array<string, array{javascript?: string, stylesheet?: string, position?: int}>
+     */
+    #[Flow\InjectConfiguration(path: 'plugins')]
+    protected array $plugins = [];
+
     public function indexAction(): string
     {
         $uri = $this->request->getHttpRequest()->getUri();
@@ -149,7 +159,63 @@ class StudioController extends ActionController
 
         $html = (string)file_get_contents($indexFile);
 
-        // Inject runtime config just before the first script/module tag
-        return preg_replace('/<\/head>/', $configScript . '</head>', $html, 1) ?? $html;
+        [$pluginStyles, $pluginScripts] = $this->pluginTags();
+
+        // Inject runtime config (and any plugin stylesheets) into <head>...
+        $html = preg_replace('/<\/head>/', $configScript . $pluginStyles . '</head>', $html, 1) ?? $html;
+
+        // ...and plugin scripts just before </body>. They are deferred
+        // `type="module"` tags placed after the shell's own module, so the
+        // shell installs its React + plugin API globals and mounts first, then
+        // each plugin registers into the live (observable) registries.
+        return preg_replace('/<\/body>/', $pluginScripts . '</body>', $html, 1) ?? $html;
+    }
+
+    /**
+     * Build the <link> and <script> tags for the configured plugin bundles.
+     *
+     * @return array{0: string, 1: string} [head stylesheet tags, body script tags]
+     */
+    private function pluginTags(): array
+    {
+        $plugins = $this->plugins;
+        // Stable order: explicit `position` ascending, then package key.
+        uasort($plugins, static function (array $a, array $b): int {
+            return ((int)($a['position'] ?? 100)) <=> ((int)($b['position'] ?? 100));
+        });
+
+        $styles = '';
+        $scripts = '';
+        foreach ($plugins as $plugin) {
+            $stylesheet = $plugin['stylesheet'] ?? null;
+            if (is_string($stylesheet) && ($uri = $this->resourceUri($stylesheet)) !== null) {
+                $styles .= '<link rel="stylesheet" href="' . htmlspecialchars($uri, ENT_QUOTES) . '">';
+            }
+            $javascript = $plugin['javascript'] ?? null;
+            if (is_string($javascript) && ($uri = $this->resourceUri($javascript)) !== null) {
+                $scripts .= '<script type="module" src="' . htmlspecialchars($uri, ENT_QUOTES) . '"></script>';
+            }
+        }
+
+        return [$styles, $scripts];
+    }
+
+    /**
+     * Turn a `resource://<Package>/Public/<path>` URI into the published web
+     * URI (`/_Resources/Static/Packages/<Package>/<path>`), cache-busted by
+     * the file's mtime. Returns null when the referenced file is not present -
+     * a plugin whose frontend has not been built is skipped rather than
+     * emitting a 404, so the shell still loads.
+     */
+    private function resourceUri(string $resourcePath): ?string
+    {
+        if (!is_file($resourcePath)) {
+            return null;
+        }
+        if (!preg_match('#^resource://([^/]+)/Public/(.+)$#', $resourcePath, $matches)) {
+            return null;
+        }
+        return '/_Resources/Static/Packages/' . $matches[1] . '/' . $matches[2]
+            . '?v=' . filemtime($resourcePath);
     }
 }

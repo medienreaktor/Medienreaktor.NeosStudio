@@ -32,7 +32,7 @@ interface RegistryDefinition {
  * panel/property-editor registries so consumers reuse the same subscribe +
  * snapshot pattern.
  */
-class ModalRegistry<Def extends RegistryDefinition> {
+export class ModalRegistry<Def extends RegistryDefinition> {
   private definitions = new Map<string, Def>()
   private listeners = new Set<() => void>()
   private snapshot: Def[] = []

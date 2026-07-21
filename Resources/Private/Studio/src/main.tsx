@@ -33,6 +33,14 @@ import { registerBuiltinModals } from './features/modals/builtin'
 import { registerBuiltinPanels } from './features/panels/builtin'
 import { registerBuiltinPropertyEditors } from './features/inspector/editors'
 import { registerBuiltinValidators } from './features/inspector/validators'
+import { installPluginApiGlobals } from './plugin-api'
+
+// Publish React and the plugin API on `window` before anything else, so the
+// deferred plugin `type="module"` tags the StudioController injects after this
+// script resolve their externals against the shell's own React and registry
+// singletons. Must run before mount; the registries are observable, so a
+// plugin registering after mount just triggers a re-render.
+installPluginApiGlobals()
 
 // Built-in panels, property editors, inspector views, validators, link types
 // and modal screens register before mount, exactly like third-party ones

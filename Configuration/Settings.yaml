@@ -1,3 +1,17 @@
+Medienreaktor:
+  NeosStudio:
+    # Third-party plugin bundles loaded into the Studio shell. Each extending
+    # package adds one entry keyed by its package key; the StudioController
+    # injects the referenced assets into the served index.html. See
+    # Medienreaktor.NeosStudio.ExamplePlugins for a working boilerplate.
+    #
+    # plugins:
+    #   'Vendor.Package':
+    #     javascript: 'resource://Vendor.Package/Public/Plugin/plugin.js'   # required, IIFE bundle
+    #     stylesheet: 'resource://Vendor.Package/Public/Plugin/plugin.css'  # optional
+    #     position: 100                                                     # optional load order
+    plugins: []
+
 Neos:
   Neos:
     fusion:
