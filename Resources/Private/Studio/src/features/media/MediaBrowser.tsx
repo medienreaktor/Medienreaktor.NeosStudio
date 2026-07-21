@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { useAssets, type MediaAsset } from '@/api/media'
+import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { AssetContextMenu, type AssetMenuTarget } from './AssetContextMenu'
 import { AssetDetailsDialog } from './AssetDetailsDialog'
@@ -74,19 +75,19 @@ export function MediaBrowser({
       {mode === 'picker' && (
         <div className="flex shrink-0 items-center justify-between gap-2 bg-blue-500 px-3 py-2 text-xs">
           <span className="min-w-0 truncate text-white">
-            Pick an asset
+            {t('media.pickAsset', 'Pick an asset')}
             {pickerTitle && (
               <>
                 {' '}
-                for{' '}
+                {t('media.for', 'for')}{' '}
                 <span className="font-medium text-white">{pickerTitle}</span>
               </>
             )}{' '}
-            — double-click to choose.
+            {t('media.doubleClickToChoose', '— double-click to choose.')}
           </span>
           {onCancel && (
             <Button variant="ghost" size="xs" onClick={onCancel}>
-              Cancel
+              {t('media.cancel', 'Cancel')}
             </Button>
           )}
         </div>

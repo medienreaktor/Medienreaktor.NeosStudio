@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent } from './registry'
 
@@ -126,7 +127,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
           // Clear the value without opening the popover.
           <button
             type="button"
-            aria-label="Clear"
+            aria-label={t('editor.clear', 'Clear')}
             className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-neutral-400 hover:bg-neutral-800 hover:text-white"
             onClick={() => commit(null)}
           >
@@ -163,7 +164,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
             className="text-neutral-400"
             onClick={() => commit(null)}
           >
-            Clear
+            {t('editor.clear', 'Clear')}
           </Button>
           <Button
             variant="ghost"
@@ -177,7 +178,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
               if (!hasTime) setOpen(false)
             }}
           >
-            {hasTime ? 'Now' : 'Today'}
+            {hasTime ? t('editor.now', 'Now') : t('editor.today', 'Today')}
           </Button>
         </div>
       </PopoverContent>
@@ -214,7 +215,7 @@ function MonthCalendar({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Previous month"
+          aria-label={t('editor.dateTime.prevMonth', 'Previous month')}
           onClick={() => onViewMonthChange(addMonths(viewMonth, -1))}
         >
           <i className="fas fa-chevron-left" aria-hidden />
@@ -223,7 +224,7 @@ function MonthCalendar({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Next month"
+          aria-label={t('editor.dateTime.nextMonth', 'Next month')}
           onClick={() => onViewMonthChange(addMonths(viewMonth, 1))}
         >
           <i className="fas fa-chevron-right" aria-hidden />
@@ -276,7 +277,9 @@ function TimePicker({
 }) {
   const hours = date ? date.getHours() : 0
   // Snap the current minute onto the step grid so it matches an option.
-  const minutes = date ? Math.round(date.getMinutes() / minuteStep) * minuteStep : 0
+  const minutes = date
+    ? Math.round(date.getMinutes() / minuteStep) * minuteStep
+    : 0
   const minuteOptions = useMemo(() => {
     const list: number[] = []
     for (let m = 0; m < 60; m += minuteStep) list.push(m)
@@ -290,7 +293,9 @@ function TimePicker({
         withDivider && 'mt-3 border-t border-neutral-800 pt-3',
       )}
     >
-      <span className="text-xs text-neutral-400">Time</span>
+      <span className="text-xs text-neutral-400">
+        {t('editor.time', 'Time')}
+      </span>
       <div className="ml-auto flex items-center gap-1">
         <Select
           value={String(hours)}
@@ -455,7 +460,9 @@ function formatToken(char: string, date: Date): string {
     case 'n':
       return String(date.getMonth() + 1)
     case 't':
-      return String(new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate())
+      return String(
+        new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(),
+      )
     case 'Y':
       return String(date.getFullYear())
     case 'y':

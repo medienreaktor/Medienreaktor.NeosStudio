@@ -12,6 +12,7 @@ import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
+import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 
 /**
@@ -47,13 +48,16 @@ export function SyncWorkspaceButton({
     onSuccess: () => {
       invalidateWorkspace()
       setConflicts(null)
-      toast.success('Workspace synchronized.')
+      toast.success(t('workspace.sync.success', 'Workspace synchronized.'))
     },
     onError: (error) => {
       // Conflicts aren't a failure - they route to the resolution dialog.
       const conflict = getRebaseConflicts(error)
       if (conflict) setConflicts(conflict)
-      else toast.error(error, { title: 'Synchronizing failed' })
+      else
+        toast.error(error, {
+          title: t('workspace.sync.failed', 'Synchronizing failed'),
+        })
     },
   })
 
@@ -62,11 +66,13 @@ export function SyncWorkspaceButton({
     onSuccess: () => {
       invalidateWorkspace()
       setConflicts(null)
-      toast.success('Changes discarded.')
+      toast.success(t('workspace.discard.success', 'Changes discarded.'))
     },
     onError: (error) => {
       setConflicts(null)
-      toast.error(error, { title: 'Discarding failed' })
+      toast.error(error, {
+        title: t('workspace.discard.failed', 'Discarding failed'),
+      })
     },
   })
 
@@ -80,13 +86,16 @@ export function SyncWorkspaceButton({
         variant="secondary"
         disabled={rebase.isPending}
         onClick={() => rebase.mutate(undefined)}
-        title="Others published changes to the base workspace. Synchronize to pull them into this workspace."
+        title={t(
+          'workspace.sync.hint',
+          'Others published changes to the base workspace. Synchronize to pull them into this workspace.',
+        )}
       >
         <i
           className={`fas fa-fw fa-rotate ${rebase.isPending ? 'fa-spin' : ''}`}
           aria-hidden
         />
-        Synchronize
+        {t('workspace.sync.action', 'Synchronize')}
       </Button>
 
       <ConflictResolutionDialog

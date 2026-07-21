@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { translate as t } from '@/lib/i18n'
 
 /**
  * Topbar split button for the active workspace: primary action publishes all
@@ -48,9 +49,8 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   const { operation, resolve, pendingConflict, setPendingConflict } =
     useWorkspacePublishing(workspaceName)
   // A discard waiting for confirmation; the dialog is open while set.
-  const [pendingDiscard, setPendingDiscard] = useState<WorkspaceOperation | null>(
-    null,
-  )
+  const [pendingDiscard, setPendingDiscard] =
+    useState<WorkspaceOperation | null>(null)
   // The review dialog open state.
   const [reviewOpen, setReviewOpen] = useState(false)
 
@@ -93,7 +93,14 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
       : undefined
   const segmentVariant =
     hasChanges && canPublish ? ('default' as const) : ('secondary' as const)
-  const publishDeniedHint = `You are not allowed to publish to "${workspace.baseWorkspace ?? 'the base workspace'}"`
+  const baseWorkspaceName =
+    workspace.baseWorkspace ??
+    t('workspace.baseWorkspaceFallback', 'the base workspace')
+  const publishDeniedHint = t(
+    'workspace.publishDenied',
+    'You are not allowed to publish to "{0}"',
+    [baseWorkspaceName],
+  )
 
   return (
     <div className="flex items-center gap-3">
@@ -103,20 +110,28 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           className={cn('rounded-r-none', segmentClasses)}
           variant={segmentVariant}
           disabled={!hasChanges || !canPublish || operation.isPending}
-          onClick={() => operation.mutate({ kind: 'publish', filter: siteFilter })}
+          onClick={() =>
+            operation.mutate({ kind: 'publish', filter: siteFilter })
+          }
           title={
             !canPublish
               ? publishDeniedHint
               : hasChanges
-                ? `Publish ${changeCount} pending ${changeCount === 1 ? 'change' : 'changes'}`
-                : 'No pending changes'
+                ? changeCount === 1
+                  ? t('workspace.publishPendingOne', 'Publish 1 pending change')
+                  : t(
+                      'workspace.publishPendingMany',
+                      'Publish {0} pending changes',
+                      [changeCount],
+                    )
+                : t('workspace.noPendingChanges', 'No pending changes')
           }
         >
           <i
             className={`fas fa-fw ${operation.isPending ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
             aria-hidden
           />
-          Publish all changes
+          {t('workspace.publishAllChanges', 'Publish all changes')}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -125,7 +140,10 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
                 className={cn('rounded-l-none px-2', segmentClasses)}
                 variant={segmentVariant}
                 disabled={!hasChanges || operation.isPending}
-                aria-label="More publish and discard actions"
+                aria-label={t(
+                  'workspace.moreActions',
+                  'More publish and discard actions',
+                )}
               />
             }
           >
@@ -137,7 +155,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
               onClick={() => setReviewOpen(true)}
             >
               <i className="fas fa-fw fa-list-check" aria-hidden />
-              Review changes
+              {t('workspace.reviewChanges', 'Review changes')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -151,16 +169,18 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
               }
             >
               <i className="fas fa-fw fa-file-arrow-up" aria-hidden />
-              Publish this page
+              {t('workspace.publishThisPage', 'Publish this page')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
               disabled={!hasChanges}
-              onClick={() => setPendingDiscard({ kind: 'discard', filter: siteFilter })}
+              onClick={() =>
+                setPendingDiscard({ kind: 'discard', filter: siteFilter })
+              }
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Discard all
+              {t('workspace.discardAll', 'Discard all')}
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
@@ -173,14 +193,16 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
               }
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Discard
+              {t('workspace.discard.button', 'Discard')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {hasChanges && (
           <span
             className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white tabular-nums"
-            aria-label={`${changeCount} pending changes`}
+            aria-label={t('workspace.pendingBadge', '{0} pending changes', [
+              changeCount,
+            ])}
           >
             {changeCount}
           </span>
@@ -195,19 +217,40 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           <DialogHeader>
             <DialogTitle>
               {pendingDiscard?.filter?.document
-                ? 'Discard changes on this page?'
-                : 'Discard all changes?'}
+                ? t(
+                    'workspace.discardPageTitle',
+                    'Discard changes on this page?',
+                  )
+                : t('workspace.discardAllTitle', 'Discard all changes?')}
             </DialogTitle>
             <DialogDescription>
               {pendingDiscard?.filter?.document
-                ? `${pageChangeCount} pending ${pageChangeCount === 1 ? 'change' : 'changes'} on this page will be discarded.`
-                : `All ${changeCount} pending ${changeCount === 1 ? 'change' : 'changes'} will be discarded.`}{' '}
-              This cannot be undone.
+                ? pageChangeCount === 1
+                  ? t(
+                      'workspace.discardPageOne',
+                      '1 pending change on this page will be discarded.',
+                    )
+                  : t(
+                      'workspace.discardPageMany',
+                      '{0} pending changes on this page will be discarded.',
+                      [pageChangeCount],
+                    )
+                : changeCount === 1
+                  ? t(
+                      'workspace.discardAllOne',
+                      'All 1 pending change will be discarded.',
+                    )
+                  : t(
+                      'workspace.discardAllMany',
+                      'All {0} pending changes will be discarded.',
+                      [changeCount],
+                    )}{' '}
+              {t('workspace.cannotBeUndone', 'This cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setPendingDiscard(null)}>
-              Cancel
+              {t('action.cancel', 'Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -216,7 +259,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
                 setPendingDiscard(null)
               }}
             >
-              Discard
+              {t('workspace.discard.button', 'Discard')}
             </Button>
           </DialogFooter>
         </DialogContent>

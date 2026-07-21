@@ -5,6 +5,7 @@ import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import {
   Select,
   SelectContent,
@@ -41,7 +42,7 @@ export function WorkspaceSwitcher({
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
       void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
       workspaceContentChanged()
-      toast.success('Workspace switched.')
+      toast.success(t('workspace.switched', 'Workspace switched.'))
     },
     onError: (error) => {
       // The CR refuses the rebase while the personal workspace still has
@@ -50,15 +51,23 @@ export function WorkspaceSwitcher({
         error instanceof ApiError &&
         (error.body as { error?: string } | null)?.error ===
           'workspace_not_empty'
-      toast.error(notEmpty ? 'Publish or discard your changes first.' : error, {
-        title: 'Switching the workspace failed',
-      })
+      toast.error(
+        notEmpty
+          ? t(
+              'workspace.publishOrDiscardFirst',
+              'Publish or discard your changes first.',
+            )
+          : error,
+        {
+          title: t('workspace.switchFailed', 'Switching the workspace failed'),
+        },
+      )
     },
   })
 
   const workspaceLabel = (workspace: Workspace) =>
     workspace.classification === 'ROOT'
-      ? 'Live'
+      ? t('workspace.live', 'Live')
       : workspace.title || workspace.name
 
   return (
@@ -79,13 +88,20 @@ export function WorkspaceSwitcher({
           label: workspaceLabel(workspace),
         }))}
       >
-        <SelectTrigger title="Workspace to publish to">
+        <SelectTrigger
+          title={t('workspace.publishTarget', 'Workspace to publish to')}
+        >
           <div className="flex items-center gap-2">
             <i
               className={`fa fa-fw text-[0.7rem] text-neutral-400 ${switchBase.isPending ? 'fa-spinner fa-spin' : 'fa-code-branch'}`}
               aria-hidden
             />
-            <SelectValue placeholder="Select workspace…" />
+            <SelectValue
+              placeholder={t(
+                'workspace.selectPlaceholder',
+                'Select workspace…',
+              )}
+            />
           </div>
         </SelectTrigger>
         <SelectContent>
@@ -98,9 +114,13 @@ export function WorkspaceSwitcher({
               {!workspace.permissions.write && (
                 <span
                   className="ml-1.5 text-xs text-neutral-400"
-                  title="You cannot publish to this workspace"
+                  title={t(
+                    'workspace.cannotPublishHere',
+                    'You cannot publish to this workspace',
+                  )}
                 >
-                  <i className="fas fa-lock" aria-hidden /> read-only
+                  <i className="fas fa-lock" aria-hidden />{' '}
+                  {t('workspace.readOnly', 'read-only')}
                 </span>
               )}
             </SelectItem>

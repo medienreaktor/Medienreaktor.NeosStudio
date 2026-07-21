@@ -6,6 +6,7 @@ import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { Placeholder } from '@/components/ui/placeholder'
 import { config } from '@/config'
+import { translate as t } from '@/lib/i18n'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
   type CreationDrag,
@@ -71,7 +72,7 @@ export function PreviewToolbar({
       <Button
         variant="ghost"
         size="icon-xs"
-        title="Reload preview"
+        title={t('preview.reload', 'Reload preview')}
         onClick={onReload}
       >
         <i className="fas fa-rotate text-xs" aria-hidden />
@@ -80,7 +81,7 @@ export function PreviewToolbar({
         asChild
         variant="ghost"
         size="icon-xs"
-        title="Open page in a new tab"
+        title={t('preview.openInNewTab', 'Open page in a new tab')}
       >
         <a href={previewUrl(document.address)} target="_blank" rel="noreferrer">
           <i
@@ -303,7 +304,11 @@ export function PreviewPane({
           const address = addressFromContextPath(message.contextPath)
           persistPropertyChange(address, message.property, message.value)
             .then(() => onNodeEditedRef.current?.(address))
-            .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))
+            .catch((e: unknown) =>
+              toast.error(e, {
+                title: t('editing.saveFailed', 'Saving failed'),
+              }),
+            )
           break
         }
         case 'neos-studio/create-node-request':
@@ -386,13 +391,23 @@ export function PreviewPane({
           }
           createVariant(address)
             .then(() => {
-              toast.success('Variant created in the current dimension.')
+              toast.success(
+                t(
+                  'editing.variantCreated',
+                  'Variant created in the current dimension.',
+                ),
+              )
               setReloadCount((count) => count + 1)
               onNodeEditedRef.current?.(address)
               onSelectNodeRef.current(address)
             })
             .catch((e: unknown) =>
-              toast.error(e, { title: 'Creating the variant failed' }),
+              toast.error(e, {
+                title: t(
+                  'editing.createVariantFailed',
+                  'Creating the variant failed',
+                ),
+              }),
             )
           break
         }
@@ -423,7 +438,9 @@ export function PreviewPane({
                   onSelectNodeRef.current(address)
                 })
                 .catch((e: unknown) =>
-                  toast.error(e, { title: 'Setting image failed' }),
+                  toast.error(e, {
+                    title: t('editing.setImageFailed', 'Setting image failed'),
+                  }),
                 )
             },
           })
@@ -449,7 +466,11 @@ export function PreviewPane({
                     : [targetAddress]
                 onNodeEditedRef.current?.(parents)
               })
-              .catch((e: unknown) => toast.error(e, { title: 'Moving failed' }))
+              .catch((e: unknown) =>
+                toast.error(e, {
+                  title: t('editing.moveFailed', 'Moving failed'),
+                }),
+              )
           } catch {
             /* malformed contextpath - ignore the drop */
           }
@@ -567,7 +588,7 @@ export function PreviewPane({
     return (
       <Placeholder
         icon="fa-file-lines"
-        title="Select a document to preview it."
+        title={t('preview.selectDocument', 'Select a document to preview it.')}
       />
     )
   }
@@ -583,7 +604,7 @@ export function PreviewPane({
               else framesRef.current.delete(layer.id)
             }}
             src={layer.src}
-            title="Page preview"
+            title={t('preview.pageFrame', 'Page preview')}
             // Until it is ready the incoming frame is invisible on top - keep
             // clicks flowing to the outgoing frame still painted beneath it.
             style={{
@@ -596,7 +617,7 @@ export function PreviewPane({
       </div>
       <NodeContextMenu
         target={elementMenu}
-        entityLabel="element"
+        entityLabel={t('editing.entity.element', 'element')}
         clipboardKind="content"
         onPasted={(affectedAddresses) => {
           // Structure changed - full reload (the pasted element isn't in the
@@ -698,7 +719,10 @@ export function PreviewPane({
           }}
           onCancel={(error) => {
             setPendingCreation(null)
-            if (error) toast.error(error, { title: 'Creating failed' })
+            if (error)
+              toast.error(error, {
+                title: t('editing.createFailed', 'Creating failed'),
+              })
           }}
         />
       )}

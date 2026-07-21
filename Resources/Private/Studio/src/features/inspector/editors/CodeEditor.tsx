@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 import { highlight, resolveHighlightMode } from './codeHighlight'
@@ -157,7 +158,9 @@ export const CodeEditor: PropertyEditorComponent = ({
       : undefined,
   )
   const readOnly = options.disabled === true || options.readonly === true
-  const buttonLabel = plainEditorOption(options, 'buttonLabel') ?? 'Edit code…'
+  const buttonLabel =
+    plainEditorOption(options, 'buttonLabel') ??
+    t('editor.code.edit', 'Edit code…')
 
   const current = asText(value)
   const preview = useMemo(() => highlight(current, mode), [current, mode])
@@ -188,7 +191,9 @@ export const CodeEditor: PropertyEditorComponent = ({
             <code dangerouslySetInnerHTML={{ __html: preview }} />
           </pre>
         ) : (
-          <span className="py-1 text-sm text-neutral-500">No content yet</span>
+          <span className="py-1 text-sm text-neutral-500">
+            {t('editor.code.empty', 'No content yet')}
+          </span>
         )}
         <span className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 group-hover:text-white">
           <i className="fas fa-code text-[0.875rem]" aria-hidden />
@@ -217,10 +222,10 @@ export const CodeEditor: PropertyEditorComponent = ({
 
           <DialogFooter>
             <Button variant="secondary" onClick={() => setOpen(false)}>
-              Cancel
+              {t('editor.cancel', 'Cancel')}
             </Button>
             <Button onClick={apply} disabled={readOnly}>
-              Apply
+              {t('editor.apply', 'Apply')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -12,6 +12,7 @@ import {
   type LinkValue,
 } from '@/features/links/linkValue'
 import { linkEditorRegistry } from '@/features/links/registry'
+import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent } from './registry'
 
 export const LINK_EDITOR = 'Neos.Neos/Inspector/Editors/LinkEditor'
@@ -81,7 +82,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
           className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-700 bg-neutral-950 px-3 py-2.5 text-sm text-neutral-400 hover:border-neutral-500 hover:text-white"
         >
           <i className="fas fa-link text-[1rem]" aria-hidden />
-          Set link…
+          {t('editor.link.set', 'Set link…')}
         </button>
       ) : (
         <div className="flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 py-1 pr-1 pl-2.5">
@@ -93,7 +94,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
             variant="ghost"
             size="icon-sm"
             onClick={() => setOpen(true)}
-            title="Edit link"
+            title={t('editor.link.edit', 'Edit link')}
           >
             <i className="fas fa-pen" aria-hidden />
           </Button>
@@ -101,7 +102,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
             variant="ghost"
             size="icon-sm"
             onClick={() => commit(null)}
-            title="Remove link"
+            title={t('editor.link.remove', 'Remove link')}
           >
             <i className="fas fa-xmark" aria-hidden />
           </Button>

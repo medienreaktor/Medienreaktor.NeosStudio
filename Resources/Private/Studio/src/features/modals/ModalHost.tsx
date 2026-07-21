@@ -4,6 +4,7 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Separator } from '@/components/ui/separator'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
+import { translate as t } from '@/lib/i18n'
 import { type SettingsDialogDefinition, useSettingsDialogs } from './registry'
 
 /**
@@ -116,7 +117,7 @@ function ModalHeader({
         {children}
         <DialogPrimitive.Close
           className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
-          aria-label="Close"
+          aria-label={t('action.close', 'Close')}
         >
           <i className="fas fa-xmark text-[1rem]" aria-hidden />
         </DialogPrimitive.Close>
@@ -143,15 +144,15 @@ function SettingsModal({
 
   return (
     <>
-      <ModalHeader title="Settings" />
+      <ModalHeader title={t('modal.settings', 'Settings')} />
       <div className="flex min-h-0 flex-1">
         <nav
-          aria-label="Settings sections"
+          aria-label={t('modal.settingsSections', 'Settings sections')}
           className="w-56 shrink-0 overflow-y-auto p-2"
         >
           {sections.length === 0 && (
             <p className="px-2 py-1.5 text-xs text-neutral-400">
-              No settings available
+              {t('modal.noSettings', 'No settings available')}
             </p>
           )}
           {sections.map((section, index) => (
@@ -236,7 +237,8 @@ function SettingsSectionBody({
   if (!enabled) {
     return (
       <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-400">
-        {section.disabledReason ?? 'You do not have access to this section.'}
+        {section.disabledReason ??
+          t('modal.noAccess', 'You do not have access to this section.')}
       </div>
     )
   }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { translate as t } from '@/lib/i18n'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
@@ -32,7 +33,11 @@ export function NodeCreationPanel() {
   const [toggled, setToggled] = useState<Record<string, boolean>>({})
 
   if (creatable === null) {
-    return <LoadingState label="Loading node types…" />
+    return (
+      <LoadingState
+        label={t('creation.loadingNodeTypes', 'Loading node types…')}
+      />
+    )
   }
   const { groups, nodeTypes } = creatable
 
@@ -51,8 +56,11 @@ export function NodeCreationPanel() {
       {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
       <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950/50 p-2 backdrop-blur-xs">
         <SearchInput
-          placeholder="Filter node types…"
-          aria-label="Filter node types"
+          placeholder={t(
+            'creation.filterNodeTypesPlaceholder',
+            'Filter node types…',
+          )}
+          aria-label={t('creation.filterNodeTypes', 'Filter node types')}
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
         />
@@ -63,8 +71,14 @@ export function NodeCreationPanel() {
             icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}
             title={
               groups.length === 0
-                ? 'No creatable content node types.'
-                : 'No node types match the filter.'
+                ? t(
+                    'creation.noCreatableContent',
+                    'No creatable content node types.',
+                  )
+                : t(
+                    'creation.noNodeTypesMatch',
+                    'No node types match the filter.',
+                  )
             }
             className="py-10"
           />
@@ -85,7 +99,11 @@ export function NodeCreationPanel() {
                 <li key={nodeType.name}>
                   <div
                     draggable
-                    title={`${nodeType.label} (${nodeType.name}) - drag into the preview`}
+                    title={t(
+                      'creation.dragHint',
+                      '{0} ({1}) - drag into the preview',
+                      [nodeType.label, nodeType.name],
+                    )}
                     className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-700 bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-800 active:cursor-grabbing"
                     onDragStart={(event) => {
                       event.dataTransfer.effectAllowed = 'copy'

@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Labeled } from '@/features/inspector/PropertyEditor'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { removeAsset } from './AssetContextMenu'
 import { AssetThumb } from './AssetThumb'
@@ -90,16 +91,22 @@ export function AssetDetailsDialog({
             </div>
 
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-              <Meta label="Type">{asset.assetType}</Meta>
-              <Meta label="Format">{asset.mediaType}</Meta>
-              <Meta label="Size">{formatBytes(asset.fileSize)}</Meta>
+              <Meta label={t('media.type', 'Type')}>{asset.assetType}</Meta>
+              <Meta label={t('media.format', 'Format')}>{asset.mediaType}</Meta>
+              <Meta label={t('media.size', 'Size')}>
+                {formatBytes(asset.fileSize)}
+              </Meta>
               {asset.width && asset.height ? (
-                <Meta label="Dimensions">
+                <Meta label={t('media.dimensions', 'Dimensions')}>
                   {asset.width} × {asset.height}
                 </Meta>
               ) : null}
-              <Meta label="Modified">{formatDate(asset.lastModified)}</Meta>
-              <Meta label="Filename">{asset.filename}</Meta>
+              <Meta label={t('media.modified', 'Modified')}>
+                {formatDate(asset.lastModified)}
+              </Meta>
+              <Meta label={t('media.filename', 'Filename')}>
+                {asset.filename}
+              </Meta>
             </dl>
           </div>
 
@@ -114,7 +121,7 @@ export function AssetDetailsDialog({
             ) : (
               !asset.isRemote && (
                 <p className="text-xs text-neutral-500">
-                  This asset is read-only.
+                  {t('media.readOnly', 'This asset is read-only.')}
                 </p>
               )
             )}
@@ -130,7 +137,7 @@ export function AssetDetailsDialog({
             )}
 
             {localId && (
-              <Field label="Usage">
+              <Field label={t('media.usage', 'Usage')}>
                 <UsageTable
                   assetSource={asset.assetSource}
                   identifier={asset.identifier}
@@ -171,9 +178,11 @@ function MetadataForm({
     setSaving(true)
     try {
       await updateAsset(localId, { title, caption, copyrightNotice: copyright })
-      toast.success('Metadata saved.')
+      toast.success(t('media.metadataSaved', 'Metadata saved.'))
     } catch (e) {
-      toast.error(e, { title: 'Saving the metadata failed' })
+      toast.error(e, {
+        title: t('media.metadataSaveFailed', 'Saving the metadata failed'),
+      })
     } finally {
       setSaving(false)
     }
@@ -184,12 +193,12 @@ function MetadataForm({
     // Input/Textarea) so metadata editing looks the same everywhere.
     <div className="space-y-4">
       <div>
-        <Labeled label="Title">
+        <Labeled label={t('media.title', 'Title')}>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
         </Labeled>
       </div>
       <div>
-        <Labeled label="Caption">
+        <Labeled label={t('media.caption', 'Caption')}>
           <Textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
@@ -197,7 +206,7 @@ function MetadataForm({
         </Labeled>
       </div>
       <div>
-        <Labeled label="Copyright">
+        <Labeled label={t('media.copyright', 'Copyright')}>
           <Input
             value={copyright}
             onChange={(e) => setCopyright(e.target.value)}
@@ -205,7 +214,9 @@ function MetadataForm({
         </Labeled>
       </div>
       <Button size="sm" onClick={save} disabled={!dirty || saving}>
-        {saving ? 'Saving…' : 'Save metadata'}
+        {saving
+          ? t('media.saving', 'Saving…')
+          : t('media.saveMetadata', 'Save metadata')}
       </Button>
     </div>
   )
@@ -222,7 +233,7 @@ function TagAssignment({
   const assignedIds = new Set(assigned.map((t) => t.identifier))
 
   return (
-    <Field label="Tags">
+    <Field label={t('media.tags', 'Tags')}>
       <div className="flex flex-wrap gap-1">
         {assigned.map((tag) => (
           <Chip
@@ -230,19 +241,23 @@ function TagAssignment({
             label={tag.label}
             onRemove={() =>
               void setAssetTag(localId, tag.identifier, false).catch((e) =>
-                toast.error(e, { title: 'Removing the tag failed' }),
+                toast.error(e, {
+                  title: t('media.tagRemoveFailed', 'Removing the tag failed'),
+                }),
               )
             }
           />
         ))}
         {assigned.length === 0 && (
-          <span className="text-xs text-neutral-500">None</span>
+          <span className="text-xs text-neutral-500">
+            {t('media.none', 'None')}
+          </span>
         )}
       </div>
       <AssignTree
-        placeholder="Add tag…"
-        treeLabel="Tags"
-        emptyText="No tags yet"
+        placeholder={t('media.addTag', 'Add tag…')}
+        treeLabel={t('media.tags', 'Tags')}
+        emptyText={t('media.noTags', 'No tags yet')}
         emptyIcon="fa-tag"
         icon="fa-tag"
         loading={tags.isLoading}
@@ -252,8 +267,8 @@ function TagAssignment({
           void setAssetTag(localId, id, !isAssigned).catch((e) =>
             toast.error(e, {
               title: isAssigned
-                ? 'Removing the tag failed'
-                : 'Adding the tag failed',
+                ? t('media.tagRemoveFailed', 'Removing the tag failed')
+                : t('media.tagAddFailed', 'Adding the tag failed'),
             }),
           )
         }
@@ -273,7 +288,7 @@ function CollectionAssignment({
   const assignedIds = new Set(assigned.map((c) => c.identifier))
 
   return (
-    <Field label="Collections">
+    <Field label={t('media.collections', 'Collections')}>
       <div className="flex flex-wrap gap-1">
         {assigned.map((collection) => (
           <Chip
@@ -285,19 +300,26 @@ function CollectionAssignment({
                 collection.identifier,
                 false,
               ).catch((e) =>
-                toast.error(e, { title: 'Removing from collection failed' }),
+                toast.error(e, {
+                  title: t(
+                    'media.collectionRemoveFailed',
+                    'Removing from collection failed',
+                  ),
+                }),
               )
             }
           />
         ))}
         {assigned.length === 0 && (
-          <span className="text-xs text-neutral-500">None</span>
+          <span className="text-xs text-neutral-500">
+            {t('media.none', 'None')}
+          </span>
         )}
       </div>
       <AssignTree
-        placeholder="Add to collection…"
-        treeLabel="Collections"
-        emptyText="No collections yet"
+        placeholder={t('media.addToCollection', 'Add to collection…')}
+        treeLabel={t('media.collections', 'Collections')}
+        emptyText={t('media.noCollections', 'No collections yet')}
         emptyIcon="fa-folder-open"
         icon="fa-folder"
         loading={collections.isLoading}
@@ -307,8 +329,11 @@ function CollectionAssignment({
           void setAssetCollection(localId, id, !isAssigned).catch((e) =>
             toast.error(e, {
               title: isAssigned
-                ? 'Removing from collection failed'
-                : 'Adding to collection failed',
+                ? t(
+                    'media.collectionRemoveFailed',
+                    'Removing from collection failed',
+                  )
+                : t('media.collectionAddFailed', 'Adding to collection failed'),
             }),
           )
         }
@@ -328,16 +353,20 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
         setBusy(true)
         try {
           await importProxyAsset(asset.assetSource, asset.identifier)
-          toast.success('Asset imported to Neos.')
+          toast.success(t('media.assetImported', 'Asset imported to Neos.'))
         } catch (e) {
-          toast.error(e, { title: 'Importing the asset failed' })
+          toast.error(e, {
+            title: t('media.importFailed', 'Importing the asset failed'),
+          })
         } finally {
           setBusy(false)
         }
       }}
     >
       <i className="fas fa-download text-[1rem]" aria-hidden />
-      {busy ? 'Importing…' : 'Import to Neos'}
+      {busy
+        ? t('media.importing', 'Importing…')
+        : t('media.importToNeos', 'Import to Neos')}
     </Button>
   )
 }
@@ -364,12 +393,15 @@ function DeleteButton({
         onClick={() => setConfirming(true)}
       >
         <i className="fas fa-trash-can text-[1rem]" aria-hidden />
-        Delete asset
+        {t('media.deleteAsset', 'Delete asset')}
       </Button>
       <ConfirmDialog
         open={confirming}
-        title="Delete this asset?"
-        description="The asset will be permanently removed. Assets that are still in use cannot be deleted."
+        title={t('media.deleteAssetTitle', 'Delete this asset?')}
+        description={t(
+          'media.deleteAssetDescription',
+          'The asset will be permanently removed. Assets that are still in use cannot be deleted.',
+        )}
         onOpenChange={setConfirming}
         onConfirm={remove}
       />
@@ -450,7 +482,7 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
         type="button"
         onClick={onRemove}
         className="text-neutral-500 hover:text-neutral-200"
-        aria-label={`Remove ${label}`}
+        aria-label={t('media.removeLabel', 'Remove {0}', [label])}
       >
         <i className="fas fa-xmark text-[0.75rem]" aria-hidden />
       </button>

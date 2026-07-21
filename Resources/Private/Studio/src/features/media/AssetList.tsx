@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import type { MediaAsset } from '@/api/media'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { LoadingState, Spinner } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
@@ -54,11 +55,11 @@ export function AssetList({
 
   if (assets.length === 0) {
     return isLoading ? (
-      <LoadingState label="Loading assets…" />
+      <LoadingState label={t('media.loadingAssets', 'Loading assets…')} />
     ) : (
       <Placeholder
         icon="fa-photo-film"
-        title="No assets match the current filters."
+        title={t('media.noAssetsMatch', 'No assets match the current filters.')}
       />
     )
   }
@@ -84,10 +85,18 @@ export function AssetList({
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-neutral-900/50 backdrop-blur-sm text-left text-xs text-neutral-500">
             <tr>
-              <th className="px-2 py-1 font-medium">Name</th>
-              <th className="px-2 py-1 font-medium">Type</th>
-              <th className="px-2 py-1 font-medium">Size</th>
-              <th className="px-2 py-1 font-medium">Modified</th>
+              <th className="px-2 py-1 font-medium">
+                {t('media.name', 'Name')}
+              </th>
+              <th className="px-2 py-1 font-medium">
+                {t('media.type', 'Type')}
+              </th>
+              <th className="px-2 py-1 font-medium">
+                {t('media.size', 'Size')}
+              </th>
+              <th className="px-2 py-1 font-medium">
+                {t('media.modified', 'Modified')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +120,7 @@ export function AssetList({
       {isFetchingNextPage && (
         <div className="flex items-center justify-center gap-2 p-4 text-xs text-neutral-500">
           <Spinner className="text-[0.875rem]" />
-          Loading more…
+          {t('media.loadingMore', 'Loading more…')}
         </div>
       )}
     </div>

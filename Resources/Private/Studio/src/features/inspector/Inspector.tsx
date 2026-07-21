@@ -17,6 +17,7 @@ import {
   persistReferenceChange,
 } from '@/features/editing/persistProperty'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
+import { translate as t } from '@/lib/i18n'
 import {
   clientEvalNode,
   clientEvalUsesParentNode,
@@ -250,14 +251,19 @@ export function InspectorPanel({
           : (propertySchema?.reload ?? 'page')
     persist
       .then(() => onNodeEdited?.(node.address, { reload }))
-      .catch((e: unknown) => toast.error(e, { title: 'Saving failed' }))
+      .catch((e: unknown) =>
+        toast.error(e, { title: t('inspector.savingFailed', 'Saving failed') }),
+      )
   }
 
   if (!node) {
     return (
       <Placeholder
         icon="fa-arrow-pointer"
-        title="Select a node in the preview or the trees to inspect it."
+        title={t(
+          'inspector.selectNodeHint',
+          'Select a node in the preview or the trees to inspect it.',
+        )}
       />
     )
   }
@@ -276,7 +282,10 @@ export function InspectorPanel({
           <>
             {visibleTabs.length === 0 ? (
               <p className="text-xs text-neutral-400">
-                This node type has no inspector properties.
+                {t(
+                  'inspector.noProperties',
+                  'This node type has no inspector properties.',
+                )}
               </p>
             ) : (
               // Remount on node type change and when ClientEval changes the
@@ -309,7 +318,19 @@ export function InspectorPanel({
                         {errorCount > 0 && (
                           <span
                             className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.65rem] font-semibold text-white"
-                            title={`${errorCount} validation ${errorCount === 1 ? 'error' : 'errors'}`}
+                            title={
+                              errorCount === 1
+                                ? t(
+                                    'inspector.validationError',
+                                    '{0} validation error',
+                                    [errorCount],
+                                  )
+                                : t(
+                                    'inspector.validationErrors',
+                                    '{0} validation errors',
+                                    [errorCount],
+                                  )
+                            }
                           >
                             {errorCount}
                           </span>
@@ -365,9 +386,12 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
     >
       <FaIcon icon="layer-group" className="mt-0.5 text-purple-300" />
       <p>
-        Shines through from <strong className="text-white">{origin}</strong>.
-        This node does not exist in the current dimension yet - editing it
-        creates an independent variant here.
+        {t('inspector.shineThroughFrom', 'Shines through from')}{' '}
+        <strong className="text-white">{origin}</strong>.{' '}
+        {t(
+          'inspector.shineThroughHint',
+          'This node does not exist in the current dimension yet - editing it creates an independent variant here.',
+        )}
       </p>
     </div>
   )

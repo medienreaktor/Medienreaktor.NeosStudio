@@ -13,6 +13,7 @@ import {
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { translate as t } from '@/lib/i18n'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
   Select,
@@ -35,22 +36,30 @@ export function ProfileSettings() {
   const { data, isLoading, error } = useProfile()
 
   useEffect(() => {
-    if (error) toast.error(error, { title: 'Could not load your profile' })
+    if (error)
+      toast.error(error, {
+        title: t('profile.loadFailed', 'Could not load your profile'),
+      })
   }, [error])
 
   return (
     <div className="max-w-xl p-6">
       <header className="mb-4">
-        <h2 className="text-base font-semibold text-white">Profile</h2>
+        <h2 className="text-base font-semibold text-white">
+          {t('profile.title', 'Profile')}
+        </h2>
         <p className="text-sm text-neutral-400">
-          Your personal account settings.
+          {t('profile.subtitle', 'Your personal account settings.')}
         </p>
       </header>
 
       {error && (
         <Placeholder
           icon="fa-triangle-exclamation"
-          title="Your profile is currently unavailable."
+          title={t(
+            'profile.unavailable',
+            'Your profile is currently unavailable.',
+          )}
           className="py-10"
         />
       )}
@@ -99,17 +108,28 @@ function ProfileForm({ profile }: { profile: Profile }) {
       // me covers profile (nested key); users so an admin's own row updates.
       queryClient.invalidateQueries({ queryKey: queryKeys.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.users })
-      toast.success('Your profile has been saved.')
+      toast.success(t('profile.saved', 'Your profile has been saved.'))
       // Translations are loaded once at boot for the language the shell
       // injected, so a changed language only shows after a reload.
       if (input.interfaceLanguage !== undefined) {
-        toast.info('The new interface language applies after the next reload.')
+        toast.info(
+          t(
+            'profile.languageReload',
+            'The new interface language applies after the next reload.',
+          ),
+        )
       }
     },
     onError: (error) =>
-      toast.error(apiErrorDescription(error, 'Saving your profile failed.'), {
-        title: 'Could not save profile',
-      }),
+      toast.error(
+        apiErrorDescription(
+          error,
+          t('profile.saveFailedDetail', 'Saving your profile failed.'),
+        ),
+        {
+          title: t('profile.saveFailed', 'Could not save profile'),
+        },
+      ),
   })
 
   const onSubmit = (event: FormEvent) => {
@@ -120,7 +140,10 @@ function ProfileForm({ profile }: { profile: Profile }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <Field label="First name" htmlFor="profile-first-name">
+        <Field
+          label={t('profile.firstName', 'First name')}
+          htmlFor="profile-first-name"
+        >
           <Input
             id="profile-first-name"
             value={firstName}
@@ -129,7 +152,10 @@ function ProfileForm({ profile }: { profile: Profile }) {
             required
           />
         </Field>
-        <Field label="Last name" htmlFor="profile-last-name">
+        <Field
+          label={t('profile.lastName', 'Last name')}
+          htmlFor="profile-last-name"
+        >
           <Input
             id="profile-last-name"
             value={lastName}
@@ -140,7 +166,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
         </Field>
       </div>
 
-      <Field label="Email" htmlFor="profile-email">
+      <Field label={t('profile.email', 'Email')} htmlFor="profile-email">
         <Input
           id="profile-email"
           type="email"
@@ -150,7 +176,10 @@ function ProfileForm({ profile }: { profile: Profile }) {
         />
       </Field>
 
-      <Field label="Interface language" htmlFor="profile-language">
+      <Field
+        label={t('profile.interfaceLanguage', 'Interface language')}
+        htmlFor="profile-language"
+      >
         <Select
           value={language}
           onValueChange={(value) => setLanguage(value as string)}
@@ -158,7 +187,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
           items={languageItems}
         >
           <SelectTrigger id="profile-language" className="w-full">
-            <SelectValue placeholder="Interface language" />
+            <SelectValue
+              placeholder={t('profile.interfaceLanguage', 'Interface language')}
+            />
           </SelectTrigger>
           <SelectContent>
             {languageItems.map((item) => (
@@ -171,7 +202,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
       </Field>
 
       <Button type="submit" disabled={!isDirty || mutation.isPending}>
-        {mutation.isPending ? 'Saving…' : 'Save profile'}
+        {mutation.isPending
+          ? t('profile.saving', 'Saving…')
+          : t('profile.saveProfile', 'Save profile')}
       </Button>
     </form>
   )
@@ -195,12 +228,20 @@ function PasswordForm() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      toast.success('Your password has been changed.')
+      toast.success(
+        t('profile.passwordChanged', 'Your password has been changed.'),
+      )
     },
     onError: (error) =>
-      toast.error(apiErrorDescription(error, 'Changing the password failed.'), {
-        title: 'Could not change password',
-      }),
+      toast.error(
+        apiErrorDescription(
+          error,
+          t('profile.passwordFailedDetail', 'Changing the password failed.'),
+        ),
+        {
+          title: t('profile.passwordFailed', 'Could not change password'),
+        },
+      ),
   })
 
   const onSubmit = (event: FormEvent) => {
@@ -211,13 +252,21 @@ function PasswordForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <header>
-        <h3 className="text-sm font-semibold text-white">Change password</h3>
+        <h3 className="text-sm font-semibold text-white">
+          {t('profile.changePassword', 'Change password')}
+        </h3>
         <p className="text-sm text-neutral-400">
-          Enter your current password to set a new one.
+          {t(
+            'profile.changePasswordHint',
+            'Enter your current password to set a new one.',
+          )}
         </p>
       </header>
 
-      <Field label="Current password" htmlFor="profile-current-password">
+      <Field
+        label={t('profile.currentPassword', 'Current password')}
+        htmlFor="profile-current-password"
+      >
         <Input
           id="profile-current-password"
           type="password"
@@ -229,7 +278,10 @@ function PasswordForm() {
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="New password" htmlFor="profile-new-password">
+        <Field
+          label={t('profile.newPassword', 'New password')}
+          htmlFor="profile-new-password"
+        >
           <Input
             id="profile-new-password"
             type="password"
@@ -239,7 +291,10 @@ function PasswordForm() {
             required
           />
         </Field>
-        <Field label="Repeat new password" htmlFor="profile-confirm-password">
+        <Field
+          label={t('profile.repeatNewPassword', 'Repeat new password')}
+          htmlFor="profile-confirm-password"
+        >
           <Input
             id="profile-confirm-password"
             type="password"
@@ -252,11 +307,15 @@ function PasswordForm() {
         </Field>
       </div>
       {mismatch && (
-        <p className="text-sm text-red-500">The new passwords do not match.</p>
+        <p className="text-sm text-red-500">
+          {t('profile.passwordMismatch', 'The new passwords do not match.')}
+        </p>
       )}
 
       <Button type="submit" disabled={!canSubmit || mutation.isPending}>
-        {mutation.isPending ? 'Changing…' : 'Change password'}
+        {mutation.isPending
+          ? t('profile.changing', 'Changing…')
+          : t('profile.changePassword', 'Change password')}
       </Button>
     </form>
   )

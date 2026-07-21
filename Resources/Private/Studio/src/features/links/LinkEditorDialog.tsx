@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { translate as t } from '@/lib/i18n'
 import type { LinkValue } from './linkValue'
 import { useLinkTypes, type LinkTypeDefinition } from './registry'
 
@@ -93,18 +94,24 @@ export function LinkEditorDialog({
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>
-            {value !== null ? 'Edit link' : 'Insert link'}
+            {value !== null
+              ? t('link.edit', 'Edit link')
+              : t('link.insert', 'Insert link')}
           </DialogTitle>
           <DialogDescription>
-            Choose the link {subject ? ' for ' : ''}
+            {t('link.chooseLink', 'Choose the link')}
+            {subject ? ` ${t('link.for', 'for')} ` : ''}
             {subject && <strong>{subject}</strong>}
-            {withOptions ? ' and how the link behaves' : ''}.
+            {withOptions
+              ? ` ${t('link.andBehaves', 'and how the link behaves')}`
+              : ''}
+            .
           </DialogDescription>
         </DialogHeader>
 
         {types.length === 0 ? (
           <p className="text-sm text-neutral-400">
-            No link types are registered.
+            {t('link.noTypes', 'No link types are registered.')}
           </p>
         ) : (
           <Tabs
@@ -138,36 +145,38 @@ export function LinkEditorDialog({
 
         {withOptions && (
           <fieldset className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <legend className="sr-only">Link options</legend>
+            <legend className="sr-only">
+              {t('link.options', 'Link options')}
+            </legend>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox
                 checked={targetBlank}
                 onCheckedChange={(next) => setTargetBlank(next)}
               />
-              Open in new window
+              {t('link.openNewWindow', 'Open in new window')}
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox
                 checked={nofollow}
                 onCheckedChange={(next) => setNofollow(next)}
               />
-              No follow (rel="nofollow")
+              {t('link.nofollow', 'No follow (rel="nofollow")')}
             </label>
             <label className="flex flex-col gap-1 text-xs text-neutral-400">
-              CSS class
+              {t('link.cssClass', 'CSS class')}
               <Input
                 value={cssClass}
                 onChange={(event) => setCssClass(event.target.value)}
-                placeholder="e.g. button"
+                placeholder={t('link.cssClassPlaceholder', 'e.g. button')}
                 className="h-8 text-sm"
               />
             </label>
             <label className="flex flex-col gap-1 text-xs text-neutral-400">
-              Title
+              {t('link.title', 'Title')}
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Shown as tooltip"
+                placeholder={t('link.titlePlaceholder', 'Shown as tooltip')}
                 className="h-8 text-sm"
               />
             </label>
@@ -181,14 +190,14 @@ export function LinkEditorDialog({
               className="text-red-500 sm:mr-auto"
               onClick={onRemove}
             >
-              Remove link
+              {t('link.remove', 'Remove link')}
             </Button>
           )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('link.cancel', 'Cancel')}
           </Button>
           <Button disabled={href === null || href === ''} onClick={apply}>
-            Apply
+            {t('link.apply', 'Apply')}
           </Button>
         </DialogFooter>
       </DialogContent>

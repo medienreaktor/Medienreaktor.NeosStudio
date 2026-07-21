@@ -6,6 +6,15 @@ Neos:
         # attribute the Studio guest script styles (see Root.fusion).
         'Medienreaktor.NeosStudio': true
 
+    userInterface:
+      translation:
+        # Ships the Studio's own UI strings through the same /neos/xliff.json
+        # endpoint the classic backend uses; the SPA loads them at boot and
+        # resolves them via lib/i18n's translate()/useTranslate helper.
+        autoInclude:
+          'Medienreaktor.NeosStudio':
+            - Main
+
     modules:
       # Main-level backend menu entry, placed above "Content" (which declares
       # position 'start'). The module controller redirects to the standalone

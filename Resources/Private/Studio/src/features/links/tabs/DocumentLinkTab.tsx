@@ -22,6 +22,7 @@ import { nodeDecor } from '@/features/tree/nodeDecor'
 import { TreeList } from '@/features/tree/TreeList'
 import { useAutoExpand } from '@/features/tree/useAutoExpand'
 import { useRevealSelection } from '@/features/tree/useRevealSelection'
+import { translate as t } from '@/lib/i18n'
 import { documentUri, parseDocumentUri } from '../linkValue'
 import type { LinkTypeTabProps } from '../registry'
 
@@ -117,7 +118,10 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
     return (
       <Placeholder
         icon="fa-sitemap"
-        title="No site is active - there is no document tree to pick from."
+        title={t(
+          'link.noSite',
+          'No site is active - there is no document tree to pick from.',
+        )}
       />
     )
   }
@@ -127,10 +131,10 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
       <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-950 p-1">
         <TreeList
           tree={tree}
-          label="Link target document"
+          label={t('link.targetDocument', 'Link target document')}
           loading={!rootLoaded}
-          loadingText="Loading documents…"
-          emptyText="This site has no documents yet."
+          loadingText={t('link.loadingDocuments', 'Loading documents…')}
+          emptyText={t('link.noDocuments', 'This site has no documents yet.')}
           emptyIcon="fa-sitemap"
           decorate={(data) =>
             data === ROOT_ID || data === null
@@ -140,14 +144,17 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
         />
       </div>
       <label className="flex items-center gap-2 text-xs text-neutral-400">
-        <span className="shrink-0">Anchor</span>
+        <span className="shrink-0">{t('link.anchor', 'Anchor')}</span>
         <Input
           value={anchor}
           onChange={(event) => {
             setAnchor(event.target.value)
             emit(parsed?.aggregateId ?? null, event.target.value)
           }}
-          placeholder="Optional #anchor on the target page"
+          placeholder={t(
+            'link.anchorPlaceholder',
+            'Optional #anchor on the target page',
+          )}
           className="h-7 text-sm"
         />
       </label>

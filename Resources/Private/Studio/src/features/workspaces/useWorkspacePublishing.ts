@@ -12,6 +12,7 @@ import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 
 /** A publish/discard, optionally scoped; no filter = the whole workspace. */
 export interface WorkspaceOperation {
@@ -60,7 +61,9 @@ export function useWorkspacePublishing(workspaceName: string) {
     onSuccess: (_data, op) => {
       invalidateWorkspace()
       toast.success(
-        op.kind === 'discard' ? 'Changes discarded.' : 'Changes published.',
+        op.kind === 'discard'
+          ? t('workspace.discard.success', 'Changes discarded.')
+          : t('workspace.changesPublished', 'Changes published.'),
       )
     },
     onError: (error, op) => {
@@ -73,7 +76,9 @@ export function useWorkspacePublishing(workspaceName: string) {
       }
       toast.error(error, {
         title:
-          op.kind === 'discard' ? 'Discarding failed' : 'Publishing failed',
+          op.kind === 'discard'
+            ? t('workspace.discard.failed', 'Discarding failed')
+            : t('workspace.publishing.failed', 'Publishing failed'),
       })
     },
   })
@@ -102,8 +107,11 @@ export function useWorkspacePublishing(workspaceName: string) {
       setPendingConflict(null)
       toast.success(
         action === 'discardAll'
-          ? 'Changes discarded.'
-          : 'Conflicting changes discarded; the rest was published.',
+          ? t('workspace.discard.success', 'Changes discarded.')
+          : t(
+              'workspace.conflict.resolvedPublished',
+              'Conflicting changes discarded; the rest was published.',
+            ),
       )
     },
     onError: (error) => {
@@ -113,7 +121,12 @@ export function useWorkspacePublishing(workspaceName: string) {
         return
       }
       setPendingConflict(null)
-      toast.error(error, { title: 'Resolving conflicts failed' })
+      toast.error(error, {
+        title: t(
+          'workspace.conflict.resolveFailed',
+          'Resolving conflicts failed',
+        ),
+      })
     },
   })
 

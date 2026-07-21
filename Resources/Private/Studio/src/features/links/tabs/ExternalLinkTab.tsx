@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { Input } from '@/components/ui/input'
+import { translate as t } from '@/lib/i18n'
 import type { LinkTypeTabProps } from '../registry'
 
 /**
@@ -25,7 +26,7 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-xs text-neutral-400" htmlFor="link-external-url">
-        URL
+        {t('link.url', 'URL')}
       </label>
       <Input
         id="link-external-url"
@@ -38,10 +39,13 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
           const trimmed = raw.trim()
           onChange(trimmed === '' ? null : normalizeExternalHref(trimmed))
         }}
-        placeholder="https://example.com"
+        placeholder={t('link.urlPlaceholder', 'https://example.com')}
       />
       <p className="text-xs text-neutral-500">
-        A full web address; https:// is added when no scheme is given.
+        {t(
+          'link.externalHelp',
+          'A full web address; https:// is added when no scheme is given.',
+        )}
       </p>
     </div>
   )

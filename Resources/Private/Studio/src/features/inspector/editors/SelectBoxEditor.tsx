@@ -16,6 +16,7 @@ import {
   plainEditorOption,
 } from '@/features/inspector/inspectorSchema'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { translate as t } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
@@ -120,7 +121,10 @@ function DataSourceSelectBox({
   })
 
   useEffect(() => {
-    if (error) toast.error(error, { title: 'Loading options failed' })
+    if (error)
+      toast.error(error, {
+        title: t('editor.loadingOptionsFailed', 'Loading options failed'),
+      })
   }, [error])
 
   const items = useMemo(() => dataSourceSelectOptions(data), [data])
@@ -129,9 +133,15 @@ function DataSourceSelectBox({
     return (
       <div
         className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm text-neutral-400"
-        title="editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier"
+        title={t(
+          'editor.selectBox.dataSourceUriHint',
+          'editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier',
+        )}
       >
-        Data source not supported
+        {t(
+          'editor.selectBox.dataSourceUnsupported',
+          'Data source not supported',
+        )}
       </div>
     )
   }
@@ -406,7 +416,7 @@ function MultiSelectList({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                title="Remove"
+                title={t('editor.remove', 'Remove')}
                 onClick={() =>
                   commit(selected.filter((candidate) => candidate !== key))
                 }

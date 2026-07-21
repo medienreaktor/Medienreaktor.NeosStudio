@@ -22,6 +22,6 @@ export default defineConfig({
     assetsDir: 'assets',
     // The SPA ships as a single chunk; raise the warning threshold above the
     // 500 kB default so an expected ~550 kB bundle doesn't flag every build.
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 2000,
   },
 })

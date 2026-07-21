@@ -2,6 +2,7 @@ import { useNodeTypes } from '@/api/nodeTypes'
 import { Button } from '@/components/ui/button'
 import { Placeholder } from '@/components/ui/placeholder'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   type ClipboardEntry,
@@ -25,7 +26,10 @@ export function ClipboardPanel() {
     return (
       <Placeholder
         icon="fa-clipboard"
-        title="Nothing on the clipboard. Cut or copy a document or element from its context menu."
+        title={t(
+          'clipboard.empty',
+          'Nothing on the clipboard. Cut or copy a document or element from its context menu.',
+        )}
       />
     )
   }
@@ -34,10 +38,10 @@ export function ClipboardPanel() {
     <div className="flex flex-col gap-1 p-2">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-xs text-neutral-400">
-          Paste inserts the highlighted entry.
+          {t('clipboard.pasteHint', 'Paste inserts the highlighted entry.')}
         </span>
         <Button variant="ghost" size="xs" onClick={clipboardClear}>
-          Clear
+          {t('clipboard.clear', 'Clear')}
         </Button>
       </div>
       {entries.map((entry) => (
@@ -72,13 +76,22 @@ function ClipboardRow({
         type="button"
         className="flex min-w-0 flex-1 items-center gap-2 px-1.5 py-1 text-left"
         title={
-          active ? undefined : 'Make this the entry the next paste inserts'
+          active
+            ? undefined
+            : t(
+                'clipboard.activateHint',
+                'Make this the entry the next paste inserts',
+              )
         }
         onClick={() => clipboardActivate(entry.id)}
       >
         <span
           className="shrink-0 text-neutral-400"
-          title={entry.mode === 'cut' ? 'Cut - pasting moves it' : 'Copied'}
+          title={
+            entry.mode === 'cut'
+              ? t('clipboard.cutHint', 'Cut - pasting moves it')
+              : t('clipboard.copied', 'Copied')
+          }
         >
           <i
             className={cn(
@@ -96,7 +109,10 @@ function ClipboardRow({
             {entry.label}
           </span>
           <span className="block text-xs text-neutral-400 capitalize">
-            {entry.mode === 'cut' ? 'Cut' : 'Copied'} {entry.kind}
+            {entry.mode === 'cut'
+              ? t('clipboard.statusCut', 'Cut')
+              : t('clipboard.copied', 'Copied')}{' '}
+            {entry.kind}
           </span>
         </span>
       </button>
@@ -104,7 +120,7 @@ function ClipboardRow({
         variant="ghost"
         size="icon-xs"
         className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-        title="Remove from clipboard"
+        title={t('clipboard.removeFromClipboard', 'Remove from clipboard')}
         onClick={() => clipboardRemove(entry.id)}
       >
         <i className="fas fa-xmark" aria-hidden />

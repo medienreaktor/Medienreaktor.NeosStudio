@@ -1,5 +1,6 @@
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
 import { dimensionSpacePointEquals } from '@/api/dimensions'
+import { translate as t } from '@/lib/i18n'
 import {
   Select,
   SelectContent,
@@ -135,7 +136,10 @@ export function DimensionSwitcher({
                     disabled={!reachable.has(dimensionValue.value)}
                     title={
                       missingVariant
-                        ? 'The selected document does not exist here yet - create it?'
+                        ? t(
+                            'dimension.missingVariant',
+                            'The selected document does not exist here yet - create it?',
+                          )
                         : undefined
                     }
                   >

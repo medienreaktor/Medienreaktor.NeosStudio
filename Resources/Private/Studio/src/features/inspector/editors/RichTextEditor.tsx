@@ -19,6 +19,7 @@ import {
   type RawFormattingConfig,
 } from '@/guest/formatting'
 import { cn } from '@/lib/utils'
+import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const RICH_TEXT_EDITOR = 'Neos.Neos/Inspector/Editors/RichTextEditor'
@@ -264,12 +265,16 @@ function Toolbar({
   }
 
   const blockChoices = [
-    ...(formatting.paragraph ? [{ value: 'p', label: 'Paragraph' }] : []),
+    ...(formatting.paragraph
+      ? [{ value: 'p', label: t('editor.rte.paragraph', 'Paragraph') }]
+      : []),
     ...formatting.headingLevels.map((level) => ({
       value: `h${level}`,
-      label: `Heading ${level}`,
+      label: t('editor.rte.heading', 'Heading {0}', [level]),
     })),
-    ...(formatting.codeBlock ? [{ value: 'pre', label: 'Code block' }] : []),
+    ...(formatting.codeBlock
+      ? [{ value: 'pre', label: t('editor.rte.codeBlock', 'Code block') }]
+      : []),
   ]
 
   return (
@@ -293,7 +298,7 @@ function Toolbar({
         >
           <SelectTrigger
             size="sm"
-            aria-label="Block format"
+            aria-label={t('editor.rte.blockFormat', 'Block format')}
             className="h-6 w-28 border-none bg-transparent text-xs shadow-none dark:bg-transparent"
           >
             <SelectValue />
@@ -309,7 +314,7 @@ function Toolbar({
       )}
       {formatting.bold && (
         <ToolbarButton
-          label="Bold"
+          label={t('editor.rte.bold', 'Bold')}
           active={editor.isActive('bold')}
           onRun={() => chain().toggleBold().run()}
         >
@@ -318,7 +323,7 @@ function Toolbar({
       )}
       {formatting.italic && (
         <ToolbarButton
-          label="Italic"
+          label={t('editor.rte.italic', 'Italic')}
           active={editor.isActive('italic')}
           onRun={() => chain().toggleItalic().run()}
         >
@@ -327,7 +332,7 @@ function Toolbar({
       )}
       {formatting.underline && (
         <ToolbarButton
-          label="Underline"
+          label={t('editor.rte.underline', 'Underline')}
           active={editor.isActive('underline')}
           onRun={() => chain().toggleUnderline().run()}
         >
@@ -336,7 +341,7 @@ function Toolbar({
       )}
       {formatting.strike && (
         <ToolbarButton
-          label="Strikethrough"
+          label={t('editor.rte.strikethrough', 'Strikethrough')}
           active={editor.isActive('strike')}
           onRun={() => chain().toggleStrike().run()}
         >
@@ -345,7 +350,7 @@ function Toolbar({
       )}
       {formatting.code && (
         <ToolbarButton
-          label="Code"
+          label={t('editor.rte.code', 'Code')}
           active={editor.isActive('code')}
           onRun={() => chain().toggleCode().run()}
         >
@@ -354,7 +359,7 @@ function Toolbar({
       )}
       {formatting.subscript && (
         <ToolbarButton
-          label="Subscript"
+          label={t('editor.rte.subscript', 'Subscript')}
           active={editor.isActive('subscript')}
           onRun={() => chain().toggleSubscript().run()}
         >
@@ -363,7 +368,7 @@ function Toolbar({
       )}
       {formatting.superscript && (
         <ToolbarButton
-          label="Superscript"
+          label={t('editor.rte.superscript', 'Superscript')}
           active={editor.isActive('superscript')}
           onRun={() => chain().toggleSuperscript().run()}
         >
@@ -372,7 +377,7 @@ function Toolbar({
       )}
       {formatting.link && (
         <ToolbarButton
-          label="Link"
+          label={t('editor.rte.link', 'Link')}
           active={editor.isActive('link')}
           onRun={openLinkDialog}
           runOnClick
@@ -382,7 +387,7 @@ function Toolbar({
       )}
       {formatting.bulletList && (
         <ToolbarButton
-          label="Bullet list"
+          label={t('editor.rte.bulletList', 'Bullet list')}
           active={editor.isActive('bulletList')}
           onRun={() => chain().toggleBulletList().run()}
         >
@@ -391,7 +396,7 @@ function Toolbar({
       )}
       {formatting.orderedList && (
         <ToolbarButton
-          label="Ordered list"
+          label={t('editor.rte.orderedList', 'Ordered list')}
           active={editor.isActive('orderedList')}
           onRun={() => chain().toggleOrderedList().run()}
         >
@@ -400,7 +405,7 @@ function Toolbar({
       )}
       {formatting.blockquote && (
         <ToolbarButton
-          label="Blockquote"
+          label={t('editor.rte.blockquote', 'Blockquote')}
           active={editor.isActive('blockquote')}
           onRun={() => chain().toggleBlockquote().run()}
         >
@@ -409,7 +414,7 @@ function Toolbar({
       )}
       {formatting.horizontalRule && formatting.multiline && (
         <ToolbarButton
-          label="Horizontal rule"
+          label={t('editor.rte.horizontalRule', 'Horizontal rule')}
           onRun={() => chain().setHorizontalRule().run()}
         >
           <i className="fas fa-minus text-xs" aria-hidden />
@@ -417,7 +422,7 @@ function Toolbar({
       )}
       {formatting.removeFormat && (
         <ToolbarButton
-          label="Remove formatting"
+          label={t('editor.rte.removeFormat', 'Remove formatting')}
           onRun={() => chain().unsetAllMarks().run()}
         >
           <i className="fas fa-eraser text-xs" aria-hidden />

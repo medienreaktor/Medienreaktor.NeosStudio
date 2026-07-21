@@ -1,6 +1,7 @@
 import { useMe } from '@/api/me'
 import { ProfileSettings } from '@/features/profile/ProfileSettings'
 import { UserAdministration } from '@/features/users/UserAdministration'
+import { translate as t } from '@/lib/i18n'
 import { settingsDialogRegistry } from './registry'
 
 /**
@@ -21,7 +22,7 @@ export function registerBuiltinModals(): void {
     // gate. Its "account" group draws a separator between it and the
     // administration sections below.
     id: PROFILE_SETTINGS,
-    title: 'Profile',
+    title: t('modal.profile', 'Profile'),
     icon: 'user',
     component: ProfileSettings,
     order: 0,
@@ -29,13 +30,13 @@ export function registerBuiltinModals(): void {
   })
   settingsDialogRegistry.register({
     id: USERS_SETTINGS,
-    title: 'Users',
+    title: t('modal.users', 'Users'),
     icon: 'users',
     component: UserAdministration,
     order: 10,
     // User administration is administrators only (the /users endpoint 403s
     // otherwise); non-admins still see the entry, disabled.
     useEnabled: () => useMe().data?.permissions.users ?? false,
-    disabledReason: 'Administrators only',
+    disabledReason: t('modal.adminsOnly', 'Administrators only'),
   })
 }

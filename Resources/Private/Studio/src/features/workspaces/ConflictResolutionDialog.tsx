@@ -1,4 +1,5 @@
 import type { RebaseConflict } from '@/api/workspaces'
+import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,17 +13,36 @@ import {
 /** Icon + past-tense verb per type of change, mirroring the change badges. */
 const TYPE_META: Record<
   NonNullable<RebaseConflict['typeOfChange']>,
-  { icon: string; verb: string }
+  { icon: string; verbKey: string; verb: string }
 > = {
-  created: { icon: 'fa-plus', verb: 'added' },
-  changed: { icon: 'fa-pen', verb: 'changed' },
-  moved: { icon: 'fa-arrows-up-down-left-right', verb: 'moved' },
-  deleted: { icon: 'fa-trash-can', verb: 'removed' },
+  created: {
+    icon: 'fa-plus',
+    verbKey: 'workspace.change.added',
+    verb: 'added',
+  },
+  changed: {
+    icon: 'fa-pen',
+    verbKey: 'workspace.change.changed',
+    verb: 'changed',
+  },
+  moved: {
+    icon: 'fa-arrows-up-down-left-right',
+    verbKey: 'workspace.change.moved',
+    verb: 'moved',
+  },
+  deleted: {
+    icon: 'fa-trash-can',
+    verbKey: 'workspace.change.removed',
+    verb: 'removed',
+  },
 }
 
 function reasonText(conflict: RebaseConflict): string {
   if (conflict.reason === 'node_has_been_deleted') {
-    return 'It was deleted in the target workspace since you changed it.'
+    return t(
+      'workspace.conflict.nodeDeleted',
+      'It was deleted in the target workspace since you changed it.',
+    )
   }
   return conflict.message
 }
@@ -63,13 +83,21 @@ export function ConflictResolutionDialog({
         <DialogHeader>
           <DialogTitle>
             {conflicts.length === 1
-              ? '1 conflicting change'
-              : `${conflicts.length} conflicting changes`}
+              ? t('workspace.conflict.countOne', '1 conflicting change')
+              : t('workspace.conflict.countMany', '{0} conflicting changes', [
+                  conflicts.length,
+                ])}
           </DialogTitle>
           <DialogDescription>
             {partial
-              ? 'These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.'
-              : 'These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.'}
+              ? t(
+                  'workspace.conflict.partialDescription',
+                  'These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.',
+                )
+              : t(
+                  'workspace.conflict.description',
+                  'These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.',
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -82,7 +110,7 @@ export function ConflictResolutionDialog({
               conflict.nodeLabel ??
               conflict.documentLabel ??
               conflict.nodeAggregateId ??
-              'Unknown node'
+              t('workspace.conflict.unknownNode', 'Unknown node')
             const canNavigate =
               onNavigate !== undefined &&
               conflict.documentAddress !== null &&
@@ -100,7 +128,10 @@ export function ConflictResolutionDialog({
                   <div className="truncate text-sm text-neutral-100">
                     {title}
                     {meta ? (
-                      <span className="text-neutral-400"> — {meta.verb}</span>
+                      <span className="text-neutral-400">
+                        {' '}
+                        — {t(meta.verbKey, meta.verb)}
+                      </span>
                     ) : null}
                   </div>
                   <div className="text-xs text-neutral-400">
@@ -127,7 +158,7 @@ export function ConflictResolutionDialog({
 
         <DialogFooter>
           <Button variant="secondary" onClick={onCancel} disabled={busy}>
-            Cancel
+            {t('action.cancel', 'Cancel')}
           </Button>
           {onDiscardAll ? (
             <Button
@@ -135,12 +166,15 @@ export function ConflictResolutionDialog({
               onClick={onDiscardAll}
               disabled={busy}
             >
-              Discard all changes
+              {t('workspace.conflict.discardAllChanges', 'Discard all changes')}
             </Button>
           ) : null}
           {!partial && onForce ? (
             <Button variant="destructive" onClick={onForce} disabled={busy}>
-              Discard conflicting changes
+              {t(
+                'workspace.conflict.discardConflicting',
+                'Discard conflicting changes',
+              )}
             </Button>
           ) : null}
         </DialogFooter>

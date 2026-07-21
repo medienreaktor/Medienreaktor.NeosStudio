@@ -7,6 +7,7 @@ import {
   useNodeAncestors,
 } from '@/api/nodes'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import {
   Dialog,
@@ -117,7 +118,11 @@ function OpenInsertNodeDialog({
   onCreated: (address: string, creation: CreateNodeRequest) => void
   onClose: () => void
 }) {
-  const { superTypes, noun } = ROLES[role]
+  const { superTypes } = ROLES[role]
+  const noun =
+    role === 'document'
+      ? t('creation.nounDocument', 'document')
+      : t('creation.nounElement', 'element')
   const [selectedMode, setSelectedMode] = useState<InsertMode>(
     request.defaultMode ?? 'inside',
   )
@@ -219,7 +224,9 @@ function OpenInsertNodeDialog({
           succeedingSibling =
             index >= 0 ? (siblings[index + 1]?.address ?? null) : null
         } catch (e) {
-          toast.error(e, { title: 'Creating failed' })
+          toast.error(e, {
+            title: t('creation.creatingFailed', 'Creating failed'),
+          })
           return
         } finally {
           setResolving(false)
@@ -244,9 +251,15 @@ function OpenInsertNodeDialog({
           className="@container flex max-h-[80vh] flex-col gap-3 overflow-hidden"
         >
           <DialogHeader>
-            <DialogTitle>Create new {noun}</DialogTitle>
+            <DialogTitle>
+              {t('creation.createNewNoun', 'Create new {0}', [noun])}
+            </DialogTitle>
             <DialogDescription>
-              {reference ? `Relative to “${nodeLabel(reference)}”.` : ' '}
+              {reference
+                ? t('creation.relativeTo', 'Relative to “{0}”.', [
+                    nodeLabel(reference),
+                  ])
+                : ' '}
             </DialogDescription>
           </DialogHeader>
 
@@ -257,7 +270,7 @@ function OpenInsertNodeDialog({
               onValueChange={([value]) => {
                 if (value) setSelectedMode(value as InsertMode)
               }}
-              aria-label="Insertion position"
+              aria-label={t('creation.insertionPosition', 'Insertion position')}
             >
               {MODES.map(({ mode, label, icon }) => {
                 const loading = modeGroups[mode] === null
@@ -269,14 +282,17 @@ function OpenInsertNodeDialog({
                     disabled={!available && !loading}
                   >
                     <i className={`fas ${icon}`} aria-hidden />
-                    {label}
+                    {t(`creation.mode.${mode}`, label)}
                   </ToggleGroupItem>
                 )
               })}
             </ToggleGroup>
             <SearchInput
-              placeholder="Filter node types…"
-              aria-label="Filter node types"
+              placeholder={t(
+                'creation.filterNodeTypesPlaceholder',
+                'Filter node types…',
+              )}
+              aria-label={t('creation.filterNodeTypes', 'Filter node types')}
               autoFocus={true}
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
@@ -285,14 +301,23 @@ function OpenInsertNodeDialog({
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {visibleGroups === null ? (
-              <LoadingState label="Loading node types…" />
+              <LoadingState
+                label={t('creation.loadingNodeTypes', 'Loading node types…')}
+              />
             ) : visibleGroups.length === 0 ? (
               <Placeholder
                 icon={query ? 'fa-magnifying-glass' : ROLES[role].icon}
                 title={
                   query
-                    ? 'No node types match the filter.'
-                    : `No ${noun} types can be created here.`
+                    ? t(
+                        'creation.noNodeTypesMatch',
+                        'No node types match the filter.',
+                      )
+                    : t(
+                        'creation.noTypesHere',
+                        'No {0} types can be created here.',
+                        [noun],
+                      )
                 }
                 className="py-10"
               />
@@ -350,7 +375,10 @@ function OpenInsertNodeDialog({
           onCancel={(error) => {
             // Cancelling the creation form returns to the type selection; a
             // failure without a visible form surfaces here as well.
-            if (error) toast.error(error, { title: 'Creating failed' })
+            if (error)
+              toast.error(error, {
+                title: t('creation.creatingFailed', 'Creating failed'),
+              })
             setCreation(null)
           }}
         />

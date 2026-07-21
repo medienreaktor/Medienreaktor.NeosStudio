@@ -7,6 +7,7 @@ import {
   useNodeTypeSchema,
 } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -172,7 +173,9 @@ export function CreateNodeFlow({
       // With a dialog open the user can retry or cancel; without one the
       // flow is invisible - surface the failure through onCancel.
       if (elements !== null && elements.length > 0) {
-        toast.error(message, { title: 'Creating failed' })
+        toast.error(message, {
+          title: t('creation.creatingFailed', 'Creating failed'),
+        })
         setCreating(false)
       } else {
         onCancel(message)
@@ -227,7 +230,7 @@ export function CreateNodeFlow({
               nodeTypeName={request.nodeTypeName}
               className="text-[1rem]"
             />
-            Create {typeLabel}
+            {t('creation.createType', 'Create {0}', [typeLabel])}
           </DialogTitle>
         </DialogHeader>
 
@@ -270,13 +273,15 @@ export function CreateNodeFlow({
             onClick={() => onCancel()}
             disabled={creating}
           >
-            Cancel
+            {t('creation.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={() => void submit(values)}
             disabled={creating || hasErrors}
           >
-            {creating ? 'Creating…' : 'Create'}
+            {creating
+              ? t('creation.creating', 'Creating…')
+              : t('creation.create', 'Create')}
           </Button>
         </DialogFooter>
       </DialogContent>

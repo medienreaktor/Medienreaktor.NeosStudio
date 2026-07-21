@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dialog as SheetPrimitive } from '@base-ui/react/dialog'
 
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -74,7 +75,7 @@ function SheetContent({
         {showCloseButton && (
           <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
             <i className="fas fa-xmark text-[1rem]" aria-hidden />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close', 'Close')}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

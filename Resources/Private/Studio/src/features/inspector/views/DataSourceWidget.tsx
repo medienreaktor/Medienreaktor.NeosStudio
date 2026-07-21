@@ -2,6 +2,7 @@ import { useDataSource } from '@/api/dataSources'
 import type { NodeDto } from '@/api/nodes'
 import { Skeleton } from '@/components/ui/skeleton'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { translate as t } from '@/lib/i18n'
 
 /**
  * The shared fetch-and-frame behind the data views (Column/Table/TimeSeries):
@@ -44,8 +45,14 @@ export function DataSourceWidget({
         <WidgetNotice
           message={
             typeof options.dataSourceUri === 'string'
-              ? 'dataSourceUri is not supported - register a data source and reference it via the dataSource option.'
-              : 'No data source configured for this view.'
+              ? t(
+                  'view.dataSourceUriUnsupported',
+                  'dataSourceUri is not supported - register a data source and reference it via the dataSource option.',
+                )
+              : t(
+                  'view.noDataSource',
+                  'No data source configured for this view.',
+                )
           }
         />
       ) : error ? (

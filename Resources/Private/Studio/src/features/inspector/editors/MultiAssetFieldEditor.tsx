@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
 import { cn } from '@/lib/utils'
+import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorProps } from './registry'
 import {
   assetReference,
@@ -107,7 +108,9 @@ export function MultiAssetFieldEditor({
         className="justify-center"
       >
         <i className="fas fa-plus text-[1rem]" aria-hidden />
-        {kind === 'image' ? 'Add image…' : 'Add asset…'}
+        {kind === 'image'
+          ? t('editor.addImage', 'Add image…')
+          : t('editor.addAsset', 'Add asset…')}
       </Button>
     </div>
   )
@@ -183,10 +186,19 @@ function AssetRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm" title={asset?.label}>
-          {asset ? asset.label : missing ? 'Asset not found' : 'Loading…'}
+          {asset
+            ? asset.label
+            : missing
+              ? t('editor.assetNotFound', 'Asset not found')
+              : t('editor.loading', 'Loading…')}
         </div>
       </div>
-      <Button variant="ghost" size="icon-sm" onClick={onRemove} title="Remove">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={onRemove}
+        title={t('editor.remove', 'Remove')}
+      >
         <i className="fas fa-xmark" aria-hidden />
       </Button>
     </div>

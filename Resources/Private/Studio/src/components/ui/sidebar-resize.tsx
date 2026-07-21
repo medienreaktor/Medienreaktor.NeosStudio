@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react'
 
+import { translate as t } from '@/lib/i18n'
+
 const STORAGE_KEY = 'neos-studio.sidebar_width'
 const MIN_WIDTH = 200
 const MAX_WIDTH = 560
@@ -57,7 +59,7 @@ export function SidebarResizeHandle(props: {
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize sidebar"
+      aria-label={t('common.resizeSidebar', 'Resize sidebar')}
       className="absolute inset-y-0 right-0 z-20 hidden w-1.5 cursor-col-resize transition-colors hover:bg-blue-500/40 active:bg-blue-500/60 md:block"
       {...props}
     />

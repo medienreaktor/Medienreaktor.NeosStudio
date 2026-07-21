@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Toast as ToastPrimitive } from '@base-ui/react/toast'
 
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 /**
@@ -25,17 +26,20 @@ interface Options {
   id?: string
 }
 
-const DEFAULT_TITLES: Record<ToastKind, string> = {
-  success: 'Success',
-  error: 'Error',
-  info: 'Notice',
-  loading: 'Working…',
+// Thunks, not plain strings: resolved at call time so the translation bundle
+// (loaded at boot, after this module is imported) is in place when a toast is
+// actually raised.
+const DEFAULT_TITLES: Record<ToastKind, () => string> = {
+  success: () => t('common.toastSuccess', 'Success'),
+  error: () => t('common.toastError', 'Error'),
+  info: () => t('common.toastInfo', 'Notice'),
+  loading: () => t('common.toastLoading', 'Working…'),
 }
 
 function raise(kind: ToastKind, message: React.ReactNode, options?: Options) {
   return toastManager.add({
     type: kind,
-    title: options?.title ?? DEFAULT_TITLES[kind],
+    title: options?.title ?? DEFAULT_TITLES[kind](),
     description: message,
     // Errors stay until dismissed; the rest auto-expire on the provider default.
     timeout: options?.timeout ?? (kind === 'error' ? 0 : undefined),
@@ -142,7 +146,7 @@ function ToastList() {
         </div>
       </div>
       <ToastPrimitive.Close
-        aria-label="Close"
+        aria-label={t('common.close', 'Close')}
         className="absolute top-3 right-3 rounded-xs text-neutral-400 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
       >
         <i className="fas fa-xmark text-[1rem]" aria-hidden />

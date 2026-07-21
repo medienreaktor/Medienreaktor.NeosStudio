@@ -20,6 +20,7 @@ import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
 import { DocumentsToolbar } from '@/features/tree/DocumentsToolbar'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { LoadingState } from '@/components/ui/spinner'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useRequestAttention } from './PanelSystem'
 import { panelRegistry } from './registry'
@@ -75,7 +76,7 @@ function DocumentsPanel() {
     return () => clearTimeout(timer)
   }, [searchTerm])
   if (!site || !workspaceName) {
-    return <LoadingState label="Loading sites…" />
+    return <LoadingState label={t('panel.loadingSites', 'Loading sites…')} />
   }
   // A term or an active node type filter switches from the tree to the flat
   // server-side result list (all matching documents, regardless of depth).
@@ -296,43 +297,43 @@ export function registerBuiltinPanels(): void {
   // main area, with Media Library alongside it.
   panelRegistry.register({
     id: 'visual-editor',
-    title: 'Visual Editor',
+    title: t('panel.title.visualEditor', 'Visual Editor'),
     component: VisualEditorPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({
     id: 'media-library',
-    title: 'Media Library',
+    title: t('panel.title.mediaLibrary', 'Media Library'),
     component: MediaLibraryPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({
     id: 'documents',
-    title: 'Documents',
+    title: t('panel.title.documents', 'Documents'),
     component: DocumentsPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar' },
   })
   panelRegistry.register({
     id: 'outline',
-    title: 'Outline',
+    title: t('panel.title.outline', 'Outline'),
     component: OutlinePanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'create',
-    title: 'Create',
+    title: t('panel.title.create', 'Create'),
     component: NodeCreationPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'clipboard',
-    title: 'Clipboard',
+    title: t('panel.title.clipboard', 'Clipboard'),
     component: ClipboardPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'inspector',
-    title: 'Inspector',
+    title: t('panel.title.inspector', 'Inspector'),
     component: NodeInspectorPanel,
     defaultPlacement: { kind: 'dock', region: 'secondary' },
   })

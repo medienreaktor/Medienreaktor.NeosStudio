@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { translate as t } from '@/lib/i18n'
 import { ConfirmDialog } from './ConfirmDialog'
 
 /** A collection or tag the context menu was opened for. */
@@ -32,9 +33,11 @@ export interface MediaMenuTarget {
   anchor: { x: number; y: number }
 }
 
-const NOUN: Record<MediaMenuTarget['kind'], string> = {
-  collection: 'collection',
-  tag: 'tag',
+/** The human-readable noun for a menu target, translated at call time. */
+function nounLabel(kind: MediaMenuTarget['kind']): string {
+  return kind === 'collection'
+    ? t('media.nounCollection', 'collection')
+    : t('media.nounTag', 'tag')
 }
 
 /**
@@ -81,7 +84,7 @@ export function MediaItemActions({
               }}
             >
               <i className="fas fa-fw fa-pen" aria-hidden />
-              Rename
+              {t('media.rename', 'Rename')}
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
@@ -91,7 +94,7 @@ export function MediaItemActions({
               }}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Delete
+              {t('media.delete', 'Delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -101,12 +104,26 @@ export function MediaItemActions({
 
       <ConfirmDialog
         open={deleting !== null}
-        title={`Delete this ${deleting ? NOUN[deleting.kind] : ''}?`}
+        title={
+          deleting
+            ? t('media.deleteThis', 'Delete this {0}?', [
+                nounLabel(deleting.kind),
+              ])
+            : ''
+        }
         description={
           deleting?.kind === 'collection'
-            ? `“${deleting.label}” will be removed. The assets inside it are kept.`
+            ? t(
+                'media.deleteCollectionDescription',
+                '“{0}” will be removed. The assets inside it are kept.',
+                [deleting.label],
+              )
             : deleting
-              ? `“${deleting.label}” will be removed from all assets. The assets are kept.`
+              ? t(
+                  'media.deleteTagDescription',
+                  '“{0}” will be removed from all assets. The assets are kept.',
+                  [deleting.label],
+                )
               : undefined
         }
         onOpenChange={(open) => !open && setDeleting(null)}
@@ -155,7 +172,11 @@ function RenameDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rename {target ? NOUN[target.kind] : ''}</DialogTitle>
+          <DialogTitle>
+            {target
+              ? t('media.renameNoun', 'Rename {0}', [nounLabel(target.kind)])
+              : ''}
+          </DialogTitle>
         </DialogHeader>
         <Input
           autoFocus
@@ -168,10 +189,10 @@ function RenameDialog({
         />
         <DialogFooter>
           <Button variant="secondary" disabled={busy} onClick={onClose}>
-            Cancel
+            {t('media.cancel', 'Cancel')}
           </Button>
           <Button disabled={busy || !value.trim()} onClick={save}>
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? t('media.saving', 'Saving…') : t('media.save', 'Save')}
           </Button>
         </DialogFooter>
       </DialogContent>

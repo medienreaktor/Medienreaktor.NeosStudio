@@ -1,0 +1,1363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext">
+    <body>
+      <trans-unit id="action.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="action.close" xml:space="preserve">
+        <source>Close</source>
+      </trans-unit>
+      <trans-unit id="app.connectToApi" xml:space="preserve">
+        <source>Connect to the API</source>
+      </trans-unit>
+      <trans-unit id="app.loadingStudio" xml:space="preserve">
+        <source>Loading Neos Studio…</source>
+      </trans-unit>
+      <trans-unit id="app.loginFailed" xml:space="preserve">
+        <source>Login failed</source>
+      </trans-unit>
+      <trans-unit id="app.tagline" xml:space="preserve">
+        <source>Editing environment for Neos</source>
+      </trans-unit>
+      <trans-unit id="clipboard.activateHint" xml:space="preserve">
+        <source>Make this the entry the next paste inserts</source>
+      </trans-unit>
+      <trans-unit id="clipboard.clear" xml:space="preserve">
+        <source>Clear</source>
+      </trans-unit>
+      <trans-unit id="clipboard.copied" xml:space="preserve">
+        <source>Copied</source>
+      </trans-unit>
+      <trans-unit id="clipboard.cutHint" xml:space="preserve">
+        <source>Cut - pasting moves it</source>
+      </trans-unit>
+      <trans-unit id="clipboard.empty" xml:space="preserve">
+        <source>Nothing on the clipboard. Cut or copy a document or element from its context menu.</source>
+      </trans-unit>
+      <trans-unit id="clipboard.pasteHint" xml:space="preserve">
+        <source>Paste inserts the highlighted entry.</source>
+      </trans-unit>
+      <trans-unit id="clipboard.removeFromClipboard" xml:space="preserve">
+        <source>Remove from clipboard</source>
+      </trans-unit>
+      <trans-unit id="clipboard.statusCut" xml:space="preserve">
+        <source>Cut</source>
+      </trans-unit>
+      <trans-unit id="common.close" xml:space="preserve">
+        <source>Close</source>
+      </trans-unit>
+      <trans-unit id="common.resizeSidebar" xml:space="preserve">
+        <source>Resize sidebar</source>
+      </trans-unit>
+      <trans-unit id="common.sidebar" xml:space="preserve">
+        <source>Sidebar</source>
+      </trans-unit>
+      <trans-unit id="common.sidebarMobileDescription" xml:space="preserve">
+        <source>Displays the mobile sidebar.</source>
+      </trans-unit>
+      <trans-unit id="common.toastError" xml:space="preserve">
+        <source>Error</source>
+      </trans-unit>
+      <trans-unit id="common.toastInfo" xml:space="preserve">
+        <source>Notice</source>
+      </trans-unit>
+      <trans-unit id="common.toastLoading" xml:space="preserve">
+        <source>Working…</source>
+      </trans-unit>
+      <trans-unit id="common.toastSuccess" xml:space="preserve">
+        <source>Success</source>
+      </trans-unit>
+      <trans-unit id="common.toggleSidebar" xml:space="preserve">
+        <source>Toggle Sidebar</source>
+      </trans-unit>
+      <trans-unit id="creation.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="creation.create" xml:space="preserve">
+        <source>Create</source>
+      </trans-unit>
+      <trans-unit id="creation.createNewNoun" xml:space="preserve">
+        <source>Create new {0}</source>
+      </trans-unit>
+      <trans-unit id="creation.createType" xml:space="preserve">
+        <source>Create {0}</source>
+      </trans-unit>
+      <trans-unit id="creation.creating" xml:space="preserve">
+        <source>Creating…</source>
+      </trans-unit>
+      <trans-unit id="creation.creatingFailed" xml:space="preserve">
+        <source>Creating failed</source>
+      </trans-unit>
+      <trans-unit id="creation.dragHint" xml:space="preserve">
+        <source>{0} ({1}) - drag into the preview</source>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
+        <source>Filter node types</source>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypesPlaceholder" xml:space="preserve">
+        <source>Filter node types…</source>
+      </trans-unit>
+      <trans-unit id="creation.insertionPosition" xml:space="preserve">
+        <source>Insertion position</source>
+      </trans-unit>
+      <trans-unit id="creation.loadingNodeTypes" xml:space="preserve">
+        <source>Loading node types…</source>
+      </trans-unit>
+      <trans-unit id="creation.mode.after" xml:space="preserve">
+        <source>After</source>
+      </trans-unit>
+      <trans-unit id="creation.mode.before" xml:space="preserve">
+        <source>Before</source>
+      </trans-unit>
+      <trans-unit id="creation.mode.inside" xml:space="preserve">
+        <source>Inside</source>
+      </trans-unit>
+      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
+        <source>No creatable content node types.</source>
+      </trans-unit>
+      <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
+        <source>No node types match the filter.</source>
+      </trans-unit>
+      <trans-unit id="creation.noTypesHere" xml:space="preserve">
+        <source>No {0} types can be created here.</source>
+      </trans-unit>
+      <trans-unit id="creation.nounDocument" xml:space="preserve">
+        <source>document</source>
+      </trans-unit>
+      <trans-unit id="creation.nounElement" xml:space="preserve">
+        <source>element</source>
+      </trans-unit>
+      <trans-unit id="creation.relativeTo" xml:space="preserve">
+        <source>Relative to “{0}”.</source>
+      </trans-unit>
+      <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
+        <source>Checking parent documents failed</source>
+      </trans-unit>
+      <trans-unit id="dimension.checkingParents" xml:space="preserve">
+        <source> Checking which parent documents are missing…</source>
+      </trans-unit>
+      <trans-unit id="dimension.createAndCopy" xml:space="preserve">
+        <source>Create and copy content</source>
+      </trans-unit>
+      <trans-unit id="dimension.createEmpty" xml:space="preserve">
+        <source>Create empty</source>
+      </trans-unit>
+      <trans-unit id="dimension.createTitle" xml:space="preserve">
+        <source>Create document in {0}?</source>
+      </trans-unit>
+      <trans-unit id="dimension.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+      </trans-unit>
+      <trans-unit id="dimension.creating" xml:space="preserve">
+        <source>Creating…</source>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
+        <source> {0} missing parent documents will be created as well.</source>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsOne" xml:space="preserve">
+        <source> 1 missing parent document will be created as well.</source>
+      </trans-unit>
+      <trans-unit id="dimension.missingVariant" xml:space="preserve">
+        <source>The selected document does not exist here yet - create it?</source>
+      </trans-unit>
+      <trans-unit id="dimension.notExistYet" xml:space="preserve">
+        <source>“{0}” does not exist in {1} yet.</source>
+      </trans-unit>
+      <trans-unit id="dimension.variantCreated" xml:space="preserve">
+        <source>Document variant created.</source>
+      </trans-unit>
+      <trans-unit id="editing.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="editing.copy" xml:space="preserve">
+        <source>Copy</source>
+      </trans-unit>
+      <trans-unit id="editing.copyFailed" xml:space="preserve">
+        <source>Copying failed</source>
+      </trans-unit>
+      <trans-unit id="editing.createFailed" xml:space="preserve">
+        <source>Creating failed</source>
+      </trans-unit>
+      <trans-unit id="editing.createNew" xml:space="preserve">
+        <source>Create new…</source>
+      </trans-unit>
+      <trans-unit id="editing.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+      </trans-unit>
+      <trans-unit id="editing.cut" xml:space="preserve">
+        <source>Cut</source>
+      </trans-unit>
+      <trans-unit id="editing.cutFailed" xml:space="preserve">
+        <source>Cutting failed</source>
+      </trans-unit>
+      <trans-unit id="editing.delete" xml:space="preserve">
+        <source>Delete</source>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.description" xml:space="preserve">
+        <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
+        <source>Delete this {0}?</source>
+      </trans-unit>
+      <trans-unit id="editing.deleteFailed" xml:space="preserve">
+        <source>Deleting failed</source>
+      </trans-unit>
+      <trans-unit id="editing.entity.document" xml:space="preserve">
+        <source>document</source>
+      </trans-unit>
+      <trans-unit id="editing.entity.element" xml:space="preserve">
+        <source>element</source>
+      </trans-unit>
+      <trans-unit id="editing.hide" xml:space="preserve">
+        <source>Hide</source>
+      </trans-unit>
+      <trans-unit id="editing.hideFailed" xml:space="preserve">
+        <source>Hiding failed</source>
+      </trans-unit>
+      <trans-unit id="editing.moveFailed" xml:space="preserve">
+        <source>Moving failed</source>
+      </trans-unit>
+      <trans-unit id="editing.noParentToPaste" xml:space="preserve">
+        <source>The node has no parent to paste next to.</source>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfter" xml:space="preserve">
+        <source>Paste after</source>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfterHint" xml:space="preserve">
+        <source>Paste “{0}” after this {1}</source>
+      </trans-unit>
+      <trans-unit id="editing.pasteFailed" xml:space="preserve">
+        <source>Pasting failed</source>
+      </trans-unit>
+      <trans-unit id="editing.pasteInto" xml:space="preserve">
+        <source>Paste into</source>
+      </trans-unit>
+      <trans-unit id="editing.pasteIntoHint" xml:space="preserve">
+        <source>Paste “{0}” inside, as the last child</source>
+      </trans-unit>
+      <trans-unit id="editing.saveFailed" xml:space="preserve">
+        <source>Saving failed</source>
+      </trans-unit>
+      <trans-unit id="editing.setImageFailed" xml:space="preserve">
+        <source>Setting image failed</source>
+      </trans-unit>
+      <trans-unit id="editing.unhide" xml:space="preserve">
+        <source>Unhide</source>
+      </trans-unit>
+      <trans-unit id="editing.unhideFailed" xml:space="preserve">
+        <source>Unhiding failed</source>
+      </trans-unit>
+      <trans-unit id="editing.variantCreated" xml:space="preserve">
+        <source>Variant created in the current dimension.</source>
+      </trans-unit>
+      <trans-unit id="editor.addAsset" xml:space="preserve">
+        <source>Add asset…</source>
+      </trans-unit>
+      <trans-unit id="editor.addImage" xml:space="preserve">
+        <source>Add image…</source>
+      </trans-unit>
+      <trans-unit id="editor.apply" xml:space="preserve">
+        <source>Apply</source>
+      </trans-unit>
+      <trans-unit id="editor.assetNotFound" xml:space="preserve">
+        <source>Asset not found</source>
+      </trans-unit>
+      <trans-unit id="editor.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="editor.clear" xml:space="preserve">
+        <source>Clear</source>
+      </trans-unit>
+      <trans-unit id="editor.code.edit" xml:space="preserve">
+        <source>Edit code…</source>
+      </trans-unit>
+      <trans-unit id="editor.code.empty" xml:space="preserve">
+        <source>No content yet</source>
+      </trans-unit>
+      <trans-unit id="editor.crop" xml:space="preserve">
+        <source>Crop</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.apply" xml:space="preserve">
+        <source>Apply crop</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.applying" xml:space="preserve">
+        <source>Applying…</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.aspectRatio" xml:space="preserve">
+        <source>Aspect ratio</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.cannotCrop" xml:space="preserve">
+        <source>This image cannot be cropped.</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.drawFirst" xml:space="preserve">
+        <source>Draw a crop area first.</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.failed" xml:space="preserve">
+        <source>Cropping failed</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.failedBody" xml:space="preserve">
+        <source>Cropping failed.</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.free" xml:space="preserve">
+        <source>Free</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.original" xml:space="preserve">
+        <source>Original</source>
+      </trans-unit>
+      <trans-unit id="editor.crop.title" xml:space="preserve">
+        <source>Crop image</source>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.nextMonth" xml:space="preserve">
+        <source>Next month</source>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.prevMonth" xml:space="preserve">
+        <source>Previous month</source>
+      </trans-unit>
+      <trans-unit id="editor.link.edit" xml:space="preserve">
+        <source>Edit link</source>
+      </trans-unit>
+      <trans-unit id="editor.link.remove" xml:space="preserve">
+        <source>Remove link</source>
+      </trans-unit>
+      <trans-unit id="editor.link.set" xml:space="preserve">
+        <source>Set link…</source>
+      </trans-unit>
+      <trans-unit id="editor.loading" xml:space="preserve">
+        <source>Loading…</source>
+      </trans-unit>
+      <trans-unit id="editor.loadingOptionsFailed" xml:space="preserve">
+        <source>Loading options failed</source>
+      </trans-unit>
+      <trans-unit id="editor.noMatches" xml:space="preserve">
+        <source>No matches</source>
+      </trans-unit>
+      <trans-unit id="editor.now" xml:space="preserve">
+        <source>Now</source>
+      </trans-unit>
+      <trans-unit id="editor.range.currentValue" xml:space="preserve">
+        <source>Current value</source>
+      </trans-unit>
+      <trans-unit id="editor.range.maximum" xml:space="preserve">
+        <source>Maximum</source>
+      </trans-unit>
+      <trans-unit id="editor.range.minimum" xml:space="preserve">
+        <source>Minimum</source>
+      </trans-unit>
+      <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
+        <source>References can be set after creation</source>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
+        <source>Type at least {0} characters to search</source>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeastOne" xml:space="preserve">
+        <source>Type at least {0} character to search</source>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeToSearch" xml:space="preserve">
+        <source>Type to search</source>
+      </trans-unit>
+      <trans-unit id="editor.remove" xml:space="preserve">
+        <source>Remove</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockFormat" xml:space="preserve">
+        <source>Block format</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockquote" xml:space="preserve">
+        <source>Blockquote</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.bold" xml:space="preserve">
+        <source>Bold</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.bulletList" xml:space="preserve">
+        <source>Bullet list</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.code" xml:space="preserve">
+        <source>Code</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.codeBlock" xml:space="preserve">
+        <source>Code block</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.heading" xml:space="preserve">
+        <source>Heading {0}</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.horizontalRule" xml:space="preserve">
+        <source>Horizontal rule</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.italic" xml:space="preserve">
+        <source>Italic</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.link" xml:space="preserve">
+        <source>Link</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.orderedList" xml:space="preserve">
+        <source>Ordered list</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.paragraph" xml:space="preserve">
+        <source>Paragraph</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.removeFormat" xml:space="preserve">
+        <source>Remove formatting</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.strikethrough" xml:space="preserve">
+        <source>Strikethrough</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.subscript" xml:space="preserve">
+        <source>Subscript</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.superscript" xml:space="preserve">
+        <source>Superscript</source>
+      </trans-unit>
+      <trans-unit id="editor.rte.underline" xml:space="preserve">
+        <source>Underline</source>
+      </trans-unit>
+      <trans-unit id="editor.searchFailed" xml:space="preserve">
+        <source>Search failed</source>
+      </trans-unit>
+      <trans-unit id="editor.searchPlaceholder" xml:space="preserve">
+        <source>Search…</source>
+      </trans-unit>
+      <trans-unit id="editor.searching" xml:space="preserve">
+        <source>Searching…</source>
+      </trans-unit>
+      <trans-unit id="editor.select" xml:space="preserve">
+        <source>Select…</source>
+      </trans-unit>
+      <trans-unit id="editor.selectAsset" xml:space="preserve">
+        <source>Select asset…</source>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUnsupported" xml:space="preserve">
+        <source>Data source not supported</source>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUriHint" xml:space="preserve">
+        <source>editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier</source>
+      </trans-unit>
+      <trans-unit id="editor.selectImage" xml:space="preserve">
+        <source>Select image…</source>
+      </trans-unit>
+      <trans-unit id="editor.time" xml:space="preserve">
+        <source>Time</source>
+      </trans-unit>
+      <trans-unit id="editor.today" xml:space="preserve">
+        <source>Today</source>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.generateFailed" xml:space="preserve">
+        <source>Could not generate the URL path segment</source>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
+        <source>Rebuild the URL path segment from the current page title</source>
+      </trans-unit>
+      <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
+        <source>Editor not supported yet: {0}</source>
+      </trans-unit>
+      <trans-unit id="inspector.no" xml:space="preserve">
+        <source>No</source>
+      </trans-unit>
+      <trans-unit id="inspector.noProperties" xml:space="preserve">
+        <source>This node type has no inspector properties.</source>
+      </trans-unit>
+      <trans-unit id="inspector.savingFailed" xml:space="preserve">
+        <source>Saving failed</source>
+      </trans-unit>
+      <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
+        <source>Select a node in the preview or the trees to inspect it.</source>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
+        <source>Shines through from</source>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughHint" xml:space="preserve">
+        <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
+      </trans-unit>
+      <trans-unit id="inspector.validationError" xml:space="preserve">
+        <source>{0} validation error</source>
+      </trans-unit>
+      <trans-unit id="inspector.validationErrors" xml:space="preserve">
+        <source>{0} validation errors</source>
+      </trans-unit>
+      <trans-unit id="inspector.yes" xml:space="preserve">
+        <source>Yes</source>
+      </trans-unit>
+      <trans-unit id="link.anchor" xml:space="preserve">
+        <source>Anchor</source>
+      </trans-unit>
+      <trans-unit id="link.anchorPlaceholder" xml:space="preserve">
+        <source>Optional #anchor on the target page</source>
+      </trans-unit>
+      <trans-unit id="link.andBehaves" xml:space="preserve">
+        <source>and how the link behaves</source>
+      </trans-unit>
+      <trans-unit id="link.apply" xml:space="preserve">
+        <source>Apply</source>
+      </trans-unit>
+      <trans-unit id="link.asset" xml:space="preserve">
+        <source>Asset</source>
+      </trans-unit>
+      <trans-unit id="link.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="link.chooseLink" xml:space="preserve">
+        <source>Choose the link</source>
+      </trans-unit>
+      <trans-unit id="link.cssClass" xml:space="preserve">
+        <source>CSS class</source>
+      </trans-unit>
+      <trans-unit id="link.cssClassPlaceholder" xml:space="preserve">
+        <source>e.g. button</source>
+      </trans-unit>
+      <trans-unit id="link.document" xml:space="preserve">
+        <source>Document</source>
+      </trans-unit>
+      <trans-unit id="link.edit" xml:space="preserve">
+        <source>Edit link</source>
+      </trans-unit>
+      <trans-unit id="link.email" xml:space="preserve">
+        <source>E-Mail</source>
+      </trans-unit>
+      <trans-unit id="link.emailAddress" xml:space="preserve">
+        <source>E-Mail address</source>
+      </trans-unit>
+      <trans-unit id="link.emailHelp" xml:space="preserve">
+        <source>The link opens the visitor's mail client (mailto:).</source>
+      </trans-unit>
+      <trans-unit id="link.emailPlaceholder" xml:space="preserve">
+        <source>mail@example.com</source>
+      </trans-unit>
+      <trans-unit id="link.external" xml:space="preserve">
+        <source>External</source>
+      </trans-unit>
+      <trans-unit id="link.externalHelp" xml:space="preserve">
+        <source>A full web address; https:// is added when no scheme is given.</source>
+      </trans-unit>
+      <trans-unit id="link.for" xml:space="preserve">
+        <source>for</source>
+      </trans-unit>
+      <trans-unit id="link.insert" xml:space="preserve">
+        <source>Insert link</source>
+      </trans-unit>
+      <trans-unit id="link.linkedAsset" xml:space="preserve">
+        <source>Linked asset: {0}</source>
+      </trans-unit>
+      <trans-unit id="link.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+      </trans-unit>
+      <trans-unit id="link.noDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+      </trans-unit>
+      <trans-unit id="link.noSite" xml:space="preserve">
+        <source>No site is active - there is no document tree to pick from.</source>
+      </trans-unit>
+      <trans-unit id="link.noTypes" xml:space="preserve">
+        <source>No link types are registered.</source>
+      </trans-unit>
+      <trans-unit id="link.nofollow" xml:space="preserve">
+        <source>No follow (rel="nofollow")</source>
+      </trans-unit>
+      <trans-unit id="link.openNewWindow" xml:space="preserve">
+        <source>Open in new window</source>
+      </trans-unit>
+      <trans-unit id="link.options" xml:space="preserve">
+        <source>Link options</source>
+      </trans-unit>
+      <trans-unit id="link.pickAssetFailed" xml:space="preserve">
+        <source>Picking asset failed</source>
+      </trans-unit>
+      <trans-unit id="link.remove" xml:space="preserve">
+        <source>Remove link</source>
+      </trans-unit>
+      <trans-unit id="link.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+      </trans-unit>
+      <trans-unit id="link.targetDocument" xml:space="preserve">
+        <source>Link target document</source>
+      </trans-unit>
+      <trans-unit id="link.title" xml:space="preserve">
+        <source>Title</source>
+      </trans-unit>
+      <trans-unit id="link.titlePlaceholder" xml:space="preserve">
+        <source>Shown as tooltip</source>
+      </trans-unit>
+      <trans-unit id="link.url" xml:space="preserve">
+        <source>URL</source>
+      </trans-unit>
+      <trans-unit id="link.urlPlaceholder" xml:space="preserve">
+        <source>https://example.com</source>
+      </trans-unit>
+      <trans-unit id="media.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+      </trans-unit>
+      <trans-unit id="media.addTag" xml:space="preserve">
+        <source>Add tag…</source>
+      </trans-unit>
+      <trans-unit id="media.addToCollection" xml:space="preserve">
+        <source>Add to collection…</source>
+      </trans-unit>
+      <trans-unit id="media.allCollections" xml:space="preserve">
+        <source>All collections</source>
+      </trans-unit>
+      <trans-unit id="media.allTags" xml:space="preserve">
+        <source>All tags</source>
+      </trans-unit>
+      <trans-unit id="media.allTypes" xml:space="preserve">
+        <source>All types</source>
+      </trans-unit>
+      <trans-unit id="media.assetCountOne" xml:space="preserve">
+        <source>{0} asset</source>
+      </trans-unit>
+      <trans-unit id="media.assetCountOther" xml:space="preserve">
+        <source>{0} assets</source>
+      </trans-unit>
+      <trans-unit id="media.assetImported" xml:space="preserve">
+        <source>Asset imported to Neos.</source>
+      </trans-unit>
+      <trans-unit id="media.assetInUse" xml:space="preserve">
+        <source>This asset is in use and cannot be deleted.</source>
+      </trans-unit>
+      <trans-unit id="media.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
+      <trans-unit id="media.caption" xml:space="preserve">
+        <source>Caption</source>
+      </trans-unit>
+      <trans-unit id="media.chooseFiles" xml:space="preserve">
+        <source>Choose files</source>
+      </trans-unit>
+      <trans-unit id="media.closeUploader" xml:space="preserve">
+        <source>Close uploader</source>
+      </trans-unit>
+      <trans-unit id="media.collection" xml:space="preserve">
+        <source>Collection</source>
+      </trans-unit>
+      <trans-unit id="media.collectionAddFailed" xml:space="preserve">
+        <source>Adding to collection failed</source>
+      </trans-unit>
+      <trans-unit id="media.collectionRemoveFailed" xml:space="preserve">
+        <source>Removing from collection failed</source>
+      </trans-unit>
+      <trans-unit id="media.collections" xml:space="preserve">
+        <source>Collections</source>
+      </trans-unit>
+      <trans-unit id="media.copyright" xml:space="preserve">
+        <source>Copyright</source>
+      </trans-unit>
+      <trans-unit id="media.delete" xml:space="preserve">
+        <source>Delete</source>
+      </trans-unit>
+      <trans-unit id="media.deleteAsset" xml:space="preserve">
+        <source>Delete asset</source>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetDescription" xml:space="preserve">
+        <source>The asset will be permanently removed. Assets that are still in use cannot be deleted.</source>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetFailed" xml:space="preserve">
+        <source>Deleting the asset failed.</source>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetTitle" xml:space="preserve">
+        <source>Delete this asset?</source>
+      </trans-unit>
+      <trans-unit id="media.deleteCollectionDescription" xml:space="preserve">
+        <source>“{0}” will be removed. The assets inside it are kept.</source>
+      </trans-unit>
+      <trans-unit id="media.deleteTagDescription" xml:space="preserve">
+        <source>“{0}” will be removed from all assets. The assets are kept.</source>
+      </trans-unit>
+      <trans-unit id="media.deleteThis" xml:space="preserve">
+        <source>Delete this {0}?</source>
+      </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+      </trans-unit>
+      <trans-unit id="media.done" xml:space="preserve">
+        <source>Done</source>
+      </trans-unit>
+      <trans-unit id="media.doubleClickToChoose" xml:space="preserve">
+        <source>— double-click to choose.</source>
+      </trans-unit>
+      <trans-unit id="media.dragFilesHere" xml:space="preserve">
+        <source>Drag files here</source>
+      </trans-unit>
+      <trans-unit id="media.editAsset" xml:space="preserve">
+        <source>Edit asset</source>
+      </trans-unit>
+      <trans-unit id="media.failed" xml:space="preserve">
+        <source>Failed</source>
+      </trans-unit>
+      <trans-unit id="media.filename" xml:space="preserve">
+        <source>Filename</source>
+      </trans-unit>
+      <trans-unit id="media.for" xml:space="preserve">
+        <source>for</source>
+      </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+      </trans-unit>
+      <trans-unit id="media.gridView" xml:space="preserve">
+        <source>Grid view</source>
+      </trans-unit>
+      <trans-unit id="media.importFailed" xml:space="preserve">
+        <source>Importing the asset failed</source>
+      </trans-unit>
+      <trans-unit id="media.importToNeos" xml:space="preserve">
+        <source>Import to Neos</source>
+      </trans-unit>
+      <trans-unit id="media.importing" xml:space="preserve">
+        <source>Importing…</source>
+      </trans-unit>
+      <trans-unit id="media.listView" xml:space="preserve">
+        <source>List view</source>
+      </trans-unit>
+      <trans-unit id="media.loadingAssets" xml:space="preserve">
+        <source>Loading assets…</source>
+      </trans-unit>
+      <trans-unit id="media.loadingMore" xml:space="preserve">
+        <source>Loading more…</source>
+      </trans-unit>
+      <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
+        <source>Saving the metadata failed</source>
+      </trans-unit>
+      <trans-unit id="media.metadataSaved" xml:space="preserve">
+        <source>Metadata saved.</source>
+      </trans-unit>
+      <trans-unit id="media.modified" xml:space="preserve">
+        <source>Modified</source>
+      </trans-unit>
+      <trans-unit id="media.name" xml:space="preserve">
+        <source>Name</source>
+      </trans-unit>
+      <trans-unit id="media.newCollection" xml:space="preserve">
+        <source>New collection</source>
+      </trans-unit>
+      <trans-unit id="media.newTag" xml:space="preserve">
+        <source>New tag</source>
+      </trans-unit>
+      <trans-unit id="media.noAssetsMatch" xml:space="preserve">
+        <source>No assets match the current filters.</source>
+      </trans-unit>
+      <trans-unit id="media.noCollections" xml:space="preserve">
+        <source>No collections yet</source>
+      </trans-unit>
+      <trans-unit id="media.noTags" xml:space="preserve">
+        <source>No tags yet</source>
+      </trans-unit>
+      <trans-unit id="media.none" xml:space="preserve">
+        <source>None</source>
+      </trans-unit>
+      <trans-unit id="media.nounCollection" xml:space="preserve">
+        <source>collection</source>
+      </trans-unit>
+      <trans-unit id="media.nounTag" xml:space="preserve">
+        <source>tag</source>
+      </trans-unit>
+      <trans-unit id="media.or" xml:space="preserve">
+        <source>or</source>
+      </trans-unit>
+      <trans-unit id="media.pickAsset" xml:space="preserve">
+        <source>Pick an asset</source>
+      </trans-unit>
+      <trans-unit id="media.readOnly" xml:space="preserve">
+        <source>This asset is read-only.</source>
+      </trans-unit>
+      <trans-unit id="media.readOnlyBadge" xml:space="preserve">
+        <source>read-only</source>
+      </trans-unit>
+      <trans-unit id="media.removeLabel" xml:space="preserve">
+        <source>Remove {0}</source>
+      </trans-unit>
+      <trans-unit id="media.rename" xml:space="preserve">
+        <source>Rename</source>
+      </trans-unit>
+      <trans-unit id="media.renameNoun" xml:space="preserve">
+        <source>Rename {0}</source>
+      </trans-unit>
+      <trans-unit id="media.save" xml:space="preserve">
+        <source>Save</source>
+      </trans-unit>
+      <trans-unit id="media.saveMetadata" xml:space="preserve">
+        <source>Save metadata</source>
+      </trans-unit>
+      <trans-unit id="media.saving" xml:space="preserve">
+        <source>Saving…</source>
+      </trans-unit>
+      <trans-unit id="media.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+      </trans-unit>
+      <trans-unit id="media.searchAssetsAria" xml:space="preserve">
+        <source>Search assets</source>
+      </trans-unit>
+      <trans-unit id="media.size" xml:space="preserve">
+        <source>Size</source>
+      </trans-unit>
+      <trans-unit id="media.sortNameAsc" xml:space="preserve">
+        <source>Name A–Z</source>
+      </trans-unit>
+      <trans-unit id="media.sortNameDesc" xml:space="preserve">
+        <source>Name Z–A</source>
+      </trans-unit>
+      <trans-unit id="media.sortNewest" xml:space="preserve">
+        <source>Newest first</source>
+      </trans-unit>
+      <trans-unit id="media.sortOldest" xml:space="preserve">
+        <source>Oldest first</source>
+      </trans-unit>
+      <trans-unit id="media.source" xml:space="preserve">
+        <source>Source</source>
+      </trans-unit>
+      <trans-unit id="media.tag" xml:space="preserve">
+        <source>Tag</source>
+      </trans-unit>
+      <trans-unit id="media.tagAddFailed" xml:space="preserve">
+        <source>Adding the tag failed</source>
+      </trans-unit>
+      <trans-unit id="media.tagRemoveFailed" xml:space="preserve">
+        <source>Removing the tag failed</source>
+      </trans-unit>
+      <trans-unit id="media.tags" xml:space="preserve">
+        <source>Tags</source>
+      </trans-unit>
+      <trans-unit id="media.title" xml:space="preserve">
+        <source>Title</source>
+      </trans-unit>
+      <trans-unit id="media.type" xml:space="preserve">
+        <source>Type</source>
+      </trans-unit>
+      <trans-unit id="media.untagged" xml:space="preserve">
+        <source>Untagged</source>
+      </trans-unit>
+      <trans-unit id="media.upload" xml:space="preserve">
+        <source>Upload</source>
+      </trans-unit>
+      <trans-unit id="media.uploadAssets" xml:space="preserve">
+        <source>Upload assets</source>
+      </trans-unit>
+      <trans-unit id="media.uploadFileFailed" xml:space="preserve">
+        <source>Uploading "{0}" failed</source>
+      </trans-unit>
+      <trans-unit id="media.usage" xml:space="preserve">
+        <source>Usage</source>
+      </trans-unit>
+      <trans-unit id="media.usageInaccessible" xml:space="preserve">
+        <source>+ {0} usage(s) you cannot access</source>
+      </trans-unit>
+      <trans-unit id="media.usageNone" xml:space="preserve">
+        <source>Not used anywhere. Safe to delete.</source>
+      </trans-unit>
+      <trans-unit id="media.usageUnavailable" xml:space="preserve">
+        <source>Usage information is unavailable.</source>
+      </trans-unit>
+      <trans-unit id="media.working" xml:space="preserve">
+        <source>Working…</source>
+      </trans-unit>
+      <trans-unit id="modal.adminsOnly" xml:space="preserve">
+        <source>Administrators only</source>
+      </trans-unit>
+      <trans-unit id="modal.noAccess" xml:space="preserve">
+        <source>You do not have access to this section.</source>
+      </trans-unit>
+      <trans-unit id="modal.noSettings" xml:space="preserve">
+        <source>No settings available</source>
+      </trans-unit>
+      <trans-unit id="modal.profile" xml:space="preserve">
+        <source>Profile</source>
+      </trans-unit>
+      <trans-unit id="modal.settings" xml:space="preserve">
+        <source>Settings</source>
+      </trans-unit>
+      <trans-unit id="modal.settingsSections" xml:space="preserve">
+        <source>Settings sections</source>
+      </trans-unit>
+      <trans-unit id="modal.users" xml:space="preserve">
+        <source>Users</source>
+      </trans-unit>
+      <trans-unit id="panel.collapse" xml:space="preserve">
+        <source>Collapse panel</source>
+      </trans-unit>
+      <trans-unit id="panel.dragHere" xml:space="preserve">
+        <source>Drag panels here</source>
+      </trans-unit>
+      <trans-unit id="panel.expand" xml:space="preserve">
+        <source>Expand panel</source>
+      </trans-unit>
+      <trans-unit id="panel.loadingSites" xml:space="preserve">
+        <source>Loading sites…</source>
+      </trans-unit>
+      <trans-unit id="panel.title.clipboard" xml:space="preserve">
+        <source>Clipboard</source>
+      </trans-unit>
+      <trans-unit id="panel.title.create" xml:space="preserve">
+        <source>Create</source>
+      </trans-unit>
+      <trans-unit id="panel.title.documents" xml:space="preserve">
+        <source>Documents</source>
+      </trans-unit>
+      <trans-unit id="panel.title.inspector" xml:space="preserve">
+        <source>Inspector</source>
+      </trans-unit>
+      <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
+        <source>Media Library</source>
+      </trans-unit>
+      <trans-unit id="panel.title.outline" xml:space="preserve">
+        <source>Outline</source>
+      </trans-unit>
+      <trans-unit id="panel.title.visualEditor" xml:space="preserve">
+        <source>Visual Editor</source>
+      </trans-unit>
+      <trans-unit id="preview.openInNewTab" xml:space="preserve">
+        <source>Open page in a new tab</source>
+      </trans-unit>
+      <trans-unit id="preview.pageFrame" xml:space="preserve">
+        <source>Page preview</source>
+      </trans-unit>
+      <trans-unit id="preview.reload" xml:space="preserve">
+        <source>Reload preview</source>
+      </trans-unit>
+      <trans-unit id="preview.selectDocument" xml:space="preserve">
+        <source>Select a document to preview it.</source>
+      </trans-unit>
+      <trans-unit id="profile.changePassword" xml:space="preserve">
+        <source>Change password</source>
+      </trans-unit>
+      <trans-unit id="profile.changePasswordHint" xml:space="preserve">
+        <source>Enter your current password to set a new one.</source>
+      </trans-unit>
+      <trans-unit id="profile.changing" xml:space="preserve">
+        <source>Changing…</source>
+      </trans-unit>
+      <trans-unit id="profile.currentPassword" xml:space="preserve">
+        <source>Current password</source>
+      </trans-unit>
+      <trans-unit id="profile.email" xml:space="preserve">
+        <source>Email</source>
+      </trans-unit>
+      <trans-unit id="profile.firstName" xml:space="preserve">
+        <source>First name</source>
+      </trans-unit>
+      <trans-unit id="profile.interfaceLanguage" xml:space="preserve">
+        <source>Interface language</source>
+      </trans-unit>
+      <trans-unit id="profile.languageReload" xml:space="preserve">
+        <source>The new interface language applies after the next reload.</source>
+      </trans-unit>
+      <trans-unit id="profile.lastName" xml:space="preserve">
+        <source>Last name</source>
+      </trans-unit>
+      <trans-unit id="profile.loadFailed" xml:space="preserve">
+        <source>Could not load your profile</source>
+      </trans-unit>
+      <trans-unit id="profile.newPassword" xml:space="preserve">
+        <source>New password</source>
+      </trans-unit>
+      <trans-unit id="profile.passwordChanged" xml:space="preserve">
+        <source>Your password has been changed.</source>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailed" xml:space="preserve">
+        <source>Could not change password</source>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailedDetail" xml:space="preserve">
+        <source>Changing the password failed.</source>
+      </trans-unit>
+      <trans-unit id="profile.passwordMismatch" xml:space="preserve">
+        <source>The new passwords do not match.</source>
+      </trans-unit>
+      <trans-unit id="profile.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+      </trans-unit>
+      <trans-unit id="profile.saveFailed" xml:space="preserve">
+        <source>Could not save profile</source>
+      </trans-unit>
+      <trans-unit id="profile.saveFailedDetail" xml:space="preserve">
+        <source>Saving your profile failed.</source>
+      </trans-unit>
+      <trans-unit id="profile.saveProfile" xml:space="preserve">
+        <source>Save profile</source>
+      </trans-unit>
+      <trans-unit id="profile.saved" xml:space="preserve">
+        <source>Your profile has been saved.</source>
+      </trans-unit>
+      <trans-unit id="profile.saving" xml:space="preserve">
+        <source>Saving…</source>
+      </trans-unit>
+      <trans-unit id="profile.subtitle" xml:space="preserve">
+        <source>Your personal account settings.</source>
+      </trans-unit>
+      <trans-unit id="profile.title" xml:space="preserve">
+        <source>Profile</source>
+      </trans-unit>
+      <trans-unit id="profile.unavailable" xml:space="preserve">
+        <source>Your profile is currently unavailable.</source>
+      </trans-unit>
+      <trans-unit id="sites.activeSite" xml:space="preserve">
+        <source>Active site</source>
+      </trans-unit>
+      <trans-unit id="sites.selectPlaceholder" xml:space="preserve">
+        <source>Select site…</source>
+      </trans-unit>
+      <trans-unit id="tree.clearFilter" xml:space="preserve">
+        <source>Clear filter</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
+        <source>Contains changes in workspace "{0}"</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.hidden" xml:space="preserve">
+        <source>Hidden</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInMenu" xml:space="preserve">
+        <source>Hidden in menus</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInherited" xml:space="preserve">
+        <source>Hidden (inherited)</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.modified" xml:space="preserve">
+        <source>Modified in workspace "{0}"</source>
+      </trans-unit>
+      <trans-unit id="tree.documentTreeLabel" xml:space="preserve">
+        <source>Document tree</source>
+      </trans-unit>
+      <trans-unit id="tree.emptyContent" xml:space="preserve">
+        <source>No content below this document.</source>
+      </trans-unit>
+      <trans-unit id="tree.emptyDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+      </trans-unit>
+      <trans-unit id="tree.filterByNodeType" xml:space="preserve">
+        <source>Filter by node type</source>
+      </trans-unit>
+      <trans-unit id="tree.loadingContent" xml:space="preserve">
+        <source>Loading content…</source>
+      </trans-unit>
+      <trans-unit id="tree.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+      </trans-unit>
+      <trans-unit id="tree.newDocument" xml:space="preserve">
+        <source>New document…</source>
+      </trans-unit>
+      <trans-unit id="tree.newDocumentAria" xml:space="preserve">
+        <source>New document</source>
+      </trans-unit>
+      <trans-unit id="tree.noSearchMatch" xml:space="preserve">
+        <source>No documents match the search.</source>
+      </trans-unit>
+      <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
+        <source>Loading the outline failed</source>
+      </trans-unit>
+      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
+        <source>Select a document to outline its content.</source>
+      </trans-unit>
+      <trans-unit id="tree.outlinerLabel" xml:space="preserve">
+        <source>Content outliner</source>
+      </trans-unit>
+      <trans-unit id="tree.searchAriaLabel" xml:space="preserve">
+        <source>Search documents by title</source>
+      </trans-unit>
+      <trans-unit id="tree.searchFailed" xml:space="preserve">
+        <source>Searching documents failed</source>
+      </trans-unit>
+      <trans-unit id="tree.searchPlaceholder" xml:space="preserve">
+        <source>Search documents…</source>
+      </trans-unit>
+      <trans-unit id="tree.searchResultsLabel" xml:space="preserve">
+        <source>Document search results</source>
+      </trans-unit>
+      <trans-unit id="tree.searchingDocuments" xml:space="preserve">
+        <source>Searching documents…</source>
+      </trans-unit>
+      <trans-unit id="tree.treeLoadFailed" xml:space="preserve">
+        <source>Loading the tree failed</source>
+      </trans-unit>
+      <trans-unit id="users.active" xml:space="preserve">
+        <source>Active</source>
+      </trans-unit>
+      <trans-unit id="users.columnEmail" xml:space="preserve">
+        <source>Email</source>
+      </trans-unit>
+      <trans-unit id="users.columnName" xml:space="preserve">
+        <source>Name</source>
+      </trans-unit>
+      <trans-unit id="users.columnRoles" xml:space="preserve">
+        <source>Roles</source>
+      </trans-unit>
+      <trans-unit id="users.columnStatus" xml:space="preserve">
+        <source>Status</source>
+      </trans-unit>
+      <trans-unit id="users.inactive" xml:space="preserve">
+        <source>Inactive</source>
+      </trans-unit>
+      <trans-unit id="users.loadFailed" xml:space="preserve">
+        <source>Could not load users</source>
+      </trans-unit>
+      <trans-unit id="users.none" xml:space="preserve">
+        <source>No users found.</source>
+      </trans-unit>
+      <trans-unit id="users.subtitle" xml:space="preserve">
+        <source>Backend user accounts.</source>
+      </trans-unit>
+      <trans-unit id="users.title" xml:space="preserve">
+        <source>Users</source>
+      </trans-unit>
+      <trans-unit id="users.unavailable" xml:space="preserve">
+        <source>Users are currently unavailable.</source>
+      </trans-unit>
+      <trans-unit id="users.you" xml:space="preserve">
+        <source>You</source>
+      </trans-unit>
+      <trans-unit id="view.clickToSelect" xml:space="preserve">
+        <source>Click to select</source>
+      </trans-unit>
+      <trans-unit id="view.copiedNodeType" xml:space="preserve">
+        <source>Copied node type to clipboard</source>
+      </trans-unit>
+      <trans-unit id="view.copyFailed" xml:space="preserve">
+        <source>Could not copy to clipboard</source>
+      </trans-unit>
+      <trans-unit id="view.copyNodeType" xml:space="preserve">
+        <source>Copy node type to clipboard</source>
+      </trans-unit>
+      <trans-unit id="view.created" xml:space="preserve">
+        <source>Created</source>
+      </trans-unit>
+      <trans-unit id="view.dataSourceUriUnsupported" xml:space="preserve">
+        <source>dataSourceUri is not supported - register a data source and reference it via the dataSource option.</source>
+      </trans-unit>
+      <trans-unit id="view.identifier" xml:space="preserve">
+        <source>Identifier</source>
+      </trans-unit>
+      <trans-unit id="view.lastModification" xml:space="preserve">
+        <source>Last modification</source>
+      </trans-unit>
+      <trans-unit id="view.name" xml:space="preserve">
+        <source>Name</source>
+      </trans-unit>
+      <trans-unit id="view.noData" xml:space="preserve">
+        <source>No data.</source>
+      </trans-unit>
+      <trans-unit id="view.noDataSource" xml:space="preserve">
+        <source>No data source configured for this view.</source>
+      </trans-unit>
+      <trans-unit id="view.nodeAddress" xml:space="preserve">
+        <source>Node address</source>
+      </trans-unit>
+      <trans-unit id="view.noneConfigured" xml:space="preserve">
+        <source>(none configured)</source>
+      </trans-unit>
+      <trans-unit id="view.notEnoughData" xml:space="preserve">
+        <source>Not enough data for a chart.</source>
+      </trans-unit>
+      <trans-unit id="view.notSupported" xml:space="preserve">
+        <source>View not supported yet: {0}</source>
+      </trans-unit>
+      <trans-unit id="view.timeSeriesChart" xml:space="preserve">
+        <source>Time series chart</source>
+      </trans-unit>
+      <trans-unit id="view.type" xml:space="preserve">
+        <source>Type</source>
+      </trans-unit>
+      <trans-unit id="view.unavailable" xml:space="preserve">
+        <source>unavailable</source>
+      </trans-unit>
+      <trans-unit id="workspace.badge.changed" xml:space="preserve">
+        <source>Changed</source>
+      </trans-unit>
+      <trans-unit id="workspace.badge.moved" xml:space="preserve">
+        <source>Moved</source>
+      </trans-unit>
+      <trans-unit id="workspace.badge.new" xml:space="preserve">
+        <source>New</source>
+      </trans-unit>
+      <trans-unit id="workspace.badge.removed" xml:space="preserve">
+        <source>Removed</source>
+      </trans-unit>
+      <trans-unit id="workspace.baseWorkspaceFallback" xml:space="preserve">
+        <source>the base workspace</source>
+      </trans-unit>
+      <trans-unit id="workspace.cannotBeUndone" xml:space="preserve">
+        <source>This cannot be undone.</source>
+      </trans-unit>
+      <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
+        <source>You cannot publish to this workspace</source>
+      </trans-unit>
+      <trans-unit id="workspace.change.added" xml:space="preserve">
+        <source>added</source>
+      </trans-unit>
+      <trans-unit id="workspace.change.changed" xml:space="preserve">
+        <source>changed</source>
+      </trans-unit>
+      <trans-unit id="workspace.change.moved" xml:space="preserve">
+        <source>moved</source>
+      </trans-unit>
+      <trans-unit id="workspace.change.removed" xml:space="preserve">
+        <source>removed</source>
+      </trans-unit>
+      <trans-unit id="workspace.changesPublished" xml:space="preserve">
+        <source>Changes published.</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countMany" xml:space="preserve">
+        <source>{0} conflicting changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countOne" xml:space="preserve">
+        <source>1 conflicting change</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.description" xml:space="preserve">
+        <source>These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardAllChanges" xml:space="preserve">
+        <source>Discard all changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardConflicting" xml:space="preserve">
+        <source>Discard conflicting changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.nodeDeleted" xml:space="preserve">
+        <source>It was deleted in the target workspace since you changed it.</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.partialDescription" xml:space="preserve">
+        <source>These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolveFailed" xml:space="preserve">
+        <source>Resolving conflicts failed</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolvedPublished" xml:space="preserve">
+        <source>Conflicting changes discarded; the rest was published.</source>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+      </trans-unit>
+      <trans-unit id="workspace.discard.button" xml:space="preserve">
+        <source>Discard</source>
+      </trans-unit>
+      <trans-unit id="workspace.discard.failed" xml:space="preserve">
+        <source>Discarding failed</source>
+      </trans-unit>
+      <trans-unit id="workspace.discard.success" xml:space="preserve">
+        <source>Changes discarded.</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardAll" xml:space="preserve">
+        <source>Discard all</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllMany" xml:space="preserve">
+        <source>All {0} pending changes will be discarded.</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllOne" xml:space="preserve">
+        <source>All 1 pending change will be discarded.</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllTitle" xml:space="preserve">
+        <source>Discard all changes?</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageMany" xml:space="preserve">
+        <source>{0} pending changes on this page will be discarded.</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageOne" xml:space="preserve">
+        <source>1 pending change on this page will be discarded.</source>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageTitle" xml:space="preserve">
+        <source>Discard changes on this page?</source>
+      </trans-unit>
+      <trans-unit id="workspace.live" xml:space="preserve">
+        <source>Live</source>
+      </trans-unit>
+      <trans-unit id="workspace.manyChanges" xml:space="preserve">
+        <source>{0} changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.moreActions" xml:space="preserve">
+        <source>More publish and discard actions</source>
+      </trans-unit>
+      <trans-unit id="workspace.noPendingChanges" xml:space="preserve">
+        <source>No pending changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.oneChange" xml:space="preserve">
+        <source>1 change</source>
+      </trans-unit>
+      <trans-unit id="workspace.pendingBadge" xml:space="preserve">
+        <source>{0} pending changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
+        <source>Publish all changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishDenied" xml:space="preserve">
+        <source>You are not allowed to publish to "{0}"</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
+        <source>Publish or discard your changes first.</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
+        <source>Publish {0} pending changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
+        <source>Publish 1 pending change</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishTarget" xml:space="preserve">
+        <source>Workspace to publish to</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishThisPage" xml:space="preserve">
+        <source>Publish this page</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishing.failed" xml:space="preserve">
+        <source>Publishing failed</source>
+      </trans-unit>
+      <trans-unit id="workspace.readOnly" xml:space="preserve">
+        <source>read-only</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.description" xml:space="preserve">
+        <source>Changes on top of "{0}". Select documents to publish or discard.</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyBody" xml:space="preserve">
+        <source>The pending changes on the selected documents will be discarded. This cannot be undone.</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyTitle" xml:space="preserve">
+        <source>Discard changes on {0} documents?</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneBody" xml:space="preserve">
+        <source>The pending changes on the selected document will be discarded. This cannot be undone.</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneTitle" xml:space="preserve">
+        <source>Discard changes on this document?</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardSelected" xml:space="preserve">
+        <source>Discard selected</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.hidden" xml:space="preserve">
+        <source>Hidden</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.loading" xml:space="preserve">
+        <source>Loading changes…</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
+        <source>Publish selected</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
+        <source>Publish selected ({0})</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectAll" xml:space="preserve">
+        <source>Select all ({0})</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectedOf" xml:space="preserve">
+        <source>{0} of {1} selected</source>
+      </trans-unit>
+      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
+        <source>Review changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
+        <source>Select workspace…</source>
+      </trans-unit>
+      <trans-unit id="workspace.switchFailed" xml:space="preserve">
+        <source>Switching the workspace failed</source>
+      </trans-unit>
+      <trans-unit id="workspace.switched" xml:space="preserve">
+        <source>Workspace switched.</source>
+      </trans-unit>
+      <trans-unit id="workspace.sync.action" xml:space="preserve">
+        <source>Synchronize</source>
+      </trans-unit>
+      <trans-unit id="workspace.sync.failed" xml:space="preserve">
+        <source>Synchronizing failed</source>
+      </trans-unit>
+      <trans-unit id="workspace.sync.hint" xml:space="preserve">
+        <source>Others published changes to the base workspace. Synchronize to pull them into this workspace.</source>
+      </trans-unit>
+      <trans-unit id="workspace.sync.success" xml:space="preserve">
+        <source>Workspace synchronized.</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

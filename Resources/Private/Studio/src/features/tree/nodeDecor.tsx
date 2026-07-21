@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { NodeTypeMap } from '@/api/nodeTypes'
 import { isExplicitlyHidden, type NodeDto } from '@/api/nodes'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
 import type { PendingChanges } from './usePendingChanges'
@@ -41,7 +42,9 @@ export function nodeDecor(
     markers.push(
       <span
         key="dirty"
-        title={`Modified in workspace "${changed.workspace}"`}
+        title={t('tree.decor.modified', 'Modified in workspace "{0}"', [
+          changed.workspace,
+        ])}
         className="size-1.5 rounded-full bg-orange-500"
       />,
     )
@@ -50,7 +53,11 @@ export function nodeDecor(
     markers.push(
       <span
         key="containsDirty"
-        title={`Contains changes in workspace "${changed.workspace}"`}
+        title={t(
+          'tree.decor.containsChanges',
+          'Contains changes in workspace "{0}"',
+          [changed.workspace],
+        )}
         className="size-1.5 rounded-full border border-orange-500"
       />,
     )
@@ -58,10 +65,10 @@ export function nodeDecor(
 
   const iconTitle = hidden
     ? hiddenInherited
-      ? 'Hidden (inherited)'
-      : 'Hidden'
+      ? t('tree.decor.hiddenInherited', 'Hidden (inherited)')
+      : t('tree.decor.hidden', 'Hidden')
     : hiddenInMenu
-      ? 'Hidden in menus'
+      ? t('tree.decor.hiddenInMenu', 'Hidden in menus')
       : undefined
 
   return {

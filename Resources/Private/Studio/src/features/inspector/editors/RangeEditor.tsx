@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
@@ -114,7 +115,7 @@ export const RangeEditor: PropertyEditorComponent = ({
             }
           }}
           className="min-w-0 flex-1 text-center"
-          title="Current value"
+          title={t('editor.range.currentValue', 'Current value')}
         />
         {opts.unit && (
           <span className="text-xs pr-2 text-neutral-400">{opts.unit}</span>
@@ -139,10 +140,10 @@ export const RangeEditor: PropertyEditorComponent = ({
           />
         </div>
         <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
-          <span title="Minimum">
+          <span title={t('editor.range.minimum', 'Minimum')}>
             {opts.minLabel ?? `${opts.min}${opts.unit}`}
           </span>
-          <span title="Maximum">
+          <span title={t('editor.range.maximum', 'Maximum')}>
             {opts.maxLabel ?? `${opts.max}${opts.unit}`}
           </span>
         </div>

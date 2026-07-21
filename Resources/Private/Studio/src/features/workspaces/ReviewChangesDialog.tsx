@@ -19,27 +19,37 @@ import {
 } from '@/components/ui/dialog'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
+import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import { useWorkspacePublishing } from './useWorkspacePublishing'
 
 /** The change verbs a document row can carry, in display priority order. */
 const CHANGE_BADGES = [
-  { key: 'created', label: 'New', icon: 'fa-plus', className: 'bg-green-500' },
+  {
+    key: 'created',
+    label: 'New',
+    labelKey: 'workspace.badge.new',
+    icon: 'fa-plus',
+    className: 'bg-green-500',
+  },
   {
     key: 'deleted',
     label: 'Removed',
+    labelKey: 'workspace.badge.removed',
     icon: 'fa-trash-can',
     className: 'bg-red-500',
   },
   {
     key: 'moved',
     label: 'Moved',
+    labelKey: 'workspace.badge.moved',
     icon: 'fa-arrows-up-down-left-right',
     className: 'bg-blue-500',
   },
   {
     key: 'changed',
     label: 'Changed',
+    labelKey: 'workspace.badge.changed',
     icon: 'fa-pen',
     className: 'bg-amber-500',
   },
@@ -60,7 +70,7 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
             className={`fas fa-fw ${badge.icon} text-[0.625rem]`}
             aria-hidden
           />
-          {badge.label}
+          {t(badge.labelKey, badge.label)}
         </span>
       ))}
     </span>
@@ -149,16 +159,29 @@ export function ReviewChangesDialog({
   }
 
   const busy = operation.isPending
-  const publishDeniedHint = `You are not allowed to publish to "${workspace.baseWorkspace ?? 'the base workspace'}"`
+  const baseWorkspaceName =
+    workspace.baseWorkspace ??
+    t('workspace.baseWorkspaceFallback', 'the base workspace')
+  const publishDeniedHint = t(
+    'workspace.publishDenied',
+    'You are not allowed to publish to "{0}"',
+    [baseWorkspaceName],
+  )
 
   return (
     <>
       <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
         <DialogContent size="lg" className="flex max-h-[85vh] flex-col">
           <DialogHeader>
-            <DialogTitle>Review changes</DialogTitle>
+            <DialogTitle>
+              {t('workspace.reviewChanges', 'Review changes')}
+            </DialogTitle>
             <DialogDescription>
-              {`Changes on top of "${workspace.baseWorkspace ?? 'the base workspace'}". Select documents to publish or discard.`}
+              {t(
+                'workspace.review.description',
+                'Changes on top of "{0}". Select documents to publish or discard.',
+                [baseWorkspaceName],
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -170,18 +193,26 @@ export function ReviewChangesDialog({
                 onCheckedChange={toggleAll}
               />
               {selectedCount > 0
-                ? `${selectedCount} of ${documents.length} selected`
-                : `Select all (${documents.length})`}
+                ? t('workspace.review.selectedOf', '{0} of {1} selected', [
+                    selectedCount,
+                    documents.length,
+                  ])
+                : t('workspace.review.selectAll', 'Select all ({0})', [
+                    documents.length,
+                  ])}
             </label>
           )}
 
           <div className="-mx-1 flex-1 overflow-y-auto px-1">
             {isLoading ? (
-              <LoadingState label="Loading changes…" className="py-8" />
+              <LoadingState
+                label={t('workspace.review.loading', 'Loading changes…')}
+                className="py-8"
+              />
             ) : documents.length === 0 ? (
               <Placeholder
                 icon="fa-check"
-                title="No pending changes."
+                title={t('workspace.review.empty', 'No pending changes.')}
                 className="py-8"
               />
             ) : (
@@ -225,7 +256,7 @@ export function ReviewChangesDialog({
                             {document.hidden && (
                               <i
                                 className="fas fa-eye-slash text-xs text-neutral-500"
-                                title="Hidden"
+                                title={t('workspace.review.hidden', 'Hidden')}
                                 aria-hidden
                               />
                             )}
@@ -238,10 +269,11 @@ export function ReviewChangesDialog({
                           <div className="mt-1 flex items-center gap-2">
                             <ChangeBadges document={document} />
                             <span className="text-xs text-neutral-500">
-                              {document.changeCount}{' '}
                               {document.changeCount === 1
-                                ? 'change'
-                                : 'changes'}
+                                ? t('workspace.oneChange', '1 change')
+                                : t('workspace.manyChanges', '{0} changes', [
+                                    document.changeCount,
+                                  ])}
                             </span>
                           </div>
                         </div>
@@ -249,7 +281,7 @@ export function ReviewChangesDialog({
                           <button
                             type="button"
                             className="mt-0.5 shrink-0 text-xs text-blue-400 hover:underline"
-                            title="Go to page"
+                            title={t('workspace.review.goToPage', 'Go to page')}
                             onClick={(event) => {
                               // Don't toggle the row's checkbox.
                               event.preventDefault()
@@ -277,7 +309,7 @@ export function ReviewChangesDialog({
               onClick={() => onOpenChange(false)}
               disabled={busy}
             >
-              Close
+              {t('action.close', 'Close')}
             </Button>
             <Button
               variant="destructive"
@@ -285,7 +317,7 @@ export function ReviewChangesDialog({
               onClick={() => setConfirmDiscard(true)}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Discard selected
+              {t('workspace.review.discardSelected', 'Discard selected')}
             </Button>
             <Button
               disabled={selectedCount === 0 || !canPublish || busy}
@@ -302,8 +334,12 @@ export function ReviewChangesDialog({
                 aria-hidden
               />
               {selectedCount > 0
-                ? `Publish selected (${selectedCount})`
-                : 'Publish selected'}
+                ? t(
+                    'workspace.review.publishSelectedCount',
+                    'Publish selected ({0})',
+                    [selectedCount],
+                  )
+                : t('workspace.review.publishSelected', 'Publish selected')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -317,13 +353,26 @@ export function ReviewChangesDialog({
           <DialogHeader>
             <DialogTitle>
               {selectedCount === 1
-                ? 'Discard changes on this document?'
-                : `Discard changes on ${selectedCount} documents?`}
+                ? t(
+                    'workspace.review.discardOneTitle',
+                    'Discard changes on this document?',
+                  )
+                : t(
+                    'workspace.review.discardManyTitle',
+                    'Discard changes on {0} documents?',
+                    [selectedCount],
+                  )}
             </DialogTitle>
             <DialogDescription>
-              The pending changes on the selected{' '}
-              {selectedCount === 1 ? 'document' : 'documents'} will be
-              discarded. This cannot be undone.
+              {selectedCount === 1
+                ? t(
+                    'workspace.review.discardOneBody',
+                    'The pending changes on the selected document will be discarded. This cannot be undone.',
+                  )
+                : t(
+                    'workspace.review.discardManyBody',
+                    'The pending changes on the selected documents will be discarded. This cannot be undone.',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -331,7 +380,7 @@ export function ReviewChangesDialog({
               variant="secondary"
               onClick={() => setConfirmDiscard(false)}
             >
-              Cancel
+              {t('action.cancel', 'Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -340,7 +389,7 @@ export function ReviewChangesDialog({
                 run('discard')
               }}
             >
-              Discard
+              {t('workspace.discard.button', 'Discard')}
             </Button>
           </DialogFooter>
         </DialogContent>

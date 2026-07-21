@@ -14,6 +14,7 @@ import {
 } from '@/api/assetValue'
 import { parseCropConfig } from './cropOptions'
 import { ImageCropDialog } from './ImageCropDialog'
+import { translate as t } from '@/lib/i18n'
 
 /**
  * The shared body of the Asset and Image editors: shows the currently
@@ -96,7 +97,9 @@ export function AssetFieldEditor({
         className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-700 bg-neutral-950 px-3 py-4 text-sm text-neutral-400 hover:border-neutral-500 hover:text-white"
       >
         <i className={`fas ${iconClass} text-[1rem]`} aria-hidden />
-        {kind === 'image' ? 'Select image…' : 'Select asset…'}
+        {kind === 'image'
+          ? t('editor.selectImage', 'Select image…')
+          : t('editor.selectAsset', 'Select asset…')}
       </button>
     )
   }
@@ -120,7 +123,7 @@ export function AssetFieldEditor({
               />
             ) : (
               <span className="py-6 text-xs text-neutral-500">
-                Asset not found
+                {t('editor.assetNotFound', 'Asset not found')}
               </span>
             )}
           </div>
@@ -132,7 +135,7 @@ export function AssetFieldEditor({
             className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
           >
             <span className="rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white">
-              Select…
+              {t('editor.select', 'Select…')}
             </span>
           </button>
           <div className="absolute top-1 right-1 z-10 flex gap-1">
@@ -141,7 +144,7 @@ export function AssetFieldEditor({
                 variant="secondary"
                 size="icon-xs"
                 onClick={() => setCropOpen(true)}
-                title="Crop"
+                title={t('editor.crop', 'Crop')}
               >
                 <i className="fas fa-crop-simple" aria-hidden />
               </Button>
@@ -150,7 +153,7 @@ export function AssetFieldEditor({
               variant="secondary"
               size="icon-xs"
               onClick={clear}
-              title="Remove"
+              title={t('editor.remove', 'Remove')}
             >
               <i className="fas fa-xmark" aria-hidden />
             </Button>
@@ -197,13 +200,22 @@ export function AssetFieldEditor({
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm" title={asset?.label}>
-          {asset ? asset.label : missing ? 'Asset not found' : 'Loading…'}
+          {asset
+            ? asset.label
+            : missing
+              ? t('editor.assetNotFound', 'Asset not found')
+              : t('editor.loading', 'Loading…')}
         </div>
       </div>
       <Button variant="outline" size="sm" onClick={select}>
-        Select…
+        {t('editor.select', 'Select…')}
       </Button>
-      <Button variant="ghost" size="icon-sm" onClick={clear} title="Remove">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={clear}
+        title={t('editor.remove', 'Remove')}
+      >
         <i className="fas fa-xmark" aria-hidden />
       </Button>
     </div>

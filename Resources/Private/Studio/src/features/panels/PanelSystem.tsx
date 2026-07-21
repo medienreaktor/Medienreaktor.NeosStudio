@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   clampToViewport,
@@ -522,7 +523,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
           data-region={region}
           className="grid flex-1 place-items-center text-xs text-neutral-400"
         >
-          Drag panels here
+          {t('panel.dragHere', 'Drag panels here')}
         </div>
       )}
     </div>
@@ -574,7 +575,7 @@ export function SecondaryDock({
       {showCollapsed ? (
         <button
           type="button"
-          aria-label="Expand panel"
+          aria-label={t('panel.expand', 'Expand panel')}
           onClick={() => setCollapsed(false)}
           className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
         >
@@ -588,7 +589,7 @@ export function SecondaryDock({
           {hasPanels && (
             <button
               type="button"
-              aria-label="Collapse panel"
+              aria-label={t('panel.collapse', 'Collapse panel')}
               onClick={() => setCollapsed(true)}
               className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
             >

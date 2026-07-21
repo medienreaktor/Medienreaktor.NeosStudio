@@ -1,6 +1,7 @@
 import type { NodeDto } from '@/api/nodes'
 import type { InspectorView } from '@/features/inspector/inspectorSchema'
 import { Labeled } from '@/features/inspector/PropertyEditor'
+import { translate as t } from '@/lib/i18n'
 import { useInspectorView } from './registry'
 
 /**
@@ -23,9 +24,13 @@ export function InspectorViewRenderer({
       <Labeled label={view.label}>
         <div
           className="min-h-9 rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm text-neutral-400"
-          title={`View not supported yet: ${view.view ?? '(none configured)'}`}
+          title={t('view.notSupported', 'View not supported yet: {0}', [
+            view.view ?? t('view.noneConfigured', '(none configured)'),
+          ])}
         >
-          View not supported yet: {view.view ?? '(none configured)'}
+          {t('view.notSupported', 'View not supported yet: {0}', [
+            view.view ?? t('view.noneConfigured', '(none configured)'),
+          ])}
         </div>
       </Labeled>
     )

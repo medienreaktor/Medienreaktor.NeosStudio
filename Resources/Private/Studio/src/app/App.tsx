@@ -22,7 +22,7 @@ import {
 import { useSites } from '@/api/sites'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
-import { loadTranslations } from '@/lib/i18n'
+import { loadTranslations, translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
@@ -224,7 +224,7 @@ export function App() {
         await handleRedirectCallback()
       } catch (e) {
         callbackFailed = true
-        toast.error(e, { title: 'Login failed' })
+        toast.error(e, { title: t('app.loginFailed', 'Login failed') })
       }
       if (getTokens()) {
         sessionStorage.removeItem(AUTO_LOGIN_KEY)
@@ -291,7 +291,7 @@ export function App() {
   if (auth === 'checking') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <LoadingState label="Loading Neos Studio…" />
+        <LoadingState label={t('app.loadingStudio', 'Loading Neos Studio…')} />
       </div>
     )
   }
@@ -301,8 +301,12 @@ export function App() {
       <div className="grid min-h-screen place-items-center">
         <div className="rounded-lg border bg-neutral-900 px-12 py-10 text-center">
           <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
-          <p className="mb-6 text-neutral-400">Editing environment for Neos</p>
-          <Button onClick={() => beginLogin()}>Connect to the API</Button>
+          <p className="mb-6 text-neutral-400">
+            {t('app.tagline', 'Editing environment for Neos')}
+          </p>
+          <Button onClick={() => beginLogin()}>
+            {t('app.connectToApi', 'Connect to the API')}
+          </Button>
         </div>
       </div>
     )

@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { ApiError } from '@/api/client'
 import { deleteAsset, type MediaAsset } from '@/api/media'
+import { translate as t } from '@/lib/i18n'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,9 +31,11 @@ export async function removeAsset(localId: string): Promise<void> {
       e instanceof ApiError &&
       (e.body as { error?: string } | null)?.error === 'asset_in_use'
     ) {
-      throw new Error('This asset is in use and cannot be deleted.')
+      throw new Error(
+        t('media.assetInUse', 'This asset is in use and cannot be deleted.'),
+      )
     }
-    throw new Error('Deleting the asset failed.')
+    throw new Error(t('media.deleteAssetFailed', 'Deleting the asset failed.'))
   }
 }
 
@@ -84,7 +87,7 @@ export function AssetContextMenu({
               }}
             >
               <i className="fas fa-fw fa-pen" aria-hidden />
-              Edit asset
+              {t('media.editAsset', 'Edit asset')}
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
@@ -95,7 +98,7 @@ export function AssetContextMenu({
               }}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Delete asset
+              {t('media.deleteAsset', 'Delete asset')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -103,8 +106,11 @@ export function AssetContextMenu({
 
       <ConfirmDialog
         open={deleting !== null}
-        title="Delete this asset?"
-        description="The asset will be permanently removed. Assets that are still in use cannot be deleted."
+        title={t('media.deleteAssetTitle', 'Delete this asset?')}
+        description={t(
+          'media.deleteAssetDescription',
+          'The asset will be permanently removed. Assets that are still in use cannot be deleted.',
+        )}
         onOpenChange={(open) => !open && setDeleting(null)}
         onConfirm={() =>
           deleting?.localAssetIdentifier

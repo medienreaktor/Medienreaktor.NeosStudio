@@ -10,6 +10,7 @@ import { localIdentifierFor } from '@/api/assetValue'
 import { toast } from '@/components/ui/toast'
 import { AssetList } from '@/features/media/AssetList'
 import { assetKey } from '@/features/media/useMediaBrowserState'
+import { translate as t } from '@/lib/i18n'
 import { assetUri, parseAssetUri } from '../linkValue'
 import type { LinkTypeTabProps } from '../registry'
 import { SearchInput } from '@/components/ui/search-input'
@@ -35,7 +36,11 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   const pick = (asset: MediaAsset) => {
     localIdentifierFor(asset)
       .then((id) => onChange(assetUri(id)))
-      .catch((e: unknown) => toast.error(e, { title: 'Picking asset failed' }))
+      .catch((e: unknown) =>
+        toast.error(e, {
+          title: t('link.pickAssetFailed', 'Picking asset failed'),
+        }),
+      )
   }
 
   return (
@@ -45,7 +50,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
           <SearchInput
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search assets…"
+            placeholder={t('link.searchAssets', 'Search assets…')}
           />
         </div>
       </div>
@@ -68,7 +73,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
       </div>
       {current.data && (
         <p className="truncate text-xs text-neutral-400">
-          Linked asset: {current.data.label}
+          {t('link.linkedAsset', 'Linked asset: {0}', [current.data.label])}
         </p>
       )}
     </div>

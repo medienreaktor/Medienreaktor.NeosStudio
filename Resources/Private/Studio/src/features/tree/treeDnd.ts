@@ -7,6 +7,7 @@ import { queryKeys } from '@/api/keys'
 import { fetchAllowedChildNodeTypes, type NodeDto } from '@/api/nodes'
 import { queryClient } from '@/app/queryClient'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import {
   type MoveByAddress,
   moveNodesByAddress,
@@ -154,7 +155,7 @@ export function buildTreeDnd<T>({
           await moveNodesByAddress(moves)
           onMoved([...affected])
         } catch (e) {
-          toast.error(e, { title: 'Moving failed' })
+          toast.error(e, { title: t('editing.moveFailed', 'Moving failed') })
         }
       },
     },

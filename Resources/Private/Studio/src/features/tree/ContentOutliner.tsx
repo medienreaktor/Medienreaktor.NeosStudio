@@ -18,6 +18,7 @@ import {
 import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
+import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
 import {
   NodeContextMenu,
@@ -67,7 +68,10 @@ export function ContentOutliner({
     return (
       <Placeholder
         icon="fa-list-tree"
-        title="Select a document to outline its content."
+        title={t(
+          'tree.outlinerEmptyDocument',
+          'Select a document to outline its content.',
+        )}
       />
     )
   }
@@ -164,7 +168,7 @@ function OutlinerTree({
           // the parent's children refresh drops the row.
           if (!isNotFound(e)) {
             toast.error(e, {
-              title: 'Loading the outline failed',
+              title: t('tree.outlineLoadFailed', 'Loading the outline failed'),
               id: 'outliner-load',
             })
           }
@@ -191,7 +195,7 @@ function OutlinerTree({
             ]
           } catch (e) {
             toast.error(e, {
-              title: 'Loading the outline failed',
+              title: t('tree.outlineLoadFailed', 'Loading the outline failed'),
               id: 'outliner-load',
             })
             setRootLoaded(true)
@@ -209,7 +213,7 @@ function OutlinerTree({
           // no children to show, and no error worth reporting.
           if (!isNotFound(e)) {
             toast.error(e, {
-              title: 'Loading the outline failed',
+              title: t('tree.outlineLoadFailed', 'Loading the outline failed'),
               id: 'outliner-load',
             })
           }
@@ -260,10 +264,10 @@ function OutlinerTree({
     <>
       <TreeList
         tree={tree}
-        label="Content outliner"
+        label={t('tree.outlinerLabel', 'Content outliner')}
         loading={!rootLoaded}
-        loadingText="Loading content…"
-        emptyText="No content below this document."
+        loadingText={t('tree.loadingContent', 'Loading content…')}
+        emptyText={t('tree.emptyContent', 'No content below this document.')}
         emptyIcon="fa-list-tree"
         decorate={(data) => {
           if (data === null || data === ROOT_ID) return null
@@ -276,7 +280,7 @@ function OutlinerTree({
       />
       <NodeContextMenu
         target={menuTarget}
-        entityLabel="element"
+        entityLabel={t('editing.entity.element', 'element')}
         clipboardKind="content"
         onClose={() => setMenuTarget(null)}
         onDone={(action, target) => onNodeAction?.(action, target)}

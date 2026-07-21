@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover'
 import { toast } from '@/components/ui/toast'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { translate } from '@/lib/i18n'
 import {
   faClassName,
   resolveNodeTypeIconClass,
@@ -70,7 +71,12 @@ function useReferenceOptions(
   })
   useEffect(() => {
     if (dataSource.error)
-      toast.error(dataSource.error, { title: 'Loading options failed' })
+      toast.error(dataSource.error, {
+        title: translate(
+          'editor.loadingOptionsFailed',
+          'Loading options failed',
+        ),
+      })
   }, [dataSource.error])
 
   const threshold =
@@ -114,7 +120,10 @@ function useReferenceOptions(
     enabled: searchEnabled,
   })
   useEffect(() => {
-    if (search.error) toast.error(search.error, { title: 'Search failed' })
+    if (search.error)
+      toast.error(search.error, {
+        title: translate('editor.searchFailed', 'Search failed'),
+      })
   }, [search.error])
 
   if (dataSourceIdentifier !== null) {
@@ -149,7 +158,17 @@ function useReferenceOptions(
     loading: searchEnabled && search.isPending,
     hint:
       searchTerm.trim().length < threshold
-        ? `Type at least ${threshold} character${threshold === 1 ? '' : 's'} to search`
+        ? threshold === 1
+          ? translate(
+              'editor.reference.typeAtLeastOne',
+              'Type at least {0} character to search',
+              [threshold],
+            )
+          : translate(
+              'editor.reference.typeAtLeast',
+              'Type at least {0} characters to search',
+              [threshold],
+            )
         : null,
   }
 }
@@ -344,7 +363,7 @@ function ReferencePicker({
                   break
               }
             }}
-            placeholder="Search…"
+            placeholder={translate('editor.searchPlaceholder', 'Search…')}
             className="h-8 pl-8"
           />
         </div>
@@ -356,12 +375,15 @@ function ReferencePicker({
         >
           {loading ? (
             <div className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-400">
-              <i className="fas fa-spinner fa-spin text-[0.875rem]" aria-hidden />{' '}
-              Searching…
+              <i
+                className="fas fa-spinner fa-spin text-[0.875rem]"
+                aria-hidden
+              />{' '}
+              {translate('editor.searching', 'Searching…')}
             </div>
           ) : options.length === 0 ? (
             <p className="px-2 py-2 text-xs text-neutral-400">
-              {hint ?? 'No matches'}
+              {hint ?? translate('editor.noMatches', 'No matches')}
             </p>
           ) : (
             <>
@@ -460,13 +482,17 @@ function ReferenceEditorBase({
     // ride along in CreateNodeAggregateWithNode's property values.
     return (
       <div className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm text-neutral-400">
-        References can be set after creation
+        {translate(
+          'editor.reference.afterCreation',
+          'References can be set after creation',
+        )}
       </div>
     )
   }
 
   const placeholder =
-    plainEditorOption(options, 'placeholder') ?? 'Type to search'
+    plainEditorOption(options, 'placeholder') ??
+    translate('editor.reference.typeToSearch', 'Type to search')
   const availableOptions = picker.options.filter(
     (option) => !selected.includes(option.id),
   )
@@ -517,7 +543,7 @@ function ReferenceEditorBase({
           <Button
             variant="ghost"
             size="icon-sm"
-            title="Remove"
+            title={translate('editor.remove', 'Remove')}
             onClick={() => commit([])}
           >
             <i className="fas fa-xmark" aria-hidden />

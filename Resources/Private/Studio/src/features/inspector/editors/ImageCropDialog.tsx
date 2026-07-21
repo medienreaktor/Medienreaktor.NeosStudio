@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { CropConfig } from './cropOptions'
+import { translate as t } from '@/lib/i18n'
 
 /** A selectable ratio in the dialog; `aspect` undefined means a free crop. */
 interface RatioOption {
@@ -105,14 +106,18 @@ export function ImageCropDialog({
     if (config.allowOriginal && dimsKnown) {
       list.push({
         value: ORIGINAL,
-        label: 'Original',
+        label: t('editor.crop.original', 'Original'),
         aspect: width! / height!,
       })
     }
     // Always keep a free crop reachable when nothing else constrains the tool,
     // so a bare ImageEditor (no presets) is still usable.
     if (config.allowCustom || list.length === 0) {
-      list.push({ value: FREE, label: 'Free', aspect: undefined })
+      list.push({
+        value: FREE,
+        label: t('editor.crop.free', 'Free'),
+        aspect: undefined,
+      })
     }
     return list
   }, [config, dimsKnown, width, height])
@@ -182,7 +187,7 @@ export function ImageCropDialog({
       height: Math.round((crop.height / 100) * height!),
     }
     if (pixels.width <= 0 || pixels.height <= 0) {
-      toast.info('Draw a crop area first.')
+      toast.info(t('editor.crop.drawFirst', 'Draw a crop area first.'))
       return
     }
     setBusy(true)
@@ -192,9 +197,12 @@ export function ImageCropDialog({
       onApply(variant)
       onOpenChange(false)
     } catch (e) {
-      toast.error(e instanceof Error ? e : 'Cropping failed.', {
-        title: 'Cropping failed',
-      })
+      toast.error(
+        e instanceof Error
+          ? e
+          : t('editor.crop.failedBody', 'Cropping failed.'),
+        { title: t('editor.crop.failed', 'Cropping failed') },
+      )
     } finally {
       setBusy(false)
     }
@@ -212,12 +220,14 @@ export function ImageCropDialog({
     >
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle>Crop image</DialogTitle>
+          <DialogTitle>{t('editor.crop.title', 'Crop image')}</DialogTitle>
         </DialogHeader>
 
         {showSelector && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-400">Aspect ratio</span>
+            <span className="text-xs text-neutral-400">
+              {t('editor.crop.aspectRatio', 'Aspect ratio')}
+            </span>
             <Select
               value={selected}
               onValueChange={(value) => selectRatio(String(value))}
@@ -245,7 +255,7 @@ export function ImageCropDialog({
             />
           ) : !dimsKnown || !original.previewUri ? (
             <span className="py-12 text-sm text-neutral-500">
-              This image cannot be cropped.
+              {t('editor.crop.cannotCrop', 'This image cannot be cropped.')}
             </span>
           ) : (
             <ReactCrop
@@ -270,10 +280,12 @@ export function ImageCropDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('editor.cancel', 'Cancel')}
           </Button>
           <Button disabled={busy || !dimsKnown || !crop} onClick={apply}>
-            {busy ? 'Applying…' : 'Apply crop'}
+            {busy
+              ? t('editor.crop.applying', 'Applying…')
+              : t('editor.crop.apply', 'Apply crop')}
           </Button>
         </DialogFooter>
       </DialogContent>

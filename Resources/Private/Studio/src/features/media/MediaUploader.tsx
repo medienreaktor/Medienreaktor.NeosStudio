@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone'
 
 import { uploadAsset } from '@/api/media'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -64,7 +65,11 @@ export function MediaUploader({
                 item.id === id ? { ...item, status: 'error' } : item,
               ),
             )
-            toast.error(e, { title: `Uploading "${file.name}" failed` })
+            toast.error(e, {
+              title: t('media.uploadFileFailed', 'Uploading "{0}" failed', [
+                file.name,
+              ]),
+            })
           })
       }
     },
@@ -84,13 +89,13 @@ export function MediaUploader({
       <div className="w-full max-w-md rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl">
         <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
           <h2 className="text-sm font-medium text-neutral-200">
-            Upload assets
+            {t('media.uploadAssets', 'Upload assets')}
           </h2>
           <Button
             variant="ghost"
             size="icon-xs"
             onClick={onClose}
-            aria-label="Close uploader"
+            aria-label={t('media.closeUploader', 'Close uploader')}
           >
             <i className="fas fa-xmark text-[1rem]" aria-hidden />
           </Button>
@@ -111,10 +116,14 @@ export function MediaUploader({
               className="fas fa-cloud-arrow-up mb-2 text-[2rem] text-neutral-500"
               aria-hidden
             />
-            <p className="text-sm text-neutral-300">Drag files here</p>
-            <p className="mb-3 text-xs text-neutral-500">or</p>
+            <p className="text-sm text-neutral-300">
+              {t('media.dragFilesHere', 'Drag files here')}
+            </p>
+            <p className="mb-3 text-xs text-neutral-500">
+              {t('media.or', 'or')}
+            </p>
             <Button variant="outline" size="sm" onClick={open}>
-              Choose files
+              {t('media.chooseFiles', 'Choose files')}
             </Button>
           </div>
 
@@ -135,9 +144,9 @@ export function MediaUploader({
                       )}
                     >
                       {item.status === 'error'
-                        ? 'Failed'
+                        ? t('media.failed', 'Failed')
                         : item.status === 'done'
-                          ? 'Done'
+                          ? t('media.done', 'Done')
                           : `${Math.round(item.progress * 100)}%`}
                     </span>
                   </div>
@@ -159,7 +168,7 @@ export function MediaUploader({
         {allDone && (
           <div className="border-t border-neutral-800 px-4 py-3 text-right">
             <Button size="sm" onClick={onClose}>
-              Done
+              {t('media.done', 'Done')}
             </Button>
           </div>
         )}

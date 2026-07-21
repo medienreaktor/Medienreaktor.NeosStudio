@@ -1,3 +1,4 @@
+import { translate as t } from '@/lib/i18n'
 import { isAssetUri, isDocumentUri } from './linkValue'
 import { linkEditorRegistry } from './registry'
 import { AssetLinkTab } from './tabs/AssetLinkTab'
@@ -18,21 +19,21 @@ export const EMAIL_LINK_TYPE = 'email'
 export function registerBuiltinLinkTypes(): void {
   linkEditorRegistry.register({
     id: DOCUMENT_LINK_TYPE,
-    label: 'Document',
+    label: t('link.document', 'Document'),
     icon: <i className="fas fa-file-lines" aria-hidden />,
     component: DocumentLinkTab,
     matches: isDocumentUri,
   })
   linkEditorRegistry.register({
     id: ASSET_LINK_TYPE,
-    label: 'Asset',
+    label: t('link.asset', 'Asset'),
     icon: <i className="fas fa-paperclip" aria-hidden />,
     component: AssetLinkTab,
     matches: isAssetUri,
   })
   linkEditorRegistry.register({
     id: EXTERNAL_LINK_TYPE,
-    label: 'External',
+    label: t('link.external', 'External'),
     icon: <i className="fas fa-globe" aria-hidden />,
     component: ExternalLinkTab,
     matches: (href) => /^https?:\/\//i.test(href),
@@ -41,7 +42,7 @@ export function registerBuiltinLinkTypes(): void {
   })
   linkEditorRegistry.register({
     id: EMAIL_LINK_TYPE,
-    label: 'E-Mail',
+    label: t('link.email', 'E-Mail'),
     icon: <i className="fas fa-envelope" aria-hidden />,
     component: EmailLinkTab,
     matches: (href) => /^mailto:/i.test(href),

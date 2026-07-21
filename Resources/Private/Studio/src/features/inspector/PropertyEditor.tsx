@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
-import { translateLabel } from '@/lib/i18n'
+import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { InspectorProperty } from './inspectorSchema'
 import { ValidationErrors } from './validators/ValidationErrors'
@@ -167,7 +167,11 @@ function ReadOnlyValue({
   return (
     <div
       className="min-h-9 rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-400"
-      title={`Editor not supported yet: ${property.editor ?? property.type}`}
+      title={t(
+        'inspector.editorNotSupported',
+        'Editor not supported yet: {0}',
+        [property.editor ?? property.type],
+      )}
     >
       {formatValue(value)}
     </div>
@@ -178,7 +182,8 @@ function formatValue(value: SerializedPropertyValue | undefined): string {
   const raw = value?.value
   if (raw === null || raw === undefined || raw === '') return '–'
   if (typeof raw === 'string') return raw
-  if (typeof raw === 'boolean') return raw ? 'Yes' : 'No'
+  if (typeof raw === 'boolean')
+    return raw ? t('inspector.yes', 'Yes') : t('inspector.no', 'No')
   if (typeof raw === 'number') return String(raw)
   return JSON.stringify(raw)
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -33,7 +34,7 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Delete',
+  confirmLabel = t('media.delete', 'Delete'),
   destructive = true,
   onOpenChange,
   onConfirm,
@@ -46,7 +47,9 @@ export function ConfirmDialog({
       await onConfirm()
       onOpenChange(false)
     } catch (e) {
-      toast.error(e instanceof Error ? e : 'The action failed.')
+      toast.error(
+        e instanceof Error ? e : t('media.actionFailed', 'The action failed.'),
+      )
     } finally {
       setBusy(false)
     }
@@ -70,14 +73,14 @@ export function ConfirmDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('media.cancel', 'Cancel')}
           </Button>
           <Button
             variant={destructive ? 'destructive' : 'default'}
             disabled={busy}
             onClick={confirm}
           >
-            {busy ? 'Working…' : confirmLabel}
+            {busy ? t('media.working', 'Working…') : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

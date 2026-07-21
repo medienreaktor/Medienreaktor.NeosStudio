@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { MediaItemActions, type MediaMenuTarget } from './MediaItemMenu'
 import { collectionToNode, MediaTree, tagToNode } from './MediaTree'
@@ -39,26 +40,44 @@ const TYPES: Array<AssetType | 'All'> = [
   'Audio',
 ]
 
+// `label` is the English source text; it is translated at render time via
+// `labelKey` (module-level constants evaluate before the translation bundle
+// has loaded, so the lookup must happen in the component).
 const SORTS: Array<{
   value: string
   label: string
+  labelKey: string
   sortBy: 'modified' | 'name'
   dir: 'asc' | 'desc'
 }> = [
   {
     value: 'modified-desc',
     label: 'Newest first',
+    labelKey: 'media.sortNewest',
     sortBy: 'modified',
     dir: 'desc',
   },
   {
     value: 'modified-asc',
     label: 'Oldest first',
+    labelKey: 'media.sortOldest',
     sortBy: 'modified',
     dir: 'asc',
   },
-  { value: 'name-asc', label: 'Name A–Z', sortBy: 'name', dir: 'asc' },
-  { value: 'name-desc', label: 'Name Z–A', sortBy: 'name', dir: 'desc' },
+  {
+    value: 'name-asc',
+    label: 'Name A–Z',
+    labelKey: 'media.sortNameAsc',
+    sortBy: 'name',
+    dir: 'asc',
+  },
+  {
+    value: 'name-desc',
+    label: 'Name Z–A',
+    labelKey: 'media.sortNameDesc',
+    sortBy: 'name',
+    dir: 'desc',
+  },
 ]
 
 function flattenTags(tags: MediaTag[]): MediaTag[] {
@@ -106,17 +125,18 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
   const collectionLabel =
     filter.collection === null
-      ? 'All collections'
+      ? t('media.allCollections', 'All collections')
       : (collections.data?.find((c) => c.identifier === filter.collection)
-          ?.title ?? 'Collection')
+          ?.title ?? t('media.collection', 'Collection'))
 
   const tagLabel =
     filter.tagMode === 'none'
-      ? 'Untagged'
+      ? t('media.untagged', 'Untagged')
       : filter.tag === null
-        ? 'All tags'
-        : (flattenTags(tags.data ?? []).find((t) => t.identifier === filter.tag)
-            ?.label ?? 'Tag')
+        ? t('media.allTags', 'All tags')
+        : (flattenTags(tags.data ?? []).find(
+            (tag) => tag.identifier === filter.tag,
+          )?.label ?? t('media.tag', 'Tag'))
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
@@ -124,8 +144,8 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       <SearchInput
         value={filter.search}
         onChange={(e) => state.setSearch(e.target.value)}
-        placeholder="Search assets…"
-        aria-label="Search assets"
+        placeholder={t('media.searchAssets', 'Search assets…')}
+        aria-label={t('media.searchAssetsAria', 'Search assets')}
         wrapperClassName="min-w-40"
       />
 
@@ -134,7 +154,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         onValueChange={(v) => state.setType(v as AssetType | 'All')}
         items={TYPES.map((type) => ({
           value: type,
-          label: type === 'All' ? 'All types' : type,
+          label: type === 'All' ? t('media.allTypes', 'All types') : type,
         }))}
       >
         <SelectTrigger className="h-8 w-32" size="sm">
@@ -143,7 +163,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         <SelectContent>
           {TYPES.map((type) => (
             <SelectItem key={type} value={type}>
-              {type === 'All' ? 'All types' : type}
+              {type === 'All' ? t('media.allTypes', 'All types') : type}
             </SelectItem>
           ))}
         </SelectContent>
@@ -155,7 +175,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             icon={
               <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
             }
-            label={activeSource?.label ?? 'Source'}
+            label={activeSource?.label ?? t('media.source', 'Source')}
           >
             <ul className="min-w-48 space-y-0.5">
               {sources.data!.map((source) => (
@@ -184,13 +204,13 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                 icon={
                   <i className="fas fa-folder text-[0.875rem]" aria-hidden />
                 }
-                label="All collections"
+                label={t('media.allCollections', 'All collections')}
                 active={filter.collection === null}
                 onClick={() => state.selectCollection(null)}
               />
               <MediaTree
-                label="Collections"
-                emptyText="No collections yet"
+                label={t('media.collections', 'Collections')}
+                emptyText={t('media.noCollections', 'No collections yet')}
                 emptyIcon="fa-folder-open"
                 loading={collections.isLoading}
                 roots={(collections.data ?? []).map(collectionToNode)}
@@ -224,19 +244,19 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             <div className="min-w-56">
               <RailButton
                 icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
-                label="All tags"
+                label={t('media.allTags', 'All tags')}
                 active={filter.tagMode === 'given' && filter.tag === null}
                 onClick={() => state.selectTag(null)}
               />
               <RailButton
                 icon={<i className="fas fa-ban text-[0.875rem]" aria-hidden />}
-                label="Untagged"
+                label={t('media.untagged', 'Untagged')}
                 active={filter.tagMode === 'none'}
                 onClick={() => state.showUntagged()}
               />
               <MediaTree
-                label="Tags"
-                emptyText="No tags yet"
+                label={t('media.tags', 'Tags')}
+                emptyText={t('media.noTags', 'No tags yet')}
                 emptyIcon="fa-tag"
                 loading={tags.isLoading}
                 roots={(tags.data ?? []).map(tagToNode)}
@@ -271,7 +291,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
           }}
           items={SORTS.map((sort) => ({
             value: sort.value,
-            label: sort.label,
+            label: t(sort.labelKey, sort.label),
           }))}
         >
           <SelectTrigger className="h-8 w-36" size="sm">
@@ -280,7 +300,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
           <SelectContent>
             {SORTS.map((sort) => (
               <SelectItem key={sort.value} value={sort.value}>
-                {sort.label}
+                {t(sort.labelKey, sort.label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -374,7 +394,9 @@ function SourceButton({
         )}
         <span className="truncate">{source.label}</span>
         {source.isReadOnly && (
-          <span className="ml-auto text-xs text-neutral-500">read-only</span>
+          <span className="ml-auto text-xs text-neutral-500">
+            {t('media.readOnlyBadge', 'read-only')}
+          </span>
         )}
       </button>
     </li>
@@ -478,14 +500,17 @@ function InlineCreate({
 
 function AddCollection() {
   return (
-    <InlineCreate placeholder="New collection" onCreate={createCollection} />
+    <InlineCreate
+      placeholder={t('media.newCollection', 'New collection')}
+      onCreate={createCollection}
+    />
   )
 }
 
 function AddTag() {
   return (
     <InlineCreate
-      placeholder="New tag"
+      placeholder={t('media.newTag', 'New tag')}
       onCreate={(label) => createTag(label)}
     />
   )

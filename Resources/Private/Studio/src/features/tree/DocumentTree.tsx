@@ -19,6 +19,7 @@ import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
 import { config } from '@/config'
+import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
 import {
   NodeContextMenu,
@@ -116,7 +117,7 @@ export function DocumentTree({
           // drops the row.
           if (!isNotFound(e)) {
             toast.error(e, {
-              title: 'Loading the tree failed',
+              title: t('tree.treeLoadFailed', 'Loading the tree failed'),
               id: 'tree-load',
             })
           }
@@ -147,7 +148,7 @@ export function DocumentTree({
           // children to show, and no error worth reporting.
           if (!isNotFound(e)) {
             toast.error(e, {
-              title: 'Loading the tree failed',
+              title: t('tree.treeLoadFailed', 'Loading the tree failed'),
               id: 'tree-load',
             })
           }
@@ -198,10 +199,10 @@ export function DocumentTree({
     <>
       <TreeList
         tree={tree}
-        label="Document tree"
+        label={t('tree.documentTreeLabel', 'Document tree')}
         loading={!rootLoaded}
-        loadingText="Loading documents…"
-        emptyText="This site has no documents yet."
+        loadingText={t('tree.loadingDocuments', 'Loading documents…')}
+        emptyText={t('tree.emptyDocuments', 'This site has no documents yet.')}
         emptyIcon="fa-sitemap"
         decorate={(data) => {
           if (data === ROOT_ID || data === null) return null
@@ -214,7 +215,7 @@ export function DocumentTree({
       />
       <NodeContextMenu
         target={menuTarget}
-        entityLabel="document"
+        entityLabel={t('editing.entity.document', 'document')}
         clipboardKind="document"
         onClose={() => setMenuTarget(null)}
         onDone={(action, target) => onNodeAction?.(action, target)}

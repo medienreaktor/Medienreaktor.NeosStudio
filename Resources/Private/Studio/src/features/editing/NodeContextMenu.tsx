@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { aggregateIdOf } from '@/api/nodeAddress'
 import { fetchNode, useAllowedChildNodeTypes } from '@/api/nodes'
+import { translate as t } from '@/lib/i18n'
 import {
   activeClipboardEntry,
   type ClipboardKind,
@@ -144,7 +145,10 @@ export function NodeContextMenu({
       .then(() => onDone(action, menuTarget))
       .catch((e: unknown) =>
         toast.error(e, {
-          title: action === 'hide' ? 'Hiding failed' : 'Unhiding failed',
+          title:
+            action === 'hide'
+              ? t('editing.hideFailed', 'Hiding failed')
+              : t('editing.unhideFailed', 'Unhiding failed'),
         }),
       )
   }
@@ -152,7 +156,9 @@ export function NodeContextMenu({
   const runDelete = (deleteTarget: NodeMenuTarget) => {
     deleteNode(deleteTarget.address)
       .then(() => onDone('delete', deleteTarget))
-      .catch((e: unknown) => toast.error(e, { title: 'Deleting failed' }))
+      .catch((e: unknown) =>
+        toast.error(e, { title: t('editing.deleteFailed', 'Deleting failed') }),
+      )
   }
 
   // Cut/copy: snapshot the node (label, type) onto the clipboard. The fetch
@@ -166,7 +172,10 @@ export function NodeContextMenu({
       )
       .catch((e: unknown) =>
         toast.error(e, {
-          title: mode === 'cut' ? 'Cutting failed' : 'Copying failed',
+          title:
+            mode === 'cut'
+              ? t('editing.cutFailed', 'Cutting failed')
+              : t('editing.copyFailed', 'Copying failed'),
         }),
       )
   }
@@ -187,7 +196,12 @@ export function NodeContextMenu({
         return { parent: menuTarget.address, sibling: null }
       // After: the target's parent, before the target's next sibling.
       if (menuTarget.parentAddress === null) {
-        throw new Error('The node has no parent to paste next to.')
+        throw new Error(
+          t(
+            'editing.noParentToPaste',
+            'The node has no parent to paste next to.',
+          ),
+        )
       }
       return {
         parent: menuTarget.parentAddress,
@@ -204,7 +218,9 @@ export function NodeContextMenu({
       .then(({ affectedAddresses, newAddress }) =>
         onPasted?.(affectedAddresses, newAddress),
       )
-      .catch((e: unknown) => toast.error(e, { title: 'Pasting failed' }))
+      .catch((e: unknown) =>
+        toast.error(e, { title: t('editing.pasteFailed', 'Pasting failed') }),
+      )
   }
 
   return (
@@ -236,7 +252,7 @@ export function NodeContextMenu({
                   }}
                 >
                   <i className="fas fa-fw fa-plus" aria-hidden />
-                  Create new…
+                  {t('editing.createNew', 'Create new…')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -248,32 +264,40 @@ export function NodeContextMenu({
                   onClick={() => runCapture(target, 'cut')}
                 >
                   <i className="fas fa-fw fa-scissors" aria-hidden />
-                  Cut
+                  {t('editing.cut', 'Cut')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={target.tethered}
                   onClick={() => runCapture(target, 'copy')}
                 >
                   <i className="fas fa-fw fa-copy" aria-hidden />
-                  Copy
+                  {t('editing.copy', 'Copy')}
                 </DropdownMenuItem>
                 {clipboardEntry && (
                   <>
                     <DropdownMenuItem
                       disabled={!canPasteInto}
-                      title={`Paste “${clipboardEntry.label}” inside, as the last child`}
+                      title={t(
+                        'editing.pasteIntoHint',
+                        'Paste “{0}” inside, as the last child',
+                        [clipboardEntry.label],
+                      )}
                       onClick={() => runPaste(target, 'into')}
                     >
                       <i className="fas fa-fw fa-paste" aria-hidden />
-                      Paste into
+                      {t('editing.pasteInto', 'Paste into')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       disabled={!canPasteAfter}
-                      title={`Paste “${clipboardEntry.label}” after this ${entityLabel}`}
+                      title={t(
+                        'editing.pasteAfterHint',
+                        'Paste “{0}” after this {1}',
+                        [clipboardEntry.label, entityLabel],
+                      )}
                       onClick={() => runPaste(target, 'after')}
                     >
                       <i className="fas fa-fw fa-paste" aria-hidden />
-                      Paste after
+                      {t('editing.pasteAfter', 'Paste after')}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -286,7 +310,7 @@ export function NodeContextMenu({
                 onClick={() => runVisibilityAction(target, 'unhide')}
               >
                 <i className="fas fa-fw fa-eye" aria-hidden />
-                Unhide
+                {t('editing.unhide', 'Unhide')}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
@@ -294,7 +318,7 @@ export function NodeContextMenu({
                 onClick={() => runVisibilityAction(target, 'hide')}
               >
                 <i className="fas fa-fw fa-eye-slash" aria-hidden />
-                Hide
+                {t('editing.hide', 'Hide')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
@@ -306,7 +330,7 @@ export function NodeContextMenu({
               }}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
-              Delete
+              {t('editing.delete', 'Delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -317,15 +341,22 @@ export function NodeContextMenu({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete this {entityLabel}?</DialogTitle>
+            <DialogTitle>
+              {t('editing.deleteConfirm.title', 'Delete this {0}?', [
+                entityLabel,
+              ])}
+            </DialogTitle>
             <DialogDescription>
-              The {entityLabel} and everything inside it will be removed. This
-              is undone by discarding the change from the workspace.
+              {t(
+                'editing.deleteConfirm.description',
+                'The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.',
+                [entityLabel],
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setPendingDelete(null)}>
-              Cancel
+              {t('editing.cancel', 'Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -334,7 +365,7 @@ export function NodeContextMenu({
                 setPendingDelete(null)
               }}
             >
-              Delete
+              {t('editing.delete', 'Delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

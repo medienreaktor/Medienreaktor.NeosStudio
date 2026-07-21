@@ -3,6 +3,7 @@ import { generateUriPathSegment, useNode } from '@/api/nodes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent } from './registry'
 
 export const URI_PATH_SEGMENT_EDITOR =
@@ -53,7 +54,12 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
       setDraft(slug)
       if (slug !== initial) onCommit(slug)
     } catch (error) {
-      toast.error(error, { title: 'Could not generate the URL path segment' })
+      toast.error(error, {
+        title: t(
+          'editor.uriPathSegment.generateFailed',
+          'Could not generate the URL path segment',
+        ),
+      })
     } finally {
       setIsSyncing(false)
     }
@@ -83,7 +89,10 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
           size="icon"
           disabled={isSyncing}
           onClick={sync}
-          title="Rebuild the URL path segment from the current page title"
+          title={t(
+            'editor.uriPathSegment.rebuild',
+            'Rebuild the URL path segment from the current page title',
+          )}
         >
           <i
             className={`fas fa-fw fa-rotate ${isSyncing ? 'fa-spin' : ''}`}

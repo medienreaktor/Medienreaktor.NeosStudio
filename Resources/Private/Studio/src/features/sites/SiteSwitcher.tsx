@@ -1,4 +1,5 @@
 import type { Site } from '@/api/sites'
+import { translate as t } from '@/lib/i18n'
 import {
   Select,
   SelectContent,
@@ -29,13 +30,15 @@ export function SiteSwitcher({
       // Lets SelectValue render the site name for the selected nodeName.
       items={sites.map((site) => ({ value: site.nodeName, label: site.name }))}
     >
-      <SelectTrigger title="Active site">
+      <SelectTrigger title={t('sites.activeSite', 'Active site')}>
         <div className="flex items-center gap-2">
           <i
             className={`fa fa-globe fa-fw text-[0.7rem] text-neutral-400`}
             aria-hidden
           />
-          <SelectValue placeholder="Select site…" />
+          <SelectValue
+            placeholder={t('sites.selectPlaceholder', 'Select site…')}
+          />
         </div>
       </SelectTrigger>
       <SelectContent>

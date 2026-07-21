@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SearchInput } from '@/components/ui/search-input'
 import { useCreatableNodeTypes } from '@/features/creation/creatableNodeTypes'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
 
@@ -54,8 +55,8 @@ export function DocumentsToolbar({
       <SearchInput
         value={searchTerm}
         onChange={(event) => onSearchTermChange(event.target.value)}
-        placeholder="Search documents…"
-        aria-label="Search documents by title"
+        placeholder={t('tree.searchPlaceholder', 'Search documents…')}
+        aria-label={t('tree.searchAriaLabel', 'Search documents by title')}
       />
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -63,8 +64,8 @@ export function DocumentsToolbar({
             <Button
               variant="outline"
               size="icon-sm"
-              title="Filter by node type"
-              aria-label="Filter by node type"
+              title={t('tree.filterByNodeType', 'Filter by node type')}
+              aria-label={t('tree.filterByNodeType', 'Filter by node type')}
               disabled={creatable === null}
               className={cn(filterActive && 'border-blue-500 text-blue-500')}
             />
@@ -75,7 +76,9 @@ export function DocumentsToolbar({
         <DropdownMenuContent align="end" className="max-h-80 w-64">
           {/* GroupLabel must live inside a Group (Base UI error 31 otherwise). */}
           <DropdownMenuGroup>
-            <DropdownMenuLabel>Filter by node type</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {t('tree.filterByNodeType', 'Filter by node type')}
+            </DropdownMenuLabel>
             {documentTypes.map((nodeType) => (
               <DropdownMenuCheckboxItem
                 key={nodeType.name}
@@ -101,7 +104,7 @@ export function DocumentsToolbar({
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onTypeFilterChange([])}>
                 <i className="fas fa-fw fa-xmark" aria-hidden />
-                Clear filter
+                {t('tree.clearFilter', 'Clear filter')}
               </DropdownMenuItem>
             </>
           )}
@@ -109,8 +112,8 @@ export function DocumentsToolbar({
       </DropdownMenu>
       <Button
         size="icon-sm"
-        title="New document…"
-        aria-label="New document"
+        title={t('tree.newDocument', 'New document…')}
+        aria-label={t('tree.newDocumentAria', 'New document')}
         disabled={createDisabled}
         onClick={onCreate}
       >

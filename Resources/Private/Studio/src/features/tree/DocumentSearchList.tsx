@@ -10,6 +10,7 @@ import type { Site } from '@/api/sites'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { nodeDecor } from './nodeDecor'
 import { usePendingChanges } from './usePendingChanges'
@@ -48,7 +49,7 @@ export function DocumentSearchList({
   useEffect(() => {
     if (results.error) {
       toast.error(results.error, {
-        title: 'Searching documents failed',
+        title: t('tree.searchFailed', 'Searching documents failed'),
         id: 'document-search',
       })
     }
@@ -57,14 +58,18 @@ export function DocumentSearchList({
   // A site without a node has no descendants to search (the query is disabled
   // and would pend forever).
   if (site.nodeAddress !== null && results.isPending) {
-    return <LoadingState label="Searching documents…" />
+    return (
+      <LoadingState
+        label={t('tree.searchingDocuments', 'Searching documents…')}
+      />
+    )
   }
   const nodes = results.data ?? []
   if (nodes.length === 0) {
     return (
       <Placeholder
         icon="fa-magnifying-glass"
-        title="No documents match the search."
+        title={t('tree.noSearchMatch', 'No documents match the search.')}
       />
     )
   }
@@ -72,7 +77,7 @@ export function DocumentSearchList({
     <div
       className="flex flex-col"
       role="list"
-      aria-label="Document search results"
+      aria-label={t('tree.searchResultsLabel', 'Document search results')}
     >
       {nodes.map((node) => {
         const decor = nodeDecor(node, nodeTypes, pendingChanges)

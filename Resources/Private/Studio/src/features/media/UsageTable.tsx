@@ -1,4 +1,5 @@
 import { useAssetUsage } from '@/api/media'
+import { translate as t } from '@/lib/i18n'
 import { Skeleton } from '@/components/ui/skeleton'
 
 /** Where a given asset is referenced across the content repository. */
@@ -17,14 +18,14 @@ export function UsageTable({
   if (usage.error || !usage.data) {
     return (
       <p className="text-xs text-neutral-500">
-        Usage information is unavailable.
+        {t('media.usageUnavailable', 'Usage information is unavailable.')}
       </p>
     )
   }
   if (usage.data.total === 0) {
     return (
       <p className="text-xs text-neutral-500">
-        Not used anywhere. Safe to delete.
+        {t('media.usageNone', 'Not used anywhere. Safe to delete.')}
       </p>
     )
   }
@@ -56,7 +57,9 @@ export function UsageTable({
       ))}
       {usage.data.inaccessibleCount > 0 && (
         <p className="text-xs text-neutral-500">
-          + {usage.data.inaccessibleCount} usage(s) you cannot access
+          {t('media.usageInaccessible', '+ {0} usage(s) you cannot access', [
+            usage.data.inaccessibleCount,
+          ])}
         </p>
       )}
     </div>

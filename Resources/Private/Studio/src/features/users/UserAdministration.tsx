@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { useUsers, type User } from '@/api/users'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Placeholder } from '@/components/ui/placeholder'
@@ -19,20 +20,27 @@ export function UserAdministration() {
   const { data, isLoading, error } = useUsers()
 
   useEffect(() => {
-    if (error) toast.error(error, { title: 'Could not load users' })
+    if (error)
+      toast.error(error, {
+        title: t('users.loadFailed', 'Could not load users'),
+      })
   }, [error])
 
   return (
     <div className="p-6">
       <header className="mb-4">
-        <h2 className="text-base font-semibold text-white">Users</h2>
-        <p className="text-sm text-neutral-400">Backend user accounts.</p>
+        <h2 className="text-base font-semibold text-white">
+          {t('users.title', 'Users')}
+        </h2>
+        <p className="text-sm text-neutral-400">
+          {t('users.subtitle', 'Backend user accounts.')}
+        </p>
       </header>
 
       {error && (
         <Placeholder
           icon="fa-triangle-exclamation"
-          title="Users are currently unavailable."
+          title={t('users.unavailable', 'Users are currently unavailable.')}
           className="py-10"
         />
       )}
@@ -42,7 +50,7 @@ export function UserAdministration() {
       {data && data.users.length === 0 && (
         <Placeholder
           icon="fa-users"
-          title="No users found."
+          title={t('users.none', 'No users found.')}
           className="py-10"
         />
       )}
@@ -52,10 +60,10 @@ export function UserAdministration() {
           <table className="w-full text-left text-sm">
             <thead className="border-b text-xs text-neutral-400">
               <tr>
-                <Th>Name</Th>
-                <Th>Email</Th>
-                <Th>Roles</Th>
-                <Th>Status</Th>
+                <Th>{t('users.columnName', 'Name')}</Th>
+                <Th>{t('users.columnEmail', 'Email')}</Th>
+                <Th>{t('users.columnRoles', 'Roles')}</Th>
+                <Th>{t('users.columnStatus', 'Status')}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800">
@@ -79,7 +87,7 @@ function UserRow({ user }: { user: User }) {
         </span>
         {user.isCurrentUser && (
           <Badge variant="outline" className="ml-2 align-middle">
-            You
+            {t('users.you', 'You')}
           </Badge>
         )}
       </Td>
@@ -101,12 +109,12 @@ function UserRow({ user }: { user: User }) {
         {user.active ? (
           <span className="inline-flex items-center gap-1.5 text-neutral-300">
             <span className="size-1.5 rounded-full bg-green-500" />
-            Active
+            {t('users.active', 'Active')}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-neutral-500">
             <span className="size-1.5 rounded-full bg-neutral-600" />
-            Inactive
+            {t('users.inactive', 'Inactive')}
           </span>
         )}
       </Td>

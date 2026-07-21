@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { translate as t } from '@/lib/i18n'
 import { useModals } from './ModalHost'
 
 /**
@@ -14,7 +15,7 @@ export function ModalLauncher() {
         variant="ghost"
         size="icon"
         className="size-7"
-        aria-label="Settings"
+        aria-label={t('modal.settings', 'Settings')}
         onClick={() => openSettings()}
       >
         <i className="fas fa-gear" aria-hidden />

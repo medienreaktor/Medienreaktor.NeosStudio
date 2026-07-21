@@ -14,6 +14,7 @@ import {
   nodeLabel,
 } from '@/api/nodes'
 import { toast } from '@/components/ui/toast'
+import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -120,7 +121,12 @@ export function CreateVariantDialog({
         }
       } catch (e) {
         if (!cancelled) {
-          toast.error(e, { title: 'Checking parent documents failed' })
+          toast.error(e, {
+            title: t(
+              'dimension.checkParentsFailed',
+              'Checking parent documents failed',
+            ),
+          })
           setPhase('ready')
         }
       }
@@ -146,10 +152,15 @@ export function CreateVariantDialog({
         }
       }
       await executeCommands(commands)
-      toast.success('Document variant created.')
+      toast.success(t('dimension.variantCreated', 'Document variant created.'))
       onCreated(targetPoint)
     } catch (e) {
-      toast.error(e, { title: 'Creating the variant failed' })
+      toast.error(e, {
+        title: t(
+          'dimension.createVariantFailed',
+          'Creating the variant failed',
+        ),
+      })
       setPhase('ready')
     }
   }
@@ -162,16 +173,31 @@ export function CreateVariantDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Create document in{' '}
-            {dimensionSpacePointLabel(targetPoint, dimensions)}?
+            {t('dimension.createTitle', 'Create document in {0}?', [
+              dimensionSpacePointLabel(targetPoint, dimensions),
+            ])}
           </DialogTitle>
           <DialogDescription>
-            &ldquo;{nodeLabel(document)}&rdquo; does not exist in{' '}
-            {dimensionSpacePointLabel(targetPoint, dimensions)} yet.
+            {t('dimension.notExistYet', '“{0}” does not exist in {1} yet.', [
+              nodeLabel(document),
+              dimensionSpacePointLabel(targetPoint, dimensions),
+            ])}
             {phase === 'analyzing' &&
-              ' Checking which parent documents are missing…'}
+              t(
+                'dimension.checkingParents',
+                ' Checking which parent documents are missing…',
+              )}
             {missingAncestors.length > 0 &&
-              ` ${missingAncestors.length} missing parent document${missingAncestors.length === 1 ? '' : 's'} will be created as well.`}
+              (missingAncestors.length === 1
+                ? t(
+                    'dimension.missingParentsOne',
+                    ' 1 missing parent document will be created as well.',
+                  )
+                : t(
+                    'dimension.missingParentsMany',
+                    ' {0} missing parent documents will be created as well.',
+                    [missingAncestors.length],
+                  ))}
           </DialogDescription>
         </DialogHeader>
 
@@ -181,17 +207,19 @@ export function CreateVariantDialog({
             onClick={onCancel}
             disabled={phase === 'creating'}
           >
-            Cancel
+            {t('action.cancel', 'Cancel')}
           </Button>
           <Button
             variant="outline"
             onClick={() => create(false)}
             disabled={phase !== 'ready'}
           >
-            Create empty
+            {t('dimension.createEmpty', 'Create empty')}
           </Button>
           <Button onClick={() => create(true)} disabled={phase !== 'ready'}>
-            {phase === 'creating' ? 'Creating…' : 'Create and copy content'}
+            {phase === 'creating'
+              ? t('dimension.creating', 'Creating…')
+              : t('dimension.createAndCopy', 'Create and copy content')}
           </Button>
         </DialogFooter>
       </DialogContent>

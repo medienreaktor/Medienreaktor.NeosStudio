@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { translate as t } from '@/lib/i18n'
 import { DataSourceWidget } from './DataSourceWidget'
 import { dataCollection, dataPath } from './dataPath'
 import type { InspectorViewComponent } from './registry'
@@ -36,7 +37,7 @@ export const TimeSeriesView: InspectorViewComponent = ({ node, options }) => {
         if (points.length < 2) {
           return (
             <p className="text-xs text-neutral-400">
-              Not enough data for a chart.
+              {t('view.notEnoughData', 'Not enough data for a chart.')}
             </p>
           )
         }
@@ -202,7 +203,7 @@ function LineChart({
           width={width}
           height={height}
           role="img"
-          aria-label="Time series chart"
+          aria-label={t('view.timeSeriesChart', 'Time series chart')}
           onPointerMove={onPointerMove}
           onPointerLeave={() => setHover(null)}
         >
