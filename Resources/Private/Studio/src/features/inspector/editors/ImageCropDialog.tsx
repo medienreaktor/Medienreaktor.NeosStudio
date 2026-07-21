@@ -221,6 +221,7 @@ export function ImageCropDialog({
             <Select
               value={selected}
               onValueChange={(value) => selectRatio(String(value))}
+              items={options.map(({ value, label }) => ({ value, label }))}
             >
               <SelectTrigger size="sm">
                 <SelectValue />

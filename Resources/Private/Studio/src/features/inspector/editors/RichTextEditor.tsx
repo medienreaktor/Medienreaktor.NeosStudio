@@ -276,6 +276,7 @@ function Toolbar({
     <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-700 p-1">
       {formatting.block && blockChoices.length > 1 && (
         <Select
+          items={blockChoices}
           value={activeBlock(editor, formatting)}
           onValueChange={(value) => {
             const block = String(value)
