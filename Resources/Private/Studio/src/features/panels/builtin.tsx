@@ -21,7 +21,6 @@ import { DocumentsToolbar } from '@/features/tree/DocumentsToolbar'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { LoadingState } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
-import { clampToViewport, type PanelRect } from './geometry'
 import { useRequestAttention } from './PanelSystem'
 import { panelRegistry } from './registry'
 
@@ -285,17 +284,13 @@ function MediaLibraryPanel() {
   return <MediaBrowser mode="manage" />
 }
 
-/** Where the inspector historically sat: right edge, lower half. */
-function inspectorDefaultRect(): PanelRect {
-  return clampToViewport({
-    width: 384,
-    height: Math.round(window.innerHeight / 2) - 16,
-    x: window.innerWidth - 384 - 16,
-    y: Math.round(window.innerHeight / 2) + 8,
-  })
-}
-
-/** Call once before the app mounts. */
+/**
+ * Call once before the app mounts. The default layout: the sidebar holds the
+ * Documents tree alone on top and an Outline/Create/Clipboard tab group below
+ * (stacked groups split the height evenly); the main area tabs the Visual
+ * Editor and the Media Library; the Inspector docks in the right-hand
+ * secondary sidebar, expanded.
+ */
 export function registerBuiltinPanels(): void {
   // The Visual Editor registers first so it is the default-active tab in the
   // main area, with Media Library alongside it.
@@ -321,24 +316,24 @@ export function registerBuiltinPanels(): void {
     id: 'outline',
     title: 'Outline',
     component: OutlinePanel,
-    defaultPlacement: { kind: 'dock', region: 'sidebar' },
+    defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'create',
     title: 'Create',
     component: NodeCreationPanel,
-    defaultPlacement: { kind: 'dock', region: 'sidebar' },
+    defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'clipboard',
     title: 'Clipboard',
     component: ClipboardPanel,
-    defaultPlacement: { kind: 'dock', region: 'sidebar' },
+    defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'inspector',
     title: 'Inspector',
     component: NodeInspectorPanel,
-    defaultPlacement: { kind: 'floating', rect: inspectorDefaultRect },
+    defaultPlacement: { kind: 'dock', region: 'secondary' },
   })
 }

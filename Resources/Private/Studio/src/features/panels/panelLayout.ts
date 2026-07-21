@@ -199,15 +199,28 @@ export function normalizeLayout(
   }
 
   // Registered panels missing from the layout appear at their default spot,
-  // in registration order.
+  // in registration order. Panels placed in this pass that share a dock
+  // `group` key become tabs of one group (the first of them stays active).
+  const defaultGroups = new Map<string, PanelGroup>()
   for (const definition of definitions) {
     if (seenPanels.has(definition.id)) continue
-    if (definition.defaultPlacement.kind === 'dock') {
-      docks[definition.defaultPlacement.region].push(newGroup(definition.id))
+    const placement = definition.defaultPlacement
+    if (placement.kind === 'dock') {
+      const key = placement.group
+        ? `${placement.region}:${placement.group}`
+        : null
+      const shared = key ? defaultGroups.get(key) : undefined
+      if (shared) {
+        shared.panels.push(definition.id)
+      } else {
+        const group = newGroup(definition.id)
+        docks[placement.region].push(group)
+        if (key) defaultGroups.set(key, group)
+      }
     } else {
       floating.push({
         ...newGroup(definition.id),
-        rect: clampToViewport(definition.defaultPlacement.rect()),
+        rect: clampToViewport(placement.rect()),
       })
     }
   }
