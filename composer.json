@@ -1,7 +1,7 @@
 {
     "name": "medienreaktor/neos-studio",
     "type": "neos-package",
-    "description": "Neos Studio - a modern UI built on the Medienreaktor.NeosApi HTTP API. Starts with an API debugging interface.",
+    "description": "Neos Studio - a blazingly fast, extensible editing UI for Neos 9, built entirely on the Medienreaktor.NeosApi HTTP API.",
     "license": "GPL-3.0-or-later",
     "require": {
         "php": "^8.2",
