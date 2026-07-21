@@ -29,6 +29,13 @@ Neos:
           'Medienreaktor.NeosStudio':
             - Main
 
+    moduleConfiguration:
+      # Land in the Studio after backend login instead of the classic content
+      # module. BackendRedirectionService picks the first entry the user's
+      # roles can access, so editors without the Studio privilege still fall
+      # back to 'content'.
+      preferredStartModules: ['studio', 'content', 'user/usersettings']
+
     modules:
       # Main-level backend menu entry, placed above "Content" (which declares
       # position 'start'). The module controller redirects to the standalone
