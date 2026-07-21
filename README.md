@@ -124,6 +124,12 @@ Studio is a working editing environment today: silent auth, trees and outliner, 
 
 Next up: collaborative editing on shared workspaces (change feed, presence), richer publishing views, and continuing to replace legacy `Neos.Neos.Ui` surfaces one at a time.
 
+## License
+
+Neos Studio is free software, released under the [GNU General Public License, version 3 or later](LICENSE).
+
+Copyright (C) 2026 medienreaktor GmbH
+
 ---
 
 Built by [medienreaktor](https://www.medienreaktor.de) with ❤️ for the Neos community. Feedback, issues and plugin experiments very welcome — this is where the Neos editing experience is headed. Come shape it.
