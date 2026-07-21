@@ -24,7 +24,14 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        'scrollbar-none inline-flex h-9 w-fit max-w-full items-center justify-center overflow-x-auto text-neutral-400',
+        // justify-start, not -center: centering an overflowing scroll
+        // container puts the leading tabs outside the reachable scroll area,
+        // so the list mounts "scrolled to the end" with no way back.
+        // relative is load-bearing: Base UI scrolls the active tab into view
+        // on mount by walking offsetParents up to this list — if the list is
+        // position: static the walk overshoots to the page and scrollTo gets
+        // a huge offset, pinning the list to the end.
+        'scrollbar-none relative inline-flex h-9 w-fit max-w-full items-center justify-start overflow-x-auto text-neutral-400',
         className,
       )}
       {...props}
