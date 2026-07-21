@@ -25,6 +25,7 @@ import {
 } from './clientEval'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyEditor } from './PropertyEditor'
+import { validateValue } from './validators'
 import { InspectorViewRenderer } from './views/InspectorViewRenderer'
 
 /**
@@ -154,6 +155,39 @@ export function InspectorPanel({
   }
   const visibleTabs = stableTabsRef.current
 
+  // Validate every visible property's current value (persisted, overlaid with
+  // live edits) - like the classic UI's validation of transient values, so
+  // errors show while typing, not only after a failed save attempt. Hidden
+  // properties are already dropped from visibleTabs and thus never block.
+  const validationErrors = useMemo(() => {
+    if (!visibleTabs || !node) return {}
+    const errors: Record<string, string[]> = {}
+    for (const property of visibleTabs
+      .flatMap((tab) => tab.groups)
+      .flatMap((group) => group.items)
+      .flatMap((item) => (item.kind === 'property' ? [item.property] : []))) {
+      if (Object.keys(property.validation).length === 0) continue
+      const hasLiveValue =
+        transientValues !== undefined && property.name in transientValues
+      // Reference values do not live in node.properties (their editors fetch
+      // them through the /references relation), so before any edit there is
+      // nothing to validate against - a NotEmpty on a set reference would
+      // falsely report empty. Validate references only once edited.
+      if (
+        (property.type === 'reference' || property.type === 'references') &&
+        !hasLiveValue
+      ) {
+        continue
+      }
+      const value = hasLiveValue
+        ? transientValues[property.name]
+        : propertyValue(node, property.name)?.value
+      const propertyErrors = validateValue(value, property.validation)
+      if (propertyErrors.length > 0) errors[property.name] = propertyErrors
+    }
+    return errors
+  }, [visibleTabs, node, transientValues])
+
   const save = (propertyName: string, value: unknown) => {
     if (!node) return
     // Reflect the commit in the ClientEval context right away - editors
@@ -168,6 +202,16 @@ export function InspectorPanel({
       .flatMap((item) => (item.kind === 'property' ? [item.property] : []))
       .find((property) => property.name === propertyName)
     const propertyType = propertySchema?.type
+    // An invalid value is never persisted: the commit is dropped and the
+    // inline error (already visible - reportLiveChange above put the value
+    // into the validation overlay) tells the user why. The editor keeps its
+    // draft, so fixing the input and re-committing saves normally.
+    if (
+      propertySchema &&
+      validateValue(value, propertySchema.validation).length > 0
+    ) {
+      return
+    }
     // Two further "properties" are not real properties and route to their own
     // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
     // tree/preview hide actions), and the node type is changed with
@@ -244,12 +288,35 @@ export function InspectorPanel({
                 defaultValue={visibleTabs[0].id}
               >
                 <TabsList>
-                  {visibleTabs.map((tab) => (
-                    <TabsTrigger key={tab.id} value={tab.id} title={tab.label}>
-                      {tab.icon && <FaIcon icon={tab.icon} />}
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
+                  {visibleTabs.map((tab) => {
+                    // The classic UI's per-tab badge: how many of this tab's
+                    // properties currently fail validation.
+                    const errorCount = tab.groups
+                      .flatMap((group) => group.items)
+                      .filter(
+                        (item) =>
+                          item.kind === 'property' &&
+                          validationErrors[item.property.name] !== undefined,
+                      ).length
+                    return (
+                      <TabsTrigger
+                        key={tab.id}
+                        value={tab.id}
+                        title={tab.label}
+                      >
+                        {tab.icon && <FaIcon icon={tab.icon} />}
+                        {tab.label}
+                        {errorCount > 0 && (
+                          <span
+                            className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.65rem] font-semibold text-white"
+                            title={`${errorCount} validation ${errorCount === 1 ? 'error' : 'errors'}`}
+                          >
+                            {errorCount}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                    )
+                  })}
                 </TabsList>
                 {visibleTabs.map((tab) => (
                   <TabsContent
@@ -262,6 +329,7 @@ export function InspectorPanel({
                         key={group.id}
                         group={group}
                         node={node}
+                        validationErrors={validationErrors}
                         onSave={save}
                         onLiveChange={reportLiveChange}
                       />
@@ -308,11 +376,14 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
 function PropertyGroup({
   group,
   node,
+  validationErrors,
   onSave,
   onLiveChange,
 }: {
   group: InspectorGroup
   node: NodeDto
+  /** Property name -> errors for the property's current (live) value. */
+  validationErrors: Record<string, string[]>
   onSave: (propertyName: string, value: unknown) => void
   /** A keystroke-level (pre-commit) value change - feeds ClientEval. */
   onLiveChange: (propertyName: string, value: unknown) => void
@@ -339,6 +410,7 @@ function PropertyGroup({
               property={item.property}
               value={propertyValue(node, item.property.name)}
               nodeAddress={node.address}
+              errors={validationErrors[item.property.name]}
               onSave={onSave}
               onLiveChange={onLiveChange}
             />

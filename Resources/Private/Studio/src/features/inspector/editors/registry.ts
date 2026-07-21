@@ -57,6 +57,14 @@ export interface PropertyEditorProps {
   /** Focus on mount; the host sets this for the first field of a form. */
   autoFocus?: boolean
   /**
+   * The current value fails validation (see validators/registry.ts). The host
+   * renders the error message(s) below the editor either way; editors that
+   * can should additionally mark their control (aria-invalid on an input
+   * turns its border red). Purely presentational - validation itself runs in
+   * the hosts, never in editors.
+   */
+  invalid?: boolean
+  /**
    * The address of the node being edited, when it already exists (the
    * inspector). Absent in the node creation dialog, where the node does not
    * exist yet. Editors that operate on the node itself - e.g. the node type

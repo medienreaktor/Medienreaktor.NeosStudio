@@ -108,6 +108,8 @@ export interface PropertyConfig {
   scope?: PropertyScope
   /** Reference declarations only: maxItems 1 marks a singular reference. */
   constraints?: { maxItems?: number | null } | null
+  /** Validator identifier -> options, e.g. "Neos.Neos/Validation/NotEmptyValidator": []. */
+  validation?: Record<string, unknown> | null
   ui?: {
     label?: string | null
     reloadIfChanged?: boolean

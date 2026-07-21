@@ -9,6 +9,7 @@ import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { InspectorProperty } from './inspectorSchema'
+import { ValidationErrors } from './validators/ValidationErrors'
 
 /**
  * One property in the inspector: resolves the configured editor through the
@@ -24,6 +25,7 @@ export function PropertyEditor({
   property,
   value,
   nodeAddress,
+  errors,
   onSave,
   onLiveChange,
 }: {
@@ -31,6 +33,8 @@ export function PropertyEditor({
   value: SerializedPropertyValue | undefined
   /** Address of the node being edited, passed to editors that operate on the node itself (e.g. the node type switcher). */
   nodeAddress: string
+  /** Validation errors for the property's current (live) value - rendered inline below the control. */
+  errors?: string[]
   onSave: (propertyName: string, value: unknown) => void
   /** A keystroke-level (pre-commit) value change; the inspector feeds these to ClientEval so dependent fields react while typing. */
   onLiveChange?: (propertyName: string, value: unknown) => void
@@ -55,6 +59,7 @@ export function PropertyEditor({
       value={value?.value}
       options={property.editorOptions}
       nodeAddress={nodeAddress}
+      invalid={errors !== undefined && errors.length > 0}
       // The inspector auto-saves: persist on commit. Live pre-commit changes
       // are never persisted (that would be a save per keystroke), but they do
       // feed ClientEval so dependent fields react while typing.
@@ -62,22 +67,33 @@ export function PropertyEditor({
       onChange={(next) => onLiveChange?.(property.name, next)}
     />
   )
+  const inlineErrors = <ValidationErrors errors={errors} />
 
   if (definition.rendersOwnLabel) {
     // The editor owns the label line (e.g. the checkbox label beside the box),
     // so the scope hint sits next to the whole control instead; the wrapper's
     // text color tints the editor's own label text purple by inheritance.
-    if (property.scope === 'node') return editor
+    if (property.scope === 'node')
+      return (
+        <>
+          {editor}
+          {inlineErrors}
+        </>
+      )
     return (
-      <div className="flex items-center gap-1.5 text-purple-300">
-        {editor}
-        <ScopeHint scope={property.scope} />
-      </div>
+      <>
+        <div className="flex items-center gap-1.5 text-purple-300">
+          {editor}
+          <ScopeHint scope={property.scope} />
+        </div>
+        {inlineErrors}
+      </>
     )
   }
   return (
     <Labeled label={property.label} scope={property.scope}>
       {editor}
+      {inlineErrors}
     </Labeled>
   )
 }

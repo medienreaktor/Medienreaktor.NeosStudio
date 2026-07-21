@@ -26,6 +26,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
   onCommit,
   nodeAddress,
   autoFocus,
+  invalid,
 }) => {
   const initial = value === null || value === undefined ? '' : String(value)
   const [draft, setDraft] = useState(initial)
@@ -63,6 +64,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
       <Input
         autoFocus={autoFocus}
         value={draft}
+        aria-invalid={invalid || undefined}
         disabled={isSyncing}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}

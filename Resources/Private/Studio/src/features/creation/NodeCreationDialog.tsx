@@ -23,6 +23,8 @@ import {
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
+import { validateValue } from '@/features/inspector/validators'
+import { ValidationErrors } from '@/features/inspector/validators/ValidationErrors'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
 import { createNode, type CreateNodeRequest } from './createNode'
@@ -112,6 +114,10 @@ export function CreateNodeFlow({
   }, [schema])
 
   const [values, setValues] = useState<Record<string, unknown>>({})
+  // Elements the user has edited: inline errors only show for these, so the
+  // dialog does not open with every required field already flagged red - the
+  // disabled Create button and the * markers cover the untouched state.
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
   // Seed defaults once the schema arrives (elements is null until then): the
   // element's own defaultValue, or the mapped property's - what the CR would
   // apply anyway, but visible and editable before creating.
@@ -194,13 +200,19 @@ export function CreateNodeFlow({
 
   if (elements === null || elements.length === 0) return null
 
-  const missingRequired = elements.some((element) => {
-    const value = values[element.name]
-    return (
-      element.required &&
-      (value === undefined || value === null || value === '')
+  // Every element's validation block, run against the live draft - the same
+  // registry-backed validators the inspector uses. Any error disables Create;
+  // "required" is just the NotEmptyValidator, so the old missing-required
+  // gate is subsumed.
+  const validationErrors: Record<string, string[]> = {}
+  for (const element of elements) {
+    const errors = validateValue(
+      values[element.name],
+      element.config.validation,
     )
-  })
+    if (errors.length > 0) validationErrors[element.name] = errors
+  }
+  const hasErrors = Object.keys(validationErrors).length > 0
 
   return (
     <Dialog
@@ -223,7 +235,7 @@ export function CreateNodeFlow({
           className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault()
-            if (!creating && !missingRequired) void submit(values)
+            if (!creating && !hasErrors) void submit(values)
           }}
         >
           {elements.map((element, index) => (
@@ -232,12 +244,22 @@ export function CreateNodeFlow({
               element={element}
               autoFocus={index === 0}
               value={values[element.name]}
-              onChange={(value) =>
+              errors={
+                touched.has(element.name)
+                  ? validationErrors[element.name]
+                  : undefined
+              }
+              onChange={(value) => {
                 setValues((previous) => ({
                   ...previous,
                   [element.name]: value,
                 }))
-              }
+                setTouched((previous) =>
+                  previous.has(element.name)
+                    ? previous
+                    : new Set(previous).add(element.name),
+                )
+              }}
             />
           ))}
         </form>
@@ -252,7 +274,7 @@ export function CreateNodeFlow({
           </Button>
           <Button
             onClick={() => void submit(values)}
-            disabled={creating || missingRequired}
+            disabled={creating || hasErrors}
           >
             {creating ? 'Creating…' : 'Create'}
           </Button>
@@ -274,11 +296,14 @@ function ElementEditor({
   element,
   autoFocus = false,
   value,
+  errors,
   onChange,
 }: {
   element: CreationElement
   autoFocus?: boolean
   value: unknown
+  /** Validation errors for the element's current draft value - rendered inline below the control. */
+  errors?: string[]
   onChange: (value: unknown) => void
 }) {
   const type = element.config.type ?? 'string'
@@ -286,6 +311,7 @@ function ElementEditor({
     element.config.ui?.editor ?? defaultEditorForType(type) ?? TEXT_FIELD_EDITOR
   const definition = usePropertyEditor(editorId)
   const Editor = definition?.component
+  const invalid = errors !== undefined && errors.length > 0
 
   const control = Editor ? (
     <Editor
@@ -293,9 +319,10 @@ function ElementEditor({
       value={value}
       options={element.config.ui?.editorOptions ?? {}}
       autoFocus={autoFocus}
+      invalid={invalid}
       // The dialog keeps a live draft it submits on Create, so it tracks both
-      // per-keystroke changes and commits (its required-field validation gates
-      // the Create button and must stay current as the user types).
+      // per-keystroke changes and commits (its validation gates the Create
+      // button and must stay current as the user types).
       onChange={onChange}
       onCommit={onChange}
     />
@@ -303,6 +330,7 @@ function ElementEditor({
     <Input
       autoFocus={autoFocus}
       value={typeof value === 'string' ? value : ''}
+      aria-invalid={invalid || undefined}
       onChange={(event) => onChange(event.target.value)}
     />
   )
@@ -310,7 +338,12 @@ function ElementEditor({
   // The editor renders its own label (e.g. a checkbox): show it as-is, without
   // wrapping in a <label> (which would nest labels) or adding one above.
   if (definition?.rendersOwnLabel) {
-    return <div className="text-sm">{control}</div>
+    return (
+      <div className="text-sm">
+        {control}
+        <ValidationErrors errors={errors} />
+      </div>
+    )
   }
 
   return (
@@ -320,6 +353,7 @@ function ElementEditor({
         {element.required && <span className="text-red-500"> *</span>}
       </span>
       {control}
+      <ValidationErrors errors={errors} />
     </label>
   )
 }

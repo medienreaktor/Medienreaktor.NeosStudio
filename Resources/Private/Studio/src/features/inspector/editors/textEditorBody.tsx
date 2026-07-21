@@ -19,6 +19,7 @@ export function TextEditorBody({
   onChange,
   options,
   autoFocus,
+  invalid,
 }: PropertyEditorProps & { multiline: boolean }) {
   const initial = value === null || value === undefined ? '' : String(value)
   const [draft, setDraft] = useState(initial)
@@ -82,6 +83,7 @@ export function TextEditorBody({
         autoFocus={autoFocus}
         value={draft}
         placeholder={placeholder}
+        aria-invalid={invalid || undefined}
         onChange={(event) => change(event.target.value)}
         {...keyHandlers}
       />
@@ -92,6 +94,7 @@ export function TextEditorBody({
       autoFocus={autoFocus}
       value={draft}
       placeholder={placeholder}
+      aria-invalid={invalid || undefined}
       inputMode={isNumeric ? 'decimal' : undefined}
       onChange={(event) => change(event.target.value)}
       {...keyHandlers}

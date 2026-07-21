@@ -25,6 +25,12 @@ export interface InspectorProperty {
   /** Any non-"node" scope makes edits span dimension variants - flagged next to the label. */
   scope: PropertyScope
   /**
+   * The property's validation block: validator identifier -> options,
+   * run through the validator registry (see validators/registry.ts).
+   * Empty when the property configures no validation.
+   */
+  validation: Record<string, unknown>
+  /**
    * How the preview refreshes after this property is saved:
    * ui.reloadPageIfChanged reloads the whole page ('page'),
    * ui.reloadIfChanged re-renders just the node's element out-of-band
@@ -246,6 +252,7 @@ export function buildInspectorSchema(
             editor,
             hidden: propertyConfig.ui?.inspector?.hidden ?? false,
             scope: propertyConfig.scope ?? 'node',
+            validation: propertyConfig.validation ?? {},
             reload: propertyConfig.ui?.reloadPageIfChanged
               ? 'page'
               : propertyConfig.ui?.reloadIfChanged

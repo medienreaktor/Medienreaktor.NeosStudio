@@ -32,13 +32,15 @@ import { registerBuiltinLinkTypes } from './features/links/builtin'
 import { registerBuiltinModals } from './features/modals/builtin'
 import { registerBuiltinPanels } from './features/panels/builtin'
 import { registerBuiltinPropertyEditors } from './features/inspector/editors'
+import { registerBuiltinValidators } from './features/inspector/validators'
 
-// Built-in panels, property editors, inspector views, link types and modal
-// screens register before mount, exactly like third-party ones would from a
-// plugin entry point.
+// Built-in panels, property editors, inspector views, validators, link types
+// and modal screens register before mount, exactly like third-party ones
+// would from a plugin entry point.
 registerBuiltinPanels()
 registerBuiltinPropertyEditors()
 registerBuiltinInspectorViews()
+registerBuiltinValidators()
 registerBuiltinLinkTypes()
 registerBuiltinModals()
 
