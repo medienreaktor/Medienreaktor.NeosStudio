@@ -1,5 +1,7 @@
 # Neos Studio
 
+![Neos Studio](Documentation/Banner.png)
+
 **A revolutionary, blazingly fast editing UI for Neos 9.** Built from scratch on a clean HTTP API — zero coupling to the legacy `Neos.Neos.Ui`, zero legacy baggage. This is what content editing in Neos can feel like: instant, fluid, and open for extension from day one.
 
 Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi) — a unified OAuth-secured REST API over the Event-Sourced Content Repository. No Fusion-rendered backend modules, no shared React runtime with the old UI, no wire-protocol archaeology. Just a fast, typed, cache-smart client in front of a well-defined API.
