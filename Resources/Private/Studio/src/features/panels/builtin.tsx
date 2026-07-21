@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchNode } from '@/api/nodes'
 import { useStudio } from '@/app/StudioContext'
+import { ClipboardPanel } from '@/features/clipboard/ClipboardPanel'
 import {
   InsertNodeDialog,
   type InsertRequest,
@@ -326,6 +327,12 @@ export function registerBuiltinPanels(): void {
     id: 'create',
     title: 'Create',
     component: NodeCreationPanel,
+    defaultPlacement: { kind: 'dock', region: 'sidebar' },
+  })
+  panelRegistry.register({
+    id: 'clipboard',
+    title: 'Clipboard',
+    component: ClipboardPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar' },
   })
   panelRegistry.register({

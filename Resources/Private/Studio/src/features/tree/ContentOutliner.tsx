@@ -18,6 +18,7 @@ import {
 import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
+import { useClipboard } from '@/features/clipboard/clipboardStore'
 import {
   NodeContextMenu,
   type NodeMenuAction,
@@ -122,6 +123,12 @@ function OutlinerTree({
   const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
+  // The active cut entry's row renders dimmed - the node is "in transit".
+  const clipboard = useClipboard()
+  const cutAddress =
+    clipboard.entries.find(
+      (entry) => entry.id === clipboard.activeId && entry.mode === 'cut',
+    )?.address ?? null
 
   const dnd = buildTreeDnd<TreeItemData>({
     getNode: (data) => (data === ROOT_ID || data === null ? null : data),
@@ -258,18 +265,22 @@ function OutlinerTree({
         loadingText="Loading content…"
         emptyText="No content below this document."
         emptyIcon="fa-list-tree"
-        decorate={(data) =>
-          data === null || data === ROOT_ID
-            ? null
-            : nodeDecor(data, nodeTypes, pendingChanges)
-        }
+        decorate={(data) => {
+          if (data === null || data === ROOT_ID) return null
+          const decor = nodeDecor(data, nodeTypes, pendingChanges)
+          return data.address === cutAddress
+            ? { ...decor, dimmed: true }
+            : decor
+        }}
         onItemContextMenu={openMenu}
       />
       <NodeContextMenu
         target={menuTarget}
         entityLabel="element"
+        clipboardKind="content"
         onClose={() => setMenuTarget(null)}
         onDone={(action, target) => onNodeAction?.(action, target)}
+        onPasted={(affectedAddresses) => onMoved?.(affectedAddresses)}
         onCreateNew={onCreateNew}
       />
     </>

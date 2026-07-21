@@ -597,6 +597,13 @@ export function PreviewPane({
       <NodeContextMenu
         target={elementMenu}
         entityLabel="element"
+        clipboardKind="content"
+        onPasted={(affectedAddresses) => {
+          // Structure changed - full reload (the pasted element isn't in the
+          // current markup, so no out-of-band fragment can place it).
+          setReloadCount((count) => count + 1)
+          onNodeEditedRef.current?.(affectedAddresses)
+        }}
         onClose={() => setElementMenu(null)}
         onCreateNew={(target) =>
           setInsertRequest({
