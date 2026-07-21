@@ -10,6 +10,8 @@
  */
 export const queryKeys = {
   me: ['me'] as const,
+  /** The own editable profile - nested under `me` so invalidating me covers it. */
+  profile: ['me', 'profile'] as const,
   sites: (workspace: string, dimensions: Record<string, string> | null) =>
     ['sites', { workspace, dimensions }] as const,
   workspaces: {

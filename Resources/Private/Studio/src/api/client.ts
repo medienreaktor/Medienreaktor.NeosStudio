@@ -21,6 +21,21 @@ export function isNotFound(error: unknown): boolean {
 }
 
 /**
+ * The server's human-readable error_description from an ApiError body, or the
+ * fallback. ApiError.message is only the generic status line; toasts should
+ * show what the server actually complained about.
+ */
+export function apiErrorDescription(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const body = error.body as { error_description?: unknown } | null
+    if (body && typeof body.error_description === 'string') {
+      return body.error_description
+    }
+  }
+  return fallback
+}
+
+/**
  * Typed request for query/mutation hooks: resolves with the parsed body on
  * 2xx and throws ApiError otherwise, so TanStack Query sees proper error
  * states (and the retry logic can distinguish 4xx from 5xx).

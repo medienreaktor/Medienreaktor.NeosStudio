@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 
+import { Separator } from '@/components/ui/separator'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
 import { type SettingsDialogDefinition, useSettingsDialogs } from './registry'
@@ -146,20 +147,26 @@ function SettingsModal({
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label="Settings sections"
-          className="w-56 shrink-0 overflow-y-auto border-r p-2"
+          className="w-56 shrink-0 overflow-y-auto p-2"
         >
           {sections.length === 0 && (
             <p className="px-2 py-1.5 text-xs text-neutral-400">
               No settings available
             </p>
           )}
-          {sections.map((section) => (
-            <SettingsNavItem
-              key={section.id}
-              section={section}
-              isActive={section.id === active?.id}
-              onSelect={onSelect}
-            />
+          {sections.map((section, index) => (
+            <React.Fragment key={section.id}>
+              {/* Separate adjacent sections of different groups, e.g. the
+                  personal Profile section from the administration ones. */}
+              {index > 0 && sections[index - 1].group !== section.group && (
+                <Separator className="my-2" />
+              )}
+              <SettingsNavItem
+                section={section}
+                isActive={section.id === active?.id}
+                onSelect={onSelect}
+              />
+            </React.Fragment>
           ))}
         </nav>
         <div className="min-h-0 flex-1 overflow-auto">

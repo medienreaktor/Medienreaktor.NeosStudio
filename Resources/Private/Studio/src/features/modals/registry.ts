@@ -85,6 +85,13 @@ export interface SettingsDialogDefinition extends RegistryDefinition {
   title: string
   /** Optional subnav icon. */
   icon?: ModalIcon
+  /**
+   * Visual grouping in the subnavigation: a separator is drawn between
+   * adjacent sections whose groups differ. Sorting stays purely order-based,
+   * so keep a group's sections contiguous via their `order`. Omitting the
+   * group puts a section in the default (unnamed) group.
+   */
+  group?: string
   /** The section body. Propless - reads app state via context, like a settings screen. */
   component: React.ComponentType
   /**
