@@ -83,7 +83,7 @@ composer require medienreaktor/neos-api medienreaktor/neos-studio
 cd DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio
 nvm use
 npm install
-npm run build      # outputs to Resources/Public/Studio/ (git-ignored)
+npm run build      # outputs to Resources/Public/Studio/ (committed to the repo)
 
 # publish and flush on the Neos side
 ./flow resource:publish
