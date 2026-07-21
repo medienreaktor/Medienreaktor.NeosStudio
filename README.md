@@ -2,7 +2,7 @@
 
 **A revolutionary, blazingly fast editing UI for Neos 9.** Built from scratch on a clean HTTP API — zero coupling to the legacy `Neos.Neos.Ui`, zero legacy baggage. This is what content editing in Neos can feel like: instant, fluid, and open for extension from day one.
 
-Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) — a unified OAuth-secured REST API over the Event-Sourced Content Repository. No Fusion-rendered backend modules, no shared React runtime with the old UI, no wire-protocol archaeology. Just a fast, typed, cache-smart client in front of a well-defined API.
+Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi) — a unified OAuth-secured REST API over the Event-Sourced Content Repository. No Fusion-rendered backend modules, no shared React runtime with the old UI, no wire-protocol archaeology. Just a fast, typed, cache-smart client in front of a well-defined API.
 
 > **Why "the future"?** The classic Neos UI is a great piece of engineering — from 2016. Its plugin API freezes React 16 forever, its wire protocol is undocumented, and every extension fights the build system. Neos Studio inverts that: an API-first backend, a lean modern frontend, and extensibility through observable registries designed as a public contract. It replaces legacy UI surfaces one at a time — the strangler pattern, applied to the editing experience itself.
 
@@ -20,7 +20,7 @@ The entire workspace is built from **panels**: document tree, content outliner, 
 
 ### ✍️ Lightweight inline Rich Text Editing
 
-Inline editing runs on **TipTap 3** — a lean, headless, ProseMirror-based editor instead of a monolithic CKEditor build. The RTE lives *inside the preview iframe* with a floating toolbar, driven by a guest-side formatting registry, so what you edit is exactly what renders. The same normalized formatting engine powers the inspector's rich-text editor, and the shared Link Editor (with a pluggable tab registry) handles links in both the RTE and the inspector's link fields.
+Inline editing runs on **TipTap 3** — a lean, headless, ProseMirror-based editor instead of a monolithic CKEditor build. The RTE lives _inside the preview iframe_ with a floating toolbar, driven by a guest-side formatting registry, so what you edit is exactly what renders. The same normalized formatting engine powers the inspector's rich-text editor, and the shared Link Editor (with a pluggable tab registry) handles links in both the RTE and the inspector's link fields.
 
 ### 🖱️ Context menus and drag & drop
 
@@ -36,7 +36,7 @@ Full parity with the classic inspector — and then some:
 - **Editors**: text, textarea, rich text, select box (with data source support), references, asset / assets, image, link, date & time, range slider, boolean, code, node type, URI path segment … all registered through an editor registry, all replaceable.
 - **Views**: NodeInfo, Column, Table and TimeSeries views plus data-source-driven widgets — through a views registry.
 - **Validators**: the `Neos.Neos/Validation` built-ins with live inline errors, tab badges and save-blocking — through a validators registry.
-- **ClientEval** support (`ClientEval:` expressions for hidden state and editor options), transient values, and **dimension shine-through indicators** with one-click "create variant" — in the inspector *and* directly in the preview.
+- **ClientEval** support (`ClientEval:` expressions for hidden state and editor options), transient values, and **dimension shine-through indicators** with one-click "create variant" — in the inspector _and_ directly in the preview.
 
 ### 🌐 Full editing environment
 
@@ -51,26 +51,26 @@ Full parity with the classic inspector — and then some:
 
 Extensibility isn't bolted on; it's the architecture. Studio's building blocks are **observable registries**:
 
-| Registry | What you can add |
-|---|---|
-| Panels | Whole new workspace surfaces, docked anywhere |
+| Registry          | What you can add                                   |
+| ----------------- | -------------------------------------------------- |
+| Panels            | Whole new workspace surfaces, docked anywhere      |
 | Inspector editors | Custom property editors for any node type property |
-| Inspector views | Custom read-only views and widgets |
-| Validators | Custom client-side validation |
-| Link editor tabs | New link source types in the shared link modal |
-| Modals | App-level dialogs |
+| Inspector views   | Custom read-only views and widgets                 |
+| Validators        | Custom client-side validation                      |
+| Link editor tabs  | New link source types in the shared link modal     |
+| Modals            | App-level dialogs                                  |
 
 Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state, and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
 
-**Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](../Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel and a custom inspector editor (a color picker) from a completely separate package.
+**Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel and a custom inspector editor (a color picker) from a completely separate package.
 
 ## The package family
 
-| Package | What it is |
-|---|---|
-| [Medienreaktor.NeosApi](../Medienreaktor.NeosApi) | The foundation: OAuth 2.1 (PKCE, refresh token rotation, client credentials, dynamic registration), a read API over the ContentGraph, a write API for CR commands with batching and idempotency, workspace publishing, media API, data sources. Deny-by-default endpoint policy, structural content authorization through the CR itself. Useful far beyond Studio — for integrations, importers and MCP servers. |
-| **Medienreaktor.NeosStudio** (this package) | The editing UI built on that API. |
-| [Medienreaktor.NeosStudio.ExamplePlugins](../Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package. |
+| Package                                                                               | What it is                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi)                                     | The foundation: OAuth 2.1 (PKCE, refresh token rotation, client credentials, dynamic registration), a read API over the ContentGraph, a write API for CR commands with batching and idempotency, workspace publishing, media API, data sources. Deny-by-default endpoint policy, structural content authorization through the CR itself. Useful far beyond Studio — for integrations, importers and MCP servers. |
+| **Medienreaktor.NeosStudio** (this package)                                           | The editing UI built on that API.                                                                                                                                                                                                                                                                                                                                                                                |
+| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                                                                                                                                                                              |
 
 ## Getting started
 
@@ -124,4 +124,4 @@ Next up: collaborative editing on shared workspaces (change feed, presence), ric
 
 ---
 
-Built by [medienreaktor](https://medienreaktor.de) with ❤️ for the Neos community. Feedback, issues and plugin experiments very welcome — this is where the Neos editing experience is headed. Come shape it.
+Built by [medienreaktor](https://www.medienreaktor.de) with ❤️ for the Neos community. Feedback, issues and plugin experiments very welcome — this is where the Neos editing experience is headed. Come shape it.
