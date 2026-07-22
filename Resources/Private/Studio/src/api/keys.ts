@@ -12,8 +12,12 @@ export const queryKeys = {
   me: ['me'] as const,
   /** The own editable profile - nested under `me` so invalidating me covers it. */
   profile: ['me', 'profile'] as const,
+  /** Prefix covering every sites listing variant AND the options - for invalidation after site writes. */
+  sitesAll: ['sites'] as const,
   sites: (workspace: string, dimensions: Record<string, string> | null) =>
     ['sites', { workspace, dimensions }] as const,
+  /** Site packages + site node types for the creation dialog. */
+  siteOptions: ['sites', 'options'] as const,
   workspaces: {
     all: ['workspaces'] as const,
     changes: (name: string) => ['workspaces', name, 'changes'] as const,

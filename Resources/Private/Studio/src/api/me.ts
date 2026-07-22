@@ -23,6 +23,8 @@ export interface Me {
   permissions: {
     media: boolean
     users: boolean
+    sites: boolean
+    workspaces: boolean
     administration: boolean
   } & Record<string, boolean>
 }

@@ -271,7 +271,11 @@ export function App() {
     auth === 'authenticated',
   )
 
-  const sites = sitesResponse?.sites ?? []
+  // The editing shell only deals in online sites; offline ones exist solely
+  // for the sites administration (which fetches the full listing itself).
+  const sites = (sitesResponse?.sites ?? []).filter(
+    (site) => site.state === 'online',
+  )
   // Starts from the site remembered across reloads; a stored name that no
   // longer matches simply falls back to the first site below.
   const [siteNodeName, setSiteNodeName] = useState<string | null>(() =>
