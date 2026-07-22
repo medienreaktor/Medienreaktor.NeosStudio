@@ -19,8 +19,6 @@ Edit **together in the same workspace, live**. Every shared workspace offers a _
 - **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through pure PHP endpoints. If it runs Neos 9, it runs multiplayer.
 - **Emergent, not a mode**: sessions are ordinary Neos `SHARED` workspaces (create them in the Workspaces module, manage access with the usual roles). Two people in the same workspace — that _is_ the multiplayer. Publishing the session to live works exactly like publishing any workspace.
 
-Character-level co-typing inside a single text field (CRDT/Yjs) is on the roadmap; until then, concurrent edits of the _same_ field resolve last-write-wins while everything else merges naturally through the event log.
-
 ### ⚡ Blazingly fast, everywhere
 
 - **Instant loads** — a static Vite-built SPA served at `/neos/studio`, with TanStack Query caching and background revalidation. Navigating between documents doesn't reload the world; it reuses what's already in the cache.
