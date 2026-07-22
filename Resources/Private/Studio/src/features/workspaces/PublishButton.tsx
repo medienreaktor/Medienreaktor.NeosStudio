@@ -34,9 +34,9 @@ import { translate as t } from '@/lib/i18n'
  * Topbar split button for the active workspace: primary action publishes all
  * pending changes to the base workspace, the attached dropdown scopes to the
  * selected document ("this page") and offers discarding (behind a
- * confirmation - discards are irreversible). Reviewing changes lives in the
- * dedicated ReviewButton next to this one. Orange with a
- * change-count bubble while there is something to publish, muted and disabled
+ * confirmation - discards are irreversible). Reviewing changes and the
+ * pending-count bubble live in the dedicated ReviewButton next to this one.
+ * Green while there is something to publish, muted and disabled
  * otherwise. Without publish permission on the base workspace (a non-
  * LivePublisher editor) the publish actions are disabled with an explanation -
  * discarding stays available, it only touches the own workspace.
@@ -118,7 +118,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   return (
     <div className="flex items-center gap-3">
       {/* gap-px splits the segments with a hairline of header background */}
-      <div className="relative flex gap-px">
+      <div className="flex gap-px">
         <Button
           className={cn('rounded-r-none', segmentClasses)}
           variant={segmentVariant}
@@ -202,16 +202,6 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {hasChanges && (
-          <span
-            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white tabular-nums"
-            aria-label={t('workspace.pendingBadge', '{0} pending changes', [
-              changeCount,
-            ])}
-          >
-            {changeCount}
-          </span>
-        )}
       </div>
 
       <Dialog
