@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchNode } from '@/api/nodes'
+import { aggregateIdOf } from '@/api/nodeAddress'
 import { useStudio } from '@/app/StudioContext'
+import { usePresence } from '@/features/collaboration/PresenceContext'
 import { ClipboardPanel } from '@/features/clipboard/ClipboardPanel'
 import {
   InsertNodeDialog,
@@ -243,6 +245,29 @@ function VisualEditorPanel() {
     navigateToNode,
     reportInlineEdit,
   } = useStudio()
+  // Collaborators standing on the previewed document whose focused node can
+  // be highlighted in the page - the guest outlines those elements in the
+  // person's color with an initials badge.
+  const { peers } = usePresence()
+  const documentAggregateId = selectedDocument
+    ? aggregateIdOf(selectedDocument.address)
+    : null
+  const presence = useMemo(
+    () =>
+      peers
+        .filter(
+          (peer) =>
+            peer.documentAggregateId === documentAggregateId &&
+            peer.focusedAggregateId !== null,
+        )
+        .map((peer) => ({
+          aggregateId: peer.focusedAggregateId as string,
+          color: peer.color,
+          initials: peer.initials,
+          name: peer.name,
+        })),
+    [peers, documentAggregateId],
+  )
   return (
     <div className="flex h-full min-h-0 flex-col">
       <PreviewPane
@@ -255,6 +280,7 @@ function VisualEditorPanel() {
         }
         reloadToken={previewReloadToken}
         elementUpdate={previewElementUpdate}
+        presence={presence}
       />
     </div>
   )

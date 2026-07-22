@@ -23,11 +23,12 @@ export type StudioContextValue = {
   /** Bumped to reload the preview iframe after edits made outside of it. */
   previewReloadToken: number
   /**
-   * The last edit that wants just its node's element refreshed in the preview
-   * (out-of-band render + DOM swap instead of an iframe reload). The token
-   * distinguishes successive edits of the same address.
+   * The last edit that wants just its nodes' elements refreshed in the
+   * preview (out-of-band render + DOM swap instead of an iframe reload).
+   * Usually one address; remote collaborators' edits can batch several. The
+   * token distinguishes successive updates of the same addresses.
    */
-  previewElementUpdate: { address: string; token: number } | null
+  previewElementUpdate: { addresses: string[]; token: number } | null
   /** Select a document (also inspects it). */
   selectDocument: (node: NodeDto) => void
   /** Inspect a node without changing the selected document. */

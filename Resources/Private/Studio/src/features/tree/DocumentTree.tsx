@@ -21,6 +21,7 @@ import type { Site } from '@/api/sites'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
+import { usePresence } from '@/features/collaboration/PresenceContext'
 import {
   NodeContextMenu,
   type NodeMenuAction,
@@ -76,6 +77,9 @@ export function DocumentTree({
   const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
+  // Collaborators mark the document they are standing on ({} outside a
+  // collaborative session - the default context renders nothing).
+  const { peers } = usePresence()
   // The active cut entry's row renders dimmed - the node is "in transit".
   const clipboard = useClipboard()
   const cutAddress =
@@ -206,7 +210,14 @@ export function DocumentTree({
         emptyIcon="fa-sitemap"
         decorate={(data) => {
           if (data === ROOT_ID || data === null) return null
-          const decor = nodeDecor(data, nodeTypes, pendingChanges)
+          const decor = nodeDecor(
+            data,
+            nodeTypes,
+            pendingChanges,
+            peers.filter(
+              (peer) => peer.documentAggregateId === data.aggregateId,
+            ),
+          )
           return data.address === cutAddress
             ? { ...decor, dimmed: true }
             : decor

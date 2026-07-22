@@ -145,9 +145,26 @@ export type GuestToHostMessage =
       ok: boolean
     }
 
+/**
+ * A collaborator's live position on the rendered page: the element of the
+ * node they focus gets an outline in their color plus an initials badge.
+ */
+export interface PresenceHighlight {
+  aggregateId: string
+  color: string
+  initials: string
+  name: string
+}
+
 export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */
   | { type: 'neos-studio/select-node'; aggregateId: string | null }
+  /**
+   * The collaborators currently on this document and the elements they
+   * focus. Replaces the previous set; an empty list clears all presence
+   * decor (e.g. everyone left, or collaboration ended).
+   */
+  | { type: 'neos-studio/presence-update'; users: PresenceHighlight[] }
   /**
    * A node type drag from the creation panel started - the guest marks the
    * collections that allow this type as drop targets.

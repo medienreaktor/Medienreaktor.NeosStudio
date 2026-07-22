@@ -1198,6 +1198,10 @@
         <source>Visual Editor</source>
         <target xml:lang="de">Visueller Editor</target>
       </trans-unit>
+      <trans-unit id="presence.justYou" xml:space="preserve">
+        <source>Just you</source>
+        <target xml:lang="de">Nur Sie</target>
+      </trans-unit>
       <trans-unit id="preview.openInNewTab" xml:space="preserve">
         <source>Open page in a new tab</source>
         <target xml:lang="de">Seite in neuem Tab öffnen</target>
@@ -1321,6 +1325,10 @@
       <trans-unit id="tree.clearFilter" xml:space="preserve">
         <source>Clear filter</source>
         <target xml:lang="de">Filter zurücksetzen</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
+        <target xml:lang="de">{0} ist hier</target>
       </trans-unit>
       <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
         <source>Contains changes in workspace "{0}"</source>
@@ -1562,6 +1570,18 @@
         <source>You cannot publish to this workspace</source>
         <target xml:lang="de">Sie können nicht in diesen Arbeitsbereich veröffentlichen</target>
       </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+        <target xml:lang="de">Gemeinsam</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+        <target xml:lang="de">Gemeinsames Bearbeiten in einem geteilten Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
+        <target xml:lang="de">Gemeinsames Bearbeiten (mit allen im Arbeitsbereich)</target>
+      </trans-unit>
       <trans-unit id="workspace.change.added" xml:space="preserve">
         <source>added</source>
         <target xml:lang="de">hinzugefügt</target>
@@ -1709,6 +1729,10 @@
       <trans-unit id="workspace.publishTarget" xml:space="preserve">
         <source>Workspace to publish to</source>
         <target xml:lang="de">Arbeitsbereich zum Veröffentlichen</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
+        <source>My workspace, publishing to</source>
+        <target xml:lang="de">Mein Arbeitsbereich, veröffentlicht nach</target>
       </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>

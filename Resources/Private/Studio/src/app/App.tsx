@@ -16,6 +16,7 @@ import { queryKeys } from '@/api/keys'
 import { fetchNode, type NodeDto, useNodeVariants } from '@/api/nodes'
 import {
   addressInDimension,
+  addressInWorkspace,
   addressWithAggregateId,
   aggregateIdOf,
 } from '@/api/nodeAddress'
@@ -40,6 +41,12 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { StudioProvider, type StudioContextValue } from '@/app/StudioContext'
+import { CollaborationBridge } from '@/features/collaboration/CollaborationBridge'
+import { PresenceAvatars } from '@/features/collaboration/PresenceAvatars'
+import {
+  PresenceProvider,
+  type PresencePeer,
+} from '@/features/collaboration/PresenceContext'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import {
@@ -76,6 +83,10 @@ const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
 const SELECTED_SITE_KEY = 'neos-studio.selected_site'
 const DIMENSION_SPACE_POINT_KEY = 'neos-studio.dimension_space_point'
 
+// Remember a collaborative editing context (a shared workspace edited
+// directly) across reloads; absent = the personal workspace.
+const EDITING_WORKSPACE_KEY = 'neos-studio.editing_workspace'
+
 // The stored point, or null (= let the backend pick its default) if nothing
 // valid is stored. Structural check only - whether the point is still allowed
 // by the dimension configuration is verified once the dimensions load.
@@ -109,29 +120,70 @@ export function App() {
   // Bumped after inspector edits so the preview shows them (inline edits
   // already render live inside the iframe and need no reload).
   const [previewReloadToken, setPreviewReloadToken] = useState(0)
-  // Inspector edits of ui.reloadIfChanged properties: refresh just the node's
-  // element in the preview (out-of-band render) instead of a full reload.
+  // Inspector edits of ui.reloadIfChanged properties (and remote
+  // collaborators' content edits): refresh just those nodes' elements in the
+  // preview (out-of-band render) instead of a full reload.
   const [previewElementUpdate, setPreviewElementUpdate] = useState<{
-    address: string
+    addresses: string[]
     token: number
   } | null>(null)
 
-  // The identity itself is not displayed, but the me-query doubles as the
-  // token check: a 401 drives the logout below.
-  const { error: meError } = useMe(auth === 'authenticated')
+  // The me-query doubles as the token check (a 401 drives the logout below);
+  // the user id additionally tells the collaboration feed which events are
+  // the own ones.
+  const { data: me, error: meError } = useMe(auth === 'authenticated')
   const { sidebarWidth, isResizing, resizeHandleProps } = useResizableSidebar()
   const { data: workspacesResponse } = useWorkspaces(auth === 'authenticated')
 
-  // Editing always happens in the personal workspace, as in the classic UI.
-  // The workspace switcher never changes this - it rebases the personal
-  // workspace onto a different base (live or a shared workspace) and thereby
-  // retargets where a publish goes.
+  // The editing context. Default (classic model): editing happens in the
+  // personal workspace and the switcher only retargets where a publish goes
+  // (rebases the personal workspace onto a different base). Collaborative
+  // model: the switcher can instead point the editing context AT a shared
+  // workspace - every command then runs directly against it, which is what
+  // makes multiplayer editing work (all participants write into one event
+  // log). Switching the editing context is a pure client-side state change:
+  // no CR command, no empty-workspace requirement, personal pending changes
+  // survive untouched.
   const workspaces = workspacesResponse?.workspaces ?? []
-  const activeWorkspace =
+  const [editingWorkspaceName, setEditingWorkspaceName] = useState<
+    string | null
+  >(() => localStorage.getItem(EDITING_WORKSPACE_KEY))
+  const personalWorkspace =
     workspaces.find((w) => w.classification === 'PERSONAL') ?? null
+  const collaborativeWorkspace = editingWorkspaceName
+    ? (workspaces.find(
+        (w) =>
+          w.name === editingWorkspaceName &&
+          w.classification === 'SHARED' &&
+          w.permissions.write,
+      ) ?? null)
+    : null
+  const activeWorkspace = collaborativeWorkspace ?? personalWorkspace
   const baseTargets = workspaces.filter(
     (w) => w.classification === 'ROOT' || w.classification === 'SHARED',
   )
+
+  // A remembered collaborative context that no longer resolves (workspace
+  // deleted, write access revoked) falls back to the personal workspace.
+  useEffect(() => {
+    if (!workspacesResponse || editingWorkspaceName === null) return
+    const stillValid = workspacesResponse.workspaces.some(
+      (w) =>
+        w.name === editingWorkspaceName &&
+        w.classification === 'SHARED' &&
+        w.permissions.write,
+    )
+    if (!stillValid) {
+      setEditingWorkspaceName(null)
+      localStorage.removeItem(EDITING_WORKSPACE_KEY)
+    }
+  }, [workspacesResponse, editingWorkspaceName])
+
+  // Who else is in the collaborative session (fed by the bridge below).
+  const [presence, setPresence] = useState<{
+    peers: PresencePeer[]
+    you: string | null
+  }>({ peers: [], you: null })
 
   const { data: dimensionsResponse } = useDimensions(auth === 'authenticated')
   const dimensions = dimensionsResponse?.dimensions ?? []
@@ -172,17 +224,15 @@ export function App() {
     auth === 'authenticated',
   )
 
-  // Keep the user on the same document across a dimension switch: fetch the
-  // node at its address in the target point and reselect it once it resolves.
-  // The counter drops stale responses when dimensions change in quick
-  // succession, so a slow earlier fetch cannot override the latest switch.
+  // Keep the user on the same document across a dimension or editing-context
+  // switch: fetch the node at its address in the target subgraph and reselect
+  // it once it resolves. The counter drops stale responses when switches
+  // happen in quick succession, so a slow earlier fetch cannot override the
+  // latest one.
   const followDocumentRequest = useRef(0)
-  const followDocumentInto = (
-    previousAddress: string,
-    point: DimensionSpacePoint,
-  ) => {
+  const followDocumentTo = (targetAddress: string) => {
     const request = ++followDocumentRequest.current
-    fetchNode(addressInDimension(previousAddress, point))
+    fetchNode(targetAddress)
       .then((node) => {
         if (followDocumentRequest.current !== request) return
         setSelectedDocument(node)
@@ -191,6 +241,28 @@ export function App() {
       .catch(() => {
         /* fine - the tree simply starts unselected */
       })
+  }
+  const followDocumentInto = (
+    previousAddress: string,
+    point: DimensionSpacePoint,
+  ) => followDocumentTo(addressInDimension(previousAddress, point))
+
+  /**
+   * Move the editing context to a shared workspace (name) or back to the
+   * personal one (null). Client-side only; the selected document follows
+   * into the target workspace's subgraph.
+   */
+  const switchEditingContext = (name: string | null) => {
+    const targetName = name ?? personalWorkspace?.name ?? null
+    if (targetName === null || targetName === activeWorkspace?.name) return
+    setEditingWorkspaceName(name)
+    if (name !== null) localStorage.setItem(EDITING_WORKSPACE_KEY, name)
+    else localStorage.removeItem(EDITING_WORKSPACE_KEY)
+    const previousAddress = selectedDocument?.address ?? null
+    setSelectedDocument(null)
+    setInspectedNode(null)
+    if (previousAddress)
+      followDocumentTo(addressInWorkspace(previousAddress, targetName))
   }
 
   const { data: sitesResponse } = useSites(
@@ -312,6 +384,73 @@ export function App() {
     )
   }
 
+  // The workspace's content changed wholesale (published/discarded/rebased,
+  // locally or by a collaborator): refresh every cached node read, all tree
+  // items, the preview, and the app-state snapshots. A snapshot that no
+  // longer resolves (the node was removed) is deselected gracefully.
+  const refreshWorkspaceContent = () => {
+    setLastEdit((prev) => ({
+      addresses: [ALL_NODES],
+      token: (prev?.token ?? 0) + 1,
+    }))
+    setPreviewReloadToken((token) => token + 1)
+    if (selectedDocument) {
+      fetchNode(selectedDocument.address)
+        .then(setSelectedDocument)
+        .catch(() => {
+          setSelectedDocument(null)
+          setInspectedNode(null)
+        })
+    }
+    if (inspectedNode) {
+      fetchNode(inspectedNode.address)
+        .then(setInspectedNode)
+        .catch(() => setInspectedNode(null))
+    }
+  }
+
+  // A collaborator's content edits (property/reference changes): swap the
+  // affected elements in the preview out-of-band, refresh their tree rows and
+  // the inspector snapshot if it shows one of them. The cached reads must be
+  // dropped first - the refreshes below would otherwise serve the 30s-stale
+  // query cache.
+  const remoteContentChanged = (aggregateIds: string[]) => {
+    const baseAddress =
+      selectedDocument?.address ?? activeSite?.nodeAddress ?? null
+    if (!baseAddress) return
+    const addresses = aggregateIds.map((id) =>
+      addressWithAggregateId(baseAddress, id),
+    )
+    for (const address of addresses) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.nodes.node(address),
+      })
+    }
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    setLastEdit((prev) => ({ addresses, token: (prev?.token ?? 0) + 1 }))
+    setPreviewElementUpdate((prev) => ({
+      addresses,
+      token: (prev?.token ?? 0) + 1,
+    }))
+    if (
+      inspectedNode &&
+      aggregateIds.includes(aggregateIdOf(inspectedNode.address))
+    ) {
+      fetchNode(inspectedNode.address)
+        .then(setInspectedNode)
+        .catch(() => setInspectedNode(null))
+    }
+  }
+
+  // A collaborator changed the structure (or published/discarded/rebased the
+  // session): incremental updates cannot describe this - drop all caches and
+  // refresh wholesale.
+  const remoteWorkspaceChanged = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    refreshWorkspaceContent()
+  }
+
   // The app state and actions panels read via useStudio(). Panels register
   // themselves in the panel registry (see features/panels/builtin.tsx); their
   // placement (sidebar dock, floating, tab grouping) is the panel system's
@@ -378,7 +517,7 @@ export function App() {
         setPreviewReloadToken((token) => token + 1)
       } else if (reload === 'element') {
         setPreviewElementUpdate((prev) => ({
-          address,
+          addresses: [address],
           token: (prev?.token ?? 0) + 1,
         }))
       }
@@ -400,28 +539,7 @@ export function App() {
       // appears in its new place.
       setPreviewReloadToken((token) => token + 1)
     },
-    workspaceContentChanged: () => {
-      setLastEdit((prev) => ({
-        addresses: [ALL_NODES],
-        token: (prev?.token ?? 0) + 1,
-      }))
-      setPreviewReloadToken((token) => token + 1)
-      // The snapshots held in app state are re-read as well; a node that no
-      // longer exists (created in the workspace, then discarded) is dropped.
-      if (selectedDocument) {
-        fetchNode(selectedDocument.address)
-          .then(setSelectedDocument)
-          .catch(() => {
-            setSelectedDocument(null)
-            setInspectedNode(null)
-          })
-      }
-      if (inspectedNode) {
-        fetchNode(inspectedNode.address)
-          .then(setInspectedNode)
-          .catch(() => setInspectedNode(null))
-      }
-    },
+    workspaceContentChanged: refreshWorkspaceContent,
   }
 
   return (
@@ -438,188 +556,229 @@ export function App() {
       )}
     >
       <StudioProvider value={studio}>
-        <ModalProvider>
-          {/* AssetPickerProvider wraps PanelsProvider so editors inside floating
+        <PresenceProvider
+          value={{
+            active: collaborativeWorkspace !== null,
+            peers: collaborativeWorkspace !== null ? presence.peers : [],
+            you: presence.you,
+          }}
+        >
+          <ModalProvider>
+            {/* AssetPickerProvider wraps PanelsProvider so editors inside floating
               panels (the Inspector is portalled out by the panel system) can
               still open the asset picker; the bridge inside does the tab switch. */}
-          <AssetPickerProvider>
-            <PanelsProvider floatingVisibleForMainPanel="visual-editor">
-              <AssetPickerPanelBridge />
-              <Sidebar>
-                <SidebarHeader>
-                  <div className="flex items-center gap-2.5 px-2 py-1 text-lg">
-                    <svg
-                      viewBox="0 0 453.54 124.45"
-                      className="h-6 w-auto shrink-0"
-                      role="img"
-                      aria-label="Neos"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M410.69 86l4.95-5.54c5.5 4.94 10.61 7.54 18.11 7.54 6.7 0 11.49-3.4 11.49-8.47 0-4.51-2.55-6.89-13.49-9.66-12.69-3.25-19.07-7.6-19.07-16.47 0-9.19 8.46-15.52 19.31-15.52 8.06 0 14 2.62 19.71 7.13l-4.63 5.94c-5.27-4.12-9.74-5.86-15.16-5.86-6.15 0-10.86 3-10.86 7.76 0 4.59 3 7.13 14.29 9.9 12.21 2.93 18.2 7.76 18.2 16.31 0 10-8.62 16.16-19.87 16.16-8.94 0-16.36-3.22-22.98-9.22zM327.77 66.55c0-15.68 12.13-28.67 29-28.67s29 13 29 28.67-12.13 28.67-29 28.67-29-12.99-29-28.67zm49.72 0c0-12.12-8.54-21.3-20.67-21.3s-20.67 9.19-20.67 21.3 8.54 21.3 20.67 21.3 20.67-9.19 20.67-21.3zM302.55 38.83V46h-32.72v16.67H299V70h-29.17v17.06h33.12v7.21h-41.18V38.83zM191.07 38.83l32.48 40.94V38.83h7.9v55.44h-6.62l-33.37-42.06v42.06h-7.9V38.83z"
-                      />
-                      <path
-                        fill="#009fe3"
-                        d="M88.83 0L68.12 15.1v31.57l20.71 29.28V0zM88.83 112.57L9.22 0 0 6.74v117.71l20.71-15.1V51.06l51.78 73.39h22.65l16.34-11.88H88.83z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M20.71 51.06v58.29L0 124.45h22.65l20.71-15.1V83.17L20.71 51.06zM88.83 75.95V0h22.65v112.57H88.83L9.22 0h25.89l53.72 75.95z"
-                      />
-                    </svg>
-                  </div>
-                </SidebarHeader>
-                <SidebarContent className="overflow-hidden p-2">
-                  <PanelDock region="sidebar" />
-                </SidebarContent>
-                <SidebarResizeHandle {...resizeHandleProps} />
-              </Sidebar>
-
-              <SidebarInset>
-                {/* Fixed height so the bar does not jump as the switchers and
-                    workspace buttons resolve and render after load. */}
-                <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <SidebarTrigger />
-                      <ModalLauncher />
-                    </div>
-                    {sites.length > 0 && (
-                      <SiteSwitcher
-                        sites={sites}
-                        value={activeSite?.nodeName ?? null}
-                        onChange={(nodeName) => {
-                          setSiteNodeName(nodeName)
-                          setSelectedDocument(null)
-                          setInspectedNode(null)
-                          // The stored document belongs to the previous site -
-                          // a reload should land on the new site's root, not
-                          // re-resolve a document from the old one.
-                          localStorage.removeItem(SELECTED_DOCUMENT_KEY)
-                        }}
-                      />
-                    )}
-                    {dimensions.length > 0 && sitesResponse && (
-                      <DimensionSwitcher
-                        dimensions={dimensions}
-                        allowedPoints={
-                          dimensionsResponse?.allowedDimensionSpacePoints ?? []
-                        }
-                        value={
-                          dimensionSpacePoint ??
-                          sitesResponse.dimensionSpacePoint
-                        }
-                        documentCoverage={
-                          selectedDocument
-                            ? documentVariants?.coveredDimensionSpacePoints
-                            : undefined
-                        }
-                        onCreateVariant={setVariantRequest}
-                        onChange={(point) => {
-                          const previousAddress =
-                            selectedDocument?.address ?? null
-                          setDimensionSpacePoint(point)
-                          setSelectedDocument(null)
-                          setInspectedNode(null)
-                          if (previousAddress)
-                            followDocumentInto(previousAddress, point)
-                        }}
-                      />
-                    )}
-
-                    <PreviewToolbar
-                      document={selectedDocument}
-                      onReload={() => {
-                        // Reload the preview, both trees and the inspector
-                        // together. Everything serves stale content while the
-                        // fresh data is in flight: drop the cached node reads,
-                        // then the trees invalidate optimistically (ALL_NODES
-                        // keeps existing rows until refetch resolves) and the
-                        // inspected-node / document snapshots are only swapped
-                        // once fetchNode resolves - so nothing blanks mid-reload.
-                        void queryClient.invalidateQueries({
-                          queryKey: queryKeys.nodes.all,
-                        })
-                        setLastEdit((prev) => ({
-                          addresses: [ALL_NODES],
-                          token: (prev?.token ?? 0) + 1,
-                        }))
-                        setPreviewReloadToken((token) => token + 1)
-                        if (selectedDocument) {
-                          fetchNode(selectedDocument.address)
-                            .then(setSelectedDocument)
-                            .catch(() => {
-                              /* keep showing the previous snapshot */
-                            })
-                        }
-                        if (inspectedNode) {
-                          fetchNode(inspectedNode.address)
-                            .then(setInspectedNode)
-                            .catch(() => {
-                              /* keep showing the previous snapshot */
-                            })
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {activeWorkspace && baseTargets.length > 0 && (
-                      <WorkspaceSwitcher
-                        personalWorkspace={activeWorkspace}
-                        targets={baseTargets}
-                      />
-                    )}
-                    {activeWorkspace && (
-                      <>
-                        <SyncWorkspaceButton
-                          workspaceName={activeWorkspace.name}
+            <AssetPickerProvider>
+              <PanelsProvider floatingVisibleForMainPanel="visual-editor">
+                <AssetPickerPanelBridge />
+                {/* The collaborative session's engine: presence heartbeats and
+                  the change-feed tail. Mounted (and thus polling) only while
+                  the editing context is a shared workspace. */}
+                {collaborativeWorkspace && (
+                  <CollaborationBridge
+                    workspaceName={collaborativeWorkspace.name}
+                    ownUserId={me?.user?.id ?? null}
+                    documentAggregateId={
+                      selectedDocument
+                        ? aggregateIdOf(selectedDocument.address)
+                        : null
+                    }
+                    focusedAggregateId={
+                      inspectedNode
+                        ? aggregateIdOf(inspectedNode.address)
+                        : null
+                    }
+                    dimensionSpacePoint={
+                      dimensionSpacePoint ??
+                      sitesResponse?.dimensionSpacePoint ??
+                      null
+                    }
+                    onPresence={setPresence}
+                    onRemoteContentChange={remoteContentChanged}
+                    onRemoteWorkspaceChange={remoteWorkspaceChanged}
+                  />
+                )}
+                <Sidebar>
+                  <SidebarHeader>
+                    <div className="flex items-center gap-2.5 px-2 py-1 text-lg">
+                      <svg
+                        viewBox="0 0 453.54 124.45"
+                        className="h-6 w-auto shrink-0"
+                        role="img"
+                        aria-label="Neos"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M410.69 86l4.95-5.54c5.5 4.94 10.61 7.54 18.11 7.54 6.7 0 11.49-3.4 11.49-8.47 0-4.51-2.55-6.89-13.49-9.66-12.69-3.25-19.07-7.6-19.07-16.47 0-9.19 8.46-15.52 19.31-15.52 8.06 0 14 2.62 19.71 7.13l-4.63 5.94c-5.27-4.12-9.74-5.86-15.16-5.86-6.15 0-10.86 3-10.86 7.76 0 4.59 3 7.13 14.29 9.9 12.21 2.93 18.2 7.76 18.2 16.31 0 10-8.62 16.16-19.87 16.16-8.94 0-16.36-3.22-22.98-9.22zM327.77 66.55c0-15.68 12.13-28.67 29-28.67s29 13 29 28.67-12.13 28.67-29 28.67-29-12.99-29-28.67zm49.72 0c0-12.12-8.54-21.3-20.67-21.3s-20.67 9.19-20.67 21.3 8.54 21.3 20.67 21.3 20.67-9.19 20.67-21.3zM302.55 38.83V46h-32.72v16.67H299V70h-29.17v17.06h33.12v7.21h-41.18V38.83zM191.07 38.83l32.48 40.94V38.83h7.9v55.44h-6.62l-33.37-42.06v42.06h-7.9V38.83z"
                         />
-                        <PublishButton workspace={activeWorkspace} />
-                      </>
-                    )}
-                  </div>
-                </header>
+                        <path
+                          fill="#009fe3"
+                          d="M88.83 0L68.12 15.1v31.57l20.71 29.28V0zM88.83 112.57L9.22 0 0 6.74v117.71l20.71-15.1V51.06l51.78 73.39h22.65l16.34-11.88H88.83z"
+                        />
+                        <path
+                          fill="currentColor"
+                          d="M20.71 51.06v58.29L0 124.45h22.65l20.71-15.1V83.17L20.71 51.06zM88.83 75.95V0h22.65v112.57H88.83L9.22 0h25.89l53.72 75.95z"
+                        />
+                      </svg>
+                    </div>
+                  </SidebarHeader>
+                  <SidebarContent className="overflow-hidden p-2">
+                    <PanelDock region="sidebar" />
+                  </SidebarContent>
+                  <SidebarResizeHandle {...resizeHandleProps} />
+                </Sidebar>
 
-                {/* The main area and the optional right-hand sidebar. The Visual
+                <SidebarInset>
+                  {/* Fixed height so the bar does not jump as the switchers and
+                    workspace buttons resolve and render after load. */}
+                  <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <SidebarTrigger />
+                        <ModalLauncher />
+                      </div>
+                      {sites.length > 0 && (
+                        <SiteSwitcher
+                          sites={sites}
+                          value={activeSite?.nodeName ?? null}
+                          onChange={(nodeName) => {
+                            setSiteNodeName(nodeName)
+                            setSelectedDocument(null)
+                            setInspectedNode(null)
+                            // The stored document belongs to the previous site -
+                            // a reload should land on the new site's root, not
+                            // re-resolve a document from the old one.
+                            localStorage.removeItem(SELECTED_DOCUMENT_KEY)
+                          }}
+                        />
+                      )}
+                      {dimensions.length > 0 && sitesResponse && (
+                        <DimensionSwitcher
+                          dimensions={dimensions}
+                          allowedPoints={
+                            dimensionsResponse?.allowedDimensionSpacePoints ??
+                            []
+                          }
+                          value={
+                            dimensionSpacePoint ??
+                            sitesResponse.dimensionSpacePoint
+                          }
+                          documentCoverage={
+                            selectedDocument
+                              ? documentVariants?.coveredDimensionSpacePoints
+                              : undefined
+                          }
+                          onCreateVariant={setVariantRequest}
+                          onChange={(point) => {
+                            const previousAddress =
+                              selectedDocument?.address ?? null
+                            setDimensionSpacePoint(point)
+                            setSelectedDocument(null)
+                            setInspectedNode(null)
+                            if (previousAddress)
+                              followDocumentInto(previousAddress, point)
+                          }}
+                        />
+                      )}
+
+                      <PreviewToolbar
+                        document={selectedDocument}
+                        onReload={() => {
+                          // Reload the preview, both trees and the inspector
+                          // together. Everything serves stale content while the
+                          // fresh data is in flight: drop the cached node reads,
+                          // then the trees invalidate optimistically (ALL_NODES
+                          // keeps existing rows until refetch resolves) and the
+                          // inspected-node / document snapshots are only swapped
+                          // once fetchNode resolves - so nothing blanks mid-reload.
+                          void queryClient.invalidateQueries({
+                            queryKey: queryKeys.nodes.all,
+                          })
+                          setLastEdit((prev) => ({
+                            addresses: [ALL_NODES],
+                            token: (prev?.token ?? 0) + 1,
+                          }))
+                          setPreviewReloadToken((token) => token + 1)
+                          if (selectedDocument) {
+                            fetchNode(selectedDocument.address)
+                              .then(setSelectedDocument)
+                              .catch(() => {
+                                /* keep showing the previous snapshot */
+                              })
+                          }
+                          if (inspectedNode) {
+                            fetchNode(inspectedNode.address)
+                              .then(setInspectedNode)
+                              .catch(() => {
+                                /* keep showing the previous snapshot */
+                              })
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <PresenceAvatars />
+                      {personalWorkspace &&
+                        activeWorkspace &&
+                        baseTargets.length > 0 && (
+                          <WorkspaceSwitcher
+                            personalWorkspace={personalWorkspace}
+                            activeWorkspace={activeWorkspace}
+                            targets={baseTargets}
+                            onSwitchEditingContext={switchEditingContext}
+                          />
+                        )}
+                      {activeWorkspace && (
+                        <>
+                          <SyncWorkspaceButton
+                            workspaceName={activeWorkspace.name}
+                          />
+                          <PublishButton workspace={activeWorkspace} />
+                        </>
+                      )}
+                    </div>
+                  </header>
+
+                  {/* The main area and the optional right-hand sidebar. The Visual
                   Editor (preview) and Media Library live here as panels; the
                   secondary dock belongs to the Visual Editor, so it only shows
                   while that is the active main tab - not for the Media Library. */}
-                <div className="flex min-h-0 flex-1">
-                  <PanelDock region="main" />
-                  <SecondaryDock visibleForMainPanel="visual-editor" />
-                </div>
+                  <div className="flex min-h-0 flex-1">
+                    <PanelDock region="main" />
+                    <SecondaryDock visibleForMainPanel="visual-editor" />
+                  </div>
 
-                {variantRequest && selectedDocument && activeWorkspace && (
-                  <CreateVariantDialog
-                    document={selectedDocument}
-                    targetPoint={variantRequest}
-                    dimensions={dimensions}
-                    workspaceName={activeWorkspace.name}
-                    onCancel={() => setVariantRequest(null)}
-                    onCreated={(point) => {
-                      setVariantRequest(null)
-                      const previousAddress = selectedDocument.address
-                      // The new variants exist now - drop every cached node read and
-                      // the pending-changes badge state before anything refetches.
-                      void queryClient.invalidateQueries({
-                        queryKey: queryKeys.nodes.all,
-                      })
-                      void queryClient.invalidateQueries({
-                        queryKey: queryKeys.workspaces.all,
-                      })
-                      setDimensionSpacePoint(point)
-                      setSelectedDocument(null)
-                      setInspectedNode(null)
-                      // Follow the document into its new dimension so outliner and
-                      // inspector show the just-created variant right away.
-                      followDocumentInto(previousAddress, point)
-                    }}
-                  />
-                )}
-              </SidebarInset>
-            </PanelsProvider>
-          </AssetPickerProvider>
-        </ModalProvider>
+                  {variantRequest && selectedDocument && activeWorkspace && (
+                    <CreateVariantDialog
+                      document={selectedDocument}
+                      targetPoint={variantRequest}
+                      dimensions={dimensions}
+                      workspaceName={activeWorkspace.name}
+                      onCancel={() => setVariantRequest(null)}
+                      onCreated={(point) => {
+                        setVariantRequest(null)
+                        const previousAddress = selectedDocument.address
+                        // The new variants exist now - drop every cached node read and
+                        // the pending-changes badge state before anything refetches.
+                        void queryClient.invalidateQueries({
+                          queryKey: queryKeys.nodes.all,
+                        })
+                        void queryClient.invalidateQueries({
+                          queryKey: queryKeys.workspaces.all,
+                        })
+                        setDimensionSpacePoint(point)
+                        setSelectedDocument(null)
+                        setInspectedNode(null)
+                        // Follow the document into its new dimension so outliner and
+                        // inspector show the just-created variant right away.
+                        followDocumentInto(previousAddress, point)
+                      }}
+                    />
+                  )}
+                </SidebarInset>
+              </PanelsProvider>
+            </AssetPickerProvider>
+          </ModalProvider>
+        </PresenceProvider>
       </StudioProvider>
     </SidebarProvider>
   )

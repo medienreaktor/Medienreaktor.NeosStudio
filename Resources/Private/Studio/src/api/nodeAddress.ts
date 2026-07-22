@@ -51,6 +51,18 @@ export function addressInDimension(
   })
 }
 
+/** The address of the same node aggregate in another workspace - following a
+ * document across an editing-context switch. */
+export function addressInWorkspace(
+  encoded: string,
+  workspaceName: string,
+): string {
+  return encodeNodeAddress({
+    ...decodeNodeAddress(encoded),
+    workspaceName,
+  })
+}
+
 /**
  * The address of a different node aggregate in the same subgraph (workspace and
  * dimension space point) as the given one. Used to resolve a persisted node id

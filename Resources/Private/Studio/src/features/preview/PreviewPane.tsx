@@ -38,6 +38,7 @@ import type {
   GuestToHostMessage,
   HostToGuestMessage,
   LinkAttributes,
+  PresenceHighlight,
 } from './protocol'
 
 /**
@@ -127,6 +128,7 @@ export function PreviewPane({
   onNodeEdited,
   reloadToken = 0,
   elementUpdate = null,
+  presence = [],
 }: {
   document: NodeDto | null
   /** Address outlined in the preview - the node inspected in the shell. */
@@ -140,13 +142,16 @@ export function PreviewPane({
   /** Bump to reload the iframe after edits made outside of it (e.g. the inspector). */
   reloadToken?: number
   /**
-   * Bump the token to refresh just this node's rendered element in place
-   * (an inspector edit with ui.reloadIfChanged): the element is re-rendered
-   * out-of-band and swapped into the live page - no iframe reload, scroll
-   * position and inline editing elsewhere survive. Falls back to a full
-   * reload whenever the element cannot be updated in place.
+   * Bump the token to refresh just these nodes' rendered elements in place
+   * (an inspector edit with ui.reloadIfChanged, or remote collaborators'
+   * edits): each element is re-rendered out-of-band and swapped into the
+   * live page - no iframe reload, scroll position and inline editing
+   * elsewhere survive. Falls back to a full reload whenever an element
+   * cannot be updated in place.
    */
-  elementUpdate?: { address: string; token: number } | null
+  elementUpdate?: { addresses: string[]; token: number } | null
+  /** Collaborators on this document, outlined at the elements they focus. */
+  presence?: PresenceHighlight[]
 }) {
   // Bumping this reloads the preview even when the src is unchanged (e.g.
   // after edits in the same document); it feeds into a layer's load key.
@@ -578,11 +583,26 @@ export function PreviewPane({
   const update = elementUpdate ?? undefined
   useEffect(() => {
     if (!update) return
-    void updateElementOutOfBand(update.address)
+    for (const address of update.addresses) {
+      void updateElementOutOfBand(address)
+    }
     // Only a new update (token) triggers a pass - the other values are read
     // fresh when it runs; a re-run on guestReady flips would replay old edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update?.token])
+
+  // Push the collaborators' positions into the guest (also right after it
+  // boots, so a reloaded frame regains the presence decor).
+  useEffect(() => {
+    if (!guestReady) return
+    const frame = activeFrameRef.current?.contentWindow
+    if (!frame) return
+    const message: HostToGuestMessage = {
+      type: 'neos-studio/presence-update',
+      users: presence,
+    }
+    frame.postMessage(message, window.location.origin)
+  }, [guestReady, presence])
 
   if (!document || !src) {
     return (

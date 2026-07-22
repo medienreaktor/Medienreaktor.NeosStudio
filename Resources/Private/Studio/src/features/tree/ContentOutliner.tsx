@@ -20,6 +20,7 @@ import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
+import { usePresence } from '@/features/collaboration/PresenceContext'
 import {
   NodeContextMenu,
   type NodeMenuAction,
@@ -127,6 +128,9 @@ function OutlinerTree({
   const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
   const pendingChanges = usePendingChanges(workspaceName)
+  // Collaborators mark the content node they focus (empty outside a
+  // collaborative session - the default context renders nothing).
+  const { peers } = usePresence()
   // The active cut entry's row renders dimmed - the node is "in transit".
   const clipboard = useClipboard()
   const cutAddress =
@@ -271,7 +275,14 @@ function OutlinerTree({
         emptyIcon="fa-list-tree"
         decorate={(data) => {
           if (data === null || data === ROOT_ID) return null
-          const decor = nodeDecor(data, nodeTypes, pendingChanges)
+          const decor = nodeDecor(
+            data,
+            nodeTypes,
+            pendingChanges,
+            peers.filter(
+              (peer) => peer.focusedAggregateId === data.aggregateId,
+            ),
+          )
           return data.address === cutAddress
             ? { ...decor, dimmed: true }
             : decor

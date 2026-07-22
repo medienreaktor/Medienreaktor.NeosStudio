@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { NodeTypeMap } from '@/api/nodeTypes'
 import { isExplicitlyHidden, type NodeDto } from '@/api/nodes'
+import type { PresencePeer } from '@/features/collaboration/PresenceContext'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
@@ -22,11 +23,14 @@ export interface TreeRowDecor {
  * Dirty markers on the right:
  * filled dot for changes on the node itself, hollow dot for documents that
  * contain changed content.
+ * Presence: collaborators standing on this node render as small initials
+ * chips in their color (before the dirty markers).
  */
 export function nodeDecor(
   node: NodeDto,
   nodeTypes: NodeTypeMap | undefined,
   changed: PendingChanges | null,
+  peersHere: PresencePeer[] = [],
 ): TreeRowDecor {
   const hidden = node.tags.all.includes('disabled')
   const hiddenInherited = node.tags.inherited.includes('disabled')
@@ -38,6 +42,18 @@ export function nodeDecor(
     !isDirty && changed !== null && changed.documentIds.has(node.aggregateId)
 
   const markers: ReactNode[] = []
+  for (const peer of peersHere) {
+    markers.push(
+      <span
+        key={`presence-${peer.userId}`}
+        title={t('tree.decor.editingHere', '{0} is here', [peer.name])}
+        className="flex size-4 items-center justify-center rounded-full text-[0.5rem] font-semibold text-white select-none"
+        style={{ backgroundColor: peer.color }}
+      >
+        {peer.initials}
+      </span>,
+    )
+  }
   if (isDirty) {
     markers.push(
       <span

@@ -4,6 +4,13 @@ import { queryKeys } from './keys'
 
 export interface Me {
   account: string | null
+  /**
+   * The Neos user behind the account - the id matches the content
+   * repository's initiatingUserId event metadata and the presence roster, so
+   * the client can tell its own changes from colleagues'. null for
+   * non-user-bound authentications (client credentials).
+   */
+  user: { id: string; label: string } | null
   roles: string[]
   scopes: string[]
   client: string | null

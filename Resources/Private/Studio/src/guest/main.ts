@@ -28,6 +28,7 @@
 import type {
   GuestToHostMessage,
   HostToGuestMessage,
+  PresenceHighlight,
 } from '../features/preview/protocol'
 import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
 import { mountRichTextEditors } from './richtext'
@@ -57,6 +58,8 @@ const ADD_BUTTON_ID = 'neos-studio-element-add-button'
 const COLLECTION_ADD_CLASS = 'neos-studio-collection-add'
 const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
 const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
+const PRESENCE_CLASS = 'neos-studio-presence'
+const PRESENCE_BADGE_CLASS = 'neos-studio-presence-badge'
 
 /** The Neos brand purple (purple-500 of the shell palette), for the
  *  shine-through indicators - the guest styles are literal CSS, no Tailwind. */
@@ -1101,9 +1104,115 @@ function onDragLeaveDocument(event: DragEvent): void {
  * when the swapped element (or something inside it) was selected. Returns
  * false when the swap cannot happen - the host falls back to a full reload.
  */
+/**
+ * Collaborators' positions on this page, pushed by the host: each focused
+ * element gets a dashed outline in the person's color plus a floating
+ * initials badge pinned to its top left corner (the top right belongs to the
+ * element handle). Badges are fixed-position and follow their element through
+ * scrolling and layout changes, like the other floating affordances.
+ */
+let presenceHighlights: PresenceHighlight[] = []
+/** Live badges and the elements they are pinned to, in render order. */
+let presenceBadges: { badge: HTMLElement; element: HTMLElement }[] = []
+
+function injectPresenceStyles(): void {
+  const style = document.createElement('style')
+  style.textContent = `
+    [${WRAPPER_ATTRIBUTE}].${PRESENCE_CLASS}:not(.${SELECTED_CLASS}) {
+      outline: 2px dashed var(--neos-studio-presence-color, rgba(${PURPLE}, 1));
+      outline-offset: 5px;
+    }
+    .${PRESENCE_BADGE_CLASS} {
+      position: fixed;
+      z-index: 2147483644;
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      color: #fff;
+      font: 600 10px/20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      text-align: center;
+      pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  `
+  document.head.appendChild(style)
+}
+
+/** Rebuild all presence decor from the current roster (also called after an
+ * out-of-band element swap - the old badges point at replaced DOM). */
+function renderPresence(): void {
+  for (const { badge } of presenceBadges) badge.remove()
+  presenceBadges = []
+  for (const element of document.querySelectorAll<HTMLElement>(
+    `.${PRESENCE_CLASS}`,
+  )) {
+    element.classList.remove(PRESENCE_CLASS)
+    element.style.removeProperty('--neos-studio-presence-color')
+  }
+  // Badge slots per element, so several people on one element stack side by
+  // side instead of on top of each other.
+  const slots = new Map<HTMLElement, number>()
+  for (const user of presenceHighlights) {
+    const element = elementsByAggregateId.get(user.aggregateId)
+    if (!element || !element.isConnected) continue
+    element.classList.add(PRESENCE_CLASS)
+    element.style.setProperty('--neos-studio-presence-color', user.color)
+    const badge = document.createElement('div')
+    badge.className = PRESENCE_BADGE_CLASS
+    badge.textContent = user.initials
+    badge.title = user.name
+    badge.style.backgroundColor = user.color
+    document.body.appendChild(badge)
+    const slot = slots.get(element) ?? 0
+    slots.set(element, slot + 1)
+    badge.dataset.slot = String(slot)
+    presenceBadges.push({ badge, element })
+  }
+  positionPresenceBadges()
+}
+
+function positionPresenceBadges(): void {
+  for (const { badge, element } of presenceBadges) {
+    if (!element.isConnected) {
+      badge.style.display = 'none'
+      continue
+    }
+    const rect = element.getBoundingClientRect()
+    const slot = Number(badge.dataset.slot ?? 0)
+    badge.style.display = 'block'
+    // Half outside the top left corner, like a nametag on the outline.
+    badge.style.left = `${rect.left - 10 + slot * 24}px`
+    badge.style.top = `${rect.top - 10}px`
+  }
+}
+
+let presenceUpdateScheduled = false
+
+function schedulePresenceUpdate(): void {
+  if (presenceUpdateScheduled) return
+  presenceUpdateScheduled = true
+  requestAnimationFrame(() => {
+    presenceUpdateScheduled = false
+    positionPresenceBadges()
+  })
+}
+
 function replaceElement(aggregateId: string, html: string): boolean {
   const element = elementsByAggregateId.get(aggregateId)
   if (!element || !element.isConnected) return false
+  // Never swap DOM out from under the user's own typing: while a rich-text
+  // editor inside the element has focus, a remote update would clobber the
+  // draft and the caret. Report success anyway - the skipped refresh is the
+  // deliberate phase-1 concurrency stopgap (last write wins on blur); a
+  // failure return would trigger a full page reload, which is worse.
+  const active = document.activeElement
+  if (
+    active instanceof HTMLElement &&
+    element.contains(active) &&
+    (active.isContentEditable || active.closest('[contenteditable="true"]'))
+  ) {
+    return true
+  }
   const template = document.createElement('template')
   template.innerHTML = html
   const replacement = template.content.querySelector<HTMLElement>(
@@ -1140,6 +1249,9 @@ function replaceElement(aggregateId: string, html: string): boolean {
     select(replacement, { notifyHost: false })
   }
   scheduleHandleUpdate()
+  // Presence badges/outlines inside the old subtree point at replaced DOM -
+  // rebuild them against the fresh index.
+  renderPresence()
   return true
 }
 
@@ -1173,6 +1285,10 @@ function onHostMessage(event: MessageEvent): void {
       ok: replaceElement(message.aggregateId, message.html),
     })
   }
+  if (message?.type === 'neos-studio/presence-update') {
+    presenceHighlights = message.users
+    renderPresence()
+  }
   if (message?.type === 'neos-studio/creation-drag-start')
     startDrag(message.nodeTypeName)
   if (message?.type === 'neos-studio/creation-drag-end') endDrag()
@@ -1184,6 +1300,7 @@ function onHostMessage(event: MessageEvent): void {
 
 function init(): void {
   injectStyles()
+  injectPresenceStyles()
   indexWrappedElements()
   mountCollectionAddButtons()
   // Rich-text inline editing: mount a TipTap editor on every editable
@@ -1210,6 +1327,9 @@ function init(): void {
   // ... as does the shine-through "Create variant" button.
   window.addEventListener('scroll', scheduleShineButtonUpdate, true)
   window.addEventListener('resize', scheduleShineButtonUpdate)
+  // ... and the collaborators' presence badges.
+  window.addEventListener('scroll', schedulePresenceUpdate, true)
+  window.addEventListener('resize', schedulePresenceUpdate)
   window.addEventListener('message', onHostMessage)
   post({ type: 'neos-studio/guest-ready' })
 }

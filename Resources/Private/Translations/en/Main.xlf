@@ -899,6 +899,9 @@
       <trans-unit id="panel.title.visualEditor" xml:space="preserve">
         <source>Visual Editor</source>
       </trans-unit>
+      <trans-unit id="presence.justYou" xml:space="preserve">
+        <source>Just you</source>
+      </trans-unit>
       <trans-unit id="preview.openInNewTab" xml:space="preserve">
         <source>Open page in a new tab</source>
       </trans-unit>
@@ -991,6 +994,9 @@
       </trans-unit>
       <trans-unit id="tree.clearFilter" xml:space="preserve">
         <source>Clear filter</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
       </trans-unit>
       <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
         <source>Contains changes in workspace "{0}"</source>
@@ -1172,6 +1178,15 @@
       <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
         <source>You cannot publish to this workspace</source>
       </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
+      </trans-unit>
       <trans-unit id="workspace.change.added" xml:space="preserve">
         <source>added</source>
       </trans-unit>
@@ -1282,6 +1297,9 @@
       </trans-unit>
       <trans-unit id="workspace.publishTarget" xml:space="preserve">
         <source>Workspace to publish to</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
+        <source>My workspace, publishing to</source>
       </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>
