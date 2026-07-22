@@ -80,17 +80,21 @@ export interface InspectorTab {
  * magic value "i18n". Id-shaped labels resolve against the XLIFF bundle
  * (loaded at boot, see lib/i18n.ts); anything untranslatable falls back to a
  * humanized key: "metaDescription" -> "Meta description".
+ *
+ * Keys sourced from configuration values (group/tab ids, select values) can
+ * arrive as numbers or booleans when the YAML leaves them unquoted - PHP
+ * preserves the scalar type through json_encode.
  */
 export function humanizeLabel(
   label: string | null | undefined,
-  key: string,
+  key: string | number,
 ): string {
   if (label && label !== 'i18n') {
     if (!looksLikeI18nId(label)) return label
     const translated = translateLabel(label)
     if (translated !== null) return translated
   }
-  const words = key
+  const words = String(key)
     .replace(/^_/, '')
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .toLowerCase()
@@ -100,6 +104,18 @@ export function humanizeLabel(
 function looksLikeI18nId(label: string): boolean {
   // "Vendor.Package:Source:key.path" - two colons, no spaces.
   return /^[\w.]+:[\w.-]+:[\w.-]+$/.test(label)
+}
+
+/**
+ * A group/tab id referenced from a configuration value, normalized to a
+ * string. The configured groups/tabs maps are JSON objects whose keys are
+ * always strings, but an unquoted numeric id on the referencing side
+ * ("group: 123") arrives as a number - without normalization the two sides
+ * never meet, and the raw number later crashes humanizeLabel's fallback.
+ */
+function configKey(value: string | number | null | undefined): string | null {
+  if (value === null || value === undefined || value === '') return null
+  return String(value)
 }
 
 /** A plain (or translated) editor option; an untranslatable i18n id is worse than none - drop it. */
@@ -168,7 +184,7 @@ export function buildInspectorSchema(
     { name: string; config: PropertyConfig }[]
   >()
   for (const [name, config] of Object.entries(properties)) {
-    const group = config?.ui?.inspector?.group
+    const group = configKey(config?.ui?.inspector?.group)
     if (!group) continue
     if (!propertiesByGroup.has(group)) propertiesByGroup.set(group, [])
     propertiesByGroup.get(group)!.push({ name, config: config ?? {} })
@@ -178,7 +194,7 @@ export function buildInspectorSchema(
   // inspector treats them as properties like the classic UI does. Synthesize
   // the type the editor mapping keys on: constraints.maxItems 1 = singular.
   for (const [name, config] of Object.entries(references)) {
-    const group = config?.ui?.inspector?.group
+    const group = configKey(config?.ui?.inspector?.group)
     if (!group) continue
     if (!propertiesByGroup.has(group)) propertiesByGroup.set(group, [])
     propertiesByGroup.get(group)!.push({
@@ -195,7 +211,7 @@ export function buildInspectorSchema(
     { name: string; config: InspectorViewConfig }[]
   >()
   for (const [name, config] of Object.entries(viewsConfig)) {
-    const group = config?.group
+    const group = configKey(config?.group)
     if (!group) continue
     if (!viewsByGroup.has(group)) viewsByGroup.set(group, [])
     viewsByGroup.get(group)!.push({ name, config: config ?? {} })
@@ -280,7 +296,7 @@ export function buildInspectorSchema(
       }
     })
 
-    const tabId = config.tab ?? 'default'
+    const tabId = configKey(config.tab) ?? 'default'
     if (!groupsByTab.has(tabId)) groupsByTab.set(tabId, [])
     groupsByTab.get(tabId)!.push({
       id: groupId,

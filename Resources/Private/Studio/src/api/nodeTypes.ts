@@ -38,8 +38,16 @@ export function useNodeTypes(enabled = true) {
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled,
+    // ui.group with an unquoted numeric id arrives as a number despite the
+    // DTO type - normalize so it matches the (always string) keys of the
+    // group definitions.
     select: (data): NodeTypeMap =>
-      new Map(data.nodeTypes.map((nt) => [nt.name, nt])),
+      new Map(
+        data.nodeTypes.map((nt) => [
+          nt.name,
+          { ...nt, group: nt.group === null ? null : String(nt.group) },
+        ]),
+      ),
   })
 }
 
@@ -63,14 +71,18 @@ export interface InspectorTabConfig {
 export interface InspectorGroupConfig {
   label?: string | null
   icon?: string | null
-  /** Defaults to the "default" tab when omitted. */
-  tab?: string
+  /**
+   * Defaults to the "default" tab when omitted. An unquoted numeric id in the
+   * YAML arrives as a number (PHP preserves the scalar type), as it does for
+   * the group references below.
+   */
+  tab?: string | number
   position?: string | number
   collapsed?: boolean
 }
 
 export interface PropertyInspectorConfig {
-  group?: string
+  group?: string | number
   position?: string | number
   editor?: string
   editorOptions?: Record<string, unknown>
@@ -87,7 +99,7 @@ export interface InspectorViewConfig {
   /** The view identifier, e.g. "Neos.Neos/Inspector/Views/Data/TableView". */
   view?: string
   label?: string | null
-  group?: string
+  group?: string | number
   position?: string | number
   viewOptions?: Record<string, unknown>
   /** True, or a "ClientEval:..." expression, like a property's hidden flag. */
