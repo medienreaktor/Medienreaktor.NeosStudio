@@ -26,6 +26,8 @@ export const queryKeys = {
   },
   dimensions: ['dimensions'] as const,
   users: ['users'] as const,
+  /** The assignable-role catalog - nested under `users` so invalidating users covers it. */
+  userRoles: ['users', 'roles'] as const,
   dataSources: {
     all: ['dataSources'] as const,
     /** One data source invocation - keyed by everything that reaches getData(). */

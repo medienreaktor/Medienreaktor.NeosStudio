@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="clipboard.empty" xml:space="preserve">
         <source>Nothing on the clipboard. Cut or copy a document or element from its context menu.</source>
-        <target xml:lang="de">Nichts in der Zwischenablage. Schneiden Sie ein Dokument oder Element über dessen Kontextmenü aus oder kopieren Sie es.</target>
+        <target xml:lang="de">Nichts in der Zwischenablage. Schneide ein Dokument oder Element über dessen Kontextmenü aus oder kopiere es.</target>
       </trans-unit>
       <trans-unit id="clipboard.pasteHint" xml:space="preserve">
         <source>Paste inserts the highlighted entry.</source>
@@ -57,6 +57,10 @@
       <trans-unit id="clipboard.statusCut" xml:space="preserve">
         <source>Cut</source>
         <target xml:lang="de">Ausgeschnitten</target>
+      </trans-unit>
+      <trans-unit id="common.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="de">Abbrechen</target>
       </trans-unit>
       <trans-unit id="common.close" xml:space="preserve">
         <source>Close</source>
@@ -388,7 +392,7 @@
       </trans-unit>
       <trans-unit id="editor.crop.drawFirst" xml:space="preserve">
         <source>Draw a crop area first.</source>
-        <target xml:lang="de">Zeichnen Sie zuerst einen Zuschneidebereich.</target>
+        <target xml:lang="de">Zeichne zuerst einen Zuschneidebereich.</target>
       </trans-unit>
       <trans-unit id="editor.crop.failed" xml:space="preserve">
         <source>Cropping failed</source>
@@ -572,7 +576,7 @@
       </trans-unit>
       <trans-unit id="editor.selectBox.dataSourceUriHint" xml:space="preserve">
         <source>editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier</source>
-        <target xml:lang="de">editorOptions.dataSourceUri wird in Studio nicht unterstützt - verwenden Sie dataSourceIdentifier</target>
+        <target xml:lang="de">editorOptions.dataSourceUri wird in Studio nicht unterstützt - verwende dataSourceIdentifier</target>
       </trans-unit>
       <trans-unit id="editor.selectImage" xml:space="preserve">
         <source>Select image…</source>
@@ -612,7 +616,7 @@
       </trans-unit>
       <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
         <source>Select a node in the preview or the trees to inspect it.</source>
-        <target xml:lang="de">Wählen Sie einen Knoten in der Vorschau oder in den Bäumen aus, um ihn zu inspizieren.</target>
+        <target xml:lang="de">Wähle einen Knoten in der Vorschau oder in den Bäumen aus, um ihn zu inspizieren.</target>
       </trans-unit>
       <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
         <source>Shines through from</source>
@@ -660,7 +664,7 @@
       </trans-unit>
       <trans-unit id="link.chooseLink" xml:space="preserve">
         <source>Choose the link</source>
-        <target xml:lang="de">Wählen Sie den Link</target>
+        <target xml:lang="de">Wähle den Link</target>
       </trans-unit>
       <trans-unit id="link.cssClass" xml:space="preserve">
         <source>CSS class</source>
@@ -1112,7 +1116,7 @@
       </trans-unit>
       <trans-unit id="media.usageInaccessible" xml:space="preserve">
         <source>+ {0} usage(s) you cannot access</source>
-        <target xml:lang="de">+ {0} Verwendung(en), auf die Sie keinen Zugriff haben</target>
+        <target xml:lang="de">+ {0} Verwendung(en), auf die Du keinen Zugriff hast</target>
       </trans-unit>
       <trans-unit id="media.usageNone" xml:space="preserve">
         <source>Not used anywhere. Safe to delete.</source>
@@ -1132,7 +1136,7 @@
       </trans-unit>
       <trans-unit id="modal.noAccess" xml:space="preserve">
         <source>You do not have access to this section.</source>
-        <target xml:lang="de">Sie haben keinen Zugriff auf diesen Bereich.</target>
+        <target xml:lang="de">Du hast keinen Zugriff auf diesen Bereich.</target>
       </trans-unit>
       <trans-unit id="modal.noSettings" xml:space="preserve">
         <source>No settings available</source>
@@ -1200,7 +1204,7 @@
       </trans-unit>
       <trans-unit id="presence.justYou" xml:space="preserve">
         <source>Just you</source>
-        <target xml:lang="de">Nur Sie</target>
+        <target xml:lang="de">Nur Du</target>
       </trans-unit>
       <trans-unit id="preview.openInNewTab" xml:space="preserve">
         <source>Open page in a new tab</source>
@@ -1216,7 +1220,7 @@
       </trans-unit>
       <trans-unit id="preview.selectDocument" xml:space="preserve">
         <source>Select a document to preview it.</source>
-        <target xml:lang="de">Wählen Sie ein Dokument, um es in der Vorschau anzuzeigen.</target>
+        <target xml:lang="de">Wähle ein Dokument, um es in der Vorschau anzuzeigen.</target>
       </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
@@ -1224,7 +1228,7 @@
       </trans-unit>
       <trans-unit id="profile.changePasswordHint" xml:space="preserve">
         <source>Enter your current password to set a new one.</source>
-        <target xml:lang="de">Geben Sie Ihr aktuelles Passwort ein, um ein neues festzulegen.</target>
+        <target xml:lang="de">Gib Dein aktuelles Passwort ein, um ein neues festzulegen.</target>
       </trans-unit>
       <trans-unit id="profile.changing" xml:space="preserve">
         <source>Changing…</source>
@@ -1256,7 +1260,7 @@
       </trans-unit>
       <trans-unit id="profile.loadFailed" xml:space="preserve">
         <source>Could not load your profile</source>
-        <target xml:lang="de">Ihr Profil konnte nicht geladen werden</target>
+        <target xml:lang="de">Dein Profil konnte nicht geladen werden</target>
       </trans-unit>
       <trans-unit id="profile.newPassword" xml:space="preserve">
         <source>New password</source>
@@ -1264,7 +1268,7 @@
       </trans-unit>
       <trans-unit id="profile.passwordChanged" xml:space="preserve">
         <source>Your password has been changed.</source>
-        <target xml:lang="de">Ihr Passwort wurde geändert.</target>
+        <target xml:lang="de">Dein Passwort wurde geändert.</target>
       </trans-unit>
       <trans-unit id="profile.passwordFailed" xml:space="preserve">
         <source>Could not change password</source>
@@ -1288,7 +1292,7 @@
       </trans-unit>
       <trans-unit id="profile.saveFailedDetail" xml:space="preserve">
         <source>Saving your profile failed.</source>
-        <target xml:lang="de">Das Speichern Ihres Profils ist fehlgeschlagen.</target>
+        <target xml:lang="de">Das Speichern Deines Profils ist fehlgeschlagen.</target>
       </trans-unit>
       <trans-unit id="profile.saveProfile" xml:space="preserve">
         <source>Save profile</source>
@@ -1296,7 +1300,7 @@
       </trans-unit>
       <trans-unit id="profile.saved" xml:space="preserve">
         <source>Your profile has been saved.</source>
-        <target xml:lang="de">Ihr Profil wurde gespeichert.</target>
+        <target xml:lang="de">Dein Profil wurde gespeichert.</target>
       </trans-unit>
       <trans-unit id="profile.saving" xml:space="preserve">
         <source>Saving…</source>
@@ -1304,7 +1308,7 @@
       </trans-unit>
       <trans-unit id="profile.subtitle" xml:space="preserve">
         <source>Your personal account settings.</source>
-        <target xml:lang="de">Ihre persönlichen Kontoeinstellungen.</target>
+        <target xml:lang="de">Deine persönlichen Kontoeinstellungen.</target>
       </trans-unit>
       <trans-unit id="profile.title" xml:space="preserve">
         <source>Profile</source>
@@ -1312,7 +1316,7 @@
       </trans-unit>
       <trans-unit id="profile.unavailable" xml:space="preserve">
         <source>Your profile is currently unavailable.</source>
-        <target xml:lang="de">Ihr Profil ist derzeit nicht verfügbar.</target>
+        <target xml:lang="de">Dein Profil ist derzeit nicht verfügbar.</target>
       </trans-unit>
       <trans-unit id="sites.activeSite" xml:space="preserve">
         <source>Active site</source>
@@ -1326,13 +1330,13 @@
         <source>Clear filter</source>
         <target xml:lang="de">Filter zurücksetzen</target>
       </trans-unit>
-      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
-        <source>{0} is here</source>
-        <target xml:lang="de">{0} ist hier</target>
-      </trans-unit>
       <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
         <source>Contains changes in workspace "{0}"</source>
         <target xml:lang="de">Enthält Änderungen im Arbeitsbereich „{0}“</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
+        <target xml:lang="de">{0} ist hier</target>
       </trans-unit>
       <trans-unit id="tree.decor.hidden" xml:space="preserve">
         <source>Hidden</source>
@@ -1392,7 +1396,7 @@
       </trans-unit>
       <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
         <source>Select a document to outline its content.</source>
-        <target xml:lang="de">Wählen Sie ein Dokument, um dessen Inhalt zu gliedern.</target>
+        <target xml:lang="de">Wähle ein Dokument, um dessen Inhalt zu gliedern.</target>
       </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>
@@ -1422,9 +1426,33 @@
         <source>Loading the tree failed</source>
         <target xml:lang="de">Laden des Baums fehlgeschlagen</target>
       </trans-unit>
+      <trans-unit id="users.activate" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="de">Aktivieren</target>
+      </trans-unit>
+      <trans-unit id="users.activated" xml:space="preserve">
+        <source>The user "{0}" has been activated.</source>
+        <target xml:lang="de">Der Benutzer "{0}" wurde aktiviert.</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="de">Status konnte nicht geändert werden</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="de">Das Ändern des Status ist fehlgeschlagen.</target>
+      </trans-unit>
       <trans-unit id="users.active" xml:space="preserve">
         <source>Active</source>
         <target xml:lang="de">Aktiv</target>
+      </trans-unit>
+      <trans-unit id="users.columnAccount" xml:space="preserve">
+        <source>Account</source>
+        <target xml:lang="de">Konto</target>
+      </trans-unit>
+      <trans-unit id="users.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="de">Aktionen</target>
       </trans-unit>
       <trans-unit id="users.columnEmail" xml:space="preserve">
         <source>Email</source>
@@ -1442,17 +1470,177 @@
         <source>Status</source>
         <target xml:lang="de">Status</target>
       </trans-unit>
+      <trans-unit id="users.create" xml:space="preserve">
+        <source>Create user</source>
+        <target xml:lang="de">Benutzer erstellen</target>
+      </trans-unit>
+      <trans-unit id="users.createFailed" xml:space="preserve">
+        <source>Could not create user</source>
+        <target xml:lang="de">Benutzer konnte nicht erstellt werden</target>
+      </trans-unit>
+      <trans-unit id="users.createFailedDetail" xml:space="preserve">
+        <source>Creating the user failed.</source>
+        <target xml:lang="de">Das Erstellen des Benutzers ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="users.created" xml:space="preserve">
+        <source>The user "{0}" has been created.</source>
+        <target xml:lang="de">Der Benutzer "{0}" wurde erstellt.</target>
+      </trans-unit>
+      <trans-unit id="users.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="de">Wird erstellt…</target>
+      </trans-unit>
+      <trans-unit id="users.deactivate" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="de">Deaktivieren</target>
+      </trans-unit>
+      <trans-unit id="users.deactivated" xml:space="preserve">
+        <source>The user "{0}" has been deactivated.</source>
+        <target xml:lang="de">Der Benutzer "{0}" wurde deaktiviert.</target>
+      </trans-unit>
+      <trans-unit id="users.delete" xml:space="preserve">
+        <source>Delete user</source>
+        <target xml:lang="de">Benutzer löschen</target>
+      </trans-unit>
+      <trans-unit id="users.deleteDescription" xml:space="preserve">
+        <source>The user, their accounts and their personal workspaces including any unpublished changes are removed permanently.</source>
+        <target xml:lang="de">Der Benutzer, seine Konten und seine persönlichen Arbeitsbereiche einschließlich unveröffentlichter Änderungen werden dauerhaft entfernt.</target>
+      </trans-unit>
+      <trans-unit id="users.deleteTitle" xml:space="preserve">
+        <source>Delete user "{0}"?</source>
+        <target xml:lang="de">Benutzer "{0}" löschen?</target>
+      </trans-unit>
+      <trans-unit id="users.deleted" xml:space="preserve">
+        <source>The user "{0}" has been deleted.</source>
+        <target xml:lang="de">Der Benutzer "{0}" wurde gelöscht.</target>
+      </trans-unit>
+      <trans-unit id="users.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="de">Bearbeiten</target>
+      </trans-unit>
+      <trans-unit id="users.editUser" xml:space="preserve">
+        <source>Edit user</source>
+        <target xml:lang="de">Benutzer bearbeiten</target>
+      </trans-unit>
+      <trans-unit id="users.editUserHint" xml:space="preserve">
+        <source>Name, email address and roles.</source>
+        <target xml:lang="de">Name, E-Mail-Adresse und Rollen.</target>
+      </trans-unit>
+      <trans-unit id="users.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="de">E-Mail</target>
+      </trans-unit>
+      <trans-unit id="users.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="de">Vorname</target>
+      </trans-unit>
       <trans-unit id="users.inactive" xml:space="preserve">
         <source>Inactive</source>
         <target xml:lang="de">Inaktiv</target>
+      </trans-unit>
+      <trans-unit id="users.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="de">Nachname</target>
       </trans-unit>
       <trans-unit id="users.loadFailed" xml:space="preserve">
         <source>Could not load users</source>
         <target xml:lang="de">Benutzer konnten nicht geladen werden</target>
       </trans-unit>
+      <trans-unit id="users.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="de">Neues Passwort</target>
+      </trans-unit>
+      <trans-unit id="users.newUser" xml:space="preserve">
+        <source>New user</source>
+        <target xml:lang="de">Neuer Benutzer</target>
+      </trans-unit>
+      <trans-unit id="users.newUserHint" xml:space="preserve">
+        <source>Creates a backend account on the default authentication provider.</source>
+        <target xml:lang="de">Erstellt ein Backend-Konto beim Standard-Authentifizierungsanbieter.</target>
+      </trans-unit>
+      <trans-unit id="users.noMatches" xml:space="preserve">
+        <source>No users match your search.</source>
+        <target xml:lang="de">Keine Benutzer entsprechen Deiner Suche.</target>
+      </trans-unit>
       <trans-unit id="users.none" xml:space="preserve">
         <source>No users found.</source>
         <target xml:lang="de">Keine Benutzer gefunden.</target>
+      </trans-unit>
+      <trans-unit id="users.ownAdminLocked" xml:space="preserve">
+        <source>You cannot remove your own Administrator role.</source>
+        <target xml:lang="de">Du kannst Deine eigene Administrator-Rolle nicht entfernen.</target>
+      </trans-unit>
+      <trans-unit id="users.password" xml:space="preserve">
+        <source>Password</source>
+        <target xml:lang="de">Passwort</target>
+      </trans-unit>
+      <trans-unit id="users.passwordMismatch" xml:space="preserve">
+        <source>The passwords do not match.</source>
+        <target xml:lang="de">Die Passwörter stimmen nicht überein.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordReset" xml:space="preserve">
+        <source>The password of "{0}" has been reset.</source>
+        <target xml:lang="de">Das Passwort von "{0}" wurde zurückgesetzt.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailed" xml:space="preserve">
+        <source>Could not reset password</source>
+        <target xml:lang="de">Passwort konnte nicht zurückgesetzt werden</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailedDetail" xml:space="preserve">
+        <source>Resetting the password failed.</source>
+        <target xml:lang="de">Das Zurücksetzen des Passworts ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="users.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="de">Neues Passwort wiederholen</target>
+      </trans-unit>
+      <trans-unit id="users.repeatPassword" xml:space="preserve">
+        <source>Repeat password</source>
+        <target xml:lang="de">Passwort wiederholen</target>
+      </trans-unit>
+      <trans-unit id="users.resetPassword" xml:space="preserve">
+        <source>Reset password</source>
+        <target xml:lang="de">Passwort zurücksetzen</target>
+      </trans-unit>
+      <trans-unit id="users.resetPasswordHint" xml:space="preserve">
+        <source>Sets a new password without requiring the current one. Active sessions of this user are ended.</source>
+        <target xml:lang="de">Setzt ein neues Passwort, ohne das aktuelle zu verlangen. Aktive Sitzungen dieses Benutzers werden beendet.</target>
+      </trans-unit>
+      <trans-unit id="users.resetting" xml:space="preserve">
+        <source>Resetting…</source>
+        <target xml:lang="de">Wird zurückgesetzt…</target>
+      </trans-unit>
+      <trans-unit id="users.roles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="de">Rollen</target>
+      </trans-unit>
+      <trans-unit id="users.rowActions" xml:space="preserve">
+        <source>User actions</source>
+        <target xml:lang="de">Benutzeraktionen</target>
+      </trans-unit>
+      <trans-unit id="users.save" xml:space="preserve">
+        <source>Save user</source>
+        <target xml:lang="de">Benutzer speichern</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailed" xml:space="preserve">
+        <source>Could not save user</source>
+        <target xml:lang="de">Benutzer konnte nicht gespeichert werden</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailedDetail" xml:space="preserve">
+        <source>Saving the user failed.</source>
+        <target xml:lang="de">Das Speichern des Benutzers ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="users.saved" xml:space="preserve">
+        <source>The user "{0}" has been saved.</source>
+        <target xml:lang="de">Der Benutzer "{0}" wurde gespeichert.</target>
+      </trans-unit>
+      <trans-unit id="users.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="de">Wird gespeichert…</target>
+      </trans-unit>
+      <trans-unit id="users.search" xml:space="preserve">
+        <source>Search users…</source>
+        <target xml:lang="de">Benutzer suchen…</target>
       </trans-unit>
       <trans-unit id="users.subtitle" xml:space="preserve">
         <source>Backend user accounts.</source>
@@ -1468,7 +1656,7 @@
       </trans-unit>
       <trans-unit id="users.you" xml:space="preserve">
         <source>You</source>
-        <target xml:lang="de">Sie</target>
+        <target xml:lang="de">Du</target>
       </trans-unit>
       <trans-unit id="view.clickToSelect" xml:space="preserve">
         <source>Click to select</source>
@@ -1492,7 +1680,7 @@
       </trans-unit>
       <trans-unit id="view.dataSourceUriUnsupported" xml:space="preserve">
         <source>dataSourceUri is not supported - register a data source and reference it via the dataSource option.</source>
-        <target xml:lang="de">dataSourceUri wird nicht unterstützt - registrieren Sie eine Datenquelle und verweisen Sie über die dataSource-Option darauf.</target>
+        <target xml:lang="de">dataSourceUri wird nicht unterstützt - registriere eine Datenquelle und verweise über die dataSource-Option darauf.</target>
       </trans-unit>
       <trans-unit id="view.identifier" xml:space="preserve">
         <source>Identifier</source>
@@ -1568,19 +1756,7 @@
       </trans-unit>
       <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
         <source>You cannot publish to this workspace</source>
-        <target xml:lang="de">Sie können nicht in diesen Arbeitsbereich veröffentlichen</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborative" xml:space="preserve">
-        <source>Collaborative</source>
-        <target xml:lang="de">Gemeinsam</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
-        <source>Editing together in a shared workspace</source>
-        <target xml:lang="de">Gemeinsames Bearbeiten in einem geteilten Arbeitsbereich</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
-        <source>Collaborative editing (with everyone in the workspace)</source>
-        <target xml:lang="de">Gemeinsames Bearbeiten (mit allen im Arbeitsbereich)</target>
+        <target xml:lang="de">Du kannst nicht in diesen Arbeitsbereich veröffentlichen</target>
       </trans-unit>
       <trans-unit id="workspace.change.added" xml:space="preserve">
         <source>added</source>
@@ -1602,6 +1778,18 @@
         <source>Changes published.</source>
         <target xml:lang="de">Änderungen veröffentlicht.</target>
       </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+        <target xml:lang="de">Gemeinsam</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+        <target xml:lang="de">Gemeinsames Bearbeiten in einem geteilten Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
+        <target xml:lang="de">Gemeinsames Bearbeiten (mit allen im Arbeitsbereich)</target>
+      </trans-unit>
       <trans-unit id="workspace.conflict.countMany" xml:space="preserve">
         <source>{0} conflicting changes</source>
         <target xml:lang="de">{0} widersprüchliche Änderungen</target>
@@ -1612,7 +1800,7 @@
       </trans-unit>
       <trans-unit id="workspace.conflict.description" xml:space="preserve">
         <source>These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.</source>
-        <target xml:lang="de">Diese ausstehenden Änderungen widersprechen bereits im Basis-Arbeitsbereich veröffentlichten Änderungen. Beim Verwerfen bleiben alle Ihre übrigen Änderungen erhalten; verworfene Änderungen können nicht wiederhergestellt werden.</target>
+        <target xml:lang="de">Diese ausstehenden Änderungen widersprechen bereits im Basis-Arbeitsbereich veröffentlichten Änderungen. Beim Verwerfen bleiben alle Deine übrigen Änderungen erhalten; verworfene Änderungen können nicht wiederhergestellt werden.</target>
       </trans-unit>
       <trans-unit id="workspace.conflict.discardAllChanges" xml:space="preserve">
         <source>Discard all changes</source>
@@ -1624,11 +1812,11 @@
       </trans-unit>
       <trans-unit id="workspace.conflict.nodeDeleted" xml:space="preserve">
         <source>It was deleted in the target workspace since you changed it.</source>
-        <target xml:lang="de">Er wurde im Ziel-Arbeitsbereich gelöscht, seit Sie ihn geändert haben.</target>
+        <target xml:lang="de">Er wurde im Ziel-Arbeitsbereich gelöscht, seit Du ihn geändert hast.</target>
       </trans-unit>
       <trans-unit id="workspace.conflict.partialDescription" xml:space="preserve">
         <source>These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.</source>
-        <target xml:lang="de">Diese Änderungen können nicht einzeln veröffentlicht werden – sie hängen von anderen ausstehenden Änderungen ab. Veröffentlichen Sie stattdessen alles oder verwerfen Sie sie.</target>
+        <target xml:lang="de">Diese Änderungen können nicht einzeln veröffentlicht werden – sie hängen von anderen ausstehenden Änderungen ab. Veröffentliche stattdessen alles oder verwirf sie.</target>
       </trans-unit>
       <trans-unit id="workspace.conflict.resolveFailed" xml:space="preserve">
         <source>Resolving conflicts failed</source>
@@ -1712,11 +1900,11 @@
       </trans-unit>
       <trans-unit id="workspace.publishDenied" xml:space="preserve">
         <source>You are not allowed to publish to "{0}"</source>
-        <target xml:lang="de">Sie dürfen nicht in „{0}“ veröffentlichen</target>
+        <target xml:lang="de">Du darfst nicht in „{0}“ veröffentlichen</target>
       </trans-unit>
       <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
         <source>Publish or discard your changes first.</source>
-        <target xml:lang="de">Veröffentlichen oder verwerfen Sie zuerst Ihre Änderungen.</target>
+        <target xml:lang="de">Veröffentliche oder verwirf zuerst Deine Änderungen.</target>
       </trans-unit>
       <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
         <source>Publish {0} pending changes</source>
@@ -1748,7 +1936,7 @@
       </trans-unit>
       <trans-unit id="workspace.review.description" xml:space="preserve">
         <source>Changes on top of "{0}". Select documents to publish or discard.</source>
-        <target xml:lang="de">Änderungen auf Basis von „{0}“. Wählen Sie Dokumente zum Veröffentlichen oder Verwerfen aus.</target>
+        <target xml:lang="de">Änderungen auf Basis von „{0}“. Wähle Dokumente zum Veröffentlichen oder Verwerfen aus.</target>
       </trans-unit>
       <trans-unit id="workspace.review.discardManyBody" xml:space="preserve">
         <source>The pending changes on the selected documents will be discarded. This cannot be undone.</source>
@@ -1828,7 +2016,7 @@
       </trans-unit>
       <trans-unit id="workspace.sync.hint" xml:space="preserve">
         <source>Others published changes to the base workspace. Synchronize to pull them into this workspace.</source>
-        <target xml:lang="de">Andere haben Änderungen im Basis-Arbeitsbereich veröffentlicht. Synchronisieren Sie, um sie in diesen Arbeitsbereich zu übernehmen.</target>
+        <target xml:lang="de">Andere haben Änderungen im Basis-Arbeitsbereich veröffentlicht. Synchronisiere, um sie in diesen Arbeitsbereich zu übernehmen.</target>
       </trans-unit>
       <trans-unit id="workspace.sync.success" xml:space="preserve">
         <source>Workspace synchronized.</source>

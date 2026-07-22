@@ -44,6 +44,9 @@
       <trans-unit id="clipboard.statusCut" xml:space="preserve">
         <source>Cut</source>
       </trans-unit>
+      <trans-unit id="common.cancel" xml:space="preserve">
+        <source>Cancel</source>
+      </trans-unit>
       <trans-unit id="common.close" xml:space="preserve">
         <source>Close</source>
       </trans-unit>
@@ -995,11 +998,11 @@
       <trans-unit id="tree.clearFilter" xml:space="preserve">
         <source>Clear filter</source>
       </trans-unit>
-      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
-        <source>{0} is here</source>
-      </trans-unit>
       <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
         <source>Contains changes in workspace "{0}"</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
       </trans-unit>
       <trans-unit id="tree.decor.hidden" xml:space="preserve">
         <source>Hidden</source>
@@ -1067,8 +1070,26 @@
       <trans-unit id="tree.treeLoadFailed" xml:space="preserve">
         <source>Loading the tree failed</source>
       </trans-unit>
+      <trans-unit id="users.activate" xml:space="preserve">
+        <source>Activate</source>
+      </trans-unit>
+      <trans-unit id="users.activated" xml:space="preserve">
+        <source>The user "{0}" has been activated.</source>
+      </trans-unit>
+      <trans-unit id="users.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+      </trans-unit>
+      <trans-unit id="users.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+      </trans-unit>
       <trans-unit id="users.active" xml:space="preserve">
         <source>Active</source>
+      </trans-unit>
+      <trans-unit id="users.columnAccount" xml:space="preserve">
+        <source>Account</source>
+      </trans-unit>
+      <trans-unit id="users.columnActions" xml:space="preserve">
+        <source>Actions</source>
       </trans-unit>
       <trans-unit id="users.columnEmail" xml:space="preserve">
         <source>Email</source>
@@ -1082,14 +1103,134 @@
       <trans-unit id="users.columnStatus" xml:space="preserve">
         <source>Status</source>
       </trans-unit>
+      <trans-unit id="users.create" xml:space="preserve">
+        <source>Create user</source>
+      </trans-unit>
+      <trans-unit id="users.createFailed" xml:space="preserve">
+        <source>Could not create user</source>
+      </trans-unit>
+      <trans-unit id="users.createFailedDetail" xml:space="preserve">
+        <source>Creating the user failed.</source>
+      </trans-unit>
+      <trans-unit id="users.created" xml:space="preserve">
+        <source>The user "{0}" has been created.</source>
+      </trans-unit>
+      <trans-unit id="users.creating" xml:space="preserve">
+        <source>Creating…</source>
+      </trans-unit>
+      <trans-unit id="users.deactivate" xml:space="preserve">
+        <source>Deactivate</source>
+      </trans-unit>
+      <trans-unit id="users.deactivated" xml:space="preserve">
+        <source>The user "{0}" has been deactivated.</source>
+      </trans-unit>
+      <trans-unit id="users.delete" xml:space="preserve">
+        <source>Delete user</source>
+      </trans-unit>
+      <trans-unit id="users.deleteDescription" xml:space="preserve">
+        <source>The user, their accounts and their personal workspaces including any unpublished changes are removed permanently.</source>
+      </trans-unit>
+      <trans-unit id="users.deleteTitle" xml:space="preserve">
+        <source>Delete user "{0}"?</source>
+      </trans-unit>
+      <trans-unit id="users.deleted" xml:space="preserve">
+        <source>The user "{0}" has been deleted.</source>
+      </trans-unit>
+      <trans-unit id="users.edit" xml:space="preserve">
+        <source>Edit</source>
+      </trans-unit>
+      <trans-unit id="users.editUser" xml:space="preserve">
+        <source>Edit user</source>
+      </trans-unit>
+      <trans-unit id="users.editUserHint" xml:space="preserve">
+        <source>Name, email address and roles.</source>
+      </trans-unit>
+      <trans-unit id="users.email" xml:space="preserve">
+        <source>Email</source>
+      </trans-unit>
+      <trans-unit id="users.firstName" xml:space="preserve">
+        <source>First name</source>
+      </trans-unit>
       <trans-unit id="users.inactive" xml:space="preserve">
         <source>Inactive</source>
+      </trans-unit>
+      <trans-unit id="users.lastName" xml:space="preserve">
+        <source>Last name</source>
       </trans-unit>
       <trans-unit id="users.loadFailed" xml:space="preserve">
         <source>Could not load users</source>
       </trans-unit>
+      <trans-unit id="users.newPassword" xml:space="preserve">
+        <source>New password</source>
+      </trans-unit>
+      <trans-unit id="users.newUser" xml:space="preserve">
+        <source>New user</source>
+      </trans-unit>
+      <trans-unit id="users.newUserHint" xml:space="preserve">
+        <source>Creates a backend account on the default authentication provider.</source>
+      </trans-unit>
+      <trans-unit id="users.noMatches" xml:space="preserve">
+        <source>No users match your search.</source>
+      </trans-unit>
       <trans-unit id="users.none" xml:space="preserve">
         <source>No users found.</source>
+      </trans-unit>
+      <trans-unit id="users.ownAdminLocked" xml:space="preserve">
+        <source>You cannot remove your own Administrator role.</source>
+      </trans-unit>
+      <trans-unit id="users.password" xml:space="preserve">
+        <source>Password</source>
+      </trans-unit>
+      <trans-unit id="users.passwordMismatch" xml:space="preserve">
+        <source>The passwords do not match.</source>
+      </trans-unit>
+      <trans-unit id="users.passwordReset" xml:space="preserve">
+        <source>The password of "{0}" has been reset.</source>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailed" xml:space="preserve">
+        <source>Could not reset password</source>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailedDetail" xml:space="preserve">
+        <source>Resetting the password failed.</source>
+      </trans-unit>
+      <trans-unit id="users.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+      </trans-unit>
+      <trans-unit id="users.repeatPassword" xml:space="preserve">
+        <source>Repeat password</source>
+      </trans-unit>
+      <trans-unit id="users.resetPassword" xml:space="preserve">
+        <source>Reset password</source>
+      </trans-unit>
+      <trans-unit id="users.resetPasswordHint" xml:space="preserve">
+        <source>Sets a new password without requiring the current one. Active sessions of this user are ended.</source>
+      </trans-unit>
+      <trans-unit id="users.resetting" xml:space="preserve">
+        <source>Resetting…</source>
+      </trans-unit>
+      <trans-unit id="users.roles" xml:space="preserve">
+        <source>Roles</source>
+      </trans-unit>
+      <trans-unit id="users.rowActions" xml:space="preserve">
+        <source>User actions</source>
+      </trans-unit>
+      <trans-unit id="users.save" xml:space="preserve">
+        <source>Save user</source>
+      </trans-unit>
+      <trans-unit id="users.saveFailed" xml:space="preserve">
+        <source>Could not save user</source>
+      </trans-unit>
+      <trans-unit id="users.saveFailedDetail" xml:space="preserve">
+        <source>Saving the user failed.</source>
+      </trans-unit>
+      <trans-unit id="users.saved" xml:space="preserve">
+        <source>The user "{0}" has been saved.</source>
+      </trans-unit>
+      <trans-unit id="users.saving" xml:space="preserve">
+        <source>Saving…</source>
+      </trans-unit>
+      <trans-unit id="users.search" xml:space="preserve">
+        <source>Search users…</source>
       </trans-unit>
       <trans-unit id="users.subtitle" xml:space="preserve">
         <source>Backend user accounts.</source>
@@ -1178,15 +1319,6 @@
       <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
         <source>You cannot publish to this workspace</source>
       </trans-unit>
-      <trans-unit id="workspace.collaborative" xml:space="preserve">
-        <source>Collaborative</source>
-      </trans-unit>
-      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
-        <source>Editing together in a shared workspace</source>
-      </trans-unit>
-      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
-        <source>Collaborative editing (with everyone in the workspace)</source>
-      </trans-unit>
       <trans-unit id="workspace.change.added" xml:space="preserve">
         <source>added</source>
       </trans-unit>
@@ -1201,6 +1333,15 @@
       </trans-unit>
       <trans-unit id="workspace.changesPublished" xml:space="preserve">
         <source>Changes published.</source>
+      </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
       </trans-unit>
       <trans-unit id="workspace.conflict.countMany" xml:space="preserve">
         <source>{0} conflicting changes</source>

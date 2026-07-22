@@ -1,23 +1,49 @@
-import { useEffect, type ReactNode } from 'react'
-import { useUsers, type User } from '@/api/users'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMutation } from '@tanstack/react-query'
+
+import { apiErrorDescription } from '@/api/client'
+import { queryKeys } from '@/api/keys'
+import { deleteUser, updateUser, useUsers, type User } from '@/api/users'
+import { queryClient } from '@/app/queryClient'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Placeholder } from '@/components/ui/placeholder'
+import { SearchInput } from '@/components/ui/search-input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Placeholder } from '@/components/ui/placeholder'
+// Generic yes/no confirm; lives in media where it originated.
+import { ConfirmDialog } from '@/features/media/ConfirmDialog'
+import { CreateUserDialog } from './CreateUserDialog'
+import { EditUserDialog } from './EditUserDialog'
+import { ResetPasswordDialog } from './ResetPasswordDialog'
 
 /**
- * User administration, rendered as a section of the shared Settings modal (see
- * features/modals). This replaces the classic Neos Users backend module.
+ * User administration, rendered as a section of the shared Settings modal
+ * (see features/modals). Replaces the classic Neos Users backend module:
+ * create users, edit details and roles, reset passwords, (de)activate and
+ * delete.
  *
- * For now it lists the backend users read-only. The section is administrators
- * only - the host disables its subnav entry for non-admins and only mounts
- * this component when the user has the "users" permission, so the /users
- * request here always comes from an admin (the endpoint 403s otherwise).
- * Account editing (create, roles, activate, password) fills in from here.
+ * The section is administrators only - the host disables its subnav entry for
+ * non-admins (me.permissions.users), and every write endpoint 403s without
+ * the Administrator role anyway. Self-lockout operations (deactivate, delete,
+ * dropping the own Administrator role) are disabled in the UI and refused by
+ * the server.
  */
 export function UserAdministration() {
   const { data, isLoading, error } = useUsers()
+  const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<User | null>(null)
+  const [resetting, setResetting] = useState<User | null>(null)
+  const [deleting, setDeleting] = useState<User | null>(null)
 
   useEffect(() => {
     if (error)
@@ -26,15 +52,38 @@ export function UserAdministration() {
       })
   }, [error])
 
+  const users = useMemo(() => {
+    const all = data?.users ?? []
+    const term = search.trim().toLowerCase()
+    if (term === '') return all
+    return all.filter((user) =>
+      [
+        user.fullName,
+        user.label,
+        user.email ?? '',
+        ...user.accounts.map((account) => account.accountIdentifier),
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(term),
+    )
+  }, [data, search])
+
   return (
     <div className="p-6">
-      <header className="mb-4">
-        <h2 className="text-base font-semibold text-white">
-          {t('users.title', 'Users')}
-        </h2>
-        <p className="text-sm text-neutral-400">
-          {t('users.subtitle', 'Backend user accounts.')}
-        </p>
+      <header className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-white">
+            {t('users.title', 'Users')}
+          </h2>
+          <p className="text-sm text-neutral-400">
+            {t('users.subtitle', 'Backend user accounts.')}
+          </p>
+        </div>
+        <Button onClick={() => setCreating(true)}>
+          <i className="fas fa-plus" aria-hidden />
+          {t('users.newUser', 'New user')}
+        </Button>
       </header>
 
       {error && (
@@ -47,38 +96,135 @@ export function UserAdministration() {
 
       {isLoading && <UserTableSkeleton />}
 
-      {data && data.users.length === 0 && (
-        <Placeholder
-          icon="fa-users"
-          title={t('users.none', 'No users found.')}
-          className="py-10"
-        />
+      {data && (
+        <>
+          <SearchInput
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t('users.search', 'Search users…')}
+            wrapperClassName="mb-3 max-w-xs"
+          />
+
+          {users.length === 0 ? (
+            <Placeholder
+              icon="fa-users"
+              title={
+                search.trim() !== ''
+                  ? t('users.noMatches', 'No users match your search.')
+                  : t('users.none', 'No users found.')
+              }
+              className="py-10"
+            />
+          ) : (
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b text-xs text-neutral-400">
+                  <tr>
+                    <Th>{t('users.columnName', 'Name')}</Th>
+                    <Th>{t('users.columnAccount', 'Account')}</Th>
+                    <Th>{t('users.columnEmail', 'Email')}</Th>
+                    <Th>{t('users.columnRoles', 'Roles')}</Th>
+                    <Th>{t('users.columnStatus', 'Status')}</Th>
+                    <Th>
+                      <span className="sr-only">
+                        {t('users.columnActions', 'Actions')}
+                      </span>
+                    </Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800">
+                  {users.map((user) => (
+                    <UserRow
+                      key={user.id}
+                      user={user}
+                      onEdit={() => setEditing(user)}
+                      onResetPassword={() => setResetting(user)}
+                      onDelete={() => setDeleting(user)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
 
-      {data && data.users.length > 0 && (
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b text-xs text-neutral-400">
-              <tr>
-                <Th>{t('users.columnName', 'Name')}</Th>
-                <Th>{t('users.columnEmail', 'Email')}</Th>
-                <Th>{t('users.columnRoles', 'Roles')}</Th>
-                <Th>{t('users.columnStatus', 'Status')}</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-800">
-              {data.users.map((user) => (
-                <UserRow key={user.id} user={user} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <CreateUserDialog open={creating} onOpenChange={setCreating} />
+      <EditUserDialog
+        user={editing}
+        onOpenChange={(open) => {
+          if (!open) setEditing(null)
+        }}
+      />
+      <ResetPasswordDialog
+        user={resetting}
+        onOpenChange={(open) => {
+          if (!open) setResetting(null)
+        }}
+      />
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleting(null)
+        }}
+        title={t('users.deleteTitle', 'Delete user "{0}"?', [
+          deleting?.label ?? '',
+        ])}
+        description={t(
+          'users.deleteDescription',
+          'The user, their accounts and their personal workspaces including any unpublished changes are removed permanently.',
+        )}
+        confirmLabel={t('users.delete', 'Delete user')}
+        onConfirm={async () => {
+          const user = deleting!
+          await deleteUser(user.id)
+          queryClient.invalidateQueries({ queryKey: queryKeys.users })
+          toast.success(
+            t('users.deleted', 'The user "{0}" has been deleted.', [
+              user.label,
+            ]),
+          )
+        }}
+      />
     </div>
   )
 }
 
-function UserRow({ user }: { user: User }) {
+function UserRow({
+  user,
+  onEdit,
+  onResetPassword,
+  onDelete,
+}: {
+  user: User
+  onEdit: () => void
+  onResetPassword: () => void
+  onDelete: () => void
+}) {
+  const activation = useMutation({
+    mutationFn: (active: boolean) => updateUser(user.id, { active }),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users })
+      toast.success(
+        response.user.active
+          ? t('users.activated', 'The user "{0}" has been activated.', [
+              response.user.label,
+            ])
+          : t('users.deactivated', 'The user "{0}" has been deactivated.', [
+              response.user.label,
+            ]),
+      )
+    },
+    onError: (error) =>
+      toast.error(
+        apiErrorDescription(
+          error,
+          t('users.activationFailedDetail', 'Changing the status failed.'),
+        ),
+        { title: t('users.activationFailed', 'Could not change status') },
+      ),
+  })
+
   return (
     <tr className="text-neutral-200">
       <Td>
@@ -89,6 +235,17 @@ function UserRow({ user }: { user: User }) {
           <Badge variant="outline" className="ml-2 align-middle">
             {t('users.you', 'You')}
           </Badge>
+        )}
+      </Td>
+      <Td>
+        {user.accounts.length === 0 ? (
+          <span className="text-neutral-500">—</span>
+        ) : (
+          user.accounts.map((account) => (
+            <div key={account.accountIdentifier} className="text-neutral-300">
+              {account.accountIdentifier}
+            </div>
+          ))
         )}
       </Td>
       <Td>{user.email ?? <span className="text-neutral-500">—</span>}</Td>
@@ -118,6 +275,54 @@ function UserRow({ user }: { user: User }) {
           </span>
         )}
       </Td>
+      <Td className="w-10 text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t('users.rowActions', 'User actions')}
+              />
+            }
+          >
+            <i className="fas fa-ellipsis-vertical" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onEdit}>
+              <i className="fas fa-pen" aria-hidden />
+              {t('users.edit', 'Edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onResetPassword}>
+              <i className="fas fa-key" aria-hidden />
+              {t('users.resetPassword', 'Reset password')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={
+                (user.active && user.isCurrentUser) || activation.isPending
+              }
+              onClick={() => activation.mutate(!user.active)}
+            >
+              <i
+                className={`fas ${user.active ? 'fa-user-slash' : 'fa-user-check'}`}
+                aria-hidden
+              />
+              {user.active
+                ? t('users.deactivate', 'Deactivate')
+                : t('users.activate', 'Activate')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={user.isCurrentUser}
+              onClick={onDelete}
+            >
+              <i className="fas fa-trash" aria-hidden />
+              {t('users.delete', 'Delete user')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Td>
     </tr>
   )
 }
@@ -132,8 +337,18 @@ function Th({ children }: { children: ReactNode }) {
   return <th className="px-3 py-2 font-medium">{children}</th>
 }
 
-function Td({ children }: { children: ReactNode }) {
-  return <td className="px-3 py-2.5 align-middle">{children}</td>
+function Td({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <td className={`px-3 py-2.5 align-middle ${className ?? ''}`}>
+      {children}
+    </td>
+  )
 }
 
 function UserTableSkeleton() {
