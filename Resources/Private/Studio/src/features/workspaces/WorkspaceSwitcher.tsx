@@ -107,7 +107,7 @@ export function WorkspaceSwitcher({
     })),
     ...sharedTargets.map((workspace) => ({
       value: `edit:${workspace.name}`,
-      label: `${workspaceLabel(workspace)} · ${t('workspace.collaborative', 'Collaborative')}`,
+      label: `${workspaceLabel(workspace)}`,
     })),
   ]
 
@@ -153,8 +153,8 @@ export function WorkspaceSwitcher({
                 switchBase.isPending
                   ? 'fa-spinner fa-spin text-neutral-400'
                   : collaborative
-                    ? 'fa-users text-purple-400'
-                    : 'fa-code-branch text-neutral-400'
+                    ? 'fa-users text-purple-500'
+                    : 'fa-layer-group text-neutral-400'
               }`}
               aria-hidden
             />
@@ -214,7 +214,7 @@ export function WorkspaceSwitcher({
                     disabled={!workspace.permissions.write}
                   >
                     <i
-                      className="fas fa-users text-[0.7rem] text-purple-400"
+                      className="fas fa-users text-[0.7rem] text-purple-500"
                       aria-hidden
                     />
                     {workspaceLabel(workspace)}

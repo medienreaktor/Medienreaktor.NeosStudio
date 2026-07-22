@@ -7,7 +7,6 @@ import {
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
-import { ReviewChangesDialog } from './ReviewChangesDialog'
 import {
   useWorkspacePublishing,
   type WorkspaceOperation,
@@ -34,8 +33,9 @@ import { translate as t } from '@/lib/i18n'
 /**
  * Topbar split button for the active workspace: primary action publishes all
  * pending changes to the base workspace, the attached dropdown scopes to the
- * selected document ("this page"), opens the review dialog, and offers
- * discarding (behind a confirmation - discards are irreversible). Orange with a
+ * selected document ("this page") and offers discarding (behind a
+ * confirmation - discards are irreversible). Reviewing changes lives in the
+ * dedicated ReviewButton next to this one. Orange with a
  * change-count bubble while there is something to publish, muted and disabled
  * otherwise. Without publish permission on the base workspace (a non-
  * LivePublisher editor) the publish actions are disabled with an explanation -
@@ -52,8 +52,6 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // A discard waiting for confirmation; the dialog is open while set.
   const [pendingDiscard, setPendingDiscard] =
     useState<WorkspaceOperation | null>(null)
-  // The review dialog open state.
-  const [reviewOpen, setReviewOpen] = useState(false)
 
   const allChanges = changesResponse?.changes ?? []
   // A workspace spans every site the account edited; scope everything (the
@@ -166,14 +164,6 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              disabled={!hasChanges}
-              onClick={() => setReviewOpen(true)}
-            >
-              <i className="fas fa-fw fa-list-check" aria-hidden />
-              {t('workspace.reviewChanges', 'Review changes')}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
               disabled={pageChangeCount === 0 || !canPublish}
               title={canPublish ? undefined : publishDeniedHint}
               onClick={() =>
@@ -279,12 +269,6 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <ReviewChangesDialog
-        workspace={workspace}
-        open={reviewOpen}
-        onOpenChange={setReviewOpen}
-      />
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}

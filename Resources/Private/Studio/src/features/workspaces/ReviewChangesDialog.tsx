@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useWorkspaceDocumentChanges,
   type Workspace,
@@ -17,6 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
@@ -77,11 +84,27 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
   )
 }
 
+/** "Live" for the root workspace, the title (or name) otherwise. */
+function workspaceLabel(workspace: Workspace | undefined, name: string) {
+  if (!workspace) return name
+  return workspace.classification === 'ROOT'
+    ? t('workspace.live', 'Live')
+    : workspace.title || workspace.name
+}
+
 /**
- * Lists every change the active workspace has made on top of its base
- * workspace, grouped by the document (page) it belongs to, and lets an editor
- * publish or discard a selection of documents. Scoped to the active site, the
- * same way the Publish button's count is, so the two always agree.
+ * Lists the changes a workspace has made on top of its base workspace, grouped
+ * by the document (page) they belong to, and lets an editor publish or discard
+ * a selection of documents. Scoped to the active site, the same way the
+ * Publish button's count is, so the two always agree.
+ *
+ * Which workspace is under review is picked inside the dialog: the source
+ * ("changes in") and target ("publishing to") selects cover every reviewable
+ * pair the account can see. The content repository only knows changes of a
+ * workspace relative to its base, so valid pairs are exactly workspace -> its
+ * base: the target select filters the sources, and picking a target re-picks a
+ * matching source. This is what makes a draft -> live review possible without
+ * moving the editing context into the draft workspace.
  *
  * Granularity is the document: the content repository publishes/discards a
  * document's changes as a unit, which is what avoids the dependency conflicts
@@ -89,22 +112,102 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
  * surfaces the shared ConflictResolutionDialog.
  */
 export function ReviewChangesDialog({
-  workspace,
+  workspaces,
+  activeWorkspace,
   open,
   onOpenChange,
+  onNavigate,
 }: {
-  workspace: Workspace
+  /** Every workspace the account can read (the workspace list). */
+  workspaces: Workspace[]
+  /** The current editing context; the dialog opens on its changes. */
+  activeWorkspace: Workspace
   open: boolean
   onOpenChange: (open: boolean) => void
+  /**
+   * Show a document in its workspace - switches the editing context first
+   * when the reviewed workspace is not the active one.
+   */
+  onNavigate: (address: string, workspaceName: string) => void
 }) {
-  const workspaceName = workspace.name
-  const canPublish = workspace.permissions.publish
+  // Reviewable sources: everything with a base to publish to. The list only
+  // contains readable workspaces, so no extra permission filter is needed.
+  const sources = useMemo(
+    () => workspaces.filter((w) => w.baseWorkspace !== null),
+    [workspaces],
+  )
+
+  const [sourceName, setSourceName] = useState(activeWorkspace.name)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  // Every open starts fresh on the active workspace - the closed dialog does
+  // not carry a stale review over to the next one.
+  useEffect(() => {
+    if (open) {
+      setSourceName(activeWorkspace.name)
+      setSelectedIds(new Set())
+    }
+  }, [open, activeWorkspace.name])
+
+  const source =
+    sources.find((w) => w.name === sourceName) ??
+    sources.find((w) => w.name === activeWorkspace.name) ??
+    sources[0] ??
+    null
+  const targetName = source?.baseWorkspace ?? null
+
+  // The targets on offer: every workspace that some readable source publishes
+  // to. A base the account cannot read is still a valid target (publishing
+  // needs write on it only at publish time) - it renders by name.
+  const targetNames = useMemo(() => {
+    const names = [...new Set(sources.map((w) => w.baseWorkspace!))]
+    const label = (name: string) =>
+      workspaceLabel(
+        workspaces.find((w) => w.name === name),
+        name,
+      )
+    // Live first, the rest alphabetically.
+    return names.sort((a, b) => {
+      const wsA = workspaces.find((w) => w.name === a)
+      const wsB = workspaces.find((w) => w.name === b)
+      if (wsA?.classification === 'ROOT') return -1
+      if (wsB?.classification === 'ROOT') return 1
+      return label(a).localeCompare(label(b))
+    })
+  }, [sources, workspaces])
+
+  const sourcesForTarget = useMemo(
+    () => sources.filter((w) => w.baseWorkspace === targetName),
+    [sources, targetName],
+  )
+
+  const pickSource = (name: string) => {
+    if (name === source?.name) return
+    setSourceName(name)
+    setSelectedIds(new Set())
+  }
+
+  const pickTarget = (name: string) => {
+    if (name === targetName) return
+    // Re-pick a source that publishes to the new target: the active workspace
+    // if it matches, otherwise one that actually has something to review.
+    const candidates = sources.filter((w) => w.baseWorkspace === name)
+    const next =
+      candidates.find((w) => w.name === activeWorkspace.name) ??
+      candidates.find((w) => w.hasPublishableChanges) ??
+      candidates[0]
+    if (next) pickSource(next.name)
+  }
+
   const { site, navigateToNode } = useStudio()
   // Fetch only while open; the query refreshes on publish/discard via the
   // workspaces invalidation the shared hook performs.
-  const { data, isLoading } = useWorkspaceDocumentChanges(workspaceName, open)
+  const { data, isLoading } = useWorkspaceDocumentChanges(
+    source?.name ?? null,
+    open,
+  )
   const { operation, resolve, pendingConflict, setPendingConflict } =
-    useWorkspacePublishing(workspaceName)
+    useWorkspacePublishing(source?.name ?? '')
 
   // Scope to the active site, mirroring the Publish button: the active site's
   // documents plus any whose site could not be resolved (never silently hide a
@@ -119,7 +222,6 @@ export function ReviewChangesDialog({
       : all
   }, [data, siteId])
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   // A discard waiting for confirmation; the confirm dialog is open while true.
   const [confirmDiscard, setConfirmDiscard] = useState(false)
 
@@ -159,14 +261,55 @@ export function ReviewChangesDialog({
   }
 
   const busy = operation.isPending
-  const baseWorkspaceName =
-    workspace.baseWorkspace ??
-    t('workspace.baseWorkspaceFallback', 'the base workspace')
+  const reviewingActive = source?.name === activeWorkspace.name
+  const canPublish = source?.permissions.publish ?? false
+  // Discarding rewrites the reviewed workspace - needs write access on it (a
+  // given for the active workspace, not for e.g. a draft reviewed as VIEWER).
+  const canDiscard = source?.permissions.write ?? false
+  // Navigating means showing the document in its workspace. Away from the
+  // active context that is an editing-context switch, which only exists for
+  // the own personal workspace and writable shared ones.
+  const canNavigate =
+    source !== null &&
+    (reviewingActive ||
+      source.classification === 'PERSONAL' ||
+      (source.classification === 'SHARED' && source.permissions.write))
+  const sourceLabel = workspaceLabel(source ?? undefined, source?.name ?? '')
+  const targetLabel = targetName
+    ? workspaceLabel(
+        workspaces.find((w) => w.name === targetName),
+        targetName,
+      )
+    : t('workspace.baseWorkspaceFallback', 'the base workspace')
   const publishDeniedHint = t(
     'workspace.publishDenied',
     'You are not allowed to publish to "{0}"',
-    [baseWorkspaceName],
+    [targetLabel],
   )
+  const discardDeniedHint = t(
+    'workspace.review.noWriteAccess',
+    'You are not allowed to change "{0}"',
+    [sourceLabel],
+  )
+
+  const sourceItems = sourcesForTarget.map((w) => ({
+    value: w.name,
+    label: workspaceLabel(w, w.name),
+  }))
+  const targetItems = targetNames.map((name) => ({
+    value: name,
+    label: workspaceLabel(
+      workspaces.find((w) => w.name === name),
+      name,
+    ),
+  }))
+
+  const goToDocument = (address: string) => {
+    if (!source) return
+    onOpenChange(false)
+    if (reviewingActive) navigateToNode(address)
+    else onNavigate(address, source.name)
+  }
 
   return (
     <>
@@ -178,12 +321,71 @@ export function ReviewChangesDialog({
             </DialogTitle>
             <DialogDescription>
               {t(
-                'workspace.review.description',
-                'Changes on top of "{0}". Select documents to publish or discard.',
-                [baseWorkspaceName],
+                'workspace.review.selectDescription',
+                'Select documents to publish or discard.',
               )}
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex flex-wrap items-center gap-3 border-b border-neutral-800 pb-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-neutral-400">
+                {t('workspace.review.sourceLabel', 'Changes in')}
+              </span>
+              <Select
+                value={source?.name}
+                onValueChange={(v) => pickSource(v as string)}
+                disabled={busy}
+                items={sourceItems}
+              >
+                <SelectTrigger size="sm" className="min-w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sourcesForTarget.map((w) => (
+                    <SelectItem key={w.name} value={w.name}>
+                      {workspaceLabel(w, w.name)}
+                      {w.hasPublishableChanges && (
+                        <span
+                          className="size-1.5 rounded-full bg-amber-500"
+                          title={t(
+                            'workspace.review.hasChanges',
+                            'Has pending changes',
+                          )}
+                        />
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <i
+              className="fas fa-arrow-right mt-4 text-xs text-neutral-500"
+              aria-hidden
+            />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-neutral-400">
+                {t('workspace.review.targetLabel', 'Publishing to')}
+              </span>
+              <Select
+                value={targetName ?? undefined}
+                onValueChange={(v) => pickTarget(v as string)}
+                disabled={busy}
+                items={targetItems}
+              >
+                <SelectTrigger size="sm" className="min-w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {targetItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           {documents.length > 0 && (
             <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-800 pb-2 text-sm text-neutral-300">
@@ -277,16 +479,22 @@ export function ReviewChangesDialog({
                             </span>
                           </div>
                         </div>
-                        {document.documentAddress && (
+                        {document.documentAddress && canNavigate && (
                           <button
                             type="button"
                             className="mt-0.5 shrink-0 text-xs text-blue-400 hover:underline"
-                            title={t('workspace.review.goToPage', 'Go to page')}
+                            title={
+                              reviewingActive
+                                ? t('workspace.review.goToPage', 'Go to page')
+                                : t(
+                                    'workspace.review.goToPageSwitches',
+                                    'Go to page (switches the edited workspace)',
+                                  )
+                            }
                             onClick={(event) => {
                               // Don't toggle the row's checkbox.
                               event.preventDefault()
-                              onOpenChange(false)
-                              navigateToNode(document.documentAddress!)
+                              goToDocument(document.documentAddress!)
                             }}
                           >
                             <i
@@ -313,7 +521,8 @@ export function ReviewChangesDialog({
             </Button>
             <Button
               variant="destructive"
-              disabled={selectedCount === 0 || busy}
+              disabled={selectedCount === 0 || !canDiscard || busy}
+              title={canDiscard ? undefined : discardDeniedHint}
               onClick={() => setConfirmDiscard(true)}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
@@ -407,8 +616,7 @@ export function ReviewChangesDialog({
         onDiscardAll={() => resolve.mutate('discardAll')}
         onNavigate={(address) => {
           setPendingConflict(null)
-          onOpenChange(false)
-          navigateToNode(address)
+          goToDocument(address)
         }}
       />
     </>

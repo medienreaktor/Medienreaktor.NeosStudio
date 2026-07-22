@@ -2346,9 +2346,13 @@
         <source>read-only</source>
         <target xml:lang="de">schreibgeschützt</target>
       </trans-unit>
-      <trans-unit id="workspace.review.description" xml:space="preserve">
-        <source>Changes on top of "{0}". Select documents to publish or discard.</source>
-        <target xml:lang="de">Änderungen auf Basis von „{0}“. Wähle Dokumente zum Veröffentlichen oder Verwerfen aus.</target>
+      <trans-unit id="workspace.review.button" xml:space="preserve">
+        <source>Review</source>
+        <target xml:lang="de">Prüfen</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
+        <source>Review pending changes between workspaces</source>
+        <target xml:lang="de">Ausstehende Änderungen zwischen Arbeitsbereichen prüfen</target>
       </trans-unit>
       <trans-unit id="workspace.review.discardManyBody" xml:space="preserve">
         <source>The pending changes on the selected documents will be discarded. This cannot be undone.</source>
@@ -2378,6 +2382,14 @@
         <source>Go to page</source>
         <target xml:lang="de">Zur Seite</target>
       </trans-unit>
+      <trans-unit id="workspace.review.goToPageSwitches" xml:space="preserve">
+        <source>Go to page (switches the edited workspace)</source>
+        <target xml:lang="de">Zur Seite (wechselt den bearbeiteten Arbeitsbereich)</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hasChanges" xml:space="preserve">
+        <source>Has pending changes</source>
+        <target xml:lang="de">Hat ausstehende Änderungen</target>
+      </trans-unit>
       <trans-unit id="workspace.review.hidden" xml:space="preserve">
         <source>Hidden</source>
         <target xml:lang="de">Versteckt</target>
@@ -2385,6 +2397,10 @@
       <trans-unit id="workspace.review.loading" xml:space="preserve">
         <source>Loading changes…</source>
         <target xml:lang="de">Änderungen werden geladen…</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change "{0}"</source>
+        <target xml:lang="de">Du darfst „{0}“ nicht ändern</target>
       </trans-unit>
       <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
         <source>Publish selected</source>
@@ -2398,9 +2414,21 @@
         <source>Select all ({0})</source>
         <target xml:lang="de">Alle auswählen ({0})</target>
       </trans-unit>
+      <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
+        <source>Select documents to publish or discard.</source>
+        <target xml:lang="de">Wähle Dokumente zum Veröffentlichen oder Verwerfen aus.</target>
+      </trans-unit>
       <trans-unit id="workspace.review.selectedOf" xml:space="preserve">
         <source>{0} of {1} selected</source>
         <target xml:lang="de">{0} von {1} ausgewählt</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.sourceLabel" xml:space="preserve">
+        <source>Changes in</source>
+        <target xml:lang="de">Änderungen in</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
+        <source>Publishing to</source>
+        <target xml:lang="de">Veröffentlicht nach</target>
       </trans-unit>
       <trans-unit id="workspace.reviewChanges" xml:space="preserve">
         <source>Review changes</source>

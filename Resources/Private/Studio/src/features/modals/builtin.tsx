@@ -55,7 +55,7 @@ export function registerBuiltinModals(): void {
   settingsDialogRegistry.register({
     id: WORKSPACES_SETTINGS,
     title: t('modal.workspaces', 'Workspaces'),
-    icon: 'code-branch',
+    icon: 'layer-group',
     component: WorkspacesAdministration,
     order: 30,
     // The classic Workspaces module privilege - editors normally have it.

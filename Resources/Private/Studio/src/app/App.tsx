@@ -67,6 +67,7 @@ import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
 import { PublishButton } from '@/features/workspaces/PublishButton'
+import { ReviewButton } from '@/features/workspaces/ReviewButton'
 import { SyncWorkspaceButton } from '@/features/workspaces/SyncWorkspaceButton'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
@@ -265,6 +266,49 @@ export function App() {
     setInspectedNode(null)
     if (previousAddress)
       followDocumentTo(addressInWorkspace(previousAddress, targetName))
+  }
+
+  /**
+   * A followed link or review row: show the target document; trees reveal and
+   * select it. Links can cross dimensions (e.g. a language menu) - follow the
+   * switch so the trees browse the same dimension as the preview.
+   */
+  const navigateToNode = (address: string) => {
+    fetchNode(address)
+      .then((node) => {
+        const currentPoint =
+          dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
+        if (
+          currentPoint &&
+          !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)
+        ) {
+          setDimensionSpacePoint(node.dimensionSpacePoint)
+        }
+        setSelectedDocument(node)
+        setInspectedNode(node)
+      })
+      .catch(() => {
+        /* fine - e.g. the linked document is not visible in this workspace */
+      })
+  }
+
+  /**
+   * Show a document that lives in another workspace (the review dialog's
+   * "go to page" on a non-active source): move the editing context to that
+   * workspace first - personal, or a writable shared one (collaborative) -
+   * then navigate to the address, which is already bound to it.
+   */
+  const navigateToNodeInWorkspace = (address: string, name: string) => {
+    if (activeWorkspace && name !== activeWorkspace.name) {
+      const editingName = name === personalWorkspace?.name ? null : name
+      setEditingWorkspaceName(editingName)
+      if (editingName !== null)
+        localStorage.setItem(EDITING_WORKSPACE_KEY, editingName)
+      else localStorage.removeItem(EDITING_WORKSPACE_KEY)
+      setSelectedDocument(null)
+      setInspectedNode(null)
+    }
+    navigateToNode(address)
   }
 
   const { data: sitesResponse } = useSites(
@@ -481,27 +525,7 @@ export function App() {
         .then(setInspectedNode)
         .catch(() => {})
     },
-    navigateToNode: (address) => {
-      // A followed link: show the target document; trees reveal and select it.
-      // Links can cross dimensions (e.g. a language menu) - follow the switch so
-      // the trees browse the same dimension as the preview.
-      fetchNode(address)
-        .then((node) => {
-          const currentPoint =
-            dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
-          if (
-            currentPoint &&
-            !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)
-          ) {
-            setDimensionSpacePoint(node.dimensionSpacePoint)
-          }
-          setSelectedDocument(node)
-          setInspectedNode(node)
-        })
-        .catch(() => {
-          /* fine - e.g. the linked document is not visible in this workspace */
-        })
-    },
+    navigateToNode,
     reportInlineEdit: (addresses) => {
       setLastEdit((prev) => ({
         addresses,
@@ -745,6 +769,11 @@ export function App() {
                         <>
                           <SyncWorkspaceButton
                             workspaceName={activeWorkspace.name}
+                          />
+                          <ReviewButton
+                            workspaces={workspaces}
+                            activeWorkspace={activeWorkspace}
+                            onNavigate={navigateToNodeInWorkspace}
                           />
                           <PublishButton workspace={activeWorkspace} />
                         </>
