@@ -221,3 +221,90 @@ export function useWorkspaceChanges(workspaceName: string | null) {
     staleTime: 10_000,
   })
 }
+
+/**
+ * Workspace management (Api.Workspaces.Manage): creating shared/private
+ * workspaces is open to every editor; editing, deleting and role assignments
+ * additionally require the per-workspace manage permission - callers gate on
+ * workspace.permissions.manage (the server re-checks).
+ */
+
+export interface CreateWorkspaceInput {
+  title: string
+  description?: string
+  /** Defaults to "live" on the server. */
+  baseWorkspaceName?: string
+  /** "shared": every editor may collaborate; "private": only the creator. */
+  visibility?: 'shared' | 'private'
+}
+
+export interface UpdateWorkspaceInput {
+  title?: string
+  description?: string
+}
+
+/** One role assignment: who (user or Flow role group) may do what. */
+export interface WorkspaceRoleAssignment {
+  subjectType: 'USER' | 'GROUP'
+  subject: string
+  /** Human-readable name for USER subjects; the role identifier for groups. */
+  label: string
+  role: 'VIEWER' | 'COLLABORATOR' | 'MANAGER'
+}
+
+export function createWorkspace(input: CreateWorkspaceInput) {
+  return apiFetch<{ workspace: Workspace }>('/workspaces', {
+    method: 'POST',
+    body: input,
+  })
+}
+
+export function updateWorkspace(
+  workspaceName: string,
+  input: UpdateWorkspaceInput,
+) {
+  return apiFetch<{ workspace: Workspace }>(
+    `/workspaces/${encodeURIComponent(workspaceName)}`,
+    { method: 'PATCH', body: input },
+  )
+}
+
+/** With force, pending changes are discarded along with the workspace. */
+export function deleteWorkspace(workspaceName: string, force = false) {
+  return apiFetch<{ success: boolean }>(
+    `/workspaces/${encodeURIComponent(workspaceName)}`,
+    { method: 'DELETE', body: force ? { force: true } : undefined },
+  )
+}
+
+/** Requires manage permission - only enable for such workspaces. */
+export function useWorkspaceRoles(workspaceName: string | null) {
+  return useQuery({
+    queryKey: queryKeys.workspaces.roles(workspaceName ?? ''),
+    queryFn: () =>
+      apiFetch<{ assignments: WorkspaceRoleAssignment[] }>(
+        `/workspaces/${encodeURIComponent(workspaceName!)}/roles`,
+      ),
+    enabled: workspaceName !== null,
+  })
+}
+
+export function assignWorkspaceRole(
+  workspaceName: string,
+  assignment: Pick<WorkspaceRoleAssignment, 'subjectType' | 'subject' | 'role'>,
+) {
+  return apiFetch<{ assignments: WorkspaceRoleAssignment[] }>(
+    `/workspaces/${encodeURIComponent(workspaceName)}/roles`,
+    { method: 'POST', body: assignment },
+  )
+}
+
+export function unassignWorkspaceRole(
+  workspaceName: string,
+  subject: Pick<WorkspaceRoleAssignment, 'subjectType' | 'subject'>,
+) {
+  return apiFetch<{ assignments: WorkspaceRoleAssignment[] }>(
+    `/workspaces/${encodeURIComponent(workspaceName)}/roles`,
+    { method: 'DELETE', body: subject },
+  )
+}

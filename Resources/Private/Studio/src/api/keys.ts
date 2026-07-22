@@ -23,6 +23,7 @@ export const queryKeys = {
     changes: (name: string) => ['workspaces', name, 'changes'] as const,
     documentChanges: (name: string) =>
       ['workspaces', name, 'document-changes'] as const,
+    roles: (name: string) => ['workspaces', name, 'roles'] as const,
   },
   nodeTypes: {
     all: ['nodeTypes'] as const,
