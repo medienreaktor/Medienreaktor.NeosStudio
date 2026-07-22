@@ -129,12 +129,6 @@ Conventions: every query key comes from `api/keys.ts` (never inline literals); o
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 
-## Status & roadmap
-
-Studio is a working editing environment today: silent auth, trees and outliner, full inspector (editors, views, validators, ClientEval, dimensions), inline rich-text editing, **collaborative multiplayer editing on shared workspaces** (live change feed + presence), media module, node creation and clipboard with drag & drop, context menus, user and profile management, a localized UI and a public plugin API — verified end-to-end against a ddev Neos 9 site with automated smoke tests.
-
-Next up: Yjs-based co-typing inside rich-text fields, richer publishing views, and continuing to replace legacy `Neos.Neos.Ui` surfaces one at a time.
-
 ## License
 
 Neos Studio is free software, released under the [GNU General Public License, version 3 or later](LICENSE).
