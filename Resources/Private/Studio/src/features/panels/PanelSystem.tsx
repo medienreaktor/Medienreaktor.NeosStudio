@@ -719,7 +719,7 @@ export function SecondaryDock({
           onClick={() => setCollapsed(false)}
           className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
         >
-          <i className="fas fa-angles-left text-[1rem]" aria-hidden />
+          <i className="fas fa-angles-left text-xs" aria-hidden />
         </button>
       ) : (
         <>
@@ -733,7 +733,7 @@ export function SecondaryDock({
               onClick={() => setCollapsed(true)}
               className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
             >
-              <i className="fas fa-angles-right text-[1rem]" aria-hidden />
+              <i className="fas fa-angles-right text-xs" aria-hidden />
             </button>
           )}
         </>

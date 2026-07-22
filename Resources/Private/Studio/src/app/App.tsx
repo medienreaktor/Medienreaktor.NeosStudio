@@ -639,7 +639,7 @@ export function App() {
                 <SidebarInset>
                   {/* Fixed height so the bar does not jump as the switchers and
                     workspace buttons resolve and render after load. */}
-                  <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
+                  <header className="@container flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
                         <SidebarTrigger />

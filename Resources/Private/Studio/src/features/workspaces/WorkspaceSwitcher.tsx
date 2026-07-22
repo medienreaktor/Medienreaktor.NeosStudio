@@ -159,6 +159,7 @@ export function WorkspaceSwitcher({
               aria-hidden
             />
             <SelectValue
+              className="hidden @[48rem]:inline"
               placeholder={t(
                 'workspace.selectPlaceholder',
                 'Select workspace…',

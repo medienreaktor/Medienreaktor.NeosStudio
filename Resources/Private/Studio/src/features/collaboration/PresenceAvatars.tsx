@@ -22,7 +22,10 @@ export function PresenceAvatars() {
 
   if (peers.length === 0) {
     return (
-      <span className="text-xs text-neutral-400" data-slot="presence-avatars">
+      <span
+        className="hidden @[56rem]:inline text-xs text-neutral-400"
+        data-slot="presence-avatars"
+      >
         <i className="fas fa-users mr-1" aria-hidden />
         {t('presence.justYou', 'Just you')}
       </span>
@@ -34,7 +37,7 @@ export function PresenceAvatars() {
 
   return (
     <div
-      className="flex items-center -space-x-1.5"
+      className="hidden @[56rem]:flex items-center -space-x-1.5"
       data-slot="presence-avatars"
     >
       {shown.map((peer) => (

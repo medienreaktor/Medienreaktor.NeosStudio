@@ -116,7 +116,10 @@ export function DimensionSwitcher({
                     aria-hidden
                   />
                 )}
-                <SelectValue placeholder={dimension.label} />
+                <SelectValue
+                  className="hidden @[64rem]:inline"
+                  placeholder={dimension.label}
+                />
               </div>
             </SelectTrigger>
             <SelectContent>

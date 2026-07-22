@@ -39,6 +39,7 @@ export function SiteSwitcher({
             aria-hidden
           />
           <SelectValue
+            className="hidden @[64rem]:inline"
             placeholder={t('sites.selectPlaceholder', 'Select site…')}
           />
         </div>
