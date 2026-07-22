@@ -537,10 +537,11 @@ export function PanelDock({ region }: { region: DockRegion }) {
  *
  * Pass `visibleForMainPanel` to make it contextual to the main area's active
  * tab: the dock then belongs to that one main panel (the Visual Editor) and
- * hides while another main panel (the Media Library) is showing. It keeps its
- * own docked panels mounted across the switch - hidden via CSS, not unmounted -
- * so their state survives, and a display:none dock stays out of drop
- * hit-testing so nothing can be dropped into it while it is hidden.
+ * auto-collapses while another main panel (the Media Library) is showing. The
+ * user can still expand it there, but that expansion is transient - the
+ * persisted collapse preference belongs to the home panel and is restored when
+ * the user returns to it. Docked panels stay mounted across the switch (hidden
+ * via CSS, not unmounted) so their state survives.
  */
 export function SecondaryDock({
   visibleForMainPanel,
@@ -548,16 +549,26 @@ export function SecondaryDock({
   visibleForMainPanel?: PanelId
 }) {
   const { layout, drag } = usePanels()
-  const [collapsed, setCollapsed] = usePersistedFlag(SECONDARY_COLLAPSED_KEY)
+  const [preferredCollapsed, setPreferredCollapsed] = usePersistedFlag(
+    SECONDARY_COLLAPSED_KEY,
+  )
   const hasPanels = layout.docks.secondary.length > 0
   // The main area is a tab region, so it coalesces to a single group; its
-  // active tab decides whether this contextual dock is showing.
-  const hidden =
-    visibleForMainPanel !== undefined &&
-    layout.docks.main[0]?.active !== visibleForMainPanel
+  // active tab decides whether this contextual dock is in its home context.
+  const activeMain = layout.docks.main[0]?.active ?? null
+  const away =
+    visibleForMainPanel !== undefined && activeMain !== visibleForMainPanel
+  const [awayExpandedFor, setAwayExpandedFor] = React.useState<PanelId | null>(
+    null,
+  )
+  const collapsed = away ? awayExpandedFor !== activeMain : preferredCollapsed
+  const setCollapsed = (next: boolean) => {
+    if (away) setAwayExpandedFor(next ? null : activeMain)
+    else setPreferredCollapsed(next)
+  }
   // Empty and neither worth keeping mounted nor being dropped into: render
-  // nothing. (A hidden contextual dock never reveals for a drag.)
-  if (!hasPanels && (hidden || !drag)) return null
+  // nothing.
+  if (!hasPanels && !drag) return null
   // A drag in progress force-expands so a panel can be dropped in even when the
   // user has collapsed the region. Collapsing is only offered once it holds
   // panels - an empty dock only ever shows to receive a drop.
@@ -569,7 +580,6 @@ export function SecondaryDock({
         // Collapsed: take no width and drop the border so no bar shows - only
         // the expand button, overlaid on the top-right of the main region.
         showCollapsed ? 'w-0' : 'w-80 border-l',
-        hidden && 'hidden',
       )}
     >
       {showCollapsed ? (
