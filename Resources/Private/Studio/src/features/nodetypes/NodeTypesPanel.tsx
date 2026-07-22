@@ -1,6 +1,7 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNodeTypesWithProperties } from '@/api/nodeTypes'
 import { Button } from '@/components/ui/button'
+import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
@@ -32,9 +33,9 @@ import {
  */
 
 const HEADER_HEIGHT = 54
-const SECTION_HEADER_HEIGHT = 20
+/** The CollapsibleGroup summary: py-2 + one text-xs line, plus the border-t. */
+const SECTION_HEADER_HEIGHT = 33
 const ROW_HEIGHT = 18
-const CARD_BOTTOM_PADDING = 8
 /** Edges attach at the header's vertical center. */
 const EDGE_ANCHOR_Y = HEADER_HEIGHT / 2
 const MIN_SCALE = 0.08
@@ -47,15 +48,26 @@ const KIND_ACCENT: Record<CardKind, string> = {
   other: 'bg-neutral-500',
 }
 
-function cardHeight(model: CardModel): number {
+/** Which of a card's two sections are expanded. */
+interface SectionOpenState {
+  own: boolean
+  inherited: boolean
+}
+
+/** Own properties open, the (usually long) inherited list tucked away. */
+const DEFAULT_OPEN: SectionOpenState = { own: true, inherited: false }
+
+function cardHeight(model: CardModel, open: SectionOpenState): number {
   const sections =
     (model.ownRows.length > 0
-      ? SECTION_HEADER_HEIGHT + model.ownRows.length * ROW_HEIGHT
+      ? SECTION_HEADER_HEIGHT +
+        (open.own ? model.ownRows.length * ROW_HEIGHT : 0)
       : 0) +
     (model.inheritedRows.length > 0
-      ? SECTION_HEADER_HEIGHT + model.inheritedRows.length * ROW_HEIGHT
+      ? SECTION_HEADER_HEIGHT +
+        (open.inherited ? model.inheritedRows.length * ROW_HEIGHT : 0)
       : 0)
-  return HEADER_HEIGHT + sections + (sections > 0 ? CARD_BOTTOM_PADDING : 0)
+  return HEADER_HEIGHT + sections
 }
 
 interface ViewTransform {
@@ -90,47 +102,52 @@ function CardSection({
   title,
   rows,
   inherited,
+  open,
+  onToggle,
 }: {
   title: string
   rows: CardRow[]
   inherited: boolean
+  open: boolean
+  onToggle: () => void
 }) {
   return (
-    <div className="px-3">
-      <div
-        className="flex items-center border-t border-neutral-800 text-[8px] font-semibold tracking-widest text-neutral-500 uppercase"
-        style={{ height: SECTION_HEADER_HEIGHT }}
+    <div className="border-t border-neutral-800 px-3">
+      <CollapsibleGroup
+        label={<span className="truncate">{title}</span>}
+        open={open}
+        onOpenChange={onToggle}
+        bodyClassName="py-0"
       >
-        {title}
-      </div>
-      {rows.map((row) => (
-        <div
-          key={(row.isReference ? 'ref:' : 'prop:') + row.name}
-          className={cn(
-            'flex items-center gap-1 text-[10px]',
-            inherited ? 'text-neutral-500' : 'text-neutral-200',
-          )}
-          style={{ height: ROW_HEIGHT }}
-          title={
-            row.inheritedFrom
-              ? t('nodeTypes.inheritedFrom', 'Inherited from {0}', [
-                  row.inheritedFrom,
-                ])
-              : undefined
-          }
-        >
-          {row.isReference && (
-            <i
-              className="fas fa-link fa-fw shrink-0 text-[7px] text-neutral-500"
-              aria-hidden
-            />
-          )}
-          <span className="truncate">{row.name}</span>
-          <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-neutral-500">
-            {row.type}
-          </span>
-        </div>
-      ))}
+        {rows.map((row) => (
+          <div
+            key={(row.isReference ? 'ref:' : 'prop:') + row.name}
+            className={cn(
+              'flex items-center gap-1 text-[10px]',
+              inherited ? 'text-neutral-500' : 'text-neutral-200',
+            )}
+            style={{ height: ROW_HEIGHT }}
+            title={
+              row.inheritedFrom
+                ? t('nodeTypes.inheritedFrom', 'Inherited from {0}', [
+                    row.inheritedFrom,
+                  ])
+                : undefined
+            }
+          >
+            {row.isReference && (
+              <i
+                className="fas fa-link fa-fw shrink-0 text-[7px] text-neutral-500"
+                aria-hidden
+              />
+            )}
+            <span className="truncate">{row.name}</span>
+            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-neutral-500">
+              {row.type}
+            </span>
+          </div>
+        ))}
+      </CollapsibleGroup>
     </div>
   )
 }
@@ -144,11 +161,15 @@ const GraphSurface = memo(function GraphSurface({
   models,
   highlight,
   matches,
+  openSections,
+  onToggleSection,
 }: {
   layout: GraphLayout
   models: Map<string, CardModel>
   highlight: Highlight | null
   matches: Set<string>
+  openSections: Record<string, SectionOpenState>
+  onToggleSection: (name: string, section: keyof SectionOpenState) => void
 }) {
   const emphasized = (name: string): boolean =>
     highlight === null ||
@@ -178,7 +199,9 @@ const GraphSurface = memo(function GraphSurface({
               key={`${edge.from}->${edge.to}`}
               d={edgePath(from, to)}
               fill="none"
-              stroke={active ? 'var(--color-blue-500)' : 'var(--color-neutral-600)'}
+              stroke={
+                active ? 'var(--color-blue-500)' : 'var(--color-neutral-600)'
+              }
               strokeWidth={active ? 2 : 1}
               opacity={highlight !== null && !active ? 0.25 : 1}
             />
@@ -188,6 +211,7 @@ const GraphSurface = memo(function GraphSurface({
       {[...layout.cards.values()].map((card) => {
         const model = models.get(card.name)
         if (!model) return null
+        const open = openSections[card.name] ?? DEFAULT_OPEN
         return (
           <div
             key={card.name}
@@ -237,6 +261,8 @@ const GraphSurface = memo(function GraphSurface({
                 title={t('nodeTypes.properties', 'Properties')}
                 rows={model.ownRows}
                 inherited={false}
+                open={open.own}
+                onToggle={() => onToggleSection(card.name, 'own')}
               />
             )}
             {model.inheritedRows.length > 0 && (
@@ -244,6 +270,8 @@ const GraphSurface = memo(function GraphSurface({
                 title={t('nodeTypes.inherited', 'Inherited')}
                 rows={model.inheritedRows}
                 inherited
+                open={open.inherited}
+                onToggle={() => onToggleSection(card.name, 'inherited')}
               />
             )}
           </div>
@@ -286,7 +314,11 @@ export function NodeTypesPanel() {
   // The panel mounts hidden behind the Visual Editor tab; the node types
   // is only fetched (and fitted) once the tab has actually been shown.
   const [visible, setVisible] = useState(false)
-  const { data: nodeTypes, isLoading, isError } = useNodeTypesWithProperties(visible)
+  const {
+    data: nodeTypes,
+    isLoading,
+    isError,
+  } = useNodeTypesWithProperties(visible)
 
   const models = useMemo(
     () => (nodeTypes ? buildCardModels(nodeTypes) : []),
@@ -296,16 +328,30 @@ export function NodeTypesPanel() {
     () => new Map(models.map((model) => [model.name, model])),
     [models],
   )
+  // Collapsing/expanding a card section changes its height, so the state
+  // lives here and feeds the layout - cards below shift and edges re-anchor.
+  const [openSections, setOpenSections] = useState<
+    Record<string, SectionOpenState>
+  >({})
+  const toggleSection = useCallback(
+    (name: string, section: keyof SectionOpenState) =>
+      setOpenSections((current) => {
+        const open = current[name] ?? DEFAULT_OPEN
+        return { ...current, [name]: { ...open, [section]: !open[section] } }
+      }),
+    [],
+  )
+
   const layout = useMemo(
     () =>
       layoutGraph(
         models.map((model) => ({
           name: model.name,
           superTypes: model.superTypes,
-          height: cardHeight(model),
+          height: cardHeight(model, openSections[model.name] ?? DEFAULT_OPEN),
         })),
       ),
-    [models],
+    [models, openSections],
   )
 
   const [view, setView] = useState<ViewTransform>({ x: 40, y: 40, scale: 1 })
@@ -427,7 +473,9 @@ export function NodeTypesPanel() {
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return
     const target = event.target as HTMLElement
-    if (target.closest('button, input, a')) return
+    // Summary rows are the section collapsibles' toggles - like buttons,
+    // pressing them must neither pan nor change the selection.
+    if (target.closest('button, input, a, summary')) return
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -578,9 +626,7 @@ export function NodeTypesPanel() {
         }}
       >
         {isLoading && (
-          <LoadingState
-            label={t('nodeTypes.loading', 'Loading node types…')}
-          />
+          <LoadingState label={t('nodeTypes.loading', 'Loading node types…')} />
         )}
         {isError && (
           <div className="flex h-full items-center justify-center text-sm text-neutral-400">
@@ -600,6 +646,8 @@ export function NodeTypesPanel() {
               models={modelsByName}
               highlight={highlight}
               matches={matchSet}
+              openSections={openSections}
+              onToggleSection={toggleSection}
             />
           </div>
         )}
