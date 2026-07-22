@@ -341,14 +341,18 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
   if (target.kind === 'tabs') {
     const insert = <T extends PanelGroup>(g: T): T => {
       if (g.id !== target.groupId) return g
-      let index = Math.min(target.index, g.panels.length)
-      // Moving within the same group: the removal shifted later tabs left.
+      // `target.index` is a slot in the pre-strip tab order. Moving within the
+      // same group, the removal shifted later tabs left - adjust first, then
+      // clamp to the stripped array (clamping first would pull an end drop one
+      // slot short, silently no-op'ing e.g. a two-tab left-to-right reorder).
+      let index = target.index
       if (
         g.id === fromGroupId &&
         removedTabIndex >= 0 &&
         removedTabIndex < index
       )
         index -= 1
+      index = Math.min(index, g.panels.length)
       const panels = [...g.panels]
       panels.splice(index, 0, panel)
       // Expand so the dropped panel is visible right away.
