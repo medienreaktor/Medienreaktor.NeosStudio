@@ -899,6 +899,9 @@
       <trans-unit id="panel.loadingSites" xml:space="preserve">
         <source>Loading sites…</source>
       </trans-unit>
+      <trans-unit id="panel.resetLayout" xml:space="preserve">
+        <source>Reset to default</source>
+      </trans-unit>
       <trans-unit id="panel.title.clipboard" xml:space="preserve">
         <source>Clipboard</source>
       </trans-unit>

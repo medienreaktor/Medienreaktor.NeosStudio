@@ -43,6 +43,12 @@ export type FloatingGroup = PanelGroup & { rect: PanelRect }
 export type PanelLayout = {
   docks: Record<DockRegion, PanelGroup[]>
   floating: FloatingGroup[]
+  /**
+   * Panels the user has hidden entirely (via a tab's context menu). They stay
+   * out of every group - normalization strips them instead of re-adding them
+   * at their default placement - until shown again.
+   */
+  hidden: PanelId[]
 }
 
 export type DropTarget =
@@ -140,7 +146,19 @@ export function normalizeLayout(
     docks?: unknown
     dock?: unknown
     floating?: unknown
+    hidden?: unknown
   } | null
+
+  // Hidden panels count as seen before the groups are sanitized: any stale
+  // group entry drops out, and the default-placement pass skips them - a
+  // hidden panel exists nowhere in the layout.
+  const hidden: PanelId[] = []
+  for (const value of Array.isArray(s?.hidden) ? s.hidden : []) {
+    if (typeof value !== 'string' || !known.has(value)) continue
+    if (seenPanels.has(value)) continue
+    seenPanels.add(value)
+    hidden.push(value)
+  }
 
   const sanitizeGroup = (value: unknown): PanelGroup | null => {
     const g = value as Partial<PanelGroup> | null
@@ -225,7 +243,7 @@ export function normalizeLayout(
     }
   }
 
-  return coalesceLayout({ docks, floating })
+  return coalesceLayout({ docks, floating, hidden })
 }
 
 /** Apply a per-group update across every dock region and the floating groups. */
@@ -236,7 +254,7 @@ function mapGroups(
   const docks = emptyDocks()
   for (const region of DOCK_REGIONS)
     docks[region] = layout.docks[region].map(update)
-  return { docks, floating: layout.floating.map(update) }
+  return { docks, floating: layout.floating.map(update), hidden: layout.hidden }
 }
 
 export function activatePanel(
@@ -336,7 +354,11 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
       // Expand so the dropped panel is visible right away.
       return { ...g, panels, active: panel, collapsed: false }
     }
-    const next = { docks: emptyDocks(), floating: floating.map(insert) }
+    const next = {
+      docks: emptyDocks(),
+      floating: floating.map(insert),
+      hidden: layout.hidden,
+    }
     for (const region of DOCK_REGIONS)
       next.docks[region] = docks[region].map(insert)
     const landed = [
@@ -360,7 +382,7 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
       index -= 1
     index = Math.min(index, docks[target.region].length)
     docks[target.region].splice(index, 0, newGroup(panel))
-    return coalesceLayout({ docks, floating })
+    return coalesceLayout({ docks, floating, hidden: layout.hidden })
   }
 
   // Tear out: keep the size it had when it floated alone, position the tab
@@ -374,5 +396,52 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
   return coalesceLayout({
     docks,
     floating: [...floating, { ...newGroup(panel), rect }],
+    hidden: layout.hidden,
   })
+}
+
+/**
+ * Hide `panel` entirely: it leaves whatever group holds it and joins the
+ * hidden list, where normalization keeps it from reappearing at its default
+ * placement. Re-normalizing against the definitions does the removal (and
+ * drops the group if the panel was its last tab).
+ */
+export function hidePanel(
+  layout: PanelLayout,
+  panel: PanelId,
+  definitions: PanelDefinition[],
+): PanelLayout {
+  if (layout.hidden.includes(panel)) return layout
+  return normalizeLayout(
+    { ...layout, hidden: [...layout.hidden, panel] },
+    definitions,
+  )
+}
+
+/**
+ * Show a hidden panel again. With `at`, it joins that group as the tab right
+ * after `at.after` (append when that tab is gone) and becomes active - the
+ * context-menu case, where `at` is the tab the menu was opened from. Without
+ * `at`, or when the group no longer exists, normalization places it at its
+ * default placement.
+ */
+export function showPanel(
+  layout: PanelLayout,
+  panel: PanelId,
+  at: { groupId: string; after: PanelId } | null,
+  definitions: PanelDefinition[],
+): PanelLayout {
+  const hidden = layout.hidden.filter((p) => p !== panel)
+  if (hidden.length === layout.hidden.length) return layout
+  let inserted = false
+  const next = mapGroups({ ...layout, hidden }, (g) => {
+    if (!at || g.id !== at.groupId || inserted) return g
+    inserted = true
+    const anchor = g.panels.indexOf(at.after)
+    const panels = [...g.panels]
+    panels.splice(anchor >= 0 ? anchor + 1 : panels.length, 0, panel)
+    // Expand and activate so the shown panel is visible right away.
+    return { ...g, panels, active: panel, collapsed: false }
+  })
+  return inserted ? next : normalizeLayout(next, definitions)
 }

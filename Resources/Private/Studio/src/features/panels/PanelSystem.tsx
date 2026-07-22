@@ -1,6 +1,14 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
@@ -19,6 +27,7 @@ import {
   DOCK_REGIONS,
   type DropTarget,
   type FloatingGroup,
+  hidePanel,
   isTabRegion,
   loadLayout,
   normalizeLayout,
@@ -27,6 +36,7 @@ import {
   type PanelLayout,
   saveLayout,
   setFloatingRect,
+  showPanel,
   type TabDrop,
   toggleCollapsed,
 } from './panelLayout'
@@ -37,9 +47,10 @@ import { type PanelDefinition, panelRegistry } from './registry'
  * is a tab in a group; groups stack in the sidebar dock or float above the
  * app. Drag a tab to reorder it, merge it into another group (drop on a tab
  * bar or a group's body), dock it between groups (drop in a sidebar gap), or
- * tear it out (drop anywhere else). Floating groups drag by their bar, resize
- * from every edge, collapse to their tab bar and stack by click order. The
- * layout persists to localStorage.
+ * tear it out (drop anywhere else). Right-click a tab to check/uncheck which
+ * panels are visible at all. Floating groups drag by their bar, resize from
+ * every edge, collapse to their tab bar and stack by click order. The layout
+ * persists to localStorage.
  *
  * Wrap the app in <PanelsProvider> (it portals the floating groups and the
  * drag ghost to <body>) and render <PanelDock /> where docked groups belong.
@@ -72,6 +83,12 @@ type PanelsContextValue = {
   setPanelAttention: (panel: PanelId, active: boolean) => void
   onTabPointerDown: (
     e: React.PointerEvent<HTMLElement>,
+    groupId: string,
+    panel: PanelId,
+  ) => void
+  /** Open the panel-visibility context menu from a right-clicked tab. */
+  onTabContextMenu: (
+    e: React.MouseEvent<HTMLElement>,
     groupId: string,
     panel: PanelId,
   ) => void
@@ -254,6 +271,14 @@ export function PanelsProvider({
   const [attention, setAttention] = React.useState<ReadonlySet<PanelId>>(
     () => new Set(),
   )
+  // The panel-visibility context menu: which tab it was opened from (shown
+  // panels join that group right after this tab) and where to anchor it.
+  const [panelMenu, setPanelMenu] = React.useState<{
+    groupId: string
+    panel: PanelId
+    x: number
+    y: number
+  } | null>(null)
   const layoutRef = React.useRef(layout)
   layoutRef.current = layout
 
@@ -392,6 +417,10 @@ export function PanelsProvider({
     attention,
     setPanelAttention,
     onTabPointerDown,
+    onTabContextMenu: React.useCallback((e, groupId, panel) => {
+      e.preventDefault()
+      setPanelMenu({ groupId, panel, x: e.clientX, y: e.clientY })
+    }, []),
     toggle: React.useCallback(
       (groupId) => setLayout((l) => toggleCollapsed(l, groupId)),
       [],
@@ -403,14 +432,22 @@ export function PanelsProvider({
     activate: React.useCallback(
       (panel) =>
         setLayout((l) => {
+          // A hidden panel reappears at its default placement first -
+          // programmatic hand-offs (e.g. the asset picker jumping to the
+          // Media Library) must work even after the user hid the target.
+          const shown = l.hidden.includes(panel)
+            ? showPanel(l, panel, null, registered)
+            : l
           for (const region of DOCK_REGIONS) {
-            const group = l.docks[region].find((g) => g.panels.includes(panel))
-            if (group) return activatePanel(l, group.id, panel)
+            const group = shown.docks[region].find((g) =>
+              g.panels.includes(panel),
+            )
+            if (group) return activatePanel(shown, group.id, panel)
           }
-          const floating = l.floating.find((g) => g.panels.includes(panel))
-          return floating ? activatePanel(l, floating.id, panel) : l
+          const floating = shown.floating.find((g) => g.panels.includes(panel))
+          return floating ? activatePanel(shown, floating.id, panel) : shown
         }),
-      [],
+      [registered],
     ),
     trackFloatingDrag: React.useCallback(
       (e, groupId) =>
@@ -449,7 +486,100 @@ export function PanelsProvider({
         </>,
         document.body,
       )}
+      {panelMenu && (
+        <PanelVisibilityMenu
+          menu={panelMenu}
+          definitions={registered}
+          hidden={layout.hidden}
+          onClose={() => setPanelMenu(null)}
+          onSetVisible={(panel, visible) =>
+            setLayout((l) =>
+              visible
+                ? showPanel(
+                    l,
+                    panel,
+                    { groupId: panelMenu.groupId, after: panelMenu.panel },
+                    registered,
+                  )
+                : hidePanel(l, panel, registered),
+            )
+          }
+          onReset={() => setLayout(normalizeLayout(null, registered))}
+        />
+      )}
     </PanelsContext.Provider>
+  )
+}
+
+/**
+ * The context menu of a right-clicked panel tab: every registered panel with a
+ * checkmark on the visible ones. Unchecking hides a panel entirely; checking a
+ * hidden one adds it as the tab right after the one the menu was opened from.
+ * Toggles keep the menu open so several panels can be switched in one visit.
+ * "Reset to default" discards the whole arrangement - placement, floating
+ * rects and hidden panels - for the registry's default layout.
+ */
+function PanelVisibilityMenu({
+  menu,
+  definitions,
+  hidden,
+  onClose,
+  onSetVisible,
+  onReset,
+}: {
+  menu: { x: number; y: number }
+  definitions: PanelDefinition[]
+  hidden: PanelId[]
+  onClose: () => void
+  onSetVisible: (panel: PanelId, visible: boolean) => void
+  onReset: () => void
+}) {
+  const visibleCount = definitions.length - hidden.length
+  return (
+    <DropdownMenu open onOpenChange={(open) => !open && onClose()}>
+      {/* Invisible anchor at the pointer - the tab itself is out of reach. */}
+      <DropdownMenuTrigger
+        aria-hidden
+        tabIndex={-1}
+        style={{
+          position: 'fixed',
+          left: menu.x,
+          top: menu.y,
+          width: 0,
+          height: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      <DropdownMenuContent>
+        {definitions.map((definition) => {
+          const visible = !hidden.includes(definition.id)
+          return (
+            <DropdownMenuCheckboxItem
+              key={definition.id}
+              checked={visible}
+              // The last visible panel cannot be hidden - without any tab
+              // left there would be no place to reopen this menu from.
+              disabled={visible && visibleCount === 1}
+              onCheckedChange={(checked) =>
+                onSetVisible(definition.id, checked)
+              }
+            >
+              {definition.title}
+            </DropdownMenuCheckboxItem>
+          )
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            onClose()
+            onReset()
+          }}
+        >
+          {t('panel.resetLayout', 'Reset to default')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -663,8 +793,14 @@ function GroupTabBar({
   group: PanelGroup
   floating?: boolean
 }) {
-  const { definitions, drag, attention, onTabPointerDown, trackFloatingDrag } =
-    usePanels()
+  const {
+    definitions,
+    drag,
+    attention,
+    onTabPointerDown,
+    onTabContextMenu,
+    trackFloatingDrag,
+  } = usePanels()
   const dropIndex =
     drag?.target.kind === 'tabs' && drag.target.groupId === group.id
       ? Math.min(drag.target.index, group.panels.length)
@@ -688,6 +824,7 @@ function GroupTabBar({
             type="button"
             data-panel-tab
             onPointerDown={(e) => onTabPointerDown(e, group.id, panel)}
+            onContextMenu={(e) => onTabContextMenu(e, group.id, panel)}
             className={cn(
               'cursor-grab touch-none px-2 py-1 text-xs font-medium select-none border-t',
               panel === group.active

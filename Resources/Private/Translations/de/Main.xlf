@@ -1198,6 +1198,10 @@
         <source>Loading sites…</source>
         <target xml:lang="de">Websites werden geladen …</target>
       </trans-unit>
+      <trans-unit id="panel.resetLayout" xml:space="preserve">
+        <source>Reset to default</source>
+        <target xml:lang="de">Auf Standard zurücksetzen</target>
+      </trans-unit>
       <trans-unit id="panel.title.clipboard" xml:space="preserve">
         <source>Clipboard</source>
         <target xml:lang="de">Zwischenablage</target>
