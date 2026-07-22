@@ -9,6 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  SidebarResizeHandle,
+  useResizableSidebar,
+} from '@/components/ui/sidebar-resize'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
@@ -58,6 +62,8 @@ import { type PanelDefinition, panelRegistry } from './registry'
 
 const STORAGE_KEY = 'neos-studio.panel_layout'
 const SECONDARY_COLLAPSED_KEY = 'neos-studio.secondary_collapsed'
+const SECONDARY_WIDTH_KEY = 'neos-studio.secondary_width'
+const SECONDARY_DEFAULT_WIDTH = 320
 const DRAG_THRESHOLD = 5
 
 /** A boolean flag persisted to localStorage under `key`. */
@@ -682,6 +688,11 @@ export function SecondaryDock({
   const [preferredCollapsed, setPreferredCollapsed] = usePersistedFlag(
     SECONDARY_COLLAPSED_KEY,
   )
+  const { sidebarWidth, resizeHandleProps } = useResizableSidebar({
+    storageKey: SECONDARY_WIDTH_KEY,
+    defaultWidth: SECONDARY_DEFAULT_WIDTH,
+    side: 'right',
+  })
   const hasPanels = layout.docks.secondary.length > 0
   // The main area is a tab region, so it coalesces to a single group; its
   // active tab decides whether this contextual dock is in its home context.
@@ -709,8 +720,9 @@ export function SecondaryDock({
         'relative flex shrink-0 flex-col bg-neutral-900',
         // Collapsed: take no width and drop the border so no bar shows - only
         // the expand button, overlaid on the top-right of the main region.
-        showCollapsed ? 'w-0' : 'w-80 border-l',
+        showCollapsed ? 'w-0' : 'border-l',
       )}
+      style={showCollapsed ? undefined : { width: sidebarWidth }}
     >
       {showCollapsed ? (
         <button
@@ -724,6 +736,7 @@ export function SecondaryDock({
       ) : (
         <>
           <PanelDock region="secondary" />
+          <SidebarResizeHandle side="right" {...resizeHandleProps} />
           {/* Overlaid on the tab bar's spare area (top-right) so the tabs still
             start at the very top instead of being pushed down by a header. */}
           {hasPanels && (
