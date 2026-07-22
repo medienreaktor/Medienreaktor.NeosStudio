@@ -51,6 +51,63 @@ export function useNodeTypes(enabled = true) {
   })
 }
 
+/** One merged property declaration as the ?includeProperties listing carries it. */
+export interface NodeTypePropertySummary {
+  type: string | null
+  /** Untranslated ui.label id, if configured. */
+  label: string | null
+}
+
+/** One merged reference declaration - maxItems 1 marks a singular reference. */
+export interface NodeTypeReferenceSummary {
+  label: string | null
+  maxItems: number | null
+}
+
+export interface NodeTypeWithPropertiesDto extends NodeTypeDto {
+  properties: Record<string, NodeTypePropertySummary>
+  references: Record<string, NodeTypeReferenceSummary>
+}
+
+export type NodeTypeWithPropertiesMap = Map<string, NodeTypeWithPropertiesDto>
+
+interface NodeTypesWithPropertiesResponse {
+  nodeTypes: NodeTypeWithPropertiesDto[]
+  groups: Record<string, NodeTypeGroup | null>
+}
+
+/**
+ * The full content model: every node type with its merged property and
+ * reference declarations - what the Content Model graph renders. Separate
+ * query (and key) from useNodeTypes so the lean listing every other consumer
+ * boots with stays small.
+ */
+export function useNodeTypesWithProperties(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.nodeTypes.withProperties,
+    queryFn: () =>
+      apiFetch<NodeTypesWithPropertiesResponse>(
+        '/nodetypes?includeProperties=1',
+      ),
+    // The content model changes on deployments, not during a session.
+    staleTime: Infinity,
+    enabled,
+    select: (data): NodeTypeWithPropertiesMap =>
+      new Map(
+        data.nodeTypes.map((nt) => [
+          nt.name,
+          {
+            ...nt,
+            // Same unquoted-YAML-scalar normalization as useNodeTypes.
+            group: nt.group === null ? null : String(nt.group),
+            properties: nt.properties ?? {},
+            references: nt.references ?? {},
+          },
+        ]),
+      ),
+  })
+}
+
 /** The group definitions from the same query, for creation UIs. */
 export function useNodeTypeGroups(enabled = true) {
   return useQuery({

@@ -16,6 +16,7 @@ import type {
 import { InspectorPanel } from '@/features/inspector/Inspector'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
+import { NodeTypesPanel } from '@/features/nodetypes/NodeTypesPanel'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
@@ -331,6 +332,14 @@ export function registerBuiltinPanels(): void {
     id: 'media-library',
     title: t('panel.title.mediaLibrary', 'Media Library'),
     component: MediaLibraryPanel,
+    defaultPlacement: { kind: 'dock', region: 'main' },
+  })
+  // Registered directly after the Media Library so its tab appears to the
+  // right of it in the main area's tab group.
+  panelRegistry.register({
+    id: 'node-types',
+    title: t('panel.title.nodeTypes', 'Node Types'),
+    component: NodeTypesPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({

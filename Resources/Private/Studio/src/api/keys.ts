@@ -27,6 +27,8 @@ export const queryKeys = {
   },
   nodeTypes: {
     all: ['nodeTypes'] as const,
+    /** The listing variant carrying every type's property/reference declarations. */
+    withProperties: ['nodeTypes', 'with-properties'] as const,
     schema: (name: string) => ['nodeTypes', 'schema', name] as const,
   },
   dimensions: ['dimensions'] as const,

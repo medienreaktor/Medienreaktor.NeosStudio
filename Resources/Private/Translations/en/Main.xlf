@@ -887,6 +887,57 @@
       <trans-unit id="modal.workspaces" xml:space="preserve">
         <source>Workspaces</source>
       </trans-unit>
+      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
+        <source>Abstract</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.fit" xml:space="preserve">
+        <source>Fit to view</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
+        <source>Inherited</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
+        <source>Inherited from {0}</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
+        <source>Abstract type</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
+        <source>Content Collection</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
+        <source>Content</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
+        <source>Document</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
+        <source>Mixin / other</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
+        <source>The node types could not be loaded.</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loading" xml:space="preserve">
+        <source>Loading node types…</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.matches" xml:space="preserve">
+        <source>{0} matches</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.properties" xml:space="preserve">
+        <source>Properties</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
+        <source>Search node types by name</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
+        <source>Search node types…</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+      </trans-unit>
+      <trans-unit id="nodeTypes.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+      </trans-unit>
       <trans-unit id="panel.collapse" xml:space="preserve">
         <source>Collapse panel</source>
       </trans-unit>
@@ -916,6 +967,9 @@
       </trans-unit>
       <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
         <source>Media Library</source>
+      </trans-unit>
+      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
+        <source>Node Types</source>
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>

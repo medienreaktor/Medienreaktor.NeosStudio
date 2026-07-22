@@ -1182,6 +1182,74 @@
         <source>Workspaces</source>
         <target xml:lang="de">Arbeitsbereiche</target>
       </trans-unit>
+      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
+        <source>Abstract</source>
+        <target xml:lang="de">Abstrakt</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.fit" xml:space="preserve">
+        <source>Fit to view</source>
+        <target xml:lang="de">Ansicht einpassen</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
+        <source>Inherited</source>
+        <target xml:lang="de">Geerbt</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
+        <source>Inherited from {0}</source>
+        <target xml:lang="de">Geerbt von {0}</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
+        <source>Abstract type</source>
+        <target xml:lang="de">Abstrakter Typ</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
+        <source>Content Collection</source>
+        <target xml:lang="de">Inhaltssammlung</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
+        <source>Content</source>
+        <target xml:lang="de">Inhalt</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="de">Dokument</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
+        <source>Mixin / other</source>
+        <target xml:lang="de">Mixin / Sonstiges</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
+        <source>The node types could not be loaded.</source>
+        <target xml:lang="de">Die Node-Typen konnten nicht geladen werden.</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loading" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="de">Node-Typen werden geladen…</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.matches" xml:space="preserve">
+        <source>{0} matches</source>
+        <target xml:lang="de">{0} Treffer</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.properties" xml:space="preserve">
+        <source>Properties</source>
+        <target xml:lang="de">Eigenschaften</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
+        <source>Search node types by name</source>
+        <target xml:lang="de">Node-Typen nach Name durchsuchen</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
+        <source>Search node types…</source>
+        <target xml:lang="de">Node-Typen durchsuchen…</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+        <target xml:lang="de">Vergrößern</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+        <target xml:lang="de">Verkleinern</target>
+      </trans-unit>
       <trans-unit id="panel.collapse" xml:space="preserve">
         <source>Collapse panel</source>
         <target xml:lang="de">Panel einklappen</target>
@@ -1221,6 +1289,10 @@
       <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
         <source>Media Library</source>
         <target xml:lang="de">Medienbibliothek</target>
+      </trans-unit>
+      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
+        <source>Node Types</source>
+        <target xml:lang="de">Node-Typen</target>
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>
