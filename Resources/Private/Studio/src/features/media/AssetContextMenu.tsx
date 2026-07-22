@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ConfirmDialog } from './ConfirmDialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 /** The asset a right-click context menu was opened for. */
 export interface AssetMenuTarget {

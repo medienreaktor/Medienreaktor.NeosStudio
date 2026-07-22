@@ -26,15 +26,16 @@ interface ConfirmDialogProps {
 }
 
 /**
- * A yes/no confirmation dialog. Reused for every destructive media action
- * (deleting assets, collections and tags) so nothing is removed without a
- * deliberate confirm. Awaits an async onConfirm and surfaces failures inline.
+ * A yes/no confirmation dialog, used for every destructive action (deleting
+ * assets, collections, tags, users, ...) so nothing is removed without a
+ * deliberate confirm. Awaits an async onConfirm and surfaces failures as a
+ * toast while staying open.
  */
 export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = t('media.delete', 'Delete'),
+  confirmLabel,
   destructive = true,
   onOpenChange,
   onConfirm,
@@ -48,7 +49,7 @@ export function ConfirmDialog({
       onOpenChange(false)
     } catch (e) {
       toast.error(
-        e instanceof Error ? e : t('media.actionFailed', 'The action failed.'),
+        e instanceof Error ? e : t('common.actionFailed', 'The action failed.'),
       )
     } finally {
       setBusy(false)
@@ -73,14 +74,16 @@ export function ConfirmDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            {t('media.cancel', 'Cancel')}
+            {t('common.cancel', 'Cancel')}
           </Button>
           <Button
             variant={destructive ? 'destructive' : 'default'}
             disabled={busy}
             onClick={confirm}
           >
-            {busy ? t('media.working', 'Working…') : confirmLabel}
+            {busy
+              ? t('common.working', 'Working…')
+              : (confirmLabel ?? t('common.delete', 'Delete'))}
           </Button>
         </DialogFooter>
       </DialogContent>

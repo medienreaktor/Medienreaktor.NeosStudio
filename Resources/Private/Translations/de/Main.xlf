@@ -58,6 +58,10 @@
         <source>Cut</source>
         <target xml:lang="de">Ausgeschnitten</target>
       </trans-unit>
+      <trans-unit id="common.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="de">Die Aktion ist fehlgeschlagen.</target>
+      </trans-unit>
       <trans-unit id="common.cancel" xml:space="preserve">
         <source>Cancel</source>
         <target xml:lang="de">Abbrechen</target>
@@ -65,6 +69,10 @@
       <trans-unit id="common.close" xml:space="preserve">
         <source>Close</source>
         <target xml:lang="de">Schließen</target>
+      </trans-unit>
+      <trans-unit id="common.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="de">Löschen</target>
       </trans-unit>
       <trans-unit id="common.resizeSidebar" xml:space="preserve">
         <source>Resize sidebar</source>
@@ -97,6 +105,10 @@
       <trans-unit id="common.toggleSidebar" xml:space="preserve">
         <source>Toggle Sidebar</source>
         <target xml:lang="de">Seitenleiste umschalten</target>
+      </trans-unit>
+      <trans-unit id="common.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="de">Wird ausgeführt…</target>
       </trans-unit>
       <trans-unit id="creation.cancel" xml:space="preserve">
         <source>Cancel</source>

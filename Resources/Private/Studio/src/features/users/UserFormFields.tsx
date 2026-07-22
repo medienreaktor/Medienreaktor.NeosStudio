@@ -1,32 +1,8 @@
-import type { ReactNode } from 'react'
-
 import { useUserRoles } from '@/api/users'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Field } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { translate as t } from '@/lib/i18n'
-
-/** Labeled form field, same shape as the profile settings use. */
-export function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string
-  htmlFor?: string
-  children: ReactNode
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label
-        htmlFor={htmlFor}
-        className="block text-sm font-medium text-neutral-200"
-      >
-        {label}
-      </label>
-      {children}
-    </div>
-  )
-}
 
 /**
  * The role picker of the user dialogs: one checkbox per assignable role from

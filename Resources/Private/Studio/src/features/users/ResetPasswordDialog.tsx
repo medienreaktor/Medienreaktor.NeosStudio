@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
-import { Field } from './UserFormFields'
+import { Field } from '@/components/ui/field'
 
 /**
  * Administrative password reset: sets a new password for the user without

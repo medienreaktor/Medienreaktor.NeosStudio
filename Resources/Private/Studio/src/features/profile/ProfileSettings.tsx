@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
@@ -12,8 +12,10 @@ import {
 } from '@/api/profile'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { translate as t } from '@/lib/i18n'
+import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
   Select,
@@ -44,14 +46,10 @@ export function ProfileSettings() {
 
   return (
     <div className="max-w-xl p-6">
-      <header className="mb-4">
-        <h2 className="text-base font-semibold text-white">
-          {t('profile.title', 'Profile')}
-        </h2>
-        <p className="text-sm text-neutral-400">
-          {t('profile.subtitle', 'Your personal account settings.')}
-        </p>
-      </header>
+      <SettingsHeader
+        title={t('profile.title', 'Profile')}
+        subtitle={t('profile.subtitle', 'Your personal account settings.')}
+      />
 
       {error && (
         <Placeholder
@@ -318,27 +316,5 @@ function PasswordForm() {
           : t('profile.changePassword', 'Change password')}
       </Button>
     </form>
-  )
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string
-  htmlFor: string
-  children: ReactNode
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label
-        htmlFor={htmlFor}
-        className="block text-sm font-medium text-neutral-200"
-      >
-        {label}
-      </label>
-      {children}
-    </div>
   )
 }

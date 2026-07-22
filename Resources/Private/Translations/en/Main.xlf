@@ -44,11 +44,17 @@
       <trans-unit id="clipboard.statusCut" xml:space="preserve">
         <source>Cut</source>
       </trans-unit>
+      <trans-unit id="common.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+      </trans-unit>
       <trans-unit id="common.cancel" xml:space="preserve">
         <source>Cancel</source>
       </trans-unit>
       <trans-unit id="common.close" xml:space="preserve">
         <source>Close</source>
+      </trans-unit>
+      <trans-unit id="common.delete" xml:space="preserve">
+        <source>Delete</source>
       </trans-unit>
       <trans-unit id="common.resizeSidebar" xml:space="preserve">
         <source>Resize sidebar</source>
@@ -73,6 +79,9 @@
       </trans-unit>
       <trans-unit id="common.toggleSidebar" xml:space="preserve">
         <source>Toggle Sidebar</source>
+      </trans-unit>
+      <trans-unit id="common.working" xml:space="preserve">
+        <source>Working…</source>
       </trans-unit>
       <trans-unit id="creation.cancel" xml:space="preserve">
         <source>Cancel</source>

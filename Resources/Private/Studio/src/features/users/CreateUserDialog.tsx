@@ -17,7 +17,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
-import { Field, RolesField } from './UserFormFields'
+import { Field } from '@/components/ui/field'
+import { RolesField } from './UserFormFields'
 
 const DEFAULT_ROLES = ['Neos.Neos:Editor']
 

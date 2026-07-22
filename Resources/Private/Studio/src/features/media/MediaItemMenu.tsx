@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { translate as t } from '@/lib/i18n'
-import { ConfirmDialog } from './ConfirmDialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 /** A collection or tag the context menu was opened for. */
 export interface MediaMenuTarget {

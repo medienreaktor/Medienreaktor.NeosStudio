@@ -31,7 +31,7 @@ import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { removeAsset } from './AssetContextMenu'
 import { AssetThumb } from './AssetThumb'
-import { ConfirmDialog } from './ConfirmDialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { formatBytes, formatDate } from './format'
 import {
   collectionToNode,

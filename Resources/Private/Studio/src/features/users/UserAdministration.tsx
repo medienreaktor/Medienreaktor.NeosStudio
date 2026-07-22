@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
@@ -7,6 +7,7 @@ import { deleteUser, updateUser, useUsers, type User } from '@/api/users'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,10 +18,17 @@ import {
 import { Placeholder } from '@/components/ui/placeholder'
 import { SearchInput } from '@/components/ui/search-input'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
-// Generic yes/no confirm; lives in media where it originated.
-import { ConfirmDialog } from '@/features/media/ConfirmDialog'
+import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { CreateUserDialog } from './CreateUserDialog'
 import { EditUserDialog } from './EditUserDialog'
 import { ResetPasswordDialog } from './ResetPasswordDialog'
@@ -71,20 +79,15 @@ export function UserAdministration() {
 
   return (
     <div className="p-6">
-      <header className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-semibold text-white">
-            {t('users.title', 'Users')}
-          </h2>
-          <p className="text-sm text-neutral-400">
-            {t('users.subtitle', 'Backend user accounts.')}
-          </p>
-        </div>
+      <SettingsHeader
+        title={t('users.title', 'Users')}
+        subtitle={t('users.subtitle', 'Backend user accounts.')}
+      >
         <Button onClick={() => setCreating(true)}>
           <i className="fas fa-plus" aria-hidden />
           {t('users.newUser', 'New user')}
         </Button>
-      </header>
+      </SettingsHeader>
 
       {error && (
         <Placeholder
@@ -116,23 +119,23 @@ export function UserAdministration() {
               className="py-10"
             />
           ) : (
-            <div className="overflow-x-auto rounded-md border">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b text-xs text-neutral-400">
-                  <tr>
-                    <Th>{t('users.columnName', 'Name')}</Th>
-                    <Th>{t('users.columnAccount', 'Account')}</Th>
-                    <Th>{t('users.columnEmail', 'Email')}</Th>
-                    <Th>{t('users.columnRoles', 'Roles')}</Th>
-                    <Th>{t('users.columnStatus', 'Status')}</Th>
-                    <Th>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>{t('users.columnName', 'Name')}</TableHead>
+                    <TableHead>{t('users.columnAccount', 'Account')}</TableHead>
+                    <TableHead>{t('users.columnEmail', 'Email')}</TableHead>
+                    <TableHead>{t('users.columnRoles', 'Roles')}</TableHead>
+                    <TableHead>{t('users.columnStatus', 'Status')}</TableHead>
+                    <TableHead>
                       <span className="sr-only">
                         {t('users.columnActions', 'Actions')}
                       </span>
-                    </Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-800">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {users.map((user) => (
                     <UserRow
                       key={user.id}
@@ -142,8 +145,8 @@ export function UserAdministration() {
                       onDelete={() => setDeleting(user)}
                     />
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </>
@@ -226,8 +229,8 @@ function UserRow({
   })
 
   return (
-    <tr className="text-neutral-200">
-      <Td>
+    <TableRow className="text-neutral-200">
+      <TableCell>
         <span className="font-medium text-white">
           {user.fullName || user.label}
         </span>
@@ -236,8 +239,8 @@ function UserRow({
             {t('users.you', 'You')}
           </Badge>
         )}
-      </Td>
-      <Td>
+      </TableCell>
+      <TableCell>
         {user.accounts.length === 0 ? (
           <span className="text-neutral-500">—</span>
         ) : (
@@ -247,9 +250,9 @@ function UserRow({
             </div>
           ))
         )}
-      </Td>
-      <Td>{user.email ?? <span className="text-neutral-500">—</span>}</Td>
-      <Td>
+      </TableCell>
+      <TableCell>{user.email ?? <span className="text-neutral-500">—</span>}</TableCell>
+      <TableCell>
         <div className="flex flex-wrap gap-1">
           {user.roles.length === 0 ? (
             <span className="text-neutral-500">—</span>
@@ -261,8 +264,8 @@ function UserRow({
             ))
           )}
         </div>
-      </Td>
-      <Td>
+      </TableCell>
+      <TableCell>
         {user.active ? (
           <span className="inline-flex items-center gap-1.5 text-neutral-300">
             <span className="size-1.5 rounded-full bg-green-500" />
@@ -274,8 +277,8 @@ function UserRow({
             {t('users.inactive', 'Inactive')}
           </span>
         )}
-      </Td>
-      <Td className="w-10 text-right">
+      </TableCell>
+      <TableCell className="w-10 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -322,8 +325,8 @@ function UserRow({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </Td>
-    </tr>
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -331,24 +334,6 @@ function UserRow({
 function shortRole(role: string): string {
   const colon = role.lastIndexOf(':')
   return colon === -1 ? role : role.slice(colon + 1)
-}
-
-function Th({ children }: { children: ReactNode }) {
-  return <th className="px-3 py-2 font-medium">{children}</th>
-}
-
-function Td({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
-  return (
-    <td className={`px-3 py-2.5 align-middle ${className ?? ''}`}>
-      {children}
-    </td>
-  )
 }
 
 function UserTableSkeleton() {
