@@ -88,6 +88,9 @@ class StudioController extends ActionController
             // bundle for the backend user's interface language at boot.
             'interfaceLanguage' => $this->userService->getInterfaceLanguage(),
             'xliffEndpoint' => $origin . '/neos/xliff.json',
+            // The classic backend logout (POST, session-authenticated): ends
+            // the Flow session the shell and the silent OAuth flow ride on.
+            'logoutEndpoint' => $origin . '/neos/logout',
         ];
 
         return $this->renderSpa($config);

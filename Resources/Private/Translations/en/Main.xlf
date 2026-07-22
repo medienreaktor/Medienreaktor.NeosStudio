@@ -1289,6 +1289,15 @@
       <trans-unit id="tree.treeLoadFailed" xml:space="preserve">
         <source>Loading the tree failed</source>
       </trans-unit>
+      <trans-unit id="userMenu.label" xml:space="preserve">
+        <source>User menu</source>
+      </trans-unit>
+      <trans-unit id="userMenu.logout" xml:space="preserve">
+        <source>Logout</source>
+      </trans-unit>
+      <trans-unit id="userMenu.profile" xml:space="preserve">
+        <source>Profile</source>
+      </trans-unit>
       <trans-unit id="users.activate" xml:space="preserve">
         <source>Activate</source>
       </trans-unit>

@@ -61,6 +61,7 @@ import {
   SecondaryDock,
 } from '@/features/panels/PanelSystem'
 import { PreviewToolbar } from '@/features/preview/PreviewPane'
+import { UserMenu } from '@/features/profile/UserMenu'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
@@ -602,8 +603,11 @@ export function App() {
                   />
                 )}
                 <Sidebar>
-                  <SidebarHeader>
-                    <div className="flex items-center gap-2.5 px-2 py-1 text-lg">
+                  {/* Fixed to the main header's height (h-14, plus an
+                    invisible border matching its border-b) so the row does
+                    not shift when the avatar mounts after /me resolves. */}
+                  <SidebarHeader className="h-14 shrink-0 justify-center border-b border-transparent">
+                    <div className="flex items-center justify-between gap-2.5 px-2">
                       <svg
                         viewBox="0 0 453.54 124.45"
                         className="h-6 w-auto shrink-0"
@@ -623,6 +627,7 @@ export function App() {
                           d="M20.71 51.06v58.29L0 124.45h22.65l20.71-15.1V83.17L20.71 51.06zM88.83 75.95V0h22.65v112.57H88.83L9.22 0h25.89l53.72 75.95z"
                         />
                       </svg>
+                      <UserMenu />
                     </div>
                   </SidebarHeader>
                   <SidebarContent className="overflow-hidden p-2">

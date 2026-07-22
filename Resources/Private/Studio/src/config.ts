@@ -15,6 +15,8 @@ export interface StudioConfig {
   interfaceLanguage: string
   /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */
   xliffEndpoint: string
+  /** Classic backend logout (POST, session-authenticated). */
+  logoutEndpoint: string
 }
 
 declare global {
@@ -35,6 +37,7 @@ const fallback: StudioConfig = {
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',
   xliffEndpoint: '/neos/xliff.json',
+  logoutEndpoint: '/neos/logout',
 }
 
 // Merge so a shell built before a config field existed still works.

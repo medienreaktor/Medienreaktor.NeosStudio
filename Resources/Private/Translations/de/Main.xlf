@@ -1718,6 +1718,18 @@
         <source>Loading the tree failed</source>
         <target xml:lang="de">Laden des Baums fehlgeschlagen</target>
       </trans-unit>
+      <trans-unit id="userMenu.label" xml:space="preserve">
+        <source>User menu</source>
+        <target xml:lang="de">Benutzermenü</target>
+      </trans-unit>
+      <trans-unit id="userMenu.logout" xml:space="preserve">
+        <source>Logout</source>
+        <target xml:lang="de">Abmelden</target>
+      </trans-unit>
+      <trans-unit id="userMenu.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="de">Profil</target>
+      </trans-unit>
       <trans-unit id="users.activate" xml:space="preserve">
         <source>Activate</source>
         <target xml:lang="de">Aktivieren</target>

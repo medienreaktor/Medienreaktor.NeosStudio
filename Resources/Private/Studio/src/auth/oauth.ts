@@ -67,6 +67,27 @@ export function logout(): void {
   sessionStorage.removeItem(TOKEN_KEY)
 }
 
+/**
+ * A user-initiated logout: drop the Studio tokens AND end the Neos backend
+ * session - the shell route and the silent authorization redirect both ride
+ * on it, so clearing only the tokens would log the user straight back in.
+ * The reload afterwards runs into Flow security, which presents the backend
+ * login form; logging in there boots a fresh Studio session.
+ */
+export async function logoutEverywhere(): Promise<void> {
+  logout()
+  try {
+    // The core logout action skips CSRF protection, so a bare POST suffices.
+    await fetch(config.logoutEndpoint, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    /* session already gone or unreachable - the reload sorts it out */
+  }
+  window.location.assign(config.redirectUri)
+}
+
 // Treat a token as expired a little before its real deadline, so a request
 // started just before expiry does not race the clock (and to absorb client/
 // server clock skew).
