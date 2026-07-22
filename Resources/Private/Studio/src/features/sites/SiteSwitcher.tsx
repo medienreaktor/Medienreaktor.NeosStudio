@@ -11,7 +11,9 @@ import {
 /**
  * Topbar dropdown selecting the active site; all site-scoped views (document
  * tree, content outliner) follow it. Sites without a node in the current
- * subgraph are listed but not selectable.
+ * subgraph are listed but not selectable - the usual cause is a site created
+ * after this workspace was forked from live, which a synchronize (rebase)
+ * pulls in, so the entry says so.
  */
 export function SiteSwitcher({
   sites,
@@ -49,6 +51,11 @@ export function SiteSwitcher({
             disabled={site.nodeAddress === null}
           >
             {site.name}
+            {site.nodeAddress === null && (
+              <span className="ml-1.5 text-xs text-neutral-500">
+                {t('sites.synchronizeToAccess', '(synchronize to access)')}
+              </span>
+            )}
           </SelectItem>
         ))}
       </SelectContent>

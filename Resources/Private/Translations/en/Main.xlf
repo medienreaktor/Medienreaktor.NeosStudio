@@ -1043,6 +1043,9 @@
       <trans-unit id="sites.created" xml:space="preserve">
         <source>The site "{0}" has been created.</source>
       </trans-unit>
+      <trans-unit id="sites.createdSyncHint" xml:space="preserve">
+        <source>Synchronize your workspace to start editing the new site.</source>
+      </trans-unit>
       <trans-unit id="sites.creating" xml:space="preserve">
         <source>Creating…</source>
       </trans-unit>
@@ -1189,6 +1192,9 @@
       </trans-unit>
       <trans-unit id="sites.subtitle" xml:space="preserve">
         <source>Websites served by this installation.</source>
+      </trans-unit>
+      <trans-unit id="sites.synchronizeToAccess" xml:space="preserve">
+        <source>(synchronize to access)</source>
       </trans-unit>
       <trans-unit id="sites.takeOffline" xml:space="preserve">
         <source>Take offline</source>

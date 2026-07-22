@@ -1390,6 +1390,10 @@
         <source>The site "{0}" has been created.</source>
         <target xml:lang="de">Die Site "{0}" wurde erstellt.</target>
       </trans-unit>
+      <trans-unit id="sites.createdSyncHint" xml:space="preserve">
+        <source>Synchronize your workspace to start editing the new site.</source>
+        <target xml:lang="de">Synchronisiere Deinen Arbeitsbereich, um die neue Site zu bearbeiten.</target>
+      </trans-unit>
       <trans-unit id="sites.creating" xml:space="preserve">
         <source>Creating…</source>
         <target xml:lang="de">Wird erstellt…</target>
@@ -1585,6 +1589,10 @@
       <trans-unit id="sites.subtitle" xml:space="preserve">
         <source>Websites served by this installation.</source>
         <target xml:lang="de">Websites, die von dieser Installation ausgeliefert werden.</target>
+      </trans-unit>
+      <trans-unit id="sites.synchronizeToAccess" xml:space="preserve">
+        <source>(synchronize to access)</source>
+        <target xml:lang="de">(synchronisieren für Zugriff)</target>
       </trans-unit>
       <trans-unit id="sites.takeOffline" xml:space="preserve">
         <source>Take offline</source>

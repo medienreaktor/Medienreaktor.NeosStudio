@@ -89,6 +89,14 @@ export function CreateSiteDialog({
           response.site.name,
         ]),
       )
+      // The site node was created in live; a workspace forked before that
+      // does not contain it until it is synchronized (rebased).
+      toast.info(
+        t(
+          'sites.createdSyncHint',
+          'Synchronize your workspace to start editing the new site.',
+        ),
+      )
       onOpenChange(false)
     },
     onError: (error) =>
