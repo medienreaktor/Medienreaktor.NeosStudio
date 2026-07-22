@@ -40,9 +40,28 @@ export interface NodeDto {
 		originalLastModified: string | null;
 	};
 }
+/** One configured domain of a site. */
+export interface SiteDomain {
+	/** Stable domain id for updates and deletion. */
+	id: string;
+	hostname: string;
+	scheme: "http" | "https" | null;
+	port: number | null;
+	active: boolean;
+	/** True for the explicitly configured primary domain. */
+	isPrimary: boolean;
+	/** The rendered URI, e.g. "https://example.com". */
+	url: string;
+}
 export interface Site {
 	name: string;
 	nodeName: string;
+	/** "offline" sites are hidden from the site switcher but still editable. */
+	state: "online" | "offline";
+	siteResourcesPackageKey: string;
+	domains: SiteDomain[];
+	/** The effective primary domain URI (explicit or first active), or null. */
+	primaryDomain: string | null;
 	/**
 	 * The site node's aggregate id - used to scope workspace publish/discard to
 	 * this site. null if the site node does not exist in the current subgraph.
@@ -80,12 +99,13 @@ export type StudioContextValue = {
 	/** Bumped to reload the preview iframe after edits made outside of it. */
 	previewReloadToken: number;
 	/**
-	 * The last edit that wants just its node's element refreshed in the preview
-	 * (out-of-band render + DOM swap instead of an iframe reload). The token
-	 * distinguishes successive edits of the same address.
+	 * The last edit that wants just its nodes' elements refreshed in the
+	 * preview (out-of-band render + DOM swap instead of an iframe reload).
+	 * Usually one address; remote collaborators' edits can batch several. The
+	 * token distinguishes successive updates of the same addresses.
 	 */
 	previewElementUpdate: {
-		address: string;
+		addresses: string[];
 		token: number;
 	} | null;
 	/** Select a document (also inspects it). */
@@ -524,6 +544,90 @@ export interface SettingsDialogDefinition extends RegistryDefinition {
 	disabledReason?: string;
 }
 /**
+ * The keyboard-shortcut registry: every shortcut - built-in or third-party -
+ * registers here, and one window-level dispatcher (see ShortcutHost) routes
+ * keydown events to the matching handler. Modelled on the panel and modal
+ * registries: a small observable store, register-replaces-by-id so HMR and
+ * plugin reloads stay idempotent, and a stable snapshot for
+ * useSyncExternalStore (the shortcut overview dialog renders it).
+ *
+ * Combos are written as '+'-joined tokens, e.g. 'mod+shift+p' or 'mod+/'.
+ * Recognised modifiers: 'mod' (⌘ on macOS, Ctrl elsewhere), 'ctrl', 'meta',
+ * 'alt'/'option', 'shift'. The final token is the key as reported by
+ * KeyboardEvent.key ('p', '/', 'escape', 'arrowup', 'f5', ...). Because
+ * matching uses event.key, declare shifted symbols as the symbol the shift
+ * produces ('shift+?' not 'shift+/'). Layouts differ in which symbols need
+ * Shift at all (a German '/' is Shift+7): when a symbol key arrives with
+ * Shift held, dispatch retries the match without it, so 'mod+/' fires for
+ * Ctrl+Shift+7 on a German layout just like for Ctrl+/ on a US one.
+ *
+ * Beware combos the browser or OS consumes before the page sees them - no
+ * fallback can help there. Notably on macOS: ⌘+, is every browser's own
+ * Settings… menu item, and ⌘⇧+<symbol> can hit system menu shortcuts (⌘⇧/
+ * is Help-menu search - which is exactly what ⌘+/ becomes on layouts where
+ * '/' needs Shift). Prefer letters/digits, and check isMacPlatform for
+ * platform-specific alternatives.
+ *
+ * Scope: shortcuts fire on the Studio shell's own window. Keystrokes inside
+ * the preview iframe stay with the guest frame (inline editing owns them).
+ */
+export interface KeyboardShortcutDefinition {
+	/** Unique id, e.g. 'workspace.publish'. Third-party shortcuts should namespace ('vendor.package:my-shortcut'). */
+	id: string;
+	/** One combo or aliases, e.g. 'mod+shift+p' or ['mod+/', 'shift+?']. */
+	combo: string | string[];
+	/** Human-readable action name, shown in the shortcut overview. */
+	title: string;
+	/** Overview grouping label; shortcuts sharing a category list together. */
+	category?: string;
+	/**
+	 * Runs on a matching keydown. Return false to decline ("nothing to do
+	 * here") - dispatch then falls through to the next registered shortcut on
+	 * the same combo, and finally back to the browser. Any other return value
+	 * counts as handled and the event is preventDefault()ed.
+	 */
+	handler: (event: KeyboardEvent) => void | boolean;
+	/**
+	 * Fire even while focus is in an input, textarea, select or contenteditable.
+	 * Defaults to false - plain-key shortcuts must not swallow typing.
+	 */
+	allowInInput?: boolean;
+	/** Extra guard consulted at dispatch time; false skips this shortcut. */
+	when?: () => boolean;
+}
+export declare const isMacPlatform: boolean;
+declare class KeyboardShortcutRegistry {
+	private definitions;
+	private listeners;
+	private snapshot;
+	/** canonical combo → definitions listening on it, in registration order. */
+	private byCombo;
+	/** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
+	register(definition: KeyboardShortcutDefinition): void;
+	unregister(id: string): void;
+	get(id: string): KeyboardShortcutDefinition | undefined;
+	/** Stable snapshot in registration order - changes identity only on (un)register. */
+	getAll(): KeyboardShortcutDefinition[];
+	subscribe(listener: () => void): () => void;
+	/**
+	 * Route a keydown to the matching shortcut. Later registrations win on a
+	 * combo conflict (plugins load after built-ins, so a plugin can override);
+	 * a handler returning false falls through to the next match. Returns true -
+	 * and has preventDefault()ed - when some handler took the event.
+	 */
+	dispatch(event: KeyboardEvent): boolean;
+	private dispatchTo;
+	private emit;
+}
+/**
+ * Register a keyboard shortcut for the lifetime of the calling component.
+ * This is how components tie a shortcut to state they own (the publish
+ * button's mutation, the sidebar's toggle): the registry entry stays stable
+ * while handler and guard always see the latest render's closures, and
+ * unmounting unregisters - a shortcut only exists while its action does.
+ */
+export declare function useKeyboardShortcut(definition: KeyboardShortcutDefinition): void;
+/**
  * The API version a plugin can read to feature-detect. Bump on a
  * breaking change to any exported type or registry contract; plugins that
  * care can compare against it before registering.
@@ -541,6 +645,15 @@ export declare const validators: ValidatorRegistry;
 export declare const links: LinkEditorRegistry;
 /** Register/unregister settings-dialog screens. */
 export declare const modals: ModalRegistry<SettingsDialogDefinition>;
+/**
+ * Register/unregister keyboard shortcuts. See {@link KeyboardShortcutDefinition}.
+ * Module-level `shortcuts.register(...)` suits always-available actions;
+ * inside a component (e.g. a registered panel) prefer
+ * {@link useKeyboardShortcut}, which unregisters on unmount and always calls
+ * the latest render's handler. Registered shortcuts appear automatically in
+ * the shortcut overview (Shift+?).
+ */
+export declare const shortcuts: KeyboardShortcutRegistry;
 /** Options accepted by the toast helpers. */
 export interface ToastOptions {
 	/** Bold heading; defaults to a per-kind label ("Success", "Error", …). */
@@ -572,7 +685,10 @@ export interface NeosStudioPluginApi {
 	validators: typeof validators;
 	links: typeof links;
 	modals: typeof modals;
+	shortcuts: typeof shortcuts;
+	isMacPlatform: typeof isMacPlatform;
 	useStudio: typeof useStudio;
+	useKeyboardShortcut: typeof useKeyboardShortcut;
 	toast: typeof toast;
 }
 /**

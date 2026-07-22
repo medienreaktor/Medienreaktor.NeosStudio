@@ -61,6 +61,7 @@ import {
   SecondaryDock,
 } from '@/features/panels/PanelSystem'
 import { PreviewToolbar } from '@/features/preview/PreviewPane'
+import { ShortcutHost } from '@/features/shortcuts/ShortcutHost'
 import { UserMenu } from '@/features/profile/UserMenu'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
@@ -574,6 +575,10 @@ export function App() {
               still open the asset picker; the bridge inside does the tab switch. */}
             <AssetPickerProvider>
               <PanelsProvider floatingVisibleForMainPanel="visual-editor">
+                {/* Keydown dispatcher + shell-level shortcuts + the overview
+                  dialog. Inside ModalProvider and SidebarProvider so the
+                  settings and sidebar shortcuts reach their contexts. */}
+                <ShortcutHost />
                 <AssetPickerPanelBridge />
                 {/* The collaborative session's engine: presence heartbeats and
                   the change-feed tail. Mounted (and thus polling) only while

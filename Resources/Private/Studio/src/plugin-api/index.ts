@@ -43,12 +43,21 @@ import {
   ValidatorRegistry,
   validatorRegistry,
 } from '@/features/inspector/validators/registry'
-import { LinkEditorRegistry, linkEditorRegistry } from '@/features/links/registry'
+import {
+  LinkEditorRegistry,
+  linkEditorRegistry,
+} from '@/features/links/registry'
 import {
   ModalRegistry,
   settingsDialogRegistry,
   type SettingsDialogDefinition,
 } from '@/features/modals/registry'
+import {
+  KeyboardShortcutRegistry,
+  keyboardShortcutRegistry,
+  isMacPlatform,
+} from '@/features/shortcuts/registry'
+import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 
 /**
  * The API version a plugin can read to feature-detect. Bump on a
@@ -72,9 +81,26 @@ export const validators: ValidatorRegistry = validatorRegistry
 /** Register/unregister link-editor type tabs. */
 export const links: LinkEditorRegistry = linkEditorRegistry
 /** Register/unregister settings-dialog screens. */
-export const modals: ModalRegistry<SettingsDialogDefinition> = settingsDialogRegistry
+export const modals: ModalRegistry<SettingsDialogDefinition> =
+  settingsDialogRegistry
+/**
+ * Register/unregister keyboard shortcuts. See {@link KeyboardShortcutDefinition}.
+ * Module-level `shortcuts.register(...)` suits always-available actions;
+ * inside a component (e.g. a registered panel) prefer
+ * {@link useKeyboardShortcut}, which unregisters on unmount and always calls
+ * the latest render's handler. Registered shortcuts appear automatically in
+ * the shortcut overview (Shift+?).
+ */
+export const shortcuts: KeyboardShortcutRegistry = keyboardShortcutRegistry
 
-export { useStudio }
+export { useStudio, useKeyboardShortcut }
+
+/**
+ * True on macOS/iOS - for platform-dependent combos. 'mod' already resolves
+ * per platform; reach for this only when the two platforms need genuinely
+ * different keys (e.g. a combo the Mac browser menu reserves).
+ */
+export { isMacPlatform }
 
 /** Options accepted by the toast helpers. */
 export interface ToastOptions {
@@ -133,6 +159,7 @@ export type {
   ModalIcon,
   SettingsDialogDefinition,
 } from '@/features/modals/registry'
+export type { KeyboardShortcutDefinition } from '@/features/shortcuts/registry'
 
 /** The shape published at `window.NeosStudio` for plugin bundles to consume. */
 export interface NeosStudioPluginApi {
@@ -143,7 +170,10 @@ export interface NeosStudioPluginApi {
   validators: typeof validators
   links: typeof links
   modals: typeof modals
+  shortcuts: typeof shortcuts
+  isMacPlatform: typeof isMacPlatform
   useStudio: typeof useStudio
+  useKeyboardShortcut: typeof useKeyboardShortcut
   toast: typeof toast
 }
 
@@ -173,7 +203,10 @@ export function installPluginApiGlobals(): void {
     validators,
     links,
     modals,
+    shortcuts,
+    isMacPlatform,
     useStudio,
+    useKeyboardShortcut,
     toast,
   }
 }

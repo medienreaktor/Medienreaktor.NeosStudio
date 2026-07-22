@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 
@@ -101,6 +102,20 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
     'You are not allowed to publish to "{0}"',
     [baseWorkspaceName],
   )
+
+  // Same action and guards as the primary button segment; with nothing to
+  // publish the shortcut declines so the browser keeps the keystroke.
+  useKeyboardShortcut({
+    id: 'workspace.publish',
+    combo: 'mod+shift+p',
+    title: t('workspace.publishAllChanges', 'Publish all changes'),
+    category: t('shortcuts.category.workspace', 'Workspace'),
+    handler: () => {
+      if (!hasChanges || !canPublish || operation.isPending) return false
+      operation.mutate({ kind: 'publish', filter: siteFilter })
+    },
+    allowInInput: true,
+  })
 
   return (
     <div className="flex items-center gap-3">

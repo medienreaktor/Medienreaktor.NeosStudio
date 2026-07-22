@@ -1418,6 +1418,38 @@
         <source>Your profile is currently unavailable.</source>
         <target xml:lang="de">Dein Profil ist derzeit nicht verfügbar.</target>
       </trans-unit>
+      <trans-unit id="shortcuts.category.general" xml:space="preserve">
+        <source>General</source>
+        <target xml:lang="de">Allgemein</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.other" xml:space="preserve">
+        <source>Other</source>
+        <target xml:lang="de">Sonstige</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.preview" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="de">Vorschau</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.workspace" xml:space="preserve">
+        <source>Workspace</source>
+        <target xml:lang="de">Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.openSettings" xml:space="preserve">
+        <source>Open settings</source>
+        <target xml:lang="de">Einstellungen öffnen</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.description" xml:space="preserve">
+        <source>Shortcuts available in Neos Studio, including those added by plugins.</source>
+        <target xml:lang="de">In Neos Studio verfügbare Tastenkürzel, einschließlich der von Plugins hinzugefügten.</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.title" xml:space="preserve">
+        <source>Keyboard shortcuts</source>
+        <target xml:lang="de">Tastenkürzel</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.showOverview" xml:space="preserve">
+        <source>Show keyboard shortcuts</source>
+        <target xml:lang="de">Tastenkürzel anzeigen</target>
+      </trans-unit>
       <trans-unit id="sites.activateDomain" xml:space="preserve">
         <source>Activate</source>
         <target xml:lang="de">Aktivieren</target>
