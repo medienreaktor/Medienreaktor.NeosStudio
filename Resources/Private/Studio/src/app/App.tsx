@@ -606,8 +606,8 @@ export function App() {
                   {/* Fixed to the main header's height (h-14, plus an
                     invisible border matching its border-b) so the row does
                     not shift when the avatar mounts after /me resolves. */}
-                  <SidebarHeader className="h-14 shrink-0 justify-center border-b border-transparent">
-                    <div className="flex items-center justify-between gap-2.5 px-2">
+                  <SidebarHeader className="h-12 shrink-0 justify-center border-b border-transparent">
+                    <div className="flex items-center justify-between gap-2.5 px-2 pt-2">
                       <svg
                         viewBox="0 0 453.54 124.45"
                         className="h-6 w-auto shrink-0"
