@@ -1,14 +1,25 @@
-# Neos Studio
+# Medienreaktor.NeosStudio
 
 ![Neos Studio](Documentation/Banner.png)
 
-**A revolutionary, blazingly fast editing UI for Neos 9.** Built from scratch on a clean HTTP API — zero coupling to the legacy `Neos.Neos.Ui`, zero legacy baggage. This is what content editing in Neos can feel like: instant, fluid, and open for extension from day one.
+**A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.** Built from scratch on a clean HTTP API — zero coupling to the legacy `Neos.Neos.Ui`, zero legacy baggage. This is what content editing in Neos can feel like: instant, fluid, together with your team, and open for extension from day one.
 
 Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi) — a unified OAuth-secured REST API over the Event-Sourced Content Repository. No Fusion-rendered backend modules, no shared React runtime with the old UI, no wire-protocol archaeology. Just a fast, typed, cache-smart client in front of a well-defined API.
 
 > **Why "the future"?** The classic Neos UI is a great piece of engineering — from 2016. Its plugin API freezes React 16 forever, its wire protocol is undocumented, and every extension fights the build system. Neos Studio inverts that: an API-first backend, a lean modern frontend, and extensibility through observable registries designed as a public contract. It replaces legacy UI surfaces one at a time — the strangler pattern, applied to the editing experience itself.
 
 ## Highlights
+
+### 🤝 Collaborative editing — multiplayer for Neos
+
+Edit **together in the same workspace, live**. Every shared workspace offers a _Collaborative_ entry in the workspace switcher: pick it, and you and your colleagues edit the same content directly — no personal-workspace detours, no publish-to-see-each-other, no conflicts to untangle afterwards.
+
+- **See who's there**: avatar initials next to the switcher, markers on the document a colleague is on (document tree) and the element they're focusing (content outliner _and_ live preview, outlined in their color with a nametag).
+- **See what they do, as it happens**: colleagues' edits stream in within ~2 seconds. Changed elements re-render **in place** in the preview (out-of-band rendering — your scroll position and your own inline edits survive); structural changes refresh the trees.
+- **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through pure PHP endpoints. If it runs Neos 9, it runs multiplayer.
+- **Emergent, not a mode**: sessions are ordinary Neos `SHARED` workspaces (create them in the Workspaces module, manage access with the usual roles). Two people in the same workspace — that _is_ the multiplayer. Publishing the session to live works exactly like publishing any workspace.
+
+Character-level co-typing inside a single text field (CRDT/Yjs) is on the roadmap; until then, concurrent edits of the _same_ field resolve last-write-wins while everything else merges naturally through the event log.
 
 ### ⚡ Blazingly fast, everywhere
 
@@ -68,11 +79,11 @@ Third-party packages ship a small IIFE bundle that binds to the shell's public p
 
 ## The package family
 
-| Package                                                                               | What it is                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package                                                                                                             | What it is                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi)                                     | The foundation: OAuth 2.1 (PKCE, refresh token rotation, client credentials, dynamic registration), a read API over the ContentGraph, a write API for CR commands with batching and idempotency, workspace publishing, media API, data sources. Feature-based endpoint policy per role, structural content authorization through the CR itself. Useful far beyond Studio — for integrations, importers and MCP servers. |
-| **Medienreaktor.NeosStudio** (this package)                                           | The editing UI built on that API.                                                                                                                                                                                                                                                                                                                                                                                |
-| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                                                                                                                                                                              |
+| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API.                                                                                                                                                                                                                                                                                                                                                                                       |
+| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                                                                                                                                                                                     |
 
 ## Getting started
 
@@ -120,9 +131,9 @@ Conventions: every query key comes from `api/keys.ts` (never inline literals); o
 
 ## Status & roadmap
 
-Studio is a working editing environment today: silent auth, trees and outliner, full inspector (editors, views, validators, ClientEval, dimensions), inline rich-text editing, media module, node creation and clipboard with drag & drop, context menus, user and profile management, a localized UI and a public plugin API — verified end-to-end against a ddev Neos 9 site with automated smoke tests.
+Studio is a working editing environment today: silent auth, trees and outliner, full inspector (editors, views, validators, ClientEval, dimensions), inline rich-text editing, **collaborative multiplayer editing on shared workspaces** (live change feed + presence), media module, node creation and clipboard with drag & drop, context menus, user and profile management, a localized UI and a public plugin API — verified end-to-end against a ddev Neos 9 site with automated smoke tests.
 
-Next up: collaborative editing on shared workspaces (change feed, presence), richer publishing views, and continuing to replace legacy `Neos.Neos.Ui` surfaces one at a time.
+Next up: Yjs-based co-typing inside rich-text fields, richer publishing views, and continuing to replace legacy `Neos.Neos.Ui` surfaces one at a time.
 
 ## License
 
