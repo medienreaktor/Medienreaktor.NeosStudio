@@ -11,10 +11,13 @@ import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
+  eventTone,
   eventTypeLabel,
   relativeTime,
   stepIcon,
   stepSummary,
+  stepTone,
+  TONE_TEXT_CLASSES,
 } from './historyLabels'
 import type { WorkspaceBranch } from './workspaceGraphModel'
 
@@ -148,7 +151,12 @@ function DiffEvent({
               event.nodeAggregateId ??
               t('workspaceGraph.unknownNode', 'Unknown node')}
           </span>
-          <span className="shrink-0 text-[9px] text-neutral-500">
+          <span
+            className={cn(
+              'shrink-0 text-[9px]',
+              TONE_TEXT_CLASSES[eventTone(event.type)],
+            )}
+          >
             {eventTypeLabel(event.type)}
           </span>
         </div>
@@ -157,7 +165,9 @@ function DiffEvent({
         <ChangeRow key={index} change={change} />
       ))}
       {event.changes.length === 0 && !showNode && (
-        <div className="text-neutral-500">{eventTypeLabel(event.type)}</div>
+        <div className={TONE_TEXT_CLASSES[eventTone(event.type)]}>
+          {eventTypeLabel(event.type)}
+        </div>
       )}
     </div>
   )
@@ -250,7 +260,10 @@ function StepRow({
           className={cn(
             'fas fa-fw',
             stepIcon(step),
-            'mt-0.5 shrink-0 text-[0.65rem] text-neutral-400',
+            'mt-0.5 shrink-0 text-[0.65rem]',
+            // The classic Neos change colors: additions green,
+            // modifications orange, removals red.
+            TONE_TEXT_CLASSES[stepTone(step)],
           )}
           aria-hidden
         />
