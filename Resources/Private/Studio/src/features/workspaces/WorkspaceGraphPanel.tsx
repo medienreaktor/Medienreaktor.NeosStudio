@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import {
   useWorkspaces,
   useWorkspacesPendingEvents,
@@ -11,10 +11,19 @@ import {
   type GraphCanvasHandle,
 } from '@/components/graph/GraphCanvas'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { LoadingState } from '@/components/ui/spinner'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { ConflictResolutionDialog } from './ConflictResolutionDialog'
+import { ReviewChangesDialog } from './ReviewChangesDialog'
+import { useWorkspaceSync } from './useWorkspaceSync'
 import {
   baseChainOf,
   buildWorkspaceGraph,
@@ -130,12 +139,15 @@ const GraphSurface = memo(function GraphSurface({
   emphasized,
   selection,
   currentWorkspaceName,
+  onCardMenu,
 }: {
   graph: WorkspaceGraph
   /** Workspace names to emphasize; null = no selection, everything full. */
   emphasized: Set<string> | null
   selection: Selection | null
   currentWorkspaceName: string | null
+  /** A head card was right-clicked (only fired for workspaces with a base). */
+  onCardMenu: (workspaceName: string, anchor: { x: number; y: number }) => void
 }) {
   const dimmed = (name: string): boolean =>
     emphasized !== null && !emphasized.has(name)
@@ -229,6 +241,15 @@ const GraphSurface = memo(function GraphSurface({
               top: branch.cardY,
               width: WS_CARD_WIDTH,
               height: WS_CARD_HEIGHT,
+            }}
+            onContextMenu={(event) => {
+              // Roots have nothing to synchronize or review into.
+              if (workspace.baseWorkspace === null) return
+              event.preventDefault()
+              onCardMenu(workspace.name, {
+                x: event.clientX,
+                y: event.clientY,
+              })
             }}
           >
             <div style={{ height: 3, background: branch.color }} />
@@ -421,9 +442,16 @@ function Legend() {
   )
 }
 
+/** An open card context menu: which workspace, anchored where. */
+interface CardMenu {
+  workspaceName: string
+  anchor: { x: number; y: number }
+}
+
 export function WorkspaceGraphPanel() {
   const canvasRef = useRef<GraphCanvasHandle>(null)
-  const { workspaceName: currentWorkspaceName } = useStudio()
+  const { workspaceName: currentWorkspaceName, navigateToNodeInWorkspace } =
+    useStudio()
   // The panel mounts hidden behind the Visual Editor tab: fetch only once it
   // has been shown, poll only while it stays visible.
   const [shown, setShown] = useState(false)
@@ -463,6 +491,28 @@ export function WorkspaceGraphPanel() {
     [selection, graph],
   )
 
+  // The card context menu and what it leads to: a review dialog opened on the
+  // right-clicked workspace, or a rebase (with the shared conflict handling).
+  const [menu, setMenu] = useState<CardMenu | null>(null)
+  const [reviewSource, setReviewSource] = useState<string | null>(null)
+  const { rebase, discardAll, conflicts, clearConflicts, busy } =
+    useWorkspaceSync()
+  const onCardMenu = useCallback(
+    (workspaceName: string, anchor: { x: number; y: number }) =>
+      setMenu({ workspaceName, anchor }),
+    [],
+  )
+
+  const menuWorkspace = menu
+    ? (workspaces.find((workspace) => workspace.name === menu.workspaceName) ??
+      null)
+    : null
+  // The review dialog needs the active workspace (its default source); it
+  // exists whenever the app is initialized enough to right-click a card.
+  const activeWorkspace =
+    workspaces.find((workspace) => workspace.name === currentWorkspaceName) ??
+    null
+
   const isLoading =
     workspacesLoading ||
     (workspaces.length > 0 && eventsLoading && pending.size === 0)
@@ -488,6 +538,89 @@ export function WorkspaceGraphPanel() {
               onClose={() => setSelection(null)}
             />
           )}
+          {menuWorkspace && menu && (
+            <DropdownMenu open onOpenChange={(open) => !open && setMenu(null)}>
+              {/* Invisible anchor at the right-click position - the same
+                  pattern the node context menu uses. */}
+              <DropdownMenuTrigger
+                aria-hidden
+                tabIndex={-1}
+                style={{
+                  position: 'fixed',
+                  left: menu.anchor.x,
+                  top: menu.anchor.y,
+                  width: 0,
+                  height: 0,
+                  opacity: 0,
+                  pointerEvents: 'none',
+                }}
+              />
+              <DropdownMenuContent align="start">
+                {menuWorkspace.status === 'OUTDATED' && (
+                  <DropdownMenuItem
+                    disabled={!menuWorkspace.permissions.write || busy}
+                    title={t(
+                      'workspace.sync.hint',
+                      'Others published changes to the base workspace. Synchronize to pull them into this workspace.',
+                    )}
+                    onClick={() => {
+                      setMenu(null)
+                      rebase.mutate({ workspaceName: menuWorkspace.name })
+                    }}
+                  >
+                    <i className="fas fa-fw fa-rotate" aria-hidden />
+                    {t('workspace.sync.action', 'Synchronize')}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => {
+                    setMenu(null)
+                    setReviewSource(menuWorkspace.name)
+                  }}
+                >
+                  <i className="fas fa-fw fa-list-check" aria-hidden />
+                  {t('workspaceGraph.menu.review', 'Review changes…')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {activeWorkspace && (
+            <ReviewChangesDialog
+              workspaces={workspaces}
+              activeWorkspace={activeWorkspace}
+              initialSourceName={reviewSource ?? undefined}
+              open={reviewSource !== null}
+              onOpenChange={(open) => !open && setReviewSource(null)}
+              onNavigate={(address, workspaceName) => {
+                setReviewSource(null)
+                navigateToNodeInWorkspace(address, workspaceName)
+              }}
+            />
+          )}
+          <ConflictResolutionDialog
+            open={conflicts !== null}
+            conflicts={conflicts?.conflicts ?? []}
+            partial={conflicts?.code === 'partial_publish_conflicts'}
+            busy={busy}
+            onCancel={clearConflicts}
+            onForce={() =>
+              conflicts &&
+              rebase.mutate({
+                workspaceName: conflicts.workspaceName,
+                strategy: 'force',
+              })
+            }
+            onDiscardAll={() =>
+              conflicts && discardAll.mutate(conflicts.workspaceName)
+            }
+            onNavigate={(address) => {
+              if (!conflicts) return
+              clearConflicts()
+              // The conflicting document lives in the synced workspace -
+              // follow it there (switching the editing context if needed).
+              navigateToNodeInWorkspace(address, conflicts.workspaceName)
+            }}
+          />
           {isLoading && (
             <LoadingState
               className="absolute inset-0"
@@ -511,6 +644,7 @@ export function WorkspaceGraphPanel() {
           emphasized={emphasized}
           selection={selection}
           currentWorkspaceName={currentWorkspaceName}
+          onCardMenu={onCardMenu}
         />
       )}
     </GraphCanvas>

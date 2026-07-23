@@ -41,6 +41,13 @@ export type StudioContextValue = {
    */
   navigateToNode: (address: string) => void
   /**
+   * Show a document that lives in another workspace: moves the editing
+   * context to that workspace first (personal, or a writable shared one),
+   * then navigates to the address - which is already bound to it. A no-op
+   * context switch when the workspace is already active.
+   */
+  navigateToNodeInWorkspace: (address: string, workspaceName: string) => void
+  /**
    * Report inline edits made inside the preview: bumps outliner labels without
    * the refetch/reload the inspector path needs (the iframe already rendered
    * the change live).

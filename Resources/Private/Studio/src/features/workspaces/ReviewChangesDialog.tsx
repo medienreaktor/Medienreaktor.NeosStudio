@@ -114,6 +114,7 @@ function workspaceLabel(workspace: Workspace | undefined, name: string) {
 export function ReviewChangesDialog({
   workspaces,
   activeWorkspace,
+  initialSourceName,
   open,
   onOpenChange,
   onNavigate,
@@ -122,6 +123,12 @@ export function ReviewChangesDialog({
   workspaces: Workspace[]
   /** The current editing context; the dialog opens on its changes. */
   activeWorkspace: Workspace
+  /**
+   * The source workspace the dialog opens on instead of the active one (e.g.
+   * the Workspaces graph reviewing a right-clicked card). The user can still
+   * re-pick any pair inside the dialog.
+   */
+  initialSourceName?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -140,14 +147,14 @@ export function ReviewChangesDialog({
   const [sourceName, setSourceName] = useState(activeWorkspace.name)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  // Every open starts fresh on the active workspace - the closed dialog does
-  // not carry a stale review over to the next one.
+  // Every open starts fresh on the requested (or active) workspace - the
+  // closed dialog does not carry a stale review over to the next one.
   useEffect(() => {
     if (open) {
-      setSourceName(activeWorkspace.name)
+      setSourceName(initialSourceName ?? activeWorkspace.name)
       setSelectedIds(new Set())
     }
-  }, [open, activeWorkspace.name])
+  }, [open, activeWorkspace.name, initialSourceName])
 
   const source =
     sources.find((w) => w.name === sourceName) ??

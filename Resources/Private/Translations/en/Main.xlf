@@ -1907,6 +1907,9 @@
       <trans-unit id="workspaceGraph.loading" xml:space="preserve">
         <source>Loading workspaces…</source>
       </trans-unit>
+      <trans-unit id="workspaceGraph.menu.review" xml:space="preserve">
+        <source>Review changes…</source>
+      </trans-unit>
       <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
         <source>The base workspace has newer changes</source>
       </trans-unit>

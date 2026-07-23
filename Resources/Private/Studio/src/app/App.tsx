@@ -526,6 +526,7 @@ export function App() {
         .catch(() => {})
     },
     navigateToNode,
+    navigateToNodeInWorkspace,
     reportInlineEdit: (addresses) => {
       setLastEdit((prev) => ({
         addresses,

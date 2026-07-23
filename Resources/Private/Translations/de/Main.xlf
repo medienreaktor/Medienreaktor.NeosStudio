@@ -2542,6 +2542,10 @@
         <source>Loading workspaces…</source>
         <target xml:lang="de">Arbeitsbereiche werden geladen…</target>
       </trans-unit>
+      <trans-unit id="workspaceGraph.menu.review" xml:space="preserve">
+        <source>Review changes…</source>
+        <target xml:lang="de">Änderungen prüfen…</target>
+      </trans-unit>
       <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
         <source>The base workspace has newer changes</source>
         <target xml:lang="de">Der Basis-Arbeitsbereich hat neuere Änderungen</target>
