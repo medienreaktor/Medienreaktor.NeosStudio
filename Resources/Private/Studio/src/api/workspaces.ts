@@ -42,6 +42,16 @@ export interface WorkspaceChange {
   deleted: boolean
 }
 
+/**
+ * How many distinct nodes a change list touches. The changes resource returns
+ * one entry per node AND dimension (a move fans out per covered dimension
+ * space point) - UIs that show no dimensions count nodes, or a single move of
+ * a node existing in two languages would read as two changes.
+ */
+export function countChangedNodes(changes: WorkspaceChange[]): number {
+  return new Set(changes.map((change) => change.nodeAggregateId)).size
+}
+
 export function useWorkspaces(enabled = true, refetchInterval?: number) {
   return useQuery({
     queryKey: queryKeys.workspaces.all,

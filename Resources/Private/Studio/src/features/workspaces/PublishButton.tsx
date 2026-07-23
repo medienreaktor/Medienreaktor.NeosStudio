@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  countChangedNodes,
   useWorkspaceChanges,
   type Workspace,
   type WorkspaceOperationFilter,
@@ -72,15 +73,17 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   const siteFilter: WorkspaceOperationFilter | undefined = siteId
     ? { site: siteId }
     : undefined
-  const changeCount = changes.length
+  const changeCount = countChangedNodes(changes)
   const documentId = selectedDocument?.aggregateId ?? null
   // "This page" = changes on or within the selected document.
   const pageChangeCount = documentId
-    ? changes.filter(
-        (c) =>
-          c.documentAggregateId === documentId ||
-          c.nodeAggregateId === documentId,
-      ).length
+    ? countChangedNodes(
+        changes.filter(
+          (c) =>
+            c.documentAggregateId === documentId ||
+            c.nodeAggregateId === documentId,
+        ),
+      )
     : 0
 
   const hasChanges = changeCount > 0

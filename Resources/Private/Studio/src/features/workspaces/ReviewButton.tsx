@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { useWorkspaceChanges, type Workspace } from '@/api/workspaces'
+import {
+  countChangedNodes,
+  useWorkspaceChanges,
+  type Workspace,
+} from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { translate as t } from '@/lib/i18n'
@@ -34,13 +38,13 @@ export function ReviewButton({
   const allChanges = changesResponse?.changes ?? []
   // Active site's changes plus any whose site could not be resolved - never
   // silently hide a pending change (mirrors the Publish button).
-  const changeCount = (
+  const changeCount = countChangedNodes(
     siteId
       ? allChanges.filter(
           (c) => c.siteAggregateId === siteId || c.siteAggregateId === null,
         )
-      : allChanges
-  ).length
+      : allChanges,
+  )
 
   return (
     <>
