@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  groupPendingEvents,
   useWorkspaceDocumentChanges,
-  useWorkspacesPendingEvents,
+  useWorkspaceDocumentDiff,
   type Workspace,
   type WorkspaceDocumentChange,
-  type WorkspacePendingStep,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
@@ -31,14 +29,7 @@ import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
-import {
-  relativeTime,
-  stepIcon,
-  stepLabel,
-  stepTone,
-  TONE_TEXT_CLASSES,
-} from './historyLabels'
-import { StepDiff } from './StepDiff'
+import { NodeDiff } from './StepDiff'
 import { useWorkspacePublishing } from './useWorkspacePublishing'
 
 /** The change verbs a document row can carry, in display priority order. */
@@ -96,59 +87,44 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
 }
 
 /**
- * The expanded body of a document row: the editing steps that touched this
- * document, newest first, each with its before/after diff (the same diff the
- * Workspaces graph history shows, narrowed to this document's events).
+ * The expanded body of a document row: the document's NET diff against the
+ * base workspace - one squashed block per changed node showing exactly what
+ * publishing this document would apply. The chronological step-by-step view
+ * lives in the Workspaces graph's history panel; the review context answers
+ * "what will change", not "how did it happen".
  */
-function DocumentSteps({
+function DocumentDiff({
   workspaceName,
   documentId,
-  steps,
-  truncated,
 }: {
   workspaceName: string
   documentId: string
-  steps: WorkspacePendingStep[]
-  truncated: boolean
 }) {
+  const { data, isLoading, isError } = useWorkspaceDocumentDiff(
+    workspaceName,
+    documentId,
+  )
   return (
     <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 border-l border-neutral-800 pl-3 text-[11px]">
-      {steps.map((step) => (
-        <div key={step.id} className="flex flex-col gap-1">
-          <div className="flex min-w-0 items-center gap-1.5 text-[10px] text-neutral-500">
-            <i
-              className={cn(
-                'fas fa-fw',
-                stepIcon(step),
-                'text-[0.6rem]',
-                TONE_TEXT_CLASSES[stepTone(step)],
-              )}
-              aria-hidden
-            />
-            <span className="shrink-0 text-neutral-400">{stepLabel(step)}</span>
-            {step.initiatingUserLabel !== null && (
-              <span className="truncate">· {step.initiatingUserLabel}</span>
-            )}
-            <span className="shrink-0">· {relativeTime(step.recordedAt)}</span>
-          </div>
-          <StepDiff
-            workspaceName={workspaceName}
-            step={step}
-            documentId={documentId}
-          />
-        </div>
-      ))}
-      {steps.length === 0 && (
-        <div className="text-neutral-500">
-          {t('workspaceHistory.noDetails', 'No details available.')}
+      {isLoading && (
+        <div className="py-1 text-neutral-500">
+          {t('workspaceHistory.loadingDiff', 'Loading changes…')}
         </div>
       )}
-      {truncated && (
-        <div className="text-[10px] text-neutral-600">
-          {t(
-            'workspace.review.historyTruncated',
-            'Only the most recent changes are shown.',
-          )}
+      {isError && (
+        <div className="py-1 text-neutral-500">
+          {t('workspaceHistory.diffFailed', 'The changes could not be loaded.')}
+        </div>
+      )}
+      {data?.nodes.map((node) => (
+        <NodeDiff
+          key={`${node.nodeAggregateId}:${JSON.stringify(node.dimensions)}`}
+          node={node}
+        />
+      ))}
+      {data !== undefined && data.nodes.length === 0 && (
+        <div className="text-neutral-500">
+          {t('workspaceHistory.noDetails', 'No details available.')}
         </div>
       )}
     </div>
@@ -290,32 +266,6 @@ export function ReviewChangesDialog({
   )
   const { operation, resolve, pendingConflict, setPendingConflict } =
     useWorkspacePublishing(source?.name ?? '')
-
-  // The source's pending history, for the per-document diff detail: events
-  // group into editing steps (same grouping the Workspaces graph uses),
-  // indexed by the documents they touched. Fetched only while open; the
-  // per-step diffs load lazily when a row is unfolded.
-  const pendingWorkspaceNames = useMemo(
-    () => (source ? [source.name] : []),
-    [source],
-  )
-  const { byWorkspace: pendingByWorkspace } = useWorkspacesPendingEvents(
-    pendingWorkspaceNames,
-    open,
-  )
-  const pending = source ? pendingByWorkspace.get(source.name) : undefined
-  const stepsByDocument = useMemo(() => {
-    const byDocument = new Map<string, WorkspacePendingStep[]>()
-    // Newest steps first, mirroring the history log.
-    for (const step of groupPendingEvents(pending?.events ?? []).reverse()) {
-      for (const doc of step.documents) {
-        const steps = byDocument.get(doc.id) ?? []
-        steps.push(step)
-        byDocument.set(doc.id, steps)
-      }
-    }
-    return byDocument
-  }, [pending])
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
@@ -651,11 +601,9 @@ export function ReviewChangesDialog({
                         </button>
                       </label>
                       {isExpanded && source && (
-                        <DocumentSteps
+                        <DocumentDiff
                           workspaceName={source.name}
                           documentId={id}
-                          steps={stepsByDocument.get(id) ?? []}
-                          truncated={pending?.truncated ?? false}
                         />
                       )}
                     </li>

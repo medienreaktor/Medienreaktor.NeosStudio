@@ -1,5 +1,6 @@
 import {
   useWorkspacePendingEventsDiff,
+  type WorkspaceDocumentDiffNode,
   type WorkspacePendingDiffChange,
   type WorkspacePendingDiffEvent,
   type WorkspacePendingStep,
@@ -156,6 +157,64 @@ function DiffEvent({
           {eventTypeLabel(event.type)}
         </div>
       )}
+    </div>
+  )
+}
+
+/** Status vocabulary of a net-diff node, in the classic change colors. */
+const NODE_STATUS: Record<
+  WorkspaceDocumentDiffNode['status'],
+  { tone: 'add' | 'change' | 'remove'; label: () => string }
+> = {
+  created: {
+    tone: 'add',
+    label: () => t('workspaceGraph.event.nodeCreated', 'Created'),
+  },
+  removed: {
+    tone: 'remove',
+    label: () => t('workspaceGraph.event.nodeRemoved', 'Removed'),
+  },
+  moved: {
+    tone: 'change',
+    label: () => t('workspaceGraph.event.nodeMoved', 'Moved'),
+  },
+  changed: {
+    tone: 'change',
+    label: () => t('workspace.badge.changed', 'Changed'),
+  },
+}
+
+/**
+ * One changed node of a document's NET diff (workspace vs base): node header
+ * with its status in the classic change colors, then the squashed old -> new
+ * rows - what publishing this document would apply for this node.
+ */
+export function NodeDiff({ node }: { node: WorkspaceDocumentDiffNode }) {
+  const status = NODE_STATUS[node.status]
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex min-w-0 items-center gap-1.5 text-neutral-300">
+        <i
+          className={cn(
+            node.icon ? faClassName(node.icon) : 'fas fa-cube',
+            'fa-fw shrink-0 text-[0.65rem] text-neutral-500',
+          )}
+          aria-hidden
+        />
+        <span className="truncate">
+          {node.nodeLabel ??
+            node.nodeAggregateId ??
+            t('workspaceGraph.unknownNode', 'Unknown node')}
+        </span>
+        <span
+          className={cn('shrink-0 text-[9px]', TONE_TEXT_CLASSES[status.tone])}
+        >
+          {status.label()}
+        </span>
+      </div>
+      {node.changes.map((change, index) => (
+        <ChangeRow key={index} change={change} />
+      ))}
     </div>
   )
 }

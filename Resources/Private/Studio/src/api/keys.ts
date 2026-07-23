@@ -27,6 +27,8 @@ export const queryKeys = {
       ['workspaces', name, 'pending-events'] as const,
     pendingEventsDiff: (name: string, from: number, to: number) =>
       ['workspaces', name, 'pending-events-diff', { from, to }] as const,
+    documentDiff: (name: string, documentId: string) =>
+      ['workspaces', name, 'document-diff', documentId] as const,
     roles: (name: string) => ['workspaces', name, 'roles'] as const,
   },
   nodeTypes: {

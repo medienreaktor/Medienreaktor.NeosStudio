@@ -373,6 +373,51 @@ export type WorkspacePendingDiffEvent = WorkspacePendingEvent & {
 }
 
 /**
+ * One changed node of a document's NET diff against the base workspace: the
+ * squashed "what publishing applies" view (five edits of one text = one
+ * old -> new row). Shares the change-row vocabulary of the pending-events
+ * diff, so both render the same way.
+ */
+export interface WorkspaceDocumentDiffNode {
+  nodeAggregateId: string
+  dimensions: Record<string, string>
+  status: 'created' | 'removed' | 'moved' | 'changed'
+  nodeLabel: string | null
+  nodeType: string | null
+  icon: string | null
+  changes: WorkspacePendingDiffChange[]
+}
+
+/**
+ * The net state diff of one document's changed nodes (workspace vs base).
+ * Lazy: fetched when a review row is unfolded.
+ */
+export function useWorkspaceDocumentDiff(
+  workspaceName: string | null,
+  documentAggregateId: string | null,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: queryKeys.workspaces.documentDiff(
+      workspaceName ?? '',
+      documentAggregateId ?? '',
+    ),
+    queryFn: () =>
+      apiFetch<{
+        workspace: string
+        baseWorkspace: string | null
+        documentAggregateId: string
+        nodes: WorkspaceDocumentDiffNode[]
+      }>(
+        `/workspaces/${encodeURIComponent(workspaceName!)}/document-diff?documentAggregateId=${encodeURIComponent(documentAggregateId!)}`,
+      ),
+    enabled: enabled && workspaceName !== null && documentAggregateId !== null,
+    // Mirrors the changes queries: state diffs go stale with further edits.
+    staleTime: 10_000,
+  })
+}
+
+/**
  * Before/after detail for one editing step (a sequence-number slice of the
  * pending history). Lazy: fetched when a step's detail is opened.
  */
