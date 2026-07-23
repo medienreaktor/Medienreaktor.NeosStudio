@@ -14,6 +14,12 @@ export type StudioContextValue = {
   site: Site | null
   /** The active workspace's name, or null while workspaces load. */
   workspaceName: string | null
+  /**
+   * The own personal workspace's name, or null while workspaces load. The
+   * active workspace is either this one or a shared workspace being edited
+   * collaboratively.
+   */
+  personalWorkspaceName: string | null
   /** The document shown in the preview and selected in the document tree. */
   selectedDocument: NodeDto | null
   /** The node under inspection - a document or a content node. */
@@ -47,6 +53,13 @@ export type StudioContextValue = {
    * context switch when the workspace is already active.
    */
   navigateToNodeInWorkspace: (address: string, workspaceName: string) => void
+  /**
+   * Check out a workspace: move the editing context into it - back to the
+   * personal one, or into a writable shared one (collaborative editing).
+   * Client-side only (no CR command); the selected document follows into the
+   * target workspace's subgraph. A no-op when already checked out.
+   */
+  checkoutWorkspace: (workspaceName: string) => void
   /**
    * Report inline edits made inside the preview: bumps outliner labels without
    * the refetch/reload the inspector path needs (the iframe already rendered

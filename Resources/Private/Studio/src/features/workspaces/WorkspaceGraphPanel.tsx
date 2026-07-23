@@ -15,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LoadingState } from '@/components/ui/spinner'
@@ -151,7 +152,7 @@ const GraphSurface = memo(function GraphSurface({
   emphasized: Set<string> | null
   selection: Selection | null
   currentWorkspaceName: string | null
-  /** A head card was right-clicked (only fired for workspaces with a base). */
+  /** A head card was right-clicked. */
   onCardMenu: (workspaceName: string, anchor: { x: number; y: number }) => void
 }) {
   const dimmed = (name: string): boolean =>
@@ -249,8 +250,6 @@ const GraphSurface = memo(function GraphSurface({
               height: WS_CARD_HEIGHT,
             }}
             onContextMenu={(event) => {
-              // Roots have nothing to synchronize or review into.
-              if (workspace.baseWorkspace === null) return
               event.preventDefault()
               onCardMenu(workspace.name, {
                 x: event.clientX,
@@ -456,8 +455,12 @@ interface CardMenu {
 
 export function WorkspaceGraphPanel() {
   const canvasRef = useRef<GraphCanvasHandle>(null)
-  const { workspaceName: currentWorkspaceName, navigateToNodeInWorkspace } =
-    useStudio()
+  const {
+    workspaceName: currentWorkspaceName,
+    personalWorkspaceName,
+    navigateToNodeInWorkspace,
+    checkoutWorkspace,
+  } = useStudio()
   // The panel mounts hidden behind the Visual Editor tab: fetch only once it
   // has been shown, poll only while it stays visible.
   const [shown, setShown] = useState(false)
@@ -499,7 +502,7 @@ export function WorkspaceGraphPanel() {
   // right-clicked workspace, or a rebase (with the shared conflict handling).
   const [menu, setMenu] = useState<CardMenu | null>(null)
   const [reviewSource, setReviewSource] = useState<string | null>(null)
-  const { rebase, discardAll, conflicts, clearConflicts, busy } =
+  const { rebase, changeBase, discardAll, conflicts, clearConflicts, busy } =
     useWorkspaceSync()
   const onCardMenu = useCallback(
     (workspaceName: string, anchor: { x: number; y: number }) =>
@@ -560,31 +563,107 @@ export function WorkspaceGraphPanel() {
                 }}
               />
               <DropdownMenuContent align="start">
-                {menuWorkspace.status === 'OUTDATED' && (
-                  <DropdownMenuItem
-                    disabled={!menuWorkspace.permissions.write || busy}
-                    title={t(
-                      'workspace.sync.hint',
-                      'Others published changes to the base workspace. Synchronize to pull them into this workspace.',
-                    )}
-                    onClick={() => {
-                      setMenu(null)
-                      rebase.mutate({ workspaceName: menuWorkspace.name })
-                    }}
-                  >
-                    <i className="fas fa-fw fa-rotate" aria-hidden />
-                    {t('workspace.sync.action', 'Synchronize')}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => {
-                    setMenu(null)
-                    setReviewSource(menuWorkspace.name)
-                  }}
-                >
-                  <i className="fas fa-fw fa-list-check" aria-hidden />
-                  {t('workspaceGraph.menu.review', 'Review changes…')}
-                </DropdownMenuItem>
+                {(() => {
+                  const isCurrent = menuWorkspace.name === currentWorkspaceName
+                  // Checkout: back to the own personal workspace, or into a
+                  // shared one (collaborative editing - needs write there).
+                  const offerCheckout =
+                    !isCurrent &&
+                    (menuWorkspace.name === personalWorkspaceName ||
+                      menuWorkspace.classification === 'SHARED')
+                  const checkoutDisabled =
+                    menuWorkspace.classification === 'SHARED' &&
+                    !menuWorkspace.permissions.write
+                  // Rebase THE CHECKED-OUT workspace onto the clicked one.
+                  // Valid targets are what the workspace switcher offers as
+                  // bases: live and shared workspaces. Onto the current base
+                  // it is a plain rebase (synchronize); onto anything else it
+                  // retargets the base (requires a clean workspace).
+                  const offerRebase =
+                    !isCurrent &&
+                    activeWorkspace !== null &&
+                    (menuWorkspace.classification === 'ROOT' ||
+                      menuWorkspace.classification === 'SHARED')
+                  const offerReview = menuWorkspace.baseWorkspace !== null
+                  return (
+                    <>
+                      {offerCheckout && (
+                        <DropdownMenuItem
+                          disabled={checkoutDisabled}
+                          title={
+                            checkoutDisabled
+                              ? t('workspace.readOnly', 'read-only')
+                              : t(
+                                  'workspaceGraph.menu.checkoutHint',
+                                  'Switch editing into this workspace',
+                                )
+                          }
+                          onClick={() => {
+                            setMenu(null)
+                            checkoutWorkspace(menuWorkspace.name)
+                          }}
+                        >
+                          <i
+                            className="fas fa-fw fa-right-to-bracket"
+                            aria-hidden
+                          />
+                          {t('workspaceGraph.menu.checkout', 'Check out')}
+                        </DropdownMenuItem>
+                      )}
+                      {offerRebase && activeWorkspace && (
+                        <DropdownMenuItem
+                          disabled={busy}
+                          title={
+                            menuWorkspace.name === activeWorkspace.baseWorkspace
+                              ? t(
+                                  'workspaceGraph.menu.rebaseSyncHint',
+                                  'Rebase “{0}” onto its base again: newest changes from here flow in underneath your pending ones',
+                                  [workspaceLabel(activeWorkspace)],
+                                )
+                              : t(
+                                  'workspaceGraph.menu.rebaseHint',
+                                  'Rebase “{0}” onto this workspace - it becomes the new base to publish to',
+                                  [workspaceLabel(activeWorkspace)],
+                                )
+                          }
+                          onClick={() => {
+                            setMenu(null)
+                            if (
+                              menuWorkspace.name ===
+                              activeWorkspace.baseWorkspace
+                            ) {
+                              rebase.mutate({
+                                workspaceName: activeWorkspace.name,
+                              })
+                            } else {
+                              changeBase.mutate({
+                                workspaceName: activeWorkspace.name,
+                                baseWorkspace: menuWorkspace.name,
+                              })
+                            }
+                          }}
+                        >
+                          <i className="fas fa-fw fa-rotate" aria-hidden />
+                          {t('workspaceGraph.menu.rebase', 'Rebase')}
+                        </DropdownMenuItem>
+                      )}
+                      {offerReview && (offerCheckout || offerRebase) && (
+                        <DropdownMenuSeparator />
+                      )}
+                      {offerReview && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setMenu(null)
+                            setReviewSource(menuWorkspace.name)
+                          }}
+                        >
+                          <i className="fas fa-fw fa-list-check" aria-hidden />
+                          {t('workspaceGraph.menu.review', 'Review changes…')}
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  )
+                })()}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

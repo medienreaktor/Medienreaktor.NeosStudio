@@ -1622,6 +1622,12 @@
       <trans-unit id="workspace.badge.removed" xml:space="preserve">
         <source>Removed</source>
       </trans-unit>
+      <trans-unit id="workspace.baseChangeNotEmpty" xml:space="preserve">
+        <source>The workspace still has pending changes - publish or discard them before rebasing it onto another workspace.</source>
+      </trans-unit>
+      <trans-unit id="workspace.baseChanged" xml:space="preserve">
+        <source>Base workspace changed.</source>
+      </trans-unit>
       <trans-unit id="workspace.baseWorkspaceFallback" xml:space="preserve">
         <source>the base workspace</source>
       </trans-unit>
@@ -1906,6 +1912,21 @@
       </trans-unit>
       <trans-unit id="workspaceGraph.loading" xml:space="preserve">
         <source>Loading workspaces…</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkout" xml:space="preserve">
+        <source>Check out</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkoutHint" xml:space="preserve">
+        <source>Switch editing into this workspace</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebase" xml:space="preserve">
+        <source>Rebase</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseHint" xml:space="preserve">
+        <source>Rebase “{0}” onto this workspace - it becomes the new base to publish to</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseSyncHint" xml:space="preserve">
+        <source>Rebase “{0}” onto its base again: newest changes from here flow in underneath your pending ones</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.menu.review" xml:space="preserve">
         <source>Review changes…</source>

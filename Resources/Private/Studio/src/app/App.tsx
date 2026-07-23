@@ -508,6 +508,7 @@ export function App() {
   const studio: StudioContextValue = {
     site: activeSite,
     workspaceName: activeWorkspace?.name ?? null,
+    personalWorkspaceName: personalWorkspace?.name ?? null,
     selectedDocument,
     inspectedNode,
     lastEdit,
@@ -527,6 +528,8 @@ export function App() {
     },
     navigateToNode,
     navigateToNodeInWorkspace,
+    checkoutWorkspace: (name) =>
+      switchEditingContext(name === personalWorkspace?.name ? null : name),
     reportInlineEdit: (addresses) => {
       setLastEdit((prev) => ({
         addresses,

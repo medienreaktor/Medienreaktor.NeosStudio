@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { ApiError } from '@/api/client'
 import {
+  changeBaseWorkspace,
   discardWorkspace,
   getRebaseConflicts,
   rebaseWorkspace,
@@ -19,10 +21,11 @@ export interface SyncConflicts extends RebaseConflicts {
 }
 
 /**
- * Synchronizing (rebasing) a workspace, shared between the topbar
- * SyncWorkspaceButton and the Workspaces graph's card menu: the rebase and
- * the discard-everything escape hatch, conflict routing (a rebase rejected
- * with conflicts is not a failure - it surfaces as `conflicts` for the
+ * Rebasing a workspace, shared between the topbar SyncWorkspaceButton and
+ * the Workspaces graph's card menu: the rebase onto the current base
+ * (synchronize), the rebase onto a different base (changeBase) and the
+ * discard-everything escape hatch, conflict routing (a rebase rejected with
+ * conflicts is not a failure - it surfaces as `conflicts` for the
  * ConflictResolutionDialog), success/error toasts, and cache invalidation.
  *
  * Invalidation is scoped: the workspace list (status flags, pending events)
@@ -70,6 +73,44 @@ export function useWorkspaceSync() {
     },
   })
 
+  /**
+   * Rebase onto a DIFFERENT base workspace - "switching the workspace" in
+   * Neos terms: editing stays in the workspace, only where it publishes to
+   * changes. The content repository requires the workspace to be clean; the
+   * 409 for a dirty one gets a friendlier message than the raw server text.
+   */
+  const changeBase = useMutation({
+    mutationFn: ({
+      workspaceName,
+      baseWorkspace,
+    }: {
+      workspaceName: string
+      baseWorkspace: string
+    }) => changeBaseWorkspace(workspaceName, baseWorkspace),
+    onSuccess: (_, { workspaceName }) => {
+      invalidateWorkspace(workspaceName)
+      toast.success(t('workspace.baseChanged', 'Base workspace changed.'))
+    },
+    onError: (error) => {
+      const notEmpty =
+        error instanceof ApiError &&
+        error.status === 409 &&
+        (error.body as { error?: string } | null)?.error ===
+          'workspace_not_empty'
+      toast.error(
+        notEmpty
+          ? t(
+              'workspace.baseChangeNotEmpty',
+              'The workspace still has pending changes - publish or discard them before rebasing it onto another workspace.',
+            )
+          : error,
+        {
+          title: t('workspace.switchFailed', 'Switching the workspace failed'),
+        },
+      )
+    },
+  })
+
   const discardAll = useMutation({
     mutationFn: (workspaceName: string) => discardWorkspace(workspaceName),
     onSuccess: (_, workspaceName) => {
@@ -87,9 +128,10 @@ export function useWorkspaceSync() {
 
   return {
     rebase,
+    changeBase,
     discardAll,
     conflicts,
     clearConflicts: () => setConflicts(null),
-    busy: rebase.isPending || discardAll.isPending,
+    busy: rebase.isPending || changeBase.isPending || discardAll.isPending,
   }
 }
