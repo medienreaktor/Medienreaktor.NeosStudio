@@ -2551,7 +2551,7 @@
         <target xml:lang="de">Arbeitsbereiche werden geladen…</target>
       </trans-unit>
       <trans-unit id="workspaceGraph.menu.checkout" xml:space="preserve">
-        <source>Check out</source>
+        <source>Checkout</source>
         <target xml:lang="de">Auschecken</target>
       </trans-unit>
       <trans-unit id="workspaceGraph.menu.checkoutHint" xml:space="preserve">

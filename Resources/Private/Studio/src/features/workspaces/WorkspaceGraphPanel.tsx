@@ -607,7 +607,7 @@ export function WorkspaceGraphPanel() {
                             className="fas fa-fw fa-right-to-bracket"
                             aria-hidden
                           />
-                          {t('workspaceGraph.menu.checkout', 'Check out')}
+                          {t('workspaceGraph.menu.checkout', 'Checkout')}
                         </DropdownMenuItem>
                       )}
                       {offerRebase && activeWorkspace && (

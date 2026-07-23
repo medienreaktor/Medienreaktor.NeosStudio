@@ -1914,7 +1914,7 @@
         <source>Loading workspaces…</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.menu.checkout" xml:space="preserve">
-        <source>Check out</source>
+        <source>Checkout</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.menu.checkoutHint" xml:space="preserve">
         <source>Switch editing into this workspace</source>

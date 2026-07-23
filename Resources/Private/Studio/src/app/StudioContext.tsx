@@ -54,7 +54,7 @@ export type StudioContextValue = {
    */
   navigateToNodeInWorkspace: (address: string, workspaceName: string) => void
   /**
-   * Check out a workspace: move the editing context into it - back to the
+   * Checkout a workspace: move the editing context into it - back to the
    * personal one, or into a writable shared one (collaborative editing).
    * Client-side only (no CR command); the selected document follows into the
    * target workspace's subgraph. A no-op when already checked out.
