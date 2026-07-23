@@ -341,7 +341,9 @@ export function BranchHistoryPanel({
 
   const workspaceName = branch.workspace.name
   return (
-    <div className="absolute top-2 right-2 bottom-2 z-10 flex w-80 flex-col rounded-md border border-neutral-700 bg-neutral-900/95 text-xs shadow-lg backdrop-blur-xs">
+    // top-12 keeps the panel below the canvas' zoom control cluster, which
+    // sits in the top-right corner above it.
+    <div className="absolute top-12 right-2 bottom-2 z-10 flex w-80 flex-col rounded-md border border-neutral-700 bg-neutral-900/95 text-xs shadow-lg backdrop-blur-xs">
       <div className="flex items-center gap-2 border-b border-neutral-800 px-3 py-2">
         <span
           className="size-2 shrink-0 rounded-full"

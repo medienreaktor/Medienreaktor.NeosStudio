@@ -173,9 +173,6 @@ const GraphSurface = memo(function GraphSurface({
               data-graph-id={`event:${branch.workspace.name}:${dot.step.id}`}
               className={cn(
                 'absolute cursor-pointer rounded-full border-2 bg-neutral-950 transition-transform',
-                // A step of several events (one command, e.g. a paste) gets a
-                // filled center - a hint there is more inside.
-                dot.step.events.length > 1 && 'bg-neutral-400',
                 selected && cn('scale-150', SELECTED_RING),
                 dimmed(branch.workspace.name) && 'opacity-20',
               )}
@@ -185,6 +182,11 @@ const GraphSurface = memo(function GraphSurface({
                 width: DOT_RADIUS * 2,
                 height: DOT_RADIUS * 2,
                 borderColor: branch.color,
+                // A step of several events (one command, e.g. a paste) is
+                // fully filled in the branch color - a hint there is more
+                // inside.
+                backgroundColor:
+                  dot.step.events.length > 1 ? branch.color : undefined,
               }}
               title={`${stepSummary(dot.step)}\n${dot.step.initiatingUserLabel ?? ''} ${relativeTime(dot.step.recordedAt)}`.trim()}
             />
