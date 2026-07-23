@@ -314,7 +314,9 @@ const GraphSurface = memo(function GraphSurface({
   )
 })
 
-/** The bottom-right detail card for a selected commit or workspace. */
+/** The bottom-right detail card for a selected commit dot. Selecting a
+ * workspace card only emphasizes its publish path - the card itself already
+ * shows everything there is to say. */
 function DetailCard({
   selection,
   graph,
@@ -325,85 +327,45 @@ function DetailCard({
   onClose: () => void
 }) {
   const branch = graph.byName.get(selection.workspace)
-  if (!branch) return null
-  const event: WorkspacePendingEvent | undefined =
-    selection.sequenceNumber !== null
-      ? branch.dots.find(
-          (dot) => dot.event.sequenceNumber === selection.sequenceNumber,
-        )?.event
-      : undefined
+  if (!branch || selection.sequenceNumber === null) return null
+  const event: WorkspacePendingEvent | undefined = branch.dots.find(
+    (dot) => dot.event.sequenceNumber === selection.sequenceNumber,
+  )?.event
+  if (!event) return null
   return (
     <div className="absolute right-2 bottom-2 z-10 w-72 rounded-md border border-neutral-700 bg-neutral-900/95 p-3 text-xs shadow-lg backdrop-blur-xs">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {event ? (
-            <>
-              <div className="flex min-w-0 items-center gap-1.5 font-medium text-white">
-                <i
-                  className={cn(
-                    event.icon ? faClassName(event.icon) : 'fas fa-cube',
-                    'fa-fw shrink-0 text-[0.7rem] text-neutral-400',
-                  )}
-                  aria-hidden
-                />
-                <span className="truncate">
-                  {event.nodeLabel ??
-                    event.nodeAggregateId ??
-                    t('workspaceGraph.unknownNode', 'Unknown node')}
-                </span>
-              </div>
-              <div className="mt-1 text-neutral-300">
-                {eventTypeLabel(event.type)}
-              </div>
-              <div className="mt-1 text-neutral-500">
-                {event.initiatingUserLabel && (
-                  <>
-                    <i className="fas fa-user fa-fw" aria-hidden />{' '}
-                    {event.initiatingUserLabel} ·{' '}
-                  </>
-                )}
-                {new Date(event.recordedAt).toLocaleString()}
-              </div>
-              {event.nodeType && (
-                <div className="mt-1 truncate font-mono text-[9px] text-neutral-500">
-                  {event.nodeType}
-                </div>
+          <div className="flex min-w-0 items-center gap-1.5 font-medium text-white">
+            <i
+              className={cn(
+                event.icon ? faClassName(event.icon) : 'fas fa-cube',
+                'fa-fw shrink-0 text-[0.7rem] text-neutral-400',
               )}
-            </>
-          ) : (
-            <>
-              <div className="flex min-w-0 items-center gap-1.5 font-medium text-white">
-                <i
-                  className={cn(
-                    CLASSIFICATION_ICONS[branch.workspace.classification] ??
-                      'fas fa-layer-group text-neutral-400',
-                    'fa-fw shrink-0 text-[0.7rem]',
-                  )}
-                  aria-hidden
-                />
-                <span className="truncate">
-                  {workspaceLabel(branch.workspace)}
-                </span>
-              </div>
-              {branch.workspace.description && (
-                <div className="mt-1 line-clamp-3 text-neutral-400">
-                  {branch.workspace.description}
-                </div>
-              )}
-              <div className="mt-1 text-neutral-500">
-                {branch.workspace.baseWorkspace
-                  ? t('workspaceGraph.basedOn', 'Based on {0}', [
-                      workspaceLabel(
-                        graph.byName.get(branch.workspace.baseWorkspace)
-                          ?.workspace ?? branch.workspace,
-                      ),
-                    ])
-                  : t(
-                      'workspaceGraph.rootWorkspace',
-                      'Root workspace - the published state',
-                    )}
-              </div>
-            </>
+              aria-hidden
+            />
+            <span className="truncate">
+              {event.nodeLabel ??
+                event.nodeAggregateId ??
+                t('workspaceGraph.unknownNode', 'Unknown node')}
+            </span>
+          </div>
+          <div className="mt-1 text-neutral-300">
+            {eventTypeLabel(event.type)}
+          </div>
+          <div className="mt-1 text-neutral-500">
+            {event.initiatingUserLabel && (
+              <>
+                <i className="fas fa-user fa-fw" aria-hidden />{' '}
+                {event.initiatingUserLabel} ·{' '}
+              </>
+            )}
+            {new Date(event.recordedAt).toLocaleString()}
+          </div>
+          {event.nodeType && (
+            <div className="mt-1 truncate font-mono text-[9px] text-neutral-500">
+              {event.nodeType}
+            </div>
           )}
         </div>
         <Button

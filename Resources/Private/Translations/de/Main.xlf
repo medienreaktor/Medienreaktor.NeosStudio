@@ -2474,10 +2474,6 @@
         <source>Workspace synchronized.</source>
         <target xml:lang="de">Arbeitsbereich synchronisiert.</target>
       </trans-unit>
-      <trans-unit id="workspaceGraph.basedOn" xml:space="preserve">
-        <source>Based on {0}</source>
-        <target xml:lang="de">Basiert auf {0}</target>
-      </trans-unit>
       <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
         <source>{0} changes</source>
         <target xml:lang="de">{0} Änderungen</target>
@@ -2581,10 +2577,6 @@
       <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
         <source>outdated</source>
         <target xml:lang="de">veraltet</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.rootWorkspace" xml:space="preserve">
-        <source>Root workspace - the published state</source>
-        <target xml:lang="de">Root-Arbeitsbereich – der veröffentlichte Stand</target>
       </trans-unit>
       <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
         <source>Unknown node</source>

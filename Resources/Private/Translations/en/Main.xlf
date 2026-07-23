@@ -1856,9 +1856,6 @@
       <trans-unit id="workspace.sync.success" xml:space="preserve">
         <source>Workspace synchronized.</source>
       </trans-unit>
-      <trans-unit id="workspaceGraph.basedOn" xml:space="preserve">
-        <source>Based on {0}</source>
-      </trans-unit>
       <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
         <source>{0} changes</source>
       </trans-unit>
@@ -1936,9 +1933,6 @@
       </trans-unit>
       <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
         <source>outdated</source>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.rootWorkspace" xml:space="preserve">
-        <source>Root workspace - the published state</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
         <source>Unknown node</source>
