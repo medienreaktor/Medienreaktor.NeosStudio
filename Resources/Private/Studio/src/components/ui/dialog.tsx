@@ -60,8 +60,10 @@ function DialogOverlay({
 const dialogSizes = {
   /** Compact dialogs: confirmations, renames, short decision prompts */
   sm: 'max-w-md',
-  /** Working dialogs: review changes, node creation, pickers, editors */
+  /** Working dialogs: node creation, pickers, editors */
   lg: 'max-w-2xl',
+  /** Reading dialogs: review changes with inline diffs */
+  xl: 'max-w-4xl',
 } as const
 
 function DialogContent({

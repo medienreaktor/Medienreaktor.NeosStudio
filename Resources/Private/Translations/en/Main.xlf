@@ -1805,6 +1805,15 @@
       <trans-unit id="workspace.review.hidden" xml:space="preserve">
         <source>Hidden</source>
       </trans-unit>
+      <trans-unit id="workspace.review.hideChanges" xml:space="preserve">
+        <source>Hide changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.showChanges" xml:space="preserve">
+        <source>Show changes</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
+        <source>Only the most recent changes are shown.</source>
+      </trans-unit>
       <trans-unit id="workspace.review.loading" xml:space="preserve">
         <source>Loading changes…</source>
       </trans-unit>
