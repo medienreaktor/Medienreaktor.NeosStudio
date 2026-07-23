@@ -2307,8 +2307,8 @@
         <target xml:lang="de">{0} ausstehende Änderungen</target>
       </trans-unit>
       <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
-        <source>Publish all changes</source>
-        <target xml:lang="de">Alle Änderungen veröffentlichen</target>
+        <source>Publish all</source>
+        <target xml:lang="de">Alles veröffentlichen</target>
       </trans-unit>
       <trans-unit id="workspace.publishDenied" xml:space="preserve">
         <source>You are not allowed to publish to "{0}"</source>
@@ -2348,7 +2348,7 @@
       </trans-unit>
       <trans-unit id="workspace.review.button" xml:space="preserve">
         <source>Review</source>
-        <target xml:lang="de">Prüfen</target>
+        <target xml:lang="de">Änderungen prüfen</target>
       </trans-unit>
       <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
         <source>Review pending changes between workspaces</source>

@@ -1731,7 +1731,7 @@
         <source>{0} pending changes</source>
       </trans-unit>
       <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
-        <source>Publish all changes</source>
+        <source>Publish all</source>
       </trans-unit>
       <trans-unit id="workspace.publishDenied" xml:space="preserve">
         <source>You are not allowed to publish to "{0}"</source>
@@ -1761,7 +1761,7 @@
         <source>read-only</source>
       </trans-unit>
       <trans-unit id="workspace.review.button" xml:space="preserve">
-        <source>Review</source>
+        <source>Review changes</source>
       </trans-unit>
       <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
         <source>Review pending changes between workspaces</source>

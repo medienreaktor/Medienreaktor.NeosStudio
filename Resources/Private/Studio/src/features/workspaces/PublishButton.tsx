@@ -106,7 +106,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   useKeyboardShortcut({
     id: 'workspace.publish',
     combo: 'mod+shift+p',
-    title: t('workspace.publishAllChanges', 'Publish all changes'),
+    title: t('workspace.publishAllChanges', 'Publish all'),
     category: t('shortcuts.category.workspace', 'Workspace'),
     handler: () => {
       if (!hasChanges || !canPublish || operation.isPending) return false
@@ -144,7 +144,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
             className={`fas fa-fw ${operation.isPending ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
             aria-hidden
           />
-          {t('workspace.publishAllChanges', 'Publish all changes')}
+          {t('workspace.publishAllChanges', 'Publish all')}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
