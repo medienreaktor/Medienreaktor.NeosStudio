@@ -7,10 +7,18 @@ import type {
 /**
  * Layout for the Workspaces graph: workspaces as git-style branches. Live (a
  * root workspace) is the trunk on the left; every other workspace branches
- * off the head of its base workspace with its pending changes as commit dots
- * along the branch line, ending in a head card. Workspaces based on another
- * workspace branch off that workspace's head in turn, so the picture reads
+ * off its base workspace's line with its pending changes as commit dots along
+ * the branch line, ending in a head card. Workspaces based on another
+ * workspace branch off that workspace's line in turn, so the picture reads
  * "this is what everyone has built on top of the published state".
+ *
+ * The branch point is the FORK point, not the base's head: a workspace's
+ * stream records where (stream + version) it forked off its base, so base
+ * events it already contains lie left of the branch point and events
+ * published to the base afterwards lie right of it - an OUTDATED workspace
+ * visibly hangs behind the changes it has not pulled in yet. Roots (live)
+ * only surface their published history from the earliest child fork onwards;
+ * everything older collapses into the leading ellipsis.
  *
  * Pure geometry, like the node type layout: each workspace occupies one
  * horizontal lane, x grows with branch depth and commit count, and the
@@ -28,6 +36,9 @@ export const BRANCH_BEND = 90
 export const LINE_END_GAP = 28
 /** Minimum branch line length, so an empty branch is still visibly a branch. */
 const MIN_LINE_LENGTH = 60
+/** Most dots a root (live) line shows - published history is long, only the
+ * stretch since the earliest child fork tells a story. */
+const ROOT_MAX_DOTS = 25
 
 /**
  * Branch line colors, cycled per branch in layout order. Live/root trunks
@@ -120,7 +131,7 @@ export function buildWorkspaceGraph(
     }
   }
   roots.sort(branchSort)
-  for (const siblings of children.values()) siblings.sort(branchSort)
+  // Children are ordered per parent at placement time, by branch point.
 
   const branches: WorkspaceBranch[] = []
   const branchByName = new Map<string, WorkspaceBranch>()
@@ -129,64 +140,111 @@ export function buildWorkspaceGraph(
 
   const place = (
     workspace: Workspace,
-    parent: WorkspaceBranch | null,
+    branchFrom: { x: number; y: number } | null,
   ): void => {
     const lane = nextLane++
     const y = lane * LANE_HEIGHT + LANE_HEIGHT / 2
     const history = pending.get(workspace.name)
-    const isRoot = parent === null
-    // Roots show no pending dots: their stream is the published history
-    // itself, not changes waiting to go anywhere.
-    const dots: CommitDot[] = []
-    let branch: WorkspaceBranch
+    const isRoot = branchFrom === null
+    const kids = children.get(workspace.name) ?? []
+
+    // A child's fork version on THIS workspace's current stream: null while
+    // its history has not arrived, -1 when it forked off an EARLIER stream
+    // (this workspace was rebased/republished since - none of the events
+    // shown here are in the child).
+    const forkVersionOf = (child: Workspace): number | null => {
+      const childHistory = pending.get(child.name)
+      if (!childHistory?.forkedFrom || !history) return null
+      return childHistory.forkedFrom.contentStreamId === history.contentStreamId
+        ? childHistory.forkedFrom.version
+        : -1
+    }
+
+    // Which events get dots. A branch shows its whole pending history; a
+    // root's stream is the published history itself, so only the stretch
+    // after the earliest child fork is telling ("published, but not in that
+    // branch yet") - everything older collapses into the leading ellipsis.
+    let events = history?.events ?? []
+    let hiddenOlder = history?.truncated ?? false
     if (isRoot) {
-      branch = {
-        workspace,
-        lane,
-        color: ROOT_COLOR,
-        branchFrom: null,
-        startX: 0,
-        y,
-        cardX: 0,
-        cardY: y - WS_CARD_HEIGHT / 2,
-        dots,
-        truncated: false,
-        loading: false,
+      const forkVersions = kids
+        .map(forkVersionOf)
+        .filter(
+          (version): version is number => version !== null && version >= 0,
+        )
+      if (forkVersions.length === 0) {
+        events = []
+        hiddenOlder = false
+      } else {
+        const cut = Math.min(...forkVersions)
+        events = events
+          .filter((event) => event.version > cut)
+          .slice(-ROOT_MAX_DOTS)
+        // There is always earlier published history behind the cut.
+        hiddenOlder = true
       }
-    } else {
-      const events = history?.events ?? []
-      const truncated = history?.truncated ?? false
-      const startX = parent.cardX + WS_CARD_WIDTH + BRANCH_BEND
-      // The truncation ellipsis occupies the first dot slot.
-      const slotOffset = truncated ? 1 : 0
-      for (let index = 0; index < events.length; index++) {
-        dots.push({
-          x: startX + (slotOffset + index + 0.5) * DOT_SPACING,
-          event: events[index],
-        })
-      }
-      const lineLength = Math.max(
-        MIN_LINE_LENGTH,
-        (slotOffset + events.length) * DOT_SPACING + LINE_END_GAP,
-      )
-      branch = {
-        workspace,
-        lane,
-        color: BRANCH_COLORS[colorCursor++ % BRANCH_COLORS.length],
-        branchFrom: { x: parent.cardX + WS_CARD_WIDTH, y: parent.y },
-        startX,
-        y,
-        cardX: startX + lineLength,
-        cardY: y - WS_CARD_HEIGHT / 2,
-        dots,
-        truncated,
-        loading: history === undefined,
-      }
+    }
+
+    const startX = branchFrom === null ? 0 : branchFrom.x + BRANCH_BEND
+    // The ellipsis for hidden older events occupies the first dot slot.
+    const slotOffset = hiddenOlder ? 1 : 0
+    const dots: CommitDot[] = events.map((event, index) => ({
+      x: startX + (slotOffset + index + 0.5) * DOT_SPACING,
+      event,
+    }))
+    const lineLength =
+      isRoot && dots.length === 0
+        ? 0
+        : Math.max(
+            MIN_LINE_LENGTH,
+            (slotOffset + events.length) * DOT_SPACING + LINE_END_GAP,
+          )
+    const cardX = startX + lineLength
+
+    const branch: WorkspaceBranch = {
+      workspace,
+      lane,
+      color: isRoot
+        ? ROOT_COLOR
+        : BRANCH_COLORS[colorCursor++ % BRANCH_COLORS.length],
+      branchFrom,
+      startX,
+      y,
+      cardX,
+      cardY: y - WS_CARD_HEIGHT / 2,
+      dots,
+      truncated: hiddenOlder,
+      loading: !isRoot && history === undefined,
     }
     branches.push(branch)
     branchByName.set(workspace.name, branch)
-    for (const child of children.get(workspace.name) ?? []) {
-      place(child, branch)
+
+    // Where each child branches off this line: right after the last event it
+    // still contains, so everything further right is what it is missing. A
+    // child whose fork we cannot place (history loading, or all shown events
+    // are older than its fork) branches at the head.
+    const headX = cardX + WS_CARD_WIDTH
+    const branchXFor = (child: Workspace): number => {
+      const forkVersion = forkVersionOf(child)
+      if (forkVersion === null) return headX
+      if (forkVersion === -1) return dots.length > 0 ? startX : headX
+      const nextIndex = dots.findIndex((dot) => dot.event.version > forkVersion)
+      if (nextIndex === -1) return headX
+      const left =
+        nextIndex === 0
+          ? startX + slotOffset * DOT_SPACING
+          : dots[nextIndex - 1].x
+      return (left + dots[nextIndex].x) / 2
+    }
+
+    // Later branch points get the nearer lanes: the lower a child sits, the
+    // further left it forks, so its curve descends where the subtrees above
+    // it have nothing drawn yet - no line crossings.
+    const ordered = kids
+      .map((child) => ({ child, branchX: branchXFor(child) }))
+      .sort((a, b) => b.branchX - a.branchX || branchSort(a.child, b.child))
+    for (const { child, branchX } of ordered) {
+      place(child, { x: branchX, y })
     }
   }
 

@@ -116,16 +116,21 @@ function parsePick(id: string | null): Selection | null {
   return null
 }
 
-/** The branch-off curve from the parent's head into the branch line, plus the
- * line itself up to the head card. */
-function branchPath(branch: WorkspaceBranch): string {
-  if (branch.branchFrom === null) return ''
+/** The branch-off curve from the fork point on the parent's line into the
+ * own branch line, up to the head card. Roots draw just their trunk line
+ * (when they have dots to carry); null = nothing to draw. */
+function branchPath(branch: WorkspaceBranch): string | null {
+  const line =
+    branch.cardX > branch.startX ? ` L ${branch.cardX} ${branch.y}` : ''
+  if (branch.branchFrom === null) {
+    return line === '' ? null : `M ${branch.startX} ${branch.y}${line}`
+  }
   const { x: fromX, y: fromY } = branch.branchFrom
   const bend = BRANCH_BEND * 0.6
   return (
     `M ${fromX} ${fromY} ` +
-    `C ${fromX + bend} ${fromY}, ${branch.startX - bend} ${branch.y}, ${branch.startX} ${branch.y} ` +
-    `L ${branch.cardX} ${branch.y}`
+    `C ${fromX + bend} ${fromY}, ${branch.startX - bend} ${branch.y}, ${branch.startX} ${branch.y}` +
+    line
   )
 }
 
@@ -160,11 +165,12 @@ const GraphSurface = memo(function GraphSurface({
         aria-hidden
       >
         {graph.branches.map((branch) => {
-          if (branch.branchFrom === null) return null
+          const path = branchPath(branch)
+          if (path === null) return null
           return (
             <path
               key={branch.workspace.name}
-              d={branchPath(branch)}
+              d={path}
               fill="none"
               stroke={branch.color}
               strokeWidth={2}
@@ -465,17 +471,15 @@ export function WorkspaceGraphPanel() {
   } = useWorkspaces(shown, refetchInterval)
   const workspaces = useMemo(() => data?.workspaces ?? [], [data?.workspaces])
 
-  // Pending histories for every branch (non-root) workspace.
-  const branchNames = useMemo(
-    () =>
-      workspaces
-        .filter((workspace) => workspace.baseWorkspace !== null)
-        .map((workspace) => workspace.name)
-        .sort(),
+  // Pending histories for every workspace - branches for their commit dots
+  // and fork points, roots (live) for the published stretch children branch
+  // off of.
+  const workspaceNames = useMemo(
+    () => workspaces.map((workspace) => workspace.name).sort(),
     [workspaces],
   )
   const { byWorkspace: pending, isLoading: eventsLoading } =
-    useWorkspacesPendingEvents(branchNames, shown, refetchInterval)
+    useWorkspacesPendingEvents(workspaceNames, shown, refetchInterval)
 
   const graph = useMemo(
     () => buildWorkspaceGraph(workspaces, pending),

@@ -216,6 +216,11 @@ export function useWorkspaceDocumentChanges(
 export interface WorkspacePendingEvent {
   /** Global event-store sequence number - unique and ascending. */
   sequenceNumber: number
+  /**
+   * The event's 0-based position within its content stream - comparable with
+   * a fork's `forkedFrom.version` to locate a branch point in the base.
+   */
+  version: number
   /** Event short type, e.g. "NodePropertiesWereSet". */
   type: string
   kind: 'content' | 'structure'
@@ -237,6 +242,13 @@ export interface WorkspacePendingEvents {
   baseWorkspace: string | null
   status: 'UP_TO_DATE' | 'OUTDATED'
   contentStreamId: string
+  /**
+   * Where this workspace's stream branched off: the base's content stream and
+   * the version it had at that moment. Base events with a higher version
+   * happened after the fork - they are what makes the workspace OUTDATED.
+   * null for root workspaces (nothing to fork from).
+   */
+  forkedFrom: { contentStreamId: string; version: number } | null
   /** Older events were dropped - only the newest ones are listed. */
   truncated: boolean
   /** Oldest first. */
