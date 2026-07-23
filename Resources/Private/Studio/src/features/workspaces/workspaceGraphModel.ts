@@ -1,7 +1,8 @@
-import type {
-  Workspace,
-  WorkspacePendingEvent,
-  WorkspacePendingEvents,
+import {
+  groupPendingEvents,
+  type Workspace,
+  type WorkspacePendingEvents,
+  type WorkspacePendingStep,
 } from '@/api/workspaces'
 
 /**
@@ -60,7 +61,8 @@ const BRANCH_COLORS = [
 export interface CommitDot {
   /** Dot center on the branch line. */
   x: number
-  event: WorkspacePendingEvent
+  /** One editing step - possibly several events of one command. */
+  step: WorkspacePendingStep
 }
 
 export interface WorkspaceBranch {
@@ -164,6 +166,7 @@ export function buildWorkspaceGraph(
     // root's stream is the published history itself, so only the stretch
     // after the earliest child fork is telling ("published, but not in that
     // branch yet") - everything older collapses into the leading ellipsis.
+    // Events group into editing steps (one command = one step = one dot).
     let events = history?.events ?? []
     let hiddenOlder = history?.truncated ?? false
     if (isRoot) {
@@ -177,27 +180,29 @@ export function buildWorkspaceGraph(
         hiddenOlder = false
       } else {
         const cut = Math.min(...forkVersions)
-        events = events
-          .filter((event) => event.version > cut)
-          .slice(-ROOT_MAX_DOTS)
+        events = events.filter((event) => event.version > cut)
         // There is always earlier published history behind the cut.
         hiddenOlder = true
       }
+    }
+    let steps = groupPendingEvents(events)
+    if (isRoot && steps.length > ROOT_MAX_DOTS) {
+      steps = steps.slice(-ROOT_MAX_DOTS)
     }
 
     const startX = branchFrom === null ? 0 : branchFrom.x + BRANCH_BEND
     // The ellipsis for hidden older events occupies the first dot slot.
     const slotOffset = hiddenOlder ? 1 : 0
-    const dots: CommitDot[] = events.map((event, index) => ({
+    const dots: CommitDot[] = steps.map((step, index) => ({
       x: startX + (slotOffset + index + 0.5) * DOT_SPACING,
-      event,
+      step,
     }))
     const lineLength =
       isRoot && dots.length === 0
         ? 0
         : Math.max(
             MIN_LINE_LENGTH,
-            (slotOffset + events.length) * DOT_SPACING + LINE_END_GAP,
+            (slotOffset + steps.length) * DOT_SPACING + LINE_END_GAP,
           )
     const cardX = startX + lineLength
 
@@ -228,7 +233,7 @@ export function buildWorkspaceGraph(
       const forkVersion = forkVersionOf(child)
       if (forkVersion === null) return headX
       if (forkVersion === -1) return dots.length > 0 ? startX : headX
-      const nextIndex = dots.findIndex((dot) => dot.event.version > forkVersion)
+      const nextIndex = dots.findIndex((dot) => dot.step.version > forkVersion)
       if (nextIndex === -1) return headX
       const left =
         nextIndex === 0

@@ -3,7 +3,6 @@ import {
   useWorkspaces,
   useWorkspacesPendingEvents,
   type Workspace,
-  type WorkspacePendingEvent,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import {
@@ -11,7 +10,6 @@ import {
   type GraphCanvasHandle,
 } from '@/components/graph/GraphCanvas'
 import { cardSurface, SELECTED_RING } from '@/components/graph/cardStyle'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +18,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LoadingState } from '@/components/ui/spinner'
-import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { BranchHistoryPanel } from './BranchHistoryPanel'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
+import { relativeTime, stepSummary } from './historyLabels'
 import { ReviewChangesDialog } from './ReviewChangesDialog'
 import { useWorkspaceSync } from './useWorkspaceSync'
 import {
@@ -49,40 +48,6 @@ import {
 const REFRESH_INTERVAL = 30_000
 const DOT_RADIUS = 6
 
-/**
- * Human labels for the event types the feed surfaces, resolved at render time
- * (module-level t() would run before the XLIFF catalog is loaded).
- */
-const EVENT_TYPE_LABELS: Record<string, () => string> = {
-  NodePropertiesWereSet: () =>
-    t('workspaceGraph.event.propertiesChanged', 'Properties changed'),
-  NodeReferencesWereSet: () =>
-    t('workspaceGraph.event.referencesChanged', 'References changed'),
-  NodeAggregateWithNodeWasCreated: () =>
-    t('workspaceGraph.event.nodeCreated', 'Created'),
-  NodeAggregateWasMoved: () => t('workspaceGraph.event.nodeMoved', 'Moved'),
-  NodeAggregateWasRemoved: () =>
-    t('workspaceGraph.event.nodeRemoved', 'Removed'),
-  SubtreeWasTagged: () =>
-    t('workspaceGraph.event.visibilityChanged', 'Visibility changed'),
-  SubtreeWasUntagged: () =>
-    t('workspaceGraph.event.visibilityChanged', 'Visibility changed'),
-  NodeAggregateTypeWasChanged: () =>
-    t('workspaceGraph.event.typeChanged', 'Type changed'),
-  NodeAggregateNameWasChanged: () =>
-    t('workspaceGraph.event.renamed', 'Renamed'),
-  NodeSpecializationVariantWasCreated: () =>
-    t('workspaceGraph.event.variantCreated', 'Variant created'),
-  NodeGeneralizationVariantWasCreated: () =>
-    t('workspaceGraph.event.variantCreated', 'Variant created'),
-  NodePeerVariantWasCreated: () =>
-    t('workspaceGraph.event.variantCreated', 'Variant created'),
-}
-
-function eventTypeLabel(type: string): string {
-  return EVENT_TYPE_LABELS[type]?.() ?? type
-}
-
 const CLASSIFICATION_ICONS: Record<string, string> = {
   ROOT: 'fas fa-globe text-neutral-300',
   SHARED: 'fas fa-users text-purple-500',
@@ -96,7 +61,8 @@ function workspaceLabel(workspace: Workspace): string {
     : workspace.title || workspace.name
 }
 
-/** What a pick selects: a workspace head card or one commit on a branch. */
+/** What a pick selects: a workspace head card or one editing step (commit
+ * dot) on a branch, identified by the step id (its first sequence number). */
 interface Selection {
   workspace: string
   /** null = the head card itself. */
@@ -200,19 +166,16 @@ const GraphSurface = memo(function GraphSurface({
         branch.dots.map((dot) => {
           const selected =
             selection?.workspace === branch.workspace.name &&
-            selection.sequenceNumber === dot.event.sequenceNumber
-          const summary = [
-            eventTypeLabel(dot.event.type),
-            dot.event.nodeLabel ?? dot.event.nodeAggregateId ?? '',
-          ]
-            .filter(Boolean)
-            .join(': ')
+            selection.sequenceNumber === dot.step.id
           return (
             <div
-              key={`${branch.workspace.name}:${dot.event.sequenceNumber}`}
-              data-graph-id={`event:${branch.workspace.name}:${dot.event.sequenceNumber}`}
+              key={`${branch.workspace.name}:${dot.step.id}`}
+              data-graph-id={`event:${branch.workspace.name}:${dot.step.id}`}
               className={cn(
                 'absolute cursor-pointer rounded-full border-2 bg-neutral-950 transition-transform',
+                // A step of several events (one command, e.g. a paste) gets a
+                // filled center - a hint there is more inside.
+                dot.step.events.length > 1 && 'bg-neutral-400',
                 selected && cn('scale-150', SELECTED_RING),
                 dimmed(branch.workspace.name) && 'opacity-20',
               )}
@@ -223,7 +186,7 @@ const GraphSurface = memo(function GraphSurface({
                 height: DOT_RADIUS * 2,
                 borderColor: branch.color,
               }}
-              title={`${summary}\n${dot.event.initiatingUserLabel ?? ''} ${new Date(dot.event.recordedAt).toLocaleString()}`.trim()}
+              title={`${stepSummary(dot.step)}\n${dot.step.initiatingUserLabel ?? ''} ${relativeTime(dot.step.recordedAt)}`.trim()}
             />
           )
         }),
@@ -314,74 +277,6 @@ const GraphSurface = memo(function GraphSurface({
   )
 })
 
-/** The bottom-right detail card for a selected commit dot. Selecting a
- * workspace card only emphasizes its publish path - the card itself already
- * shows everything there is to say. */
-function DetailCard({
-  selection,
-  graph,
-  onClose,
-}: {
-  selection: Selection
-  graph: WorkspaceGraph
-  onClose: () => void
-}) {
-  const branch = graph.byName.get(selection.workspace)
-  if (!branch || selection.sequenceNumber === null) return null
-  const event: WorkspacePendingEvent | undefined = branch.dots.find(
-    (dot) => dot.event.sequenceNumber === selection.sequenceNumber,
-  )?.event
-  if (!event) return null
-  return (
-    <div className="absolute right-2 bottom-2 z-10 w-72 rounded-md border border-neutral-700 bg-neutral-900/95 p-3 text-xs shadow-lg backdrop-blur-xs">
-      <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-1.5 font-medium text-white">
-            <i
-              className={cn(
-                event.icon ? faClassName(event.icon) : 'fas fa-cube',
-                'fa-fw shrink-0 text-[0.7rem] text-neutral-400',
-              )}
-              aria-hidden
-            />
-            <span className="truncate">
-              {event.nodeLabel ??
-                event.nodeAggregateId ??
-                t('workspaceGraph.unknownNode', 'Unknown node')}
-            </span>
-          </div>
-          <div className="mt-1 text-neutral-300">
-            {eventTypeLabel(event.type)}
-          </div>
-          <div className="mt-1 text-neutral-500">
-            {event.initiatingUserLabel && (
-              <>
-                <i className="fas fa-user fa-fw" aria-hidden />{' '}
-                {event.initiatingUserLabel} ·{' '}
-              </>
-            )}
-            {new Date(event.recordedAt).toLocaleString()}
-          </div>
-          {event.nodeType && (
-            <div className="mt-1 truncate font-mono text-[9px] text-neutral-500">
-              {event.nodeType}
-            </div>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className="shrink-0"
-          onClick={onClose}
-          title={t('workspaceGraph.closeDetails', 'Close details')}
-        >
-          <i className="fas fa-xmark" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 function Legend() {
   return (
     <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-900/80 p-2 text-[10px] text-neutral-400 backdrop-blur-xs">
@@ -422,6 +317,7 @@ export function WorkspaceGraphPanel() {
   const {
     workspaceName: currentWorkspaceName,
     personalWorkspaceName,
+    selectedDocument,
     navigateToNodeInWorkspace,
     checkoutWorkspace,
   } = useStudio()
@@ -461,6 +357,17 @@ export function WorkspaceGraphPanel() {
         : null,
     [selection, graph],
   )
+  const selectedBranch =
+    selection !== null ? (graph.byName.get(selection.workspace) ?? null) : null
+
+  // "Go to page" on a history step moves the editing context into the
+  // branch's workspace - offered only where the user can actually edit:
+  // the checked-out workspace, the own personal one, or a writable shared
+  // one (the same rule the checkout menu applies).
+  const canNavigateInto = (workspace: Workspace): boolean =>
+    workspace.name === currentWorkspaceName ||
+    workspace.name === personalWorkspaceName ||
+    (workspace.classification === 'SHARED' && workspace.permissions.write)
 
   // The card context menu and what it leads to: a review dialog opened on the
   // right-clicked workspace, or a rebase (with the shared conflict handling).
@@ -502,10 +409,27 @@ export function WorkspaceGraphPanel() {
       overlay={
         <>
           <Legend />
-          {selection !== null && graph.byName.has(selection.workspace) && (
-            <DetailCard
-              selection={selection}
-              graph={graph}
+          {selectedBranch !== null && (
+            <BranchHistoryPanel
+              key={selectedBranch.workspace.name}
+              branch={selectedBranch}
+              selectedStepId={selection?.sequenceNumber ?? null}
+              currentDocumentId={selectedDocument?.aggregateId ?? null}
+              onSelectStep={(stepId) =>
+                setSelection({
+                  workspace: selectedBranch.workspace.name,
+                  sequenceNumber: stepId,
+                })
+              }
+              onNavigate={
+                canNavigateInto(selectedBranch.workspace)
+                  ? (address) =>
+                      navigateToNodeInWorkspace(
+                        address,
+                        selectedBranch.workspace.name,
+                      )
+                  : null
+              }
               onClose={() => setSelection(null)}
             />
           )}

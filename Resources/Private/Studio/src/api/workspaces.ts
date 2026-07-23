@@ -235,6 +235,163 @@ export interface WorkspacePendingEvent {
   nodeType: string | null
   /** Configured Font Awesome icon of the node's type, or null. */
   icon: string | null
+  /**
+   * Short class name of the command that caused the event (e.g.
+   * "SetSerializedNodeProperties"), from the rebase metadata the content
+   * repository keeps on every event. All events of one command share one
+   * `initiatingTimestamp` - together with the user that identifies one
+   * editing step, and unlike the events' correlation id it survives
+   * rebases and partial publishes.
+   */
+  command: string | null
+  initiatingTimestamp: string | null
+  /** Closest containing document of the affected node. */
+  documentAggregateId: string | null
+  documentLabel: string | null
+  /** Encoded node address of that document - navigable via the studio. */
+  documentAddress: string | null
+}
+
+/**
+ * One editing step of a workspace's pending history: the events one command
+ * produced (a paste, a property change, a move...), the unit the Workspaces
+ * graph draws as a single commit dot. Grouped client-side from consecutive
+ * events sharing command, user and initiating timestamp.
+ */
+export interface WorkspacePendingStep {
+  /** The first event's sequence number - stable id of the step. */
+  id: number
+  command: string | null
+  /** Oldest first; never empty. */
+  events: WorkspacePendingEvent[]
+  /** Sequence-number range, for the diff resource. */
+  from: number
+  to: number
+  /** Stream version of the last event - what fork points compare against. */
+  version: number
+  initiatingUserLabel: string | null
+  recordedAt: string
+  /** The distinct documents the step touched (label of the first event wins). */
+  documents: { id: string; label: string | null; address: string | null }[]
+}
+
+/**
+ * Group a pending history (oldest first) into editing steps. Events of one
+ * command commit contiguously, so grouping consecutive runs is exact; the
+ * guard on command/timestamp presence keeps unknown events as single steps.
+ */
+export function groupPendingEvents(
+  events: WorkspacePendingEvent[],
+): WorkspacePendingStep[] {
+  const steps: WorkspacePendingStep[] = []
+  let current: WorkspacePendingStep | null = null
+  for (const event of events) {
+    const joins =
+      current !== null &&
+      current.command !== null &&
+      event.command === current.command &&
+      event.initiatingTimestamp !== null &&
+      event.initiatingTimestamp === current.events[0].initiatingTimestamp &&
+      event.initiatingUserId === current.events[0].initiatingUserId
+    if (joins && current !== null) {
+      current.events.push(event)
+      current.to = event.sequenceNumber
+      current.version = event.version
+      current.recordedAt = event.recordedAt
+      if (
+        event.documentAggregateId !== null &&
+        !current.documents.some((d) => d.id === event.documentAggregateId)
+      ) {
+        current.documents.push({
+          id: event.documentAggregateId,
+          label: event.documentLabel,
+          address: event.documentAddress,
+        })
+      }
+    } else {
+      current = {
+        id: event.sequenceNumber,
+        command: event.command,
+        events: [event],
+        from: event.sequenceNumber,
+        to: event.sequenceNumber,
+        version: event.version,
+        initiatingUserLabel: event.initiatingUserLabel,
+        recordedAt: event.recordedAt,
+        documents:
+          event.documentAggregateId !== null
+            ? [
+                {
+                  id: event.documentAggregateId,
+                  label: event.documentLabel,
+                  address: event.documentAddress,
+                },
+              ]
+            : [],
+      }
+      steps.push(current)
+    }
+  }
+  return steps
+}
+
+/**
+ * One before/after row of a pending-events diff: what a single event changed.
+ * `old`/`new` carry the serialized property value, `{id,label}` node
+ * descriptors (reference/parent kinds), a type/tag name, or dimension
+ * coordinates (variant kind) - null means "did not exist".
+ */
+export interface WorkspacePendingDiffChange {
+  kind:
+    | 'property'
+    | 'reference'
+    | 'nodeType'
+    | 'name'
+    | 'parent'
+    | 'position'
+    | 'tag'
+    | 'variant'
+  property: string | null
+  /** Configured property label - possibly an XLIFF shorthand to translate. */
+  label: string | null
+  old: unknown
+  new: unknown
+}
+
+export type WorkspacePendingDiffEvent = WorkspacePendingEvent & {
+  changes: WorkspacePendingDiffChange[]
+}
+
+/**
+ * Before/after detail for one editing step (a sequence-number slice of the
+ * pending history). Lazy: fetched when a step's detail is opened.
+ */
+export function useWorkspacePendingEventsDiff(
+  workspaceName: string | null,
+  from: number | null,
+  to: number | null,
+) {
+  return useQuery({
+    queryKey: queryKeys.workspaces.pendingEventsDiff(
+      workspaceName ?? '',
+      from ?? 0,
+      to ?? 0,
+    ),
+    queryFn: () =>
+      apiFetch<{
+        workspace: string
+        contentStreamId: string
+        from: number
+        to: number
+        events: WorkspacePendingDiffEvent[]
+      }>(
+        `/workspaces/${encodeURIComponent(workspaceName!)}/pending-events/diff?from=${from}&to=${to}`,
+      ),
+    enabled: workspaceName !== null && from !== null && to !== null,
+    // The slice is immutable (events never change once recorded); only a
+    // stream swap invalidates it, and that changes the key via `from`/`to`.
+    staleTime: Infinity,
+  })
 }
 
 export interface WorkspacePendingEvents {

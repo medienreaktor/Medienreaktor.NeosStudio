@@ -2582,6 +2582,110 @@
         <source>Unknown node</source>
         <target xml:lang="de">Unbekannter Node</target>
       </trans-unit>
+      <trans-unit id="workspaceGraph.step.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="de">Ausgeblendet</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.shown" xml:space="preserve">
+        <source>Shown</source>
+        <target xml:lang="de">Eingeblendet</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.nodeCount" xml:space="preserve">
+        <source>{0} (+{1} more)</source>
+        <target xml:lang="de">{0} (+{1} weitere)</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.justNow" xml:space="preserve">
+        <source>just now</source>
+        <target xml:lang="de">gerade eben</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.minutesAgo" xml:space="preserve">
+        <source>{0}m ago</source>
+        <target xml:lang="de">vor {0} Min.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
+        <source>{0}h ago</source>
+        <target xml:lang="de">vor {0} Std.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.title" xml:space="preserve">
+        <source>History</source>
+        <target xml:lang="de">Verlauf</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.filterDocument" xml:space="preserve">
+        <source>This page</source>
+        <target xml:lang="de">Diese Seite</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.filterDocumentHint" xml:space="preserve">
+        <source>Only steps that touched the current page</source>
+        <target xml:lang="de">Nur Schritte, die die aktuelle Seite betreffen</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="de">Keine ausstehenden Änderungen.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.emptyForDocument" xml:space="preserve">
+        <source>No changes on the current page.</source>
+        <target xml:lang="de">Keine Änderungen auf der aktuellen Seite.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.older" xml:space="preserve">
+        <source>Older history is not shown.</source>
+        <target xml:lang="de">Älterer Verlauf wird nicht angezeigt.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.olderRoot" xml:space="preserve">
+        <source>Older published history is not shown.</source>
+        <target xml:lang="de">Älterer veröffentlichter Verlauf wird nicht angezeigt.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.loadingDiff" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="de">Änderungen werden geladen…</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.diffFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="de">Die Änderungen konnten nicht geladen werden.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
+        <source>No details available.</source>
+        <target xml:lang="de">Keine Details verfügbar.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="de">Zur Seite</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
+        <source>yes</source>
+        <target xml:lang="de">ja</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
+        <source>no</source>
+        <target xml:lang="de">nein</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
+        <source>empty</source>
+        <target xml:lang="de">leer</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
+        <source>Node type</source>
+        <target xml:lang="de">Node-Typ</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="de">Name</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.parent" xml:space="preserve">
+        <source>Parent</source>
+        <target xml:lang="de">Übergeordnetes Element</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.position" xml:space="preserve">
+        <source>Position</source>
+        <target xml:lang="de">Position</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.variant" xml:space="preserve">
+        <source>Dimension</source>
+        <target xml:lang="de">Dimension</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.reordered" xml:space="preserve">
+        <source>Reordered among its siblings</source>
+        <target xml:lang="de">Reihenfolge geändert</target>
+      </trans-unit>
       <trans-unit id="workspacesAdmin.active" xml:space="preserve">
         <source>Active</source>
         <target xml:lang="de">Aktiv</target>
