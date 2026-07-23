@@ -610,6 +610,18 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="de">URL-Pfadsegment aus dem aktuellen Seitentitel neu erstellen</target>
       </trans-unit>
+      <trans-unit id="graph.fit" xml:space="preserve">
+        <source>Fit to view</source>
+        <target xml:lang="de">Ansicht einpassen</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+        <target xml:lang="de">Vergrößern</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+        <target xml:lang="de">Verkleinern</target>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="de">Editor wird noch nicht unterstützt: {0}</target>
@@ -1186,10 +1198,6 @@
         <source>Abstract</source>
         <target xml:lang="de">Abstrakt</target>
       </trans-unit>
-      <trans-unit id="nodeTypes.fit" xml:space="preserve">
-        <source>Fit to view</source>
-        <target xml:lang="de">Ansicht einpassen</target>
-      </trans-unit>
       <trans-unit id="nodeTypes.inherited" xml:space="preserve">
         <source>Inherited</source>
         <target xml:lang="de">Geerbt</target>
@@ -1242,14 +1250,6 @@
         <source>Search node types…</source>
         <target xml:lang="de">Node-Typen durchsuchen…</target>
       </trans-unit>
-      <trans-unit id="nodeTypes.zoomIn" xml:space="preserve">
-        <source>Zoom in</source>
-        <target xml:lang="de">Vergrößern</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.zoomOut" xml:space="preserve">
-        <source>Zoom out</source>
-        <target xml:lang="de">Verkleinern</target>
-      </trans-unit>
       <trans-unit id="panel.collapse" xml:space="preserve">
         <source>Collapse panel</source>
         <target xml:lang="de">Panel einklappen</target>
@@ -1301,6 +1301,10 @@
       <trans-unit id="panel.title.visualEditor" xml:space="preserve">
         <source>Visual Editor</source>
         <target xml:lang="de">Visueller Editor</target>
+      </trans-unit>
+      <trans-unit id="panel.title.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="de">Arbeitsbereiche</target>
       </trans-unit>
       <trans-unit id="presence.justYou" xml:space="preserve">
         <source>Just you</source>
@@ -2461,6 +2465,98 @@
       <trans-unit id="workspace.sync.success" xml:space="preserve">
         <source>Workspace synchronized.</source>
         <target xml:lang="de">Arbeitsbereich synchronisiert.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.basedOn" xml:space="preserve">
+        <source>Based on {0}</source>
+        <target xml:lang="de">Basiert auf {0}</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="de">{0} Änderungen</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
+        <source>Close details</source>
+        <target xml:lang="de">Details schließen</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.current" xml:space="preserve">
+        <source>Editing</source>
+        <target xml:lang="de">Aktiv</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="de">Erstellt</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeMoved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="de">Verschoben</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRemoved" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="de">Gelöscht</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.propertiesChanged" xml:space="preserve">
+        <source>Properties changed</source>
+        <target xml:lang="de">Eigenschaften geändert</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.referencesChanged" xml:space="preserve">
+        <source>References changed</source>
+        <target xml:lang="de">Referenzen geändert</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.renamed" xml:space="preserve">
+        <source>Renamed</source>
+        <target xml:lang="de">Umbenannt</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.typeChanged" xml:space="preserve">
+        <source>Type changed</source>
+        <target xml:lang="de">Typ geändert</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.variantCreated" xml:space="preserve">
+        <source>Variant created</source>
+        <target xml:lang="de">Variante erstellt</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
+        <source>Visibility changed</source>
+        <target xml:lang="de">Sichtbarkeit geändert</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
+        <source>Pending change</source>
+        <target xml:lang="de">Ausstehende Änderung</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
+        <source>Base has newer changes</source>
+        <target xml:lang="de">Basis hat neuere Änderungen</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
+        <source>Personal workspace</source>
+        <target xml:lang="de">Persönlicher Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
+        <source>Shared workspace</source>
+        <target xml:lang="de">Geteilter Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
+        <source>The workspaces could not be loaded.</source>
+        <target xml:lang="de">Die Arbeitsbereiche konnten nicht geladen werden.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loading" xml:space="preserve">
+        <source>Loading workspaces…</source>
+        <target xml:lang="de">Arbeitsbereiche werden geladen…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
+        <source>The base workspace has newer changes</source>
+        <target xml:lang="de">Der Basis-Arbeitsbereich hat neuere Änderungen</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
+        <source>outdated</source>
+        <target xml:lang="de">veraltet</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.rootWorkspace" xml:space="preserve">
+        <source>Root workspace - the published state</source>
+        <target xml:lang="de">Root-Arbeitsbereich – der veröffentlichte Stand</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="de">Unbekannter Node</target>
       </trans-unit>
       <trans-unit id="workspacesAdmin.active" xml:space="preserve">
         <source>Active</source>

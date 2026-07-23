@@ -17,6 +17,7 @@ import { InspectorPanel } from '@/features/inspector/Inspector'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
 import { NodeTypesPanel } from '@/features/nodetypes/NodeTypesPanel'
+import { WorkspaceGraphPanel } from '@/features/workspaces/WorkspaceGraphPanel'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
@@ -334,8 +335,14 @@ export function registerBuiltinPanels(): void {
     component: MediaLibraryPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
-  // Registered directly after the Media Library so its tab appears to the
-  // right of it in the main area's tab group.
+  // Registration order is tab order: Workspaces sits directly to the right
+  // of the Media Library, Node Types after it.
+  panelRegistry.register({
+    id: 'workspaces',
+    title: t('panel.title.workspaces', 'Workspaces'),
+    component: WorkspaceGraphPanel,
+    defaultPlacement: { kind: 'dock', region: 'main' },
+  })
   panelRegistry.register({
     id: 'node-types',
     title: t('panel.title.nodeTypes', 'Node Types'),

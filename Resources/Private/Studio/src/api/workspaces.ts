@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import { apiFetch, ApiError } from './client'
 import { queryKeys } from './keys'
 
@@ -42,11 +42,12 @@ export interface WorkspaceChange {
   deleted: boolean
 }
 
-export function useWorkspaces(enabled = true) {
+export function useWorkspaces(enabled = true, refetchInterval?: number) {
   return useQuery({
     queryKey: queryKeys.workspaces.all,
     queryFn: () => apiFetch<{ workspaces: Workspace[] }>('/workspaces'),
     enabled,
+    refetchInterval,
   })
 }
 
@@ -199,10 +200,79 @@ export function useWorkspaceDocumentChanges(
         baseWorkspace: string | null
         status: 'UP_TO_DATE' | 'OUTDATED'
         documents: WorkspaceDocumentChange[]
-      }>(
-        `/workspaces/${encodeURIComponent(workspaceName!)}/document-changes`,
-      ),
+      }>(`/workspaces/${encodeURIComponent(workspaceName!)}/document-changes`),
     enabled: workspaceName !== null && enabled,
+  })
+}
+
+/**
+ * One event of a workspace's pending history (see the pending-events
+ * resource): an ESCR event recorded in the workspace's current content
+ * stream - which exists exactly since the workspace last forked off its base,
+ * so the list is "everything that happened since the branch point". Enriched
+ * server-side with the affected node's label/type/icon and the initiating
+ * user's name for display.
+ */
+export interface WorkspacePendingEvent {
+  /** Global event-store sequence number - unique and ascending. */
+  sequenceNumber: number
+  /** Event short type, e.g. "NodePropertiesWereSet". */
+  type: string
+  kind: 'content' | 'structure'
+  nodeAggregateId: string | null
+  parentNodeAggregateId: string | null
+  dimensionSpacePoints: Record<string, string>[]
+  initiatingUserId: string | null
+  initiatingUserLabel: string | null
+  recordedAt: string
+  /** Label of the affected node; null when it is no longer resolvable. */
+  nodeLabel: string | null
+  nodeType: string | null
+  /** Configured Font Awesome icon of the node's type, or null. */
+  icon: string | null
+}
+
+export interface WorkspacePendingEvents {
+  workspace: string
+  baseWorkspace: string | null
+  status: 'UP_TO_DATE' | 'OUTDATED'
+  contentStreamId: string
+  /** Older events were dropped - only the newest ones are listed. */
+  truncated: boolean
+  /** Oldest first. */
+  events: WorkspacePendingEvent[]
+}
+
+/**
+ * The pending histories of several workspaces at once (the Workspaces graph
+ * fetches one per visible branch). Returns a map keyed by workspace name;
+ * entries are absent while loading or on error.
+ */
+export function useWorkspacesPendingEvents(
+  workspaceNames: string[],
+  enabled = true,
+  refetchInterval?: number,
+) {
+  return useQueries({
+    queries: workspaceNames.map((name) => ({
+      queryKey: queryKeys.workspaces.pendingEvents(name),
+      queryFn: () =>
+        apiFetch<WorkspacePendingEvents>(
+          `/workspaces/${encodeURIComponent(name)}/pending-events`,
+        ),
+      enabled,
+      refetchInterval,
+    })),
+    combine: (results) => {
+      const byWorkspace = new Map<string, WorkspacePendingEvents>()
+      results.forEach((result, index) => {
+        if (result.data) byWorkspace.set(workspaceNames[index], result.data)
+      })
+      return {
+        byWorkspace,
+        isLoading: results.some((result) => result.isLoading),
+      }
+    },
   })
 }
 

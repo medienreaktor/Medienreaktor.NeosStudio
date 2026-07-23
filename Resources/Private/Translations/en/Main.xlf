@@ -458,6 +458,15 @@
       <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
         <source>Rebuild the URL path segment from the current page title</source>
       </trans-unit>
+      <trans-unit id="graph.fit" xml:space="preserve">
+        <source>Fit to view</source>
+      </trans-unit>
+      <trans-unit id="graph.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+      </trans-unit>
+      <trans-unit id="graph.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
       </trans-unit>
@@ -890,9 +899,6 @@
       <trans-unit id="nodeTypes.abstract" xml:space="preserve">
         <source>Abstract</source>
       </trans-unit>
-      <trans-unit id="nodeTypes.fit" xml:space="preserve">
-        <source>Fit to view</source>
-      </trans-unit>
       <trans-unit id="nodeTypes.inherited" xml:space="preserve">
         <source>Inherited</source>
       </trans-unit>
@@ -932,12 +938,6 @@
       <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
         <source>Search node types…</source>
       </trans-unit>
-      <trans-unit id="nodeTypes.zoomIn" xml:space="preserve">
-        <source>Zoom in</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.zoomOut" xml:space="preserve">
-        <source>Zoom out</source>
-      </trans-unit>
       <trans-unit id="panel.collapse" xml:space="preserve">
         <source>Collapse panel</source>
       </trans-unit>
@@ -976,6 +976,9 @@
       </trans-unit>
       <trans-unit id="panel.title.visualEditor" xml:space="preserve">
         <source>Visual Editor</source>
+      </trans-unit>
+      <trans-unit id="panel.title.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
       </trans-unit>
       <trans-unit id="presence.justYou" xml:space="preserve">
         <source>Just you</source>
@@ -1846,6 +1849,75 @@
       </trans-unit>
       <trans-unit id="workspace.sync.success" xml:space="preserve">
         <source>Workspace synchronized.</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.basedOn" xml:space="preserve">
+        <source>Based on {0}</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
+        <source>{0} changes</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
+        <source>Close details</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.current" xml:space="preserve">
+        <source>Editing</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
+        <source>Created</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeMoved" xml:space="preserve">
+        <source>Moved</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRemoved" xml:space="preserve">
+        <source>Removed</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.propertiesChanged" xml:space="preserve">
+        <source>Properties changed</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.referencesChanged" xml:space="preserve">
+        <source>References changed</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.renamed" xml:space="preserve">
+        <source>Renamed</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.typeChanged" xml:space="preserve">
+        <source>Type changed</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.variantCreated" xml:space="preserve">
+        <source>Variant created</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
+        <source>Visibility changed</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
+        <source>Pending change</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
+        <source>Base has newer changes</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
+        <source>Personal workspace</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
+        <source>Shared workspace</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
+        <source>The workspaces could not be loaded.</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loading" xml:space="preserve">
+        <source>Loading workspaces…</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
+        <source>The base workspace has newer changes</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
+        <source>outdated</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.rootWorkspace" xml:space="preserve">
+        <source>Root workspace - the published state</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
       </trans-unit>
       <trans-unit id="workspacesAdmin.active" xml:space="preserve">
         <source>Active</source>
