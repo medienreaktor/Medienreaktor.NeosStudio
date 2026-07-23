@@ -10,6 +10,7 @@ import {
   GraphCanvas,
   type GraphCanvasHandle,
 } from '@/components/graph/GraphCanvas'
+import { cardSurface, SELECTED_RING } from '@/components/graph/cardStyle'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -212,7 +213,7 @@ const GraphSurface = memo(function GraphSurface({
               data-graph-id={`event:${branch.workspace.name}:${dot.event.sequenceNumber}`}
               className={cn(
                 'absolute cursor-pointer rounded-full border-2 bg-neutral-950 transition-transform',
-                selected && 'scale-125 ring-2 ring-blue-500/70',
+                selected && cn('scale-150', SELECTED_RING),
                 dimmed(branch.workspace.name) && 'opacity-20',
               )}
               style={{
@@ -238,9 +239,8 @@ const GraphSurface = memo(function GraphSurface({
             key={workspace.name}
             data-graph-id={`ws:${workspace.name}`}
             className={cn(
-              'absolute cursor-pointer overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-md',
-              selected && 'border-blue-500',
-              isCurrent && 'ring-2 ring-blue-500/70',
+              'absolute cursor-pointer overflow-hidden rounded-md border-2 shadow-md',
+              selected && SELECTED_RING,
               dimmed(workspace.name) && 'opacity-30',
             )}
             style={{
@@ -248,6 +248,9 @@ const GraphSurface = memo(function GraphSurface({
               top: branch.cardY,
               width: WS_CARD_WIDTH,
               height: WS_CARD_HEIGHT,
+              // The checked-out workspace's surface leans further into its
+              // branch color; the "Editing" badge names it.
+              ...cardSurface(branch.color, isCurrent ? 22 : 10),
             }}
             onContextMenu={(event) => {
               event.preventDefault()
@@ -257,8 +260,7 @@ const GraphSurface = memo(function GraphSurface({
               })
             }}
           >
-            <div style={{ height: 3, background: branch.color }} />
-            <div className="flex flex-col gap-0.5 px-3 py-1.5">
+            <div className="flex flex-col gap-0.5 px-3 py-2">
               <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-white">
                 <i
                   className={cn(

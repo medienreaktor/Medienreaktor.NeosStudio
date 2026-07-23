@@ -4,6 +4,7 @@ import {
   GraphCanvas,
   type GraphCanvasHandle,
 } from '@/components/graph/GraphCanvas'
+import { cardSurface, SELECTED_RING } from '@/components/graph/cardStyle'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
@@ -42,11 +43,12 @@ const ROW_HEIGHT = 18
 /** Edges attach at the header's vertical center. */
 const EDGE_ANCHOR_Y = HEADER_HEIGHT / 2
 
-const KIND_ACCENT: Record<CardKind, string> = {
-  document: 'bg-blue-500',
-  collection: 'bg-amber-500',
-  content: 'bg-emerald-500',
-  other: 'bg-neutral-500',
+/** The kind color carries the whole card (outline + surface tint). */
+const KIND_COLOR: Record<CardKind, string> = {
+  document: 'var(--color-blue-500)',
+  collection: 'var(--color-amber-500)',
+  content: 'var(--color-emerald-500)',
+  other: 'var(--color-neutral-500)',
 }
 
 /** Which of a card's two sections are expanded. */
@@ -103,7 +105,7 @@ function CardSection({
   onToggle: () => void
 }) {
   return (
-    <div className="border-t border-neutral-800 px-3">
+    <div className="border-t border-white/10 px-3">
       <CollapsibleGroup
         label={<span className="truncate">{title}</span>}
         open={open}
@@ -208,10 +210,10 @@ const GraphSurface = memo(function GraphSurface({
             key={card.name}
             data-graph-id={card.name}
             className={cn(
-              'absolute cursor-pointer overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-md',
+              'absolute cursor-pointer overflow-hidden rounded-md border-2 shadow-md',
               model.abstract && 'border-dashed',
-              highlight?.selected === card.name && 'border-blue-500',
-              matches.has(card.name) && 'ring-2 ring-blue-500/70',
+              matches.has(card.name) && 'ring-2 ring-blue-500/60',
+              highlight?.selected === card.name && SELECTED_RING,
               !emphasized(card.name) && 'opacity-30',
             )}
             style={{
@@ -219,12 +221,12 @@ const GraphSurface = memo(function GraphSurface({
               top: card.y,
               width: CARD_WIDTH,
               height: card.height,
+              ...cardSurface(KIND_COLOR[model.kind]),
             }}
           >
-            <div className={cn('h-[3px]', KIND_ACCENT[model.kind])} />
             <div
               className="flex flex-col justify-center gap-0.5 px-3"
-              style={{ height: HEADER_HEIGHT - 3 }}
+              style={{ height: HEADER_HEIGHT }}
             >
               <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-white">
                 <i
@@ -287,7 +289,8 @@ function Legend() {
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
-            className={cn('size-2 rounded-full', KIND_ACCENT[entry.kind])}
+            className="size-2 rounded-full"
+            style={{ background: KIND_COLOR[entry.kind] }}
           />
           {entry.label}
         </div>
