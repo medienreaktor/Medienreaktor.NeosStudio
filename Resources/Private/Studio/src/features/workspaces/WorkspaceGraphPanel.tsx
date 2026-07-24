@@ -49,10 +49,10 @@ const REFRESH_INTERVAL = 30_000
 const DOT_RADIUS = 6
 
 const CLASSIFICATION_ICONS: Record<string, string> = {
-  ROOT: 'fas fa-globe text-neutral-300',
+  ROOT: 'fas fa-earth-americas text-white',
   SHARED: 'fas fa-users text-purple-500',
-  PRIVATE: 'fas fa-lock text-neutral-400',
-  PERSONAL: 'fas fa-user text-neutral-400',
+  PRIVATE: 'fas fa-lock text-white/50',
+  PERSONAL: 'fas fa-user text-white/50',
 }
 
 function workspaceLabel(workspace: Workspace): string {
@@ -230,7 +230,7 @@ const GraphSurface = memo(function GraphSurface({
                 <i
                   className={cn(
                     CLASSIFICATION_ICONS[workspace.classification] ??
-                      'fas fa-layer-group text-neutral-400',
+                      'fas fa-layer-group text-white/50',
                     'fa-fw shrink-0 text-[0.7rem]',
                   )}
                   aria-hidden
@@ -242,10 +242,10 @@ const GraphSurface = memo(function GraphSurface({
                   </span>
                 )}
               </div>
-              <div className="truncate font-mono text-[9px] text-neutral-500">
+              <div className="truncate font-mono text-[9px] text-white/50">
                 {workspace.name}
               </div>
-              <div className="flex items-center gap-2 text-[9px] text-neutral-400">
+              <div className="flex items-center gap-2 text-[9px] text-white">
                 {branch.branchFrom !== null && (
                   <span>
                     {t('workspaceGraph.changeCount', '{0} changes', [
@@ -278,35 +278,6 @@ const GraphSurface = memo(function GraphSurface({
     </>
   )
 })
-
-function Legend() {
-  return (
-    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-900/80 p-2 text-[10px] text-neutral-400 backdrop-blur-xs">
-      <div className="flex items-center gap-1.5">
-        <span className="size-2 rounded-full border-2 border-blue-500 bg-neutral-950" />
-        {t('workspaceGraph.legend.change', 'Pending change')}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <i
-          className="fas fa-users fa-fw text-[0.6rem] text-purple-500"
-          aria-hidden
-        />
-        {t('workspaceGraph.legend.shared', 'Shared workspace')}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <i className="fas fa-user fa-fw text-[0.6rem]" aria-hidden />
-        {t('workspaceGraph.legend.personal', 'Personal workspace')}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <i
-          className="fas fa-triangle-exclamation fa-fw text-[0.6rem] text-amber-500"
-          aria-hidden
-        />
-        {t('workspaceGraph.legend.outdated', 'Base has newer changes')}
-      </div>
-    </div>
-  )
-}
 
 /** An open card context menu: which workspace, anchored where. */
 interface CardMenu {
@@ -410,7 +381,6 @@ export function WorkspaceGraphPanel() {
       onPick={(id) => setSelection(parsePick(id))}
       overlay={
         <>
-          <Legend />
           {selectedBranch !== null && (
             <BranchHistoryPanel
               key={selectedBranch.workspace.name}

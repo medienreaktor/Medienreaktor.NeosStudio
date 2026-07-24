@@ -27,7 +27,7 @@ import {
  */
 
 export const WS_CARD_WIDTH = 240
-export const WS_CARD_HEIGHT = 78
+export const WS_CARD_HEIGHT = 64
 export const LANE_HEIGHT = 100
 /** Distance between two commit dots on a branch line. */
 export const DOT_SPACING = 36
