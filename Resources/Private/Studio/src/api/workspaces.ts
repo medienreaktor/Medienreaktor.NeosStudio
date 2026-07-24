@@ -566,8 +566,8 @@ export function updateWorkspace(
 /** With force, pending changes are discarded along with the workspace. */
 export function deleteWorkspace(workspaceName: string, force = false) {
   return apiFetch<{ success: boolean }>(
-    `/workspaces/${encodeURIComponent(workspaceName)}`,
-    { method: 'DELETE', body: force ? { force: true } : undefined },
+    `/workspaces/${encodeURIComponent(workspaceName)}${force ? '?force=true' : ''}`,
+    { method: 'DELETE' },
   )
 }
 
@@ -597,8 +597,9 @@ export function unassignWorkspaceRole(
   workspaceName: string,
   subject: Pick<WorkspaceRoleAssignment, 'subjectType' | 'subject'>,
 ) {
+  // The assignment is addressed in the path - DELETE requests carry no body.
   return apiFetch<{ assignments: WorkspaceRoleAssignment[] }>(
-    `/workspaces/${encodeURIComponent(workspaceName)}/roles`,
-    { method: 'DELETE', body: subject },
+    `/workspaces/${encodeURIComponent(workspaceName)}/roles/${encodeURIComponent(subject.subjectType)}/${encodeURIComponent(subject.subject)}`,
+    { method: 'DELETE' },
   )
 }

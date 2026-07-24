@@ -92,7 +92,7 @@ function StaticSelectBox({ value, onCommit, options }: PropertyEditorProps) {
 }
 
 /**
- * Options loaded from /api/datasources/{identifier}, passing the edited node
+ * Options loaded from /api/data-sources/{identifier}, passing the edited node
  * and editorOptions.dataSourceAdditionalData along - the same contract the
  * old UI's data-source-based select box speaks. Results are cached for the
  * session unless dataSourceDisableCaching is set; while options load (or when

@@ -34,7 +34,7 @@ interface NodeTypesResponse {
 export function useNodeTypes(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.all,
-    queryFn: () => apiFetch<NodeTypesResponse>('/nodetypes'),
+    queryFn: () => apiFetch<NodeTypesResponse>('/node-types'),
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled,
@@ -87,7 +87,7 @@ export function useNodeTypesWithProperties(enabled = true) {
     queryKey: queryKeys.nodeTypes.withProperties,
     queryFn: () =>
       apiFetch<NodeTypesWithPropertiesResponse>(
-        '/nodetypes?includeProperties=1',
+        '/node-types?includeProperties=1',
       ),
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
@@ -112,7 +112,7 @@ export function useNodeTypesWithProperties(enabled = true) {
 export function useNodeTypeGroups(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.all,
-    queryFn: () => apiFetch<NodeTypesResponse>('/nodetypes'),
+    queryFn: () => apiFetch<NodeTypesResponse>('/node-types'),
     staleTime: Infinity,
     enabled,
     select: (data) => data.groups ?? {},
@@ -241,7 +241,7 @@ export function useNodeTypeSchema(name: string | null, enabled = true) {
     queryKey: queryKeys.nodeTypes.schema(name ?? ''),
     queryFn: () =>
       apiFetch<NodeTypeSchemaDto>(
-        `/nodetypes/${encodeURIComponent(name ?? '')}`,
+        `/node-types/${encodeURIComponent(name ?? '')}`,
       ),
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,

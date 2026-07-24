@@ -4,7 +4,7 @@ import { queryKeys } from './keys'
 
 /**
  * Neos data sources: server-side DataSourceInterface implementations that
- * populate select-box style editors, invoked through /api/datasources/{id}.
+ * populate select-box style editors, invoked through /api/data-sources/{id}.
  * The endpoint forwards every extra query parameter to the data source as its
  * $arguments array (the editorOptions.dataSourceAdditionalData contract) and
  * wraps the raw getData() return value in a {"data": ...} envelope.
@@ -67,7 +67,7 @@ export function useDataSource({
       }
       const query = search.toString()
       const response = await apiFetch<{ data: unknown }>(
-        `/datasources/${encodeURIComponent(identifier ?? '')}${query ? `?${query}` : ''}`,
+        `/data-sources/${encodeURIComponent(identifier ?? '')}${query ? `?${query}` : ''}`,
       )
       return response.data
     },

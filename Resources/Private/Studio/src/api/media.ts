@@ -283,7 +283,7 @@ export async function updateAsset(
   patch: AssetMetadataPatch,
 ): Promise<MediaAsset> {
   const result = await apiFetch<{ asset: MediaAsset }>(
-    `/media/assets/${encodeURIComponent(identifier)}`,
+    `/media/assets/neos/${encodeURIComponent(identifier)}`,
     {
       method: 'PATCH',
       body: patch,
@@ -294,7 +294,7 @@ export async function updateAsset(
 }
 
 export async function deleteAsset(identifier: string): Promise<void> {
-  await apiFetch(`/media/assets/${encodeURIComponent(identifier)}`, {
+  await apiFetch(`/media/assets/neos/${encodeURIComponent(identifier)}`, {
     method: 'DELETE',
   })
   await invalidateMedia()
@@ -308,7 +308,7 @@ export async function replaceAssetResource(
   const form = new FormData()
   form.append('resource', file)
   const result = await apiUpload<{ asset: MediaAsset }>(
-    `/media/assets/${encodeURIComponent(identifier)}/resource`,
+    `/media/assets/neos/${encodeURIComponent(identifier)}/resource`,
     form,
     { onProgress },
   )
@@ -328,7 +328,7 @@ export async function createImageVariant(
   crop: CropRect,
 ): Promise<MediaAsset> {
   const result = await apiFetch<{ asset: MediaAsset }>(
-    `/media/assets/${encodeURIComponent(originalIdentifier)}/variants`,
+    `/media/assets/neos/${encodeURIComponent(originalIdentifier)}/variants`,
     { method: 'POST', body: { crop } },
   )
   await invalidateMedia()
@@ -352,16 +352,11 @@ export async function setAssetTag(
   tag: string,
   assigned: boolean,
 ): Promise<MediaAsset> {
-  const path = `/media/assets/${encodeURIComponent(identifier)}/tags`
-  const result = assigned
-    ? await apiFetch<{ asset: MediaAsset }>(path, {
-        method: 'POST',
-        body: { tag },
-      })
-    : await apiFetch<{ asset: MediaAsset }>(
-        `${path}?tag=${encodeURIComponent(tag)}`,
-        { method: 'DELETE' },
-      )
+  // Tag membership is a sub-resource: PUT adds (idempotent), DELETE removes.
+  const path = `/media/assets/neos/${encodeURIComponent(identifier)}/tags/${encodeURIComponent(tag)}`
+  const result = await apiFetch<{ asset: MediaAsset }>(path, {
+    method: assigned ? 'PUT' : 'DELETE',
+  })
   await invalidateMedia()
   return result.asset
 }
@@ -371,18 +366,11 @@ export async function setAssetCollection(
   collection: string,
   assigned: boolean,
 ): Promise<MediaAsset> {
-  const path = `/media/assets/${encodeURIComponent(identifier)}/collections`
-  const result = assigned
-    ? await apiFetch<{ asset: MediaAsset }>(path, {
-        method: 'POST',
-        body: { collection },
-      })
-    : await apiFetch<{ asset: MediaAsset }>(
-        `${path}?collection=${encodeURIComponent(collection)}`,
-        {
-          method: 'DELETE',
-        },
-      )
+  // Collection membership is a sub-resource: PUT adds (idempotent), DELETE removes.
+  const path = `/media/assets/neos/${encodeURIComponent(identifier)}/collections/${encodeURIComponent(collection)}`
+  const result = await apiFetch<{ asset: MediaAsset }>(path, {
+    method: assigned ? 'PUT' : 'DELETE',
+  })
   await invalidateMedia()
   return result.asset
 }

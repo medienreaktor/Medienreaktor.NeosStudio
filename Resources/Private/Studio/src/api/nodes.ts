@@ -87,7 +87,8 @@ export function nodeLabel(node: NodeDto): string {
 export function useNode(address: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodes.byAddress(address),
-    queryFn: () => apiFetch<NodeDto>(`/nodes/${address}`),
+    queryFn: () =>
+      apiFetch<{ node: NodeDto }>(`/nodes/${address}`).then((r) => r.node),
     enabled,
   })
 }
@@ -105,9 +106,9 @@ export function fetchNode(
   return queryClient.fetchQuery({
     queryKey: queryKeys.nodes.byAddress(address, nodeTypes),
     queryFn: () =>
-      apiFetch<NodeDto>(
+      apiFetch<{ node: NodeDto }>(
         `/nodes/${address}${nodeTypes ? `?nodeTypes=${encodeURIComponent(nodeTypes)}` : ''}`,
-      ),
+      ).then((r) => r.node),
   })
 }
 
@@ -159,7 +160,10 @@ export interface NodeVariantsDto {
 export function useNodeVariants(address: string | null, enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodes.variants(address ?? ''),
-    queryFn: () => apiFetch<NodeVariantsDto>(`/nodes/${address}/variants`),
+    queryFn: () =>
+      apiFetch<{ variants: NodeVariantsDto }>(`/nodes/${address}/variants`).then(
+        (r) => r.variants,
+      ),
     enabled: enabled && address !== null,
   })
 }
@@ -168,7 +172,10 @@ export function useNodeVariants(address: string | null, enabled = true) {
 export function fetchNodeVariants(address: string): Promise<NodeVariantsDto> {
   return queryClient.fetchQuery({
     queryKey: queryKeys.nodes.variants(address),
-    queryFn: () => apiFetch<NodeVariantsDto>(`/nodes/${address}/variants`),
+    queryFn: () =>
+      apiFetch<{ variants: NodeVariantsDto }>(`/nodes/${address}/variants`).then(
+        (r) => r.variants,
+      ),
   })
 }
 
