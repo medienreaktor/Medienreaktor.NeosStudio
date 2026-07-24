@@ -94,7 +94,6 @@ function edgePath(from: PositionedCard, to: PositionedCard): string {
 function CardSection({
   title,
   rows,
-  inherited,
   open,
   onToggle,
 }: {
@@ -115,10 +114,7 @@ function CardSection({
         {rows.map((row) => (
           <div
             key={(row.isReference ? 'ref:' : 'prop:') + row.name}
-            className={cn(
-              'flex items-center gap-1 text-[10px]',
-              inherited ? 'text-neutral-500' : 'text-neutral-200',
-            )}
+            className={cn('flex items-center gap-1 text-[10px] text-white')}
             style={{ height: ROW_HEIGHT }}
             title={
               row.inheritedFrom
@@ -130,12 +126,12 @@ function CardSection({
           >
             {row.isReference && (
               <i
-                className="fas fa-link fa-fw shrink-0 text-[7px] text-neutral-500"
+                className="fas fa-link fa-fw shrink-0 text-[7px] text-white/50"
                 aria-hidden
               />
             )}
             <span className="truncate">{row.name}</span>
-            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-neutral-500">
+            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-white/50">
               {row.type}
             </span>
           </div>
@@ -232,7 +228,7 @@ const GraphSurface = memo(function GraphSurface({
                 <i
                   className={cn(
                     model.icon ? faClassName(model.icon) : 'fas fa-cube',
-                    'fa-fw shrink-0 text-[0.7rem] text-neutral-400',
+                    'fa-fw shrink-0 text-[0.7rem] text-white',
                   )}
                   aria-hidden
                 />
@@ -240,12 +236,12 @@ const GraphSurface = memo(function GraphSurface({
                   {model.label}
                 </span>
                 {model.abstract && (
-                  <span className="ml-auto shrink-0 rounded-sm bg-neutral-800 px-1 text-[8px] tracking-wide text-neutral-400 uppercase">
+                  <span className="ml-auto shrink-0 rounded-sm bg-neutral-800 px-1 text-[8px] tracking-wide text-white/50 uppercase">
                     {t('nodeTypes.abstract', 'Abstract')}
                   </span>
                 )}
               </div>
-              <div className="truncate font-mono text-[9px] text-neutral-500">
+              <div className="truncate font-mono text-[9px] text-white/50">
                 {model.name}
               </div>
             </div>
@@ -285,7 +281,7 @@ function Legend() {
     { kind: 'other', label: t('nodeTypes.legend.other', 'Mixin / other') },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-900/80 p-2 text-[10px] text-neutral-400 backdrop-blur-xs">
+    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-900/80 p-2 text-[10px] text-white/50 backdrop-blur-xs">
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
@@ -434,7 +430,7 @@ export function NodeTypesPanel() {
               )}
             />
             {term.trim() !== '' && (
-              <span className="shrink-0 text-xs text-neutral-400">
+              <span className="shrink-0 text-xs text-white/50">
                 {t('nodeTypes.matches', '{0} matches', [matches.length])}
               </span>
             )}
@@ -447,7 +443,7 @@ export function NodeTypesPanel() {
             />
           )}
           {isError && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/50">
               {t('nodeTypes.loadFailed', 'The node types could not be loaded.')}
             </div>
           )}
