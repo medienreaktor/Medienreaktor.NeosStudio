@@ -1871,8 +1871,8 @@
       <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
         <source>Close details</source>
       </trans-unit>
-      <trans-unit id="workspaceGraph.current" xml:space="preserve">
-        <source>Editing</source>
+      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
+        <source>You are here</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
         <source>Created</source>

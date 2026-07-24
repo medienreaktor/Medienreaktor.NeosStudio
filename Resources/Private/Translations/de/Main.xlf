@@ -2494,9 +2494,9 @@
         <source>Close details</source>
         <target xml:lang="de">Details schließen</target>
       </trans-unit>
-      <trans-unit id="workspaceGraph.current" xml:space="preserve">
-        <source>Editing</source>
-        <target xml:lang="de">Aktiv</target>
+      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
+        <source>You are here</source>
+        <target xml:lang="de">Du bist hier</target>
       </trans-unit>
       <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
         <source>Created</source>

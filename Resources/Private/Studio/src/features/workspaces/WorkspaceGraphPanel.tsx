@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react'
+import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react'
 import {
   useWorkspaces,
   useWorkspacesPendingEvents,
@@ -200,79 +200,100 @@ const GraphSurface = memo(function GraphSurface({
           selection.sequenceNumber === null
         const isCurrent = currentWorkspaceName === workspace.name
         return (
-          <div
-            key={workspace.name}
-            data-graph-id={`ws:${workspace.name}`}
-            className={cn(
-              'absolute cursor-pointer overflow-hidden rounded-md border-2 shadow-md',
-              selected && SELECTED_RING,
-              dimmed(workspace.name) && 'opacity-30',
-            )}
-            style={{
-              left: branch.cardX,
-              top: branch.cardY,
-              width: WS_CARD_WIDTH,
-              height: WS_CARD_HEIGHT,
-              // The checked-out workspace's surface leans further into its
-              // branch color; the "Editing" badge names it.
-              ...cardSurface(branch.color, isCurrent ? 22 : 10),
-            }}
-            onContextMenu={(event) => {
-              event.preventDefault()
-              onCardMenu(workspace.name, {
-                x: event.clientX,
-                y: event.clientY,
-              })
-            }}
-          >
-            <div className="flex flex-col gap-0.5 px-3 py-2">
-              <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-white">
-                <i
-                  className={cn(
-                    CLASSIFICATION_ICONS[workspace.classification] ??
-                      'fas fa-layer-group text-white/50',
-                    'fa-fw shrink-0 text-[0.7rem]',
-                  )}
-                  aria-hidden
-                />
-                <span className="truncate">{workspaceLabel(workspace)}</span>
-                {isCurrent && (
-                  <span className="ml-auto shrink-0 rounded-sm bg-blue-500/20 px-1 text-[8px] tracking-wide text-blue-400 uppercase">
-                    {t('workspaceGraph.current', 'Editing')}
-                  </span>
-                )}
-              </div>
-              <div className="truncate font-mono text-[9px] text-white/50">
-                {workspace.name}
-              </div>
-              <div className="flex items-center gap-2 text-[9px] text-white">
-                {branch.branchFrom !== null && (
-                  <span>
-                    {t('workspaceGraph.changeCount', '{0} changes', [
-                      `${branch.dots.length}${branch.truncated ? '+' : ''}`,
-                    ])}
-                  </span>
-                )}
-                {workspace.status === 'OUTDATED' && (
-                  <span
-                    className="text-amber-500"
-                    title={t(
-                      'workspaceGraph.outdated',
-                      'The base workspace has newer changes',
+          <Fragment key={workspace.name}>
+            <div
+              data-graph-id={`ws:${workspace.name}`}
+              className={cn(
+                'absolute cursor-pointer overflow-hidden rounded-md border-2 shadow-md',
+                selected && SELECTED_RING,
+                dimmed(workspace.name) && 'opacity-30',
+              )}
+              style={{
+                left: branch.cardX,
+                top: branch.cardY,
+                width: WS_CARD_WIDTH,
+                height: WS_CARD_HEIGHT,
+                // The checked-out workspace's surface leans further into its
+                // branch color; the HEAD flag above marks it.
+                ...cardSurface(branch.color, isCurrent ? 22 : 10),
+              }}
+              onContextMenu={(event) => {
+                event.preventDefault()
+                onCardMenu(workspace.name, {
+                  x: event.clientX,
+                  y: event.clientY,
+                })
+              }}
+            >
+              <div className="flex flex-col gap-0.5 px-3 py-2">
+                <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-white">
+                  <i
+                    className={cn(
+                      CLASSIFICATION_ICONS[workspace.classification] ??
+                        'fas fa-layer-group text-white/50',
+                      'fa-fw shrink-0 text-[0.7rem]',
                     )}
-                  >
-                    <i className="fas fa-triangle-exclamation" aria-hidden />{' '}
-                    {t('workspaceGraph.outdatedShort', 'outdated')}
-                  </span>
-                )}
-                {!workspace.permissions.write && (
-                  <span title={t('workspace.readOnly', 'read-only')}>
-                    <i className="fas fa-lock" aria-hidden />
-                  </span>
-                )}
+                    aria-hidden
+                  />
+                  <span className="truncate">{workspaceLabel(workspace)}</span>
+                </div>
+                <div className="truncate font-mono text-[9px] text-white/50">
+                  {workspace.name}
+                </div>
+                <div className="flex items-center gap-2 text-[9px] text-white">
+                  {branch.branchFrom !== null && (
+                    <span>
+                      {t('workspaceGraph.changeCount', '{0} changes', [
+                        `${branch.dots.length}${branch.truncated ? '+' : ''}`,
+                      ])}
+                    </span>
+                  )}
+                  {workspace.status === 'OUTDATED' && (
+                    <span
+                      className="text-amber-500"
+                      title={t(
+                        'workspaceGraph.outdated',
+                        'The base workspace has newer changes',
+                      )}
+                    >
+                      <i className="fas fa-triangle-exclamation" aria-hidden />{' '}
+                      {t('workspaceGraph.outdatedShort', 'outdated')}
+                    </span>
+                  )}
+                  {!workspace.permissions.write && (
+                    <span title={t('workspace.readOnly', 'read-only')}>
+                      <i className="fas fa-lock" aria-hidden />
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+            {isCurrent && (
+              // A folder-style HEAD tab sticking out of the card's top edge,
+              // sharing the card's border and surface so the two merge into
+              // one shape. Picks like the card itself, so clicking it selects
+              // the workspace.
+              <div
+                data-graph-id={`ws:${workspace.name}`}
+                className={cn(
+                  'absolute flex -translate-y-full cursor-pointer items-center rounded-t-md px-2 pt-1 pb-1.5',
+                  dimmed(workspace.name) && 'opacity-30',
+                )}
+                style={{
+                  left: branch.cardX + 10,
+                  // The tab's bottom overlaps the card's 2px top border, so
+                  // the (opaque) surfaces merge seamlessly.
+                  top: branch.cardY + 2,
+                  backgroundColor: branch.color,
+                }}
+                title={t('workspaceGraph.youAreHere', 'You are here')}
+              >
+                <span className="text-[11px] leading-none font-bold tracking-widest text-white">
+                  HEAD
+                </span>
+              </div>
+            )}
+          </Fragment>
         )
       })}
     </>
