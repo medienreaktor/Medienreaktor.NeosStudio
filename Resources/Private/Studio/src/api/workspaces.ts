@@ -285,6 +285,8 @@ export interface WorkspacePendingStep {
   to: number
   /** Stream version of the last event - what fork points compare against. */
   version: number
+  /** Who made the edit; the stable key an avatar takes its color from. */
+  initiatingUserId: string | null
   initiatingUserLabel: string | null
   recordedAt: string
   /** The distinct documents the step touched (label of the first event wins). */
@@ -332,6 +334,7 @@ export function groupPendingEvents(
         from: event.sequenceNumber,
         to: event.sequenceNumber,
         version: event.version,
+        initiatingUserId: event.initiatingUserId,
         initiatingUserLabel: event.initiatingUserLabel,
         recordedAt: event.recordedAt,
         documents:

@@ -9,24 +9,27 @@ import { translate as t } from '@/lib/i18n'
  */
 
 /**
- * The kind of edit a step/event represents, for the classic Neos change
- * colors: additions green, modifications orange, removals red. The theme's
- * green/orange hues ARE the Neos brand palette (styles.css).
+ * The kind of edit a step/event represents, for the change colors of the
+ * history logs: additions green, modifications blue, removals red - and
+ * purple for dimension variants, the hue the whole Studio already uses for
+ * everything dimension-related (shine-through indicators, origin-dimension
+ * alerts), so "this created a translation" is recognizable at a glance.
  */
-export type ChangeTone = 'add' | 'change' | 'remove'
+export type ChangeTone = 'add' | 'change' | 'remove' | 'variant'
 
 /** Text color per tone - the 400 tier for legibility on the dark surface. */
 export const TONE_TEXT_CLASSES: Record<ChangeTone, string> = {
   add: 'text-green-400',
-  change: 'text-orange-400',
+  change: 'text-blue-400',
   remove: 'text-red-400',
+  variant: 'text-purple-400',
 }
 
 const EVENT_TYPE_TONES: Record<string, ChangeTone> = {
   NodeAggregateWithNodeWasCreated: 'add',
-  NodeSpecializationVariantWasCreated: 'add',
-  NodeGeneralizationVariantWasCreated: 'add',
-  NodePeerVariantWasCreated: 'add',
+  NodeSpecializationVariantWasCreated: 'variant',
+  NodeGeneralizationVariantWasCreated: 'variant',
+  NodePeerVariantWasCreated: 'variant',
   NodeAggregateWasRemoved: 'remove',
 }
 
@@ -163,7 +166,8 @@ const COMMAND_INFO: Record<
     label: () => t('workspaceGraph.event.nodeRemoved', 'Removed'),
   },
   'UntagSubtree:removed': {
-    icon: 'fa-trash-arrow-up',
+    // The restore icon of the trash panel and the deleted-page banner.
+    icon: 'fa-clock-rotate-left',
     tone: 'add',
     label: () => t('workspaceGraph.event.nodeRestored', 'Restored'),
   },
@@ -189,7 +193,7 @@ const COMMAND_INFO: Record<
   },
   CreateNodeVariant: {
     icon: 'fa-clone',
-    tone: 'add',
+    tone: 'variant',
     label: () => t('workspaceGraph.event.variantCreated', 'Variant created'),
   },
 }
@@ -229,8 +233,14 @@ export function stepTone(step: WorkspacePendingStep): ChangeTone {
   )
 }
 
-/** "Properties changed: About us (+2 more)" - the one-line step summary. */
-export function stepSummary(step: WorkspacePendingStep): string {
+/**
+ * What a step happened TO: "About us (+2 more)" - the labels of the nodes its
+ * events touched. null when none of them is resolvable, leaving the step's
+ * label to speak for itself. Kept apart from that label so a log row can
+ * color the two differently (the label in the change's tone, the subject in
+ * the row's own color).
+ */
+export function stepSubject(step: WorkspacePendingStep): string | null {
   const nodeLabels = [
     ...new Set(
       step.events
@@ -238,16 +248,19 @@ export function stepSummary(step: WorkspacePendingStep): string {
         .filter((label): label is string => label !== null),
     ),
   ]
-  const subject =
-    nodeLabels.length === 0
-      ? ''
-      : nodeLabels.length === 1
-        ? nodeLabels[0]
-        : t('workspaceGraph.step.nodeCount', '{0} (+{1} more)', [
-            nodeLabels[0],
-            String(nodeLabels.length - 1),
-          ])
-  return subject === '' ? stepLabel(step) : `${stepLabel(step)}: ${subject}`
+  if (nodeLabels.length === 0) return null
+  if (nodeLabels.length === 1) return nodeLabels[0]
+  return t('workspaceGraph.step.nodeCount', '{0} (+{1} more)', [
+    nodeLabels[0],
+    String(nodeLabels.length - 1),
+  ])
+}
+
+/** "Properties changed: About us (+2 more)" - the one-line step summary, for
+ * places that need it as plain text (tooltips, titles). */
+export function stepSummary(step: WorkspacePendingStep): string {
+  const subject = stepSubject(step)
+  return subject === null ? stepLabel(step) : `${stepLabel(step)}: ${subject}`
 }
 
 /** A compact relative timestamp: "2m ago", "3h ago", else a local date. */
