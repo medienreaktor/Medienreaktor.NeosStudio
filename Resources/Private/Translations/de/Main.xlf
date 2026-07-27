@@ -622,6 +622,14 @@
         <source>Zoom out</source>
         <target xml:lang="de">Verkleinern</target>
       </trans-unit>
+      <trans-unit id="history.empty" xml:space="preserve">
+        <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
+        <target xml:lang="de">Keine unveröffentlichten Änderungen auf dieser Seite. Jede Deiner Änderungen erscheint hier, bis sie veröffentlicht ist.</target>
+      </trans-unit>
+      <trans-unit id="history.loading" xml:space="preserve">
+        <source>Loading the history…</source>
+        <target xml:lang="de">Verlauf wird geladen…</target>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="de">Editor wird noch nicht unterstützt: {0}</target>
@@ -1285,6 +1293,10 @@
       <trans-unit id="panel.title.documents" xml:space="preserve">
         <source>Documents</source>
         <target xml:lang="de">Dokumente</target>
+      </trans-unit>
+      <trans-unit id="panel.title.history" xml:space="preserve">
+        <source>History</source>
+        <target xml:lang="de">Verlauf</target>
       </trans-unit>
       <trans-unit id="panel.title.inspector" xml:space="preserve">
         <source>Inspector</source>

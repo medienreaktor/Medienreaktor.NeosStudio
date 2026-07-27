@@ -17,6 +17,7 @@ import { InspectorPanel } from '@/features/inspector/Inspector'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
 import { NodeTypesPanel } from '@/features/nodetypes/NodeTypesPanel'
+import { HistoryPanel } from '@/features/workspaces/HistoryPanel'
 import { TrashPanel } from '@/features/workspaces/TrashPanel'
 import { useTrashRestore } from '@/features/workspaces/useTrashRestore'
 import { WorkspaceGraphPanel } from '@/features/workspaces/WorkspaceGraphPanel'
@@ -367,7 +368,7 @@ function MediaLibraryPanel() {
  * Documents tree alone on top and an Outline/Create/Clipboard/Trash tab group below
  * (stacked groups split the height evenly); the main area tabs the Visual
  * Editor and the Media Library; the Inspector docks in the right-hand
- * secondary sidebar, expanded.
+ * secondary sidebar, expanded, with the page's History as its second tab.
  */
 export function registerBuiltinPanels(): void {
   // The Visual Editor registers first so it is the default-active tab in the
@@ -428,10 +429,19 @@ export function registerBuiltinPanels(): void {
     component: TrashPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
+  // The Inspector and the History of the page it inspects share the secondary
+  // sidebar as tabs (the `inspect` group key): both are about the node/page
+  // currently being edited, and both want the full height.
   panelRegistry.register({
     id: 'inspector',
     title: t('panel.title.inspector', 'Inspector'),
     component: NodeInspectorPanel,
-    defaultPlacement: { kind: 'dock', region: 'secondary' },
+    defaultPlacement: { kind: 'dock', region: 'secondary', group: 'inspect' },
+  })
+  panelRegistry.register({
+    id: 'history',
+    title: t('panel.title.history', 'History'),
+    component: HistoryPanel,
+    defaultPlacement: { kind: 'dock', region: 'secondary', group: 'inspect' },
   })
 }

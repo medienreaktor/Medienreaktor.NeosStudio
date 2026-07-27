@@ -467,6 +467,12 @@
       <trans-unit id="graph.zoomOut" xml:space="preserve">
         <source>Zoom out</source>
       </trans-unit>
+      <trans-unit id="history.empty" xml:space="preserve">
+        <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
+      </trans-unit>
+      <trans-unit id="history.loading" xml:space="preserve">
+        <source>Loading the history…</source>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
       </trans-unit>
@@ -964,6 +970,9 @@
       </trans-unit>
       <trans-unit id="panel.title.documents" xml:space="preserve">
         <source>Documents</source>
+      </trans-unit>
+      <trans-unit id="panel.title.history" xml:space="preserve">
+        <source>History</source>
       </trans-unit>
       <trans-unit id="panel.title.inspector" xml:space="preserve">
         <source>Inspector</source>
