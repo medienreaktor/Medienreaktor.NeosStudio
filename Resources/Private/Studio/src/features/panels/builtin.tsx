@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchNode } from '@/api/nodes'
+import { fetchNode, isDeleted, nodeLabel, type NodeDto } from '@/api/nodes'
 import { aggregateIdOf } from '@/api/nodeAddress'
 import { useStudio } from '@/app/StudioContext'
 import { usePresence } from '@/features/collaboration/PresenceContext'
@@ -17,12 +17,15 @@ import { InspectorPanel } from '@/features/inspector/Inspector'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
 import { NodeTypesPanel } from '@/features/nodetypes/NodeTypesPanel'
+import { TrashPanel } from '@/features/workspaces/TrashPanel'
+import { useTrashRestore } from '@/features/workspaces/useTrashRestore'
 import { WorkspaceGraphPanel } from '@/features/workspaces/WorkspaceGraphPanel'
 import { PreviewPane } from '@/features/preview/PreviewPane'
 import { ContentOutliner } from '@/features/tree/ContentOutliner'
 import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
 import { DocumentsToolbar } from '@/features/tree/DocumentsToolbar'
 import { DocumentTree } from '@/features/tree/DocumentTree'
+import { Button } from '@/components/ui/button'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -237,6 +240,49 @@ function NodeInspectorPanel() {
  * callbacks) comes from the studio context, so the panel is self-contained.
  * The preview toolbar itself stays in the app header.
  */
+/**
+ * The strip over a deleted page: selecting a trash entry opens the page here,
+ * which is otherwise indistinguishable from an ordinary one - the preview shows
+ * it as it was. Says why nothing can be edited, and offers the way back.
+ */
+function DeletedDocumentBanner({ document }: { document: NodeDto }) {
+  const { workspaceName } = useStudio()
+  const restore = useTrashRestore(workspaceName)
+  return (
+    <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-red-500">
+      <i className="fas fa-fw fa-trash-can shrink-0" aria-hidden />
+      <span className="min-w-0 flex-1">
+        {t(
+          'preview.documentDeleted',
+          'This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.',
+        )}
+      </span>
+      <Button
+        variant="secondary"
+        size="xs"
+        // Like the trash rows: white at rest, green under the pointer.
+        className="shrink-0 text-white hover:text-green-400"
+        disabled={restore.isPending}
+        onClick={() =>
+          restore.mutate({
+            nodeAggregateId: document.aggregateId,
+            label: nodeLabel(document),
+          })
+        }
+      >
+        <i
+          className={cn(
+            'fas fa-fw',
+            restore.isPending ? 'fa-spinner fa-spin' : 'fa-clock-rotate-left',
+          )}
+          aria-hidden
+        />
+        {t('trash.restore', 'Restore')}
+      </Button>
+    </div>
+  )
+}
+
 function VisualEditorPanel() {
   const {
     selectedDocument,
@@ -272,6 +318,9 @@ function VisualEditorPanel() {
   )
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {selectedDocument !== null && isDeleted(selectedDocument) && (
+        <DeletedDocumentBanner document={selectedDocument} />
+      )}
       <PreviewPane
         document={selectedDocument}
         selectedAddress={inspectedNode?.address ?? null}
@@ -315,7 +364,7 @@ function MediaLibraryPanel() {
 
 /**
  * Call once before the app mounts. The default layout: the sidebar holds the
- * Documents tree alone on top and an Outline/Create/Clipboard tab group below
+ * Documents tree alone on top and an Outline/Create/Clipboard/Trash tab group below
  * (stacked groups split the height evenly); the main area tabs the Visual
  * Editor and the Media Library; the Inspector docks in the right-hand
  * secondary sidebar, expanded.
@@ -371,6 +420,12 @@ export function registerBuiltinPanels(): void {
     id: 'clipboard',
     title: t('panel.title.clipboard', 'Clipboard'),
     component: ClipboardPanel,
+    defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
+  })
+  panelRegistry.register({
+    id: 'trash',
+    title: t('panel.title.trash', 'Trash'),
+    component: TrashPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({

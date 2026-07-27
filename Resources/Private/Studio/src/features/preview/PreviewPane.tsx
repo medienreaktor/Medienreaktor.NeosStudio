@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
-import { renderNodeElement, type NodeDto } from '@/api/nodes'
+import { isDeleted, renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
@@ -49,9 +49,15 @@ import type {
  * The "inPlace" rendering mode requests the content-element metadata markup
  * the guest script needs for click-to-select and inline editing.
  */
-export function previewUrl(address: string, mode?: string): string {
+export function previewUrl(
+  address: string,
+  mode?: string,
+  /** Render a DELETED page - it is invisible to the preview otherwise. */
+  includeDeleted = false,
+): string {
   const params = new URLSearchParams({ node: address })
   if (mode) params.set('mode', mode)
+  if (includeDeleted) params.set('includeDeleted', '1')
   return `${config.previewBase}?${params}`
 }
 
@@ -98,7 +104,11 @@ export function PreviewToolbar({
         size="icon-xs"
         title={t('preview.openInNewTab', 'Open page in a new tab')}
       >
-        <a href={previewUrl(document.address)} target="_blank" rel="noreferrer">
+        <a
+          href={previewUrl(document.address, undefined, isDeleted(document))}
+          target="_blank"
+          rel="noreferrer"
+        >
           <i
             className="fas fa-arrow-up-right-from-square text-xs"
             aria-hidden
@@ -235,7 +245,18 @@ export function PreviewPane({
       })
     })
 
-  const src = document ? previewUrl(document.address, 'inPlace') : null
+  // A deleted page (selected from the trash) renders in FRONTEND mode: the
+  // page as it was, without the editing guest - there is nothing to edit in
+  // place on a page that is deleted, and click-to-select would hand out
+  // addresses of nodes that no read outside this preview resolves.
+  const documentDeleted = document !== null && isDeleted(document)
+  const src = document
+    ? previewUrl(
+        document.address,
+        documentDeleted ? undefined : 'inPlace',
+        documentDeleted,
+      )
+    : null
   const loadKey = src ? `${src}#${reloadCount}#${reloadToken}` : null
 
   // A new load means a new guest lifecycle; a menu anchored in the previous
@@ -245,6 +266,16 @@ export function PreviewPane({
     setElementMenu(null)
     setLinkEdit(null)
   }, [loadKey])
+
+  // A layer fades in once it is ready. Normally its guest reports that; a page
+  // rendered WITHOUT the guest (a deleted one) has to report it on load, or the
+  // frame would stay invisible forever waiting for a handshake that never comes.
+  const markLayerReady = (id: number) =>
+    setLayers((previous) =>
+      previous.map((layer) =>
+        layer.id === id ? { ...layer, ready: true } : layer,
+      ),
+    )
 
   // Start a new frame whenever the load key changes. We keep only the most
   // recent ready layer as the fading-out background plus the new incoming
@@ -265,7 +296,10 @@ export function PreviewPane({
     const top = layers[layers.length - 1]
     if (!top?.ready) return
     activeFrameRef.current = framesRef.current.get(top.id) ?? null
-    setGuestReady(true)
+    // A deleted page carries no guest, so the bridge stays down: every
+    // guest-facing feature (selection sync, drop targets, inline editing)
+    // would be posting into a page with nobody listening.
+    setGuestReady(!documentDeleted)
     if (layers.length <= 1) return
     const timer = setTimeout(() => {
       setLayers((previous) => {
@@ -291,11 +325,7 @@ export function PreviewPane({
       const message = event.data as GuestToHostMessage
       switch (message?.type) {
         case 'neos-studio/guest-ready':
-          setLayers((previous) =>
-            previous.map((layer) =>
-              layer.id === sourceId ? { ...layer, ready: true } : layer,
-            ),
-          )
+          markLayerReady(sourceId)
           break
         case 'neos-studio/node-selected':
           try {
@@ -639,6 +669,9 @@ export function PreviewPane({
             }}
             src={layer.src}
             title={t('preview.pageFrame', 'Page preview')}
+            onLoad={() => {
+              if (documentDeleted) markLayerReady(layer.id)
+            }}
             // Until it is ready the incoming frame is invisible on top - keep
             // clicks flowing to the outgoing frame still painted beneath it.
             style={{

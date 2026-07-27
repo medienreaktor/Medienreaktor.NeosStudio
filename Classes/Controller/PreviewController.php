@@ -6,7 +6,11 @@ namespace Medienreaktor\NeosStudio\Controller;
 
 use GuzzleHttp\Psr7\Utils;
 use Medienreaktor\NeosApi\Service\NodeAddressCodec;
+use Neos\ContentRepository\Core\ContentRepository;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
+use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
@@ -14,6 +18,7 @@ use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Domain\Model\RenderingMode;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Domain\Service\RenderingModeService;
+use Neos\Neos\Domain\SubtreeTagging\NeosSubtreeTag;
 use Neos\Neos\Domain\SubtreeTagging\NeosVisibilityConstraints;
 use Neos\Neos\Security\Authorization\ContentRepositoryAuthorizationService;
 use Neos\Neos\View\FusionView;
@@ -61,7 +66,7 @@ class PreviewController extends ActionController
     #[Flow\Inject]
     protected SecurityContext $securityContext;
 
-    public function showAction(string $node, string $mode = RenderingMode::FRONTEND): ResponseInterface|string
+    public function showAction(string $node, string $mode = RenderingMode::FRONTEND, bool $includeDeleted = false): ResponseInterface|string
     {
         try {
             $renderingMode = $this->renderingModeService->findByName($mode);
@@ -85,6 +90,7 @@ class PreviewController extends ActionController
                 $nodeAddress->workspaceName,
                 $nodeAddress->dimensionSpacePoint
             );
+            $subgraph = $this->withDeletedNodes($contentRepository, $nodeAddress, $subgraph, $includeDeleted);
         } else {
             // Frontend rendering shows the page as visitors would see it:
             // disabled nodes are excluded even though the backend user could
@@ -96,6 +102,7 @@ class PreviewController extends ActionController
             $subgraph = $contentRepository
                 ->getContentGraph($nodeAddress->workspaceName)
                 ->getSubgraph($nodeAddress->dimensionSpacePoint, $visibilityConstraints);
+            $subgraph = $this->withDeletedNodes($contentRepository, $nodeAddress, $subgraph, $includeDeleted);
         }
 
         $nodeInstance = $subgraph->findNodeById($nodeAddress->aggregateId);
@@ -144,6 +151,32 @@ class PreviewController extends ActionController
                 ->withHeader('Cache-Control', 'no-cache');
         }
         return $html;
+    }
+
+    /**
+     * Renders a DELETED page: deleting a node is a soft removal, so the page is
+     * still there, tagged "removed" and therefore invisible to every ordinary
+     * read. Showing it is what lets an editor look at what they deleted before
+     * restoring it (the Studio's trash bin does exactly that), so the tag - and
+     * only that tag - is dropped from the account's own constraints. Without
+     * $includeDeleted the subgraph is returned untouched.
+     */
+    private function withDeletedNodes(
+        ContentRepository $contentRepository,
+        NodeAddress $nodeAddress,
+        ContentSubgraphInterface $subgraph,
+        bool $includeDeleted
+    ): ContentSubgraphInterface {
+        if (!$includeDeleted) {
+            return $subgraph;
+        }
+
+        return $contentRepository->getContentGraph($nodeAddress->workspaceName)->getSubgraph(
+            $nodeAddress->dimensionSpacePoint,
+            VisibilityConstraints::excludeSubtreeTags(
+                $subgraph->getVisibilityConstraints()->excludedSubtreeTags->without(NeosSubtreeTag::removed())
+            )
+        );
     }
 
     /**

@@ -216,9 +216,33 @@ export function normalizeLayout(
     })
   }
 
-  // Registered panels missing from the layout appear at their default spot,
-  // in registration order. Panels placed in this pass that share a dock
-  // `group` key become tabs of one group (the first of them stays active).
+  // Panels sharing a dock `group` key belong together as tabs. A group key can
+  // already be represented in the layout being normalized - the usual case for
+  // a panel added to an installation that has a stored layout (an update, or a
+  // plugin loading late): find the group its siblings live in, wherever the
+  // user has since moved them, so the newcomer joins them instead of opening a
+  // group of its own below everything.
+  const groupKeyOf = (panelId: PanelId): string | null => {
+    const placement = known.get(panelId)?.defaultPlacement
+    return placement?.kind === 'dock' && placement.group
+      ? `${placement.region}:${placement.group}`
+      : null
+  }
+  const siblingGroups = new Map<string, PanelGroup>()
+  for (const group of [
+    ...DOCK_REGIONS.flatMap((region) => docks[region]),
+    ...floating,
+  ]) {
+    for (const panelId of group.panels) {
+      const key = groupKeyOf(panelId)
+      if (key !== null && !siblingGroups.has(key)) siblingGroups.set(key, group)
+    }
+  }
+
+  // Registered panels missing from the layout appear at their default spot, in
+  // registration order. Panels placed in this pass that share a dock `group`
+  // key become tabs of one group (the first of them stays active); joining an
+  // existing group appends the tab without stealing the active one.
   const defaultGroups = new Map<string, PanelGroup>()
   for (const definition of definitions) {
     if (seenPanels.has(definition.id)) continue
@@ -227,9 +251,12 @@ export function normalizeLayout(
       const key = placement.group
         ? `${placement.region}:${placement.group}`
         : null
-      const shared = key ? defaultGroups.get(key) : undefined
+      const shared = key
+        ? (defaultGroups.get(key) ?? siblingGroups.get(key))
+        : undefined
       if (shared) {
         shared.panels.push(definition.id)
+        if (key) defaultGroups.set(key, shared)
       } else {
         const group = newGroup(definition.id)
         docks[placement.region].push(group)

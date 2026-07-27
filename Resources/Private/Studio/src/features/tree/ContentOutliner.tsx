@@ -11,6 +11,7 @@ import {
   CONTENT_NODE_TYPES,
   fetchChildren,
   fetchNode,
+  isDeleted,
   isExplicitlyHidden,
   nodeLabel,
   type NodeDto,
@@ -123,6 +124,10 @@ function OutlinerTree({
   onCreateNew?: (target: NodeMenuTarget) => void
 }) {
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
+  // Outlining a DELETED page (selected from the trash): its content inherits
+  // the "removed" tag, so every read here has to ask for deleted nodes or the
+  // outline comes back empty.
+  const deleted = isDeleted(document)
   // Flips once the document root has resolved, so the outliner shows a spinner
   // while loading rather than a misleading "no content" state.
   const [rootLoaded, setRootLoaded] = useState(false)
@@ -166,7 +171,7 @@ function OutlinerTree({
       getItem: async (itemId): Promise<TreeItemData> => {
         if (itemId === ROOT_ID) return ROOT_ID
         try {
-          return await fetchNode(itemId, CONTENT_NODE_TYPES)
+          return await fetchNode(itemId, CONTENT_NODE_TYPES, deleted)
         } catch (e) {
           // Deleted node (gone after a publish/sync) - expected, not a failure;
           // the parent's children refresh drops the row.
@@ -189,6 +194,7 @@ function OutlinerTree({
             const contentDocument = await fetchNode(
               document.address,
               CONTENT_NODE_TYPES,
+              deleted,
             )
             setRootLoaded(true)
             return [
@@ -207,7 +213,11 @@ function OutlinerTree({
           }
         }
         try {
-          const children = await fetchChildren(itemId, CONTENT_NODE_TYPES)
+          const children = await fetchChildren(
+            itemId,
+            CONTENT_NODE_TYPES,
+            deleted,
+          )
           return children.map((node) => ({
             id: node.address,
             data: node as TreeItemData,

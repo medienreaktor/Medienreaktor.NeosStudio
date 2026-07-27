@@ -1,7 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
 import { dimensionSpacePointLabel, useDimensions } from '@/api/dimensions'
 import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
-import { isShineThrough, nodeLabel, useNodeAncestors } from '@/api/nodes'
+import {
+  isDeleted,
+  isShineThrough,
+  nodeLabel,
+  useNodeAncestors,
+} from '@/api/nodes'
 import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
@@ -265,6 +270,30 @@ export function InspectorPanel({
           'Select a node in the preview or the trees to inspect it.',
         )}
       />
+    )
+  }
+
+  // A deleted node (opened from the trash) is shown, not edited: its editors
+  // would persist changes onto something that is on its way out, and the
+  // reference editors cannot even read their targets - deleted nodes are
+  // invisible to every read that does not deliberately ask for them.
+  if (isDeleted(node)) {
+    return (
+      <div className="text-sm">
+        <div className="px-2 py-4">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
+            {nodeLabel(node)}
+          </h2>
+        </div>
+        <Placeholder
+          icon="fa-trash-can"
+          title={t(
+            'inspector.nodeDeleted',
+            'This node is deleted. Restore it to edit its properties again.',
+          )}
+        />
+      </div>
     )
   }
 

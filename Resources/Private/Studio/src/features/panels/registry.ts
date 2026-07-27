@@ -14,8 +14,10 @@ import type { DockRegion } from './panelLayout'
 export type PanelPlacement =
   /**
    * Docked in a region (sidebar/main/secondary), appended below existing
-   * groups. Panels default-placed in the same pass that share a `group` key
-   * join one group (as tabs) instead of each opening their own.
+   * groups. Panels sharing a `group` key join one group (as tabs) instead of
+   * each opening their own - including a group its siblings already occupy in
+   * a stored layout, so a panel added later lands next to them rather than in
+   * a new group of its own.
    */
   | { kind: 'dock'; region: DockRegion; group?: string }
   /** Floating; `rect` is evaluated lazily against the live viewport. */

@@ -13,7 +13,12 @@ import {
 } from '@/api/dimensions'
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
-import { fetchNode, type NodeDto, useNodeVariants } from '@/api/nodes'
+import {
+  fetchNode,
+  isDeleted,
+  type NodeDto,
+  useNodeVariants,
+} from '@/api/nodes'
 import {
   addressInDimension,
   addressInWorkspace,
@@ -444,8 +449,16 @@ export function App() {
       token: (prev?.token ?? 0) + 1,
     }))
     setPreviewReloadToken((token) => token + 1)
+    // A DELETED node (opened from the trash) has to be re-read with the same
+    // opt-in it was selected with, or the refresh would drop the selection just
+    // because the node is deleted. It still drops when the read fails for real
+    // - the node was published away and is gone.
     if (selectedDocument) {
-      fetchNode(selectedDocument.address)
+      fetchNode(
+        selectedDocument.address,
+        undefined,
+        isDeleted(selectedDocument),
+      )
         .then(setSelectedDocument)
         .catch(() => {
           setSelectedDocument(null)
@@ -453,7 +466,7 @@ export function App() {
         })
     }
     if (inspectedNode) {
-      fetchNode(inspectedNode.address)
+      fetchNode(inspectedNode.address, undefined, isDeleted(inspectedNode))
         .then(setInspectedNode)
         .catch(() => setInspectedNode(null))
     }

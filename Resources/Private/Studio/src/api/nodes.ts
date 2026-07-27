@@ -63,6 +63,16 @@ export function isExplicitlyHidden(node: NodeDto): boolean {
 }
 
 /**
+ * Whether the node is deleted: deleting is a soft removal, so a deleted node
+ * still exists (tagged "removed") and can be read, rendered and restored -
+ * ordinary reads just exclude it. True for the deleted node itself and for
+ * everything inside it, which inherits the tag.
+ */
+export function isDeleted(node: NodeDto): boolean {
+  return node.tags.all.includes('removed')
+}
+
+/**
  * Whether the node only exists here through dimension fallback ("shines
  * through"): it is viewed in a dimension it does not originate in. Editing
  * such a node first creates a variant in the viewed dimension (see
@@ -102,14 +112,25 @@ export function useNode(address: string, enabled = true) {
 export function fetchNode(
   address: string,
   nodeTypes?: string,
+  /** Read a DELETED node - without this it does not exist for the API. */
+  includeDeleted = false,
 ): Promise<NodeDto> {
   return queryClient.fetchQuery({
-    queryKey: queryKeys.nodes.byAddress(address, nodeTypes),
+    queryKey: queryKeys.nodes.byAddress(address, nodeTypes, includeDeleted),
     queryFn: () =>
       apiFetch<{ node: NodeDto }>(
-        `/nodes/${address}${nodeTypes ? `?nodeTypes=${encodeURIComponent(nodeTypes)}` : ''}`,
+        `/nodes/${address}${queryString(nodeTypes, includeDeleted)}`,
       ).then((r) => r.node),
   })
+}
+
+/** `?nodeTypes=…&includeDeleted=1`, omitting what is not asked for. */
+function queryString(nodeTypes?: string, includeDeleted = false): string {
+  const params = new URLSearchParams()
+  if (nodeTypes) params.set('nodeTypes', nodeTypes)
+  if (includeDeleted) params.set('includeDeleted', '1')
+  const query = params.toString()
+  return query === '' ? '' : `?${query}`
 }
 
 /**
@@ -161,9 +182,9 @@ export function useNodeVariants(address: string | null, enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodes.variants(address ?? ''),
     queryFn: () =>
-      apiFetch<{ variants: NodeVariantsDto }>(`/nodes/${address}/variants`).then(
-        (r) => r.variants,
-      ),
+      apiFetch<{ variants: NodeVariantsDto }>(
+        `/nodes/${address}/variants`,
+      ).then((r) => r.variants),
     enabled: enabled && address !== null,
   })
 }
@@ -173,9 +194,9 @@ export function fetchNodeVariants(address: string): Promise<NodeVariantsDto> {
   return queryClient.fetchQuery({
     queryKey: queryKeys.nodes.variants(address),
     queryFn: () =>
-      apiFetch<{ variants: NodeVariantsDto }>(`/nodes/${address}/variants`).then(
-        (r) => r.variants,
-      ),
+      apiFetch<{ variants: NodeVariantsDto }>(
+        `/nodes/${address}/variants`,
+      ).then((r) => r.variants),
   })
 }
 
@@ -340,12 +361,17 @@ export function useFilteredDescendants(
 export async function fetchChildren(
   address: string,
   nodeTypes?: string,
+  /**
+   * List children of a DELETED node - the content of a deleted page, which
+   * inherits its "removed" tag and is invisible without this.
+   */
+  includeDeleted = false,
 ): Promise<NodeDto[]> {
   const { nodes } = await queryClient.fetchQuery({
-    queryKey: queryKeys.nodes.children(address, nodeTypes),
+    queryKey: queryKeys.nodes.children(address, nodeTypes, includeDeleted),
     queryFn: () =>
       apiFetch<{ nodes: NodeDto[] }>(
-        `/nodes/${address}/children${nodeTypes ? `?nodeTypes=${encodeURIComponent(nodeTypes)}` : ''}`,
+        `/nodes/${address}/children${queryString(nodeTypes, includeDeleted)}`,
       ),
   })
   for (const node of nodes) {
@@ -354,7 +380,7 @@ export async function fetchChildren(
     // cache instead of re-fetching an unfiltered (differently-scoped)
     // hasChildren.
     queryClient.setQueryData(
-      queryKeys.nodes.byAddress(node.address, nodeTypes),
+      queryKeys.nodes.byAddress(node.address, nodeTypes, includeDeleted),
       node,
     )
   }

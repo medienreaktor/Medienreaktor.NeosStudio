@@ -30,6 +30,7 @@ export const queryKeys = {
     documentDiff: (name: string, documentId: string) =>
       ['workspaces', name, 'document-diff', documentId] as const,
     roles: (name: string) => ['workspaces', name, 'roles'] as const,
+    trash: (name: string) => ['workspaces', name, 'trash'] as const,
   },
   nodeTypes: {
     all: ['nodeTypes'] as const,
@@ -54,10 +55,24 @@ export const queryKeys = {
     all: ['nodes'] as const,
     /** Prefix covering every cached variant (any nodeTypes filter) of one address - for invalidation, not for reading. */
     node: (address: string) => ['nodes', address] as const,
-    byAddress: (address: string, nodeTypes?: string) =>
-      ['nodes', address, { nodeTypes: nodeTypes ?? null }] as const,
-    children: (address: string, nodeTypes?: string) =>
-      ['nodes', address, 'children', { nodeTypes: nodeTypes ?? null }] as const,
+    /**
+     * `deleted` marks a read that deliberately included deleted (soft removed)
+     * nodes - a different result set than the same address read normally, so
+     * it must not share a cache entry with it.
+     */
+    byAddress: (address: string, nodeTypes?: string, deleted = false) =>
+      [
+        'nodes',
+        address,
+        { nodeTypes: nodeTypes ?? null, ...(deleted ? { deleted } : {}) },
+      ] as const,
+    children: (address: string, nodeTypes?: string, deleted = false) =>
+      [
+        'nodes',
+        address,
+        'children',
+        { nodeTypes: nodeTypes ?? null, ...(deleted ? { deleted } : {}) },
+      ] as const,
     ancestors: (address: string, nodeTypes?: string) =>
       [
         'nodes',

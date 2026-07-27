@@ -54,6 +54,7 @@ Full parity with the classic inspector — and then some:
 - **Live preview** with an inline-editing guest bridge — edit content directly in the rendered page.
 - **Media module**: full asset management plus picker mode for asset editors.
 - **Workspaces, sites and dimensions**: switchers for all three, pending-change tracking, publish and discard.
+- **Trash panel**: deleting a node is a soft removal, so every deleted page waits in the trash until the deletion is published — with who deleted it and when, and one click to restore it (deleted parent pages come back with it).
 - **User & profile management**: administer users, and every editor gets self-service profile settings (name, email, password, interface language).
 - **Localized UI** in English and German via Neos' own XLIFF infrastructure (450+ keys) — translated the Neos way, extendable the Neos way.
 - **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, themed with the official Neos UI palette. Dark, focused, familiar.

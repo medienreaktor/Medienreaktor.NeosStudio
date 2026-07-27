@@ -577,6 +577,82 @@ export function deleteWorkspace(workspaceName: string, force = false) {
   )
 }
 
+/**
+ * One entry of a workspace's trash bin: a node deleted in it. Deleting is a
+ * soft removal, so the node is intact until the deletion is published and the
+ * content repository erases it in live - which is what makes restoring it
+ * possible at all.
+ */
+export interface WorkspaceTrashItem {
+  nodeAggregateId: string
+  /**
+   * Address of the deleted node in this workspace and the first dimension it
+   * was deleted in. Reads of it must opt into deleted nodes (`includeDeleted`),
+   * which is what selecting a trash entry to look at the page does.
+   */
+  nodeAddress: string | null
+  /** Label of the deleted node, or its node type name as a fallback. */
+  label: string
+  nodeType: string
+  /** Configured Font Awesome icon of the node's type, or null. */
+  icon: string | null
+  /** Deleted pages vs. deleted content elements - both share the resource. */
+  isDocument: boolean
+  /** Site node down to the deleted node itself (drop the last entry for its location). */
+  breadcrumb: string[]
+  siteAggregateId: string | null
+  siteLabel: string | null
+  /** Every dimension space point the node is deleted in. */
+  dimensions: Record<string, string>[]
+  /** When it was deleted (ISO), or null when the projection has no timestamp. */
+  deletedAt: string | null
+  /** Who deleted it, or null for a system/unknown user. */
+  deletedBy: string | null
+  /**
+   * Deleted ancestors a restore brings back along with the node - it would
+   * stay invisible inside a deleted parent otherwise.
+   */
+  restoresAncestors: { nodeAggregateId: string; label: string | null }[]
+}
+
+export interface WorkspaceTrashResponse {
+  workspace: string
+  /** Restoring requires UP_TO_DATE - an outdated workspace must synchronize first. */
+  status: 'UP_TO_DATE' | 'OUTDATED'
+  items: WorkspaceTrashItem[]
+  /** true when more is deleted than the resource lists at once. */
+  truncated: boolean
+}
+
+export function useWorkspaceTrash(workspaceName: string | null) {
+  return useQuery({
+    queryKey: queryKeys.workspaces.trash(workspaceName ?? ''),
+    queryFn: () =>
+      apiFetch<WorkspaceTrashResponse>(
+        `/workspaces/${encodeURIComponent(workspaceName!)}/trash`,
+      ),
+    enabled: workspaceName !== null,
+  })
+}
+
+/**
+ * Restore a deleted node, together with any deleted ancestor it lives inside.
+ * Rejected with a 409 while the workspace is outdated ("workspace_outdated")
+ * or when the node is not deleted at all ("not_deleted").
+ */
+export function restoreFromTrash(
+  workspaceName: string,
+  nodeAggregateId: string,
+): Promise<{
+  workspace: string
+  restored: { nodeAggregateId: string; label: string | null }[]
+}> {
+  return apiFetch(
+    `/workspaces/${encodeURIComponent(workspaceName)}/trash/${encodeURIComponent(nodeAggregateId)}/restore`,
+    { method: 'POST' },
+  )
+}
+
 /** Requires manage permission - only enable for such workspaces. */
 export function useWorkspaceRoles(workspaceName: string | null) {
   return useQuery({
