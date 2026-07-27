@@ -30,7 +30,13 @@ const EVENT_TYPE_TONES: Record<string, ChangeTone> = {
   NodeAggregateWasRemoved: 'remove',
 }
 
-export function eventTone(type: string): ChangeTone {
+/**
+ * Deleting a node tags it "removed" (a soft removal) and hiding it tags it
+ * "disabled" - one event type, two user actions the log must tell apart.
+ * `tag` is the subtree tag the event carries, null for every other type.
+ */
+export function eventTone(type: string, tag?: string | null): ChangeTone {
+  if (type === 'SubtreeWasTagged' && tag === 'removed') return 'remove'
   return EVENT_TYPE_TONES[type] ?? 'change'
 }
 
@@ -48,6 +54,13 @@ const EVENT_TYPE_LABELS: Record<string, () => string> = {
     t('workspaceGraph.event.visibilityChanged', 'Visibility changed'),
   SubtreeWasUntagged: () =>
     t('workspaceGraph.event.visibilityChanged', 'Visibility changed'),
+  // Keyed by "<type>:<tag>", see eventTypeLabel() below.
+  'SubtreeWasTagged:removed': () =>
+    t('workspaceGraph.event.nodeRemoved', 'Removed'),
+  'SubtreeWasUntagged:removed': () =>
+    t('workspaceGraph.event.nodeRestored', 'Restored'),
+  'SubtreeWasTagged:disabled': () => t('workspaceGraph.step.hidden', 'Hidden'),
+  'SubtreeWasUntagged:disabled': () => t('workspaceGraph.step.shown', 'Shown'),
   NodeAggregateTypeWasChanged: () =>
     t('workspaceGraph.event.typeChanged', 'Type changed'),
   NodeAggregateNameWasChanged: () =>
@@ -60,8 +73,10 @@ const EVENT_TYPE_LABELS: Record<string, () => string> = {
     t('workspaceGraph.event.variantCreated', 'Variant created'),
 }
 
-export function eventTypeLabel(type: string): string {
-  return EVENT_TYPE_LABELS[type]?.() ?? type
+export function eventTypeLabel(type: string, tag?: string | null): string {
+  const tagged =
+    tag != null ? EVENT_TYPE_LABELS[`${type}:${tag}`]?.() : undefined
+  return tagged ?? EVENT_TYPE_LABELS[type]?.() ?? type
 }
 
 /**
@@ -139,6 +154,29 @@ const COMMAND_INFO: Record<
     label: () =>
       t('workspaceGraph.event.visibilityChanged', 'Visibility changed'),
   },
+  // Tagging is what deleting and hiding are made of - keyed by
+  // "<command>:<tag>" so a step reads as the action the editor took,
+  // see stepInfo().
+  'TagSubtree:removed': {
+    icon: 'fa-trash',
+    tone: 'remove',
+    label: () => t('workspaceGraph.event.nodeRemoved', 'Removed'),
+  },
+  'UntagSubtree:removed': {
+    icon: 'fa-trash-arrow-up',
+    tone: 'add',
+    label: () => t('workspaceGraph.event.nodeRestored', 'Restored'),
+  },
+  'TagSubtree:disabled': {
+    icon: 'fa-eye-slash',
+    tone: 'change',
+    label: () => t('workspaceGraph.step.hidden', 'Hidden'),
+  },
+  'UntagSubtree:disabled': {
+    icon: 'fa-eye',
+    tone: 'change',
+    label: () => t('workspaceGraph.step.shown', 'Shown'),
+  },
   ChangeNodeAggregateType: {
     icon: 'fa-arrow-right-arrow-left',
     tone: 'change',
@@ -156,23 +194,39 @@ const COMMAND_INFO: Record<
   },
 }
 
+/**
+ * The COMMAND_INFO key of a step: its command, qualified by the subtree tag
+ * for the tagging commands - "TagSubtree" alone cannot tell a deletion from a
+ * hide. Every event of one step shares the tag (one command, one tag).
+ */
+function stepInfo(
+  step: WorkspacePendingStep,
+): { icon: string; tone: ChangeTone; label: () => string } | undefined {
+  if (step.command === null) return undefined
+  const tag = step.events[0].tag
+  return (
+    (tag != null ? COMMAND_INFO[`${step.command}:${tag}`] : undefined) ??
+    COMMAND_INFO[step.command]
+  )
+}
+
 /** What kind of edit a step is, e.g. "Properties changed". */
 export function stepLabel(step: WorkspacePendingStep): string {
-  const info = step.command !== null ? COMMAND_INFO[step.command] : undefined
+  const info = stepInfo(step)
   if (info) return info.label()
-  return eventTypeLabel(step.events[0].type)
+  return eventTypeLabel(step.events[0].type, step.events[0].tag)
 }
 
 /** Font Awesome icon name (without the fa- prefixes) for a step's action. */
 export function stepIcon(step: WorkspacePendingStep): string {
-  const info = step.command !== null ? COMMAND_INFO[step.command] : undefined
-  return info?.icon ?? 'fa-circle-dot'
+  return stepInfo(step)?.icon ?? 'fa-circle-dot'
 }
 
 /** Whether a step adds, changes or removes content. */
 export function stepTone(step: WorkspacePendingStep): ChangeTone {
-  const info = step.command !== null ? COMMAND_INFO[step.command] : undefined
-  return info?.tone ?? eventTone(step.events[0].type)
+  return (
+    stepInfo(step)?.tone ?? eventTone(step.events[0].type, step.events[0].tag)
+  )
 }
 
 /** "Properties changed: About us (+2 more)" - the one-line step summary. */

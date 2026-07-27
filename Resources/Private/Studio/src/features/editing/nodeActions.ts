@@ -89,16 +89,30 @@ export async function changeNodeType(
   await invalidateAfterStructureChange()
 }
 
+/**
+ * Deletes a node - a SOFT removal, the way Neos deletes in a non-live
+ * workspace: the node is tagged "removed" instead of being erased. Every read
+ * (trees, preview, search) excludes that tag, so it is gone for the editor,
+ * but the change stays a reviewable pending change of a node that still
+ * exists. That is what lets the review dialog name what was deleted, publish
+ * or discard the deletion per document, and restore it by discarding. The
+ * content repository turns the soft removal into a hard one in live once the
+ * deletion is published and no other workspace still needs the node
+ * (SoftRemovalGarbageCollector). A hard RemoveNodeAggregate here would erase
+ * the node from the workspace with its change still pending - unnameable in
+ * the review list and impossible to publish or discard on its own.
+ */
 export async function deleteNode(address: string): Promise<void> {
   const node = decodeNodeAddress(address)
   await executeCommands([
     {
-      type: 'RemoveNodeAggregate',
+      type: 'TagSubtree',
       payload: {
         workspaceName: node.workspaceName,
         nodeAggregateId: node.aggregateId,
         coveredDimensionSpacePoint: node.dimensionSpacePoint,
         nodeVariantSelectionStrategy: 'allSpecializations',
+        tag: 'removed',
       },
     },
   ])

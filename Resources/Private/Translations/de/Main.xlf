@@ -2510,6 +2510,10 @@
         <source>Removed</source>
         <target xml:lang="de">Gelöscht</target>
       </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRestored" xml:space="preserve">
+        <source>Restored</source>
+        <target xml:lang="de">Wiederhergestellt</target>
+      </trans-unit>
       <trans-unit id="workspaceGraph.event.propertiesChanged" xml:space="preserve">
         <source>Properties changed</source>
         <target xml:lang="de">Eigenschaften geändert</target>

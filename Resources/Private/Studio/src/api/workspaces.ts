@@ -237,6 +237,12 @@ export interface WorkspacePendingEvent {
   nodeAggregateId: string | null
   parentNodeAggregateId: string | null
   dimensionSpacePoints: Record<string, string>[]
+  /**
+   * The subtree tag a SubtreeWasTagged/SubtreeWasUntagged event carries, null
+   * for every other type: "removed" is a deletion (a soft removal), "disabled"
+   * a hide - the same event type for two different user actions.
+   */
+  tag: string | null
   initiatingUserId: string | null
   initiatingUserLabel: string | null
   recordedAt: string

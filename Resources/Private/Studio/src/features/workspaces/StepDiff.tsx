@@ -142,10 +142,10 @@ function DiffEvent({
           <span
             className={cn(
               'shrink-0 text-[9px]',
-              TONE_TEXT_CLASSES[eventTone(event.type)],
+              TONE_TEXT_CLASSES[eventTone(event.type, event.tag)],
             )}
           >
-            {eventTypeLabel(event.type)}
+            {eventTypeLabel(event.type, event.tag)}
           </span>
         </div>
       )}
@@ -153,8 +153,8 @@ function DiffEvent({
         <ChangeRow key={index} change={change} />
       ))}
       {event.changes.length === 0 && !showNode && (
-        <div className={TONE_TEXT_CLASSES[eventTone(event.type)]}>
-          {eventTypeLabel(event.type)}
+        <div className={TONE_TEXT_CLASSES[eventTone(event.type, event.tag)]}>
+          {eventTypeLabel(event.type, event.tag)}
         </div>
       )}
     </div>
