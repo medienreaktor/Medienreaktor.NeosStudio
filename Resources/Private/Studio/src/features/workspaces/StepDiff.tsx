@@ -6,10 +6,15 @@ import {
   type WorkspacePendingStep,
 } from '@/api/workspaces'
 import { Spinner } from '@/components/ui/spinner'
-import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { eventTone, eventTypeLabel, TONE_TEXT_CLASSES } from './historyLabels'
+import {
+  eventIcon,
+  eventTone,
+  eventTypeLabel,
+  TONE_TEXT_CLASSES,
+  type ChangeTone,
+} from './historyLabels'
 
 /**
  * The before/after diff of one editing step, lazily fetched from the
@@ -115,7 +120,11 @@ function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
   )
 }
 
-/** One diffed event inside an expanded step: which node, then its changes. */
+/**
+ * One diffed event inside an expanded step: what kind of change it was, on
+ * which node, then the changes themselves - the reading order of a log row
+ * (kind of edit in its tone first, what was edited after it).
+ */
 function DiffEvent({
   event,
   showNode,
@@ -126,26 +135,27 @@ function DiffEvent({
   return (
     <div className="flex flex-col gap-1">
       {showNode && (
-        <div className="flex min-w-0 items-center gap-1.5 text-neutral-300">
+        <div className="flex min-w-0 items-center gap-1.5">
           <i
             className={cn(
-              event.icon ? faClassName(event.icon) : 'fas fa-cube',
-              'fa-fw shrink-0 text-[0.65rem] text-neutral-500',
+              'fas fa-fw shrink-0 text-[0.65rem]',
+              eventIcon(event.type, event.tag),
+              TONE_TEXT_CLASSES[eventTone(event.type, event.tag)],
             )}
             aria-hidden
           />
-          <span className="truncate">
-            {event.nodeLabel ??
-              event.nodeAggregateId ??
-              t('workspaceGraph.unknownNode', 'Unknown node')}
-          </span>
           <span
             className={cn(
-              'shrink-0 text-[9px]',
+              'shrink-0',
               TONE_TEXT_CLASSES[eventTone(event.type, event.tag)],
             )}
           >
             {eventTypeLabel(event.type, event.tag)}
+          </span>
+          <span className="truncate text-white">
+            {event.nodeLabel ??
+              event.nodeAggregateId ??
+              t('workspaceGraph.unknownNode', 'Unknown node')}
           </span>
         </div>
       )}
@@ -161,55 +171,60 @@ function DiffEvent({
   )
 }
 
-/** Status vocabulary of a net-diff node, in the classic change colors. */
+/** Status vocabulary of a net-diff node, in the shared change colors. */
 const NODE_STATUS: Record<
   WorkspaceDocumentDiffNode['status'],
-  { tone: 'add' | 'change' | 'remove'; label: () => string }
+  { tone: ChangeTone; icon: string; label: () => string }
 > = {
   created: {
     tone: 'add',
+    icon: 'fa-plus',
     label: () => t('workspaceGraph.event.nodeCreated', 'Created'),
   },
   removed: {
     tone: 'remove',
+    icon: 'fa-trash',
     label: () => t('workspaceGraph.event.nodeRemoved', 'Removed'),
   },
   moved: {
     tone: 'change',
+    icon: 'fa-up-down-left-right',
     label: () => t('workspaceGraph.event.nodeMoved', 'Moved'),
   },
   changed: {
     tone: 'change',
+    icon: 'fa-pen',
     label: () => t('workspace.badge.changed', 'Changed'),
   },
 }
 
 /**
- * One changed node of a document's NET diff (workspace vs base): node header
- * with its status in the classic change colors, then the squashed old -> new
- * rows - what publishing this document would apply for this node.
+ * One changed node of a document's NET diff (workspace vs base): what kind of
+ * change it is (in the change colors) on which node, then the squashed
+ * old -> new rows - what publishing this document would apply for this node.
+ * Reads like a log row, so the review dialog and the history logs tell their
+ * changes the same way.
  */
 export function NodeDiff({ node }: { node: WorkspaceDocumentDiffNode }) {
   const status = NODE_STATUS[node.status]
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex min-w-0 items-center gap-1.5 text-neutral-300">
+      <div className="flex min-w-0 items-center gap-1.5">
         <i
           className={cn(
-            node.icon ? faClassName(node.icon) : 'fas fa-cube',
-            'fa-fw shrink-0 text-[0.65rem] text-neutral-500',
+            'fas fa-fw shrink-0 text-[0.65rem]',
+            status.icon,
+            TONE_TEXT_CLASSES[status.tone],
           )}
           aria-hidden
         />
-        <span className="truncate">
+        <span className={cn('shrink-0', TONE_TEXT_CLASSES[status.tone])}>
+          {status.label()}
+        </span>
+        <span className="truncate text-white">
           {node.nodeLabel ??
             node.nodeAggregateId ??
             t('workspaceGraph.unknownNode', 'Unknown node')}
-        </span>
-        <span
-          className={cn('shrink-0 text-[9px]', TONE_TEXT_CLASSES[status.tone])}
-        >
-          {status.label()}
         </span>
       </div>
       {node.changes.map((change, index) => (

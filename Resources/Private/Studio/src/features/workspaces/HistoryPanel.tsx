@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
+import { addressWithAggregateId } from '@/api/nodeAddress'
 import {
   groupPendingEvents,
   useWorkspacesPendingEvents,
+  type WorkspacePendingStep,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Placeholder } from '@/components/ui/placeholder'
@@ -33,7 +35,7 @@ import { HistoryStepRow } from './HistoryStepRow'
  * poll cadence.
  */
 export function HistoryPanel() {
-  const { workspaceName, selectedDocument } = useStudio()
+  const { workspaceName, selectedDocument, inspectAddress } = useStudio()
   const documentId = selectedDocument?.aggregateId ?? null
   const { byWorkspace, isLoading } = useWorkspacesPendingEvents(
     workspaceName !== null ? [workspaceName] : [],
@@ -52,6 +54,21 @@ export function HistoryPanel() {
     )
     return groupPendingEvents(events).reverse()
   }, [history, documentId])
+
+  // Picking a step also inspects what it changed: the node is revealed in the
+  // outliner and highlighted in the page, so a log entry leads straight to the
+  // content behind it. The first event with a node wins for steps that touched
+  // several. Nodes that are gone (deleted, or in another dimension) simply do
+  // not resolve - inspectAddress ignores a failed read.
+  const inspectChangedNode = (step: WorkspacePendingStep) => {
+    const aggregateId = step.events.find(
+      (event) => event.nodeAggregateId !== null,
+    )?.nodeAggregateId
+    if (aggregateId == null || selectedDocument === null) return
+    inspectAddress(
+      addressWithAggregateId(selectedDocument.address, aggregateId),
+    )
+  }
 
   if (workspaceName === null || selectedDocument === null || isLoading) {
     return <LoadingState label={t('history.loading', 'Loading the history…')} />
@@ -76,9 +93,11 @@ export function HistoryPanel() {
           step={step}
           documentId={selectedDocument.aggregateId}
           expanded={expandedId === step.id}
-          onToggle={() =>
-            setExpandedId((current) => (current === step.id ? null : step.id))
-          }
+          onToggle={() => {
+            const next = expandedId === step.id ? null : step.id
+            setExpandedId(next)
+            if (next !== null) inspectChangedNode(step)
+          }}
         />
       ))}
       {history?.truncated === true && (

@@ -25,6 +25,18 @@ export const TONE_TEXT_CLASSES: Record<ChangeTone, string> = {
   variant: 'text-purple-400',
 }
 
+/**
+ * Fill per tone - the 500 tier, which carries white text. For the filled
+ * status badges of the review dialog; the logs themselves color text, not
+ * surfaces. One source for both so the two can never drift apart again.
+ */
+export const TONE_BG_CLASSES: Record<ChangeTone, string> = {
+  add: 'bg-green-500',
+  change: 'bg-blue-500',
+  remove: 'bg-red-500',
+  variant: 'bg-purple-500',
+}
+
 const EVENT_TYPE_TONES: Record<string, ChangeTone> = {
   NodeAggregateWithNodeWasCreated: 'add',
   NodeSpecializationVariantWasCreated: 'variant',
@@ -80,6 +92,36 @@ export function eventTypeLabel(type: string, tag?: string | null): string {
   const tagged =
     tag != null ? EVENT_TYPE_LABELS[`${type}:${tag}`]?.() : undefined
   return tagged ?? EVENT_TYPE_LABELS[type]?.() ?? type
+}
+
+/**
+ * Icon per event type - the same glyphs the step rows use for the commands
+ * behind them, keyed like the labels above ("<type>:<tag>" first, so a
+ * deletion is a trash can and a hide an eye).
+ */
+const EVENT_TYPE_ICONS: Record<string, string> = {
+  NodePropertiesWereSet: 'fa-pen',
+  NodeReferencesWereSet: 'fa-link',
+  NodeAggregateWithNodeWasCreated: 'fa-plus',
+  NodeAggregateWasMoved: 'fa-up-down-left-right',
+  NodeAggregateWasRemoved: 'fa-trash',
+  SubtreeWasTagged: 'fa-tag',
+  SubtreeWasUntagged: 'fa-tag',
+  'SubtreeWasTagged:removed': 'fa-trash',
+  'SubtreeWasUntagged:removed': 'fa-clock-rotate-left',
+  'SubtreeWasTagged:disabled': 'fa-eye-slash',
+  'SubtreeWasUntagged:disabled': 'fa-eye',
+  NodeAggregateTypeWasChanged: 'fa-arrow-right-arrow-left',
+  NodeAggregateNameWasChanged: 'fa-i-cursor',
+  NodeSpecializationVariantWasCreated: 'fa-clone',
+  NodeGeneralizationVariantWasCreated: 'fa-clone',
+  NodePeerVariantWasCreated: 'fa-clone',
+}
+
+/** Font Awesome icon name (without the fa- prefixes) for an event's action. */
+export function eventIcon(type: string, tag?: string | null): string {
+  const tagged = tag != null ? EVENT_TYPE_ICONS[`${type}:${tag}`] : undefined
+  return tagged ?? EVENT_TYPE_ICONS[type] ?? 'fa-circle-dot'
 }
 
 /**

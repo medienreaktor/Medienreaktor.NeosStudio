@@ -29,38 +29,44 @@ import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
+import { TONE_BG_CLASSES } from './historyLabels'
 import { NodeDiff } from './StepDiff'
 import { useWorkspacePublishing } from './useWorkspacePublishing'
 
-/** The change verbs a document row can carry, in display priority order. */
+/**
+ * The change verbs a document row can carry, in display priority order. Their
+ * fill comes from the shared tone palette, so a review badge and a history
+ * step speak of the same change in the same color: additions green, removals
+ * red, modifications (moved as well as edited) blue.
+ */
 const CHANGE_BADGES = [
   {
     key: 'created',
     label: 'New',
     labelKey: 'workspace.badge.new',
     icon: 'fa-plus',
-    className: 'bg-green-500',
+    tone: 'add',
   },
   {
     key: 'deleted',
     label: 'Removed',
     labelKey: 'workspace.badge.removed',
     icon: 'fa-trash-can',
-    className: 'bg-red-500',
+    tone: 'remove',
   },
   {
     key: 'moved',
     label: 'Moved',
     labelKey: 'workspace.badge.moved',
     icon: 'fa-arrows-up-down-left-right',
-    className: 'bg-blue-500',
+    tone: 'change',
   },
   {
     key: 'changed',
     label: 'Changed',
     labelKey: 'workspace.badge.changed',
     icon: 'fa-pen',
-    className: 'bg-amber-500',
+    tone: 'change',
   },
 ] as const
 
@@ -72,7 +78,7 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
           key={badge.key}
           className={cn(
             'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-white',
-            badge.className,
+            TONE_BG_CLASSES[badge.tone],
           )}
         >
           <i
@@ -105,7 +111,7 @@ function DocumentDiff({
     documentId,
   )
   return (
-    <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 border-l border-neutral-800 pl-3 text-[11px]">
+    <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 text-[11px]">
       {isLoading && (
         <div className="py-1 text-neutral-500">
           {t('workspaceHistory.loadingDiff', 'Loading changes…')}
@@ -394,7 +400,7 @@ export function ReviewChangesDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-wrap items-center gap-3 border-b border-neutral-800 pb-3">
+          <div className="flex flex-wrap items-center gap-3 pb-3">
             <div className="flex flex-col gap-1">
               <span className="text-xs text-neutral-400">
                 {t('workspace.review.sourceLabel', 'Changes in')}
@@ -492,15 +498,24 @@ export function ReviewChangesDialog({
                   const isExpanded = expandedIds.has(id)
                   const breadcrumb = document.breadcrumb.slice(0, -1)
                   return (
-                    <li key={id}>
-                      <label
-                        className={cn(
-                          'flex cursor-pointer items-start gap-3 rounded-sm px-3 py-2 transition-colors',
-                          isSelected
-                            ? 'bg-neutral-800'
-                            : 'hover:bg-neutral-900',
-                        )}
-                      >
+                    // The selected look of every other list in the Studio
+                    // (trees, trash, clipboard): blue border on the lifted
+                    // surface, transparent border at rest so nothing shifts.
+                    // It sits on the whole item, so an unfolded document holds
+                    // its node changes inside its own selection.
+                    <li
+                      key={id}
+                      className={cn(
+                        // Hovering the document row lifts the whole item, its
+                        // unfolded changes included (has-, so reading the diff
+                        // itself does not light the item up).
+                        'rounded-sm border border-transparent transition-colors',
+                        isSelected
+                          ? 'border-blue-500 bg-neutral-800'
+                          : 'has-[>label:hover]:bg-neutral-800',
+                      )}
+                    >
+                      <label className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5">
                         <Checkbox
                           className="mt-0.5"
                           checked={isSelected}
@@ -509,7 +524,10 @@ export function ReviewChangesDialog({
                         <FaIcon
                           icon={document.icon ?? 'fa-file'}
                           className={cn(
-                            'mt-0.5 shrink-0 text-neutral-400',
+                            // The icon's own line box is shorter than the
+                            // title's (12px glyph, 14px text), so it needs the
+                            // difference to sit on the title's baseline.
+                            'mt-1 shrink-0 text-white',
                             document.hidden && 'opacity-50',
                           )}
                         />
@@ -517,7 +535,7 @@ export function ReviewChangesDialog({
                           <div className="flex items-center gap-2">
                             <span
                               className={cn(
-                                'truncate text-sm text-neutral-100',
+                                'truncate text-sm',
                                 document.hidden && 'opacity-50',
                               )}
                             >
@@ -532,7 +550,7 @@ export function ReviewChangesDialog({
                             )}
                           </div>
                           {breadcrumb.length > 0 && (
-                            <div className="truncate text-xs text-neutral-500">
+                            <div className="truncate text-xs text-neutral-400">
                               {breadcrumb.join(' › ')}
                             </div>
                           )}
@@ -573,7 +591,7 @@ export function ReviewChangesDialog({
                         )}
                         <button
                           type="button"
-                          className="mt-0.5 shrink-0 text-xs text-neutral-400 hover:text-white"
+                          className="mt-0.5 shrink-0 cursor-pointer text-xs"
                           title={
                             isExpanded
                               ? t(
@@ -591,9 +609,11 @@ export function ReviewChangesDialog({
                             toggleExpanded(id)
                           }}
                         >
+                          {/* The chevron of the inspector groups and the
+                              history rows: same glyph, same rotation. */}
                           <i
                             className={cn(
-                              'fas fa-fw fa-chevron-right transition-transform',
+                              'fas fa-chevron-right transition-transform',
                               isExpanded && 'rotate-90',
                             )}
                             aria-hidden
