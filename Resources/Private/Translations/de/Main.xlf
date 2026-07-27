@@ -2718,25 +2718,13 @@
         <source>{0}h ago</source>
         <target xml:lang="de">vor {0} Std.</target>
       </trans-unit>
-      <trans-unit id="workspaceHistory.title" xml:space="preserve">
-        <source>History</source>
-        <target xml:lang="de">Verlauf</target>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.filterDocument" xml:space="preserve">
-        <source>This page</source>
-        <target xml:lang="de">Diese Seite</target>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.filterDocumentHint" xml:space="preserve">
-        <source>Only steps that touched the current page</source>
-        <target xml:lang="de">Nur Schritte, die die aktuelle Seite betreffen</target>
+      <trans-unit id="workspaceHistory.events" xml:space="preserve">
+        <source>Events</source>
+        <target xml:lang="de">Ereignisse</target>
       </trans-unit>
       <trans-unit id="workspaceHistory.empty" xml:space="preserve">
         <source>No pending changes.</source>
         <target xml:lang="de">Keine ausstehenden Änderungen.</target>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.emptyForDocument" xml:space="preserve">
-        <source>No changes on the current page.</source>
-        <target xml:lang="de">Keine Änderungen auf der aktuellen Seite.</target>
       </trans-unit>
       <trans-unit id="workspaceHistory.older" xml:space="preserve">
         <source>Older history is not shown.</source>
@@ -2757,10 +2745,6 @@
       <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
         <source>No details available.</source>
         <target xml:lang="de">Keine Details verfügbar.</target>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.goToPage" xml:space="preserve">
-        <source>Go to page</source>
-        <target xml:lang="de">Zur Seite</target>
       </trans-unit>
       <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
         <source>yes</source>

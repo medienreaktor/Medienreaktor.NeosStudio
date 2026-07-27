@@ -311,7 +311,6 @@ export function WorkspaceGraphPanel() {
   const {
     workspaceName: currentWorkspaceName,
     personalWorkspaceName,
-    selectedDocument,
     navigateToNodeInWorkspace,
     checkoutWorkspace,
   } = useStudio()
@@ -353,15 +352,6 @@ export function WorkspaceGraphPanel() {
   )
   const selectedBranch =
     selection !== null ? (graph.byName.get(selection.workspace) ?? null) : null
-
-  // "Go to page" on a history step moves the editing context into the
-  // branch's workspace - offered only where the user can actually edit:
-  // the checked-out workspace, the own personal one, or a writable shared
-  // one (the same rule the checkout menu applies).
-  const canNavigateInto = (workspace: Workspace): boolean =>
-    workspace.name === currentWorkspaceName ||
-    workspace.name === personalWorkspaceName ||
-    (workspace.classification === 'SHARED' && workspace.permissions.write)
 
   // The card context menu and what it leads to: a review dialog opened on the
   // right-clicked workspace, or a rebase (with the shared conflict handling).
@@ -407,21 +397,11 @@ export function WorkspaceGraphPanel() {
               key={selectedBranch.workspace.name}
               branch={selectedBranch}
               selectedStepId={selection?.sequenceNumber ?? null}
-              currentDocumentId={selectedDocument?.aggregateId ?? null}
               onSelectStep={(stepId) =>
                 setSelection({
                   workspace: selectedBranch.workspace.name,
                   sequenceNumber: stepId,
                 })
-              }
-              onNavigate={
-                canNavigateInto(selectedBranch.workspace)
-                  ? (address) =>
-                      navigateToNodeInWorkspace(
-                        address,
-                        selectedBranch.workspace.name,
-                      )
-                  : null
               }
               onClose={() => setSelection(null)}
             />

@@ -234,6 +234,19 @@ export function stepTone(step: WorkspacePendingStep): ChangeTone {
 }
 
 /**
+ * Whether a step has a before/after worth unfolding. Subtree tagging has
+ * none: "Hidden", "Shown", "Removed" and "Restored" say the whole story, and
+ * the diff of such a step would only repeat its own label back. Every other
+ * step changed something with an old and a new value.
+ */
+export function stepHasDetails(step: WorkspacePendingStep): boolean {
+  return !step.events.every(
+    (event) =>
+      event.type === 'SubtreeWasTagged' || event.type === 'SubtreeWasUntagged',
+  )
+}
+
+/**
  * What a step happened TO: "About us (+2 more)" - the labels of the nodes its
  * events touched. null when none of them is resolvable, leaving the step's
  * label to speak for itself. Kept apart from that label so a log row can

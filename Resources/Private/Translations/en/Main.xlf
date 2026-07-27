@@ -2039,20 +2039,11 @@
       <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
         <source>{0}h ago</source>
       </trans-unit>
-      <trans-unit id="workspaceHistory.title" xml:space="preserve">
-        <source>History</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.filterDocument" xml:space="preserve">
-        <source>This page</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.filterDocumentHint" xml:space="preserve">
-        <source>Only steps that touched the current page</source>
+      <trans-unit id="workspaceHistory.events" xml:space="preserve">
+        <source>Events</source>
       </trans-unit>
       <trans-unit id="workspaceHistory.empty" xml:space="preserve">
         <source>No pending changes.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.emptyForDocument" xml:space="preserve">
-        <source>No changes on the current page.</source>
       </trans-unit>
       <trans-unit id="workspaceHistory.older" xml:space="preserve">
         <source>Older history is not shown.</source>
@@ -2068,9 +2059,6 @@
       </trans-unit>
       <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
         <source>No details available.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.goToPage" xml:space="preserve">
-        <source>Go to page</source>
       </trans-unit>
       <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
         <source>yes</source>

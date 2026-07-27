@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { type WorkspacePendingStep } from '@/api/workspaces'
-import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/features/collaboration/UserAvatar'
-import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   relativeTime,
+  stepHasDetails,
   stepIcon,
   stepLabel,
   stepSubject,
@@ -20,6 +19,10 @@ import { StepDiff } from './StepDiff'
  * from the pending-events diff resource). Shared by every history log - the
  * branch history in the Workspaces graph and the History panel of the page
  * being edited - so they stay one look.
+ *
+ * Steps without a diff worth showing (hiding, showing, deleting, restoring -
+ * see stepHasDetails) have no chevron and unfold into nothing; picking one
+ * only selects it, so its row never opens an empty box.
  */
 export function HistoryStepRow({
   workspaceName,
@@ -27,10 +30,10 @@ export function HistoryStepRow({
   expanded,
   documentId,
   onToggle,
-  onNavigate,
 }: {
   workspaceName: string
   step: WorkspacePendingStep
+  /** Selected - and unfolded, for the steps that have something to unfold. */
   expanded: boolean
   /**
    * Scopes the row to one document: the diff then shows only that document's
@@ -39,8 +42,6 @@ export function HistoryStepRow({
    */
   documentId?: string
   onToggle: () => void
-  /** Follow the step's document into the editing context; null = cannot. */
-  onNavigate: ((address: string) => void) | null
 }) {
   const rowRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -51,6 +52,7 @@ export function HistoryStepRow({
   const document = step.documents[0] ?? null
   const tone = stepTone(step)
   const subject = stepSubject(step)
+  const hasDetails = stepHasDetails(step)
   return (
     <div
       ref={rowRef}
@@ -113,32 +115,23 @@ export function HistoryStepRow({
         </div>
         {/* The chevron of the inspector groups and the creation surfaces
             (CollapsibleGroup): same glyph, same size, same rotation. */}
-        <i
-          className={cn(
-            'fas fa-chevron-right mt-0.5 shrink-0 transition-transform',
-            expanded && 'rotate-90',
-          )}
-          aria-hidden
-        />
+        {hasDetails && (
+          <i
+            className={cn(
+              'fas fa-chevron-right mt-0.5 shrink-0 transition-transform',
+              expanded && 'rotate-90',
+            )}
+            aria-hidden
+          />
+        )}
       </button>
-      {expanded && (
+      {expanded && hasDetails && (
         <div className="border-t border-neutral-800 px-2 py-1.5 text-[11px]">
           <StepDiff
             workspaceName={workspaceName}
             step={step}
             documentId={documentId}
           />
-          {onNavigate !== null && document?.address != null && (
-            <Button
-              variant="secondary"
-              size="xs"
-              className="mt-2"
-              onClick={() => onNavigate(document.address!)}
-            >
-              <i className="fas fa-arrow-right fa-fw" aria-hidden />
-              {t('workspaceHistory.goToPage', 'Go to page')}
-            </Button>
-          )}
         </div>
       )}
     </div>

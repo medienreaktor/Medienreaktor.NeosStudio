@@ -79,8 +79,6 @@ export function HistoryPanel() {
           onToggle={() =>
             setExpandedId((current) => (current === step.id ? null : step.id))
           }
-          // The page is already open - there is nowhere to navigate to.
-          onNavigate={null}
         />
       ))}
       {history?.truncated === true && (
