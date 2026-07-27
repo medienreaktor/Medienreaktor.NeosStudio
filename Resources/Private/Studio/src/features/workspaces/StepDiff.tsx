@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
+  changeKindSummary,
   eventIcon,
   eventTone,
   eventTypeLabel,
@@ -196,6 +197,11 @@ const NODE_STATUS: Record<
     icon: 'fa-pen',
     label: () => t('workspace.badge.changed', 'Changed'),
   },
+  variant: {
+    tone: 'variant',
+    icon: 'fa-clone',
+    label: () => t('workspaceGraph.event.variantCreated', 'Variant created'),
+  },
 }
 
 /**
@@ -207,19 +213,26 @@ const NODE_STATUS: Record<
  */
 export function NodeDiff({ node }: { node: WorkspaceDocumentDiffNode }) {
   const status = NODE_STATUS[node.status]
+  // "Changed" is as much as the pending-changes projection knows; the change
+  // rows themselves say what KIND of change it was, and where they agree the
+  // node speaks the log's vocabulary instead ("Properties changed").
+  const kind =
+    node.status === 'changed'
+      ? changeKindSummary(node.changes.map((change) => change.kind))
+      : null
   return (
     <div className="flex flex-col gap-1">
       <div className="flex min-w-0 items-center gap-1.5">
         <i
           className={cn(
             'fas fa-fw shrink-0 text-[0.65rem]',
-            status.icon,
+            kind?.icon ?? status.icon,
             TONE_TEXT_CLASSES[status.tone],
           )}
           aria-hidden
         />
         <span className={cn('shrink-0', TONE_TEXT_CLASSES[status.tone])}>
-          {status.label()}
+          {kind?.label ?? status.label()}
         </span>
         <span className="truncate text-white">
           {node.nodeLabel ??

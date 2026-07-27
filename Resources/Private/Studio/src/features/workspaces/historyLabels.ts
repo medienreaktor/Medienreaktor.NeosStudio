@@ -276,6 +276,77 @@ export function stepTone(step: WorkspacePendingStep): ChangeTone {
 }
 
 /**
+ * Label and icon per change-row kind of a diff - the vocabulary the steps use
+ * for the commands behind such a change, so a net diff and a log say the same
+ * thing. `key` groups the kinds that mean one edit (a new parent and a new
+ * position are both a move).
+ */
+const CHANGE_KIND_INFO: Record<
+  string,
+  { key: string; icon: string; label: () => string }
+> = {
+  property: {
+    key: 'properties',
+    icon: 'fa-pen',
+    label: () =>
+      t('workspaceGraph.event.propertiesChanged', 'Properties changed'),
+  },
+  reference: {
+    key: 'references',
+    icon: 'fa-link',
+    label: () =>
+      t('workspaceGraph.event.referencesChanged', 'References changed'),
+  },
+  nodeType: {
+    key: 'nodeType',
+    icon: 'fa-arrow-right-arrow-left',
+    label: () => t('workspaceGraph.event.typeChanged', 'Type changed'),
+  },
+  name: {
+    key: 'name',
+    icon: 'fa-i-cursor',
+    label: () => t('workspaceGraph.event.renamed', 'Renamed'),
+  },
+  parent: {
+    key: 'move',
+    icon: 'fa-up-down-left-right',
+    label: () => t('workspaceGraph.event.nodeMoved', 'Moved'),
+  },
+  position: {
+    key: 'move',
+    icon: 'fa-up-down-left-right',
+    label: () => t('workspaceGraph.event.nodeMoved', 'Moved'),
+  },
+  tag: {
+    key: 'tag',
+    icon: 'fa-tag',
+    label: () =>
+      t('workspaceGraph.event.visibilityChanged', 'Visibility changed'),
+  },
+  variant: {
+    key: 'variant',
+    icon: 'fa-clone',
+    label: () => t('workspaceGraph.event.variantCreated', 'Variant created'),
+  },
+}
+
+/**
+ * What a set of change rows spells out: "Properties changed", "Renamed", ...
+ * for rows that all describe the same kind of edit - null when they disagree
+ * (or are unknown), where only the generic status is honest.
+ */
+export function changeKindSummary(
+  kinds: string[],
+): { icon: string; label: string } | null {
+  const first = CHANGE_KIND_INFO[kinds[0] ?? '']
+  if (first === undefined) return null
+  if (kinds.some((kind) => CHANGE_KIND_INFO[kind]?.key !== first.key)) {
+    return null
+  }
+  return { icon: first.icon, label: first.label() }
+}
+
+/**
  * Whether a step has a before/after worth unfolding. Subtree tagging has
  * none: "Hidden", "Shown", "Removed" and "Restored" say the whole story, and
  * the diff of such a step would only repeat its own label back. Every other

@@ -390,7 +390,12 @@ export type WorkspacePendingDiffEvent = WorkspacePendingEvent & {
 export interface WorkspaceDocumentDiffNode {
   nodeAggregateId: string
   dimensions: Record<string, string>
-  status: 'created' | 'removed' | 'moved' | 'changed'
+  /**
+   * "variant" is a dimension variant added on top of content the base
+   * workspace already has - Neos' change projection marks it as created like a
+   * brand-new node, the resource tells the two apart by the base workspace.
+   */
+  status: 'created' | 'removed' | 'moved' | 'changed' | 'variant'
   nodeLabel: string | null
   nodeType: string | null
   icon: string | null
