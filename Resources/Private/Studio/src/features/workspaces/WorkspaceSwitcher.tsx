@@ -24,7 +24,8 @@ import {
  *   workspace; picking Live or a shared workspace rebases the personal
  *   workspace onto it and thereby retargets where a publish goes. The
  *   content repository refuses the rebase while the personal workspace still
- *   has publishable changes, surfaced as a hint to publish or discard first.
+ *   has publishable changes, so those entries are disabled until the user
+ *   publishes or discards (the server error stays as a race fallback).
  *
  * - Collaborative sessions: every shared workspace additionally offers a
  *   "Collaborative" entry that moves the EDITING context into that workspace
@@ -172,29 +173,48 @@ export function WorkspaceSwitcher({
             <SelectLabel>
               {t('workspace.publishTargetGroup', 'My workspace, publishing to')}
             </SelectLabel>
-            {targets.map((workspace) => (
-              <SelectItem
-                key={`base:${workspace.name}`}
-                value={`base:${workspace.name}`}
-              >
-                {workspaceLabel(workspace)}
-                {/* No write access on the target = the user could retarget
-                    here (that only needs read) but never publish. Selectable
-                    for reviewing, but flagged. */}
-                {!workspace.permissions.write && (
-                  <span
-                    className="ml-1.5 text-xs text-neutral-400"
-                    title={t(
-                      'workspace.cannotPublishHere',
-                      'You cannot publish to this workspace',
-                    )}
-                  >
-                    <i className="fas fa-lock" aria-hidden />{' '}
-                    {t('workspace.readOnly', 'read-only')}
-                  </span>
-                )}
-              </SelectItem>
-            ))}
+            {targets.map((workspace) => {
+              // Changing the base rebases the personal workspace, which the
+              // CR refuses while it still holds publishable changes. The
+              // current base stays enabled: it is the selected value, and in
+              // collaborative mode it is the rebase-free way back to editing
+              // the personal workspace.
+              const rebaseBlocked =
+                personalWorkspace.hasPublishableChanges &&
+                workspace.name !== personalWorkspace.baseWorkspace
+              return (
+                <SelectItem
+                  key={`base:${workspace.name}`}
+                  value={`base:${workspace.name}`}
+                  disabled={rebaseBlocked}
+                >
+                  {workspaceLabel(workspace)}
+                  {rebaseBlocked && (
+                    <span className="ml-1.5 text-xs text-neutral-400">
+                      {t(
+                        'workspace.publishOrDiscardFirst',
+                        'Publish or discard your changes first.',
+                      )}
+                    </span>
+                  )}
+                  {/* No write access on the target = the user could retarget
+                      here (that only needs read) but never publish. Selectable
+                      for reviewing, but flagged. */}
+                  {!rebaseBlocked && !workspace.permissions.write && (
+                    <span
+                      className="ml-1.5 text-xs text-neutral-400"
+                      title={t(
+                        'workspace.cannotPublishHere',
+                        'You cannot publish to this workspace',
+                      )}
+                    >
+                      <i className="fas fa-lock" aria-hidden />{' '}
+                      {t('workspace.readOnly', 'read-only')}
+                    </span>
+                  )}
+                </SelectItem>
+              )
+            })}
           </SelectGroup>
           {sharedTargets.length > 0 && (
             <>
