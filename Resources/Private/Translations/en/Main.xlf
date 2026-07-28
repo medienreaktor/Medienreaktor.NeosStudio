@@ -413,6 +413,9 @@
       <trans-unit id="editor.rte.strikethrough" xml:space="preserve">
         <source>Strikethrough</source>
       </trans-unit>
+      <trans-unit id="editor.rte.styles" xml:space="preserve">
+        <source>Styles</source>
+      </trans-unit>
       <trans-unit id="editor.rte.subscript" xml:space="preserve">
         <source>Subscript</source>
       </trans-unit>

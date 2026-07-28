@@ -21,8 +21,31 @@ import type { Editor } from '@tiptap/core'
 import { CellSelection } from '@tiptap/pm/tables'
 import { editorFormatting } from './formatting'
 import { requestLinkEdit } from './linkEditing'
+import {
+  isStyleActive,
+  isStyleAvailable,
+  stylePreviewMarkup,
+  toggleStyle,
+} from './styles'
 
 export type ToolbarKind = 'inline' | 'block'
+
+/** One choice in a toolbar item's dropdown. */
+export interface ToolbarMenuEntry {
+  /** Stable key within the menu; also its identity in the rebuild signature. */
+  key: string
+  /** The choice's label. */
+  label: string
+  /** Whether the choice is currently applied at the selection. */
+  active: boolean
+  /**
+   * HTML rendering the choice as it would look, shown instead of the label.
+   * Rendered into the guest document, so the site's own CSS applies.
+   */
+  preview?: string
+  /** Apply the choice. */
+  run(editor: Editor): void
+}
 
 export interface ToolbarItem {
   /** Stable id, also used to dedupe registrations. */
@@ -37,15 +60,22 @@ export interface ToolbarItem {
   icon: string
   /** Whether the mark/node is currently active at the selection. */
   isActive(editor: Editor): boolean
-  /** Apply the command to the editor. */
+  /** Apply the command to the editor. Unused by items that open a menu. */
   run(editor: Editor): void
   /** Whether the item applies to this editor (default: always). */
   isAvailable?(editor: Editor): boolean
+  /**
+   * The choices this item opens as a dropdown instead of acting directly. An
+   * item whose menu is empty is not rendered at all, so a picker disappears
+   * where it has nothing to offer.
+   */
+  menu?(editor: Editor): ToolbarMenuEntry[]
 }
 
 const ACTIVE_CLASS = 'neos-studio-toolbar-active'
 /** Exported so main.ts can tell toolbar clicks from clicks on page background. */
 export const TOOLBAR_CLASS = 'neos-studio-toolbar'
+const MENU_CLASS = 'neos-studio-toolbar-menu'
 const ACCENT = 'rgb(0, 173, 238)'
 
 const items: ToolbarItem[] = []
@@ -112,6 +142,61 @@ function injectStyles(): void {
       margin: 3px 2px;
       background: rgba(255, 255, 255, 0.15);
     }
+    .${TOOLBAR_CLASS} .neos-studio-toolbar-menu-host {
+      position: relative;
+      display: flex;
+    }
+    .${MENU_CLASS} {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+      min-width: 180px;
+      max-width: 320px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 4px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+    .${MENU_CLASS}[data-open='true'] {
+      display: flex;
+    }
+    .${MENU_CLASS} button {
+      justify-content: flex-start;
+      width: 100%;
+      height: auto;
+      min-height: 28px;
+      padding: 4px 8px;
+      font-weight: 400;
+      text-align: left;
+    }
+    /*
+     * The preview is rendered with the site's own styles, which know nothing
+     * about a dark dropdown - so it gets a light plate to sit on, and its
+     * layout is clamped so an outsized heading cannot blow up the menu.
+     */
+    .${MENU_CLASS} .neos-studio-toolbar-preview {
+      display: block;
+      overflow: hidden;
+      width: 100%;
+      max-height: 3em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .${MENU_CLASS} .neos-studio-toolbar-preview * {
+      margin: 0;
+      font-size: inherit;
+      line-height: inherit;
+    }
   `
   document.head.appendChild(style)
 }
@@ -131,6 +216,8 @@ class Toolbar {
   private currentEditor: Editor | null = null
   /** The available-item set the buttons were last built for. */
   private renderedSignature: string | null = null
+  /** The open dropdown, if any; at most one across both toolbars. */
+  private openMenu: HTMLElement | null = null
 
   constructor(
     private readonly kind: ToolbarKind,
@@ -141,16 +228,31 @@ class Toolbar {
     return items.filter((item) => item.kind === this.kind)
   }
 
+  /** Whether an item has anything to offer at the current selection. */
+  private isAvailable(item: ToolbarItem, editor: Editor): boolean {
+    if (item.isAvailable && !item.isAvailable(editor)) return false
+    return item.menu ? item.menu(editor).length > 0 : true
+  }
+
   /**
    * The ids of the items available for `editor`, in order. Availability can
    * change within one editor as the caret moves (e.g. table ops appear only
    * inside a table), so the buttons rebuild whenever this set changes - not
-   * just when the editor changes.
+   * just when the editor changes. A dropdown's entries are part of the
+   * signature too: which styles a picker offers depends on the block the caret
+   * is in, and the button carries the entries it was built with.
    */
   private availabilitySignature(editor: Editor): string {
     return this.itemsForKind()
-      .filter((item) => !item.isAvailable || item.isAvailable(editor))
-      .map((item) => item.id)
+      .filter((item) => this.isAvailable(item, editor))
+      .map((item) =>
+        item.menu
+          ? `${item.id}(${item
+              .menu(editor)
+              .map((entry) => entry.key)
+              .join('|')})`
+          : item.id,
+      )
       .join(',')
   }
 
@@ -167,11 +269,12 @@ class Toolbar {
 
   private renderButtons(editor: Editor): void {
     const element = this.ensureElement()
+    this.closeMenu()
     element.replaceChildren()
     this.buttons = new Map()
     let previousGroup: string | null = null
     for (const item of this.itemsForKind()) {
-      if (item.isAvailable && !item.isAvailable(editor)) continue
+      if (!this.isAvailable(item, editor)) continue
       if (previousGroup !== null && item.group !== previousGroup) {
         const separator = document.createElement('div')
         separator.className = 'neos-studio-toolbar-sep'
@@ -183,19 +286,81 @@ class Toolbar {
       button.title = item.label
       button.setAttribute('aria-label', item.label)
       button.innerHTML = item.icon
+      this.buttons.set(item.id, button)
+      if (item.menu) {
+        element.appendChild(this.renderMenuHost(item, button))
+        continue
+      }
       button.addEventListener('mousedown', (event) => {
         // Keep the editor focused and the selection intact.
         event.preventDefault()
+        this.closeMenu()
         if (this.currentEditor) {
           item.run(this.currentEditor)
           this.refreshActiveStates()
           this.reposition()
         }
       })
-      this.buttons.set(item.id, button)
       element.appendChild(button)
     }
     this.renderedSignature = this.availabilitySignature(editor)
+  }
+
+  /**
+   * A dropdown button: the entries are built when the menu opens, so their
+   * active states are current. Picking one runs it and lets the resulting
+   * editor update close the menu through show().
+   */
+  private renderMenuHost(
+    item: ToolbarItem,
+    button: HTMLButtonElement,
+  ): HTMLElement {
+    const host = document.createElement('div')
+    host.className = 'neos-studio-toolbar-menu-host'
+    const menu = document.createElement('div')
+    menu.className = MENU_CLASS
+    menu.setAttribute('role', 'menu')
+    button.setAttribute('aria-haspopup', 'true')
+    button.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+      const wasOpen = this.openMenu === menu
+      this.closeMenu()
+      if (wasOpen || !this.currentEditor) return
+      menu.replaceChildren()
+      for (const entry of item.menu!(this.currentEditor)) {
+        const choice = document.createElement('button')
+        choice.type = 'button'
+        choice.setAttribute('role', 'menuitem')
+        choice.title = entry.label
+        choice.classList.toggle(ACTIVE_CLASS, entry.active)
+        if (entry.preview) {
+          const preview = document.createElement('span')
+          preview.className = 'neos-studio-toolbar-preview'
+          preview.innerHTML = entry.preview
+          choice.appendChild(preview)
+        } else {
+          choice.textContent = entry.label
+        }
+        choice.addEventListener('mousedown', (choiceEvent) => {
+          choiceEvent.preventDefault()
+          this.closeMenu()
+          if (this.currentEditor) entry.run(this.currentEditor)
+        })
+        menu.appendChild(choice)
+      }
+      menu.dataset.open = 'true'
+      button.classList.add(ACTIVE_CLASS)
+      this.openMenu = menu
+    })
+    host.append(button, menu)
+    return host
+  }
+
+  private closeMenu(): void {
+    if (!this.openMenu) return
+    delete this.openMenu.dataset.open
+    this.openMenu.previousElementSibling?.classList.remove(ACTIVE_CLASS)
+    this.openMenu = null
   }
 
   private refreshActiveStates(): void {
@@ -216,6 +381,9 @@ class Toolbar {
       this.hide()
       return
     }
+    // Any editor change that reaches the toolbar - a moved caret, an applied
+    // command - has made an open dropdown's entries stale; dismiss it.
+    this.closeMenu()
     element.style.display = 'flex'
     this.refreshActiveStates()
     this.positioner(element, editor)
@@ -223,6 +391,7 @@ class Toolbar {
 
   hide(): void {
     this.currentEditor = null
+    this.closeMenu()
     if (this.element) this.element.style.display = 'none'
   }
 
@@ -730,3 +899,45 @@ registerToolbarItem({
   isActive: () => false,
   run: (editor) => editor.chain().focus().unsetAllMarks().run(),
 })
+
+// --- Style definitions (both toolbars) -------------------------------------
+
+/** The property's style definitions of one kind that apply at the selection. */
+function stylesForKind(editor: Editor, kind: ToolbarKind) {
+  const wanted = kind === 'block' ? 'node' : 'mark'
+  return editorFormatting(editor).styles.filter(
+    (style) => style.target.kind === wanted && isStyleAvailable(editor, style),
+  )
+}
+
+// The NodeType's styleDefinitions, as one picker per toolbar: block styles
+// among the block actions, inline styles next to the marks - the classic UI
+// groups both in a single CKEditor dropdown, but the split follows how the two
+// bars are already divided. Each entry previews itself in the site's own
+// styling (see styles.ts). Registered last, so the pickers come at the end of
+// their bar; a property without applicable definitions shows no picker at all,
+// because an item whose menu is empty is not rendered.
+const STYLES_ICON = svg(
+  '<path d="M4 20h16"/><path d="M12 4 7 16"/><path d="M12 4l5 12"/><path d="M9 12h6"/>',
+)
+for (const kind of ['block', 'inline'] as const) {
+  registerToolbarItem({
+    id: `styles-${kind}`,
+    kind,
+    group: 'styles',
+    label: 'Styles',
+    icon: STYLES_ICON,
+    isActive: (editor) =>
+      stylesForKind(editor, kind).some((style) => isStyleActive(editor, style)),
+    // Never called: an item with a menu opens it instead of running.
+    run: () => {},
+    menu: (editor) =>
+      stylesForKind(editor, kind).map((style) => ({
+        key: style.name,
+        label: style.name,
+        active: isStyleActive(editor, style),
+        preview: stylePreviewMarkup(style),
+        run: (target) => toggleStyle(target, style),
+      })),
+  })
+}

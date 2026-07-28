@@ -29,6 +29,7 @@ import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
+import { resolveStyles, styleExtensions, type ResolvedStyle } from './styles'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
 const INLINE_ATTRIBUTE = 'data-__neos-studio-inline'
@@ -73,6 +74,12 @@ export interface Formatting {
   // Actions
   removeFormat: boolean
   horizontalRule: boolean
+  /**
+   * The NodeType's `styleDefinitions`, validated and resolved against the
+   * flags above - the CSS classes this property lets an editor assign to
+   * individual elements (see styles.ts).
+   */
+  styles: ResolvedStyle[]
   // Derived
   /** Whether the schema has block nodes (vs. a single inline-only line). */
   block: boolean
@@ -100,6 +107,7 @@ export const DEFAULT_FORMATTING: Formatting = {
   alignment: false,
   removeFormat: true,
   horizontalRule: true,
+  styles: [],
   block: true,
   multiline: true,
 }
@@ -110,7 +118,8 @@ export const DEFAULT_FORMATTING: Formatting = {
  * declares `block = false` (data-__neos-studio-inline), which the site renders
  * as a <span> inside a line of text - a paragraph, heading, list or table
  * written there would be broken markup, however the NodeType's `formatting`
- * flags read. Marks (bold, link, sub/sup, ...) stay untouched.
+ * flags read. Marks (bold, link, sub/sup, ...) stay untouched, and so are the
+ * style definitions that address them; block styles go with their blocks.
  */
 function withoutBlocks(config: Formatting): Formatting {
   return {
@@ -124,6 +133,7 @@ function withoutBlocks(config: Formatting): Formatting {
     table: false,
     alignment: false,
     horizontalRule: false,
+    styles: config.styles.filter((style) => style.target.kind === 'mark'),
     block: false,
     multiline: false,
   }
@@ -197,12 +207,18 @@ export function normalizeFormatting(
     removeFormat: on('removeFormat'),
     // Neos has no dedicated hr flag; offer it wherever the schema has blocks.
     horizontalRule: block,
+    // Resolved below, once the enclosing markup has had its say.
+    styles: [],
     block,
     // autoparagraph false (or a single-line title with p:false) stays one block.
     multiline: config.autoparagraph !== false && paragraph,
   }
 
-  return inline ? withoutBlocks(normalized) : normalized
+  // Style definitions are resolved last, against the *final* capability set:
+  // a definition whose element the property does not permit is dead config,
+  // and for an inline editable that includes everything block-level.
+  const resolved = inline ? withoutBlocks(normalized) : normalized
+  return { ...resolved, styles: resolveStyles(f.styleDefinitions, resolved) }
 }
 
 /** The TipTap extension set (schema) for a resolved config. */
@@ -210,6 +226,9 @@ export function extensionsFor(config: Formatting): Extensions {
   const marks: Extensions = []
   if (config.subscript) marks.push(Subscript)
   if (config.superscript) marks.push(Superscript)
+  // The `class` attribute the property's style definitions need to survive a
+  // round trip, plus a mark per inline element that had none (see styles.ts).
+  const styles: Extensions = styleExtensions(config.styles)
 
   if (!config.block) {
     // Inline-only: a single line of text with marks, no block nodes, so the
@@ -225,6 +244,7 @@ export function extensionsFor(config: Formatting): Extensions {
       ...(config.code ? [Code] : []),
       ...(config.link ? [Link.configure(LINK_CONFIGURATION)] : []),
       ...marks,
+      ...styles,
     ]
   }
 
@@ -264,6 +284,7 @@ export function extensionsFor(config: Formatting): Extensions {
       ? [TableKit.configure({ table: { resizable: true } })]
       : []),
     ...marks,
+    ...styles,
   ]
 }
 

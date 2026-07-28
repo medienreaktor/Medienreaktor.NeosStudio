@@ -2,6 +2,12 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Editor } from '@tiptap/core'
 import { Button } from '@/components/ui/button'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,6 +24,12 @@ import {
   type Formatting,
   type RawFormattingConfig,
 } from '@/guest/formatting'
+import {
+  isStyleActive,
+  isStyleAvailable,
+  toggleStyle,
+  type ResolvedStyle,
+} from '@/guest/styles'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
@@ -264,6 +276,16 @@ function Toolbar({
     setLinkEdit(null)
   }
 
+  // The NodeType's style definitions that apply where the selection is. Block
+  // and inline styles share one dropdown here (as CKEditor does), since the
+  // inspector has a single persistent toolbar rather than the preview's split
+  // block/inline bars. No previews: the inspector renders in the host
+  // document, which has none of the site's CSS to preview them with - the
+  // element each style produces is named instead.
+  const availableStyles: ResolvedStyle[] = formatting.styles.filter((style) =>
+    isStyleAvailable(editor, style),
+  )
+
   const blockChoices = [
     ...(formatting.paragraph
       ? [{ value: 'p', label: t('editor.rte.paragraph', 'Paragraph') }]
@@ -427,6 +449,46 @@ function Toolbar({
         >
           <i className="fas fa-eraser text-xs" aria-hidden />
         </ToolbarButton>
+      )}
+      {availableStyles.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                title={t('editor.rte.styles', 'Styles')}
+                aria-label={t('editor.rte.styles', 'Styles')}
+              />
+            }
+          >
+            <i className="fas fa-paintbrush text-xs" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {availableStyles.map((style) => {
+              const active = isStyleActive(editor, style)
+              return (
+                <DropdownMenuItem
+                  key={style.name}
+                  onClick={() => toggleStyle(editor, style)}
+                >
+                  <i
+                    className={cn(
+                      'fas fa-check text-[0.65rem]',
+                      !active && 'invisible',
+                    )}
+                    aria-hidden
+                  />
+                  {style.name}
+                  <span className="ml-auto pl-2 font-mono text-xs text-neutral-400">
+                    {`<${style.element}>`}
+                  </span>
+                </DropdownMenuItem>
+              )
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
       {linkEdit && (
         <LinkEditorDialog

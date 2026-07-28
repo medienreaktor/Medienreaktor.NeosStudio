@@ -550,6 +550,10 @@
         <source>Strikethrough</source>
         <target xml:lang="de">Durchgestrichen</target>
       </trans-unit>
+      <trans-unit id="editor.rte.styles" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="de">Formatvorlagen</target>
+      </trans-unit>
       <trans-unit id="editor.rte.subscript" xml:space="preserve">
         <source>Subscript</source>
         <target xml:lang="de">Tiefgestellt</target>
