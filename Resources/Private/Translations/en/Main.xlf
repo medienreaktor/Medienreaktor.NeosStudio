@@ -641,11 +641,20 @@
       <trans-unit id="media.assetInUse" xml:space="preserve">
         <source>This asset is in use and cannot be deleted.</source>
       </trans-unit>
+      <trans-unit id="media.assetReplaced" xml:space="preserve">
+        <source>The file of "{0}" was replaced.</source>
+      </trans-unit>
       <trans-unit id="media.cancel" xml:space="preserve">
         <source>Cancel</source>
       </trans-unit>
       <trans-unit id="media.caption" xml:space="preserve">
         <source>Caption</source>
+      </trans-unit>
+      <trans-unit id="media.chooseAnotherFile" xml:space="preserve">
+        <source>Choose another file</source>
+      </trans-unit>
+      <trans-unit id="media.chooseFile" xml:space="preserve">
+        <source>Choose file</source>
       </trans-unit>
       <trans-unit id="media.chooseFiles" xml:space="preserve">
         <source>Choose files</source>
@@ -701,6 +710,9 @@
       <trans-unit id="media.doubleClickToChoose" xml:space="preserve">
         <source>— double-click to choose.</source>
       </trans-unit>
+      <trans-unit id="media.dragFileHere" xml:space="preserve">
+        <source>Drag the new file here</source>
+      </trans-unit>
       <trans-unit id="media.dragFilesHere" xml:space="preserve">
         <source>Drag files here</source>
       </trans-unit>
@@ -730,6 +742,9 @@
       </trans-unit>
       <trans-unit id="media.importing" xml:space="preserve">
         <source>Importing…</source>
+      </trans-unit>
+      <trans-unit id="media.keepOriginalFilename" xml:space="preserve">
+        <source>Keep the filename "{0}"</source>
       </trans-unit>
       <trans-unit id="media.listView" xml:space="preserve">
         <source>List view</source>
@@ -793,6 +808,21 @@
       </trans-unit>
       <trans-unit id="media.rename" xml:space="preserve">
         <source>Rename</source>
+      </trans-unit>
+      <trans-unit id="media.replaceAsset" xml:space="preserve">
+        <source>Replace file</source>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetDescription" xml:space="preserve">
+        <source>The new file takes the place of the current one. Title, tags, collections and every reference to this asset are kept.</source>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetFailed" xml:space="preserve">
+        <source>Replacing the file failed</source>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetUsageNote" xml:space="preserve">
+        <source>This asset is used {0} time(s). All usages will show the new file.</source>
+      </trans-unit>
+      <trans-unit id="media.replacing" xml:space="preserve">
+        <source>Replacing…</source>
       </trans-unit>
       <trans-unit id="media.renameNoun" xml:space="preserve">
         <source>Rename {0}</source>

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { ReplaceAssetDialog } from './ReplaceAssetDialog'
 
 /** The asset a right-click context menu was opened for. */
 export interface AssetMenuTarget {
@@ -41,9 +42,9 @@ export async function removeAsset(localId: string): Promise<void> {
 
 /**
  * The right-click actions for an asset in the grid or list: edit (opens the
- * details dialog) and delete. Mirrors MediaItemActions - an invisible anchor
- * at the click point, with the delete confirmation rendered unconditionally
- * so it survives the menu closing.
+ * details dialog), replace its file and delete. Mirrors MediaItemActions - an
+ * invisible anchor at the click point, with the delete confirmation and the
+ * replace dialog rendered outside the menu so they survive it closing.
  */
 export function AssetContextMenu({
   target,
@@ -56,11 +57,15 @@ export function AssetContextMenu({
   onEdit: (asset: MediaAsset) => void
 }) {
   const [deleting, setDeleting] = useState<MediaAsset | null>(null)
+  const [replacing, setReplacing] = useState<MediaAsset | null>(null)
 
-  const deletable =
+  const writable =
     target !== null &&
     !target.asset.isReadOnly &&
     target.asset.localAssetIdentifier !== null
+  // A cropped variant's file is derived from its original, so there is nothing
+  // of its own to replace.
+  const replaceable = writable && !target.asset.originalAssetIdentifier
 
   return (
     <>
@@ -90,8 +95,18 @@ export function AssetContextMenu({
               {t('media.editAsset', 'Edit asset')}
             </DropdownMenuItem>
             <DropdownMenuItem
+              disabled={!replaceable}
+              onClick={() => {
+                setReplacing(target.asset)
+                onClose()
+              }}
+            >
+              <i className="fas fa-fw fa-arrow-up-from-bracket" aria-hidden />
+              {t('media.replaceAsset', 'Replace file')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
               variant="destructive"
-              disabled={!deletable}
+              disabled={!writable}
               onClick={() => {
                 setDeleting(target.asset)
                 onClose()
@@ -102,6 +117,14 @@ export function AssetContextMenu({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      )}
+
+      {replacing?.localAssetIdentifier && (
+        <ReplaceAssetDialog
+          asset={replacing}
+          localId={replacing.localAssetIdentifier}
+          onOpenChange={(open) => !open && setReplacing(null)}
+        />
       )}
 
       <ConfirmDialog

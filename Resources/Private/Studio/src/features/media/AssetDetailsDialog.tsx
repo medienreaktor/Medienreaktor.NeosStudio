@@ -39,6 +39,7 @@ import {
   tagToNode,
   type MediaTreeNode,
 } from './MediaTree'
+import { ReplaceAssetDialog } from './ReplaceAssetDialog'
 import { UsageTable } from './UsageTable'
 
 interface AssetDetailsDialogProps {
@@ -149,6 +150,10 @@ export function AssetDetailsDialog({
 
         {editable && localId && (
           <DialogFooter>
+            {/* Variants have no file of their own - the original carries it. */}
+            {!asset.originalAssetIdentifier && (
+              <ReplaceButton asset={asset} localId={localId} />
+            )}
             <DeleteButton localId={localId} onDeleted={onDeleted} />
           </DialogFooter>
         )}
@@ -368,6 +373,32 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
         ? t('media.importing', 'Importing…')
         : t('media.importToNeos', 'Import to Neos')}
     </Button>
+  )
+}
+
+function ReplaceButton({
+  asset,
+  localId,
+}: {
+  asset: MediaAsset
+  localId: string
+}) {
+  const [replacing, setReplacing] = useState(false)
+
+  return (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => setReplacing(true)}>
+        <i className="fas fa-arrow-up-from-bracket text-[1rem]" aria-hidden />
+        {t('media.replaceAsset', 'Replace file')}
+      </Button>
+      {replacing && (
+        <ReplaceAssetDialog
+          asset={asset}
+          localId={localId}
+          onOpenChange={(open) => !open && setReplacing(false)}
+        />
+      )}
+    </>
   )
 }
 

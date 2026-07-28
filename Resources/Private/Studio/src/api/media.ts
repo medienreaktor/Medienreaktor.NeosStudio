@@ -300,17 +300,32 @@ export async function deleteAsset(identifier: string): Promise<void> {
   await invalidateMedia()
 }
 
+export interface ReplaceResourceOptions {
+  /**
+   * Keep the asset's current filename instead of taking the new file's, with
+   * only the extension adjusted when the media type differs.
+   */
+  keepOriginalFilename?: boolean
+  onProgress?: (fraction: number) => void
+}
+
+/**
+ * Swap the file behind a local asset, keeping its identity, metadata, tags and
+ * usages - every node referencing it renders the new file. The server refuses a
+ * different media type family (image -> pdf) and cropped image variants.
+ */
 export async function replaceAssetResource(
   identifier: string,
   file: File,
-  onProgress?: (fraction: number) => void,
+  options: ReplaceResourceOptions = {},
 ): Promise<MediaAsset> {
   const form = new FormData()
   form.append('resource', file)
+  if (options.keepOriginalFilename) form.append('keepOriginalFilename', '1')
   const result = await apiUpload<{ asset: MediaAsset }>(
     `/media/assets/neos/${encodeURIComponent(identifier)}/resource`,
     form,
-    { onProgress },
+    { onProgress: options.onProgress },
   )
   await invalidateMedia()
   return result.asset
