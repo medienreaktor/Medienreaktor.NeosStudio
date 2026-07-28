@@ -8,6 +8,11 @@
  * We map those onto TipTap extensions so a property only permits what its
  * NodeType declares - matching how the classic UI constrains CKEditor - and
  * expose the same flags to the toolbar so it shows only the allowed buttons.
+ *
+ * The markup carries one flag the NodeType cannot know: Neos.Neos:Editable's
+ * `block` prop, as data-__neos-studio-inline. It overrides the NodeType config
+ * wherever the two disagree, because it describes the markup the value is
+ * rendered into, not what an editor would like to allow.
  */
 import { Editor, type Extensions } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
@@ -26,6 +31,7 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
+const INLINE_ATTRIBUTE = 'data-__neos-studio-inline'
 
 /**
  * The Link extension's Studio configuration, used by both schema branches.
@@ -98,6 +104,31 @@ export const DEFAULT_FORMATTING: Formatting = {
   multiline: true,
 }
 
+/**
+ * Strip everything block-level from a capability set: what is left is a single
+ * line of text with marks. Applied to properties whose Neos.Neos:Editable
+ * declares `block = false` (data-__neos-studio-inline), which the site renders
+ * as a <span> inside a line of text - a paragraph, heading, list or table
+ * written there would be broken markup, however the NodeType's `formatting`
+ * flags read. Marks (bold, link, sub/sup, ...) stay untouched.
+ */
+function withoutBlocks(config: Formatting): Formatting {
+  return {
+    ...config,
+    paragraph: false,
+    headingLevels: [],
+    codeBlock: false,
+    blockquote: false,
+    bulletList: false,
+    orderedList: false,
+    table: false,
+    alignment: false,
+    horizontalRule: false,
+    block: false,
+    multiline: false,
+  }
+}
+
 export interface RawFormattingConfig {
   formatting?: Record<string, unknown>
   autoparagraph?: unknown
@@ -105,23 +136,34 @@ export interface RawFormattingConfig {
 
 /** Read and normalize a property element's formatting config. */
 export function parseFormatting(element: HTMLElement): Formatting {
+  // An inline editable is inline whatever its formatting config says - and
+  // notably also when it has none at all, where the permissive default would
+  // otherwise hand a <span> property paragraphs, headings and lists.
+  const inline = element.hasAttribute(INLINE_ATTRIBUTE)
+  const fallback = inline
+    ? withoutBlocks(DEFAULT_FORMATTING)
+    : DEFAULT_FORMATTING
   const raw = element.getAttribute(FORMATTING_ATTRIBUTE)
-  if (!raw) return DEFAULT_FORMATTING
+  if (!raw) return fallback
   let config: RawFormattingConfig
   try {
     config = JSON.parse(raw) as RawFormattingConfig
   } catch {
-    return DEFAULT_FORMATTING
+    return fallback
   }
-  return normalizeFormatting(config)
+  return normalizeFormatting(config, inline)
 }
 
 /**
  * Normalize raw Neos formatting flags into the capability set - shared by the
  * inline editors (config from the edit-mode markup) and the inspector's
- * RichTextEditor (config from ui.inspector.editorOptions).
+ * RichTextEditor (config from ui.inspector.editorOptions). `inline` forces the
+ * single-line, block-free result the enclosing markup requires.
  */
-export function normalizeFormatting(config: RawFormattingConfig): Formatting {
+export function normalizeFormatting(
+  config: RawFormattingConfig,
+  inline = false,
+): Formatting {
   const f = config.formatting ?? {}
   const on = (key: string): boolean => f[key] === true
   const headingLevels = [1, 2, 3, 4, 5, 6].filter((level) => on(`h${level}`))
@@ -135,7 +177,7 @@ export function normalizeFormatting(config: RawFormattingConfig): Formatting {
     on('ol') ||
     on('ul') ||
     on('table')
-  return {
+  const normalized: Formatting = {
     bold: on('strong'),
     italic: on('em'),
     underline: on('underline'),
@@ -159,6 +201,8 @@ export function normalizeFormatting(config: RawFormattingConfig): Formatting {
     // autoparagraph false (or a single-line title with p:false) stays one block.
     multiline: config.autoparagraph !== false && paragraph,
   }
+
+  return inline ? withoutBlocks(normalized) : normalized
 }
 
 /** The TipTap extension set (schema) for a resolved config. */

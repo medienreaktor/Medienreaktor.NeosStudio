@@ -44,6 +44,7 @@ const ALLOWED_TYPES_ATTRIBUTE = 'data-__neos-studio-allowed-types'
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const EDITABLE_NODE_ATTRIBUTE = 'data-__neos-editable-node-contextpath'
 const PLACEHOLDER_ATTRIBUTE = 'data-__neos-studio-placeholder'
+const INLINE_ATTRIBUTE = 'data-__neos-studio-inline'
 const IMAGE_PROPERTY_ATTRIBUTE = 'data-__neos-studio-image-property'
 const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
 
@@ -202,6 +203,14 @@ function injectStyles(): void {
     [${PROPERTY_ATTRIBUTE}] .tiptap > :last-child {
       margin-bottom: 0;
     }
+    /* An inline editable (Neos.Neos:Editable block = false) renders as a
+       <span> inside a line of text; TipTap's editable is a div, which would
+       break that line into a block of its own. It only ever holds inline
+       content here (see withoutBlocks in formatting.ts), so it can stay
+       inline itself. */
+    [${PROPERTY_ATTRIBUTE}][${INLINE_ATTRIBUTE}] .tiptap {
+      display: inline;
+    }
     /* Empty inline-editable properties show their configured placeholder
        (translated server-side into the markup), so new nodes are visible
        and invite editing. */
@@ -209,6 +218,17 @@ function injectStyles(): void {
       content: attr(${PLACEHOLDER_ATTRIBUTE});
       opacity: 0.4;
       pointer-events: none;
+    }
+    /* On a block editable the placeholder box is followed by TipTap's editable
+       div, so in normal flow it would claim a line of its own above the
+       editor's empty paragraph - reading as a stray empty paragraph. Floating
+       it at zero height takes it out of flow, and the paragraph's first line
+       box flows around it: placeholder and caret share one line. Inline
+       editables need none of this, their ::before sits in the same line
+       already. */
+    [${PLACEHOLDER_ATTRIBUTE}]:not([${INLINE_ATTRIBUTE}]).${EMPTY_CLASS}::before {
+      float: left;
+      height: 0;
     }
     /* While a node type is dragged from the creation panel, collections that
        allow it light up; a minimum height keeps empty collections targetable.

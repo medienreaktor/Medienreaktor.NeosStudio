@@ -73,6 +73,18 @@ prototype(Neos.Neos:Editable) {
   renderer.editable.renderer.attributes.data-__neos-studio-formatting = ${Json.stringify(MedienreaktorStudio.inlineFormatting(props.node, props.property))}
   renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
   renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.hasConfig = ${MedienreaktorStudio.inlineFormatting(props.node, props.property) != null}
+
+  # Editable's own `block` flag decides whether the property renders as a
+  # <div> or an inline <span>. An inline editable must never gain block nodes:
+  # the site renders it inside a line of text, so a paragraph, heading or list
+  # written into it is broken markup. The flag lives in Fusion, not in the
+  # NodeType, so it cannot come from inlineFormatting() - and it must be
+  # stamped even when the property declares no editor options, which is
+  # exactly the case where the guest would otherwise fall back to its
+  # permissive (block) default. Rendered as the inverse, present only for
+  # inline editables, because Fusion drops false- and null-valued attributes.
+  renderer.editable.renderer.attributes.data-__neos-studio-inline = ${props.block ? null : 'true'}
+  renderer.editable.renderer.attributes.data-__neos-studio-inline.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
 }
 
 # The Studio preview must not depend on Neos.Neos.Ui: when it is installed,
