@@ -1337,14 +1337,8 @@
       <trans-unit id="trash.loading" xml:space="preserve">
         <source>Loading trash…</source>
       </trans-unit>
-      <trans-unit id="trash.manyContentElements" xml:space="preserve">
-        <source>{0} deleted content elements are not listed - restore them by discarding the changes on their pages.</source>
-      </trans-unit>
       <trans-unit id="trash.noWriteAccess" xml:space="preserve">
         <source>You are not allowed to change this workspace</source>
-      </trans-unit>
-      <trans-unit id="trash.oneContentElement" xml:space="preserve">
-        <source>1 deleted content element is not listed - restore it by discarding the change on its page.</source>
       </trans-unit>
       <trans-unit id="trash.openFailed" xml:space="preserve">
         <source>Opening the deleted page failed</source>

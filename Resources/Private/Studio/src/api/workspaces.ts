@@ -604,7 +604,10 @@ export interface WorkspaceTrashItem {
   nodeType: string
   /** Configured Font Awesome icon of the node's type, or null. */
   icon: string | null
-  /** Deleted pages vs. deleted content elements - both share the resource. */
+  /**
+   * Deleted pages vs. deleted content elements - both share the resource
+   * unless it is asked for the pages alone (`documentsOnly`).
+   */
   isDocument: boolean
   /** Site node down to the deleted node itself (drop the last entry for its location). */
   breadcrumb: string[]
@@ -632,12 +635,18 @@ export interface WorkspaceTrashResponse {
   truncated: boolean
 }
 
+/**
+ * The workspace's deleted PAGES. Deleted content elements are left to the
+ * resource: they are restored where they are edited, so listing them in a page
+ * trash only invites a restore the panel cannot sensibly offer - and they would
+ * take up room in a capped list that belongs to the pages.
+ */
 export function useWorkspaceTrash(workspaceName: string | null) {
   return useQuery({
     queryKey: queryKeys.workspaces.trash(workspaceName ?? ''),
     queryFn: () =>
       apiFetch<WorkspaceTrashResponse>(
-        `/workspaces/${encodeURIComponent(workspaceName!)}/trash`,
+        `/workspaces/${encodeURIComponent(workspaceName!)}/trash?documentsOnly=1`,
       ),
     enabled: workspaceName !== null,
   })

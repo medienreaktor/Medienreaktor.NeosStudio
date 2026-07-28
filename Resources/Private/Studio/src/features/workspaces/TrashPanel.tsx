@@ -29,9 +29,8 @@ import { useTrashRestore } from './useTrashRestore'
  * nothing and needs no confirmation - except when deleted ancestors come back
  * with the page, which is worth saying out loud first.
  *
- * Deleted content ELEMENTS live in the same trash but are not listed here:
- * they are restored where they are edited (the page), not from a page list.
- * Their number is reported so the list never silently hides anything.
+ * Pages only: deleted content ELEMENTS are restored where they are edited, so
+ * the resource is asked for the documents alone rather than filtered here.
  */
 export function TrashPanel() {
   const { site, workspaceName, selectedDocument, selectDocument } = useStudio()
@@ -53,15 +52,11 @@ export function TrashPanel() {
     const all = data?.items ?? []
     return all.filter(
       (item) =>
-        item.isDocument &&
-        (siteId === null ||
-          item.siteAggregateId === siteId ||
-          item.siteAggregateId === null),
+        siteId === null ||
+        item.siteAggregateId === siteId ||
+        item.siteAggregateId === null,
     )
   }, [data, siteId])
-  const contentCount = (data?.items ?? []).filter(
-    (item) => !item.isDocument,
-  ).length
 
   const restore = useTrashRestore(workspaceName)
 
@@ -99,9 +94,34 @@ export function TrashPanel() {
     )
   }
 
+  // Nothing to list: the placeholder brings its own padding and fills the
+  // panel, so it stands alone rather than inside the list's padded column.
+  // Nothing else belongs here either - the outdated warning is about restoring
+  // and a restore can only be pending for a row.
+  if (items.length === 0) {
+    return (
+      <Placeholder
+        icon="fa-trash-can"
+        title={t(
+          'trash.empty',
+          'No deleted pages. They wait here until the deletion is published.',
+        )}
+      >
+        {data?.truncated && (
+          <p className="text-xs text-neutral-500">
+            {t(
+              'trash.truncated',
+              'Only the most recently deleted nodes are listed.',
+            )}
+          </p>
+        )}
+      </Placeholder>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-1 p-2">
-      {outdated && items.length > 0 && (
+      {outdated && (
         <p className="mb-1 rounded-sm bg-neutral-800 px-2 py-1.5 text-xs text-amber-400">
           <i className="fas fa-fw fa-triangle-exclamation" aria-hidden />{' '}
           {t(
@@ -110,60 +130,34 @@ export function TrashPanel() {
           )}
         </p>
       )}
-      {items.length === 0 ? (
-        <Placeholder
-          icon="fa-trash-can"
-          title={t(
-            'trash.empty',
-            'No deleted pages. They wait here until the deletion is published.',
-          )}
+      {items.map((item) => (
+        <TrashRow
+          key={item.nodeAggregateId}
+          item={item}
+          selected={selectedDocument?.aggregateId === item.nodeAggregateId}
+          onSelect={() => select(item)}
+          disabled={!canWrite || outdated || restore.isPending}
+          restoring={
+            restore.isPending &&
+            restore.variables.nodeAggregateId === item.nodeAggregateId
+          }
+          deniedHint={
+            canWrite
+              ? undefined
+              : t(
+                  'trash.noWriteAccess',
+                  'You are not allowed to change this workspace',
+                )
+          }
+          onRestore={() => runRestore(item)}
         />
-      ) : (
-        <>
-          {items.map((item) => (
-            <TrashRow
-              key={item.nodeAggregateId}
-              item={item}
-              selected={selectedDocument?.aggregateId === item.nodeAggregateId}
-              onSelect={() => select(item)}
-              disabled={!canWrite || outdated || restore.isPending}
-              restoring={
-                restore.isPending &&
-                restore.variables.nodeAggregateId === item.nodeAggregateId
-              }
-              deniedHint={
-                canWrite
-                  ? undefined
-                  : t(
-                      'trash.noWriteAccess',
-                      'You are not allowed to change this workspace',
-                    )
-              }
-              onRestore={() => runRestore(item)}
-            />
-          ))}
-        </>
-      )}
+      ))}
       {data?.truncated && (
         <p className="mt-1 text-xs text-neutral-500">
           {t(
             'trash.truncated',
             'Only the most recently deleted nodes are listed.',
           )}
-        </p>
-      )}
-      {contentCount > 0 && (
-        <p className="mt-1 text-xs text-neutral-500">
-          {contentCount === 1
-            ? t(
-                'trash.oneContentElement',
-                '1 deleted content element is not listed - restore it by discarding the change on its page.',
-              )
-            : t(
-                'trash.manyContentElements',
-                '{0} deleted content elements are not listed - restore them by discarding the changes on their pages.',
-                [String(contentCount)],
-              )}
         </p>
       )}
 

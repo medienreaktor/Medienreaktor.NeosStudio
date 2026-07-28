@@ -1782,17 +1782,9 @@
         <source>Loading trash…</source>
         <target xml:lang="de">Papierkorb wird geladen…</target>
       </trans-unit>
-      <trans-unit id="trash.manyContentElements" xml:space="preserve">
-        <source>{0} deleted content elements are not listed - restore them by discarding the changes on their pages.</source>
-        <target xml:lang="de">{0} gelöschte Inhaltselemente werden nicht aufgeführt – stelle sie wieder her, indem Du die Änderungen auf ihren Seiten verwirfst.</target>
-      </trans-unit>
       <trans-unit id="trash.noWriteAccess" xml:space="preserve">
         <source>You are not allowed to change this workspace</source>
         <target xml:lang="de">Du darfst diesen Workspace nicht ändern</target>
-      </trans-unit>
-      <trans-unit id="trash.oneContentElement" xml:space="preserve">
-        <source>1 deleted content element is not listed - restore it by discarding the change on its page.</source>
-        <target xml:lang="de">1 gelöschtes Inhaltselement wird nicht aufgeführt – stelle es wieder her, indem Du die Änderung auf seiner Seite verwirfst.</target>
       </trans-unit>
       <trans-unit id="trash.openFailed" xml:space="preserve">
         <source>Opening the deleted page failed</source>
