@@ -197,8 +197,8 @@ export function TasksBoard() {
           return (
             <div
               key={column.status}
-              className={`flex min-w-56 flex-1 flex-col rounded-md border bg-neutral-900/60 transition-colors ${
-                droppable ? 'border-blue-500' : 'border-neutral-800'
+              className={`flex min-w-56 flex-1 flex-col border transition-colors ${
+                droppable ? 'bg-neutral-900' : 'bg-neutral-900/50'
               }`}
               onDragOver={(event) => {
                 if (droppable) event.preventDefault()
@@ -387,12 +387,6 @@ function TaskCard({
         <span className="font-semibold text-white">
           {task.workspace?.title || task.workspaceName}
         </span>
-
-        {task.workspace?.description && (
-          <span className="line-clamp-2 text-xs text-neutral-400">
-            {task.workspace.description}
-          </span>
-        )}
 
         <div className="mt-0.5 flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
