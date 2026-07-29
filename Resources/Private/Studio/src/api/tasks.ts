@@ -22,6 +22,7 @@ export interface Task {
   assignee: string | null
   createdBy: string | null
   createdAt: string
+  commentCount: number
   /** The underlying workspace incl. the account's permissions; null if stale. */
   workspace: Workspace | null
 }

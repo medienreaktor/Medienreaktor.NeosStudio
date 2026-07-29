@@ -42,12 +42,13 @@ class TasksController extends AbstractApiController
     public function indexAction(): string
     {
         $this->requireScope('neos.read');
+        $commentCounts = $this->taskWorkspaceService->getCommentCounts($this->getContentRepositoryId());
         $tasks = [];
         foreach ($this->taskWorkspaceService->findAllTasks($this->getContentRepositoryId()) as $task) {
             if (!$this->workspaceSerializer->canRead($this->getContentRepositoryId(), $task->workspaceName)) {
                 continue;
             }
-            $tasks[] = $this->serializeTask($task);
+            $tasks[] = $this->serializeTask($task, $commentCounts[$task->workspaceName->value] ?? 0);
         }
 
         return $this->json(['tasks' => $tasks]);
@@ -330,9 +331,10 @@ class TasksController extends AbstractApiController
     }
 
     /**
+     * @param int|null $commentCount pre-fetched count (the listing batches them); null = count now
      * @return array<string, mixed>
      */
-    private function serializeTask(TaskWorkspace $task): array
+    private function serializeTask(TaskWorkspace $task, ?int $commentCount = null): array
     {
         // A null workspace (stale sidecar record, e.g. removal event not yet
         // caught up) serializes as workspace: null rather than failing the
@@ -345,6 +347,7 @@ class TasksController extends AbstractApiController
             'assignee' => $task->assigneeUserId?->value,
             'createdBy' => $task->createdByUserId?->value,
             'createdAt' => $task->createdAt->format(\DateTimeInterface::ATOM),
+            'commentCount' => $commentCount ?? $this->taskWorkspaceService->countComments($this->getContentRepositoryId(), $task->workspaceName),
             'workspace' => $workspace !== null
                 ? $this->workspaceSerializer->serialize($this->getContentRepositoryId(), $workspace)
                 : null,

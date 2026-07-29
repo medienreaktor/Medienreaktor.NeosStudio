@@ -223,6 +223,22 @@ final class TaskWorkspaceService
     }
 
     /**
+     * Comment counts for all task workspaces at once, keyed by workspace
+     * name (workspaces without comments are absent) - for the task listing.
+     *
+     * @return array<string, int>
+     */
+    public function getCommentCounts(ContentRepositoryId $contentRepositoryId): array
+    {
+        return $this->taskCommentRepository->countsByWorkspaceName($contentRepositoryId);
+    }
+
+    public function countComments(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): int
+    {
+        return $this->taskCommentRepository->countForWorkspaceName($contentRepositoryId, $workspaceName);
+    }
+
+    /**
      * Comment on the task. Everyone involved in the conversation - creator,
      * assignee and everyone who commented before - gets notified, except the
      * author themselves.

@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -82,32 +82,34 @@ export function TaskViewDialog({
   return (
     <Dialog open={task !== null} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {task?.workspace?.title || task?.workspaceName}
-            {task && (
-              <span
-                className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
-                style={{ color: taskStatusColor(task.status) }}
-              >
-                {statusLabel(task.status)}
-              </span>
+        {/* The header carries everything about the task itself - title +
+            status, description, assignee, actions; the body below is the
+            conversation. The dialog's built-in X closes it. */}
+        <DialogHeader className="gap-3 border-b border-neutral-800 pb-4">
+          <div className="min-w-0 pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              {task?.workspace?.title || task?.workspaceName}
+              {task && (
+                <span
+                  className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
+                  style={{ color: taskStatusColor(task.status) }}
+                >
+                  {statusLabel(task.status)}
+                </span>
+              )}
+            </DialogTitle>
+            {task?.workspace?.description && (
+              <DialogDescription className="mt-1 whitespace-pre-line">
+                {task.workspace.description}
+              </DialogDescription>
             )}
-          </DialogTitle>
-        </DialogHeader>
+          </div>
 
-        <div className="space-y-4">
-          {task?.workspace?.description && (
-            <p className="text-sm whitespace-pre-line text-neutral-300">
-              {task.workspace.description}
-            </p>
-          )}
-
-          <div>
-            <div className="text-xs text-neutral-400">
-              {t('tasks.assignee', 'Assignee')}
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-sm text-white">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div
+              className="flex items-center gap-2 text-sm text-white"
+              title={t('tasks.assignee', 'Assignee')}
+            >
               {task?.assignee ? (
                 <>
                   <span
@@ -129,37 +131,32 @@ export function TaskViewDialog({
                 </>
               )}
             </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={!canWrite || task === null}
+                onClick={() => task && onCheckout(task)}
+              >
+                <i className="fas fa-code-branch" aria-hidden />
+                {t('tasks.checkoutWorkspace', 'Checkout workspace')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={!canManage || task === null}
+                onClick={() => task && onEdit(task)}
+              >
+                <i className="fas fa-pen" aria-hidden />
+                {t('tasks.editTask', 'Edit task')}
+              </Button>
+            </div>
           </div>
+        </DialogHeader>
 
-          <TaskComments workspaceName={task?.workspaceName ?? null} />
-        </div>
-
-        <DialogFooter className="items-center">
-          <Button
-            type="button"
-            className="mr-auto"
-            disabled={!canWrite || task === null}
-            onClick={() => task && onCheckout(task)}
-          >
-            <i className="fas fa-code-branch" aria-hidden />
-            {t('tasks.checkoutWorkspace', 'Checkout workspace')}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => onOpenChange(false)}
-          >
-            {t('common.close', 'Close')}
-          </Button>
-          <Button
-            type="button"
-            disabled={!canManage || task === null}
-            onClick={() => task && onEdit(task)}
-          >
-            <i className="fas fa-pen" aria-hidden />
-            {t('tasks.editTask', 'Edit task')}
-          </Button>
-        </DialogFooter>
+        <TaskComments workspaceName={task?.workspaceName ?? null} />
       </DialogContent>
     </Dialog>
   )
@@ -254,8 +251,8 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
             }
           }}
           placeholder={t('tasks.commentPlaceholder', 'Write a comment…')}
-          rows={1}
-          className="min-h-9 flex-1 resize-none"
+          rows={3}
+          className="flex-1"
         />
         <Button
           type="submit"

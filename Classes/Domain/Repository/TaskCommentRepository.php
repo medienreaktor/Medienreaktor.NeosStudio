@@ -71,6 +71,36 @@ final readonly class TaskCommentRepository
         return array_map($this->mapRow(...), $rows);
     }
 
+    /**
+     * Comment counts of all task workspaces at once (for the task listing),
+     * keyed by workspace name. Workspaces without comments are absent.
+     *
+     * @return array<string, int>
+     */
+    public function countsByWorkspaceName(ContentRepositoryId $contentRepositoryId): array
+    {
+        $table = self::TABLE_NAME;
+        $counts = $this->dbal->fetchAllKeyValue(
+            "SELECT workspace_name, COUNT(*) FROM {$table} WHERE content_repository_id = :contentRepositoryId GROUP BY workspace_name",
+            ['contentRepositoryId' => $contentRepositoryId->value]
+        );
+
+        return array_map(intval(...), $counts);
+    }
+
+    public function countForWorkspaceName(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): int
+    {
+        $table = self::TABLE_NAME;
+
+        return (int)$this->dbal->fetchOne(
+            "SELECT COUNT(*) FROM {$table} WHERE content_repository_id = :contentRepositoryId AND workspace_name = :workspaceName",
+            [
+                'contentRepositoryId' => $contentRepositoryId->value,
+                'workspaceName' => $workspaceName->value,
+            ]
+        );
+    }
+
     public function removeForWorkspace(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
     {
         $this->dbal->delete(self::TABLE_NAME, [

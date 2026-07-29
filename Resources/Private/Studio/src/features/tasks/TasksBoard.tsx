@@ -409,12 +409,23 @@ function TaskCard({
               </span>
             )}
           </span>
-          {task.workspace?.hasPublishableChanges && (
-            <span
-              className="size-1.5 rounded-full bg-orange-400"
-              title={t('tasks.hasChanges', 'Has unpublished changes')}
-            />
-          )}
+          <span className="flex items-center gap-2">
+            {task.commentCount > 0 && (
+              <span
+                className="flex items-center gap-1 text-xs text-neutral-400"
+                title={t('tasks.comments', 'Comments')}
+              >
+                <i className="fas fa-comment text-[0.65rem]" aria-hidden />
+                {task.commentCount}
+              </span>
+            )}
+            {task.workspace?.hasPublishableChanges && (
+              <span
+                className="size-1.5 rounded-full bg-orange-400"
+                title={t('tasks.hasChanges', 'Has unpublished changes')}
+              />
+            )}
+          </span>
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="min-w-44">
