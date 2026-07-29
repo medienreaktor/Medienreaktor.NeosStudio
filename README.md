@@ -19,6 +19,18 @@ Edit **together in the same workspace, live**. Every shared workspace offers a _
 - **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through pure PHP endpoints. If it runs Neos 9, it runs multiplayer.
 - **Emergent, not a mode**: sessions are ordinary Neos `SHARED` workspaces (create them in the Workspaces module, manage access with the usual roles). Two people in the same workspace — that _is_ the multiplayer. Publishing the session to live works exactly like publishing any workspace.
 
+### 🗂️ Task workflow — feature branches for content
+
+Content work, organized like code: every task is a **feature branch**. Creating a task spins up a workspace of its own, so an editor can pick a task up, check it out, do the work and send it to review — without touching live or stepping on anyone else's changes.
+
+- **A Kanban board, as a panel**: task branches as cards in status columns — _Open_, _In review_, _Done_ — with assignee and comment count. **Dragging a card drives the workflow**: into _In review_ submits the task, back to _Open_ reopens it.
+- **Review before done**: dropping a card on _Done_ never publishes blindly — it opens the Review Changes dialog on the task's workspace, so a reviewer inspects the changes and picks what to publish. Reviewers are whoever holds the configurable reviewer role (default: `Neos.Neos:LivePublisher`).
+- **Completion is event-driven**: a catch-up hook on the Content Repository's event stream watches task workspaces — once the branch is fully published, the task flips to done and everyone involved is notified, no matter which surface (or API client) triggered the publish.
+- **One-click checkout** from the board, the task dialog or the workspace switcher, where task branches sit in their own group with **status-colored badges**. Creating a task — from the switcher or the board — checks it out for you immediately.
+- **Comments on tasks**: every task carries its own discussion thread; submitting for review and reopening take a comment, too.
+- **Notifications built in**: a bell in the top bar collects assignments, review requests, reopens, comments and completions — clicking one jumps straight to the task.
+- **Ordinary Neos underneath**: task branches are plain `SHARED` workspaces plus task metadata, with access through standard workspace roles — the creator and reviewers manage, the assignee collaborates, and uninvolved editors never see task branches at all. Publishing, syncing and conflict resolution work like on any workspace.
+
 ### ⚡ Blazingly fast, everywhere
 
 - **Instant loads** — a static Vite-built SPA served at `/neos/studio`, with TanStack Query caching and background revalidation. Navigating between documents doesn't reload the world; it reuses what's already in the cache.
@@ -63,14 +75,16 @@ Full parity with the classic inspector — and then some:
 
 Extensibility isn't bolted on; it's the architecture. Studio's building blocks are **observable registries**:
 
-| Registry          | What you can add                                   |
-| ----------------- | -------------------------------------------------- |
-| Panels            | Whole new workspace surfaces, docked anywhere      |
-| Inspector editors | Custom property editors for any node type property |
-| Inspector views   | Custom read-only views and widgets                 |
-| Validators        | Custom client-side validation                      |
-| Link editor tabs  | New link source types in the shared link modal     |
-| Modals            | App-level dialogs                                  |
+| Registry             | What you can add                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Panels               | Whole new workspace surfaces, docked anywhere                                                                             |
+| Inspector editors    | Custom property editors for any node type property                                                                        |
+| Inspector views      | Custom read-only views and widgets                                                                                        |
+| Validators           | Custom client-side validation                                                                                             |
+| Link editor tabs     | New link source types in the shared link modal                                                                            |
+| Modals               | App-level dialogs                                                                                                         |
+| Workspace decorators | Badges and grouping for workspaces in the switcher and administration (this is how task branches get their status colors) |
+| Keyboard shortcuts   | App-wide shortcuts alongside the built-in ones                                                                            |
 
 Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state, and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
 
@@ -117,7 +131,8 @@ src/
   components/ui/        shadcn-style components on Base UI primitives (owned code)
   features/             one folder per feature: tree, inspector, preview, media,
                         panels, creation, clipboard, editing, links, dimensions,
-                        workspaces, sites, users, profile, modals
+                        workspaces, tasks, notifications, collaboration, sites,
+                        users, profile, modals, shortcuts
   guest/                the script injected into the preview iframe:
                         inline editing, TipTap RTE, toolbar, link editing
   plugin-api/           the public plugin API surface (window.NeosStudio)
