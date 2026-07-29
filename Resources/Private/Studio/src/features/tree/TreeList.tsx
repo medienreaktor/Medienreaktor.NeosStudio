@@ -1,7 +1,7 @@
 import type { ItemInstance, TreeInstance } from '@headless-tree/core'
 import { cn } from '@/lib/utils'
-import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { TreeRowDecor } from './nodeDecor'
 
 /**
@@ -36,11 +36,11 @@ export function TreeList<T>({
   /** Optional FontAwesome icon (e.g. "fa-folder-open") for the empty state. */
   emptyIcon?: string
   /**
-   * While true, an empty tree shows a centered spinner instead of the empty
+   * While true, an empty tree shows skeleton rows instead of the empty
    * placeholder - for trees whose root children are still loading in.
    */
   loading?: boolean
-  /** Label beneath the spinner while loading. */
+  /** Screen-reader announcement while the skeleton rows show. */
   loadingText?: string
   /** Row decorations for an item's data; return null for undecorated rows. */
   decorate?: (data: T) => TreeRowDecor | null
@@ -69,7 +69,7 @@ export function TreeList<T>({
     >
       {isEmpty &&
         (loading ? (
-          <LoadingState label={loadingText} />
+          <TreeListSkeleton label={loadingText} />
         ) : (
           <Placeholder icon={emptyIcon} title={emptyText} />
         ))}
@@ -130,7 +130,7 @@ export function TreeList<T>({
               })
             }
             className={cn(
-              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm hover:bg-neutral-800',
+              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm transition-colors hover:bg-neutral-800 motion-safe:animate-tree-row-in',
               item.isSelected() && 'border-blue-500 bg-neutral-800',
               item.isFocused() && 'outline-0',
               isDropTarget && 'border-blue-500 bg-blue-500/10',
@@ -154,17 +154,13 @@ export function TreeList<T>({
                 }}
               >
                 {item.isFolder() ? (
-                  item.isExpanded() ? (
-                    <i
-                      className={'fas fa-caret-down fa-fw text-[0.75rem]'}
-                      aria-hidden
-                    />
-                  ) : (
-                    <i
-                      className={'fas fa-caret-right fa-fw text-[0.75rem]'}
-                      aria-hidden
-                    />
-                  )
+                  <i
+                    className={cn(
+                      'fas fa-caret-right fa-fw text-[0.75rem] transition-transform duration-150',
+                      item.isExpanded() && 'rotate-90',
+                    )}
+                    aria-hidden
+                  />
                 ) : (
                   ''
                 )}
@@ -173,14 +169,21 @@ export function TreeList<T>({
             {decor?.icon && (
               <span className="shrink-0 text-white">{decor.icon}</span>
             )}
-            <span
-              className={cn(
-                'overflow-hidden text-ellipsis',
-                decor?.dimmed && 'opacity-50',
-              )}
-            >
-              {item.isLoading() ? '…' : item.getItemName()}
-            </span>
+            {item.isLoading() ? (
+              <Skeleton
+                className="h-3 max-w-full"
+                style={{ width: `${skeletonWidth(item.getId())}px` }}
+              />
+            ) : (
+              <span
+                className={cn(
+                  'overflow-hidden text-ellipsis motion-safe:animate-fade-in',
+                  decor?.dimmed && 'opacity-50',
+                )}
+              >
+                {item.getItemName()}
+              </span>
+            )}
             {decor?.markers && (
               <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-neutral-400">
                 {decor.markers}
@@ -189,6 +192,52 @@ export function TreeList<T>({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Label width for a row whose data is still loading, derived from the item id
+ * so it stays put across re-renders instead of jumping around.
+ */
+function skeletonWidth(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0
+  return 64 + (Math.abs(hash) % 72)
+}
+
+/**
+ * Placeholder while a tree's root children load: a plausible mini-hierarchy
+ * of skeleton rows, fading out toward the bottom. Row geometry (indent step,
+ * icon size, spacing) mirrors the real rows so the loaded tree replaces it
+ * without a layout jump.
+ */
+const SKELETON_ROWS = [
+  { level: 0, width: 96 },
+  { level: 1, width: 128 },
+  { level: 2, width: 88 },
+  { level: 2, width: 112 },
+  { level: 1, width: 72 },
+  { level: 1, width: 104 },
+]
+
+function TreeListSkeleton({ label }: { label?: string }) {
+  return (
+    <div role="status" className="motion-safe:animate-fade-in">
+      {label && <span className="sr-only">{label}</span>}
+      {SKELETON_ROWS.map((row, index) => (
+        <div
+          key={index}
+          className="flex h-6 items-center gap-1.5"
+          style={{
+            paddingLeft: `${row.level * 14 + 4}px`,
+            opacity: 1 - index * 0.13,
+          }}
+        >
+          <Skeleton className="size-4 shrink-0" />
+          <Skeleton className="h-3" style={{ width: `${row.width}px` }} />
+        </div>
+      ))}
     </div>
   )
 }
