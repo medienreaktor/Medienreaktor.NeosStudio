@@ -59,6 +59,9 @@
       <trans-unit id="common.resizeSidebar" xml:space="preserve">
         <source>Resize sidebar</source>
       </trans-unit>
+      <trans-unit id="common.save" xml:space="preserve">
+        <source>Save</source>
+      </trans-unit>
       <trans-unit id="common.sidebar" xml:space="preserve">
         <source>Sidebar</source>
       </trans-unit>
@@ -980,6 +983,27 @@
       <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
         <source>Search node types…</source>
       </trans-unit>
+      <trans-unit id="notifications.empty" xml:space="preserve">
+        <source>No notifications.</source>
+      </trans-unit>
+      <trans-unit id="notifications.label" xml:space="preserve">
+        <source>Notifications</source>
+      </trans-unit>
+      <trans-unit id="notifications.markAllRead" xml:space="preserve">
+        <source>Mark all as read</source>
+      </trans-unit>
+      <trans-unit id="notifications.markRead" xml:space="preserve">
+        <source>Mark as read</source>
+      </trans-unit>
+      <trans-unit id="notifications.markReadFailed" xml:space="preserve">
+        <source>Marking as read failed</source>
+      </trans-unit>
+      <trans-unit id="notifications.openTask" xml:space="preserve">
+        <source>Open the task</source>
+      </trans-unit>
+      <trans-unit id="notifications.unreadCount" xml:space="preserve">
+        <source>{0} unread notifications</source>
+      </trans-unit>
       <trans-unit id="panel.collapse" xml:space="preserve">
         <source>Collapse panel</source>
       </trans-unit>
@@ -1018,6 +1042,9 @@
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>
+      </trans-unit>
+      <trans-unit id="panel.title.tasks" xml:space="preserve">
+        <source>Tasks</source>
       </trans-unit>
       <trans-unit id="panel.title.trash" xml:space="preserve">
         <source>Trash</source>
@@ -1349,6 +1376,150 @@
       <trans-unit id="sites.wentOnline" xml:space="preserve">
         <source>The site "{0}" is now online.</source>
       </trans-unit>
+      <trans-unit id="tasks.activeWorkspace" xml:space="preserve">
+        <source>You are editing in this workspace</source>
+      </trans-unit>
+      <trans-unit id="tasks.addTaskWorkspace" xml:space="preserve">
+        <source>Add task workspace</source>
+      </trans-unit>
+      <trans-unit id="tasks.assignedTo" xml:space="preserve">
+        <source>Assigned to {0}</source>
+      </trans-unit>
+      <trans-unit id="tasks.assignee" xml:space="preserve">
+        <source>Assignee</source>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspace" xml:space="preserve">
+        <source>Based on</source>
+      </trans-unit>
+      <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
+        <source>Checkout workspace</source>
+      </trans-unit>
+      <trans-unit id="tasks.columnDone" xml:space="preserve">
+        <source>Done</source>
+      </trans-unit>
+      <trans-unit id="tasks.columnEmpty" xml:space="preserve">
+        <source>No tasks</source>
+      </trans-unit>
+      <trans-unit id="tasks.columnInReview" xml:space="preserve">
+        <source>In review</source>
+      </trans-unit>
+      <trans-unit id="tasks.columnOpen" xml:space="preserve">
+        <source>Open</source>
+      </trans-unit>
+      <trans-unit id="tasks.completed" xml:space="preserve">
+        <source>The task has been completed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.completeTask" xml:space="preserve">
+        <source>Complete task</source>
+      </trans-unit>
+      <trans-unit id="tasks.create" xml:space="preserve">
+        <source>Create task</source>
+      </trans-unit>
+      <trans-unit id="tasks.created" xml:space="preserve">
+        <source>The task "{0}" has been created.</source>
+      </trans-unit>
+      <trans-unit id="tasks.createFailed" xml:space="preserve">
+        <source>Could not create task</source>
+      </trans-unit>
+      <trans-unit id="tasks.createFailedDetail" xml:space="preserve">
+        <source>Creating the task failed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.creating" xml:space="preserve">
+        <source>Creating…</source>
+      </trans-unit>
+      <trans-unit id="tasks.delete" xml:space="preserve">
+        <source>Delete task</source>
+      </trans-unit>
+      <trans-unit id="tasks.deleteConfirm" xml:space="preserve">
+        <source>Delete task</source>
+      </trans-unit>
+      <trans-unit id="tasks.deleted" xml:space="preserve">
+        <source>The task has been deleted.</source>
+      </trans-unit>
+      <trans-unit id="tasks.deleteDescription" xml:space="preserve">
+        <source>This removes the workspace "{0}" including all its unpublished changes. This cannot be undone.</source>
+      </trans-unit>
+      <trans-unit id="tasks.deleteTitle" xml:space="preserve">
+        <source>Delete task?</source>
+      </trans-unit>
+      <trans-unit id="tasks.description" xml:space="preserve">
+        <source>Description</source>
+      </trans-unit>
+      <trans-unit id="tasks.detailHint" xml:space="preserve">
+        <source>Edit the task details below.</source>
+      </trans-unit>
+      <trans-unit id="tasks.detailReadOnly" xml:space="preserve">
+        <source>You need manage permission on this task to edit it.</source>
+      </trans-unit>
+      <trans-unit id="tasks.editTask" xml:space="preserve">
+        <source>Edit task</source>
+      </trans-unit>
+      <trans-unit id="tasks.hasChanges" xml:space="preserve">
+        <source>Has unpublished changes</source>
+      </trans-unit>
+      <trans-unit id="tasks.loadFailed" xml:space="preserve">
+        <source>Loading the tasks failed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailed" xml:space="preserve">
+        <source>Could not move task</source>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailedDetail" xml:space="preserve">
+        <source>Moving the task failed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.newTask" xml:space="preserve">
+        <source>New task</source>
+      </trans-unit>
+      <trans-unit id="tasks.newTaskHint" xml:space="preserve">
+        <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
+      </trans-unit>
+      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
+        <source>The task has been reopened.</source>
+      </trans-unit>
+      <trans-unit id="tasks.reopenTask" xml:space="preserve">
+        <source>Reopen task</source>
+      </trans-unit>
+      <trans-unit id="tasks.saving" xml:space="preserve">
+        <source>Saving…</source>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReview" xml:space="preserve">
+        <source>Send to review</source>
+      </trans-unit>
+      <trans-unit id="tasks.statusDone" xml:space="preserve">
+        <source>done</source>
+      </trans-unit>
+      <trans-unit id="tasks.statusInReview" xml:space="preserve">
+        <source>in review</source>
+      </trans-unit>
+      <trans-unit id="tasks.statusOpen" xml:space="preserve">
+        <source>open</source>
+      </trans-unit>
+      <trans-unit id="tasks.submitted" xml:space="preserve">
+        <source>The task has been submitted for review.</source>
+      </trans-unit>
+      <trans-unit id="tasks.switcherGroup" xml:space="preserve">
+        <source>Tasks</source>
+      </trans-unit>
+      <trans-unit id="tasks.taskBranch" xml:space="preserve">
+        <source>Task branch</source>
+      </trans-unit>
+      <trans-unit id="tasks.title" xml:space="preserve">
+        <source>Title</source>
+      </trans-unit>
+      <trans-unit id="tasks.unassigned" xml:space="preserve">
+        <source>– unassigned –</source>
+      </trans-unit>
+      <trans-unit id="tasks.unassignedHint" xml:space="preserve">
+        <source>Unassigned</source>
+      </trans-unit>
+      <trans-unit id="tasks.updated" xml:space="preserve">
+        <source>The task has been updated.</source>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailed" xml:space="preserve">
+        <source>Could not update task</source>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
+        <source>Updating the task failed.</source>
+      </trans-unit>
       <trans-unit id="trash.confirmBody" xml:space="preserve">
         <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
       </trans-unit>
@@ -1651,6 +1822,9 @@
       </trans-unit>
       <trans-unit id="users.unavailable" xml:space="preserve">
         <source>Users are currently unavailable.</source>
+      </trans-unit>
+      <trans-unit id="users.username" xml:space="preserve">
+        <source>Username</source>
       </trans-unit>
       <trans-unit id="users.you" xml:space="preserve">
         <source>You</source>

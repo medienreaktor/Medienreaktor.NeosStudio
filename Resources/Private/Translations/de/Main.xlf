@@ -78,6 +78,10 @@
         <source>Resize sidebar</source>
         <target xml:lang="de">Größe der Seitenleiste ändern</target>
       </trans-unit>
+      <trans-unit id="common.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="de">Speichern</target>
+      </trans-unit>
       <trans-unit id="common.sidebar" xml:space="preserve">
         <source>Sidebar</source>
         <target xml:lang="de">Seitenleiste</target>
@@ -1306,6 +1310,34 @@
         <source>Search node types…</source>
         <target xml:lang="de">Node-Typen durchsuchen…</target>
       </trans-unit>
+      <trans-unit id="notifications.empty" xml:space="preserve">
+        <source>No notifications.</source>
+        <target xml:lang="de">Keine Benachrichtigungen.</target>
+      </trans-unit>
+      <trans-unit id="notifications.label" xml:space="preserve">
+        <source>Notifications</source>
+        <target xml:lang="de">Benachrichtigungen</target>
+      </trans-unit>
+      <trans-unit id="notifications.markAllRead" xml:space="preserve">
+        <source>Mark all as read</source>
+        <target xml:lang="de">Alle als gelesen markieren</target>
+      </trans-unit>
+      <trans-unit id="notifications.markRead" xml:space="preserve">
+        <source>Mark as read</source>
+        <target xml:lang="de">Als gelesen markieren</target>
+      </trans-unit>
+      <trans-unit id="notifications.markReadFailed" xml:space="preserve">
+        <source>Marking as read failed</source>
+        <target xml:lang="de">Als gelesen markieren fehlgeschlagen</target>
+      </trans-unit>
+      <trans-unit id="notifications.openTask" xml:space="preserve">
+        <source>Open the task</source>
+        <target xml:lang="de">Aufgabe öffnen</target>
+      </trans-unit>
+      <trans-unit id="notifications.unreadCount" xml:space="preserve">
+        <source>{0} unread notifications</source>
+        <target xml:lang="de">{0} ungelesene Benachrichtigungen</target>
+      </trans-unit>
       <trans-unit id="panel.collapse" xml:space="preserve">
         <source>Collapse panel</source>
         <target xml:lang="de">Panel einklappen</target>
@@ -1357,6 +1389,10 @@
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>
         <target xml:lang="de">Gliederung</target>
+      </trans-unit>
+      <trans-unit id="panel.title.tasks" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="de">Aufgaben</target>
       </trans-unit>
       <trans-unit id="panel.title.trash" xml:space="preserve">
         <source>Trash</source>
@@ -1798,6 +1834,198 @@
         <source>The site "{0}" is now online.</source>
         <target xml:lang="de">Die Site "{0}" ist jetzt online.</target>
       </trans-unit>
+      <trans-unit id="tasks.activeWorkspace" xml:space="preserve">
+        <source>You are editing in this workspace</source>
+        <target xml:lang="de">Du bearbeitest in diesem Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="tasks.addTaskWorkspace" xml:space="preserve">
+        <source>Add task workspace</source>
+        <target xml:lang="de">Aufgaben-Arbeitsbereich hinzufügen</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignedTo" xml:space="preserve">
+        <source>Assigned to {0}</source>
+        <target xml:lang="de">Zugewiesen an {0}</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignee" xml:space="preserve">
+        <source>Assignee</source>
+        <target xml:lang="de">Zuständig</target>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspace" xml:space="preserve">
+        <source>Based on</source>
+        <target xml:lang="de">Basiert auf</target>
+      </trans-unit>
+      <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
+        <source>Checkout workspace</source>
+        <target xml:lang="de">Arbeitsbereich auschecken</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnDone" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="de">Erledigt</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnEmpty" xml:space="preserve">
+        <source>No tasks</source>
+        <target xml:lang="de">Keine Aufgaben</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnInReview" xml:space="preserve">
+        <source>In review</source>
+        <target xml:lang="de">In Prüfung</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnOpen" xml:space="preserve">
+        <source>Open</source>
+        <target xml:lang="de">Offen</target>
+      </trans-unit>
+      <trans-unit id="tasks.completed" xml:space="preserve">
+        <source>The task has been completed.</source>
+        <target xml:lang="de">Die Aufgabe wurde abgeschlossen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.completeTask" xml:space="preserve">
+        <source>Complete task</source>
+        <target xml:lang="de">Aufgabe abschließen</target>
+      </trans-unit>
+      <trans-unit id="tasks.create" xml:space="preserve">
+        <source>Create task</source>
+        <target xml:lang="de">Aufgabe erstellen</target>
+      </trans-unit>
+      <trans-unit id="tasks.created" xml:space="preserve">
+        <source>The task "{0}" has been created.</source>
+        <target xml:lang="de">Die Aufgabe „{0}“ wurde erstellt.</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailed" xml:space="preserve">
+        <source>Could not create task</source>
+        <target xml:lang="de">Aufgabe konnte nicht erstellt werden</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailedDetail" xml:space="preserve">
+        <source>Creating the task failed.</source>
+        <target xml:lang="de">Das Erstellen der Aufgabe ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="de">Wird erstellt …</target>
+      </trans-unit>
+      <trans-unit id="tasks.delete" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="de">Aufgabe löschen</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteConfirm" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="de">Aufgabe löschen</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleted" xml:space="preserve">
+        <source>The task has been deleted.</source>
+        <target xml:lang="de">Die Aufgabe wurde gelöscht.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteDescription" xml:space="preserve">
+        <source>This removes the workspace "{0}" including all its unpublished changes. This cannot be undone.</source>
+        <target xml:lang="de">Dies entfernt den Arbeitsbereich „{0}“ einschließlich aller unveröffentlichten Änderungen. Dies kann nicht rückgängig gemacht werden.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteTitle" xml:space="preserve">
+        <source>Delete task?</source>
+        <target xml:lang="de">Aufgabe löschen?</target>
+      </trans-unit>
+      <trans-unit id="tasks.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="de">Beschreibung</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailHint" xml:space="preserve">
+        <source>Edit the task details below.</source>
+        <target xml:lang="de">Bearbeite unten die Details der Aufgabe.</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailReadOnly" xml:space="preserve">
+        <source>You need manage permission on this task to edit it.</source>
+        <target xml:lang="de">Du benötigst Verwaltungsrechte für diese Aufgabe, um sie zu bearbeiten.</target>
+      </trans-unit>
+      <trans-unit id="tasks.editTask" xml:space="preserve">
+        <source>Edit task</source>
+        <target xml:lang="de">Aufgabe bearbeiten</target>
+      </trans-unit>
+      <trans-unit id="tasks.hasChanges" xml:space="preserve">
+        <source>Has unpublished changes</source>
+        <target xml:lang="de">Enthält unveröffentlichte Änderungen</target>
+      </trans-unit>
+      <trans-unit id="tasks.loadFailed" xml:space="preserve">
+        <source>Loading the tasks failed.</source>
+        <target xml:lang="de">Das Laden der Aufgaben ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailed" xml:space="preserve">
+        <source>Could not move task</source>
+        <target xml:lang="de">Aufgabe konnte nicht verschoben werden</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailedDetail" xml:space="preserve">
+        <source>Moving the task failed.</source>
+        <target xml:lang="de">Das Verschieben der Aufgabe ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTask" xml:space="preserve">
+        <source>New task</source>
+        <target xml:lang="de">Neue Aufgabe</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTaskHint" xml:space="preserve">
+        <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
+        <target xml:lang="de">Ein Aufgaben-Branch sammelt Änderungen für ein Vorhaben. Nur beteiligte Personen sehen ihn; Prüfer geben ihn frei und veröffentlichen ihn.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
+        <source>The task has been reopened.</source>
+        <target xml:lang="de">Die Aufgabe wurde wieder geöffnet.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenTask" xml:space="preserve">
+        <source>Reopen task</source>
+        <target xml:lang="de">Aufgabe wieder öffnen</target>
+      </trans-unit>
+      <trans-unit id="tasks.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="de">Wird gespeichert …</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReview" xml:space="preserve">
+        <source>Send to review</source>
+        <target xml:lang="de">Zur Prüfung einreichen</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusDone" xml:space="preserve">
+        <source>done</source>
+        <target xml:lang="de">erledigt</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusInReview" xml:space="preserve">
+        <source>in review</source>
+        <target xml:lang="de">in Prüfung</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusOpen" xml:space="preserve">
+        <source>open</source>
+        <target xml:lang="de">offen</target>
+      </trans-unit>
+      <trans-unit id="tasks.submitted" xml:space="preserve">
+        <source>The task has been submitted for review.</source>
+        <target xml:lang="de">Die Aufgabe wurde zur Prüfung eingereicht.</target>
+      </trans-unit>
+      <trans-unit id="tasks.switcherGroup" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="de">Aufgaben</target>
+      </trans-unit>
+      <trans-unit id="tasks.taskBranch" xml:space="preserve">
+        <source>Task branch</source>
+        <target xml:lang="de">Aufgaben-Branch</target>
+      </trans-unit>
+      <trans-unit id="tasks.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="de">Titel</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassigned" xml:space="preserve">
+        <source>– unassigned –</source>
+        <target xml:lang="de">– nicht zugewiesen –</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassignedHint" xml:space="preserve">
+        <source>Unassigned</source>
+        <target xml:lang="de">Nicht zugewiesen</target>
+      </trans-unit>
+      <trans-unit id="tasks.updated" xml:space="preserve">
+        <source>The task has been updated.</source>
+        <target xml:lang="de">Die Aufgabe wurde aktualisiert.</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailed" xml:space="preserve">
+        <source>Could not update task</source>
+        <target xml:lang="de">Aufgabe konnte nicht aktualisiert werden</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
+        <source>Updating the task failed.</source>
+        <target xml:lang="de">Das Aktualisieren der Aufgabe ist fehlgeschlagen.</target>
+      </trans-unit>
       <trans-unit id="trash.confirmBody" xml:space="preserve">
         <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
         <target xml:lang="de">Es wurde innerhalb von etwas gelöscht, das ebenfalls gelöscht ist – deshalb wird zusätzlich wiederhergestellt: {0}</target>
@@ -2201,6 +2429,10 @@
       <trans-unit id="users.unavailable" xml:space="preserve">
         <source>Users are currently unavailable.</source>
         <target xml:lang="de">Benutzer sind derzeit nicht verfügbar.</target>
+      </trans-unit>
+      <trans-unit id="users.username" xml:space="preserve">
+        <source>Username</source>
+        <target xml:lang="de">Benutzername</target>
       </trans-unit>
       <trans-unit id="users.you" xml:space="preserve">
         <source>You</source>
