@@ -218,8 +218,8 @@ export function TasksBoard() {
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
                 {isLoading && (
                   <>
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
+                    <TaskCardSkeleton />
+                    <TaskCardSkeleton />
                   </>
                 )}
                 {!isLoading && columnTasks.length === 0 && (
@@ -299,6 +299,19 @@ export function TasksBoard() {
           toast.success(t('tasks.deleted', 'The task has been deleted.'))
         }}
       />
+    </div>
+  )
+}
+
+/** Placeholder card mirroring TaskCard's frame: title, description, avatar. */
+function TaskCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-1.5 rounded-md border border-neutral-800 bg-neutral-800/60 px-2.5 py-2">
+      <Skeleton className="h-3.5 w-2/3 bg-neutral-700/60" />
+      <Skeleton className="h-3 w-full bg-neutral-700/60" />
+      <div className="mt-0.5 flex items-center">
+        <Skeleton className="size-5 rounded-full bg-neutral-700/60" />
+      </div>
     </div>
   )
 }
