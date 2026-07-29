@@ -34,6 +34,18 @@ import {
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
 
 /**
+ * The darkest ramp shade of a tint, used as the trigger background: theme
+ * variables like 'var(--color-blue-500)' map onto their ramp's 950 shade,
+ * arbitrary decoration colors approximate it by mixing into near-black.
+ */
+function darkestShade(tint: string): string {
+  const ramp = tint.match(/^var\(--color-([a-z]+)-\d{2,3}\)$/)
+  return ramp
+    ? `var(--color-${ramp[1]}-950)`
+    : `color-mix(in srgb, ${tint} 20%, var(--color-neutral-950))`
+}
+
+/**
  * Topbar dropdown for the editing context - a menu (not a select) so the
  * checked-out task branch can nest its workflow actions as a submenu. Entry
  * kinds:
@@ -183,7 +195,10 @@ export function WorkspaceSwitcher({
   for (const workspace of targets) {
     const group = groupOf(workspace)
     if (!group) continue
-    decoratorGroups.set(group, [...(decoratorGroups.get(group) ?? []), workspace])
+    decoratorGroups.set(group, [
+      ...(decoratorGroups.get(group) ?? []),
+      workspace,
+    ])
   }
 
   // Tint the whole trigger by the editing context: purple for a plain
@@ -192,7 +207,9 @@ export function WorkspaceSwitcher({
   const activeDecoration = collaborative
     ? (decorationsFor(activeWorkspace, decorators)[0] ?? null)
     : null
-  const tint = collaborative ? (activeDecoration?.color ?? '#a855f7') : null
+  const tint = collaborative
+    ? (activeDecoration?.color ?? 'var(--color-purple-400)')
+    : null
 
   const currentLabel = collaborative
     ? workspaceLabel(activeWorkspace)
@@ -233,7 +250,15 @@ export function WorkspaceSwitcher({
                 )
               : t('workspace.publishTarget', 'Workspace to publish to'))
           }
-          style={tint ? { borderColor: tint, color: tint } : undefined}
+          style={
+            tint
+              ? {
+                  borderColor: tint,
+                  color: tint,
+                  backgroundColor: darkestShade(tint),
+                }
+              : undefined
+          }
           className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-700 bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50"
         >
           <span className="flex items-center gap-2">
@@ -247,13 +272,15 @@ export function WorkspaceSwitcher({
                       ? 'fa-users'
                       : 'fa-layer-group text-neutral-400'
               }`}
-              style={tint && !switchBase.isPending ? { color: tint } : undefined}
+              style={
+                tint && !switchBase.isPending ? { color: tint } : undefined
+              }
               aria-hidden
             />
             <span className="hidden @[48rem]:inline">{currentLabel}</span>
           </span>
           <i
-            className="fas fa-chevron-down text-[1rem] text-neutral-400 opacity-50"
+            className="fas fa-chevron-down text-[1rem] text-white/50"
             aria-hidden
           />
         </DropdownMenuTrigger>
@@ -280,14 +307,6 @@ export function WorkspaceSwitcher({
                   onClick={() => pick(`base:${workspace.name}`)}
                 >
                   {workspaceLabel(workspace)}
-                  {rebaseBlocked && (
-                    <span className="ml-1.5 text-xs text-neutral-400">
-                      {t(
-                        'workspace.publishOrDiscardFirst',
-                        'Publish or discard your changes first.',
-                      )}
-                    </span>
-                  )}
                   {/* No write access on the target = the user could retarget
                       here (that only needs read) but never publish. Selectable
                       for reviewing, but flagged. */}

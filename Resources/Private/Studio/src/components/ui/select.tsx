@@ -46,7 +46,7 @@ function SelectTrigger({
       {children}
       <SelectPrimitive.Icon>
         <i
-          className="fas fa-chevron-down text-[1rem] text-neutral-400 opacity-50"
+          className="fas fa-chevron-down text-[1rem] text-white/50"
           aria-hidden
         />
       </SelectPrimitive.Icon>

@@ -93,7 +93,9 @@ export function CreateTaskDialog({
     mutationFn: () =>
       createTask({
         title: title.trim(),
-        ...(description.trim() !== '' ? { description: description.trim() } : {}),
+        ...(description.trim() !== ''
+          ? { description: description.trim() }
+          : {}),
         baseWorkspace,
         ...(assignee !== UNASSIGNED ? { assignee } : {}),
       }),

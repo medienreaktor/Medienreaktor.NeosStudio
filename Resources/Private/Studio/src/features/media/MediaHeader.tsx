@@ -348,7 +348,7 @@ function FilterButton({
         </span>
         <span className="max-w-40 truncate">{label}</span>
         <i
-          className="fas fa-chevron-down text-[0.875rem] shrink-0 text-neutral-500"
+          className="fas fa-chevron-down text-[0.875rem] shrink-0 text-white/50"
           aria-hidden
         />
       </PopoverTrigger>

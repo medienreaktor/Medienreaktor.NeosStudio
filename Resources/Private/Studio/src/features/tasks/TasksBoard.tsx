@@ -19,13 +19,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import {
@@ -34,6 +34,7 @@ import {
 } from '@/features/collaboration/presenceColors'
 import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import { translate as t } from '@/lib/i18n'
+import { taskStatusColor } from './status'
 import { CreateTaskDialog } from './CreateTaskDialog'
 import { consumeTaskFocus, usePendingTaskFocus } from './focus'
 import { TaskDetailDialog } from './TaskDetailDialog'
@@ -134,9 +135,7 @@ export function TasksBoard() {
         { task: reviewing, target: 'DONE' },
         {
           onSuccess: () =>
-            toast.success(
-              t('tasks.completed', 'The task has been completed.'),
-            ),
+            toast.success(t('tasks.completed', 'The task has been completed.')),
         },
       )
       setReviewing(null)
@@ -164,14 +163,14 @@ export function TasksBoard() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center justify-end px-3 pt-3">
+      <div className="flex shrink-0 items-center justify-end px-2 pt-2">
         <Button size="sm" onClick={() => setCreating(true)}>
           <i className="fas fa-plus" aria-hidden />
           {t('tasks.newTask', 'New task')}
         </Button>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-3">
+      <div className="flex min-h-0 flex-1 items-stretch gap-2 overflow-x-auto p-2">
         {COLUMNS.map((column) => {
           const columnTasks = (data?.tasks ?? []).filter(
             (task) => task.status === column.status,
@@ -195,9 +194,22 @@ export function TasksBoard() {
                 setDragged(null)
               }}
             >
-              <div className="flex items-center gap-2 border-b border-neutral-800 px-3 py-2 text-[0.7rem] font-semibold tracking-wide text-neutral-400 uppercase">
-                {column.title()}
-                <Badge variant="secondary">{columnTasks.length}</Badge>
+              <div
+                className="flex items-center gap-2 px-3 py-2"
+                style={{ color: taskStatusColor(column.status) }}
+              >
+                <span className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none">
+                  {column.title()}
+                </span>
+                <Badge
+                  variant="secondary"
+                  className="text-current"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${taskStatusColor(column.status)} 15%, transparent)`,
+                  }}
+                >
+                  {columnTasks.length}
+                </Badge>
               </div>
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
                 {isLoading && (
@@ -217,7 +229,9 @@ export function TasksBoard() {
                     task={task}
                     active={task.workspaceName === studio.workspaceName}
                     assigneeLabel={userLabel(task.assignee)}
-                    draggable={allowedTargets(task).length > 0 && !move.isPending}
+                    draggable={
+                      allowedTargets(task).length > 0 && !move.isPending
+                    }
                     onDragStart={() => setDragged(task)}
                     onDragEnd={() => setDragged(null)}
                     onOpen={() => setEditing(task)}
@@ -302,105 +316,100 @@ function TaskCard({
   const canManage = task.workspace?.permissions.manage ?? false
 
   return (
-    <div
-      className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-800/60 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
-        active
-          ? 'border-blue-500'
-          : 'border-neutral-800 hover:border-neutral-700'
-      } ${draggable ? 'active:cursor-grabbing' : ''}`}
-      title={
-        active
-          ? t('tasks.activeWorkspace', 'You are editing in this workspace')
-          : undefined
-      }
-      draggable={draggable}
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = 'move'
-        onDragStart()
-      }}
-      onDragEnd={onDragEnd}
-      onClick={onOpen}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') onOpen()
-      }}
-    >
-      <div className="flex items-start justify-between gap-2">
+    <ContextMenu>
+      <ContextMenuTrigger
+        render={
+          <div
+            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-800/60 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
+              active
+                ? 'border-blue-500'
+                : 'border-neutral-800 hover:border-neutral-700'
+            } ${draggable ? 'active:cursor-grabbing' : ''}`}
+            title={
+              active
+                ? t(
+                    'tasks.activeWorkspace',
+                    'You are editing in this workspace',
+                  )
+                : undefined
+            }
+            draggable={draggable}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = 'move'
+              onDragStart()
+            }}
+            onDragEnd={onDragEnd}
+            onClick={onOpen}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') onOpen()
+            }}
+          />
+        }
+      >
         <span className="font-semibold text-white">
           {task.workspace?.title || task.workspaceName}
         </span>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label={t('tasks.cardMenu', 'Task actions')}
-            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-neutral-500 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <i className="fas fa-ellipsis-vertical text-[0.7rem]" aria-hidden />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="min-w-44"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={onOpen}>
-                <i className="fas fa-pen w-4 text-center" aria-hidden />
-                {t('tasks.editTask', 'Edit task…')}
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!canWrite || active} onClick={onCheckout}>
-                <i
-                  className="fas fa-code-branch w-4 text-center"
-                  aria-hidden
-                />
-                {t('tasks.checkoutWorkspace', 'Checkout workspace')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled={!canManage} onClick={onDelete}>
-                <i className="fas fa-trash-can w-4 text-center" aria-hidden />
-                {t('tasks.delete', 'Delete task')}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
 
-      {task.workspace?.description && (
-        <span className="line-clamp-2 text-xs text-neutral-400">
-          {task.workspace.description}
-        </span>
-      )}
-
-      <div className="mt-0.5 flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2">
-          {task.assignee ? (
-            <span
-              className="flex size-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white select-none"
-              style={{ backgroundColor: presenceColor(task.assignee) }}
-              title={
-                assigneeLabel
-                  ? t('tasks.assignedTo', 'Assigned to {0}', [assigneeLabel])
-                  : undefined
-              }
-            >
-              {presenceInitials(assigneeLabel ?? '?')}
-            </span>
-          ) : (
-            <span
-              className="flex size-5 items-center justify-center rounded-full bg-neutral-700 text-[0.55rem] text-neutral-400 select-none"
-              title={t('tasks.unassignedHint', 'Unassigned')}
-            >
-              ?
-            </span>
-          )}
-        </span>
-        {task.workspace?.hasPublishableChanges && (
-          <span
-            className="size-1.5 rounded-full bg-orange-400"
-            title={t('tasks.hasChanges', 'Has unpublished changes')}
-          />
+        {task.workspace?.description && (
+          <span className="line-clamp-2 text-xs text-neutral-400">
+            {task.workspace.description}
+          </span>
         )}
-      </div>
-    </div>
+
+        <div className="mt-0.5 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            {task.assignee ? (
+              <span
+                className="flex size-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white select-none"
+                style={{ backgroundColor: presenceColor(task.assignee) }}
+                title={
+                  assigneeLabel
+                    ? t('tasks.assignedTo', 'Assigned to {0}', [assigneeLabel])
+                    : undefined
+                }
+              >
+                {presenceInitials(assigneeLabel ?? '?')}
+              </span>
+            ) : (
+              <span
+                className="flex size-5 items-center justify-center rounded-full bg-neutral-700 text-[0.55rem] text-neutral-400 select-none"
+                title={t('tasks.unassignedHint', 'Unassigned')}
+              >
+                ?
+              </span>
+            )}
+          </span>
+          {task.workspace?.hasPublishableChanges && (
+            <span
+              className="size-1.5 rounded-full bg-orange-400"
+              title={t('tasks.hasChanges', 'Has unpublished changes')}
+            />
+          )}
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="min-w-44">
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={onOpen}>
+            <i className="fas fa-pen w-4 text-center" aria-hidden />
+            {t('tasks.editTask', 'Edit task…')}
+          </ContextMenuItem>
+          <ContextMenuItem disabled={!canWrite || active} onClick={onCheckout}>
+            <i className="fas fa-code-branch w-4 text-center" aria-hidden />
+            {t('tasks.checkoutWorkspace', 'Checkout workspace')}
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            variant="destructive"
+            disabled={!canManage}
+            onClick={onDelete}
+          >
+            <i className="fas fa-trash-can w-4 text-center" aria-hidden />
+            {t('tasks.delete', 'Delete task')}
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }

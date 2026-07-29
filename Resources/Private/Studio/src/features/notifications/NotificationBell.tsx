@@ -68,7 +68,7 @@ export function NotificationBell() {
               })
             : t('notifications.label', 'Notifications')
         }
-        className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-400 select-none hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+        className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-white select-none hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
       >
         <i className="fas fa-bell text-[0.8rem]" aria-hidden />
         {unreadCount > 0 && (
@@ -170,12 +170,6 @@ function NotificationRow({
           {new Date(notification.createdAt).toLocaleString()}
         </span>
       </span>
-      {hasTarget && (
-        <i
-          className="fas fa-chevron-right mt-1.5 shrink-0 text-[0.6rem] text-neutral-600"
-          aria-hidden
-        />
-      )}
     </DropdownMenuItem>
   )
 }

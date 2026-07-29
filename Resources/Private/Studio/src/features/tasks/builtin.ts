@@ -2,6 +2,7 @@ import { taskOf } from '@/api/tasks'
 import { panelRegistry } from '@/features/panels/registry'
 import { workspaceDecoratorRegistry } from '@/features/workspaces/decorators'
 import { translate as t } from '@/lib/i18n'
+import { taskStatusColor } from './status'
 import { TasksBoard } from './TasksBoard'
 
 /**
@@ -41,16 +42,10 @@ export function registerBuiltinTaskWorkflow(): void {
         .join(' · ')
 
       return {
-        // The badge IS the status, in the status color: open = Neos blue
-        // (in work), in review = orange (waiting on a reviewer), done = green.
+        // The badge IS the status, in the status color (see status.ts).
         badge: status,
         icon: 'code-branch',
-        color:
-          task.status === 'DONE'
-            ? '#4ade80'
-            : task.status === 'IN_REVIEW'
-              ? '#fb923c'
-              : '#00adee',
+        color: taskStatusColor(task.status),
         label,
         switcherGroup: t('tasks.switcherGroup', 'Tasks'),
       }

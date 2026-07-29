@@ -135,7 +135,7 @@ function DropdownMenuSubTrigger({
     >
       {children}
       <i
-        className="fas fa-chevron-right ml-auto text-[0.65rem] text-neutral-500"
+        className="fas fa-chevron-right ml-auto text-[0.65rem] text-white/50"
         aria-hidden
       />
     </MenuPrimitive.SubmenuTrigger>

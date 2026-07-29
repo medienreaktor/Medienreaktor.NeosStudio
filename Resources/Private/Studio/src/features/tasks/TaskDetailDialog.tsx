@@ -6,7 +6,6 @@ import { queryKeys } from '@/api/keys'
 import { assignTask, updateTask, type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
 import { queryClient } from '@/app/queryClient'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,17 +29,6 @@ import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 
 const UNASSIGNED = '__unassigned__'
-
-function statusLabel(status: Task['status']): string {
-  switch (status) {
-    case 'IN_REVIEW':
-      return t('tasks.statusInReview', 'in review')
-    case 'DONE':
-      return t('tasks.statusDone', 'done')
-    default:
-      return t('tasks.statusOpen', 'open')
-  }
-}
 
 /**
  * The task detail: edit title, description and the assignee. Editing needs
@@ -122,11 +110,8 @@ export function TaskDetailDialog({
     <Dialog open={task !== null} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle>
             {task?.workspace?.title || task?.workspaceName}
-            {task && (
-              <Badge variant="secondary">{statusLabel(task.status)}</Badge>
-            )}
           </DialogTitle>
           <DialogDescription>
             {canManage
@@ -189,7 +174,6 @@ export function TaskDetailDialog({
           <DialogFooter className="items-center">
             <Button
               type="button"
-              variant="ghost"
               className="mr-auto"
               disabled={!canWrite || task === null}
               onClick={() => task && onCheckout(task)}
