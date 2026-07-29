@@ -31,20 +31,18 @@ import { translate as t } from '@/lib/i18n'
 const UNASSIGNED = '__unassigned__'
 
 /**
- * The task detail: edit title, description and the assignee. Editing needs
- * manage permission on the task workspace (creator/reviewers) - without it
- * the dialog is read-only. Checking the workspace out stays in the card's
- * action menu and the footer; this dialog is about the task itself.
+ * The task EDIT dialog: title, description and the assignee as a form.
+ * Editing needs manage permission on the task workspace (creator/
+ * reviewers) - without it the dialog is read-only. Plain viewing (and the
+ * checkout action) lives in TaskViewDialog; this dialog is reached through
+ * its "Edit task" button or the card's context menu.
  */
 export function TaskDetailDialog({
   task,
   onOpenChange,
-  onCheckout,
 }: {
   task: Task | null
   onOpenChange: (open: boolean) => void
-  /** Check the task workspace out for direct editing (closes the dialog). */
-  onCheckout: (task: Task) => void
 }) {
   const { data: usersData } = useUsers()
 
@@ -61,7 +59,6 @@ export function TaskDetailDialog({
   }, [task])
 
   const canManage = task?.workspace?.permissions.manage ?? false
-  const canWrite = task?.workspace?.permissions.write ?? false
 
   const assigneeItems = [
     { value: UNASSIGNED, label: t('tasks.unassigned', '– unassigned –') },
@@ -172,15 +169,6 @@ export function TaskDetailDialog({
           </Field>
 
           <DialogFooter className="items-center">
-            <Button
-              type="button"
-              className="mr-auto"
-              disabled={!canWrite || task === null}
-              onClick={() => task && onCheckout(task)}
-            >
-              <i className="fas fa-code-branch" aria-hidden />
-              {t('tasks.checkoutWorkspace', 'Checkout workspace')}
-            </Button>
             <Button
               type="button"
               variant="secondary"

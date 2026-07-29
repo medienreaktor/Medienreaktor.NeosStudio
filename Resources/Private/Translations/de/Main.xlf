@@ -2034,6 +2034,10 @@
         <source>Updating the task failed.</source>
         <target xml:lang="de">Das Aktualisieren der Aufgabe ist fehlgeschlagen.</target>
       </trans-unit>
+      <trans-unit id="tasks.viewTask" xml:space="preserve">
+        <source>View task</source>
+        <target xml:lang="de">Aufgabe anzeigen</target>
+      </trans-unit>
       <trans-unit id="trash.confirmBody" xml:space="preserve">
         <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
         <target xml:lang="de">Es wurde innerhalb von etwas gelöscht, das ebenfalls gelöscht ist – deshalb wird zusätzlich wiederhergestellt: {0}</target>

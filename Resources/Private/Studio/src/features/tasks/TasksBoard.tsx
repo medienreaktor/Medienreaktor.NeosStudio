@@ -38,6 +38,7 @@ import { taskStatusColor } from './status'
 import { CreateTaskDialog } from './CreateTaskDialog'
 import { consumeTaskFocus, usePendingTaskFocus } from './focus'
 import { TaskDetailDialog } from './TaskDetailDialog'
+import { TaskViewDialog } from './TaskViewDialog'
 
 const COLUMNS: { status: TaskStatus; title: () => string }[] = [
   { status: 'OPEN', title: () => t('tasks.columnOpen', 'Open') },
@@ -51,8 +52,9 @@ const COLUMNS: { status: TaskStatus; title: () => string }[] = [
  * Dropping on "Done" deliberately does NOT publish blindly - it opens the
  * Review Changes dialog on the task workspace so the reviewer picks what to
  * publish; once a publish succeeded the task is completed and the card moves.
- * Clicking a card opens the task detail for editing; checking the workspace
- * out lives in the card menu and the detail dialog.
+ * Clicking a card (or a notification) opens the read-only task view, which
+ * offers checkout and the edit dialog; the card's context menu reaches both
+ * dialogs directly.
  */
 export function TasksBoard() {
   const studio = useStudio()
@@ -61,6 +63,7 @@ export function TasksBoard() {
   const { data: workspacesData } = useWorkspaces()
   const [dragged, setDragged] = useState<Task | null>(null)
   const [creating, setCreating] = useState(false)
+  const [viewing, setViewing] = useState<Task | null>(null)
   const [editing, setEditing] = useState<Task | null>(null)
   const [deleting, setDeleting] = useState<Task | null>(null)
   const [reviewing, setReviewing] = useState<Task | null>(null)
@@ -71,7 +74,7 @@ export function TasksBoard() {
     null
 
   // A pending "open this task" request (e.g. from a clicked notification):
-  // once the list contains the workspace, open its detail dialog. A request
+  // once the list contains the workspace, open its read-only view. A request
   // for a task the account cannot see (or that is gone) is dropped once the
   // list has loaded, so it cannot linger and fire on a later poll.
   const pendingFocus = usePendingTaskFocus()
@@ -80,7 +83,7 @@ export function TasksBoard() {
     const task = data.tasks.find(
       (candidate) => candidate.workspaceName === pendingFocus,
     )
-    if (task) setEditing(task)
+    if (task) setViewing(task)
     consumeTaskFocus()
   }, [pendingFocus, data])
 
@@ -143,6 +146,7 @@ export function TasksBoard() {
   }
 
   const checkout = (task: Task) => {
+    setViewing(null)
     setEditing(null)
     // Already the editing context: switching would no-op, so no toast either.
     if (task.workspaceName === studio.workspaceName) return
@@ -234,7 +238,8 @@ export function TasksBoard() {
                     }
                     onDragStart={() => setDragged(task)}
                     onDragEnd={() => setDragged(null)}
-                    onOpen={() => setEditing(task)}
+                    onView={() => setViewing(task)}
+                    onEdit={() => setEditing(task)}
                     onCheckout={() => checkout(task)}
                     onDelete={() => setDeleting(task)}
                   />
@@ -253,10 +258,18 @@ export function TasksBoard() {
         onOpenChange={setCreating}
         onCreated={checkout}
       />
+      <TaskViewDialog
+        task={viewing}
+        onOpenChange={(open) => !open && setViewing(null)}
+        onCheckout={checkout}
+        onEdit={(task) => {
+          setViewing(null)
+          setEditing(task)
+        }}
+      />
       <TaskDetailDialog
         task={editing}
         onOpenChange={(open) => !open && setEditing(null)}
-        onCheckout={checkout}
       />
       {activeWorkspace && (
         <ReviewChangesDialog
@@ -297,7 +310,8 @@ function TaskCard({
   draggable,
   onDragStart,
   onDragEnd,
-  onOpen,
+  onView,
+  onEdit,
   onCheckout,
   onDelete,
 }: {
@@ -308,7 +322,8 @@ function TaskCard({
   draggable: boolean
   onDragStart: () => void
   onDragEnd: () => void
-  onOpen: () => void
+  onView: () => void
+  onEdit: () => void
   onCheckout: () => void
   onDelete: () => void
 }) {
@@ -339,11 +354,11 @@ function TaskCard({
               onDragStart()
             }}
             onDragEnd={onDragEnd}
-            onClick={onOpen}
+            onClick={onView}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') onOpen()
+              if (event.key === 'Enter') onView()
             }}
           />
         }
@@ -391,7 +406,11 @@ function TaskCard({
       </ContextMenuTrigger>
       <ContextMenuContent className="min-w-44">
         <ContextMenuGroup>
-          <ContextMenuItem onClick={onOpen}>
+          <ContextMenuItem onClick={onView}>
+            <i className="fas fa-eye w-4 text-center" aria-hidden />
+            {t('tasks.viewTask', 'View task')}
+          </ContextMenuItem>
+          <ContextMenuItem disabled={!canManage} onClick={onEdit}>
             <i className="fas fa-pen w-4 text-center" aria-hidden />
             {t('tasks.editTask', 'Edit task')}
           </ContextMenuItem>

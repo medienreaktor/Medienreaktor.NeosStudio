@@ -1526,6 +1526,9 @@
       <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
         <source>Updating the task failed.</source>
       </trans-unit>
+      <trans-unit id="tasks.viewTask" xml:space="preserve">
+        <source>View task</source>
+      </trans-unit>
       <trans-unit id="trash.confirmBody" xml:space="preserve">
         <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
       </trans-unit>
