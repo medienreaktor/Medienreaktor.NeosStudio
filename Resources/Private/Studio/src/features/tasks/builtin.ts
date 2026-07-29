@@ -42,8 +42,8 @@ export function registerBuiltinTaskWorkflow(): void {
         .join(' · ')
 
       return {
-        // The badge IS the status, in the status color: open = red (work to
-        // do), in review = orange (waiting on a reviewer), done = green.
+        // The badge IS the status, in the status color: open = primary blue
+        // (in work), in review = orange (waiting on a reviewer), done = green.
         badge: status,
         icon: 'code-branch',
         color:
@@ -51,7 +51,7 @@ export function registerBuiltinTaskWorkflow(): void {
             ? '#4ade80'
             : task.status === 'IN_REVIEW'
               ? '#fb923c'
-              : '#f87171',
+              : '#3b82f6',
         label,
         switcherGroup: t('tasks.switcherGroup', 'Tasks'),
       }

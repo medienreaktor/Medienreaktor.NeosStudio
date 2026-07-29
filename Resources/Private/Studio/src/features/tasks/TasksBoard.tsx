@@ -109,13 +109,23 @@ export function TasksBoard() {
 
   const onDrop = (task: Task, target: TaskStatus) => {
     if (task.status === target) return
-    if (target === 'DONE') {
+    if (target === 'DONE' && task.workspace?.hasPublishableChanges) {
       // Publishing is the reviewer's explicit decision: open the review
       // dialog on the task workspace; completion follows the publish.
+      // With nothing to publish the task just completes directly.
       setReviewing(task)
       return
     }
-    move.mutate({ task, target })
+    move.mutate(
+      { task, target },
+      {
+        onSuccess: () => {
+          if (target === 'DONE') {
+            toast.success(t('tasks.completed', 'The task has been completed.'))
+          }
+        },
+      },
+    )
   }
 
   const onPublished = (sourceWorkspaceName: string) => {
@@ -154,13 +164,7 @@ export function TasksBoard() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 px-3 pt-3">
-        <span className="text-xs text-neutral-500">
-          {t(
-            'tasks.boardHint',
-            'Drag cards between columns; dropping on "Done" opens the review to publish.',
-          )}
-        </span>
+      <div className="flex shrink-0 items-center justify-end px-3 pt-3">
         <Button size="sm" onClick={() => setCreating(true)}>
           <i className="fas fa-plus" aria-hidden />
           {t('tasks.newTask', 'New task')}
