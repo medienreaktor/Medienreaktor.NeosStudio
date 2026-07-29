@@ -1,4 +1,4 @@
-import { type Task } from '@/api/tasks'
+import { type Task, type TaskStatus } from '@/api/tasks'
 import { useUsers } from '@/api/users'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +13,18 @@ import {
   presenceInitials,
 } from '@/features/collaboration/presenceColors'
 import { translate as t } from '@/lib/i18n'
+import { taskStatusColor } from './status'
+
+function statusLabel(status: TaskStatus): string {
+  switch (status) {
+    case 'DONE':
+      return t('tasks.statusDone', 'done')
+    case 'IN_REVIEW':
+      return t('tasks.statusInReview', 'in review')
+    default:
+      return t('tasks.statusOpen', 'open')
+  }
+}
 
 /**
  * The read-only task view - what a card click or a notification opens.
@@ -46,8 +58,16 @@ export function TaskViewDialog({
     <Dialog open={task !== null} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
             {task?.workspace?.title || task?.workspaceName}
+            {task && (
+              <span
+                className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
+                style={{ color: taskStatusColor(task.status) }}
+              >
+                {statusLabel(task.status)}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
