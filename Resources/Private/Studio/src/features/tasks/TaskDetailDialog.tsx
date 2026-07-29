@@ -43,11 +43,10 @@ function statusLabel(status: Task['status']): string {
 }
 
 /**
- * The task detail: edit title, description, ticket reference, due date and
- * the assignee. Editing needs manage permission on the task workspace
- * (creator/reviewers) - without it the dialog is read-only. Opening the
- * workspace for editing stays in the card's action menu; this dialog is
- * about the task itself.
+ * The task detail: edit title, description and the assignee. Editing needs
+ * manage permission on the task workspace (creator/reviewers) - without it
+ * the dialog is read-only. Checking the workspace out stays in the card's
+ * action menu and the footer; this dialog is about the task itself.
  */
 export function TaskDetailDialog({
   task,
@@ -64,16 +63,12 @@ export function TaskDetailDialog({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [assignee, setAssignee] = useState(UNASSIGNED)
-  const [ticketReference, setTicketReference] = useState('')
-  const [dueDate, setDueDate] = useState('')
 
   useEffect(() => {
     if (task) {
       setTitle(task.workspace?.title ?? task.workspaceName)
       setDescription(task.workspace?.description ?? '')
       setAssignee(task.assignee ?? UNASSIGNED)
-      setTicketReference(task.ticketReference ?? '')
-      setDueDate(task.dueDate ? task.dueDate.slice(0, 10) : '')
     }
   }, [task])
 
@@ -94,10 +89,6 @@ export function TaskDetailDialog({
       await updateTask(task.workspaceName, {
         title: title.trim(),
         description: description.trim(),
-        ...(ticketReference.trim() !== ''
-          ? { ticketReference: ticketReference.trim() }
-          : {}),
-        ...(dueDate !== '' ? { dueDate } : {}),
       })
       const newAssignee = assignee === UNASSIGNED ? null : assignee
       if (newAssignee !== (task.assignee ?? null)) {
@@ -172,55 +163,27 @@ export function TaskDetailDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label={t('tasks.assignee', 'Assignee')}
-              htmlFor="task-detail-assignee"
-            >
-              <Select
-                value={assignee}
-                onValueChange={(value) => setAssignee(value as string)}
-                items={assigneeItems}
-                disabled={!canManage}
-              >
-                <SelectTrigger id="task-detail-assignee" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {assigneeItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field
-              label={t('tasks.dueDate', 'Due date')}
-              htmlFor="task-detail-due"
-            >
-              <Input
-                id="task-detail-due"
-                type="date"
-                value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
-                disabled={!canManage}
-              />
-            </Field>
-          </div>
-
           <Field
-            label={t('tasks.ticketReference', 'Ticket reference')}
-            htmlFor="task-detail-ticket"
+            label={t('tasks.assignee', 'Assignee')}
+            htmlFor="task-detail-assignee"
           >
-            <Input
-              id="task-detail-ticket"
-              placeholder="PROJ-123"
-              value={ticketReference}
-              onChange={(event) => setTicketReference(event.target.value)}
+            <Select
+              value={assignee}
+              onValueChange={(value) => setAssignee(value as string)}
+              items={assigneeItems}
               disabled={!canManage}
-              autoComplete="off"
-            />
+            >
+              <SelectTrigger id="task-detail-assignee" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {assigneeItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
 
           <DialogFooter className="items-center">

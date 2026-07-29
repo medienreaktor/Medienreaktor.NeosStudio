@@ -7,6 +7,7 @@ import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+import { CreateTaskDialog } from '@/features/tasks/CreateTaskDialog'
 import {
   decorationsFor,
   useWorkspaceDecorators,
@@ -56,6 +57,7 @@ export function WorkspaceSwitcher({
 }) {
   const { workspaceContentChanged } = useStudio()
   const collaborative = activeWorkspace.name !== personalWorkspace.name
+  const [creatingTask, setCreatingTask] = React.useState(false)
 
   const switchBase = useMutation({
     mutationFn: (baseWorkspace: string) =>
@@ -152,6 +154,11 @@ export function WorkspaceSwitcher({
 
   const onValueChange = (picked: string) => {
     if (picked === value) return
+    // Action entries never change the selection - they open a dialog.
+    if (picked === 'action:new-task') {
+      setCreatingTask(true)
+      return
+    }
     if (picked.startsWith('edit:')) {
       onSwitchEditingContext(picked.slice('edit:'.length))
       return
@@ -335,8 +342,22 @@ export function WorkspaceSwitcher({
               </SelectGroup>
             </React.Fragment>
           ))}
+          <SelectSeparator />
+          <SelectGroup>
+            <SelectItem value="action:new-task">
+              <i className="fas fa-plus text-[0.7rem]" aria-hidden />
+              {t('tasks.addTaskWorkspace', 'Add task workspace …')}
+            </SelectItem>
+          </SelectGroup>
         </SelectContent>
       </Select>
+      <CreateTaskDialog
+        open={creatingTask}
+        onOpenChange={setCreatingTask}
+        // Check the fresh branch out right away - creating a task from the
+        // switcher means "I want to work in it now".
+        onCreated={(task) => onSwitchEditingContext(task.workspaceName)}
+      />
     </div>
   )
 }

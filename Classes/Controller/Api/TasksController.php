@@ -65,8 +65,6 @@ class TasksController extends AbstractApiController
         string $description = '',
         string $baseWorkspace = 'live',
         ?string $assignee = null,
-        ?string $ticketReference = null,
-        ?string $dueDate = null,
     ): string {
         $this->requireScope('neos.write');
         $user = $this->requireUser();
@@ -82,8 +80,6 @@ class TasksController extends AbstractApiController
             $this->parseWorkspaceName($baseWorkspace),
             $user->getId(),
             $assignee !== null && $assignee !== '' ? $this->parseUserId($assignee, 'invalid_assignee') : null,
-            $ticketReference !== null && trim($ticketReference) !== '' ? trim($ticketReference) : null,
-            $this->parseDueDate($dueDate),
         );
 
         $task = $this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $workspaceName);
@@ -153,15 +149,13 @@ class TasksController extends AbstractApiController
 
     /**
      * POST /api/tasks/{workspaceName} - update the editable details (title,
-     * description, ticket reference, due date)
+     * description)
      */
     #[Flow\SkipCsrfProtection]
     public function updateAction(
         string $workspaceName,
         string $title,
         string $description = '',
-        ?string $ticketReference = null,
-        ?string $dueDate = null,
     ): string {
         $this->requireScope('neos.write');
         $this->requireUser();
@@ -177,8 +171,6 @@ class TasksController extends AbstractApiController
             $name,
             WorkspaceTitle::fromString(trim($title)),
             WorkspaceDescription::fromString(trim($description)),
-            $ticketReference !== null && trim($ticketReference) !== '' ? trim($ticketReference) : null,
-            $this->parseDueDate($dueDate),
         );
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
@@ -220,18 +212,6 @@ class TasksController extends AbstractApiController
     }
 
     // ------------------
-
-    private function parseDueDate(?string $dueDate): ?\DateTimeImmutable
-    {
-        if ($dueDate === null || $dueDate === '') {
-            return null;
-        }
-        try {
-            return new \DateTimeImmutable($dueDate);
-        } catch (\Exception) {
-            $this->throwJsonStatus(400, 'invalid_due_date', 'The due date could not be parsed.');
-        }
-    }
 
     private function parseWorkspaceName(string $workspaceName): WorkspaceName
     {
@@ -296,8 +276,6 @@ class TasksController extends AbstractApiController
             'status' => $task->status->value,
             'assignee' => $task->assigneeUserId?->value,
             'createdBy' => $task->createdByUserId?->value,
-            'ticketReference' => $task->ticketReference,
-            'dueDate' => $task->dueDate?->format(\DateTimeInterface::ATOM),
             'createdAt' => $task->createdAt->format(\DateTimeInterface::ATOM),
             'workspace' => $workspace !== null
                 ? $this->workspaceSerializer->serialize($this->getContentRepositoryId(), $workspace)

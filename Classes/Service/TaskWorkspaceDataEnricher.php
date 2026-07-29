@@ -56,8 +56,6 @@ final class TaskWorkspaceDataEnricher implements WorkspaceDataEnricherInterface
             'assignee' => $task->assigneeUserId?->value,
             'assigneeLabel' => $task->assigneeUserId !== null ? $this->userLabel($task->assigneeUserId) : null,
             'createdBy' => $task->createdByUserId?->value,
-            'ticketReference' => $task->ticketReference,
-            'dueDate' => $task->dueDate?->format(\DateTimeInterface::ATOM),
             'createdAt' => $task->createdAt->format(\DateTimeInterface::ATOM),
         ];
     }

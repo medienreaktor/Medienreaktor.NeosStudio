@@ -111,7 +111,6 @@ final class TaskWorkspaceLifecycleHook implements CatchUpHookInterface
                 sprintf('The task "%s" has been published to "%s".', $title, $event->targetWorkspaceName->value),
                 array_filter([
                     'workspaceName' => $event->sourceWorkspaceName->value,
-                    'ticketReference' => $task->ticketReference,
                 ]),
             );
             $notified = ($recipients !== []) || $notified;

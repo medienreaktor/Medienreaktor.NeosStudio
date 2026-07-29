@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
-import { createTask } from '@/api/tasks'
+import { createTask, type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
@@ -32,16 +32,19 @@ import { translate as t } from '@/lib/i18n'
 const UNASSIGNED = '__unassigned__'
 
 /**
- * Create a task or feature branch: a shared workspace restricted to the
- * involved people (creator, assignee, reviewers) plus the task metadata.
+ * Create a task branch: a shared workspace restricted to the involved
+ * people (creator, assignee, reviewers) plus the task metadata.
  * Modelled on the CreateWorkspaceDialog.
  */
 export function CreateTaskDialog({
   open,
   onOpenChange,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Called with the created task - e.g. the switcher checking it out. */
+  onCreated?: (task: Task) => void
 }) {
   const { data: usersData } = useUsers()
   const { data: workspacesData } = useWorkspaces(open)
@@ -50,8 +53,6 @@ export function CreateTaskDialog({
   const [description, setDescription] = useState('')
   const [baseWorkspace, setBaseWorkspace] = useState('live')
   const [assignee, setAssignee] = useState(UNASSIGNED)
-  const [ticketReference, setTicketReference] = useState('')
-  const [dueDate, setDueDate] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -59,8 +60,6 @@ export function CreateTaskDialog({
       setDescription('')
       setBaseWorkspace('live')
       setAssignee(UNASSIGNED)
-      setTicketReference('')
-      setDueDate('')
     }
   }, [open])
 
@@ -97,10 +96,6 @@ export function CreateTaskDialog({
         ...(description.trim() !== '' ? { description: description.trim() } : {}),
         baseWorkspace,
         ...(assignee !== UNASSIGNED ? { assignee } : {}),
-        ...(ticketReference.trim() !== ''
-          ? { ticketReference: ticketReference.trim() }
-          : {}),
-        ...(dueDate !== '' ? { dueDate } : {}),
       }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
@@ -111,6 +106,7 @@ export function CreateTaskDialog({
         ]),
       )
       onOpenChange(false)
+      onCreated?.(response.task)
     },
     onError: (error) =>
       toast.error(
@@ -205,32 +201,6 @@ export function CreateTaskDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label={t('tasks.dueDate', 'Due date')}
-              htmlFor="task-create-due"
-            >
-              <Input
-                id="task-create-due"
-                type="date"
-                value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
-              />
-            </Field>
-            <Field
-              label={t('tasks.ticketReference', 'Ticket reference')}
-              htmlFor="task-create-ticket"
-            >
-              <Input
-                id="task-create-ticket"
-                placeholder="PROJ-123"
-                value={ticketReference}
-                onChange={(event) => setTicketReference(event.target.value)}
-                autoComplete="off"
-              />
             </Field>
           </div>
 

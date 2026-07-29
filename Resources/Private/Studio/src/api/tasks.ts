@@ -21,8 +21,6 @@ export interface Task {
   status: TaskStatus
   assignee: string | null
   createdBy: string | null
-  ticketReference: string | null
-  dueDate: string | null
   createdAt: string
   /** The underlying workspace incl. the account's permissions; null if stale. */
   workspace: Workspace | null
@@ -34,8 +32,6 @@ export interface TaskExtension {
   assignee: string | null
   assigneeLabel: string | null
   createdBy: string | null
-  ticketReference: string | null
-  dueDate: string | null
   createdAt: string
 }
 
@@ -58,8 +54,6 @@ export interface CreateTaskInput {
   description?: string
   baseWorkspace?: string
   assignee?: string
-  ticketReference?: string
-  dueDate?: string
 }
 
 export function createTask(input: CreateTaskInput): Promise<{ task: Task }> {
@@ -69,8 +63,6 @@ export function createTask(input: CreateTaskInput): Promise<{ task: Task }> {
 export interface UpdateTaskInput {
   title: string
   description?: string
-  ticketReference?: string
-  dueDate?: string
 }
 
 export function updateTask(

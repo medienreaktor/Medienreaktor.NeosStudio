@@ -293,10 +293,6 @@ function TaskCard({
 }) {
   const canWrite = task.workspace?.permissions.write ?? false
   const canManage = task.workspace?.permissions.manage ?? false
-  const overdue =
-    task.dueDate !== null &&
-    task.status !== 'DONE' &&
-    new Date(task.dueDate).getTime() < Date.now()
 
   return (
     <div
@@ -388,20 +384,6 @@ function TaskCard({
               title={t('tasks.unassignedHint', 'Unassigned')}
             >
               ?
-            </span>
-          )}
-          {task.ticketReference && (
-            <span className="font-mono text-[0.65rem] text-neutral-500">
-              {task.ticketReference}
-            </span>
-          )}
-          {task.dueDate && (
-            <span
-              className={`text-[0.65rem] ${overdue ? 'font-semibold text-red-400' : 'text-neutral-500'}`}
-              title={t('tasks.dueDate', 'Due date')}
-            >
-              <i className="far fa-clock" aria-hidden />{' '}
-              {new Date(task.dueDate).toLocaleDateString()}
             </span>
           )}
         </span>

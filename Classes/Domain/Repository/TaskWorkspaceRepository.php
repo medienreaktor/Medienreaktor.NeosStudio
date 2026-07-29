@@ -40,8 +40,6 @@ final readonly class TaskWorkspaceRepository
                 'status' => $taskWorkspace->status->value,
                 'assignee_user_id' => $taskWorkspace->assigneeUserId?->value,
                 'created_by_user_id' => $taskWorkspace->createdByUserId?->value,
-                'ticket_reference' => $taskWorkspace->ticketReference,
-                'due_date' => $taskWorkspace->dueDate?->format('Y-m-d H:i:s'),
                 'created_at' => $taskWorkspace->createdAt->format('Y-m-d H:i:s'),
             ]);
         } catch (DbalException $e) {
@@ -93,17 +91,6 @@ final readonly class TaskWorkspaceRepository
         ]);
     }
 
-    public function updateDetails(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, ?string $ticketReference, ?\DateTimeImmutable $dueDate): void
-    {
-        $this->dbal->update(self::TABLE_NAME, [
-            'ticket_reference' => $ticketReference,
-            'due_date' => $dueDate?->format('Y-m-d H:i:s'),
-        ], [
-            'content_repository_id' => $contentRepositoryId->value,
-            'workspace_name' => $workspaceName->value,
-        ]);
-    }
-
     public function updateAssignee(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, ?UserId $assigneeUserId): void
     {
         $this->dbal->update(self::TABLE_NAME, ['assignee_user_id' => $assigneeUserId?->value], [
@@ -130,8 +117,6 @@ final readonly class TaskWorkspaceRepository
             TaskStatus::from($row['status']),
             $row['assignee_user_id'] !== null ? UserId::fromString($row['assignee_user_id']) : null,
             $row['created_by_user_id'] !== null ? UserId::fromString($row['created_by_user_id']) : null,
-            $row['ticket_reference'],
-            $row['due_date'] !== null ? new \DateTimeImmutable($row['due_date']) : null,
             new \DateTimeImmutable($row['created_at']),
         );
     }

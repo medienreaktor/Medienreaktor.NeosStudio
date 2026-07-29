@@ -22,8 +22,6 @@ final readonly class TaskWorkspace
         public TaskStatus $status,
         public ?UserId $assigneeUserId,
         public ?UserId $createdByUserId,
-        public ?string $ticketReference,
-        public ?\DateTimeImmutable $dueDate,
         public \DateTimeImmutable $createdAt,
     ) {
     }

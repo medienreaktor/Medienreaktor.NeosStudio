@@ -36,7 +36,6 @@ export function registerBuiltinTaskWorkflow(): void {
         task.assigneeLabel
           ? t('tasks.assignedTo', 'Assigned to {0}', [task.assigneeLabel])
           : null,
-        task.ticketReference,
       ]
         .filter(Boolean)
         .join(' · ')

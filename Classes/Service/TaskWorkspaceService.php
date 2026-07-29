@@ -82,8 +82,6 @@ final class TaskWorkspaceService
         WorkspaceName $baseWorkspaceName,
         UserId $creatorUserId,
         ?UserId $assigneeUserId = null,
-        ?string $ticketReference = null,
-        ?\DateTimeImmutable $dueDate = null,
     ): WorkspaceName {
         $workspaceName = $this->workspaceService->getUniqueWorkspaceName(
             $contentRepositoryId,
@@ -115,8 +113,6 @@ final class TaskWorkspaceService
             TaskStatus::OPEN,
             $assigneeUserId,
             $creatorUserId,
-            $ticketReference,
-            $dueDate,
             new \DateTimeImmutable(),
         );
         $this->taskWorkspaceRepository->add($contentRepositoryId, $task);
@@ -235,22 +231,18 @@ final class TaskWorkspaceService
     }
 
     /**
-     * Update the editable task details: workspace title/description (through
-     * the WorkspaceService, which enforces manage permission) and the sidecar
-     * fields.
+     * Update the editable task details: workspace title and description,
+     * through the WorkspaceService (which enforces manage permission).
      */
     public function updateTask(
         ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         WorkspaceTitle $title,
         WorkspaceDescription $description,
-        ?string $ticketReference,
-        ?\DateTimeImmutable $dueDate,
     ): void {
         $this->requireTask($contentRepositoryId, $workspaceName);
         $this->workspaceService->setWorkspaceTitle($contentRepositoryId, $workspaceName, $title);
         $this->workspaceService->setWorkspaceDescription($contentRepositoryId, $workspaceName, $description);
-        $this->taskWorkspaceRepository->updateDetails($contentRepositoryId, $workspaceName, $ticketReference, $dueDate);
     }
 
     /**
@@ -296,7 +288,6 @@ final class TaskWorkspaceService
     {
         return array_filter([
             'workspaceName' => $task->workspaceName->value,
-            'ticketReference' => $task->ticketReference,
         ], static fn ($value) => $value !== null);
     }
 
