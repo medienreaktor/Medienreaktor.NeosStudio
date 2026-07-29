@@ -97,9 +97,14 @@ export function CreateTaskDialog({
         baseWorkspace,
         ...(assignee !== UNASSIGNED ? { assignee } : {}),
       }),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    onSuccess: async (response) => {
+      // Await the refetch: a consumer checking the new workspace out right
+      // away (the switcher) needs it IN the cached workspace list first -
+      // the app resets an editing context it cannot resolve there.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all }),
+      ])
       toast.success(
         t('tasks.created', 'The task "{0}" has been created.', [
           response.task.workspace?.title ?? title.trim(),
