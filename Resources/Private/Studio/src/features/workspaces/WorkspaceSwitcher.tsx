@@ -1,13 +1,19 @@
 import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { ApiError } from '@/api/client'
-import { changeBaseWorkspace, type Workspace } from '@/api/workspaces'
+import { ApiError, apiErrorDescription } from '@/api/client'
+import { taskOf, transitionTask, type TaskStatus } from '@/api/tasks'
+import {
+  changeBaseWorkspace,
+  useWorkspaces,
+  type Workspace,
+} from '@/api/workspaces'
 import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { CreateTaskDialog } from '@/features/tasks/CreateTaskDialog'
+import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import {
   decorationsFor,
   useWorkspaceDecorators,
@@ -55,9 +61,44 @@ export function WorkspaceSwitcher({
   /** Move the editing context to a shared workspace, or null = personal. */
   onSwitchEditingContext: (workspaceName: string | null) => void
 }) {
-  const { workspaceContentChanged } = useStudio()
+  const { workspaceContentChanged, navigateToNodeInWorkspace } = useStudio()
   const collaborative = activeWorkspace.name !== personalWorkspace.name
   const [creatingTask, setCreatingTask] = React.useState(false)
+  const [reviewing, setReviewing] = React.useState(false)
+  // The full readable list for the review dialog (the `targets` prop is only
+  // the base-workspace subset).
+  const { data: workspacesData } = useWorkspaces()
+
+  // Workflow actions for the checked-out task branch (see the entries at the
+  // bottom of the dropdown): submit / reopen transition directly, completing
+  // routes through the review dialog while changes are pending - the same
+  // semantics as the Tasks board.
+  const activeTask = taskOf(activeWorkspace)
+  const taskTransition = useMutation({
+    mutationFn: (target: TaskStatus) =>
+      transitionTask(activeWorkspace.name, target),
+    onSuccess: (_response, target) => {
+      toast.success(
+        target === 'IN_REVIEW'
+          ? t('tasks.submitted', 'The task has been submitted for review.')
+          : target === 'DONE'
+            ? t('tasks.completed', 'The task has been completed.')
+            : t('tasks.reopenedToast', 'The task has been reopened.'),
+      )
+    },
+    onError: (error) =>
+      toast.error(
+        apiErrorDescription(
+          error,
+          t('tasks.moveFailedDetail', 'Moving the task failed.'),
+        ),
+        { title: t('tasks.moveFailed', 'Could not move task') },
+      ),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    },
+  })
 
   const switchBase = useMutation({
     mutationFn: (baseWorkspace: string) =>
@@ -154,9 +195,25 @@ export function WorkspaceSwitcher({
 
   const onValueChange = (picked: string) => {
     if (picked === value) return
-    // Action entries never change the selection - they open a dialog.
+    // Action entries never change the selection - they trigger a workflow
+    // step or open a dialog.
     if (picked === 'action:new-task') {
       setCreatingTask(true)
+      return
+    }
+    if (picked === 'action:task-submit') {
+      taskTransition.mutate('IN_REVIEW')
+      return
+    }
+    if (picked === 'action:task-reopen') {
+      taskTransition.mutate('OPEN')
+      return
+    }
+    if (picked === 'action:task-complete') {
+      // Pending changes: the reviewer picks what to publish first; the task
+      // completes after the publish. Nothing pending: complete directly.
+      if (activeWorkspace.hasPublishableChanges) setReviewing(true)
+      else taskTransition.mutate('DONE')
       return
     }
     if (picked.startsWith('edit:')) {
@@ -342,6 +399,46 @@ export function WorkspaceSwitcher({
               </SelectGroup>
             </React.Fragment>
           ))}
+          {activeTask && (
+            <>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>
+                  {t('tasks.currentTaskGroup', 'Current task: {0}', [
+                    activeWorkspace.title || activeWorkspace.name,
+                  ])}
+                </SelectLabel>
+                {activeTask.status === 'OPEN' &&
+                  activeWorkspace.permissions.write && (
+                    <SelectItem value="action:task-submit">
+                      <i
+                        className="fas fa-paper-plane text-[0.7rem]"
+                        aria-hidden
+                      />
+                      {t('tasks.sendToReview', 'Send to review')}
+                    </SelectItem>
+                  )}
+                {activeTask.status !== 'DONE' &&
+                  activeWorkspace.permissions.manage &&
+                  activeWorkspace.permissions.publish && (
+                    <SelectItem value="action:task-complete">
+                      <i className="fas fa-check text-[0.7rem]" aria-hidden />
+                      {t('tasks.completeTask', 'Complete task')}
+                    </SelectItem>
+                  )}
+                {activeTask.status !== 'OPEN' &&
+                  activeWorkspace.permissions.write && (
+                    <SelectItem value="action:task-reopen">
+                      <i
+                        className="fas fa-rotate-left text-[0.7rem]"
+                        aria-hidden
+                      />
+                      {t('tasks.reopenTask', 'Reopen task')}
+                    </SelectItem>
+                  )}
+              </SelectGroup>
+            </>
+          )}
           <SelectSeparator />
           <SelectGroup>
             <SelectItem value="action:new-task">
@@ -351,6 +448,22 @@ export function WorkspaceSwitcher({
           </SelectGroup>
         </SelectContent>
       </Select>
+      {reviewing && workspacesData && (
+        <ReviewChangesDialog
+          workspaces={workspacesData.workspaces}
+          activeWorkspace={activeWorkspace}
+          initialSourceName={activeWorkspace.name}
+          open={reviewing}
+          onOpenChange={(open) => !open && setReviewing(false)}
+          onNavigate={navigateToNodeInWorkspace}
+          onPublished={(sourceWorkspaceName) => {
+            if (sourceWorkspaceName === activeWorkspace.name) {
+              taskTransition.mutate('DONE')
+              setReviewing(false)
+            }
+          }}
+        />
+      )}
       <CreateTaskDialog
         open={creatingTask}
         onOpenChange={setCreatingTask}
