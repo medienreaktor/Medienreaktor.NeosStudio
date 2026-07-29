@@ -120,6 +120,14 @@ export function WorkspaceSwitcher({
   const sharedTargets = standardTargets.filter(
     (workspace) => workspace.classification === 'SHARED',
   )
+
+  // Tint the whole trigger by the editing context: purple for a plain
+  // collaborative workspace (matching the multiplayer icon), a decorated
+  // workspace's own color (e.g. the task status color) when it brings one.
+  const activeDecoration = collaborative
+    ? (decorationsFor(activeWorkspace, decorators)[0] ?? null)
+    : null
+  const tint = collaborative ? (activeDecoration?.color ?? '#a855f7') : null
   const decoratorGroups = new Map<string, Workspace[]>()
   for (const workspace of targets) {
     const group = groupOf(workspace)
@@ -170,23 +178,28 @@ export function WorkspaceSwitcher({
       >
         <SelectTrigger
           title={
-            collaborative
+            activeDecoration?.label ??
+            (collaborative
               ? t(
                   'workspace.collaborativeContext',
                   'Editing together in a shared workspace',
                 )
-              : t('workspace.publishTarget', 'Workspace to publish to')
+              : t('workspace.publishTarget', 'Workspace to publish to'))
           }
+          style={tint ? { borderColor: tint, color: tint } : undefined}
         >
           <div className="flex items-center gap-2">
             <i
               className={`fa fa-fw text-[0.7rem] ${
                 switchBase.isPending
                   ? 'fa-spinner fa-spin text-neutral-400'
-                  : collaborative
-                    ? 'fa-users text-purple-500'
-                    : 'fa-layer-group text-neutral-400'
+                  : activeDecoration
+                    ? `fa-${activeDecoration.icon ?? 'code-branch'}`
+                    : collaborative
+                      ? 'fa-users'
+                      : 'fa-layer-group text-neutral-400'
               }`}
+              style={tint && !switchBase.isPending ? { color: tint } : undefined}
               aria-hidden
             />
             <SelectValue
@@ -286,24 +299,39 @@ export function WorkspaceSwitcher({
               <SelectSeparator />
               <SelectGroup>
                 <SelectLabel>{group}</SelectLabel>
-                {workspaces.map((workspace) => (
-                  <SelectItem
-                    key={`edit:${workspace.name}`}
-                    value={`edit:${workspace.name}`}
-                    // Checking the workspace out means editing in it
-                    // directly, which needs write access.
-                    disabled={!workspace.permissions.write}
-                  >
-                    {workspaceLabel(workspace)}
-                    <WorkspaceDecorationBadges workspace={workspace} />
-                    {!workspace.permissions.write && (
-                      <span className="ml-1.5 text-xs text-neutral-400">
-                        <i className="fas fa-lock" aria-hidden />{' '}
-                        {t('workspace.readOnly', 'read-only')}
-                      </span>
-                    )}
-                  </SelectItem>
-                ))}
+                {workspaces.map((workspace) => {
+                  const decoration =
+                    decorationsFor(workspace, decorators)[0] ?? null
+                  return (
+                    <SelectItem
+                      key={`edit:${workspace.name}`}
+                      value={`edit:${workspace.name}`}
+                      // Checking the workspace out means editing in it
+                      // directly, which needs write access.
+                      disabled={!workspace.permissions.write}
+                    >
+                      {/* Leading icon like the multiplayer entries, in the
+                          decoration's (status) color. */}
+                      <i
+                        className={`fas fa-${decoration?.icon ?? 'code-branch'} text-[0.7rem]`}
+                        style={
+                          decoration?.color
+                            ? { color: decoration.color }
+                            : undefined
+                        }
+                        aria-hidden
+                      />
+                      {workspaceLabel(workspace)}
+                      <WorkspaceDecorationBadges workspace={workspace} />
+                      {!workspace.permissions.write && (
+                        <span className="ml-1.5 text-xs text-neutral-400">
+                          <i className="fas fa-lock" aria-hidden />{' '}
+                          {t('workspace.readOnly', 'read-only')}
+                        </span>
+                      )}
+                    </SelectItem>
+                  )
+                })}
               </SelectGroup>
             </React.Fragment>
           ))}

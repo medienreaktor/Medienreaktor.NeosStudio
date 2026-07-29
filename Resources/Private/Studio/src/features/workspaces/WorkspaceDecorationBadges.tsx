@@ -24,15 +24,9 @@ export function WorkspaceDecorationBadges({
         <span
           key={index}
           title={decoration.label}
-          className="inline-flex items-center gap-1 rounded-sm border border-current px-1 py-px align-middle text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
+          className="inline-flex items-center rounded-sm border border-current px-1 py-px align-middle text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
           style={{ color: decoration.color ?? 'var(--color-neutral-400)' }}
         >
-          {decoration.icon && (
-            <i
-              className={`fas fa-${decoration.icon} text-[0.55rem]`}
-              aria-hidden
-            />
-          )}
           {decoration.badge}
         </span>
       ))}
