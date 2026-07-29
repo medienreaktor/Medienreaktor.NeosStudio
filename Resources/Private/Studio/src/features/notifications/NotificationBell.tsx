@@ -11,11 +11,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/toast'
+import { requestPanelReveal } from '@/features/panels/reveal'
+import { requestTaskFocus } from '@/features/tasks/focus'
 import { translate as t } from '@/lib/i18n'
 
 /**
@@ -102,7 +105,18 @@ export function NotificationBell() {
                 <NotificationRow
                   key={notification.id}
                   notification={notification}
-                  onMarkRead={() => markRead.mutate([notification.id])}
+                  onOpen={() => {
+                    if (notification.readAt === null) {
+                      markRead.mutate([notification.id])
+                    }
+                    // Task notifications carry their workspace: give the
+                    // user the context - reveal the board, open the task.
+                    const workspaceName = notification.payload.workspaceName
+                    if (typeof workspaceName === 'string') {
+                      requestPanelReveal('tasks')
+                      requestTaskFocus(workspaceName)
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -115,25 +129,27 @@ export function NotificationBell() {
 
 function NotificationRow({
   notification,
-  onMarkRead,
+  onOpen,
 }: {
   notification: StudioNotification
-  onMarkRead: () => void
+  onOpen: () => void
 }) {
   const unread = notification.readAt === null
+  const hasTarget = typeof notification.payload.workspaceName === 'string'
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      className={`flex w-full cursor-pointer gap-2 rounded-sm px-3 py-2 text-left hover:bg-neutral-800 ${
-        unread ? '' : 'opacity-60'
-      }`}
-      onClick={() => unread && onMarkRead()}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' && unread) onMarkRead()
-      }}
-      title={unread ? t('notifications.markRead', 'Mark as read') : undefined}
+    // A real menu item so clicking closes the menu and keyboard navigation
+    // works - the click marks the notification read and jumps to its task.
+    <DropdownMenuItem
+      className={`items-start gap-2 ${unread ? '' : 'opacity-60'}`}
+      onClick={onOpen}
+      title={
+        hasTarget
+          ? t('notifications.openTask', 'Open the task')
+          : unread
+            ? t('notifications.markRead', 'Mark as read')
+            : undefined
+      }
     >
       <span
         className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
@@ -154,6 +170,12 @@ function NotificationRow({
           {new Date(notification.createdAt).toLocaleString()}
         </span>
       </span>
-    </div>
+      {hasTarget && (
+        <i
+          className="fas fa-chevron-right mt-1.5 shrink-0 text-[0.6rem] text-neutral-600"
+          aria-hidden
+        />
+      )}
+    </DropdownMenuItem>
   )
 }

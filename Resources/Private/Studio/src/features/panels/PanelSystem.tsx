@@ -38,12 +38,14 @@ import {
   type PanelGroup,
   type PanelId,
   type PanelLayout,
+  revealPanel,
   saveLayout,
   setFloatingRect,
   showPanel,
   type TabDrop,
   toggleCollapsed,
 } from './panelLayout'
+import { onPanelRevealRequest } from './reveal'
 import { type PanelDefinition, panelRegistry } from './registry'
 
 /**
@@ -307,6 +309,16 @@ export function PanelsProvider({
   React.useEffect(() => {
     setLayout((l) => normalizeLayout(l, registered))
   }, [registered])
+
+  // Programmatic "bring this panel on screen" requests (see reveal.ts) -
+  // e.g. a notification jumping to the Tasks board.
+  React.useEffect(
+    () =>
+      onPanelRevealRequest((panel) =>
+        setLayout((l) => revealPanel(l, panel, panelRegistry.getAll())),
+      ),
+    [],
+  )
 
   // Persist debounced (drags update the rect per pointermove); flush on
   // unload so the very last change survives a quick tab close.

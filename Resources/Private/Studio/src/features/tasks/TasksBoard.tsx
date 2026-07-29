@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
@@ -35,6 +35,7 @@ import {
 import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import { translate as t } from '@/lib/i18n'
 import { CreateTaskDialog } from './CreateTaskDialog'
+import { consumeTaskFocus, usePendingTaskFocus } from './focus'
 import { TaskDetailDialog } from './TaskDetailDialog'
 
 const COLUMNS: { status: TaskStatus; title: () => string }[] = [
@@ -67,6 +68,20 @@ export function TasksBoard() {
   const activeWorkspace =
     workspaces.find((workspace) => workspace.name === studio.workspaceName) ??
     null
+
+  // A pending "open this task" request (e.g. from a clicked notification):
+  // once the list contains the workspace, open its detail dialog. A request
+  // for a task the account cannot see (or that is gone) is dropped once the
+  // list has loaded, so it cannot linger and fire on a later poll.
+  const pendingFocus = usePendingTaskFocus()
+  useEffect(() => {
+    if (pendingFocus === null || data === undefined) return
+    const task = data.tasks.find(
+      (candidate) => candidate.workspaceName === pendingFocus,
+    )
+    if (task) setEditing(task)
+    consumeTaskFocus()
+  }, [pendingFocus, data])
 
   const userLabel = (userId: string | null): string | null =>
     userId
