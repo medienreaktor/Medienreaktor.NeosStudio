@@ -73,6 +73,17 @@ export function TasksBoard() {
     workspaces.find((workspace) => workspace.name === studio.workspaceName) ??
     null
 
+  // The tasks response embeds a workspace snapshot that only refreshes with
+  // the board's 30s poll. Content edits invalidate the workspaces query
+  // immediately (persistProperty/nodeActions), so prefer its live object -
+  // the pending-changes dot must not lag a poll interval behind.
+  const tasks = (data?.tasks ?? []).map((task) => ({
+    ...task,
+    workspace:
+      workspaces.find((workspace) => workspace.name === task.workspaceName) ??
+      task.workspace,
+  }))
+
   // A pending "open this task" request (e.g. from a clicked notification):
   // once the list contains the workspace, open its read-only view. A request
   // for a task the account cannot see (or that is gone) is dropped once the
@@ -176,7 +187,7 @@ export function TasksBoard() {
 
       <div className="flex min-h-0 flex-1 items-stretch gap-2 overflow-x-auto p-2">
         {COLUMNS.map((column) => {
-          const columnTasks = (data?.tasks ?? []).filter(
+          const columnTasks = tasks.filter(
             (task) => task.status === column.status,
           )
           const droppable =
@@ -306,9 +317,8 @@ export function TasksBoard() {
 /** Placeholder card mirroring TaskCard's frame: title, description, avatar. */
 function TaskCardSkeleton() {
   return (
-    <div className="flex flex-col gap-1.5 rounded-md border border-neutral-800 bg-neutral-800/60 px-2.5 py-2">
+    <div className="flex flex-col gap-1.5 rounded-md border border-transparent bg-neutral-800 px-2.5 py-2">
       <Skeleton className="h-3.5 w-2/3 bg-neutral-700/60" />
-      <Skeleton className="h-3 w-full bg-neutral-700/60" />
       <div className="mt-0.5 flex items-center">
         <Skeleton className="size-5 rounded-full bg-neutral-700/60" />
       </div>
@@ -348,10 +358,8 @@ function TaskCard({
       <ContextMenuTrigger
         render={
           <div
-            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-800/60 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
-              active
-                ? 'border-blue-500'
-                : 'border-neutral-800 hover:border-neutral-700'
+            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-900 hover:bg-neutral-800 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
+              active ? 'border-blue-500' : 'border-transparent'
             } ${draggable ? 'active:cursor-grabbing' : ''}`}
             title={
               active

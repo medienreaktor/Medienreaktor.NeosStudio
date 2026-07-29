@@ -174,9 +174,9 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
     mutationFn: () => addTaskComment(workspaceName ?? '', text.trim()),
     onSuccess: () => {
       setText('')
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.taskComments(workspaceName ?? ''),
-      })
+      // The tasks prefix covers this thread's key AND the board's per-card
+      // commentCount - the badge updates immediately, not on the next poll.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
     },
     onError: (error) =>
       toast.error(
