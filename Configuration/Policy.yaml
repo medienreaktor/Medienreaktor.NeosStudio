@@ -20,14 +20,15 @@ privilegeTargets:
     # and reviewers manage, the assignee writes), and the content repository
     # enforces publish rights structurally.
 
-    # Read the task list (filtered to workspaces the account may read).
+    # Read the task list (filtered to workspaces the account may read) and a
+    # task's comment thread (read access on the workspace checked in-action).
     'Medienreaktor.NeosStudio:Api.Tasks.Read':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->indexAction())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(index|comments)Action())'
 
     # Create tasks and drive the workflow (update, assign, submit, reopen,
-    # delete).
+    # delete, comment).
     'Medienreaktor.NeosStudio:Api.Tasks.Write':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete)Action())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete|addComment)Action())'
 
     # Approve a task: mark it done after its changes were published through
     # the review flow. Does not publish itself - publishing rights are

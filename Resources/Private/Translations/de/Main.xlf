@@ -1878,6 +1878,26 @@
         <source>Open</source>
         <target xml:lang="de">Offen</target>
       </trans-unit>
+      <trans-unit id="tasks.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+        <target xml:lang="de">Kommentar konnte nicht hinzugefügt werden</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+        <target xml:lang="de">Das Hinzufügen des Kommentars ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+        <target xml:lang="de">Kommentar schreiben …</target>
+      </trans-unit>
+      <trans-unit id="tasks.comments" xml:space="preserve">
+        <source>Comments</source>
+        <target xml:lang="de">Kommentare</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentSend" xml:space="preserve">
+        <source>Send</source>
+        <target xml:lang="de">Senden</target>
+      </trans-unit>
       <trans-unit id="tasks.completed" xml:space="preserve">
         <source>The task has been completed.</source>
         <target xml:lang="de">Die Aufgabe wurde abgeschlossen.</target>
@@ -1966,6 +1986,10 @@
         <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
         <target xml:lang="de">Ein Aufgaben-Branch sammelt Änderungen für ein Vorhaben. Nur beteiligte Personen sehen ihn; Prüfer geben ihn frei und veröffentlichen ihn.</target>
       </trans-unit>
+      <trans-unit id="tasks.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+        <target xml:lang="de">Noch keine Kommentare.</target>
+      </trans-unit>
       <trans-unit id="tasks.reopenedToast" xml:space="preserve">
         <source>The task has been reopened.</source>
         <target xml:lang="de">Die Aufgabe wurde wieder geöffnet.</target>
@@ -1973,6 +1997,10 @@
       <trans-unit id="tasks.reopenTask" xml:space="preserve">
         <source>Reopen task</source>
         <target xml:lang="de">Aufgabe wieder öffnen</target>
+      </trans-unit>
+      <trans-unit id="tasks.reviewComment" xml:space="preserve">
+        <source>Comment (optional)</source>
+        <target xml:lang="de">Kommentar (optional)</target>
       </trans-unit>
       <trans-unit id="tasks.saving" xml:space="preserve">
         <source>Saving…</source>
@@ -1985,6 +2013,10 @@
       <trans-unit id="tasks.sendToReview" xml:space="preserve">
         <source>Send to review</source>
         <target xml:lang="de">Zur Prüfung einreichen</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReviewHint" xml:space="preserve">
+        <source>Hand the task to the reviewers. A comment helps them know what to look at.</source>
+        <target xml:lang="de">Übergib die Aufgabe zur Prüfung. Ein Kommentar hilft den Prüfern zu wissen, worauf sie achten sollen.</target>
       </trans-unit>
       <trans-unit id="tasks.statusDone" xml:space="preserve">
         <source>done</source>

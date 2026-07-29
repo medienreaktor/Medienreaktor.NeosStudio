@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Medienreaktor\NeosStudio\CatchUpHook;
 
 
+use Medienreaktor\NeosStudio\Domain\Repository\TaskCommentRepository;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
 use Medienreaktor\NeosStudio\Service\NotificationService;
 use Neos\ContentRepository\Core\Projection\CatchUpHook\CatchUpHookFactoryDependencies;
@@ -22,6 +23,7 @@ class TaskWorkspaceLifecycleHookFactory implements CatchUpHookFactoryInterface
 {
     public function __construct(
         private readonly TaskWorkspaceRepository $taskWorkspaceRepository,
+        private readonly TaskCommentRepository $taskCommentRepository,
         private readonly NotificationService $notificationService,
         private readonly WorkspaceService $workspaceService,
     ) {
@@ -32,6 +34,7 @@ class TaskWorkspaceLifecycleHookFactory implements CatchUpHookFactoryInterface
         return new TaskWorkspaceLifecycleHook(
             $dependencies->contentRepositoryId,
             $this->taskWorkspaceRepository,
+            $this->taskCommentRepository,
             $this->notificationService,
             $this->workspaceService,
         );

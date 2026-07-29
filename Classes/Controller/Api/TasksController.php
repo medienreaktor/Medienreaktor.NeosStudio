@@ -6,6 +6,7 @@ namespace Medienreaktor\NeosStudio\Controller\Api;
 
 use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
+use Medienreaktor\NeosStudio\Domain\Model\TaskComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
@@ -110,10 +111,11 @@ class TasksController extends AbstractApiController
     }
 
     /**
-     * POST /api/tasks/{workspaceName}/submit - hand the task to the reviewers
+     * POST /api/tasks/{workspaceName}/submit - hand the task to the
+     * reviewers, optionally with a comment for them
      */
     #[Flow\SkipCsrfProtection]
-    public function submitAction(string $workspaceName): string
+    public function submitAction(string $workspaceName, string $comment = ''): string
     {
         $this->requireScope('neos.write');
         $user = $this->requireUser();
@@ -121,9 +123,50 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, write: true);
 
-        $this->taskWorkspaceService->submitForReview($this->getContentRepositoryId(), $name, $user->getId());
+        $this->taskWorkspaceService->submitForReview($this->getContentRepositoryId(), $name, $user->getId(), trim($comment));
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
+    }
+
+    /**
+     * GET /api/tasks/{workspaceName}/comments - the task's comment thread,
+     * oldest first. Read access to the task workspace is enough - whoever
+     * sees the task sees (and joins) its conversation.
+     */
+    public function commentsAction(string $workspaceName): string
+    {
+        $this->requireScope('neos.read');
+        $this->requireUser();
+        $name = $this->parseWorkspaceName($workspaceName);
+        $this->requireTask($name);
+        $this->requireReadable($name);
+
+        return $this->json([
+            'comments' => array_map(
+                $this->serializeComment(...),
+                $this->taskWorkspaceService->getComments($this->getContentRepositoryId(), $name)
+            ),
+        ]);
+    }
+
+    /**
+     * POST /api/tasks/{workspaceName}/comments - body: {"text": "..."}
+     */
+    #[Flow\SkipCsrfProtection]
+    public function addCommentAction(string $workspaceName, string $text = ''): string
+    {
+        $this->requireScope('neos.write');
+        $user = $this->requireUser();
+        $name = $this->parseWorkspaceName($workspaceName);
+        $this->requireTask($name);
+        $this->requireReadable($name);
+        if (trim($text) === '') {
+            $this->throwJsonStatus(400, 'invalid_comment', 'The comment must not be empty.');
+        }
+
+        $comment = $this->taskWorkspaceService->commentOnTask($this->getContentRepositoryId(), $name, $user->getId(), trim($text));
+
+        return $this->json(['comment' => $this->serializeComment($comment)], 201);
     }
 
     /**
@@ -251,6 +294,13 @@ class TasksController extends AbstractApiController
         return $task;
     }
 
+    private function requireReadable(WorkspaceName $workspaceName): void
+    {
+        if (!$this->workspaceSerializer->canRead($this->getContentRepositoryId(), $workspaceName)) {
+            $this->throwJsonStatus(403, 'insufficient_workspace_permissions', sprintf('You lack the required permission on workspace "%s".', $workspaceName->value));
+        }
+    }
+
     private function requirePermission(WorkspaceName $workspaceName, bool $write = false, bool $manage = false): WorkspacePermissions
     {
         $permissions = $this->workspaceSerializer->permissions($this->getContentRepositoryId(), $workspaceName);
@@ -259,6 +309,24 @@ class TasksController extends AbstractApiController
         }
 
         return $permissions;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeComment(TaskComment $comment): array
+    {
+        return [
+            'id' => $comment->id,
+            'author' => $comment->authorUserId?->value,
+            // Labelled server-side (like the enricher's assigneeLabel), so the
+            // client never depends on being allowed to list all users.
+            'authorLabel' => $comment->authorUserId !== null
+                ? $this->userService->findUserById($comment->authorUserId)?->getLabel()
+                : null,
+            'text' => $comment->text,
+            'createdAt' => $comment->createdAt->format(\DateTimeInterface::ATOM),
+        ];
     }
 
     /**

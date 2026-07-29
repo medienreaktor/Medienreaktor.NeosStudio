@@ -79,17 +79,51 @@ export function updateTask(
  * The endpoint realizing a status transition - moving INTO a column drives
  * the workflow: to review = submit, back to open = reopen, to done = approve.
  * Approving does NOT publish - the board opens the Review Changes dialog
- * first and completes the task afterwards.
+ * first and completes the task afterwards. Submitting takes an optional
+ * comment for the reviewers (it joins the task's comment thread).
  */
 export function transitionTask(
   workspaceName: string,
   target: TaskStatus,
+  comment?: string,
 ): Promise<{ task: Task }> {
   const action =
     target === 'IN_REVIEW' ? 'submit' : target === 'DONE' ? 'approve' : 'reopen'
   return apiFetch<{ task: Task }>(
     `/tasks/${encodeURIComponent(workspaceName)}/${action}`,
-    { method: 'POST', body: {} },
+    { method: 'POST', body: comment ? { comment } : {} },
+  )
+}
+
+/** One comment on a task, as served by GET /api/tasks/{name}/comments. */
+export interface TaskComment {
+  id: number
+  author: string | null
+  /** Resolved server-side, so it never depends on the users listing. */
+  authorLabel: string | null
+  text: string
+  createdAt: string
+}
+
+/** The task's comment thread, oldest first. Pass null while no task is open. */
+export function useTaskComments(workspaceName: string | null) {
+  return useQuery({
+    queryKey: queryKeys.taskComments(workspaceName ?? ''),
+    queryFn: () =>
+      apiFetch<{ comments: TaskComment[] }>(
+        `/tasks/${encodeURIComponent(workspaceName ?? '')}/comments`,
+      ),
+    enabled: workspaceName !== null,
+  })
+}
+
+export function addTaskComment(
+  workspaceName: string,
+  text: string,
+): Promise<{ comment: TaskComment }> {
+  return apiFetch<{ comment: TaskComment }>(
+    `/tasks/${encodeURIComponent(workspaceName)}/comments`,
+    { method: 'POST', body: { text } },
   )
 }
 
@@ -103,7 +137,9 @@ export function assignTask(
   )
 }
 
-export function deleteTask(workspaceName: string): Promise<{ deleted: string }> {
+export function deleteTask(
+  workspaceName: string,
+): Promise<{ deleted: string }> {
   return apiFetch<{ deleted: string }>(
     `/tasks/${encodeURIComponent(workspaceName)}`,
     { method: 'DELETE' },

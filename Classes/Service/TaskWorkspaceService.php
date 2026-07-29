@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Medienreaktor\NeosStudio\Service;
 
 
+use Medienreaktor\NeosStudio\Domain\Model\TaskComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
+use Medienreaktor\NeosStudio\Domain\Repository\TaskCommentRepository;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
@@ -48,6 +50,9 @@ final class TaskWorkspaceService
 
     #[Flow\Inject]
     protected TaskWorkspaceRepository $taskWorkspaceRepository;
+
+    #[Flow\Inject]
+    protected TaskCommentRepository $taskCommentRepository;
 
     #[Flow\Inject]
     protected NotificationService $notificationService;
@@ -168,9 +173,11 @@ final class TaskWorkspaceService
 
     /**
      * Hand the task to the reviewers: status IN_REVIEW, all users with the
-     * reviewer role get notified.
+     * reviewer role get notified. An optional comment joins the task's
+     * comment thread and rides along in the notification - no separate
+     * comment notification, the review request IS the news.
      */
-    public function submitForReview(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $actingUserId): void
+    public function submitForReview(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $actingUserId, string $comment = ''): void
     {
         $task = $this->requireTask($contentRepositoryId, $workspaceName);
         if ($task->status === TaskStatus::DONE) {
@@ -179,16 +186,81 @@ final class TaskWorkspaceService
 
         $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::IN_REVIEW);
 
+        if ($comment !== '') {
+            $this->taskCommentRepository->add($contentRepositoryId, new TaskComment(
+                null,
+                $workspaceName,
+                $actingUserId,
+                $comment,
+                new \DateTimeImmutable(),
+            ));
+        }
+
         $title = $this->workspaceTitle($contentRepositoryId, $workspaceName);
         $this->notificationService->notifyUsersWithRole(
             $this->reviewerRole,
             self::NOTIFICATION_SOURCE,
             'taskWorkflow.submitted',
             sprintf('Review requested: %s', $title),
-            sprintf('%s asked for a review of the task "%s".', $this->userLabel($actingUserId), $title),
+            $comment !== ''
+                ? sprintf('%s asked for a review of the task "%s": %s', $this->userLabel($actingUserId), $title, $this->excerpt($comment))
+                : sprintf('%s asked for a review of the task "%s".', $this->userLabel($actingUserId), $title),
             $this->payload($task),
             excludedUserIds: [$actingUserId],
         );
+    }
+
+    /**
+     * The task's comment thread, oldest first.
+     *
+     * @return array<TaskComment>
+     */
+    public function getComments(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): array
+    {
+        $this->requireTask($contentRepositoryId, $workspaceName);
+
+        return $this->taskCommentRepository->findByWorkspaceName($contentRepositoryId, $workspaceName);
+    }
+
+    /**
+     * Comment on the task. Everyone involved in the conversation - creator,
+     * assignee and everyone who commented before - gets notified, except the
+     * author themselves.
+     */
+    public function commentOnTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $authorUserId, string $text): TaskComment
+    {
+        $task = $this->requireTask($contentRepositoryId, $workspaceName);
+
+        $previousAuthors = array_map(
+            static fn (TaskComment $comment) => $comment->authorUserId,
+            $this->taskCommentRepository->findByWorkspaceName($contentRepositoryId, $workspaceName)
+        );
+
+        $comment = $this->taskCommentRepository->add($contentRepositoryId, new TaskComment(
+            null,
+            $workspaceName,
+            $authorUserId,
+            $text,
+            new \DateTimeImmutable(),
+        ));
+
+        $title = $this->workspaceTitle($contentRepositoryId, $workspaceName);
+        $recipients = array_filter(
+            [$task->createdByUserId, $task->assigneeUserId, ...$previousAuthors],
+            static fn (?UserId $id) => $id !== null && !$id->equals($authorUserId)
+        );
+        // notifyUsers dedupes; the payload's workspaceName lets the bell jump
+        // straight to the task.
+        $this->notificationService->notifyUsers(
+            $recipients,
+            self::NOTIFICATION_SOURCE,
+            'taskWorkflow.commented',
+            sprintf('New comment: %s', $title),
+            sprintf('%s commented on the task "%s": %s', $this->userLabel($authorUserId), $title, $this->excerpt($text)),
+            $this->payload($task),
+        );
+
+        return $comment;
     }
 
     /**
@@ -255,6 +327,7 @@ final class TaskWorkspaceService
         $this->requireTask($contentRepositoryId, $workspaceName);
         $this->workspaceService->deleteWorkspace($contentRepositoryId, $workspaceName);
         $this->taskWorkspaceRepository->remove($contentRepositoryId, $workspaceName);
+        $this->taskCommentRepository->removeForWorkspace($contentRepositoryId, $workspaceName);
     }
 
     // ------------------
@@ -299,6 +372,14 @@ final class TaskWorkspaceService
     private function userLabel(UserId $userId): string
     {
         return $this->userService->findUserById($userId)?->getLabel() ?? $userId->value;
+    }
+
+    /** Comments can be long; notification messages carry a teaser only. */
+    private function excerpt(string $text, int $maxLength = 140): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+
+        return mb_strlen($text) > $maxLength ? mb_substr($text, 0, $maxLength - 1) . '…' : $text;
     }
 
     private function hasUserRoleAssignment(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $userId): bool

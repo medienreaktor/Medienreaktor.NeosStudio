@@ -32,6 +32,26 @@
   httpMethods: ['POST']
 
 -
+  name: 'Studio API: task comments'
+  uriPattern: 'api/tasks/{workspaceName}/comments'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'comments'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: add task comment'
+  uriPattern: 'api/tasks/{workspaceName}/comments'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'addComment'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
   name: 'Studio API: submit task for review'
   uriPattern: 'api/tasks/{workspaceName}/submit'
   defaults:

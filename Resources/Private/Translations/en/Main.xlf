@@ -1409,6 +1409,21 @@
       <trans-unit id="tasks.columnOpen" xml:space="preserve">
         <source>Open</source>
       </trans-unit>
+      <trans-unit id="tasks.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+      </trans-unit>
+      <trans-unit id="tasks.comments" xml:space="preserve">
+        <source>Comments</source>
+      </trans-unit>
+      <trans-unit id="tasks.commentSend" xml:space="preserve">
+        <source>Send</source>
+      </trans-unit>
       <trans-unit id="tasks.completed" xml:space="preserve">
         <source>The task has been completed.</source>
       </trans-unit>
@@ -1475,11 +1490,17 @@
       <trans-unit id="tasks.newTaskHint" xml:space="preserve">
         <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
       </trans-unit>
+      <trans-unit id="tasks.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+      </trans-unit>
       <trans-unit id="tasks.reopenedToast" xml:space="preserve">
         <source>The task has been reopened.</source>
       </trans-unit>
       <trans-unit id="tasks.reopenTask" xml:space="preserve">
         <source>Reopen task</source>
+      </trans-unit>
+      <trans-unit id="tasks.reviewComment" xml:space="preserve">
+        <source>Comment (optional)</source>
       </trans-unit>
       <trans-unit id="tasks.saving" xml:space="preserve">
         <source>Saving…</source>
@@ -1489,6 +1510,9 @@
       </trans-unit>
       <trans-unit id="tasks.sendToReview" xml:space="preserve">
         <source>Send to review</source>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReviewHint" xml:space="preserve">
+        <source>Hand the task to the reviewers. A comment helps them know what to look at.</source>
       </trans-unit>
       <trans-unit id="tasks.statusDone" xml:space="preserve">
         <source>done</source>

@@ -26,6 +26,7 @@ import {
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { CreateTaskDialog } from '@/features/tasks/CreateTaskDialog'
+import { SendToReviewDialog } from '@/features/tasks/SendToReviewDialog'
 import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import {
   decorationsFor,
@@ -86,6 +87,7 @@ export function WorkspaceSwitcher({
   const collaborative = activeWorkspace.name !== personalWorkspace.name
   const [creatingTask, setCreatingTask] = React.useState(false)
   const [reviewing, setReviewing] = React.useState(false)
+  const [submittingReview, setSubmittingReview] = React.useState(false)
   // The full readable list for the review dialog (the `targets` prop is only
   // the base-workspace subset).
   const { data: workspacesData } = useWorkspaces()
@@ -96,9 +98,15 @@ export function WorkspaceSwitcher({
   // Tasks board.
   const activeTask = taskOf(activeWorkspace)
   const taskTransition = useMutation({
-    mutationFn: (target: TaskStatus) =>
-      transitionTask(activeWorkspace.name, target),
-    onSuccess: (_response, target) => {
+    mutationFn: ({
+      target,
+      comment,
+    }: {
+      target: TaskStatus
+      comment?: string
+    }) => transitionTask(activeWorkspace.name, target, comment),
+    onSuccess: (_response, { target }) => {
+      if (target === 'IN_REVIEW') setSubmittingReview(false)
       toast.success(
         target === 'IN_REVIEW'
           ? t('tasks.submitted', 'The task has been submitted for review.')
@@ -125,7 +133,7 @@ export function WorkspaceSwitcher({
     // Pending changes: the reviewer picks what to publish first; the task
     // completes after the publish. Nothing pending: complete directly.
     if (activeWorkspace.hasPublishableChanges) setReviewing(true)
-    else taskTransition.mutate('DONE')
+    else taskTransition.mutate({ target: 'DONE' })
   }
 
   const switchBase = useMutation({
@@ -403,9 +411,7 @@ export function WorkspaceSwitcher({
                           {activeTask.status === 'OPEN' &&
                             activeWorkspace.permissions.write && (
                               <DropdownMenuItem
-                                onClick={() =>
-                                  taskTransition.mutate('IN_REVIEW')
-                                }
+                                onClick={() => setSubmittingReview(true)}
                               >
                                 <i
                                   className="fas fa-paper-plane w-4 text-center"
@@ -428,7 +434,9 @@ export function WorkspaceSwitcher({
                           {activeTask.status !== 'OPEN' &&
                             activeWorkspace.permissions.write && (
                               <DropdownMenuItem
-                                onClick={() => taskTransition.mutate('OPEN')}
+                                onClick={() =>
+                                  taskTransition.mutate({ target: 'OPEN' })
+                                }
                               >
                                 <i
                                   className="fas fa-rotate-left w-4 text-center"
@@ -482,6 +490,17 @@ export function WorkspaceSwitcher({
         // switcher means "I want to work in it now".
         onCreated={(task) => onSwitchEditingContext(task.workspaceName)}
       />
+      <SendToReviewDialog
+        open={submittingReview}
+        onOpenChange={setSubmittingReview}
+        pending={taskTransition.isPending}
+        onSubmit={(comment) =>
+          taskTransition.mutate({
+            target: 'IN_REVIEW',
+            comment: comment || undefined,
+          })
+        }
+      />
       {reviewing && workspacesData && (
         <ReviewChangesDialog
           workspaces={workspacesData.workspaces}
@@ -492,7 +511,7 @@ export function WorkspaceSwitcher({
           onNavigate={navigateToNodeInWorkspace}
           onPublished={(sourceWorkspaceName) => {
             if (sourceWorkspaceName === activeWorkspace.name) {
-              taskTransition.mutate('DONE')
+              taskTransition.mutate({ target: 'DONE' })
               setReviewing(false)
             }
           }}
