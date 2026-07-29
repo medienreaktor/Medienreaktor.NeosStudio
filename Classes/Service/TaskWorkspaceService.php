@@ -1,0 +1,313 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Medienreaktor\NeosStudio\Service;
+
+
+use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
+use Medienreaktor\NeosStudio\Domain\Model\TaskType;
+use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
+use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\Flow\Annotations as Flow;
+use Neos\Neos\Domain\Model\UserId;
+use Neos\Neos\Domain\Model\WorkspaceDescription;
+use Neos\Neos\Domain\Model\WorkspaceRole;
+use Neos\Neos\Domain\Model\WorkspaceRoleAssignment;
+use Neos\Neos\Domain\Model\WorkspaceRoleAssignments;
+use Neos\Neos\Domain\Model\WorkspaceRoleSubject;
+use Neos\Neos\Domain\Model\WorkspaceRoleSubjectType;
+use Neos\Neos\Domain\Model\WorkspaceTitle;
+use Neos\Neos\Domain\Service\UserService;
+use Neos\Neos\Domain\Service\WorkspacePublishingService;
+use Neos\Neos\Domain\Service\WorkspaceService;
+
+/**
+ * Central authority for task workspaces - the feature-branch workflow on top
+ * of Neos workspaces.
+ *
+ * A task workspace is a plain SHARED content repository workspace (created
+ * through the Neos WorkspaceService, so nothing in the core needs patching)
+ * plus a sidecar record carrying type/status/assignee. Visibility is driven
+ * purely by workspace role assignments: the creator manages, the assignee
+ * collaborates, reviewers (a configurable Flow role) manage - and because no
+ * blanket editor role is granted, uninvolved editors do not even see the
+ * branch in their workspace pickers.
+ *
+ * Workspace-level authorization is enforced by the Neos WorkspaceService /
+ * content repository, based on the acting (authenticated) user; the API
+ * controller performs the workflow-level permission checks.
+ */
+#[Flow\Scope('singleton')]
+final class TaskWorkspaceService
+{
+    public const NOTIFICATION_SOURCE = 'Medienreaktor.NeosStudio';
+
+    #[Flow\Inject]
+    protected WorkspaceService $workspaceService;
+
+    #[Flow\Inject]
+    protected WorkspacePublishingService $workspacePublishingService;
+
+    #[Flow\Inject]
+    protected TaskWorkspaceRepository $taskWorkspaceRepository;
+
+    #[Flow\Inject]
+    protected NotificationService $notificationService;
+
+    #[Flow\Inject]
+    protected UserService $userService;
+
+    /**
+     * Flow role whose members review task workspaces: they get MANAGER on
+     * every task workspace and are notified on review submissions.
+     */
+    #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosStudio', path: 'taskWorkflow.reviewerRole')]
+    protected string $reviewerRole;
+
+    public function getTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): ?TaskWorkspace
+    {
+        return $this->taskWorkspaceRepository->findByWorkspaceName($contentRepositoryId, $workspaceName);
+    }
+
+    /**
+     * @return array<string, TaskWorkspace> keyed by workspace name
+     */
+    public function findAllTasks(ContentRepositoryId $contentRepositoryId): array
+    {
+        return $this->taskWorkspaceRepository->findAll($contentRepositoryId);
+    }
+
+    public function createTaskWorkspace(
+        ContentRepositoryId $contentRepositoryId,
+        WorkspaceTitle $title,
+        WorkspaceDescription $description,
+        WorkspaceName $baseWorkspaceName,
+        TaskType $type,
+        UserId $creatorUserId,
+        ?UserId $assigneeUserId = null,
+        ?string $ticketReference = null,
+        ?\DateTimeImmutable $dueDate = null,
+    ): WorkspaceName {
+        $workspaceName = $this->workspaceService->getUniqueWorkspaceName(
+            $contentRepositoryId,
+            strtolower($type->value) . '-' . $title->value
+        );
+
+        $assignments = [
+            WorkspaceRoleAssignment::createForUser($creatorUserId, WorkspaceRole::MANAGER),
+            WorkspaceRoleAssignment::createForGroup($this->reviewerRole, WorkspaceRole::MANAGER),
+        ];
+        if ($assigneeUserId !== null && !$assigneeUserId->equals($creatorUserId)) {
+            $assignments[] = WorkspaceRoleAssignment::createForUser($assigneeUserId, WorkspaceRole::COLLABORATOR);
+        }
+
+        // Deliberately NOT WorkspaceRoleAssignments::createForSharedWorkspace():
+        // that would grant every AbstractEditor collaboration, making the task
+        // branch appear in everyone's pickers. Involved people only.
+        $this->workspaceService->createSharedWorkspace(
+            $contentRepositoryId,
+            $workspaceName,
+            $title,
+            $description,
+            $baseWorkspaceName,
+            WorkspaceRoleAssignments::fromArray($assignments)
+        );
+
+        $task = new TaskWorkspace(
+            $workspaceName,
+            $type,
+            TaskStatus::OPEN,
+            $assigneeUserId,
+            $creatorUserId,
+            $ticketReference,
+            $dueDate,
+            new \DateTimeImmutable(),
+        );
+        $this->taskWorkspaceRepository->add($contentRepositoryId, $task);
+
+        if ($assigneeUserId !== null && !$assigneeUserId->equals($creatorUserId)) {
+            $this->notifyAssigned($assigneeUserId, $task, $title->value);
+        }
+
+        return $workspaceName;
+    }
+
+    /**
+     * (Re-)assign the task to a user (or nobody). Adjusts the workspace role
+     * assignments so the assignee can actually work in the branch.
+     */
+    public function assignTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, ?UserId $assigneeUserId, UserId $actingUserId): void
+    {
+        $task = $this->requireTask($contentRepositoryId, $workspaceName);
+        if ($task->assigneeUserId !== null && $assigneeUserId !== null && $task->assigneeUserId->equals($assigneeUserId)) {
+            return;
+        }
+
+        // The previous assignee loses their COLLABORATOR grant - unless they
+        // hold it for another reason (creator = MANAGER stays untouched).
+        if ($task->assigneeUserId !== null
+            && !$task->assigneeUserId->equals($task->createdByUserId)
+            && $this->hasUserRoleAssignment($contentRepositoryId, $workspaceName, $task->assigneeUserId)
+        ) {
+            $this->workspaceService->unassignWorkspaceRole(
+                $contentRepositoryId,
+                $workspaceName,
+                WorkspaceRoleSubject::createForUser($task->assigneeUserId)
+            );
+        }
+
+        if ($assigneeUserId !== null
+            && !$assigneeUserId->equals($task->createdByUserId)
+            && !$this->hasUserRoleAssignment($contentRepositoryId, $workspaceName, $assigneeUserId)
+        ) {
+            $this->workspaceService->assignWorkspaceRole(
+                $contentRepositoryId,
+                $workspaceName,
+                WorkspaceRoleAssignment::createForUser($assigneeUserId, WorkspaceRole::COLLABORATOR)
+            );
+        }
+
+        $this->taskWorkspaceRepository->updateAssignee($contentRepositoryId, $workspaceName, $assigneeUserId);
+
+        if ($assigneeUserId !== null && !$assigneeUserId->equals($actingUserId)) {
+            $this->notifyAssigned($assigneeUserId, $task, $this->workspaceTitle($contentRepositoryId, $workspaceName));
+        }
+    }
+
+    /**
+     * Hand the task to the reviewers: status IN_REVIEW, all users with the
+     * reviewer role get notified.
+     */
+    public function submitForReview(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $actingUserId): void
+    {
+        $task = $this->requireTask($contentRepositoryId, $workspaceName);
+        if ($task->status === TaskStatus::DONE) {
+            throw new \RuntimeException(sprintf('Task workspace "%s" is already done.', $workspaceName->value), 1753776020);
+        }
+
+        $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::IN_REVIEW);
+
+        $title = $this->workspaceTitle($contentRepositoryId, $workspaceName);
+        $this->notificationService->notifyUsersWithRole(
+            $this->reviewerRole,
+            self::NOTIFICATION_SOURCE,
+            'taskWorkflow.submitted',
+            sprintf('Review requested: %s', $title),
+            sprintf('%s asked for a review of the %s "%s".', $this->userLabel($actingUserId), strtolower($task->type->value), $title),
+            $this->payload($task),
+            excludedUserIds: [$actingUserId],
+        );
+    }
+
+    /**
+     * Take the task back into work (e.g. a reviewer requesting changes).
+     */
+    public function reopenTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $actingUserId, string $reason = ''): void
+    {
+        $task = $this->requireTask($contentRepositoryId, $workspaceName);
+        $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::OPEN);
+
+        $title = $this->workspaceTitle($contentRepositoryId, $workspaceName);
+        $recipients = array_filter(
+            [$task->assigneeUserId, $task->createdByUserId],
+            static fn (?UserId $id) => $id !== null && !$id->equals($actingUserId)
+        );
+        $this->notificationService->notifyUsers(
+            $recipients,
+            self::NOTIFICATION_SOURCE,
+            'taskWorkflow.reopened',
+            sprintf('Reopened: %s', $title),
+            $reason !== ''
+                ? sprintf('%s reopened the %s "%s": %s', $this->userLabel($actingUserId), strtolower($task->type->value), $title, $reason)
+                : sprintf('%s reopened the %s "%s".', $this->userLabel($actingUserId), strtolower($task->type->value), $title),
+            $this->payload($task),
+        );
+    }
+
+    /**
+     * Approve the task: publish the workspace to its base. Status/DONE and
+     * the "published" notifications are handled by the lifecycle hook reacting
+     * to WorkspaceWasPublished - so publishes through other UIs (Workspace
+     * module, CLI) get the exact same treatment.
+     */
+    public function approveAndPublish(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
+    {
+        $this->requireTask($contentRepositoryId, $workspaceName);
+        $this->workspacePublishingService->publishWorkspace($contentRepositoryId, $workspaceName);
+        // Safety net in case the lifecycle hook is disabled: the status must
+        // never stay IN_REVIEW after a successful publish. Idempotent.
+        $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::DONE);
+    }
+
+    /**
+     * Delete the task workspace (content repository workspace + sidecar).
+     * The lifecycle hook also removes the sidecar when the workspace is
+     * deleted through other channels.
+     */
+    public function deleteTaskWorkspace(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
+    {
+        $this->requireTask($contentRepositoryId, $workspaceName);
+        $this->workspaceService->deleteWorkspace($contentRepositoryId, $workspaceName);
+        $this->taskWorkspaceRepository->remove($contentRepositoryId, $workspaceName);
+    }
+
+    // ------------------
+
+    private function requireTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): TaskWorkspace
+    {
+        $task = $this->taskWorkspaceRepository->findByWorkspaceName($contentRepositoryId, $workspaceName);
+        if ($task === null) {
+            throw new \RuntimeException(sprintf('Workspace "%s" is not a task workspace (Content Repository "%s").', $workspaceName->value, $contentRepositoryId->value), 1753776021);
+        }
+
+        return $task;
+    }
+
+    private function notifyAssigned(UserId $assigneeUserId, TaskWorkspace $task, string $title): void
+    {
+        $this->notificationService->notify(
+            $assigneeUserId,
+            self::NOTIFICATION_SOURCE,
+            'taskWorkflow.assigned',
+            sprintf('Assigned to you: %s', $title),
+            sprintf('You have been assigned the %s "%s".', strtolower($task->type->value), $title),
+            $this->payload($task),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function payload(TaskWorkspace $task): array
+    {
+        return array_filter([
+            'workspaceName' => $task->workspaceName->value,
+            'taskType' => $task->type->value,
+            'ticketReference' => $task->ticketReference,
+        ], static fn ($value) => $value !== null);
+    }
+
+    private function workspaceTitle(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): string
+    {
+        return $this->workspaceService->getWorkspaceMetadata($contentRepositoryId, $workspaceName)->title->value;
+    }
+
+    private function userLabel(UserId $userId): string
+    {
+        return $this->userService->findUserById($userId)?->getLabel() ?? $userId->value;
+    }
+
+    private function hasUserRoleAssignment(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $userId): bool
+    {
+        foreach ($this->workspaceService->getWorkspaceRoleAssignments($contentRepositoryId, $workspaceName) as $assignment) {
+            if ($assignment->subject->type === WorkspaceRoleSubjectType::USER && $assignment->subject->value === $userId->value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

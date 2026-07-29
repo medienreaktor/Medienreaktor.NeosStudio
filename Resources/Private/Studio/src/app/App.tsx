@@ -67,6 +67,7 @@ import {
 } from '@/features/panels/PanelSystem'
 import { PreviewToolbar } from '@/features/preview/PreviewPane'
 import { ShortcutHost } from '@/features/shortcuts/ShortcutHost'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { UserMenu } from '@/features/profile/UserMenu'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
@@ -698,7 +699,10 @@ export function App() {
                         />
                       </svg>
 
-                      <UserMenu />
+                      <div className="flex items-center gap-1">
+                        <NotificationBell />
+                        <UserMenu />
+                      </div>
                     </div>
                   </SidebarHeader>
                   <SidebarContent className="overflow-hidden p-2">

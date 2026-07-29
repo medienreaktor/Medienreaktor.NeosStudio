@@ -31,6 +31,7 @@ import { registerBuiltinInspectorViews } from './features/inspector/views'
 import { registerBuiltinLinkTypes } from './features/links/builtin'
 import { registerBuiltinModals } from './features/modals/builtin'
 import { registerBuiltinPanels } from './features/panels/builtin'
+import { registerBuiltinTaskWorkflow } from './features/tasks/builtin'
 import { registerBuiltinPropertyEditors } from './features/inspector/editors'
 import { registerBuiltinValidators } from './features/inspector/validators'
 import { installPluginApiGlobals } from './plugin-api'
@@ -51,6 +52,8 @@ registerBuiltinInspectorViews()
 registerBuiltinValidators()
 registerBuiltinLinkTypes()
 registerBuiltinModals()
+// After the other builtins so the Tasks tab lands after their main-region tabs.
+registerBuiltinTaskWorkflow()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

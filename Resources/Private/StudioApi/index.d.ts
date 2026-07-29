@@ -2,6 +2,20 @@
 
 import * as React$1 from 'react';
 
+export declare class ApiError extends Error {
+	readonly status: number;
+	readonly body: unknown;
+	constructor(status: number, body: unknown);
+}
+/**
+ * Typed request for query/mutation hooks: resolves with the parsed body on
+ * 2xx and throws ApiError otherwise, so TanStack Query sees proper error
+ * states (and the retry logic can distinguish 4xx from 5xx).
+ */
+export declare function apiFetch<T>(path: string, init?: {
+	method?: string;
+	body?: unknown;
+}): Promise<T>;
 export interface SerializedPropertyValue {
 	value: unknown;
 	type: string;
@@ -90,6 +104,12 @@ export type StudioContextValue = {
 	site: Site | null;
 	/** The active workspace's name, or null while workspaces load. */
 	workspaceName: string | null;
+	/**
+	 * The own personal workspace's name, or null while workspaces load. The
+	 * active workspace is either this one or a shared workspace being edited
+	 * collaboratively.
+	 */
+	personalWorkspaceName: string | null;
 	/** The document shown in the preview and selected in the document tree. */
 	selectedDocument: NodeDto | null;
 	/** The node under inspection - a document or a content node. */
@@ -119,6 +139,20 @@ export type StudioContextValue = {
 	 * document, switching the active dimension to match it when they differ.
 	 */
 	navigateToNode: (address: string) => void;
+	/**
+	 * Show a document that lives in another workspace: moves the editing
+	 * context to that workspace first (personal, or a writable shared one),
+	 * then navigates to the address - which is already bound to it. A no-op
+	 * context switch when the workspace is already active.
+	 */
+	navigateToNodeInWorkspace: (address: string, workspaceName: string) => void;
+	/**
+	 * Checkout a workspace: move the editing context into it - back to the
+	 * personal one, or into a writable shared one (collaborative editing).
+	 * Client-side only (no CR command); the selected document follows into the
+	 * target workspace's subgraph. A no-op when already checked out.
+	 */
+	checkoutWorkspace: (workspaceName: string) => void;
 	/**
 	 * Report inline edits made inside the preview: bumps outliner labels without
 	 * the refetch/reload the inspector path needs (the iframe already rendered
@@ -150,6 +184,11 @@ export type StudioContextValue = {
 	workspaceContentChanged: () => void;
 };
 export declare function useStudio(): StudioContextValue;
+/** Deterministic palette pick per user id - the same user gets the same
+ * color on every client without any coordination. */
+export declare function presenceColor(userId: string): string;
+/** "Jane Doe" -> "JD"; single names give one letter, empty names "?". */
+export declare function presenceInitials(name: string): string;
 /**
  * Shared geometry for floating panel groups: viewport clamping and
  * edge/corner resizing.
@@ -177,8 +216,10 @@ export type DockRegion = "sidebar" | "main" | "secondary";
 export type PanelPlacement = 
 /**
  * Docked in a region (sidebar/main/secondary), appended below existing
- * groups. Panels default-placed in the same pass that share a `group` key
- * join one group (as tabs) instead of each opening their own.
+ * groups. Panels sharing a `group` key join one group (as tabs) instead of
+ * each opening their own - including a group its siblings already occupy in
+ * a stored layout, so a panel added later lands next to them rather than in
+ * a new group of its own.
  */
 {
 	kind: "dock";
@@ -627,6 +668,99 @@ declare class KeyboardShortcutRegistry {
  * unmounting unregisters - a shortcut only exists while its action does.
  */
 export declare function useKeyboardShortcut(definition: KeyboardShortcutDefinition): void;
+export interface Workspace {
+	name: string;
+	baseWorkspace: string | null;
+	title: string;
+	description: string;
+	classification: string;
+	owner: string | null;
+	hasPublishableChanges: boolean;
+	/** OUTDATED = the base workspace has newer changes; a rebase would pull them in. */
+	status: "UP_TO_DATE" | "OUTDATED";
+	/**
+	 * The account's permissions on this workspace. `manage` covers workspace
+	 * metadata and role changes (not publishing); `publish` is derived - it
+	 * means write access on the base workspace, which is what the content
+	 * repository checks when publishing.
+	 */
+	permissions: {
+		read: boolean;
+		write: boolean;
+		manage: boolean;
+		publish: boolean;
+	};
+	/**
+	 * Namespaced contributions from backend packages (workspace data enrichers
+	 * registered with Medienreaktor.NeosApi) - e.g. a task-workflow package's
+	 * task metadata. Absence of a key means "not applicable". Consumed by
+	 * workspace decorators (see features/workspaces/decorators.ts), which know
+	 * their own key's shape; the shell treats it as opaque.
+	 */
+	extensions: Record<string, unknown>;
+}
+/**
+ * The workspace-decorator registry: plugins visually mark workspaces the shell
+ * knows nothing about - a task-workflow package badges its "TASK" branches,
+ * a release package its scheduled workspaces, and every surface listing
+ * workspaces (switcher, administration, graph) shows the same marks.
+ *
+ * Decorators are pure data-driven functions over the workspace object: the
+ * backend contributes package-specific data via the API's workspace
+ * "extensions" object (see WorkspaceDataEnricherInterface in
+ * Medienreaktor.NeosApi), and a decorator reads it back out. The shell never
+ * learns what a decoration means.
+ *
+ * Modelled on the other registries (see features/modals/registry.ts): a small
+ * observable store, register-replaces-by-id, stable snapshot for
+ * useSyncExternalStore.
+ */
+/** One visual mark a decorator attaches to a workspace. */
+export interface WorkspaceDecoration {
+	/** Short badge text, e.g. "TASK". Keep it to one word - it renders inline. */
+	badge: string;
+	/** Badge color (any CSS color); defaults to a neutral tone. */
+	color?: string;
+	/** Tooltip / accessible description, e.g. "Task branch, assigned to …". */
+	label?: string;
+	/** Optional Font Awesome icon name (bare, e.g. "clipboard-check") rendered before the badge text. */
+	icon?: string;
+	/**
+	 * Move the workspace out of the standard entries of the workspace switcher
+	 * into a dedicated group with this label (e.g. "Tasks & Features").
+	 * Workspaces sharing the same label share one group; its entries check the
+	 * workspace out for collaborative editing. Omit to leave the workspace in
+	 * the standard publish-target/collaborative entries.
+	 */
+	switcherGroup?: string;
+}
+export interface WorkspaceDecoratorDefinition {
+	/** Unique id. Third-party entries should namespace ('vendor.package:task'). */
+	id: string;
+	/** Sort weight; lower renders first. Defaults to 100. */
+	order?: number;
+	/**
+	 * Return the decoration for this workspace, or null for "not applicable".
+	 * Called during render for every listed workspace - must be cheap and pure
+	 * (derive from the workspace object, typically its `extensions`).
+	 */
+	decorate: (workspace: Workspace) => WorkspaceDecoration | null;
+}
+declare class WorkspaceDecoratorRegistry {
+	private definitions;
+	private listeners;
+	private snapshot;
+	/** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
+	register(definition: WorkspaceDecoratorDefinition): void;
+	unregister(id: string): void;
+	/**
+	 * Stable snapshot sorted by `order` then registration order - changes
+	 * identity only on (un)register, so useSyncExternalStore stays quiet.
+	 */
+	getAll(): WorkspaceDecoratorDefinition[];
+	subscribe(listener: () => void): () => void;
+	private emit;
+}
 /**
  * The API version a plugin can read to feature-detect. Bump on a
  * breaking change to any exported type or registry contract; plugins that
@@ -654,6 +788,12 @@ export declare const modals: ModalRegistry<SettingsDialogDefinition>;
  * the shortcut overview (Shift+?).
  */
 export declare const shortcuts: KeyboardShortcutRegistry;
+/**
+ * Register/unregister workspace decorators - visual marks (badges) on
+ * workspaces in the switcher and administration, derived from the workspace's
+ * `extensions` data. See {@link WorkspaceDecoratorDefinition}.
+ */
+export declare const workspaceDecorators: WorkspaceDecoratorRegistry;
 /** Options accepted by the toast helpers. */
 export interface ToastOptions {
 	/** Bold heading; defaults to a per-kind label ("Success", "Error", …). */
@@ -686,10 +826,15 @@ export interface NeosStudioPluginApi {
 	links: typeof links;
 	modals: typeof modals;
 	shortcuts: typeof shortcuts;
+	workspaceDecorators: typeof workspaceDecorators;
 	isMacPlatform: typeof isMacPlatform;
 	useStudio: typeof useStudio;
 	useKeyboardShortcut: typeof useKeyboardShortcut;
 	toast: typeof toast;
+	apiFetch: typeof apiFetch;
+	ApiError: typeof ApiError;
+	presenceColor: typeof presenceColor;
+	presenceInitials: typeof presenceInitials;
 }
 /**
  * Publish React and the plugin API on `window` so externalised plugin bundles

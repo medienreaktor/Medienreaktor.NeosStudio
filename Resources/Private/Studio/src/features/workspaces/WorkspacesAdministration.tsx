@@ -30,6 +30,7 @@ import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog'
+import { WorkspaceDecorationBadges } from './WorkspaceDecorationBadges'
 import { EditWorkspaceDialog } from './EditWorkspaceDialog'
 import { WorkspaceRolesDialog } from './WorkspaceRolesDialog'
 
@@ -263,9 +264,12 @@ function WorkspaceRow({
         )}
       </TableCell>
       <TableCell>
-        <Badge variant="secondary">
-          {classificationLabel(workspace.classification)}
-        </Badge>
+        <span className="inline-flex items-center gap-1.5">
+          <Badge variant="secondary">
+            {classificationLabel(workspace.classification)}
+          </Badge>
+          <WorkspaceDecorationBadges workspace={workspace} />
+        </span>
       </TableCell>
       <TableCell className="text-neutral-400">
         {ownerLabel ?? <span className="text-neutral-500">—</span>}

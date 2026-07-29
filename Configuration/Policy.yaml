@@ -8,6 +8,32 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:Preview':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->showAction())'
 
+    # The authenticated user's own notifications (list + mark read). Strictly
+    # per-user - the controller resolves the recipient from the account, so
+    # granting this to all editors exposes nothing across users.
+    'Medienreaktor.NeosStudio:Api.Notifications':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\NotificationsController->.*Action())'
+
+    # --- Task workflow -------------------------------------------------------
+    # Workspace-level authorization is NOT handled by these targets: the
+    # controller checks the acting user's per-workspace permissions (creator
+    # and reviewers manage, the assignee writes), and the content repository
+    # enforces publish rights structurally.
+
+    # Read the task list (filtered to workspaces the account may read).
+    'Medienreaktor.NeosStudio:Api.Tasks.Read':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->indexAction())'
+
+    # Create tasks and drive the workflow (assign, submit, reopen, delete).
+    'Medienreaktor.NeosStudio:Api.Tasks.Write':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|assign|submit|reopen|delete)Action())'
+
+    # Approve a task: publishes the task workspace to its base. The content
+    # repository additionally requires write access on the base workspace
+    # (e.g. Neos.Neos:LivePublisher when the base is live).
+    'Medienreaktor.NeosStudio:Api.Tasks.Approve':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->approveAction())'
+
   'Neos\Neos\Security\Authorization\Privilege\ModulePrivilege':
     # Controls both visibility of the "Neos Studio" entry in the backend menu
     # and access to /neos/module/studio. Matcher must equal the module path.
@@ -27,4 +53,19 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Preview'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Notifications'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Read'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Write'
+        permission: GRANT
+
+  'Neos.Neos:LivePublisher':
+    privileges:
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Approve'
         permission: GRANT

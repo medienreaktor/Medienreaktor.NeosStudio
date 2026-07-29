@@ -12,7 +12,33 @@ Medienreaktor:
     #     position: 100                                                     # optional load order
     plugins: []
 
+    taskWorkflow:
+      # Flow role whose members act as reviewers ("super editors") for task
+      # workspaces: they get MANAGER on every task workspace and are notified
+      # when a task is submitted for review. LivePublisher is the natural
+      # default - whoever may publish to live may approve tasks.
+      reviewerRole: 'Neos.Neos:LivePublisher'
+
+  # Contribute the task metadata to the NeosApi workspace JSON: appears as
+  # workspace.extensions['Medienreaktor.NeosStudio:task'] and drives the task
+  # badges and the Tasks board in the shell.
+  NeosApi:
+    workspaceDataEnrichers:
+      'Medienreaktor.NeosStudio:task':
+        enricher: 'Medienreaktor\NeosStudio\Service\TaskWorkspaceDataEnricher'
+
 Neos:
+  # React to workspace lifecycle events (published -> task DONE +
+  # notifications, removed -> sidecar cleanup) via a catch-up hook on the
+  # content graph projection.
+  ContentRepositoryRegistry:
+    presets:
+      'default':
+        contentGraphProjection:
+          catchUpHooks:
+            'Medienreaktor.NeosStudio:TaskWorkspaceLifecycle':
+              factoryObjectName: Medienreaktor\NeosStudio\CatchUpHook\TaskWorkspaceLifecycleHookFactory
+
   Neos:
     fusion:
       autoInclude:
@@ -66,9 +92,23 @@ Neos:
           # Require a logged-in Neos backend user to open the Studio shell.
           # Once loaded, the SPA obtains an OAuth token via the (first-party,
           # auto-approving) authorization flow using the same session.
+          # The Controller\Api sub-namespace is deliberately excluded: those
+          # endpoints are bearer-token only (see below), keeping them free of
+          # session/CSRF semantics - same setup as the NeosApi controllers.
           'Neos.Neos:Backend':
             requestPatterns:
               'Medienreaktor.NeosStudio:Controllers':
                 pattern: 'ControllerObjectName'
                 patternOptions:
-                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\.*'
+                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\).*'
+
+          # Put the Studio's own API endpoints (notifications) behind the same
+          # OAuth 2.1 bearer firewall as the NeosApi: request patterns of the
+          # same type are OR-combined, so this extends the provider to this
+          # package's Controller\Api namespace.
+          'Medienreaktor.NeosApi:Bearer':
+            requestPatterns:
+              'Medienreaktor.NeosStudio:ApiControllers':
+                pattern: 'ControllerObjectName'
+                patternOptions:
+                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\Api\.*'

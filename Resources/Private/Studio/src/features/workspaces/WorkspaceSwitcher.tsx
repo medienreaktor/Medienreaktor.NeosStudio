@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { ApiError } from '@/api/client'
 import { changeBaseWorkspace, type Workspace } from '@/api/workspaces'
@@ -6,6 +7,11 @@ import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+import {
+  decorationsFor,
+  useWorkspaceDecorators,
+} from '@/features/workspaces/decorators'
+import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
 import {
   Select,
   SelectContent,
@@ -97,18 +103,42 @@ export function WorkspaceSwitcher({
       ? `base:${personalWorkspace.baseWorkspace}`
       : undefined
 
-  const sharedTargets = targets.filter(
+  // Decorators can claim a workspace for a dedicated group (e.g. a task
+  // workflow's "Tasks & Features"): claimed workspaces leave the standard
+  // publish-target/collaborative entries and appear as checkout entries in
+  // their own labeled group below. The current base workspace is never
+  // claimed away - it is the selected value.
+  const decorators = useWorkspaceDecorators()
+  const groupOf = (workspace: Workspace): string | null =>
+    workspace.name === personalWorkspace.baseWorkspace
+      ? null
+      : (decorationsFor(workspace, decorators).find(
+          (decoration) => decoration.switcherGroup,
+        )?.switcherGroup ?? null)
+
+  const standardTargets = targets.filter((workspace) => !groupOf(workspace))
+  const sharedTargets = standardTargets.filter(
     (workspace) => workspace.classification === 'SHARED',
   )
+  const decoratorGroups = new Map<string, Workspace[]>()
+  for (const workspace of targets) {
+    const group = groupOf(workspace)
+    if (!group) continue
+    decoratorGroups.set(group, [...(decoratorGroups.get(group) ?? []), workspace])
+  }
 
   const items = [
-    ...targets.map((workspace) => ({
+    ...standardTargets.map((workspace) => ({
       value: `base:${workspace.name}`,
       label: workspaceLabel(workspace),
     })),
     ...sharedTargets.map((workspace) => ({
       value: `edit:${workspace.name}`,
       label: `${workspaceLabel(workspace)}`,
+    })),
+    ...[...decoratorGroups.values()].flat().map((workspace) => ({
+      value: `edit:${workspace.name}`,
+      label: workspaceLabel(workspace),
     })),
   ]
 
@@ -173,7 +203,7 @@ export function WorkspaceSwitcher({
             <SelectLabel>
               {t('workspace.publishTargetGroup', 'My workspace, publishing to')}
             </SelectLabel>
-            {targets.map((workspace) => {
+            {standardTargets.map((workspace) => {
               // Changing the base rebases the personal workspace, which the
               // CR refuses while it still holds publishable changes. The
               // current base stays enabled: it is the selected value, and in
@@ -189,6 +219,7 @@ export function WorkspaceSwitcher({
                   disabled={rebaseBlocked}
                 >
                   {workspaceLabel(workspace)}
+                  <WorkspaceDecorationBadges workspace={workspace} />
                   {rebaseBlocked && (
                     <span className="ml-1.5 text-xs text-neutral-400">
                       {t(
@@ -238,6 +269,7 @@ export function WorkspaceSwitcher({
                       aria-hidden
                     />
                     {workspaceLabel(workspace)}
+                    <WorkspaceDecorationBadges workspace={workspace} />
                     {!workspace.permissions.write && (
                       <span className="ml-1.5 text-xs text-neutral-400">
                         <i className="fas fa-lock" aria-hidden />{' '}
@@ -249,6 +281,32 @@ export function WorkspaceSwitcher({
               </SelectGroup>
             </>
           )}
+          {[...decoratorGroups.entries()].map(([group, workspaces]) => (
+            <React.Fragment key={`group:${group}`}>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>{group}</SelectLabel>
+                {workspaces.map((workspace) => (
+                  <SelectItem
+                    key={`edit:${workspace.name}`}
+                    value={`edit:${workspace.name}`}
+                    // Checking the workspace out means editing in it
+                    // directly, which needs write access.
+                    disabled={!workspace.permissions.write}
+                  >
+                    {workspaceLabel(workspace)}
+                    <WorkspaceDecorationBadges workspace={workspace} />
+                    {!workspace.permissions.write && (
+                      <span className="ml-1.5 text-xs text-neutral-400">
+                        <i className="fas fa-lock" aria-hidden />{' '}
+                        {t('workspace.readOnly', 'read-only')}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </React.Fragment>
+          ))}
         </SelectContent>
       </Select>
     </div>
