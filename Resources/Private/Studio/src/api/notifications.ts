@@ -53,3 +53,13 @@ export function markAllNotificationsRead() {
     body: { all: true },
   })
 }
+
+/**
+ * Clear the read notifications. Unread ones survive server-side - one may
+ * have arrived after the list was last rendered.
+ */
+export function clearReadNotifications() {
+  return apiFetch<{ removed: number; unreadCount: number }>('/notifications', {
+    method: 'DELETE',
+  })
+}

@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import {
+  clearReadNotifications,
   markAllNotificationsRead,
   markNotificationsRead,
   useNotifications,
@@ -51,6 +52,15 @@ export function NotificationBell() {
       }),
   })
 
+  const clear = useMutation({
+    mutationFn: clearReadNotifications,
+    onSuccess: () => void invalidate(),
+    onError: (error) =>
+      toast.error(error, {
+        title: t('notifications.clearFailed', 'Clearing failed'),
+      }),
+  })
+
   // Render nothing until the first poll resolves - the bell appears with the
   // rest of the header content once the session is established (like UserMenu).
   if (!data) return null
@@ -83,7 +93,9 @@ export function NotificationBell() {
             <span className="font-medium text-white">
               {t('notifications.label', 'Notifications')}
             </span>
-            {unreadCount > 0 && (
+            {/* One header action: while anything is unread, mark all read;
+                once everything is read, clear the list instead. */}
+            {unreadCount > 0 ? (
               <button
                 type="button"
                 className="cursor-pointer text-xs text-neutral-400 hover:text-white"
@@ -92,6 +104,17 @@ export function NotificationBell() {
               >
                 {t('notifications.markAllRead', 'Mark all as read')}
               </button>
+            ) : (
+              notifications.length > 0 && (
+                <button
+                  type="button"
+                  className="cursor-pointer text-xs text-neutral-400 hover:text-white"
+                  onClick={() => clear.mutate()}
+                  disabled={clear.isPending}
+                >
+                  {t('notifications.clear', 'Clear notifications')}
+                </button>
+              )
             )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

@@ -92,6 +92,27 @@ class NotificationsController extends AbstractApiController
         ]);
     }
 
+    /**
+     * DELETE /api/notifications - clear the user's read notifications.
+     *
+     * Only read ones: an unread notification may have arrived since the
+     * user last looked at the list, and clearing must not swallow it.
+     * CSRF skipped for the same reason as markReadAction.
+     */
+    #[Flow\SkipCsrfProtection]
+    public function clearAction(): string
+    {
+        $this->requireScope('neos.write');
+        $userId = $this->requireUserId();
+
+        $removed = $this->notificationRepository->removeReadForUser($userId->value);
+
+        return $this->json([
+            'removed' => $removed,
+            'unreadCount' => $this->notificationRepository->countUnreadByUser($userId->value),
+        ]);
+    }
+
     private function requireUserId(): UserId
     {
         $user = $this->userService->getCurrentUser();

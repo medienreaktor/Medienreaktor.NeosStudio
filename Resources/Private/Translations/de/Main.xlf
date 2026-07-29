@@ -1310,6 +1310,14 @@
         <source>Search node types…</source>
         <target xml:lang="de">Node-Typen durchsuchen…</target>
       </trans-unit>
+      <trans-unit id="notifications.clear" xml:space="preserve">
+        <source>Clear notifications</source>
+        <target xml:lang="de">Benachrichtigungen löschen</target>
+      </trans-unit>
+      <trans-unit id="notifications.clearFailed" xml:space="preserve">
+        <source>Clearing failed</source>
+        <target xml:lang="de">Löschen fehlgeschlagen</target>
+      </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
         <target xml:lang="de">Keine Benachrichtigungen.</target>
@@ -1405,10 +1413,6 @@
       <trans-unit id="panel.title.workspaces" xml:space="preserve">
         <source>Workspaces</source>
         <target xml:lang="de">Arbeitsbereiche</target>
-      </trans-unit>
-      <trans-unit id="presence.justYou" xml:space="preserve">
-        <source>Just you</source>
-        <target xml:lang="de">Nur Du</target>
       </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>

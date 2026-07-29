@@ -66,6 +66,19 @@ class NotificationRepository extends Repository
     }
 
     /**
+     * Clear the user's already-read notifications; returns the number
+     * removed. Unread ones survive deliberately - one may have arrived
+     * after the user last looked, and "clear" must not eat it.
+     */
+    public function removeReadForUser(string $userId): int
+    {
+        return (int)$this->entityManager
+            ->createQuery(sprintf('DELETE FROM %s n WHERE n.userId = :userId AND n.readAt IS NOT NULL', Notification::class))
+            ->setParameter('userId', $userId)
+            ->execute();
+    }
+
+    /**
      * Housekeeping: remove notifications older than the given threshold.
      */
     public function removeOlderThan(\DateTimeImmutable $threshold): int

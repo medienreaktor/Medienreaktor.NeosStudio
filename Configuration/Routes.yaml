@@ -103,6 +103,16 @@
   httpMethods: ['POST']
 
 -
+  name: 'Studio API: clear read notifications'
+  uriPattern: 'api/notifications'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Notifications'
+    '@action': 'clear'
+    '@format': 'json'
+  httpMethods: ['DELETE']
+
+-
   name: 'Studio: document preview (iframe)'
   uriPattern: 'neos/studio/preview'
   defaults:
