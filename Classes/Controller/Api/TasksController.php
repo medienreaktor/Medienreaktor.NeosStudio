@@ -6,7 +6,6 @@ namespace Medienreaktor\NeosStudio\Controller\Api;
 
 use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
-use Medienreaktor\NeosStudio\Domain\Model\TaskType;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
@@ -63,7 +62,6 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function createAction(
         string $title,
-        string $type,
         string $description = '',
         string $baseWorkspace = 'live',
         ?string $assignee = null,
@@ -73,18 +71,8 @@ class TasksController extends AbstractApiController
         $this->requireScope('neos.write');
         $user = $this->requireUser();
 
-        $taskType = TaskType::tryFrom($type)
-            ?? $this->throwJsonStatus(400, 'invalid_task_type', sprintf('Unknown task type "%s", expected one of: %s.', $type, implode(', ', array_column(TaskType::cases(), 'value'))));
         if (trim($title) === '') {
             $this->throwJsonStatus(400, 'invalid_title', 'The title must not be empty.');
-        }
-        $dueDateValue = null;
-        if ($dueDate !== null && $dueDate !== '') {
-            try {
-                $dueDateValue = new \DateTimeImmutable($dueDate);
-            } catch (\Exception) {
-                $this->throwJsonStatus(400, 'invalid_due_date', 'The due date could not be parsed.');
-            }
         }
 
         $workspaceName = $this->taskWorkspaceService->createTaskWorkspace(
@@ -92,11 +80,10 @@ class TasksController extends AbstractApiController
             WorkspaceTitle::fromString(trim($title)),
             WorkspaceDescription::fromString(trim($description)),
             $this->parseWorkspaceName($baseWorkspace),
-            $taskType,
             $user->getId(),
             $assignee !== null && $assignee !== '' ? $this->parseUserId($assignee, 'invalid_assignee') : null,
             $ticketReference !== null && trim($ticketReference) !== '' ? trim($ticketReference) : null,
-            $dueDateValue,
+            $this->parseDueDate($dueDate),
         );
 
         $task = $this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $workspaceName);
@@ -144,20 +131,55 @@ class TasksController extends AbstractApiController
     }
 
     /**
-     * POST /api/tasks/{workspaceName}/approve - publish the task workspace to
-     * its base. The content repository additionally enforces write access on
-     * the base workspace (e.g. Neos.Neos:LivePublisher for live).
+     * POST /api/tasks/{workspaceName}/approve - mark the task done. Does NOT
+     * publish; publishing goes through the normal review flow (a full publish
+     * of the workspace completes the task automatically via the lifecycle
+     * hook, this endpoint covers the "publish selected changes, then close
+     * the task" flow).
      */
     #[Flow\SkipCsrfProtection]
     public function approveAction(string $workspaceName): string
     {
-        $this->requireScope('neos.publish');
+        $this->requireScope('neos.write');
         $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
         $this->requirePermission($name, manage: true);
 
-        $this->taskWorkspaceService->approveAndPublish($this->getContentRepositoryId(), $name);
+        $this->taskWorkspaceService->completeTask($this->getContentRepositoryId(), $name);
+
+        return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
+    }
+
+    /**
+     * POST /api/tasks/{workspaceName} - update the editable details (title,
+     * description, ticket reference, due date)
+     */
+    #[Flow\SkipCsrfProtection]
+    public function updateAction(
+        string $workspaceName,
+        string $title,
+        string $description = '',
+        ?string $ticketReference = null,
+        ?string $dueDate = null,
+    ): string {
+        $this->requireScope('neos.write');
+        $this->requireUser();
+        $name = $this->parseWorkspaceName($workspaceName);
+        $this->requireTask($name);
+        $this->requirePermission($name, manage: true);
+        if (trim($title) === '') {
+            $this->throwJsonStatus(400, 'invalid_title', 'The title must not be empty.');
+        }
+
+        $this->taskWorkspaceService->updateTask(
+            $this->getContentRepositoryId(),
+            $name,
+            WorkspaceTitle::fromString(trim($title)),
+            WorkspaceDescription::fromString(trim($description)),
+            $ticketReference !== null && trim($ticketReference) !== '' ? trim($ticketReference) : null,
+            $this->parseDueDate($dueDate),
+        );
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
     }
@@ -198,6 +220,18 @@ class TasksController extends AbstractApiController
     }
 
     // ------------------
+
+    private function parseDueDate(?string $dueDate): ?\DateTimeImmutable
+    {
+        if ($dueDate === null || $dueDate === '') {
+            return null;
+        }
+        try {
+            return new \DateTimeImmutable($dueDate);
+        } catch (\Exception) {
+            $this->throwJsonStatus(400, 'invalid_due_date', 'The due date could not be parsed.');
+        }
+    }
 
     private function parseWorkspaceName(string $workspaceName): WorkspaceName
     {
@@ -259,7 +293,6 @@ class TasksController extends AbstractApiController
 
         return [
             'workspaceName' => $task->workspaceName->value,
-            'type' => $task->type->value,
             'status' => $task->status->value,
             'assignee' => $task->assigneeUserId?->value,
             'createdBy' => $task->createdByUserId?->value,

@@ -4,22 +4,20 @@ import { queryKeys } from './keys'
 import type { Workspace } from './workspaces'
 
 /**
- * The task workflow: TASK/FEATURE branches are ordinary shared workspaces
- * plus sidecar metadata (see TasksController / TaskWorkspaceService). The
- * same metadata also rides on every workspace object as
+ * The task workflow: task branches are ordinary shared workspaces plus
+ * sidecar metadata (see TasksController / TaskWorkspaceService). The same
+ * metadata also rides on every workspace object as
  * workspace.extensions[TASK_EXTENSION_KEY].
  */
 
 /** The enricher's registration key inside workspace.extensions. */
 export const TASK_EXTENSION_KEY = 'Medienreaktor.NeosStudio:task'
 
-export type TaskType = 'TASK' | 'FEATURE'
 export type TaskStatus = 'OPEN' | 'IN_REVIEW' | 'DONE'
 
 /** One task, as served by GET /api/tasks. */
 export interface Task {
   workspaceName: string
-  type: TaskType
   status: TaskStatus
   assignee: string | null
   createdBy: string | null
@@ -32,7 +30,6 @@ export interface Task {
 
 /** The extensions contribution's shape (a subset of Task, per workspace). */
 export interface TaskExtension {
-  type: TaskType
   status: TaskStatus
   assignee: string | null
   assigneeLabel: string | null
@@ -58,7 +55,6 @@ export function useTasks(enabled = true) {
 
 export interface CreateTaskInput {
   title: string
-  type: TaskType
   description?: string
   baseWorkspace?: string
   assignee?: string
@@ -70,10 +66,28 @@ export function createTask(input: CreateTaskInput): Promise<{ task: Task }> {
   return apiFetch<{ task: Task }>('/tasks', { method: 'POST', body: input })
 }
 
+export interface UpdateTaskInput {
+  title: string
+  description?: string
+  ticketReference?: string
+  dueDate?: string
+}
+
+export function updateTask(
+  workspaceName: string,
+  input: UpdateTaskInput,
+): Promise<{ task: Task }> {
+  return apiFetch<{ task: Task }>(
+    `/tasks/${encodeURIComponent(workspaceName)}`,
+    { method: 'POST', body: input },
+  )
+}
+
 /**
  * The endpoint realizing a status transition - moving INTO a column drives
- * the workflow: to review = submit, back to open = reopen, to done = approve
- * (which publishes the workspace to its base).
+ * the workflow: to review = submit, back to open = reopen, to done = approve.
+ * Approving does NOT publish - the board opens the Review Changes dialog
+ * first and completes the task afterwards.
  */
 export function transitionTask(
   workspaceName: string,
@@ -106,16 +120,20 @@ export function deleteTask(workspaceName: string): Promise<{ deleted: string }> 
 
 /**
  * Which columns a task may be dragged to by the current account - mirroring
- * the server's checks so invalid drops never start: submit/reopen need write
- * access on the task workspace, approve needs manage (creator/reviewers)
- * plus publish rights on the base workspace.
+ * the server's rules so invalid drops never start:
+ *
+ * - OPEN -> IN_REVIEW (submit) and IN_REVIEW -> OPEN (reopen) need write
+ *   access on the task workspace (assignee or manager). A DONE task can only
+ *   be reopened, never re-submitted.
+ * - -> DONE opens the review flow (publish selected changes, then complete),
+ *   which needs manage (creator/reviewers) plus publish rights on the base.
  */
 export function allowedTargets(task: Task): TaskStatus[] {
   const permissions = task.workspace?.permissions
   if (!permissions) return []
   const targets: TaskStatus[] = []
   if (permissions.write && task.status !== 'OPEN') targets.push('OPEN')
-  if (permissions.write && task.status !== 'IN_REVIEW') targets.push('IN_REVIEW')
+  if (permissions.write && task.status === 'OPEN') targets.push('IN_REVIEW')
   if (permissions.manage && permissions.publish && task.status !== 'DONE') {
     targets.push('DONE')
   }

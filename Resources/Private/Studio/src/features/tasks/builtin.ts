@@ -24,7 +24,6 @@ export function registerBuiltinTaskWorkflow(): void {
       const task = taskOf(workspace)
       if (!task) return null
 
-      const feature = task.type === 'FEATURE'
       const status =
         task.status === 'IN_REVIEW'
           ? t('tasks.statusInReview', 'in review')
@@ -32,9 +31,7 @@ export function registerBuiltinTaskWorkflow(): void {
             ? t('tasks.statusDone', 'done')
             : t('tasks.statusOpen', 'open')
       const label = [
-        feature
-          ? t('tasks.featureBranch', 'Feature branch')
-          : t('tasks.taskBranch', 'Task branch'),
+        t('tasks.taskBranch', 'Task branch'),
         status,
         task.assigneeLabel
           ? t('tasks.assignedTo', 'Assigned to {0}', [task.assigneeLabel])
@@ -45,18 +42,13 @@ export function registerBuiltinTaskWorkflow(): void {
         .join(' · ')
 
       return {
-        badge: task.type,
-        icon: feature ? 'code-branch' : 'clipboard-check',
-        // amber for tasks, emerald for feature branches; a review-ready
-        // branch turns blue so reviewers spot it in any listing.
-        color:
-          task.status === 'IN_REVIEW'
-            ? '#60a5fa'
-            : feature
-              ? '#34d399'
-              : '#fbbf24',
+        badge: t('tasks.badge', 'Task'),
+        icon: 'code-branch',
+        // emerald branch badge; a review-ready branch turns blue so
+        // reviewers spot it in any listing.
+        color: task.status === 'IN_REVIEW' ? '#60a5fa' : '#34d399',
         label,
-        switcherGroup: t('tasks.switcherGroup', 'Tasks & Features'),
+        switcherGroup: t('tasks.switcherGroup', 'Tasks'),
       }
     },
   })

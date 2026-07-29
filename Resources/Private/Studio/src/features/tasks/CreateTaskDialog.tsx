@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
-import { createTask, type TaskType } from '@/api/tasks'
+import { createTask } from '@/api/tasks'
 import { useUsers } from '@/api/users'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
@@ -47,7 +47,6 @@ export function CreateTaskDialog({
   const { data: workspacesData } = useWorkspaces(open)
 
   const [title, setTitle] = useState('')
-  const [type, setType] = useState<TaskType>('TASK')
   const [description, setDescription] = useState('')
   const [baseWorkspace, setBaseWorkspace] = useState('live')
   const [assignee, setAssignee] = useState(UNASSIGNED)
@@ -57,7 +56,6 @@ export function CreateTaskDialog({
   useEffect(() => {
     if (open) {
       setTitle('')
-      setType('TASK')
       setDescription('')
       setBaseWorkspace('live')
       setAssignee(UNASSIGNED)
@@ -66,10 +64,6 @@ export function CreateTaskDialog({
     }
   }, [open])
 
-  const typeItems = [
-    { value: 'TASK', label: t('tasks.typeTask', 'Task') },
-    { value: 'FEATURE', label: t('tasks.typeFeature', 'Feature') },
-  ]
   // Base candidates: live and shared workspaces (incl. other task branches -
   // stacking a task on a feature branch is legitimate).
   const baseItems = (workspacesData?.workspaces ?? [])
@@ -100,7 +94,6 @@ export function CreateTaskDialog({
     mutationFn: () =>
       createTask({
         title: title.trim(),
-        type,
         ...(description.trim() !== '' ? { description: description.trim() } : {}),
         baseWorkspace,
         ...(assignee !== UNASSIGNED ? { assignee } : {}),
@@ -158,25 +151,19 @@ export function CreateTaskDialog({
             />
           </Field>
 
+          <Field
+            label={t('tasks.description', 'Description')}
+            htmlFor="task-create-description"
+          >
+            <Textarea
+              id="task-create-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={2}
+            />
+          </Field>
+
           <div className="grid grid-cols-2 gap-4">
-            <Field label={t('tasks.type', 'Type')} htmlFor="task-create-type">
-              <Select
-                value={type}
-                onValueChange={(value) => setType(value as TaskType)}
-                items={typeItems}
-              >
-                <SelectTrigger id="task-create-type" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {typeItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
             <Field
               label={t('tasks.baseWorkspace', 'Based on')}
               htmlFor="task-create-base"
@@ -198,21 +185,6 @@ export function CreateTaskDialog({
                 </SelectContent>
               </Select>
             </Field>
-          </div>
-
-          <Field
-            label={t('tasks.description', 'Description')}
-            htmlFor="task-create-description"
-          >
-            <Textarea
-              id="task-create-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={2}
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
             <Field
               label={t('tasks.assignee', 'Assignee')}
               htmlFor="task-create-assignee"
@@ -234,6 +206,9 @@ export function CreateTaskDialog({
                 </SelectContent>
               </Select>
             </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <Field
               label={t('tasks.dueDate', 'Due date')}
               htmlFor="task-create-due"
@@ -245,20 +220,19 @@ export function CreateTaskDialog({
                 onChange={(event) => setDueDate(event.target.value)}
               />
             </Field>
+            <Field
+              label={t('tasks.ticketReference', 'Ticket reference')}
+              htmlFor="task-create-ticket"
+            >
+              <Input
+                id="task-create-ticket"
+                placeholder="PROJ-123"
+                value={ticketReference}
+                onChange={(event) => setTicketReference(event.target.value)}
+                autoComplete="off"
+              />
+            </Field>
           </div>
-
-          <Field
-            label={t('tasks.ticketReference', 'Ticket reference')}
-            htmlFor="task-create-ticket"
-          >
-            <Input
-              id="task-create-ticket"
-              placeholder="PROJ-123"
-              value={ticketReference}
-              onChange={(event) => setTicketReference(event.target.value)}
-              autoComplete="off"
-            />
-          </Field>
 
           <DialogFooter>
             <Button

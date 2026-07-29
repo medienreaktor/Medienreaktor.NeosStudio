@@ -171,6 +171,7 @@ export function ReviewChangesDialog({
   open,
   onOpenChange,
   onNavigate,
+  onPublished,
 }: {
   /** Every workspace the account can read (the workspace list). */
   workspaces: Workspace[]
@@ -189,6 +190,11 @@ export function ReviewChangesDialog({
    * when the reviewed workspace is not the active one.
    */
   onNavigate: (address: string, workspaceName: string) => void
+  /**
+   * Called after a publish succeeded, with the published source workspace -
+   * e.g. the Tasks board completing a task once its changes went out.
+   */
+  onPublished?: (sourceWorkspaceName: string) => void
 }) {
   // Reviewable sources: everything with a base to publish to. The list only
   // contains readable workspaces, so no extra permission filter is needed.
@@ -326,10 +332,16 @@ export function ReviewChangesDialog({
 
   const run = (kind: 'publish' | 'discard') => {
     const ids = selected.map((d) => d.documentAggregateId)
-    if (ids.length === 0) return
+    if (ids.length === 0 || !source) return
+    const sourceWorkspaceName = source.name
     operation.mutate(
       { kind, filter: { documents: ids } },
-      { onSuccess: () => setSelectedIds(new Set()) },
+      {
+        onSuccess: () => {
+          setSelectedIds(new Set())
+          if (kind === 'publish') onPublished?.(sourceWorkspaceName)
+        },
+      },
     )
   }
 

@@ -7,7 +7,6 @@ namespace Medienreaktor\NeosStudio\Domain\Repository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DbalException;
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
-use Medienreaktor\NeosStudio\Domain\Model\TaskType;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
@@ -38,7 +37,6 @@ final readonly class TaskWorkspaceRepository
             $this->dbal->insert(self::TABLE_NAME, [
                 'content_repository_id' => $contentRepositoryId->value,
                 'workspace_name' => $taskWorkspace->workspaceName->value,
-                'task_type' => $taskWorkspace->type->value,
                 'status' => $taskWorkspace->status->value,
                 'assignee_user_id' => $taskWorkspace->assigneeUserId?->value,
                 'created_by_user_id' => $taskWorkspace->createdByUserId?->value,
@@ -95,6 +93,17 @@ final readonly class TaskWorkspaceRepository
         ]);
     }
 
+    public function updateDetails(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, ?string $ticketReference, ?\DateTimeImmutable $dueDate): void
+    {
+        $this->dbal->update(self::TABLE_NAME, [
+            'ticket_reference' => $ticketReference,
+            'due_date' => $dueDate?->format('Y-m-d H:i:s'),
+        ], [
+            'content_repository_id' => $contentRepositoryId->value,
+            'workspace_name' => $workspaceName->value,
+        ]);
+    }
+
     public function updateAssignee(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, ?UserId $assigneeUserId): void
     {
         $this->dbal->update(self::TABLE_NAME, ['assignee_user_id' => $assigneeUserId?->value], [
@@ -118,7 +127,6 @@ final readonly class TaskWorkspaceRepository
     {
         return new TaskWorkspace(
             WorkspaceName::fromString($row['workspace_name']),
-            TaskType::from($row['task_type']),
             TaskStatus::from($row['status']),
             $row['assignee_user_id'] !== null ? UserId::fromString($row['assignee_user_id']) : null,
             $row['created_by_user_id'] !== null ? UserId::fromString($row['created_by_user_id']) : null,

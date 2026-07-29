@@ -19,7 +19,6 @@ final readonly class TaskWorkspace
 {
     public function __construct(
         public WorkspaceName $workspaceName,
-        public TaskType $type,
         public TaskStatus $status,
         public ?UserId $assigneeUserId,
         public ?UserId $createdByUserId,

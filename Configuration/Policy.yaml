@@ -24,13 +24,14 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:Api.Tasks.Read':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->indexAction())'
 
-    # Create tasks and drive the workflow (assign, submit, reopen, delete).
+    # Create tasks and drive the workflow (update, assign, submit, reopen,
+    # delete).
     'Medienreaktor.NeosStudio:Api.Tasks.Write':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|assign|submit|reopen|delete)Action())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete)Action())'
 
-    # Approve a task: publishes the task workspace to its base. The content
-    # repository additionally requires write access on the base workspace
-    # (e.g. Neos.Neos:LivePublisher when the base is live).
+    # Approve a task: mark it done after its changes were published through
+    # the review flow. Does not publish itself - publishing rights are
+    # enforced by the content repository on the publish endpoints.
     'Medienreaktor.NeosStudio:Api.Tasks.Approve':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->approveAction())'
 

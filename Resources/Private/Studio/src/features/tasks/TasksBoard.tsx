@@ -12,6 +12,7 @@ import {
   type TaskStatus,
 } from '@/api/tasks'
 import { useUsers } from '@/api/users'
+import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { Badge } from '@/components/ui/badge'
@@ -31,9 +32,10 @@ import {
   presenceColor,
   presenceInitials,
 } from '@/features/collaboration/presenceColors'
+import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import { translate as t } from '@/lib/i18n'
-import { AssignTaskDialog } from './AssignTaskDialog'
 import { CreateTaskDialog } from './CreateTaskDialog'
+import { TaskDetailDialog } from './TaskDetailDialog'
 
 const COLUMNS: { status: TaskStatus; title: () => string }[] = [
   { status: 'OPEN', title: () => t('tasks.columnOpen', 'Open') },
@@ -41,26 +43,30 @@ const COLUMNS: { status: TaskStatus; title: () => string }[] = [
   { status: 'DONE', title: () => t('tasks.columnDone', 'Done') },
 ]
 
-const TYPE_COLORS: Record<Task['type'], string> = {
-  TASK: 'text-amber-400',
-  FEATURE: 'text-emerald-400',
-}
-
 /**
- * The Tasks board: one column per status, task/feature workspaces as cards.
- * Dragging a card into a column drives the workflow (submit / reopen /
- * approve+publish); what the current account may drag where mirrors the
- * server's permission checks (see allowedTargets). Cards check the workspace
- * out for direct (collaborative) editing.
+ * The Tasks board: one column per status, task branches as cards. Dragging a
+ * card drives the workflow: to "In review" = submit, back to "Open" = reopen.
+ * Dropping on "Done" deliberately does NOT publish blindly - it opens the
+ * Review Changes dialog on the task workspace so the reviewer picks what to
+ * publish; once a publish succeeded the task is completed and the card moves.
+ * Clicking a card opens the task detail for editing; checking the workspace
+ * out lives in the card menu and the detail dialog.
  */
 export function TasksBoard() {
   const studio = useStudio()
   const { data, isLoading, error } = useTasks()
   const { data: usersData } = useUsers()
+  const { data: workspacesData } = useWorkspaces()
   const [dragged, setDragged] = useState<Task | null>(null)
   const [creating, setCreating] = useState(false)
-  const [assigning, setAssigning] = useState<Task | null>(null)
+  const [editing, setEditing] = useState<Task | null>(null)
   const [deleting, setDeleting] = useState<Task | null>(null)
+  const [reviewing, setReviewing] = useState<Task | null>(null)
+
+  const workspaces = workspacesData?.workspaces ?? []
+  const activeWorkspace =
+    workspaces.find((workspace) => workspace.name === studio.workspaceName) ??
+    null
 
   const userLabel = (userId: string | null): string | null =>
     userId
@@ -75,16 +81,6 @@ export function TasksBoard() {
   const move = useMutation({
     mutationFn: ({ task, target }: { task: Task; target: TaskStatus }) =>
       transitionTask(task.workspaceName, target),
-    onSuccess: (_response, { target }) => {
-      if (target === 'DONE') {
-        // Approving published the workspace into its base: cached node reads
-        // and the preview may now be stale.
-        studio.workspaceContentChanged()
-        toast.success(
-          t('tasks.approved', 'The task has been approved and published.'),
-        )
-      }
-    },
     onError: (mutationError) =>
       toast.error(
         apiErrorDescription(
@@ -96,13 +92,40 @@ export function TasksBoard() {
     onSettled: invalidate,
   })
 
+  const onDrop = (task: Task, target: TaskStatus) => {
+    if (task.status === target) return
+    if (target === 'DONE') {
+      // Publishing is the reviewer's explicit decision: open the review
+      // dialog on the task workspace; completion follows the publish.
+      setReviewing(task)
+      return
+    }
+    move.mutate({ task, target })
+  }
+
+  const onPublished = (sourceWorkspaceName: string) => {
+    if (reviewing && sourceWorkspaceName === reviewing.workspaceName) {
+      move.mutate(
+        { task: reviewing, target: 'DONE' },
+        {
+          onSuccess: () =>
+            toast.success(
+              t('tasks.completed', 'The task has been completed.'),
+            ),
+        },
+      )
+      setReviewing(null)
+    }
+  }
+
   const checkout = (task: Task) => {
+    setEditing(null)
+    // Already the editing context: switching would no-op, so no toast either.
+    if (task.workspaceName === studio.workspaceName) return
     studio.checkoutWorkspace(task.workspaceName)
-    toast.info(
-      t('tasks.checkedOut', 'Now editing in "{0}".', [
-        task.workspace?.title || task.workspaceName,
-      ]),
-    )
+    // The same toast a switch via the workspace switcher shows - checking a
+    // task branch out IS that switch, just triggered from the board.
+    toast.success(t('workspace.switched', 'Workspace switched.'))
   }
 
   if (error) {
@@ -120,7 +143,7 @@ export function TasksBoard() {
         <span className="text-xs text-neutral-500">
           {t(
             'tasks.boardHint',
-            'Drag cards between columns to submit, reopen or approve & publish.',
+            'Drag cards between columns; dropping on "Done" opens the review to publish.',
           )}
         </span>
         <Button size="sm" onClick={() => setCreating(true)}>
@@ -149,9 +172,7 @@ export function TasksBoard() {
               }}
               onDrop={(event) => {
                 event.preventDefault()
-                if (dragged && droppable) {
-                  move.mutate({ task: dragged, target: column.status })
-                }
+                if (dragged && droppable) onDrop(dragged, column.status)
                 setDragged(null)
               }}
             >
@@ -175,12 +196,13 @@ export function TasksBoard() {
                   <TaskCard
                     key={task.workspaceName}
                     task={task}
+                    active={task.workspaceName === studio.workspaceName}
                     assigneeLabel={userLabel(task.assignee)}
                     draggable={allowedTargets(task).length > 0 && !move.isPending}
                     onDragStart={() => setDragged(task)}
                     onDragEnd={() => setDragged(null)}
+                    onOpen={() => setEditing(task)}
                     onCheckout={() => checkout(task)}
-                    onAssign={() => setAssigning(task)}
                     onDelete={() => setDeleting(task)}
                   />
                 ))}
@@ -191,10 +213,22 @@ export function TasksBoard() {
       </div>
 
       <CreateTaskDialog open={creating} onOpenChange={setCreating} />
-      <AssignTaskDialog
-        task={assigning}
-        onOpenChange={(open) => !open && setAssigning(null)}
+      <TaskDetailDialog
+        task={editing}
+        onOpenChange={(open) => !open && setEditing(null)}
+        onCheckout={checkout}
       />
+      {activeWorkspace && (
+        <ReviewChangesDialog
+          workspaces={workspaces}
+          activeWorkspace={activeWorkspace}
+          initialSourceName={reviewing?.workspaceName}
+          open={reviewing !== null}
+          onOpenChange={(open) => !open && setReviewing(null)}
+          onNavigate={studio.navigateToNodeInWorkspace}
+          onPublished={onPublished}
+        />
+      )}
       <ConfirmDialog
         open={deleting !== null}
         title={t('tasks.deleteTitle', 'Delete task?')}
@@ -218,21 +252,24 @@ export function TasksBoard() {
 
 function TaskCard({
   task,
+  active,
   assigneeLabel,
   draggable,
   onDragStart,
   onDragEnd,
+  onOpen,
   onCheckout,
-  onAssign,
   onDelete,
 }: {
   task: Task
+  /** The task workspace is the current editing context (checked out). */
+  active: boolean
   assigneeLabel: string | null
   draggable: boolean
   onDragStart: () => void
   onDragEnd: () => void
+  onOpen: () => void
   onCheckout: () => void
-  onAssign: () => void
   onDelete: () => void
 }) {
   const canWrite = task.workspace?.permissions.write ?? false
@@ -244,71 +281,68 @@ function TaskCard({
 
   return (
     <div
-      className={`flex flex-col gap-1.5 rounded-md border border-neutral-800 bg-neutral-800/60 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
-        draggable ? 'cursor-grab active:cursor-grabbing' : ''
-      }`}
+      className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-800/60 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
+        active
+          ? 'border-blue-500'
+          : 'border-neutral-800 hover:border-neutral-700'
+      } ${draggable ? 'active:cursor-grabbing' : ''}`}
+      title={
+        active
+          ? t('tasks.activeWorkspace', 'You are editing in this workspace')
+          : undefined
+      }
       draggable={draggable}
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = 'move'
         onDragStart()
       }}
       onDragEnd={onDragEnd}
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') onOpen()
+      }}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span
-          className={`rounded-sm border border-current px-1 py-px text-[0.58rem] font-bold tracking-wider select-none ${TYPE_COLORS[task.type]}`}
-        >
-          {task.type}
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-semibold text-white">
+          {task.workspace?.title || task.workspaceName}
         </span>
-        <span className="flex items-center gap-1">
-          {task.ticketReference && (
-            <span className="font-mono text-[0.65rem] text-neutral-500">
-              {task.ticketReference}
-            </span>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label={t('tasks.cardMenu', 'Task actions')}
-              className="flex size-5 cursor-pointer items-center justify-center rounded-sm text-neutral-500 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
-            >
-              <i className="fas fa-ellipsis-vertical text-[0.7rem]" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-44">
-              <DropdownMenuGroup>
-                <DropdownMenuItem disabled={!canWrite} onClick={onCheckout}>
-                  <i
-                    className="fas fa-arrow-right-to-bracket w-4 text-center"
-                    aria-hidden
-                  />
-                  {t('tasks.openWorkspace', 'Open workspace')}
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={!canManage} onClick={onAssign}>
-                  <i className="fas fa-user-pen w-4 text-center" aria-hidden />
-                  {t('tasks.assign', 'Assign…')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled={!canManage} onClick={onDelete}>
-                  <i className="fas fa-trash-can w-4 text-center" aria-hidden />
-                  {t('tasks.delete', 'Delete task')}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label={t('tasks.cardMenu', 'Task actions')}
+            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-neutral-500 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <i className="fas fa-ellipsis-vertical text-[0.7rem]" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="min-w-44"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={onOpen}>
+                <i className="fas fa-pen w-4 text-center" aria-hidden />
+                {t('tasks.editTask', 'Edit task…')}
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!canWrite || active} onClick={onCheckout}>
+                <i
+                  className="fas fa-code-branch w-4 text-center"
+                  aria-hidden
+                />
+                {t('tasks.checkoutWorkspace', 'Checkout workspace')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={!canManage} onClick={onDelete}>
+                <i className="fas fa-trash-can w-4 text-center" aria-hidden />
+                {t('tasks.delete', 'Delete task')}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <button
-        type="button"
-        className={`text-left font-semibold text-white ${canWrite ? 'cursor-pointer hover:underline' : ''}`}
-        onClick={() => canWrite && onCheckout()}
-        title={
-          canWrite
-            ? t('tasks.openWorkspaceHint', 'Check out and edit in this workspace')
-            : undefined
-        }
-      >
-        {task.workspace?.title || task.workspaceName}
-      </button>
       {task.workspace?.description && (
         <span className="line-clamp-2 text-xs text-neutral-400">
           {task.workspace.description}
@@ -335,6 +369,11 @@ function TaskCard({
               title={t('tasks.unassignedHint', 'Unassigned')}
             >
               ?
+            </span>
+          )}
+          {task.ticketReference && (
+            <span className="font-mono text-[0.65rem] text-neutral-500">
+              {task.ticketReference}
             </span>
           )}
           {task.dueDate && (

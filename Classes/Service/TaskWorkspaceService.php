@@ -6,7 +6,6 @@ namespace Medienreaktor\NeosStudio\Service;
 
 
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
-use Medienreaktor\NeosStudio\Domain\Model\TaskType;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
@@ -21,7 +20,6 @@ use Neos\Neos\Domain\Model\WorkspaceRoleSubject;
 use Neos\Neos\Domain\Model\WorkspaceRoleSubjectType;
 use Neos\Neos\Domain\Model\WorkspaceTitle;
 use Neos\Neos\Domain\Service\UserService;
-use Neos\Neos\Domain\Service\WorkspacePublishingService;
 use Neos\Neos\Domain\Service\WorkspaceService;
 
 /**
@@ -47,9 +45,6 @@ final class TaskWorkspaceService
 
     #[Flow\Inject]
     protected WorkspaceService $workspaceService;
-
-    #[Flow\Inject]
-    protected WorkspacePublishingService $workspacePublishingService;
 
     #[Flow\Inject]
     protected TaskWorkspaceRepository $taskWorkspaceRepository;
@@ -85,7 +80,6 @@ final class TaskWorkspaceService
         WorkspaceTitle $title,
         WorkspaceDescription $description,
         WorkspaceName $baseWorkspaceName,
-        TaskType $type,
         UserId $creatorUserId,
         ?UserId $assigneeUserId = null,
         ?string $ticketReference = null,
@@ -93,7 +87,7 @@ final class TaskWorkspaceService
     ): WorkspaceName {
         $workspaceName = $this->workspaceService->getUniqueWorkspaceName(
             $contentRepositoryId,
-            strtolower($type->value) . '-' . $title->value
+            'task-' . $title->value
         );
 
         $assignments = [
@@ -118,7 +112,6 @@ final class TaskWorkspaceService
 
         $task = new TaskWorkspace(
             $workspaceName,
-            $type,
             TaskStatus::OPEN,
             $assigneeUserId,
             $creatorUserId,
@@ -196,7 +189,7 @@ final class TaskWorkspaceService
             self::NOTIFICATION_SOURCE,
             'taskWorkflow.submitted',
             sprintf('Review requested: %s', $title),
-            sprintf('%s asked for a review of the %s "%s".', $this->userLabel($actingUserId), strtolower($task->type->value), $title),
+            sprintf('%s asked for a review of the task "%s".', $this->userLabel($actingUserId), $title),
             $this->payload($task),
             excludedUserIds: [$actingUserId],
         );
@@ -221,25 +214,43 @@ final class TaskWorkspaceService
             'taskWorkflow.reopened',
             sprintf('Reopened: %s', $title),
             $reason !== ''
-                ? sprintf('%s reopened the %s "%s": %s', $this->userLabel($actingUserId), strtolower($task->type->value), $title, $reason)
-                : sprintf('%s reopened the %s "%s".', $this->userLabel($actingUserId), strtolower($task->type->value), $title),
+                ? sprintf('%s reopened the task "%s": %s', $this->userLabel($actingUserId), $title, $reason)
+                : sprintf('%s reopened the task "%s".', $this->userLabel($actingUserId), $title),
             $this->payload($task),
         );
     }
 
     /**
-     * Approve the task: publish the workspace to its base. Status/DONE and
-     * the "published" notifications are handled by the lifecycle hook reacting
-     * to WorkspaceWasPublished - so publishes through other UIs (Workspace
-     * module, CLI) get the exact same treatment.
+     * Mark the task done. Deliberately does NOT publish: publishing happens
+     * through the normal review flow (Studio's Review Changes dialog, the
+     * Workspace module, CLI, ...) where the reviewer picks what to publish;
+     * completing is the editorial bookkeeping afterwards. A FULL publish of
+     * the workspace also completes the task automatically via the lifecycle
+     * hook.
      */
-    public function approveAndPublish(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
+    public function completeTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
     {
         $this->requireTask($contentRepositoryId, $workspaceName);
-        $this->workspacePublishingService->publishWorkspace($contentRepositoryId, $workspaceName);
-        // Safety net in case the lifecycle hook is disabled: the status must
-        // never stay IN_REVIEW after a successful publish. Idempotent.
         $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::DONE);
+    }
+
+    /**
+     * Update the editable task details: workspace title/description (through
+     * the WorkspaceService, which enforces manage permission) and the sidecar
+     * fields.
+     */
+    public function updateTask(
+        ContentRepositoryId $contentRepositoryId,
+        WorkspaceName $workspaceName,
+        WorkspaceTitle $title,
+        WorkspaceDescription $description,
+        ?string $ticketReference,
+        ?\DateTimeImmutable $dueDate,
+    ): void {
+        $this->requireTask($contentRepositoryId, $workspaceName);
+        $this->workspaceService->setWorkspaceTitle($contentRepositoryId, $workspaceName, $title);
+        $this->workspaceService->setWorkspaceDescription($contentRepositoryId, $workspaceName, $description);
+        $this->taskWorkspaceRepository->updateDetails($contentRepositoryId, $workspaceName, $ticketReference, $dueDate);
     }
 
     /**
@@ -273,7 +284,7 @@ final class TaskWorkspaceService
             self::NOTIFICATION_SOURCE,
             'taskWorkflow.assigned',
             sprintf('Assigned to you: %s', $title),
-            sprintf('You have been assigned the %s "%s".', strtolower($task->type->value), $title),
+            sprintf('You have been assigned the task "%s".', $title),
             $this->payload($task),
         );
     }
@@ -285,7 +296,6 @@ final class TaskWorkspaceService
     {
         return array_filter([
             'workspaceName' => $task->workspaceName->value,
-            'taskType' => $task->type->value,
             'ticketReference' => $task->ticketReference,
         ], static fn ($value) => $value !== null);
     }

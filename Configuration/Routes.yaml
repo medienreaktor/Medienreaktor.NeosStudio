@@ -52,6 +52,16 @@
   httpMethods: ['POST']
 
 -
+  name: 'Studio API: update task'
+  uriPattern: 'api/tasks/{workspaceName}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'update'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
   name: 'Studio API: reopen task'
   uriPattern: 'api/tasks/{workspaceName}/reopen'
   defaults:

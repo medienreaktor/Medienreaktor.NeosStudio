@@ -52,7 +52,6 @@ final class TaskWorkspaceDataEnricher implements WorkspaceDataEnricherInterface
         }
 
         return [
-            'type' => $task->type->value,
             'status' => $task->status->value,
             'assignee' => $task->assigneeUserId?->value,
             'assigneeLabel' => $task->assigneeUserId !== null ? $this->userLabel($task->assigneeUserId) : null,
