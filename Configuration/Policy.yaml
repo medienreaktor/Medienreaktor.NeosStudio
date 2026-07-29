@@ -8,6 +8,34 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:Preview':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->showAction())'
 
+    # The authenticated user's own notifications (list + mark read). Strictly
+    # per-user - the controller resolves the recipient from the account, so
+    # granting this to all editors exposes nothing across users.
+    'Medienreaktor.NeosStudio:Api.Notifications':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\NotificationsController->.*Action())'
+
+    # --- Task workflow -------------------------------------------------------
+    # Workspace-level authorization is NOT handled by these targets: the
+    # controller checks the acting user's per-workspace permissions (creator
+    # and reviewers manage, the assignee writes), and the content repository
+    # enforces publish rights structurally.
+
+    # Read the task list (filtered to workspaces the account may read) and a
+    # task's comment thread (read access on the workspace checked in-action).
+    'Medienreaktor.NeosStudio:Api.Tasks.Read':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(index|comments)Action())'
+
+    # Create tasks and drive the workflow (update, assign, submit, reopen,
+    # delete, comment).
+    'Medienreaktor.NeosStudio:Api.Tasks.Write':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete|addComment)Action())'
+
+    # Approve a task: mark it done after its changes were published through
+    # the review flow. Does not publish itself - publishing rights are
+    # enforced by the content repository on the publish endpoints.
+    'Medienreaktor.NeosStudio:Api.Tasks.Approve':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->approveAction())'
+
   'Neos\Neos\Security\Authorization\Privilege\ModulePrivilege':
     # Controls both visibility of the "Neos Studio" entry in the backend menu
     # and access to /neos/module/studio. Matcher must equal the module path.
@@ -27,4 +55,19 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Preview'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Notifications'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Read'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Write'
+        permission: GRANT
+
+  'Neos.Neos:LivePublisher':
+    privileges:
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Approve'
         permission: GRANT

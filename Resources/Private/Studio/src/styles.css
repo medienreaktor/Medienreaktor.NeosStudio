@@ -18,8 +18,13 @@
  * Purple is the exception: the brand value #28234c (the logo's dark indigo)
  * is a 900-level lightness, so it anchors the ramp at shade 900 and the rest
  * extrapolates along its hue. Used for dimension shine-through indicators.
+ *
+ * `static`: emit every variable, not just the ones Tailwind sees in a
+ * utility - runtime code (task status colors, workspace decorators from
+ * plugins) references shades via var(--color-...) strings the scanner
+ * cannot detect.
  */
-@theme {
+@theme static {
   --color-neutral-50: #f7f7f7;
   --color-neutral-100: #ededed;
   --color-neutral-200: #dddddd;
@@ -68,17 +73,17 @@
   --color-green-900: #08421a;
   --color-green-950: #04260e;
 
-  --color-purple-50: #f2f0fa;
-  --color-purple-100: #e2def4;
-  --color-purple-200: #c8c1ea;
-  --color-purple-300: #a89ddc;
-  --color-purple-400: #8b7cce;
-  --color-purple-500: #7161c0;
-  --color-purple-600: #5a4aa6;
-  --color-purple-700: #483a88;
-  --color-purple-800: #392e6b;
-  --color-purple-900: #28234c;
-  --color-purple-950: #1a1633;
+  --color-purple-50: #f4f3ff;
+  --color-purple-100: #ebe9fe;
+  --color-purple-200: #d9d7fd;
+  --color-purple-300: #bcb6fc;
+  --color-purple-400: #9b8df8;
+  --color-purple-500: #7b5ff3;
+  --color-purple-600: #7047eb;
+  --color-purple-700: #592bd6;
+  --color-purple-800: #4b24b3;
+  --color-purple-900: #3f1f93;
+  --color-purple-950: #261b4a;
 
   --color-red-50: #fff1ec;
   --color-red-100: #ffdccf;

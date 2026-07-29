@@ -1,3 +1,137 @@
+#
+# Studio shell API (OAuth bearer secured, same firewall as Medienreaktor.NeosApi)
+#
+-
+  name: 'Studio API: tasks list'
+  uriPattern: 'api/tasks'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'index'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: create task'
+  uriPattern: 'api/tasks'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'create'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: assign task'
+  uriPattern: 'api/tasks/{workspaceName}/assign'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'assign'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: task comments'
+  uriPattern: 'api/tasks/{workspaceName}/comments'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'comments'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: add task comment'
+  uriPattern: 'api/tasks/{workspaceName}/comments'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'addComment'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: submit task for review'
+  uriPattern: 'api/tasks/{workspaceName}/submit'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'submit'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: approve task (publish)'
+  uriPattern: 'api/tasks/{workspaceName}/approve'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'approve'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: update task'
+  uriPattern: 'api/tasks/{workspaceName}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'update'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: reopen task'
+  uriPattern: 'api/tasks/{workspaceName}/reopen'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'reopen'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: delete task'
+  uriPattern: 'api/tasks/{workspaceName}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Tasks'
+    '@action': 'delete'
+    '@format': 'json'
+  httpMethods: ['DELETE']
+
+-
+  name: 'Studio API: notifications'
+  uriPattern: 'api/notifications'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Notifications'
+    '@action': 'index'
+    '@format': 'json'
+  httpMethods: ['GET']
+  appendExceedingArguments: true
+
+-
+  name: 'Studio API: mark notifications read'
+  uriPattern: 'api/notifications/read'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Notifications'
+    '@action': 'markRead'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: clear read notifications'
+  uriPattern: 'api/notifications'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\Notifications'
+    '@action': 'clear'
+    '@format': 'json'
+  httpMethods: ['DELETE']
+
 -
   name: 'Studio: document preview (iframe)'
   uriPattern: 'neos/studio/preview'

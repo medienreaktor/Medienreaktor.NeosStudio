@@ -39,6 +39,13 @@ export const queryKeys = {
     schema: (name: string) => ['nodeTypes', 'schema', name] as const,
   },
   dimensions: ['dimensions'] as const,
+  /** The user's Studio notifications (the bell) - one list, polled. */
+  notifications: ['notifications'] as const,
+  /** Task/feature workspaces (the Tasks board) - one list, polled. */
+  tasks: ['tasks'] as const,
+  /** One task's comment thread - under `tasks` so invalidating tasks covers it. */
+  taskComments: (workspaceName: string) =>
+    ['tasks', workspaceName, 'comments'] as const,
   users: ['users'] as const,
   /** The assignable-role catalog - nested under `users` so invalidating users covers it. */
   userRoles: ['users', 'roles'] as const,

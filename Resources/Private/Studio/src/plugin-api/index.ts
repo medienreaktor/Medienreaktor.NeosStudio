@@ -28,8 +28,13 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
+import { apiFetch, ApiError } from '@/api/client'
 import { useStudio } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
+import {
+  presenceColor,
+  presenceInitials,
+} from '@/features/collaboration/presenceColors'
 import { PanelRegistry, panelRegistry } from '@/features/panels/registry'
 import {
   PropertyEditorRegistry,
@@ -58,6 +63,10 @@ import {
   isMacPlatform,
 } from '@/features/shortcuts/registry'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
+import {
+  WorkspaceDecoratorRegistry,
+  workspaceDecoratorRegistry,
+} from '@/features/workspaces/decorators'
 
 /**
  * The API version a plugin can read to feature-detect. Bump on a
@@ -92,8 +101,32 @@ export const modals: ModalRegistry<SettingsDialogDefinition> =
  * the shortcut overview (Shift+?).
  */
 export const shortcuts: KeyboardShortcutRegistry = keyboardShortcutRegistry
+/**
+ * Register/unregister workspace decorators - visual marks (badges) on
+ * workspaces in the switcher and administration, derived from the workspace's
+ * `extensions` data. See {@link WorkspaceDecoratorDefinition}.
+ */
+export const workspaceDecorators: WorkspaceDecoratorRegistry =
+  workspaceDecoratorRegistry
 
 export { useStudio, useKeyboardShortcut }
+
+/**
+ * Typed request against the Studio REST API, sharing the shell's OAuth
+ * session (bearer token, single-flighted refresh). Paths are relative to the
+ * API base ('/tasks' -> '<apiBase>/tasks'), so a plugin package's own
+ * endpoints behind the same firewall are reachable exactly like the
+ * built-in ones. Resolves with the parsed JSON body on 2xx and throws
+ * {@link ApiError} otherwise.
+ */
+export { apiFetch, ApiError }
+
+/**
+ * The shell's per-user avatar scheme (initials avatars colored by user id) -
+ * use these so people look the same in a plugin as they do in presence
+ * indicators and the user menu.
+ */
+export { presenceColor, presenceInitials }
 
 /**
  * True on macOS/iOS - for platform-dependent combos. 'mod' already resolves
@@ -160,6 +193,11 @@ export type {
   SettingsDialogDefinition,
 } from '@/features/modals/registry'
 export type { KeyboardShortcutDefinition } from '@/features/shortcuts/registry'
+export type {
+  WorkspaceDecoration,
+  WorkspaceDecoratorDefinition,
+} from '@/features/workspaces/decorators'
+export type { Workspace } from '@/api/workspaces'
 
 /** The shape published at `window.NeosStudio` for plugin bundles to consume. */
 export interface NeosStudioPluginApi {
@@ -171,10 +209,15 @@ export interface NeosStudioPluginApi {
   links: typeof links
   modals: typeof modals
   shortcuts: typeof shortcuts
+  workspaceDecorators: typeof workspaceDecorators
   isMacPlatform: typeof isMacPlatform
   useStudio: typeof useStudio
   useKeyboardShortcut: typeof useKeyboardShortcut
   toast: typeof toast
+  apiFetch: typeof apiFetch
+  ApiError: typeof ApiError
+  presenceColor: typeof presenceColor
+  presenceInitials: typeof presenceInitials
 }
 
 declare global {
@@ -204,9 +247,14 @@ export function installPluginApiGlobals(): void {
     links,
     modals,
     shortcuts,
+    workspaceDecorators,
     isMacPlatform,
     useStudio,
     useKeyboardShortcut,
     toast,
+    apiFetch,
+    ApiError,
+    presenceColor,
+    presenceInitials,
   }
 }

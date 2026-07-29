@@ -284,6 +284,27 @@ function mapGroups(
   return { docks, floating: layout.floating.map(update), hidden: layout.hidden }
 }
 
+/**
+ * Bring a panel on screen wherever it currently lives: un-hide it if hidden,
+ * make it its group's active tab, expand a collapsed group, and raise a
+ * floating group. Used by programmatic navigation (e.g. a notification
+ * jumping to the Tasks board).
+ */
+export function revealPanel(
+  layout: PanelLayout,
+  panel: PanelId,
+  definitions: PanelDefinition[],
+): PanelLayout {
+  let next = layout.hidden.includes(panel)
+    ? showPanel(layout, panel, null, definitions)
+    : layout
+  next = mapGroups(next, (g) =>
+    g.panels.includes(panel) ? { ...g, active: panel, collapsed: false } : g,
+  )
+  const floatingGroup = next.floating.find((g) => g.panels.includes(panel))
+  return floatingGroup ? bringToFront(next, floatingGroup.id) : next
+}
+
 export function activatePanel(
   layout: PanelLayout,
   groupId: string,

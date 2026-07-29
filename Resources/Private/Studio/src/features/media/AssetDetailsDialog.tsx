@@ -474,7 +474,7 @@ function AssignTree({
       <PopoverTrigger className="mt-1 flex h-7 w-full items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-700/30 px-2 text-xs text-neutral-300 hover:bg-neutral-700/50">
         <span className="truncate">{placeholder}</span>
         <i
-          className="fas fa-chevron-down ml-auto shrink-0 text-[0.75rem] text-neutral-500"
+          className="fas fa-chevron-down ml-auto shrink-0 text-[0.75rem] text-white/50"
           aria-hidden
         />
       </PopoverTrigger>

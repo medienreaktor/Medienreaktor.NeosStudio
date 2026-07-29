@@ -24,6 +24,14 @@ export interface Workspace {
     manage: boolean
     publish: boolean
   }
+  /**
+   * Namespaced contributions from backend packages (workspace data enrichers
+   * registered with Medienreaktor.NeosApi) - e.g. a task-workflow package's
+   * task metadata. Absence of a key means "not applicable". Consumed by
+   * workspace decorators (see features/workspaces/decorators.ts), which know
+   * their own key's shape; the shell treats it as opaque.
+   */
+  extensions: Record<string, unknown>
 }
 
 export interface WorkspaceChange {

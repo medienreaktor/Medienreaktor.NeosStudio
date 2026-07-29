@@ -3,7 +3,6 @@ import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import { isDeleted, renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
-import { Button } from '@/components/ui/button'
 import { Placeholder } from '@/components/ui/placeholder'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
@@ -62,10 +61,8 @@ export function previewUrl(
 }
 
 /**
- * Preview controls for the topbar: reload the
- * iframe and open the page in a new tab. The external link always uses the
- * plain preview rendering - the content-element metadata of the "inPlace"
- * mode only makes sense inside the shell's iframe.
+ * The preview's reload keyboard shortcut, mounted in the topbar. Renders
+ * nothing - the reload is keystroke-only (mod+shift+r).
  */
 export function PreviewToolbar({
   document,
@@ -74,8 +71,8 @@ export function PreviewToolbar({
   document: NodeDto | null
   onReload: () => void
 }) {
-  // Registered before the early return (hooks) and guarded instead: without a
-  // document there is nothing to reload and the keystroke stays untouched.
+  // Guarded instead of conditionally registered: without a document there is
+  // nothing to reload and the keystroke stays untouched.
   useKeyboardShortcut({
     id: 'preview.reload',
     combo: 'mod+shift+r',
@@ -87,36 +84,7 @@ export function PreviewToolbar({
     },
     allowInInput: true,
   })
-  if (!document) return null
-  return (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        title={t('preview.reload', 'Reload preview')}
-        onClick={onReload}
-      >
-        <i className="fas fa-rotate text-xs" aria-hidden />
-      </Button>
-      <Button
-        asChild
-        variant="ghost"
-        size="icon-xs"
-        title={t('preview.openInNewTab', 'Open page in a new tab')}
-      >
-        <a
-          href={previewUrl(document.address, undefined, isDeleted(document))}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <i
-            className="fas fa-arrow-up-right-from-square text-xs"
-            aria-hidden
-          />
-        </a>
-      </Button>
-    </div>
-  )
+  return null
 }
 
 /**
