@@ -470,7 +470,7 @@ export function WorkspaceSwitcher({
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => setCreatingTask(true)}>
               <i className="fas fa-plus text-[0.7rem]" aria-hidden />
-              {t('tasks.addTaskWorkspace', 'Add task workspace …')}
+              {t('tasks.addTaskWorkspace', 'Add task workspace')}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

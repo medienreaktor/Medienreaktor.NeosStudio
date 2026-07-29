@@ -393,7 +393,7 @@ function TaskCard({
         <ContextMenuGroup>
           <ContextMenuItem onClick={onOpen}>
             <i className="fas fa-pen w-4 text-center" aria-hidden />
-            {t('tasks.editTask', 'Edit task…')}
+            {t('tasks.editTask', 'Edit task')}
           </ContextMenuItem>
           <ContextMenuItem disabled={!canWrite || active} onClick={onCheckout}>
             <i className="fas fa-code-branch w-4 text-center" aria-hidden />

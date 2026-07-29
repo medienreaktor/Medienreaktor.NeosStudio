@@ -29,8 +29,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 
-const UNASSIGNED = '__unassigned__'
-
 /**
  * Create a task branch: a shared workspace restricted to the involved
  * people (creator, assignee, reviewers) plus the task metadata.
@@ -52,14 +50,15 @@ export function CreateTaskDialog({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [baseWorkspace, setBaseWorkspace] = useState('live')
-  const [assignee, setAssignee] = useState(UNASSIGNED)
+  // null = unassigned; the trigger then shows the "Select user" placeholder.
+  const [assignee, setAssignee] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
       setTitle('')
       setDescription('')
       setBaseWorkspace('live')
-      setAssignee(UNASSIGNED)
+      setAssignee(null)
     }
   }, [open])
 
@@ -81,13 +80,10 @@ export function CreateTaskDialog({
   if (baseItems.length === 0) {
     baseItems.push({ value: 'live', label: t('workspace.live', 'Live') })
   }
-  const assigneeItems = [
-    { value: UNASSIGNED, label: t('tasks.unassigned', '– unassigned –') },
-    ...(usersData?.users ?? []).map((user) => ({
-      value: user.id,
-      label: user.label,
-    })),
-  ]
+  const assigneeItems = (usersData?.users ?? []).map((user) => ({
+    value: user.id,
+    label: user.label,
+  }))
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -97,7 +93,7 @@ export function CreateTaskDialog({
           ? { description: description.trim() }
           : {}),
         baseWorkspace,
-        ...(assignee !== UNASSIGNED ? { assignee } : {}),
+        ...(assignee !== null ? { assignee } : {}),
       }),
     onSuccess: async (response) => {
       // Await the refetch: a consumer checking the new workspace out right
@@ -198,7 +194,10 @@ export function CreateTaskDialog({
                 items={assigneeItems}
               >
                 <SelectTrigger id="task-create-assignee" className="w-full">
-                  <SelectValue />
+                  <SelectValue
+                    placeholder={t('tasks.selectUser', 'Select user')}
+                    className="data-placeholder:text-neutral-400"
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {assigneeItems.map((item) => (

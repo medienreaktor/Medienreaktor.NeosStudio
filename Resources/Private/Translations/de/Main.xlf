@@ -1974,6 +1974,10 @@
         <source>Saving…</source>
         <target xml:lang="de">Wird gespeichert …</target>
       </trans-unit>
+      <trans-unit id="tasks.selectUser" xml:space="preserve">
+        <source>Select user</source>
+        <target xml:lang="de">Benutzer auswählen</target>
+      </trans-unit>
       <trans-unit id="tasks.sendToReview" xml:space="preserve">
         <source>Send to review</source>
         <target xml:lang="de">Zur Prüfung einreichen</target>

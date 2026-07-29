@@ -1481,6 +1481,9 @@
       <trans-unit id="tasks.saving" xml:space="preserve">
         <source>Saving…</source>
       </trans-unit>
+      <trans-unit id="tasks.selectUser" xml:space="preserve">
+        <source>Select user</source>
+      </trans-unit>
       <trans-unit id="tasks.sendToReview" xml:space="preserve">
         <source>Send to review</source>
       </trans-unit>
