@@ -231,7 +231,14 @@ export function TasksBoard() {
         })}
       </div>
 
-      <CreateTaskDialog open={creating} onOpenChange={setCreating} />
+      {/* Creating checks the fresh branch out right away - same behavior as
+          the switcher's "Add task workspace" entry, so the switcher always
+          reflects the new task immediately. */}
+      <CreateTaskDialog
+        open={creating}
+        onOpenChange={setCreating}
+        onCreated={checkout}
+      />
       <TaskDetailDialog
         task={editing}
         onOpenChange={(open) => !open && setEditing(null)}
