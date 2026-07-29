@@ -54,13 +54,25 @@ class NotificationsController extends AbstractApiController
      * authorization comes from the bearer token, not the (same-origin)
      * backend session cookie that would otherwise trigger it.
      *
-     * @param array<string> $ids
+     * The body is read directly (like the NeosApi batch endpoints) - a
+     * mapped array action argument would trip over Flow's property mapping,
+     * which refuses array elements without explicit per-index allowances.
      */
     #[Flow\SkipCsrfProtection]
-    public function markReadAction(array $ids = [], bool $all = false): string
+    public function markReadAction(): string
     {
         $this->requireScope('neos.write');
         $userId = $this->requireUserId();
+
+        $body = json_decode((string)$this->request->getHttpRequest()->getBody(), true);
+        if (!is_array($body)) {
+            $this->throwJsonStatus(400, 'invalid_request', 'Request body must be a JSON object.');
+        }
+        $all = ($body['all'] ?? false) === true;
+        $ids = array_filter(
+            is_array($body['ids'] ?? null) ? $body['ids'] : [],
+            is_string(...)
+        );
 
         if ($all) {
             $this->notificationRepository->markAllReadForUser($userId->value, new \DateTimeImmutable());
