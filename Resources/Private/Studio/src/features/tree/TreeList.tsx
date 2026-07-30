@@ -169,7 +169,10 @@ export function TreeList<T>({
             {decor?.icon && (
               <span className="shrink-0 text-white">{decor.icon}</span>
             )}
-            {item.isLoading() ? (
+            {/* Not isLoading(): that also covers children-loading, which
+                would swap an expanding folder's own label out for a skeleton
+                and blink it back in once the children arrive. */}
+            {!item.hasLoadedData() ? (
               <Skeleton
                 className="h-3 max-w-full"
                 style={{ width: `${skeletonWidth(item.getId())}px` }}
