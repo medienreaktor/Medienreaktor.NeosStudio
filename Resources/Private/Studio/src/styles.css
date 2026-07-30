@@ -100,6 +100,8 @@
   /* Tree rows and freshly resolved labels ease in instead of popping. */
   --animate-tree-row-in: tree-row-in 150ms ease-out both;
   --animate-fade-in: fade-in 150ms ease-out both;
+  /* Media grid cards rise in from below - new pages append at the bottom. */
+  --animate-media-item-in: media-item-in 200ms ease-out both;
   @keyframes tree-row-in {
     from {
       opacity: 0;
@@ -109,6 +111,12 @@
   @keyframes fade-in {
     from {
       opacity: 0;
+    }
+  }
+  @keyframes media-item-in {
+    from {
+      opacity: 0;
+      translate: 0 0.375rem;
     }
   }
 

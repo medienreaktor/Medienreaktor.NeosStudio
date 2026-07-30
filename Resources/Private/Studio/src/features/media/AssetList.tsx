@@ -158,7 +158,7 @@ function GridCard({
       }}
       title={asset.label}
       className={cn(
-        'group flex flex-col overflow-hidden border rounded-md  text-left transition-colors',
+        'group flex flex-col overflow-hidden border rounded-md  text-left transition-colors motion-safe:animate-media-item-in',
         active
           ? 'border-blue-500 bg-neutral-900'
           : 'border-transparent hover:bg-neutral-900',
@@ -200,7 +200,8 @@ function ListRow({
         })
       }
       className={cn(
-        'cursor-pointer border-b border-neutral-800/60',
+        // Fade only - translating table rows breaks their layout.
+        'cursor-pointer border-b border-neutral-800/60 motion-safe:animate-fade-in',
         active ? 'bg-blue-500' : 'hover:bg-neutral-800/50',
       )}
     >

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import type { AssetType, MediaAsset } from '@/api/media'
 import { cn } from '@/lib/utils'
 
@@ -24,13 +26,26 @@ export function AssetThumb({
   const uri = preview
     ? (asset.previewUri ?? asset.thumbnailUri)
     : (asset.thumbnailUri ?? asset.previewUri)
+  // Keyed to the URI, not a boolean, so a replaced image fades in again.
+  const [loadedUri, setLoadedUri] = useState<string | null>(null)
   if (asset.assetType === 'Image' && uri) {
     return (
       <img
         src={uri}
         alt={asset.label}
         loading="lazy"
-        className={cn('h-full w-full aspect-square object-contain', className)}
+        decoding="async"
+        // Cache hits can complete before React attaches onLoad; the ref
+        // callback runs after mount and catches those.
+        ref={(el) => {
+          if (el?.complete) setLoadedUri(uri)
+        }}
+        onLoad={() => setLoadedUri(uri)}
+        className={cn(
+          'h-full w-full aspect-square object-contain transition-opacity duration-200',
+          loadedUri !== uri && 'opacity-0',
+          className,
+        )}
       />
     )
   }
