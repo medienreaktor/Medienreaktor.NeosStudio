@@ -72,6 +72,7 @@ import { UserMenu } from '@/features/profile/UserMenu'
 import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
+import { ShareButton } from '@/features/sharing/ShareButton'
 import { PublishButton } from '@/features/workspaces/PublishButton'
 import { ReviewButton } from '@/features/workspaces/ReviewButton'
 import { SyncWorkspaceButton } from '@/features/workspaces/SyncWorkspaceButton'
@@ -811,6 +812,9 @@ export function App() {
                             onSwitchEditingContext={switchEditingContext}
                           />
                         )}
+                      {selectedDocument && (
+                        <ShareButton document={selectedDocument} />
+                      )}
                       {activeWorkspace && (
                         <>
                           <SyncWorkspaceButton

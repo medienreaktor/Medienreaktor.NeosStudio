@@ -1148,6 +1148,72 @@
       <trans-unit id="profile.unavailable" xml:space="preserve">
         <source>Your profile is currently unavailable.</source>
       </trans-unit>
+      <trans-unit id="share.activeLinks" xml:space="preserve">
+        <source>Your active links</source>
+      </trans-unit>
+      <trans-unit id="share.button" xml:space="preserve">
+        <source>Share</source>
+      </trans-unit>
+      <trans-unit id="share.buttonHint" xml:space="preserve">
+        <source>Share a preview link to this page with people without a login</source>
+      </trans-unit>
+      <trans-unit id="share.copied" xml:space="preserve">
+        <source>Link copied to the clipboard.</source>
+      </trans-unit>
+      <trans-unit id="share.copy" xml:space="preserve">
+        <source>Copy</source>
+      </trans-unit>
+      <trans-unit id="share.copyFailed" xml:space="preserve">
+        <source>Copying failed — please copy the link manually.</source>
+      </trans-unit>
+      <trans-unit id="share.copyOnceHint" xml:space="preserve">
+        <source>Copy the link now — for security it is shown only this once.</source>
+      </trans-unit>
+      <trans-unit id="share.create" xml:space="preserve">
+        <source>Create link</source>
+      </trans-unit>
+      <trans-unit id="share.createAnother" xml:space="preserve">
+        <source>Create another link</source>
+      </trans-unit>
+      <trans-unit id="share.createFailed" xml:space="preserve">
+        <source>Creating the preview link failed.</source>
+      </trans-unit>
+      <trans-unit id="share.creating" xml:space="preserve">
+        <source>Creating…</source>
+      </trans-unit>
+      <trans-unit id="share.description" xml:space="preserve">
+        <source>Anyone with the link can view this page read-only, without logging in, until the link expires.</source>
+      </trans-unit>
+      <trans-unit id="share.expires" xml:space="preserve">
+        <source>expires {0}</source>
+      </trans-unit>
+      <trans-unit id="share.expiry" xml:space="preserve">
+        <source>Expires after</source>
+      </trans-unit>
+      <trans-unit id="share.label" xml:space="preserve">
+        <source>Label</source>
+      </trans-unit>
+      <trans-unit id="share.revoke" xml:space="preserve">
+        <source>Revoke link</source>
+      </trans-unit>
+      <trans-unit id="share.revoked" xml:space="preserve">
+        <source>The preview link was revoked.</source>
+      </trans-unit>
+      <trans-unit id="share.revokeFailed" xml:space="preserve">
+        <source>Revoking the preview link failed.</source>
+      </trans-unit>
+      <trans-unit id="share.title" xml:space="preserve">
+        <source>Share preview link</source>
+      </trans-unit>
+      <trans-unit id="share.ttl24" xml:space="preserve">
+        <source>24 hours</source>
+      </trans-unit>
+      <trans-unit id="share.ttl48" xml:space="preserve">
+        <source>2 days</source>
+      </trans-unit>
+      <trans-unit id="share.ttl168" xml:space="preserve">
+        <source>7 days</source>
+      </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>
       </trans-unit>

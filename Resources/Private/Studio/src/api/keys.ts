@@ -43,6 +43,8 @@ export const queryKeys = {
   notifications: ['notifications'] as const,
   /** Task/feature workspaces (the Tasks board) - one list, polled. */
   tasks: ['tasks'] as const,
+  /** The user's own shareable preview links (the Share dialog's list). */
+  previewLinks: ['previewLinks'] as const,
   /** One task's comment thread - under `tasks` so invalidating tasks covers it. */
   taskComments: (workspaceName: string) =>
     ['tasks', workspaceName, 'comments'] as const,

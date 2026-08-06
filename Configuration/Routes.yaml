@@ -133,6 +133,48 @@
   httpMethods: ['DELETE']
 
 -
+  name: 'Studio API: preview links list'
+  uriPattern: 'api/preview-links'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\PreviewLinks'
+    '@action': 'index'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: create preview link'
+  uriPattern: 'api/preview-links'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\PreviewLinks'
+    '@action': 'create'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: revoke preview link'
+  uriPattern: 'api/preview-links/{linkId}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\PreviewLinks'
+    '@action': 'delete'
+    '@format': 'json'
+  httpMethods: ['DELETE']
+
+-
+  # Public by design: the token in the path is the sole credential (see
+  # ShareController). Sessionless, no privilege target.
+  name: 'Studio: shared preview link (anonymous)'
+  uriPattern: 'neos/studio/share/{token}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Share'
+    '@action': 'show'
+    '@format': 'html'
+  httpMethods: ['GET']
+
+-
   name: 'Studio: document preview (iframe)'
   uriPattern: 'neos/studio/preview'
   defaults:

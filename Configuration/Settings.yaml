@@ -12,6 +12,13 @@ Medienreaktor:
     #     position: 100                                                     # optional load order
     plugins: []
 
+    previewLinks:
+      # Lifetime applied when a client requests none (\DateInterval spec).
+      defaultLifetime: 'P2D'
+      # Hard ceiling - requested lifetimes are clamped to this, so no client
+      # (and no misconfigured defaultLifetime) can mint longer-lived links.
+      maxLifetime: 'P7D'
+
     taskWorkflow:
       # Flow role whose members act as reviewers ("super editors") for task
       # workspaces: they get MANAGER on every task workspace and are notified
@@ -95,12 +102,15 @@ Neos:
           # The Controller\Api sub-namespace is deliberately excluded: those
           # endpoints are bearer-token only (see below), keeping them free of
           # session/CSRF semantics - same setup as the NeosApi controllers.
+          # ShareController is excluded too: the anonymous preview-link
+          # endpoint is deliberately sessionless - its token is the sole
+          # credential, no backend session must ever get involved.
           'Neos.Neos:Backend':
             requestPatterns:
               'Medienreaktor.NeosStudio:Controllers':
                 pattern: 'ControllerObjectName'
                 patternOptions:
-                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\).*'
+                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\|ShareController).*'
 
           # Put the Studio's own API endpoints (notifications) behind the same
           # OAuth 2.1 bearer firewall as the NeosApi: request patterns of the

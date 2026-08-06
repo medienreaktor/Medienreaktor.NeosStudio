@@ -1530,6 +1530,94 @@
         <source>Your profile is currently unavailable.</source>
         <target xml:lang="de">Dein Profil ist derzeit nicht verfügbar.</target>
       </trans-unit>
+      <trans-unit id="share.activeLinks" xml:space="preserve">
+        <source>Your active links</source>
+        <target xml:lang="de">Deine aktiven Links</target>
+      </trans-unit>
+      <trans-unit id="share.button" xml:space="preserve">
+        <source>Share</source>
+        <target xml:lang="de">Teilen</target>
+      </trans-unit>
+      <trans-unit id="share.buttonHint" xml:space="preserve">
+        <source>Share a preview link to this page with people without a login</source>
+        <target xml:lang="de">Teile einen Vorschau-Link zu dieser Seite mit Personen ohne Login</target>
+      </trans-unit>
+      <trans-unit id="share.copied" xml:space="preserve">
+        <source>Link copied to the clipboard.</source>
+        <target xml:lang="de">Link in die Zwischenablage kopiert.</target>
+      </trans-unit>
+      <trans-unit id="share.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="de">Kopieren</target>
+      </trans-unit>
+      <trans-unit id="share.copyFailed" xml:space="preserve">
+        <source>Copying failed — please copy the link manually.</source>
+        <target xml:lang="de">Kopieren fehlgeschlagen — bitte kopiere den Link manuell.</target>
+      </trans-unit>
+      <trans-unit id="share.copyOnceHint" xml:space="preserve">
+        <source>Copy the link now — for security it is shown only this once.</source>
+        <target xml:lang="de">Kopiere den Link jetzt — aus Sicherheitsgründen wird er nur dieses eine Mal angezeigt.</target>
+      </trans-unit>
+      <trans-unit id="share.create" xml:space="preserve">
+        <source>Create link</source>
+        <target xml:lang="de">Link erstellen</target>
+      </trans-unit>
+      <trans-unit id="share.createAnother" xml:space="preserve">
+        <source>Create another link</source>
+        <target xml:lang="de">Weiteren Link erstellen</target>
+      </trans-unit>
+      <trans-unit id="share.createFailed" xml:space="preserve">
+        <source>Creating the preview link failed.</source>
+        <target xml:lang="de">Der Vorschau-Link konnte nicht erstellt werden.</target>
+      </trans-unit>
+      <trans-unit id="share.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="de">Wird erstellt…</target>
+      </trans-unit>
+      <trans-unit id="share.description" xml:space="preserve">
+        <source>Anyone with the link can view this page read-only, without logging in, until the link expires.</source>
+        <target xml:lang="de">Jeder mit dem Link kann diese Seite ohne Login ansehen (nur lesend), bis der Link abläuft.</target>
+      </trans-unit>
+      <trans-unit id="share.expires" xml:space="preserve">
+        <source>expires {0}</source>
+        <target xml:lang="de">läuft ab am {0}</target>
+      </trans-unit>
+      <trans-unit id="share.expiry" xml:space="preserve">
+        <source>Expires after</source>
+        <target xml:lang="de">Läuft ab nach</target>
+      </trans-unit>
+      <trans-unit id="share.label" xml:space="preserve">
+        <source>Label</source>
+        <target xml:lang="de">Bezeichnung</target>
+      </trans-unit>
+      <trans-unit id="share.revoke" xml:space="preserve">
+        <source>Revoke link</source>
+        <target xml:lang="de">Link widerrufen</target>
+      </trans-unit>
+      <trans-unit id="share.revoked" xml:space="preserve">
+        <source>The preview link was revoked.</source>
+        <target xml:lang="de">Der Vorschau-Link wurde widerrufen.</target>
+      </trans-unit>
+      <trans-unit id="share.revokeFailed" xml:space="preserve">
+        <source>Revoking the preview link failed.</source>
+        <target xml:lang="de">Der Vorschau-Link konnte nicht widerrufen werden.</target>
+      </trans-unit>
+      <trans-unit id="share.title" xml:space="preserve">
+        <source>Share preview link</source>
+        <target xml:lang="de">Vorschau-Link teilen</target>
+      </trans-unit>
+      <trans-unit id="share.ttl24" xml:space="preserve">
+        <source>24 hours</source>
+        <target xml:lang="de">24 Stunden</target>
+      </trans-unit>
+      <trans-unit id="share.ttl48" xml:space="preserve">
+        <source>2 days</source>
+        <target xml:lang="de">2 Tage</target>
+      </trans-unit>
+      <trans-unit id="share.ttl168" xml:space="preserve">
+        <source>7 days</source>
+        <target xml:lang="de">7 Tage</target>
+      </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>
         <target xml:lang="de">Allgemein</target>

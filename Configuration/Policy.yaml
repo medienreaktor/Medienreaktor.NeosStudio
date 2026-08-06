@@ -14,6 +14,22 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:Api.Notifications':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\NotificationsController->.*Action())'
 
+    # Mint, list and revoke the authenticated user's own shareable preview
+    # links. Strictly per-user like the notifications; additionally, minting
+    # requires read access on the target workspace (checked in-action), so a
+    # link can never grant more than its creator could see.
+    'Medienreaktor.NeosStudio:Api.PreviewLinks':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\PreviewLinksController->(index|create|delete)Action())'
+
+    # The anonymous consumption endpoint for preview links: granted to
+    # Everybody (below) following the core's Neos.Neos:PublicFrontendAccess
+    # pattern - the core's AllControllerActions catch-all matches every
+    # controller action, so without an explicit Everybody GRANT an anonymous
+    # request is forced to authenticate (401). The actual credential is the
+    # token in the URL, validated in-action.
+    'Medienreaktor.NeosStudio:PublicShareAccess':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\ShareController->showAction())'
+
     # --- Task workflow -------------------------------------------------------
     # Workspace-level authorization is NOT handled by these targets: the
     # controller checks the acting user's per-workspace permissions (creator
@@ -43,6 +59,14 @@ privilegeTargets:
       matcher: 'studio'
 
 roles:
+  # Anonymous visitors may reach the share endpoint; the preview-link token
+  # in the URL is the credential (validated in-action, 404 otherwise).
+  'Neos.Flow:Everybody':
+    privileges:
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:PublicShareAccess'
+        permission: GRANT
+
   # Any backend editor may open the Studio; what they can actually do inside
   # is governed by the API's own policies and the OAuth token scopes.
   'Neos.Neos:AbstractEditor':
@@ -58,6 +82,9 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Notifications'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.PreviewLinks'
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Read'
