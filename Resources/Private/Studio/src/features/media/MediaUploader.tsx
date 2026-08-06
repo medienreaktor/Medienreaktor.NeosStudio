@@ -85,8 +85,8 @@ export function MediaUploader({
     items.length > 0 && items.every((item) => item.status !== 'uploading')
 
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center bg-neutral-50/80 dark:bg-neutral-950/80 p-8">
-      <div className="w-full max-w-md rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 shadow-xl">
+    <div className="absolute inset-0 z-20 grid place-items-center bg-white/80 dark:bg-neutral-950/80 p-8">
+      <div className="w-full max-w-md rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 shadow-xl">
         <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 px-4 py-3">
           <h2 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
             {t('media.uploadAssets', 'Upload assets')}

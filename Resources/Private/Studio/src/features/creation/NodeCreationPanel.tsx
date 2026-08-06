@@ -54,7 +54,7 @@ export function NodeCreationPanel() {
   return (
     <div className="@container flex min-h-full flex-col">
       {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-50/50 dark:bg-neutral-950/50 p-2 backdrop-blur-xs">
+      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-white/50 dark:bg-neutral-950/50 p-2 backdrop-blur-xs">
         <SearchInput
           placeholder={t(
             'creation.filterNodeTypesPlaceholder',

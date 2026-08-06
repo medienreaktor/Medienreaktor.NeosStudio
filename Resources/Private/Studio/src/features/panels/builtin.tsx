@@ -250,7 +250,7 @@ function DeletedDocumentBanner({ document }: { document: NodeDto }) {
   const { workspaceName } = useStudio()
   const restore = useTrashRestore(workspaceName)
   return (
-    <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-xs text-red-500">
+    <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-3 py-2 text-xs text-red-500">
       <i className="fas fa-fw fa-trash-can shrink-0" aria-hidden />
       <span className="min-w-0 flex-1">
         {t(

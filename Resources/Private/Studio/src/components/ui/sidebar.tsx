@@ -128,7 +128,7 @@ function SidebarProvider({
             } as React.CSSProperties
           }
           className={cn(
-            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-neutral-100 dark:has-data-[variant=inset]:bg-neutral-900',
+            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-neutral-50 dark:has-data-[variant=inset]:bg-neutral-900',
             className,
           )}
           {...props}
@@ -159,7 +159,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          'flex h-full w-(--sidebar-width) flex-col bg-neutral-100 dark:bg-neutral-900 text-neutral-950 dark:text-white',
+          'flex h-full w-(--sidebar-width) flex-col bg-neutral-50 dark:bg-neutral-900 text-neutral-950 dark:text-white',
           className,
         )}
         {...props}
@@ -176,7 +176,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-neutral-100 dark:bg-neutral-900 p-0 text-neutral-950 dark:text-white [&>button]:hidden"
+          className="w-(--sidebar-width) bg-neutral-50 dark:bg-neutral-900 p-0 text-neutral-950 dark:text-white [&>button]:hidden"
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -238,7 +238,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex h-full w-full flex-col bg-neutral-100 dark:bg-neutral-900 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-neutral-300 dark:group-data-[variant=floating]:border-neutral-700 group-data-[variant=floating]:shadow-sm"
+          className="flex h-full w-full flex-col bg-neutral-50 dark:bg-neutral-900 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-neutral-300 dark:group-data-[variant=floating]:border-neutral-700 group-data-[variant=floating]:shadow-sm"
         >
           {children}
         </div>
@@ -290,7 +290,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
         'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-neutral-300 dark:hover:after:bg-neutral-700 sm:flex',
         'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
         '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
-        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-neutral-100 dark:hover:group-data-[collapsible=offcanvas]:bg-neutral-900',
+        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-neutral-50 dark:hover:group-data-[collapsible=offcanvas]:bg-neutral-900',
         '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2',
         '[[data-side=right][data-collapsible=offcanvas]_&]:-left-2',
         className,
@@ -305,7 +305,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        'relative flex w-full flex-1 flex-col bg-neutral-50 dark:bg-neutral-950',
+        'relative flex w-full flex-1 flex-col bg-white dark:bg-neutral-950',
         'md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
         className,
       )}
@@ -322,7 +322,10 @@ function SidebarInput({
     <Input
       data-slot="sidebar-input"
       data-sidebar="input"
-      className={cn('h-8 w-full bg-neutral-50 dark:bg-neutral-950 shadow-none', className)}
+      className={cn(
+        'h-8 w-full bg-white dark:bg-neutral-950 shadow-none',
+        className,
+      )}
       {...props}
     />
   )
@@ -358,7 +361,10 @@ function SidebarSeparator({
     <Separator
       data-slot="sidebar-separator"
       data-sidebar="separator"
-      className={cn('mx-2 w-auto bg-neutral-300 dark:bg-neutral-700', className)}
+      className={cn(
+        'mx-2 w-auto bg-neutral-300 dark:bg-neutral-700',
+        className,
+      )}
       {...props}
     />
   )
@@ -474,9 +480,10 @@ const sidebarMenuButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white',
+        default:
+          'hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white',
         outline:
-          'bg-neutral-50 dark:bg-neutral-950 shadow-[0_0_0_1px_light-dark(var(--color-neutral-300),var(--color-neutral-700))] hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white hover:shadow-[0_0_0_1px_light-dark(var(--color-neutral-200),var(--color-neutral-800))]',
+          'bg-white dark:bg-neutral-950 shadow-[0_0_0_1px_light-dark(var(--color-neutral-300),var(--color-neutral-700))] hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white hover:shadow-[0_0_0_1px_light-dark(var(--color-neutral-200),var(--color-neutral-800))]',
       },
       size: {
         default: 'h-8 text-sm',

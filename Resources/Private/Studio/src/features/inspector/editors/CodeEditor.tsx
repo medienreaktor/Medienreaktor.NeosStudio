@@ -87,12 +87,12 @@ function CodeArea({
     'm-0 border-0 p-3 font-mono text-sm leading-5 whitespace-pre [tab-size:2]'
 
   return (
-    <div className="relative h-[60vh] overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-sm leading-5">
+    <div className="relative h-[60vh] overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-mono text-sm leading-5">
       <div className="flex h-full">
         <div
           ref={gutterRef}
           aria-hidden
-          className="shrink-0 overflow-hidden border-r border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/60 py-3 pr-2 pl-3 text-right text-neutral-400 dark:text-neutral-600 select-none"
+          className="shrink-0 overflow-hidden border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 py-3 pr-2 pl-3 text-right text-neutral-400 dark:text-neutral-600 select-none"
         >
           {Array.from({ length: lineCount }, (_, i) => (
             <div key={i}>{i + 1}</div>
@@ -102,7 +102,10 @@ function CodeArea({
           <pre
             ref={preRef}
             aria-hidden
-            className={cn(shared, 'h-full overflow-auto text-neutral-800 dark:text-neutral-200')}
+            className={cn(
+              shared,
+              'h-full overflow-auto text-neutral-800 dark:text-neutral-200',
+            )}
           >
             <code dangerouslySetInnerHTML={{ __html: html }} />
           </pre>

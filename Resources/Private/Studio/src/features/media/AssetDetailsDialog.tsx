@@ -87,7 +87,7 @@ export function AssetDetailsDialog({
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left: preview + read-only metadata. */}
           <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
-            <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900 p-2">
+            <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-50 dark:bg-neutral-900 p-2">
               <AssetThumb asset={asset} preview />
             </div>
 
@@ -548,7 +548,13 @@ function Meta({
   return (
     <>
       <dt className="text-neutral-500">{label}</dt>
-      <dd className={cn('truncate text-right text-neutral-700 dark:text-neutral-300')}>{children}</dd>
+      <dd
+        className={cn(
+          'truncate text-right text-neutral-700 dark:text-neutral-300',
+        )}
+      >
+        {children}
+      </dd>
     </>
   )
 }

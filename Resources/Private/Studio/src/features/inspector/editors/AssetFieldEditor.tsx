@@ -94,7 +94,7 @@ export function AssetFieldEditor({
       <button
         type="button"
         onClick={select}
-        className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-4 text-sm text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-950 dark:hover:text-white"
+        className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-4 text-sm text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-950 dark:hover:text-white"
       >
         <i className={`fas ${iconClass} text-[1rem]`} aria-hidden />
         {kind === 'image'
@@ -112,7 +112,7 @@ export function AssetFieldEditor({
   if (kind === 'image') {
     return (
       <div>
-        <div className="group relative overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950">
+        <div className="group relative overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950">
           <div className="flex min-h-24 items-center justify-center p-2">
             {asset ? (
               <AssetThumb asset={asset} preview className="max-h-48" />
@@ -182,8 +182,8 @@ export function AssetFieldEditor({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 p-2">
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
+    <div className="flex items-center gap-3 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-2">
+      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-50 dark:bg-neutral-900">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (

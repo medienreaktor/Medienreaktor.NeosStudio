@@ -46,7 +46,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   return (
     <div className="relative flex h-full min-h-0 flex-col gap-2">
       <div className="absolute left-0 top-0 right-0 z-10 p-px">
-        <div className="relative w-full rounded-sm bg-neutral-50/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
+        <div className="relative w-full rounded-sm bg-white/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
           <SearchInput
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -54,7 +54,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
           />
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
         <AssetList
           assets={assets}
           view="grid"

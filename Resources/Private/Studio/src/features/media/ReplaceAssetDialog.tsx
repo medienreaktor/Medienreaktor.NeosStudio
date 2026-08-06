@@ -128,12 +128,14 @@ export function ReplaceAssetDialog({
 
         <div className="space-y-4">
           {/* The file being replaced, so it is clear what is about to change. */}
-          <div className="flex items-center gap-3 rounded-md bg-neutral-100 dark:bg-neutral-900 p-2">
+          <div className="flex items-center gap-3 rounded-md bg-neutral-50 dark:bg-neutral-900 p-2">
             <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded bg-neutral-200 dark:bg-neutral-800">
               <AssetThumb asset={asset} className="text-[1.5rem]" />
             </div>
             <div className="min-w-0 text-xs">
-              <p className="truncate text-neutral-800 dark:text-neutral-200">{asset.filename}</p>
+              <p className="truncate text-neutral-800 dark:text-neutral-200">
+                {asset.filename}
+              </p>
               <p className="text-neutral-500">
                 {formatBytes(asset.fileSize)} · {asset.mediaType}
               </p>
@@ -213,7 +215,7 @@ export function ReplaceAssetDialog({
           </label>
 
           {usageTotal > 0 && (
-            <p className="flex items-start gap-2 rounded-md bg-neutral-100 dark:bg-neutral-900 p-2 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="flex items-start gap-2 rounded-md bg-neutral-50 dark:bg-neutral-900 p-2 text-xs text-neutral-600 dark:text-neutral-400">
               <i
                 className="fas fa-circle-info mt-0.5 shrink-0 text-neutral-500"
                 aria-hidden

@@ -172,7 +172,7 @@ const GraphSurface = memo(function GraphSurface({
               key={`${branch.workspace.name}:${dot.step.id}`}
               data-graph-id={`event:${branch.workspace.name}:${dot.step.id}`}
               className={cn(
-                'absolute cursor-pointer rounded-full border-2 bg-neutral-50 dark:bg-neutral-950 transition-transform',
+                'absolute cursor-pointer rounded-full border-2 bg-white dark:bg-neutral-950 transition-transform',
                 selected && cn('scale-150', SELECTED_RING),
                 dimmed(branch.workspace.name) && 'opacity-20',
               )}
@@ -288,7 +288,7 @@ const GraphSurface = memo(function GraphSurface({
                 }}
                 title={t('workspaceGraph.youAreHere', 'You are here')}
               >
-                <span className="text-[11px] leading-none font-bold tracking-widest text-neutral-950 dark:text-white">
+                <span className="text-[11px] leading-none font-bold tracking-widest text-white">
                   HEAD
                 </span>
               </div>

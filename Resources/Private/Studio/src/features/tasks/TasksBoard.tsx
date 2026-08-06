@@ -198,7 +198,9 @@ export function TasksBoard() {
             <div
               key={column.status}
               className={`flex min-w-56 flex-1 flex-col border transition-colors ${
-                droppable ? 'bg-neutral-100 dark:bg-neutral-900' : 'bg-neutral-100/50 dark:bg-neutral-900/50'
+                droppable
+                  ? 'bg-neutral-50 dark:bg-neutral-900'
+                  : 'bg-neutral-50/50 dark:bg-neutral-900/50'
               }`}
               onDragOver={(event) => {
                 if (droppable) event.preventDefault()
@@ -358,7 +360,7 @@ function TaskCard({
       <ContextMenuTrigger
         render={
           <div
-            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-2 text-[0.78rem] text-neutral-800 dark:text-neutral-200 ${
+            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-2 text-[0.78rem] text-neutral-800 dark:text-neutral-200 ${
               active ? 'border-blue-500' : 'border-transparent'
             } ${draggable ? 'active:cursor-grabbing' : ''}`}
             title={

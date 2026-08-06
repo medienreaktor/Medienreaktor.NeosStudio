@@ -137,7 +137,7 @@ function HalfThumbnail({ appearance }: { appearance: 'light' | 'dark' }) {
         <span
           className={cn(
             'absolute top-0.5 left-1 block size-1 rounded-full',
-            dark ? 'bg-neutral-500' : 'bg-neutral-400',
+            dark ? 'bg-white0' : 'bg-neutral-400',
           )}
         />
       </span>

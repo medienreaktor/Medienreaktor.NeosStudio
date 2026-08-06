@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import {
-  asyncDataLoaderFeature,
-  selectionFeature,
-} from '@headless-tree/core'
+import { asyncDataLoaderFeature, selectionFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { addressWithAggregateId } from '@/api/nodeAddress'
 import {
@@ -129,7 +126,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 p-1">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-1">
         <TreeList
           tree={tree}
           label={t('link.targetDocument', 'Link target document')}

@@ -114,7 +114,9 @@ function CardSection({
         {rows.map((row) => (
           <div
             key={(row.isReference ? 'ref:' : 'prop:') + row.name}
-            className={cn('flex items-center gap-1 text-[10px] text-neutral-950 dark:text-white')}
+            className={cn(
+              'flex items-center gap-1 text-[10px] text-neutral-950 dark:text-white',
+            )}
             style={{ height: ROW_HEIGHT }}
             title={
               row.inheritedFrom
@@ -283,7 +285,7 @@ function Legend() {
     { kind: 'other', label: t('nodeTypes.legend.other', 'Mixin / other') },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-100/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
+    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
@@ -413,7 +415,7 @@ export function NodeTypesPanel() {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-2 pr-32">
             <SearchInput
               wrapperClassName="pointer-events-auto max-w-64"
-              className="bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-xs"
+              className="bg-neutral-50/80 dark:bg-neutral-900/80 backdrop-blur-xs"
               value={term}
               onChange={(event) => {
                 matchCursor.current = 0

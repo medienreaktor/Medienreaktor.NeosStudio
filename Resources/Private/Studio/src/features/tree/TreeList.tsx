@@ -130,8 +130,9 @@ export function TreeList<T>({
               })
             }
             className={cn(
-              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-800 motion-safe:animate-tree-row-in',
-              item.isSelected() && 'border-blue-500 bg-neutral-200 dark:bg-neutral-800',
+              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 motion-safe:animate-tree-row-in',
+              item.isSelected() &&
+                'border-blue-500 bg-neutral-100 dark:bg-neutral-800',
               item.isFocused() && 'outline-0',
               isDropTarget && 'border-blue-500 bg-blue-500/10',
             )}
@@ -141,7 +142,8 @@ export function TreeList<T>({
               <span
                 className={cn(
                   'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-neutral-600 dark:text-neutral-400',
-                  item.isFolder() && 'hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white',
+                  item.isFolder() &&
+                    'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white',
                 )}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -167,7 +169,9 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.icon && (
-              <span className="shrink-0 text-neutral-950 dark:text-white">{decor.icon}</span>
+              <span className="shrink-0 text-neutral-950 dark:text-white">
+                {decor.icon}
+              </span>
             )}
             {/* Not isLoading(): that also covers children-loading, which
                 would swap an expanding folder's own label out for a skeleton

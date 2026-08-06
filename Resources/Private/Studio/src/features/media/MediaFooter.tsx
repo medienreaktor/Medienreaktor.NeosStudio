@@ -17,7 +17,7 @@ export function MediaFooter({
   onUpload: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 px-3 py-2">
+    <div className="flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-2">
       <Button size="sm" onClick={onUpload}>
         <i className="fas fa-upload text-[1rem]" aria-hidden />
         {t('media.upload', 'Upload')}

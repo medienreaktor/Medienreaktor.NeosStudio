@@ -151,6 +151,6 @@
     color-scheme: dark;
   }
   body {
-    @apply bg-neutral-50 font-sans text-neutral-950 dark:bg-neutral-950 dark:text-white;
+    @apply bg-white font-sans text-neutral-950 dark:bg-neutral-950 dark:text-white;
   }
 }

@@ -122,7 +122,7 @@ function ToastList() {
       // Base UI drives the stacking/swipe geometry through these CSS vars; the
       // `after` gap keeps the collapsed stack hoverable between toasts.
       className={cn(
-        'absolute right-0 bottom-0 left-auto w-full rounded-lg border bg-neutral-100 dark:bg-neutral-900 p-4 pr-8 text-neutral-950 dark:text-white shadow-lg select-none',
+        'absolute right-0 bottom-0 left-auto w-full rounded-lg border bg-neutral-50 dark:bg-neutral-900 p-4 pr-8 text-neutral-950 dark:text-white shadow-lg select-none',
         'z-[calc(1000-var(--toast-index))] transform-[translateX(var(--toast-swipe-movement-x))_translateY(calc(var(--toast-swipe-movement-y)+calc(min(var(--toast-index),10)*-15px)))_scale(calc(max(0,1-(var(--toast-index)*0.1))))]',
         'transition-all [transition-property:transform,opacity] duration-300 ease-out',
         "after:absolute after:bottom-full after:left-0 after:h-4.25 after:w-full after:content-['']",

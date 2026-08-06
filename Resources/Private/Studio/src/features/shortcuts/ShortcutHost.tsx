@@ -148,7 +148,7 @@ function ShortcutKeys({ combo }: { combo: string }) {
       {formatCombo(combo).map((part, index) => (
         <span
           key={index}
-          className="min-w-6 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 text-center font-sans text-xs text-neutral-700 dark:text-neutral-300"
+          className="min-w-6 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-1.5 py-0.5 text-center font-sans text-xs text-neutral-700 dark:text-neutral-300"
         >
           {part}
         </span>

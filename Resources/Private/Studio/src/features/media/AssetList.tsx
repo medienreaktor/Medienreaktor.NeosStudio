@@ -83,7 +83,7 @@ export function AssetList({
         </div>
       ) : (
         <table className="w-full border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-neutral-100/50 dark:bg-neutral-900/50 backdrop-blur-sm text-left text-xs text-neutral-500">
+          <thead className="sticky top-0 z-10 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm text-left text-xs text-neutral-500">
             <tr>
               <th className="px-2 py-1 font-medium">
                 {t('media.name', 'Name')}
@@ -160,15 +160,17 @@ function GridCard({
       className={cn(
         'group flex flex-col overflow-hidden border rounded-md  text-left transition-colors motion-safe:animate-media-item-in',
         active
-          ? 'border-blue-500 bg-neutral-100 dark:bg-neutral-900'
-          : 'border-transparent hover:bg-neutral-100 dark:hover:bg-neutral-900',
+          ? 'border-blue-500 bg-neutral-50 dark:bg-neutral-900'
+          : 'border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-900',
       )}
     >
       <div className="grid aspect-square place-items-center overflow-hidden p-2">
         <AssetThumb asset={asset} />
       </div>
       <div className="px-2 py-1">
-        <p className="truncate text-xs text-neutral-800 dark:text-neutral-200">{asset.label}</p>
+        <p className="truncate text-xs text-neutral-800 dark:text-neutral-200">
+          {asset.label}
+        </p>
       </div>
     </button>
   )
@@ -202,19 +204,27 @@ function ListRow({
       className={cn(
         // Fade only - translating table rows breaks their layout.
         'cursor-pointer border-b border-neutral-200/60 dark:border-neutral-800/60 motion-safe:animate-fade-in',
-        active ? 'bg-blue-500' : 'hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50',
+        active
+          ? 'bg-blue-500'
+          : 'hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50',
       )}
     >
       <td className="px-2 py-1">
         <div className="flex items-center gap-2">
-          <div className="grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-neutral-50/50 dark:bg-neutral-950/50">
+          <div className="grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-white/50 dark:bg-neutral-950/50">
             <AssetThumb asset={asset} className="size-5" />
           </div>
-          <span className="truncate text-neutral-800 dark:text-neutral-200">{asset.label}</span>
+          <span className="truncate text-neutral-800 dark:text-neutral-200">
+            {asset.label}
+          </span>
         </div>
       </td>
-      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">{asset.assetType}</td>
-      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">{formatBytes(asset.fileSize)}</td>
+      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">
+        {asset.assetType}
+      </td>
+      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">
+        {formatBytes(asset.fileSize)}
+      </td>
       <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">
         {formatDate(asset.lastModified)}
       </td>

@@ -49,7 +49,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        'fixed inset-0 z-200 bg-neutral-50/80 dark:bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0',
+        'fixed inset-0 z-200 bg-white/90 dark:bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0',
         className,
       )}
       {...props}
@@ -82,7 +82,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-200 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border bg-neutral-50 dark:bg-neutral-950 p-6 shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
+          'fixed top-1/2 left-1/2 z-200 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-6 shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
           dialogSizes[size],
           className,
         )}
@@ -130,7 +130,10 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn('text-lg font-semibold text-neutral-950 dark:text-white', className)}
+      className={cn(
+        'text-lg font-semibold text-neutral-950 dark:text-white',
+        className,
+      )}
       {...props}
     />
   )
@@ -143,7 +146,10 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn('text-sm text-neutral-600 dark:text-neutral-400', className)}
+      className={cn(
+        'text-sm text-neutral-600 dark:text-neutral-400',
+        className,
+      )}
       {...props}
     />
   )

@@ -272,7 +272,7 @@ function LineChart({
       )}
       {hovered && (
         <div
-          className="pointer-events-none absolute top-1 z-10 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 px-2 py-1 text-xs whitespace-nowrap shadow-md"
+          className="pointer-events-none absolute top-1 z-10 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 text-xs whitespace-nowrap shadow-md"
           style={
             x(hovered.time) > width / 2
               ? { right: width - x(hovered.time) + 8 }

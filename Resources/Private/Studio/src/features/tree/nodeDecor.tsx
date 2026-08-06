@@ -126,7 +126,7 @@ export function nodeDecor(
             title={overlay.label}
             className={cn(
               faClassName(overlay.icon),
-              'absolute rounded-full bg-neutral-100 dark:bg-neutral-900 text-[0.6rem]',
+              'absolute rounded-full bg-neutral-50 dark:bg-neutral-900 text-[0.6rem]',
               OVERLAY_POSITION[overlay.position ?? 'bottom-right'],
             )}
             style={{ color: overlay.color ?? 'var(--color-red-500)' }}

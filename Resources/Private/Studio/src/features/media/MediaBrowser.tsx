@@ -74,13 +74,13 @@ export function MediaBrowser({
     <div className="relative flex h-full min-h-0 flex-col">
       {mode === 'picker' && (
         <div className="flex shrink-0 items-center justify-between gap-2 bg-blue-500 px-3 py-2 text-xs">
-          <span className="min-w-0 truncate text-neutral-950 dark:text-white">
+          <span className="min-w-0 truncate text-white">
             {t('media.pickAsset', 'Pick an asset')}
             {pickerTitle && (
               <>
                 {' '}
                 {t('media.for', 'for')}{' '}
-                <span className="font-medium text-neutral-950 dark:text-white">{pickerTitle}</span>
+                <span className="font-medium text-white">{pickerTitle}</span>
               </>
             )}{' '}
             {t('media.doubleClickToChoose', '— double-click to choose.')}

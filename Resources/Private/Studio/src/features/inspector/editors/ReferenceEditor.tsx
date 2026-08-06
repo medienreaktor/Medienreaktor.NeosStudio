@@ -534,7 +534,9 @@ function ReferenceEditorBase({
                   <span className="truncate">{display.label}</span>
                 </>
               ) : (
-                <span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>
+                <span className="text-neutral-600 dark:text-neutral-400">
+                  {placeholder}
+                </span>
               )
             }
           />
@@ -592,7 +594,7 @@ function ReferenceEditorBase({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-2 text-sm',
+              'flex h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 text-sm',
               dragIndex === index && 'opacity-50',
             )}
           >
@@ -625,7 +627,11 @@ function ReferenceEditorBase({
       })}
       <ReferencePicker
         {...pickerProps}
-        triggerContent={<span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>}
+        triggerContent={
+          <span className="text-neutral-600 dark:text-neutral-400">
+            {placeholder}
+          </span>
+        }
       />
     </div>
   )

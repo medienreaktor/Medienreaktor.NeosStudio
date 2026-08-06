@@ -247,7 +247,7 @@ export function ImageCropDialog({
           </div>
         )}
 
-        <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950">
+        <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950">
           {!original ? (
             <i
               className="fas fa-spinner fa-spin text-[1.5rem] text-neutral-500"

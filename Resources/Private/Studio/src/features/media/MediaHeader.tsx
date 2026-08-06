@@ -140,7 +140,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
-    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-neutral-50/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
+    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-white/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
       <SearchInput
         value={filter.search}
         onChange={(e) => state.setSearch(e.target.value)}
@@ -338,11 +338,16 @@ function FilterButton({
       <PopoverTrigger
         className={cn(
           'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm bg-neutral-300/30 dark:bg-neutral-700/30 hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50',
-          active ? 'text-neutral-950 dark:text-white' : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 ',
+          active
+            ? 'text-neutral-950 dark:text-white'
+            : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 ',
         )}
       >
         <span
-          className={cn('shrink-0', active ? 'text-neutral-950 dark:text-white' : 'text-neutral-500')}
+          className={cn(
+            'shrink-0',
+            active ? 'text-neutral-950 dark:text-white' : 'text-neutral-500',
+          )}
         >
           {icon}
         </span>

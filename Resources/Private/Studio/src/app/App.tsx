@@ -428,7 +428,7 @@ export function App() {
   if (auth === 'anonymous') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <div className="rounded-lg border bg-neutral-100 dark:bg-neutral-900 px-12 py-10 text-center">
+        <div className="rounded-lg border bg-neutral-50 dark:bg-neutral-900 px-12 py-10 text-center">
           <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
           <p className="mb-6 text-neutral-600 dark:text-neutral-400">
             {t('app.tagline', 'Editing environment for Neos')}

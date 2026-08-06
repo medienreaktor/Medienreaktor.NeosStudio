@@ -80,11 +80,11 @@ function ModalHost({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
           data-slot="modal-overlay"
-          className="fixed inset-0 z-200 bg-neutral-50/80 dark:bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
+          className="fixed inset-0 z-200 bg-white/90 dark:bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
         />
         <DialogPrimitive.Popup
           data-slot="modal-content"
-          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border bg-neutral-50 dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
+          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
         >
           {open.kind === 'settings' && (
             <SettingsModal
@@ -109,7 +109,7 @@ function ModalHeader({
   children?: React.ReactNode
 }) {
   return (
-    <header className="flex shrink-0 items-center gap-3 border-b px-4 py-2.5">
+    <header className="flex shrink-0 items-center gap-3 px-4 py-2.5">
       <DialogPrimitive.Title className="text-lg font-semibold text-neutral-950 dark:text-white">
         {title}
       </DialogPrimitive.Title>
@@ -207,7 +207,7 @@ function SettingsNavItem({
         !enabled
           ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600'
           : isActive
-            ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white'
+            ? 'bg-neutral-100 dark:bg-neutral-800 text-blue-500'
             : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 hover:text-neutral-950 dark:hover:text-white',
       )}
     >
