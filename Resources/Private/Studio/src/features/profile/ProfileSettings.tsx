@@ -88,8 +88,23 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const [email, setEmail] = useState(profile.email ?? '')
   const [language, setLanguage] = useState(profile.interfaceLanguage)
 
+  // Neos ships language labels as "Deutsch – German"; show the native name
+  // prominently with the English name muted behind it.
   const languageItems = Object.entries(profile.availableLanguages).map(
-    ([value, label]) => ({ value, label }),
+    ([value, label]) => {
+      const [native, english] = label.split(' – ')
+      return {
+        value,
+        label: (
+          <span>
+            {native}
+            {english && (
+              <span className="ml-2 text-neutral-400">{english}</span>
+            )}
+          </span>
+        ),
+      }
+    },
   )
 
   const changes: UpdateProfileInput = {}
