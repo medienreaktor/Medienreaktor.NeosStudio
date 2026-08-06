@@ -1,0 +1,3447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext" target-language="fr">
+    <body>
+      <trans-unit id="action.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="action.close" xml:space="preserve">
+        <source>Close</source>
+        <target xml:lang="fr">Fermer</target>
+      </trans-unit>
+      <trans-unit id="app.connectToApi" xml:space="preserve">
+        <source>Connect to the API</source>
+        <target xml:lang="fr">Se connecter à l'API</target>
+      </trans-unit>
+      <trans-unit id="app.loadingStudio" xml:space="preserve">
+        <source>Loading Neos Studio…</source>
+        <target xml:lang="fr">Chargement de Neos Studio…</target>
+      </trans-unit>
+      <trans-unit id="app.loginFailed" xml:space="preserve">
+        <source>Login failed</source>
+        <target xml:lang="fr">Échec de la connexion</target>
+      </trans-unit>
+      <trans-unit id="app.tagline" xml:space="preserve">
+        <source>Editing environment for Neos</source>
+        <target xml:lang="fr">Environnement d'édition pour Neos</target>
+      </trans-unit>
+      <trans-unit id="clipboard.activateHint" xml:space="preserve">
+        <source>Make this the entry the next paste inserts</source>
+        <target xml:lang="fr">Utiliser cette entrée lors du prochain collage</target>
+      </trans-unit>
+      <trans-unit id="clipboard.clear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="fr">Vider</target>
+      </trans-unit>
+      <trans-unit id="clipboard.copied" xml:space="preserve">
+        <source>Copied</source>
+        <target xml:lang="fr">Copié</target>
+      </trans-unit>
+      <trans-unit id="clipboard.cutHint" xml:space="preserve">
+        <source>Cut - pasting moves it</source>
+        <target xml:lang="fr">Coupé - le collage le déplace</target>
+      </trans-unit>
+      <trans-unit id="clipboard.empty" xml:space="preserve">
+        <source>Nothing on the clipboard. Cut or copy a document or element from its context menu.</source>
+        <target xml:lang="fr">Le presse-papiers est vide. Coupez ou copiez un document ou un élément depuis son menu contextuel.</target>
+      </trans-unit>
+      <trans-unit id="clipboard.pasteHint" xml:space="preserve">
+        <source>Paste inserts the highlighted entry.</source>
+        <target xml:lang="fr">Coller insère l'entrée en surbrillance.</target>
+      </trans-unit>
+      <trans-unit id="clipboard.removeFromClipboard" xml:space="preserve">
+        <source>Remove from clipboard</source>
+        <target xml:lang="fr">Retirer du presse-papiers</target>
+      </trans-unit>
+      <trans-unit id="clipboard.statusCut" xml:space="preserve">
+        <source>Cut</source>
+        <target xml:lang="fr">Coupé</target>
+      </trans-unit>
+      <trans-unit id="common.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="fr">L'action a échoué.</target>
+      </trans-unit>
+      <trans-unit id="common.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="common.close" xml:space="preserve">
+        <source>Close</source>
+        <target xml:lang="fr">Fermer</target>
+      </trans-unit>
+      <trans-unit id="common.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fr">Supprimer</target>
+      </trans-unit>
+      <trans-unit id="common.resizeSidebar" xml:space="preserve">
+        <source>Resize sidebar</source>
+        <target xml:lang="fr">Redimensionner la barre latérale</target>
+      </trans-unit>
+      <trans-unit id="common.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="fr">Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="common.sidebar" xml:space="preserve">
+        <source>Sidebar</source>
+        <target xml:lang="fr">Barre latérale</target>
+      </trans-unit>
+      <trans-unit id="common.sidebarMobileDescription" xml:space="preserve">
+        <source>Displays the mobile sidebar.</source>
+        <target xml:lang="fr">Affiche la barre latérale mobile.</target>
+      </trans-unit>
+      <trans-unit id="common.toastError" xml:space="preserve">
+        <source>Error</source>
+        <target xml:lang="fr">Erreur</target>
+      </trans-unit>
+      <trans-unit id="common.toastInfo" xml:space="preserve">
+        <source>Notice</source>
+        <target xml:lang="fr">Information</target>
+      </trans-unit>
+      <trans-unit id="common.toastLoading" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="fr">En cours…</target>
+      </trans-unit>
+      <trans-unit id="common.toastSuccess" xml:space="preserve">
+        <source>Success</source>
+        <target xml:lang="fr">Succès</target>
+      </trans-unit>
+      <trans-unit id="common.toggleSidebar" xml:space="preserve">
+        <source>Toggle Sidebar</source>
+        <target xml:lang="fr">Afficher/masquer la barre latérale</target>
+      </trans-unit>
+      <trans-unit id="common.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="fr">En cours…</target>
+      </trans-unit>
+      <trans-unit id="creation.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="creation.create" xml:space="preserve">
+        <source>Create</source>
+        <target xml:lang="fr">Créer</target>
+      </trans-unit>
+      <trans-unit id="creation.createNewNoun" xml:space="preserve">
+        <source>Create new {0}</source>
+        <target xml:lang="fr">Créer un nouveau {0}</target>
+      </trans-unit>
+      <trans-unit id="creation.createType" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="fr">Créer {0}</target>
+      </trans-unit>
+      <trans-unit id="creation.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="creation.creatingFailed" xml:space="preserve">
+        <source>Creating failed</source>
+        <target xml:lang="fr">Échec de la création</target>
+      </trans-unit>
+      <trans-unit id="creation.dragHint" xml:space="preserve">
+        <source>{0} ({1}) - drag into the preview</source>
+        <target xml:lang="fr">{0} ({1}) - à glisser dans l'aperçu</target>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
+        <source>Filter node types</source>
+        <target xml:lang="fr">Filtrer les types de nœuds</target>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypesPlaceholder" xml:space="preserve">
+        <source>Filter node types…</source>
+        <target xml:lang="fr">Filtrer les types de nœuds…</target>
+      </trans-unit>
+      <trans-unit id="creation.insertionPosition" xml:space="preserve">
+        <source>Insertion position</source>
+        <target xml:lang="fr">Position d'insertion</target>
+      </trans-unit>
+      <trans-unit id="creation.loadingNodeTypes" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="fr">Chargement des types de nœuds…</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.after" xml:space="preserve">
+        <source>After</source>
+        <target xml:lang="fr">Après</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.before" xml:space="preserve">
+        <source>Before</source>
+        <target xml:lang="fr">Avant</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.inside" xml:space="preserve">
+        <source>Inside</source>
+        <target xml:lang="fr">À l'intérieur</target>
+      </trans-unit>
+      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
+        <source>No creatable content node types.</source>
+        <target xml:lang="fr">Aucun type de nœud de contenu ne peut être créé.</target>
+      </trans-unit>
+      <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
+        <source>No node types match the filter.</source>
+        <target xml:lang="fr">Aucun type de nœud ne correspond au filtre.</target>
+      </trans-unit>
+      <trans-unit id="creation.noTypesHere" xml:space="preserve">
+        <source>No {0} types can be created here.</source>
+        <target xml:lang="fr">Aucun type de {0} ne peut être créé ici.</target>
+      </trans-unit>
+      <trans-unit id="creation.nounDocument" xml:space="preserve">
+        <source>document</source>
+        <target xml:lang="fr">document</target>
+      </trans-unit>
+      <trans-unit id="creation.nounElement" xml:space="preserve">
+        <source>element</source>
+        <target xml:lang="fr">élément</target>
+      </trans-unit>
+      <trans-unit id="creation.relativeTo" xml:space="preserve">
+        <source>Relative to “{0}”.</source>
+        <target xml:lang="fr">Par rapport à “{0}”.</target>
+      </trans-unit>
+      <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
+        <source>Checking parent documents failed</source>
+        <target xml:lang="fr">Échec de la vérification des documents parents</target>
+      </trans-unit>
+      <trans-unit id="dimension.checkingParents" xml:space="preserve">
+        <source> Checking which parent documents are missing…</source>
+        <target xml:lang="fr"> Vérification des documents parents manquants…</target>
+      </trans-unit>
+      <trans-unit id="dimension.createAndCopy" xml:space="preserve">
+        <source>Create and copy content</source>
+        <target xml:lang="fr">Créer et copier le contenu</target>
+      </trans-unit>
+      <trans-unit id="dimension.createEmpty" xml:space="preserve">
+        <source>Create empty</source>
+        <target xml:lang="fr">Créer vide</target>
+      </trans-unit>
+      <trans-unit id="dimension.createTitle" xml:space="preserve">
+        <source>Create document in {0}?</source>
+        <target xml:lang="fr">Créer le document en {0} ?</target>
+      </trans-unit>
+      <trans-unit id="dimension.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+        <target xml:lang="fr">Échec de la création de la variante</target>
+      </trans-unit>
+      <trans-unit id="dimension.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
+        <source> {0} missing parent documents will be created as well.</source>
+        <target xml:lang="fr"> {0} documents parents manquants seront également créés.</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsOne" xml:space="preserve">
+        <source> 1 missing parent document will be created as well.</source>
+        <target xml:lang="fr"> 1 document parent manquant sera également créé.</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingVariant" xml:space="preserve">
+        <source>The selected document does not exist here yet - create it?</source>
+        <target xml:lang="fr">Le document sélectionné n'existe pas encore ici - le créer ?</target>
+      </trans-unit>
+      <trans-unit id="dimension.notExistYet" xml:space="preserve">
+        <source>“{0}” does not exist in {1} yet.</source>
+        <target xml:lang="fr">“{0}” n'existe pas encore en {1}.</target>
+      </trans-unit>
+      <trans-unit id="dimension.variantCreated" xml:space="preserve">
+        <source>Document variant created.</source>
+        <target xml:lang="fr">Variante du document créée.</target>
+      </trans-unit>
+      <trans-unit id="editing.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="editing.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="fr">Copier</target>
+      </trans-unit>
+      <trans-unit id="editing.copyFailed" xml:space="preserve">
+        <source>Copying failed</source>
+        <target xml:lang="fr">Échec de la copie</target>
+      </trans-unit>
+      <trans-unit id="editing.createFailed" xml:space="preserve">
+        <source>Creating failed</source>
+        <target xml:lang="fr">Échec de la création</target>
+      </trans-unit>
+      <trans-unit id="editing.createNew" xml:space="preserve">
+        <source>Create new…</source>
+        <target xml:lang="fr">Créer un nouveau…</target>
+      </trans-unit>
+      <trans-unit id="editing.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+        <target xml:lang="fr">Échec de la création de la variante</target>
+      </trans-unit>
+      <trans-unit id="editing.cut" xml:space="preserve">
+        <source>Cut</source>
+        <target xml:lang="fr">Couper</target>
+      </trans-unit>
+      <trans-unit id="editing.cutFailed" xml:space="preserve">
+        <source>Cutting failed</source>
+        <target xml:lang="fr">Échec du coupage</target>
+      </trans-unit>
+      <trans-unit id="editing.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fr">Supprimer</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.description" xml:space="preserve">
+        <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
+        <target xml:lang="fr">Le {0} et tout son contenu seront supprimés. Pour annuler, rejetez la modification depuis l'espace de travail.</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
+        <source>Delete this {0}?</source>
+        <target xml:lang="fr">Supprimer ce {0} ?</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteFailed" xml:space="preserve">
+        <source>Deleting failed</source>
+        <target xml:lang="fr">Échec de la suppression</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.document" xml:space="preserve">
+        <source>document</source>
+        <target xml:lang="fr">document</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.element" xml:space="preserve">
+        <source>element</source>
+        <target xml:lang="fr">élément</target>
+      </trans-unit>
+      <trans-unit id="editing.hide" xml:space="preserve">
+        <source>Hide</source>
+        <target xml:lang="fr">Masquer</target>
+      </trans-unit>
+      <trans-unit id="editing.hideFailed" xml:space="preserve">
+        <source>Hiding failed</source>
+        <target xml:lang="fr">Échec du masquage</target>
+      </trans-unit>
+      <trans-unit id="editing.moveFailed" xml:space="preserve">
+        <source>Moving failed</source>
+        <target xml:lang="fr">Échec du déplacement</target>
+      </trans-unit>
+      <trans-unit id="editing.noParentToPaste" xml:space="preserve">
+        <source>The node has no parent to paste next to.</source>
+        <target xml:lang="fr">Le nœud n'a pas de parent à côté duquel coller.</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfter" xml:space="preserve">
+        <source>Paste after</source>
+        <target xml:lang="fr">Coller après</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfterHint" xml:space="preserve">
+        <source>Paste “{0}” after this {1}</source>
+        <target xml:lang="fr">Coller “{0}” après ce {1}</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteFailed" xml:space="preserve">
+        <source>Pasting failed</source>
+        <target xml:lang="fr">Échec du collage</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteInto" xml:space="preserve">
+        <source>Paste into</source>
+        <target xml:lang="fr">Coller à l'intérieur</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteIntoHint" xml:space="preserve">
+        <source>Paste “{0}” inside, as the last child</source>
+        <target xml:lang="fr">Coller “{0}” à l'intérieur, en dernier enfant</target>
+      </trans-unit>
+      <trans-unit id="editing.saveFailed" xml:space="preserve">
+        <source>Saving failed</source>
+        <target xml:lang="fr">Échec de l'enregistrement</target>
+      </trans-unit>
+      <trans-unit id="editing.setImageFailed" xml:space="preserve">
+        <source>Setting image failed</source>
+        <target xml:lang="fr">Échec de la définition de l'image</target>
+      </trans-unit>
+      <trans-unit id="editing.unhide" xml:space="preserve">
+        <source>Unhide</source>
+        <target xml:lang="fr">Afficher</target>
+      </trans-unit>
+      <trans-unit id="editing.unhideFailed" xml:space="preserve">
+        <source>Unhiding failed</source>
+        <target xml:lang="fr">Échec de l'affichage</target>
+      </trans-unit>
+      <trans-unit id="editing.variantCreated" xml:space="preserve">
+        <source>Variant created in the current dimension.</source>
+        <target xml:lang="fr">Variante créée dans la dimension actuelle.</target>
+      </trans-unit>
+      <trans-unit id="editor.addAsset" xml:space="preserve">
+        <source>Add asset…</source>
+        <target xml:lang="fr">Ajouter une ressource…</target>
+      </trans-unit>
+      <trans-unit id="editor.addImage" xml:space="preserve">
+        <source>Add image…</source>
+        <target xml:lang="fr">Ajouter une image…</target>
+      </trans-unit>
+      <trans-unit id="editor.apply" xml:space="preserve">
+        <source>Apply</source>
+        <target xml:lang="fr">Appliquer</target>
+      </trans-unit>
+      <trans-unit id="editor.assetNotFound" xml:space="preserve">
+        <source>Asset not found</source>
+        <target xml:lang="fr">Ressource introuvable</target>
+      </trans-unit>
+      <trans-unit id="editor.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="editor.clear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="fr">Effacer</target>
+      </trans-unit>
+      <trans-unit id="editor.code.edit" xml:space="preserve">
+        <source>Edit code…</source>
+        <target xml:lang="fr">Modifier le code…</target>
+      </trans-unit>
+      <trans-unit id="editor.code.empty" xml:space="preserve">
+        <source>No content yet</source>
+        <target xml:lang="fr">Pas encore de contenu</target>
+      </trans-unit>
+      <trans-unit id="editor.crop" xml:space="preserve">
+        <source>Crop</source>
+        <target xml:lang="fr">Recadrer</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.apply" xml:space="preserve">
+        <source>Apply crop</source>
+        <target xml:lang="fr">Appliquer le recadrage</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.applying" xml:space="preserve">
+        <source>Applying…</source>
+        <target xml:lang="fr">Application…</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.aspectRatio" xml:space="preserve">
+        <source>Aspect ratio</source>
+        <target xml:lang="fr">Rapport d'aspect</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.cannotCrop" xml:space="preserve">
+        <source>This image cannot be cropped.</source>
+        <target xml:lang="fr">Cette image ne peut pas être recadrée.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.drawFirst" xml:space="preserve">
+        <source>Draw a crop area first.</source>
+        <target xml:lang="fr">Dessinez d'abord une zone de recadrage.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.failed" xml:space="preserve">
+        <source>Cropping failed</source>
+        <target xml:lang="fr">Échec du recadrage</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.failedBody" xml:space="preserve">
+        <source>Cropping failed.</source>
+        <target xml:lang="fr">Le recadrage a échoué.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.free" xml:space="preserve">
+        <source>Free</source>
+        <target xml:lang="fr">Libre</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.original" xml:space="preserve">
+        <source>Original</source>
+        <target xml:lang="fr">Original</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.title" xml:space="preserve">
+        <source>Crop image</source>
+        <target xml:lang="fr">Recadrer l'image</target>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.nextMonth" xml:space="preserve">
+        <source>Next month</source>
+        <target xml:lang="fr">Mois suivant</target>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.prevMonth" xml:space="preserve">
+        <source>Previous month</source>
+        <target xml:lang="fr">Mois précédent</target>
+      </trans-unit>
+      <trans-unit id="editor.link.edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="fr">Modifier le lien</target>
+      </trans-unit>
+      <trans-unit id="editor.link.remove" xml:space="preserve">
+        <source>Remove link</source>
+        <target xml:lang="fr">Supprimer le lien</target>
+      </trans-unit>
+      <trans-unit id="editor.link.set" xml:space="preserve">
+        <source>Set link…</source>
+        <target xml:lang="fr">Définir le lien…</target>
+      </trans-unit>
+      <trans-unit id="editor.loading" xml:space="preserve">
+        <source>Loading…</source>
+        <target xml:lang="fr">Chargement…</target>
+      </trans-unit>
+      <trans-unit id="editor.loadingOptionsFailed" xml:space="preserve">
+        <source>Loading options failed</source>
+        <target xml:lang="fr">Échec du chargement des options</target>
+      </trans-unit>
+      <trans-unit id="editor.noMatches" xml:space="preserve">
+        <source>No matches</source>
+        <target xml:lang="fr">Aucun résultat</target>
+      </trans-unit>
+      <trans-unit id="editor.now" xml:space="preserve">
+        <source>Now</source>
+        <target xml:lang="fr">Maintenant</target>
+      </trans-unit>
+      <trans-unit id="editor.range.currentValue" xml:space="preserve">
+        <source>Current value</source>
+        <target xml:lang="fr">Valeur actuelle</target>
+      </trans-unit>
+      <trans-unit id="editor.range.maximum" xml:space="preserve">
+        <source>Maximum</source>
+        <target xml:lang="fr">Maximum</target>
+      </trans-unit>
+      <trans-unit id="editor.range.minimum" xml:space="preserve">
+        <source>Minimum</source>
+        <target xml:lang="fr">Minimum</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
+        <source>References can be set after creation</source>
+        <target xml:lang="fr">Les références pourront être définies après la création</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
+        <source>Type at least {0} characters to search</source>
+        <target xml:lang="fr">Saisissez au moins {0} caractères pour rechercher</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeastOne" xml:space="preserve">
+        <source>Type at least {0} character to search</source>
+        <target xml:lang="fr">Saisissez au moins {0} caractère pour rechercher</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeToSearch" xml:space="preserve">
+        <source>Type to search</source>
+        <target xml:lang="fr">Saisissez pour rechercher</target>
+      </trans-unit>
+      <trans-unit id="editor.remove" xml:space="preserve">
+        <source>Remove</source>
+        <target xml:lang="fr">Retirer</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockFormat" xml:space="preserve">
+        <source>Block format</source>
+        <target xml:lang="fr">Format de bloc</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockquote" xml:space="preserve">
+        <source>Blockquote</source>
+        <target xml:lang="fr">Citation</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.bold" xml:space="preserve">
+        <source>Bold</source>
+        <target xml:lang="fr">Gras</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.bulletList" xml:space="preserve">
+        <source>Bullet list</source>
+        <target xml:lang="fr">Liste à puces</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.code" xml:space="preserve">
+        <source>Code</source>
+        <target xml:lang="fr">Code</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.codeBlock" xml:space="preserve">
+        <source>Code block</source>
+        <target xml:lang="fr">Bloc de code</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.heading" xml:space="preserve">
+        <source>Heading {0}</source>
+        <target xml:lang="fr">Titre {0}</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.horizontalRule" xml:space="preserve">
+        <source>Horizontal rule</source>
+        <target xml:lang="fr">Ligne horizontale</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.italic" xml:space="preserve">
+        <source>Italic</source>
+        <target xml:lang="fr">Italique</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.link" xml:space="preserve">
+        <source>Link</source>
+        <target xml:lang="fr">Lien</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.orderedList" xml:space="preserve">
+        <source>Ordered list</source>
+        <target xml:lang="fr">Liste numérotée</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.paragraph" xml:space="preserve">
+        <source>Paragraph</source>
+        <target xml:lang="fr">Paragraphe</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.removeFormat" xml:space="preserve">
+        <source>Remove formatting</source>
+        <target xml:lang="fr">Supprimer la mise en forme</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.strikethrough" xml:space="preserve">
+        <source>Strikethrough</source>
+        <target xml:lang="fr">Barré</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.styles" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="fr">Styles</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.subscript" xml:space="preserve">
+        <source>Subscript</source>
+        <target xml:lang="fr">Indice</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.superscript" xml:space="preserve">
+        <source>Superscript</source>
+        <target xml:lang="fr">Exposant</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.underline" xml:space="preserve">
+        <source>Underline</source>
+        <target xml:lang="fr">Souligné</target>
+      </trans-unit>
+      <trans-unit id="editor.searchFailed" xml:space="preserve">
+        <source>Search failed</source>
+        <target xml:lang="fr">Échec de la recherche</target>
+      </trans-unit>
+      <trans-unit id="editor.searchPlaceholder" xml:space="preserve">
+        <source>Search…</source>
+        <target xml:lang="fr">Rechercher…</target>
+      </trans-unit>
+      <trans-unit id="editor.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="fr">Recherche…</target>
+      </trans-unit>
+      <trans-unit id="editor.select" xml:space="preserve">
+        <source>Select…</source>
+        <target xml:lang="fr">Sélectionner…</target>
+      </trans-unit>
+      <trans-unit id="editor.selectAsset" xml:space="preserve">
+        <source>Select asset…</source>
+        <target xml:lang="fr">Sélectionner une ressource…</target>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUnsupported" xml:space="preserve">
+        <source>Data source not supported</source>
+        <target xml:lang="fr">Source de données non prise en charge</target>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUriHint" xml:space="preserve">
+        <source>editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier</source>
+        <target xml:lang="fr">editorOptions.dataSourceUri n'est pas pris en charge dans Studio - utilisez dataSourceIdentifier</target>
+      </trans-unit>
+      <trans-unit id="editor.selectImage" xml:space="preserve">
+        <source>Select image…</source>
+        <target xml:lang="fr">Sélectionner une image…</target>
+      </trans-unit>
+      <trans-unit id="editor.time" xml:space="preserve">
+        <source>Time</source>
+        <target xml:lang="fr">Heure</target>
+      </trans-unit>
+      <trans-unit id="editor.today" xml:space="preserve">
+        <source>Today</source>
+        <target xml:lang="fr">Aujourd'hui</target>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.generateFailed" xml:space="preserve">
+        <source>Could not generate the URL path segment</source>
+        <target xml:lang="fr">Impossible de générer le segment d'URL</target>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
+        <source>Rebuild the URL path segment from the current page title</source>
+        <target xml:lang="fr">Régénérer le segment d'URL à partir du titre actuel de la page</target>
+      </trans-unit>
+      <trans-unit id="graph.fit" xml:space="preserve">
+        <source>Fit to view</source>
+        <target xml:lang="fr">Ajuster à la vue</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+        <target xml:lang="fr">Zoom avant</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+        <target xml:lang="fr">Zoom arrière</target>
+      </trans-unit>
+      <trans-unit id="history.empty" xml:space="preserve">
+        <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
+        <target xml:lang="fr">Aucune modification non publiée sur cette page. Chaque modification que vous effectuez apparaît ici jusqu'à sa publication.</target>
+      </trans-unit>
+      <trans-unit id="history.loading" xml:space="preserve">
+        <source>Loading the history…</source>
+        <target xml:lang="fr">Chargement de l'historique…</target>
+      </trans-unit>
+      <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
+        <source>Editor not supported yet: {0}</source>
+        <target xml:lang="fr">Éditeur pas encore pris en charge : {0}</target>
+      </trans-unit>
+      <trans-unit id="inspector.no" xml:space="preserve">
+        <source>No</source>
+        <target xml:lang="fr">Non</target>
+      </trans-unit>
+      <trans-unit id="inspector.noProperties" xml:space="preserve">
+        <source>This node type has no inspector properties.</source>
+        <target xml:lang="fr">Ce type de nœud n'a aucune propriété dans l'inspecteur.</target>
+      </trans-unit>
+      <trans-unit id="inspector.nodeDeleted" xml:space="preserve">
+        <source>This node is deleted. Restore it to edit its properties again.</source>
+        <target xml:lang="fr">Ce nœud est supprimé. Restaurez-le pour modifier à nouveau ses propriétés.</target>
+      </trans-unit>
+      <trans-unit id="inspector.savingFailed" xml:space="preserve">
+        <source>Saving failed</source>
+        <target xml:lang="fr">Échec de l'enregistrement</target>
+      </trans-unit>
+      <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
+        <source>Select a node in the preview or the trees to inspect it.</source>
+        <target xml:lang="fr">Sélectionnez un nœud dans l'aperçu ou dans les arborescences pour l'inspecter.</target>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
+        <source>Shines through from</source>
+        <target xml:lang="fr">Hérité par transparence de</target>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughHint" xml:space="preserve">
+        <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
+        <target xml:lang="fr">Ce nœud n'existe pas encore dans la dimension actuelle - le modifier crée ici une variante indépendante.</target>
+      </trans-unit>
+      <trans-unit id="inspector.validationError" xml:space="preserve">
+        <source>{0} validation error</source>
+        <target xml:lang="fr">{0} erreur de validation</target>
+      </trans-unit>
+      <trans-unit id="inspector.validationErrors" xml:space="preserve">
+        <source>{0} validation errors</source>
+        <target xml:lang="fr">{0} erreurs de validation</target>
+      </trans-unit>
+      <trans-unit id="inspector.yes" xml:space="preserve">
+        <source>Yes</source>
+        <target xml:lang="fr">Oui</target>
+      </trans-unit>
+      <trans-unit id="link.anchor" xml:space="preserve">
+        <source>Anchor</source>
+        <target xml:lang="fr">Ancre</target>
+      </trans-unit>
+      <trans-unit id="link.anchorPlaceholder" xml:space="preserve">
+        <source>Optional #anchor on the target page</source>
+        <target xml:lang="fr">#ancre optionnelle sur la page cible</target>
+      </trans-unit>
+      <trans-unit id="link.andBehaves" xml:space="preserve">
+        <source>and how the link behaves</source>
+        <target xml:lang="fr">et le comportement du lien</target>
+      </trans-unit>
+      <trans-unit id="link.apply" xml:space="preserve">
+        <source>Apply</source>
+        <target xml:lang="fr">Appliquer</target>
+      </trans-unit>
+      <trans-unit id="link.asset" xml:space="preserve">
+        <source>Asset</source>
+        <target xml:lang="fr">Ressource</target>
+      </trans-unit>
+      <trans-unit id="link.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="link.chooseLink" xml:space="preserve">
+        <source>Choose the link</source>
+        <target xml:lang="fr">Choisir le lien</target>
+      </trans-unit>
+      <trans-unit id="link.cssClass" xml:space="preserve">
+        <source>CSS class</source>
+        <target xml:lang="fr">Classe CSS</target>
+      </trans-unit>
+      <trans-unit id="link.cssClassPlaceholder" xml:space="preserve">
+        <source>e.g. button</source>
+        <target xml:lang="fr">p. ex. button</target>
+      </trans-unit>
+      <trans-unit id="link.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="fr">Document</target>
+      </trans-unit>
+      <trans-unit id="link.edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="fr">Modifier le lien</target>
+      </trans-unit>
+      <trans-unit id="link.email" xml:space="preserve">
+        <source>E-Mail</source>
+        <target xml:lang="fr">E-mail</target>
+      </trans-unit>
+      <trans-unit id="link.emailAddress" xml:space="preserve">
+        <source>E-Mail address</source>
+        <target xml:lang="fr">Adresse e-mail</target>
+      </trans-unit>
+      <trans-unit id="link.emailHelp" xml:space="preserve">
+        <source>The link opens the visitor's mail client (mailto:).</source>
+        <target xml:lang="fr">Le lien ouvre le client de messagerie du visiteur (mailto:).</target>
+      </trans-unit>
+      <trans-unit id="link.emailPlaceholder" xml:space="preserve">
+        <source>mail@example.com</source>
+        <target xml:lang="fr">mail@exemple.com</target>
+      </trans-unit>
+      <trans-unit id="link.external" xml:space="preserve">
+        <source>External</source>
+        <target xml:lang="fr">Externe</target>
+      </trans-unit>
+      <trans-unit id="link.externalHelp" xml:space="preserve">
+        <source>A full web address; https:// is added when no scheme is given.</source>
+        <target xml:lang="fr">Une adresse web complète ; https:// est ajouté si aucun schéma n'est indiqué.</target>
+      </trans-unit>
+      <trans-unit id="link.for" xml:space="preserve">
+        <source>for</source>
+        <target xml:lang="fr">pour</target>
+      </trans-unit>
+      <trans-unit id="link.insert" xml:space="preserve">
+        <source>Insert link</source>
+        <target xml:lang="fr">Insérer un lien</target>
+      </trans-unit>
+      <trans-unit id="link.linkedAsset" xml:space="preserve">
+        <source>Linked asset: {0}</source>
+        <target xml:lang="fr">Ressource liée : {0}</target>
+      </trans-unit>
+      <trans-unit id="link.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+        <target xml:lang="fr">Chargement des documents…</target>
+      </trans-unit>
+      <trans-unit id="link.noDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+        <target xml:lang="fr">Ce site n'a pas encore de documents.</target>
+      </trans-unit>
+      <trans-unit id="link.noSite" xml:space="preserve">
+        <source>No site is active - there is no document tree to pick from.</source>
+        <target xml:lang="fr">Aucun site n'est actif - il n'y a pas d'arborescence de documents où choisir.</target>
+      </trans-unit>
+      <trans-unit id="link.noTypes" xml:space="preserve">
+        <source>No link types are registered.</source>
+        <target xml:lang="fr">Aucun type de lien n'est enregistré.</target>
+      </trans-unit>
+      <trans-unit id="link.nofollow" xml:space="preserve">
+        <source>No follow (rel="nofollow")</source>
+        <target xml:lang="fr">No follow (rel="nofollow")</target>
+      </trans-unit>
+      <trans-unit id="link.openNewWindow" xml:space="preserve">
+        <source>Open in new window</source>
+        <target xml:lang="fr">Ouvrir dans une nouvelle fenêtre</target>
+      </trans-unit>
+      <trans-unit id="link.options" xml:space="preserve">
+        <source>Link options</source>
+        <target xml:lang="fr">Options du lien</target>
+      </trans-unit>
+      <trans-unit id="link.pickAssetFailed" xml:space="preserve">
+        <source>Picking asset failed</source>
+        <target xml:lang="fr">Échec de la sélection de la ressource</target>
+      </trans-unit>
+      <trans-unit id="link.remove" xml:space="preserve">
+        <source>Remove link</source>
+        <target xml:lang="fr">Supprimer le lien</target>
+      </trans-unit>
+      <trans-unit id="link.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+        <target xml:lang="fr">Rechercher des ressources…</target>
+      </trans-unit>
+      <trans-unit id="link.targetDocument" xml:space="preserve">
+        <source>Link target document</source>
+        <target xml:lang="fr">Document cible du lien</target>
+      </trans-unit>
+      <trans-unit id="link.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fr">Titre</target>
+      </trans-unit>
+      <trans-unit id="link.titlePlaceholder" xml:space="preserve">
+        <source>Shown as tooltip</source>
+        <target xml:lang="fr">Affiché en infobulle</target>
+      </trans-unit>
+      <trans-unit id="link.url" xml:space="preserve">
+        <source>URL</source>
+        <target xml:lang="fr">URL</target>
+      </trans-unit>
+      <trans-unit id="link.urlPlaceholder" xml:space="preserve">
+        <source>https://example.com</source>
+        <target xml:lang="fr">https://exemple.com</target>
+      </trans-unit>
+      <trans-unit id="media.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="fr">L'action a échoué.</target>
+      </trans-unit>
+      <trans-unit id="media.addTag" xml:space="preserve">
+        <source>Add tag…</source>
+        <target xml:lang="fr">Ajouter une étiquette…</target>
+      </trans-unit>
+      <trans-unit id="media.addToCollection" xml:space="preserve">
+        <source>Add to collection…</source>
+        <target xml:lang="fr">Ajouter à une collection…</target>
+      </trans-unit>
+      <trans-unit id="media.allCollections" xml:space="preserve">
+        <source>All collections</source>
+        <target xml:lang="fr">Toutes les collections</target>
+      </trans-unit>
+      <trans-unit id="media.allTags" xml:space="preserve">
+        <source>All tags</source>
+        <target xml:lang="fr">Toutes les étiquettes</target>
+      </trans-unit>
+      <trans-unit id="media.allTypes" xml:space="preserve">
+        <source>All types</source>
+        <target xml:lang="fr">Tous les types</target>
+      </trans-unit>
+      <trans-unit id="media.assetCountOne" xml:space="preserve">
+        <source>{0} asset</source>
+        <target xml:lang="fr">{0} ressource</target>
+      </trans-unit>
+      <trans-unit id="media.assetCountOther" xml:space="preserve">
+        <source>{0} assets</source>
+        <target xml:lang="fr">{0} ressources</target>
+      </trans-unit>
+      <trans-unit id="media.assetImported" xml:space="preserve">
+        <source>Asset imported to Neos.</source>
+        <target xml:lang="fr">Ressource importée dans Neos.</target>
+      </trans-unit>
+      <trans-unit id="media.assetInUse" xml:space="preserve">
+        <source>This asset is in use and cannot be deleted.</source>
+        <target xml:lang="fr">Cette ressource est utilisée et ne peut pas être supprimée.</target>
+      </trans-unit>
+      <trans-unit id="media.assetReplaced" xml:space="preserve">
+        <source>The file of "{0}" was replaced.</source>
+        <target xml:lang="fr">Le fichier de "{0}" a été remplacé.</target>
+      </trans-unit>
+      <trans-unit id="media.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fr">Annuler</target>
+      </trans-unit>
+      <trans-unit id="media.caption" xml:space="preserve">
+        <source>Caption</source>
+        <target xml:lang="fr">Légende</target>
+      </trans-unit>
+      <trans-unit id="media.chooseAnotherFile" xml:space="preserve">
+        <source>Choose another file</source>
+        <target xml:lang="fr">Choisir un autre fichier</target>
+      </trans-unit>
+      <trans-unit id="media.chooseFile" xml:space="preserve">
+        <source>Choose file</source>
+        <target xml:lang="fr">Choisir un fichier</target>
+      </trans-unit>
+      <trans-unit id="media.chooseFiles" xml:space="preserve">
+        <source>Choose files</source>
+        <target xml:lang="fr">Choisir des fichiers</target>
+      </trans-unit>
+      <trans-unit id="media.closeUploader" xml:space="preserve">
+        <source>Close uploader</source>
+        <target xml:lang="fr">Fermer le chargeur</target>
+      </trans-unit>
+      <trans-unit id="media.collection" xml:space="preserve">
+        <source>Collection</source>
+        <target xml:lang="fr">Collection</target>
+      </trans-unit>
+      <trans-unit id="media.collectionAddFailed" xml:space="preserve">
+        <source>Adding to collection failed</source>
+        <target xml:lang="fr">Échec de l'ajout à la collection</target>
+      </trans-unit>
+      <trans-unit id="media.collectionRemoveFailed" xml:space="preserve">
+        <source>Removing from collection failed</source>
+        <target xml:lang="fr">Échec du retrait de la collection</target>
+      </trans-unit>
+      <trans-unit id="media.collections" xml:space="preserve">
+        <source>Collections</source>
+        <target xml:lang="fr">Collections</target>
+      </trans-unit>
+      <trans-unit id="media.copyright" xml:space="preserve">
+        <source>Copyright</source>
+        <target xml:lang="fr">Copyright</target>
+      </trans-unit>
+      <trans-unit id="media.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fr">Supprimer</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAsset" xml:space="preserve">
+        <source>Delete asset</source>
+        <target xml:lang="fr">Supprimer la ressource</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetDescription" xml:space="preserve">
+        <source>The asset will be permanently removed. Assets that are still in use cannot be deleted.</source>
+        <target xml:lang="fr">La ressource sera supprimée définitivement. Les ressources encore utilisées ne peuvent pas être supprimées.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetFailed" xml:space="preserve">
+        <source>Deleting the asset failed.</source>
+        <target xml:lang="fr">La suppression de la ressource a échoué.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetTitle" xml:space="preserve">
+        <source>Delete this asset?</source>
+        <target xml:lang="fr">Supprimer cette ressource ?</target>
+      </trans-unit>
+      <trans-unit id="media.deleteCollectionDescription" xml:space="preserve">
+        <source>“{0}” will be removed. The assets inside it are kept.</source>
+        <target xml:lang="fr">“{0}” sera supprimée. Les ressources qu'elle contient sont conservées.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteTagDescription" xml:space="preserve">
+        <source>“{0}” will be removed from all assets. The assets are kept.</source>
+        <target xml:lang="fr">“{0}” sera retirée de toutes les ressources. Les ressources sont conservées.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteThis" xml:space="preserve">
+        <source>Delete this {0}?</source>
+        <target xml:lang="fr">Supprimer cette {0} ?</target>
+      </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="fr">Dimensions</target>
+      </trans-unit>
+      <trans-unit id="media.done" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="fr">Terminé</target>
+      </trans-unit>
+      <trans-unit id="media.doubleClickToChoose" xml:space="preserve">
+        <source>— double-click to choose.</source>
+        <target xml:lang="fr">— double-cliquez pour choisir.</target>
+      </trans-unit>
+      <trans-unit id="media.dragFileHere" xml:space="preserve">
+        <source>Drag the new file here</source>
+        <target xml:lang="fr">Glissez le nouveau fichier ici</target>
+      </trans-unit>
+      <trans-unit id="media.dragFilesHere" xml:space="preserve">
+        <source>Drag files here</source>
+        <target xml:lang="fr">Glissez des fichiers ici</target>
+      </trans-unit>
+      <trans-unit id="media.editAsset" xml:space="preserve">
+        <source>Edit asset</source>
+        <target xml:lang="fr">Modifier la ressource</target>
+      </trans-unit>
+      <trans-unit id="media.failed" xml:space="preserve">
+        <source>Failed</source>
+        <target xml:lang="fr">Échec</target>
+      </trans-unit>
+      <trans-unit id="media.filename" xml:space="preserve">
+        <source>Filename</source>
+        <target xml:lang="fr">Nom de fichier</target>
+      </trans-unit>
+      <trans-unit id="media.for" xml:space="preserve">
+        <source>for</source>
+        <target xml:lang="fr">pour</target>
+      </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+        <target xml:lang="fr">Format</target>
+      </trans-unit>
+      <trans-unit id="media.gridView" xml:space="preserve">
+        <source>Grid view</source>
+        <target xml:lang="fr">Vue en grille</target>
+      </trans-unit>
+      <trans-unit id="media.importFailed" xml:space="preserve">
+        <source>Importing the asset failed</source>
+        <target xml:lang="fr">Échec de l'importation de la ressource</target>
+      </trans-unit>
+      <trans-unit id="media.importToNeos" xml:space="preserve">
+        <source>Import to Neos</source>
+        <target xml:lang="fr">Importer dans Neos</target>
+      </trans-unit>
+      <trans-unit id="media.importing" xml:space="preserve">
+        <source>Importing…</source>
+        <target xml:lang="fr">Importation…</target>
+      </trans-unit>
+      <trans-unit id="media.keepOriginalFilename" xml:space="preserve">
+        <source>Keep the filename "{0}"</source>
+        <target xml:lang="fr">Conserver le nom de fichier "{0}"</target>
+      </trans-unit>
+      <trans-unit id="media.listView" xml:space="preserve">
+        <source>List view</source>
+        <target xml:lang="fr">Vue en liste</target>
+      </trans-unit>
+      <trans-unit id="media.loadingAssets" xml:space="preserve">
+        <source>Loading assets…</source>
+        <target xml:lang="fr">Chargement des ressources…</target>
+      </trans-unit>
+      <trans-unit id="media.loadingMore" xml:space="preserve">
+        <source>Loading more…</source>
+        <target xml:lang="fr">Chargement de la suite…</target>
+      </trans-unit>
+      <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
+        <source>Saving the metadata failed</source>
+        <target xml:lang="fr">Échec de l'enregistrement des métadonnées</target>
+      </trans-unit>
+      <trans-unit id="media.metadataSaved" xml:space="preserve">
+        <source>Metadata saved.</source>
+        <target xml:lang="fr">Métadonnées enregistrées.</target>
+      </trans-unit>
+      <trans-unit id="media.modified" xml:space="preserve">
+        <source>Modified</source>
+        <target xml:lang="fr">Modifié</target>
+      </trans-unit>
+      <trans-unit id="media.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="media.newCollection" xml:space="preserve">
+        <source>New collection</source>
+        <target xml:lang="fr">Nouvelle collection</target>
+      </trans-unit>
+      <trans-unit id="media.newTag" xml:space="preserve">
+        <source>New tag</source>
+        <target xml:lang="fr">Nouvelle étiquette</target>
+      </trans-unit>
+      <trans-unit id="media.noAssetsMatch" xml:space="preserve">
+        <source>No assets match the current filters.</source>
+        <target xml:lang="fr">Aucune ressource ne correspond aux filtres actuels.</target>
+      </trans-unit>
+      <trans-unit id="media.noCollections" xml:space="preserve">
+        <source>No collections yet</source>
+        <target xml:lang="fr">Pas encore de collections</target>
+      </trans-unit>
+      <trans-unit id="media.noTags" xml:space="preserve">
+        <source>No tags yet</source>
+        <target xml:lang="fr">Pas encore d'étiquettes</target>
+      </trans-unit>
+      <trans-unit id="media.none" xml:space="preserve">
+        <source>None</source>
+        <target xml:lang="fr">Aucune</target>
+      </trans-unit>
+      <trans-unit id="media.nounCollection" xml:space="preserve">
+        <source>collection</source>
+        <target xml:lang="fr">collection</target>
+      </trans-unit>
+      <trans-unit id="media.nounTag" xml:space="preserve">
+        <source>tag</source>
+        <target xml:lang="fr">étiquette</target>
+      </trans-unit>
+      <trans-unit id="media.or" xml:space="preserve">
+        <source>or</source>
+        <target xml:lang="fr">ou</target>
+      </trans-unit>
+      <trans-unit id="media.pickAsset" xml:space="preserve">
+        <source>Pick an asset</source>
+        <target xml:lang="fr">Choisir une ressource</target>
+      </trans-unit>
+      <trans-unit id="media.readOnly" xml:space="preserve">
+        <source>This asset is read-only.</source>
+        <target xml:lang="fr">Cette ressource est en lecture seule.</target>
+      </trans-unit>
+      <trans-unit id="media.readOnlyBadge" xml:space="preserve">
+        <source>read-only</source>
+        <target xml:lang="fr">lecture seule</target>
+      </trans-unit>
+      <trans-unit id="media.removeLabel" xml:space="preserve">
+        <source>Remove {0}</source>
+        <target xml:lang="fr">Retirer {0}</target>
+      </trans-unit>
+      <trans-unit id="media.rename" xml:space="preserve">
+        <source>Rename</source>
+        <target xml:lang="fr">Renommer</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAsset" xml:space="preserve">
+        <source>Replace file</source>
+        <target xml:lang="fr">Remplacer le fichier</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetDescription" xml:space="preserve">
+        <source>The new file takes the place of the current one. Title, tags, collections and every reference to this asset are kept.</source>
+        <target xml:lang="fr">Le nouveau fichier prend la place de l'actuel. Le titre, les étiquettes, les collections et toutes les références à cette ressource sont conservés.</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetFailed" xml:space="preserve">
+        <source>Replacing the file failed</source>
+        <target xml:lang="fr">Échec du remplacement du fichier</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetUsageNote" xml:space="preserve">
+        <source>This asset is used {0} time(s). All usages will show the new file.</source>
+        <target xml:lang="fr">Cette ressource est utilisée {0} fois. Toutes les utilisations afficheront le nouveau fichier.</target>
+      </trans-unit>
+      <trans-unit id="media.replacing" xml:space="preserve">
+        <source>Replacing…</source>
+        <target xml:lang="fr">Remplacement…</target>
+      </trans-unit>
+      <trans-unit id="media.renameNoun" xml:space="preserve">
+        <source>Rename {0}</source>
+        <target xml:lang="fr">Renommer {0}</target>
+      </trans-unit>
+      <trans-unit id="media.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="fr">Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="media.saveMetadata" xml:space="preserve">
+        <source>Save metadata</source>
+        <target xml:lang="fr">Enregistrer les métadonnées</target>
+      </trans-unit>
+      <trans-unit id="media.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fr">Enregistrement…</target>
+      </trans-unit>
+      <trans-unit id="media.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+        <target xml:lang="fr">Rechercher des ressources…</target>
+      </trans-unit>
+      <trans-unit id="media.searchAssetsAria" xml:space="preserve">
+        <source>Search assets</source>
+        <target xml:lang="fr">Rechercher des ressources</target>
+      </trans-unit>
+      <trans-unit id="media.size" xml:space="preserve">
+        <source>Size</source>
+        <target xml:lang="fr">Taille</target>
+      </trans-unit>
+      <trans-unit id="media.sortNameAsc" xml:space="preserve">
+        <source>Name A–Z</source>
+        <target xml:lang="fr">Nom A–Z</target>
+      </trans-unit>
+      <trans-unit id="media.sortNameDesc" xml:space="preserve">
+        <source>Name Z–A</source>
+        <target xml:lang="fr">Nom Z–A</target>
+      </trans-unit>
+      <trans-unit id="media.sortNewest" xml:space="preserve">
+        <source>Newest first</source>
+        <target xml:lang="fr">Plus récents d'abord</target>
+      </trans-unit>
+      <trans-unit id="media.sortOldest" xml:space="preserve">
+        <source>Oldest first</source>
+        <target xml:lang="fr">Plus anciens d'abord</target>
+      </trans-unit>
+      <trans-unit id="media.source" xml:space="preserve">
+        <source>Source</source>
+        <target xml:lang="fr">Source</target>
+      </trans-unit>
+      <trans-unit id="media.tag" xml:space="preserve">
+        <source>Tag</source>
+        <target xml:lang="fr">Étiquette</target>
+      </trans-unit>
+      <trans-unit id="media.tagAddFailed" xml:space="preserve">
+        <source>Adding the tag failed</source>
+        <target xml:lang="fr">Échec de l'ajout de l'étiquette</target>
+      </trans-unit>
+      <trans-unit id="media.tagRemoveFailed" xml:space="preserve">
+        <source>Removing the tag failed</source>
+        <target xml:lang="fr">Échec du retrait de l'étiquette</target>
+      </trans-unit>
+      <trans-unit id="media.tags" xml:space="preserve">
+        <source>Tags</source>
+        <target xml:lang="fr">Étiquettes</target>
+      </trans-unit>
+      <trans-unit id="media.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fr">Titre</target>
+      </trans-unit>
+      <trans-unit id="media.type" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fr">Type</target>
+      </trans-unit>
+      <trans-unit id="media.untagged" xml:space="preserve">
+        <source>Untagged</source>
+        <target xml:lang="fr">Sans étiquette</target>
+      </trans-unit>
+      <trans-unit id="media.upload" xml:space="preserve">
+        <source>Upload</source>
+        <target xml:lang="fr">Charger</target>
+      </trans-unit>
+      <trans-unit id="media.uploadAssets" xml:space="preserve">
+        <source>Upload assets</source>
+        <target xml:lang="fr">Charger des ressources</target>
+      </trans-unit>
+      <trans-unit id="media.uploadFileFailed" xml:space="preserve">
+        <source>Uploading "{0}" failed</source>
+        <target xml:lang="fr">Échec du chargement de "{0}"</target>
+      </trans-unit>
+      <trans-unit id="media.usage" xml:space="preserve">
+        <source>Usage</source>
+        <target xml:lang="fr">Utilisation</target>
+      </trans-unit>
+      <trans-unit id="media.usageInaccessible" xml:space="preserve">
+        <source>+ {0} usage(s) you cannot access</source>
+        <target xml:lang="fr">+ {0} utilisation(s) auxquelles vous n'avez pas accès</target>
+      </trans-unit>
+      <trans-unit id="media.usageNone" xml:space="preserve">
+        <source>Not used anywhere. Safe to delete.</source>
+        <target xml:lang="fr">Utilisée nulle part. Peut être supprimée sans risque.</target>
+      </trans-unit>
+      <trans-unit id="media.usageUnavailable" xml:space="preserve">
+        <source>Usage information is unavailable.</source>
+        <target xml:lang="fr">Les informations d'utilisation ne sont pas disponibles.</target>
+      </trans-unit>
+      <trans-unit id="media.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="fr">En cours…</target>
+      </trans-unit>
+      <trans-unit id="modal.adminsOnly" xml:space="preserve">
+        <source>Administrators only</source>
+        <target xml:lang="fr">Administrateurs uniquement</target>
+      </trans-unit>
+      <trans-unit id="modal.noAccess" xml:space="preserve">
+        <source>You do not have access to this section.</source>
+        <target xml:lang="fr">Vous n'avez pas accès à cette section.</target>
+      </trans-unit>
+      <trans-unit id="modal.noPermission" xml:space="preserve">
+        <source>Not available for your account</source>
+        <target xml:lang="fr">Non disponible pour votre compte</target>
+      </trans-unit>
+      <trans-unit id="modal.noSettings" xml:space="preserve">
+        <source>No settings available</source>
+        <target xml:lang="fr">Aucun paramètre disponible</target>
+      </trans-unit>
+      <trans-unit id="modal.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="fr">Profil</target>
+      </trans-unit>
+      <trans-unit id="modal.settings" xml:space="preserve">
+        <source>Settings</source>
+        <target xml:lang="fr">Paramètres</target>
+      </trans-unit>
+      <trans-unit id="modal.settingsSections" xml:space="preserve">
+        <source>Settings sections</source>
+        <target xml:lang="fr">Sections des paramètres</target>
+      </trans-unit>
+      <trans-unit id="modal.sites" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="fr">Sites</target>
+      </trans-unit>
+      <trans-unit id="modal.users" xml:space="preserve">
+        <source>Users</source>
+        <target xml:lang="fr">Utilisateurs</target>
+      </trans-unit>
+      <trans-unit id="modal.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="fr">Espaces de travail</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
+        <source>Abstract</source>
+        <target xml:lang="fr">Abstrait</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
+        <source>Inherited</source>
+        <target xml:lang="fr">Hérité</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
+        <source>Inherited from {0}</source>
+        <target xml:lang="fr">Hérité de {0}</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
+        <source>Abstract type</source>
+        <target xml:lang="fr">Type abstrait</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
+        <source>Content Collection</source>
+        <target xml:lang="fr">Collection de contenu</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
+        <source>Content</source>
+        <target xml:lang="fr">Contenu</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="fr">Document</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
+        <source>Mixin / other</source>
+        <target xml:lang="fr">Mixin / autre</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
+        <source>The node types could not be loaded.</source>
+        <target xml:lang="fr">Les types de nœuds n'ont pas pu être chargés.</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loading" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="fr">Chargement des types de nœuds…</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.matches" xml:space="preserve">
+        <source>{0} matches</source>
+        <target xml:lang="fr">{0} résultats</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.properties" xml:space="preserve">
+        <source>Properties</source>
+        <target xml:lang="fr">Propriétés</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
+        <source>Search node types by name</source>
+        <target xml:lang="fr">Rechercher des types de nœuds par nom</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
+        <source>Search node types…</source>
+        <target xml:lang="fr">Rechercher des types de nœuds…</target>
+      </trans-unit>
+      <trans-unit id="notifications.clear" xml:space="preserve">
+        <source>Clear notifications</source>
+        <target xml:lang="fr">Effacer les notifications</target>
+      </trans-unit>
+      <trans-unit id="notifications.clearFailed" xml:space="preserve">
+        <source>Clearing failed</source>
+        <target xml:lang="fr">Échec de l'effacement</target>
+      </trans-unit>
+      <trans-unit id="notifications.empty" xml:space="preserve">
+        <source>No notifications.</source>
+        <target xml:lang="fr">Aucune notification.</target>
+      </trans-unit>
+      <trans-unit id="notifications.label" xml:space="preserve">
+        <source>Notifications</source>
+        <target xml:lang="fr">Notifications</target>
+      </trans-unit>
+      <trans-unit id="notifications.markAllRead" xml:space="preserve">
+        <source>Mark all as read</source>
+        <target xml:lang="fr">Tout marquer comme lu</target>
+      </trans-unit>
+      <trans-unit id="notifications.markRead" xml:space="preserve">
+        <source>Mark as read</source>
+        <target xml:lang="fr">Marquer comme lu</target>
+      </trans-unit>
+      <trans-unit id="notifications.markReadFailed" xml:space="preserve">
+        <source>Marking as read failed</source>
+        <target xml:lang="fr">Échec du marquage comme lu</target>
+      </trans-unit>
+      <trans-unit id="notifications.openTask" xml:space="preserve">
+        <source>Open the task</source>
+        <target xml:lang="fr">Ouvrir la tâche</target>
+      </trans-unit>
+      <trans-unit id="notifications.unreadCount" xml:space="preserve">
+        <source>{0} unread notifications</source>
+        <target xml:lang="fr">{0} notifications non lues</target>
+      </trans-unit>
+      <trans-unit id="panel.collapse" xml:space="preserve">
+        <source>Collapse panel</source>
+        <target xml:lang="fr">Replier le panneau</target>
+      </trans-unit>
+      <trans-unit id="panel.dragHere" xml:space="preserve">
+        <source>Drag panels here</source>
+        <target xml:lang="fr">Glissez des panneaux ici</target>
+      </trans-unit>
+      <trans-unit id="panel.expand" xml:space="preserve">
+        <source>Expand panel</source>
+        <target xml:lang="fr">Déplier le panneau</target>
+      </trans-unit>
+      <trans-unit id="panel.loadingSites" xml:space="preserve">
+        <source>Loading sites…</source>
+        <target xml:lang="fr">Chargement des sites…</target>
+      </trans-unit>
+      <trans-unit id="panel.resetLayout" xml:space="preserve">
+        <source>Reset to default</source>
+        <target xml:lang="fr">Réinitialiser par défaut</target>
+      </trans-unit>
+      <trans-unit id="panel.title.clipboard" xml:space="preserve">
+        <source>Clipboard</source>
+        <target xml:lang="fr">Presse-papiers</target>
+      </trans-unit>
+      <trans-unit id="panel.title.create" xml:space="preserve">
+        <source>Create</source>
+        <target xml:lang="fr">Créer</target>
+      </trans-unit>
+      <trans-unit id="panel.title.documents" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="fr">Documents</target>
+      </trans-unit>
+      <trans-unit id="panel.title.history" xml:space="preserve">
+        <source>History</source>
+        <target xml:lang="fr">Historique</target>
+      </trans-unit>
+      <trans-unit id="panel.title.inspector" xml:space="preserve">
+        <source>Inspector</source>
+        <target xml:lang="fr">Inspecteur</target>
+      </trans-unit>
+      <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
+        <source>Media Library</source>
+        <target xml:lang="fr">Médiathèque</target>
+      </trans-unit>
+      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
+        <source>Node Types</source>
+        <target xml:lang="fr">Types de nœuds</target>
+      </trans-unit>
+      <trans-unit id="panel.title.outline" xml:space="preserve">
+        <source>Outline</source>
+        <target xml:lang="fr">Structure</target>
+      </trans-unit>
+      <trans-unit id="panel.title.tasks" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="fr">Tâches</target>
+      </trans-unit>
+      <trans-unit id="panel.title.trash" xml:space="preserve">
+        <source>Trash</source>
+        <target xml:lang="fr">Corbeille</target>
+      </trans-unit>
+      <trans-unit id="panel.title.visualEditor" xml:space="preserve">
+        <source>Visual Editor</source>
+        <target xml:lang="fr">Éditeur visuel</target>
+      </trans-unit>
+      <trans-unit id="panel.title.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="fr">Espaces de travail</target>
+      </trans-unit>
+      <trans-unit id="preview.documentDeleted" xml:space="preserve">
+        <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
+        <target xml:lang="fr">Cette page est supprimée. Elle revient si vous la restaurez - ou disparaît définitivement une fois la suppression publiée.</target>
+      </trans-unit>
+      <trans-unit id="preview.openInNewTab" xml:space="preserve">
+        <source>Open page in a new tab</source>
+        <target xml:lang="fr">Ouvrir la page dans un nouvel onglet</target>
+      </trans-unit>
+      <trans-unit id="preview.pageFrame" xml:space="preserve">
+        <source>Page preview</source>
+        <target xml:lang="fr">Aperçu de la page</target>
+      </trans-unit>
+      <trans-unit id="preview.reload" xml:space="preserve">
+        <source>Reload preview</source>
+        <target xml:lang="fr">Recharger l'aperçu</target>
+      </trans-unit>
+      <trans-unit id="preview.selectDocument" xml:space="preserve">
+        <source>Select a document to preview it.</source>
+        <target xml:lang="fr">Sélectionnez un document pour l'afficher en aperçu.</target>
+      </trans-unit>
+      <trans-unit id="profile.changePassword" xml:space="preserve">
+        <source>Change password</source>
+        <target xml:lang="fr">Changer le mot de passe</target>
+      </trans-unit>
+      <trans-unit id="profile.changePasswordHint" xml:space="preserve">
+        <source>Enter your current password to set a new one.</source>
+        <target xml:lang="fr">Saisissez votre mot de passe actuel pour en définir un nouveau.</target>
+      </trans-unit>
+      <trans-unit id="profile.changing" xml:space="preserve">
+        <source>Changing…</source>
+        <target xml:lang="fr">Modification…</target>
+      </trans-unit>
+      <trans-unit id="profile.currentPassword" xml:space="preserve">
+        <source>Current password</source>
+        <target xml:lang="fr">Mot de passe actuel</target>
+      </trans-unit>
+      <trans-unit id="profile.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="fr">E-mail</target>
+      </trans-unit>
+      <trans-unit id="profile.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="fr">Prénom</target>
+      </trans-unit>
+      <trans-unit id="profile.interfaceLanguage" xml:space="preserve">
+        <source>Interface language</source>
+        <target xml:lang="fr">Langue de l'interface</target>
+      </trans-unit>
+      <trans-unit id="profile.languageReload" xml:space="preserve">
+        <source>The new interface language applies after the next reload.</source>
+        <target xml:lang="fr">La nouvelle langue de l'interface s'applique après le prochain rechargement.</target>
+      </trans-unit>
+      <trans-unit id="profile.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="profile.loadFailed" xml:space="preserve">
+        <source>Could not load your profile</source>
+        <target xml:lang="fr">Impossible de charger votre profil</target>
+      </trans-unit>
+      <trans-unit id="profile.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="fr">Nouveau mot de passe</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordChanged" xml:space="preserve">
+        <source>Your password has been changed.</source>
+        <target xml:lang="fr">Votre mot de passe a été changé.</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailed" xml:space="preserve">
+        <source>Could not change password</source>
+        <target xml:lang="fr">Impossible de changer le mot de passe</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailedDetail" xml:space="preserve">
+        <source>Changing the password failed.</source>
+        <target xml:lang="fr">Le changement du mot de passe a échoué.</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordMismatch" xml:space="preserve">
+        <source>The new passwords do not match.</source>
+        <target xml:lang="fr">Les nouveaux mots de passe ne correspondent pas.</target>
+      </trans-unit>
+      <trans-unit id="profile.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="fr">Répéter le nouveau mot de passe</target>
+      </trans-unit>
+      <trans-unit id="profile.saveFailed" xml:space="preserve">
+        <source>Could not save profile</source>
+        <target xml:lang="fr">Impossible d'enregistrer le profil</target>
+      </trans-unit>
+      <trans-unit id="profile.saveFailedDetail" xml:space="preserve">
+        <source>Saving your profile failed.</source>
+        <target xml:lang="fr">L'enregistrement de votre profil a échoué.</target>
+      </trans-unit>
+      <trans-unit id="profile.saveProfile" xml:space="preserve">
+        <source>Save profile</source>
+        <target xml:lang="fr">Enregistrer le profil</target>
+      </trans-unit>
+      <trans-unit id="profile.saved" xml:space="preserve">
+        <source>Your profile has been saved.</source>
+        <target xml:lang="fr">Votre profil a été enregistré.</target>
+      </trans-unit>
+      <trans-unit id="profile.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fr">Enregistrement…</target>
+      </trans-unit>
+      <trans-unit id="profile.subtitle" xml:space="preserve">
+        <source>Your personal account settings.</source>
+        <target xml:lang="fr">Vos paramètres de compte personnels.</target>
+      </trans-unit>
+      <trans-unit id="profile.title" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="fr">Profil</target>
+      </trans-unit>
+      <trans-unit id="profile.unavailable" xml:space="preserve">
+        <source>Your profile is currently unavailable.</source>
+        <target xml:lang="fr">Votre profil est actuellement indisponible.</target>
+      </trans-unit>
+      <trans-unit id="share.activeLinks" xml:space="preserve">
+        <source>Your active links</source>
+        <target xml:lang="fr">Vos liens actifs</target>
+      </trans-unit>
+      <trans-unit id="share.button" xml:space="preserve">
+        <source>Share</source>
+        <target xml:lang="fr">Partager</target>
+      </trans-unit>
+      <trans-unit id="share.buttonHint" xml:space="preserve">
+        <source>Share a preview link to this page with people without a login</source>
+        <target xml:lang="fr">Partager un lien d'aperçu de cette page avec des personnes sans compte</target>
+      </trans-unit>
+      <trans-unit id="share.copied" xml:space="preserve">
+        <source>Link copied to the clipboard.</source>
+        <target xml:lang="fr">Lien copié dans le presse-papiers.</target>
+      </trans-unit>
+      <trans-unit id="share.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="fr">Copier</target>
+      </trans-unit>
+      <trans-unit id="share.copyFailed" xml:space="preserve">
+        <source>Copying failed — please copy the link manually.</source>
+        <target xml:lang="fr">Échec de la copie — veuillez copier le lien manuellement.</target>
+      </trans-unit>
+      <trans-unit id="share.copyOnceHint" xml:space="preserve">
+        <source>Copy the link now — for security it is shown only this once.</source>
+        <target xml:lang="fr">Copiez le lien maintenant — pour des raisons de sécurité, il n'est affiché que cette fois-ci.</target>
+      </trans-unit>
+      <trans-unit id="share.create" xml:space="preserve">
+        <source>Create link</source>
+        <target xml:lang="fr">Créer le lien</target>
+      </trans-unit>
+      <trans-unit id="share.createAnother" xml:space="preserve">
+        <source>Create another link</source>
+        <target xml:lang="fr">Créer un autre lien</target>
+      </trans-unit>
+      <trans-unit id="share.createFailed" xml:space="preserve">
+        <source>Creating the preview link failed.</source>
+        <target xml:lang="fr">La création du lien d'aperçu a échoué.</target>
+      </trans-unit>
+      <trans-unit id="share.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="share.description" xml:space="preserve">
+        <source>Anyone with the link can view this page read-only, without logging in, until the link expires.</source>
+        <target xml:lang="fr">Toute personne disposant du lien peut consulter cette page en lecture seule, sans se connecter, jusqu'à l'expiration du lien.</target>
+      </trans-unit>
+      <trans-unit id="share.expires" xml:space="preserve">
+        <source>expires {0}</source>
+        <target xml:lang="fr">expire {0}</target>
+      </trans-unit>
+      <trans-unit id="share.expiry" xml:space="preserve">
+        <source>Expires after</source>
+        <target xml:lang="fr">Expire après</target>
+      </trans-unit>
+      <trans-unit id="share.label" xml:space="preserve">
+        <source>Label</source>
+        <target xml:lang="fr">Libellé</target>
+      </trans-unit>
+      <trans-unit id="share.revoke" xml:space="preserve">
+        <source>Revoke link</source>
+        <target xml:lang="fr">Révoquer le lien</target>
+      </trans-unit>
+      <trans-unit id="share.revoked" xml:space="preserve">
+        <source>The preview link was revoked.</source>
+        <target xml:lang="fr">Le lien d'aperçu a été révoqué.</target>
+      </trans-unit>
+      <trans-unit id="share.revokeFailed" xml:space="preserve">
+        <source>Revoking the preview link failed.</source>
+        <target xml:lang="fr">La révocation du lien d'aperçu a échoué.</target>
+      </trans-unit>
+      <trans-unit id="share.title" xml:space="preserve">
+        <source>Share preview link</source>
+        <target xml:lang="fr">Partager un lien d'aperçu</target>
+      </trans-unit>
+      <trans-unit id="share.ttl24" xml:space="preserve">
+        <source>24 hours</source>
+        <target xml:lang="fr">24 heures</target>
+      </trans-unit>
+      <trans-unit id="share.ttl48" xml:space="preserve">
+        <source>2 days</source>
+        <target xml:lang="fr">2 jours</target>
+      </trans-unit>
+      <trans-unit id="share.ttl168" xml:space="preserve">
+        <source>7 days</source>
+        <target xml:lang="fr">7 jours</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.general" xml:space="preserve">
+        <source>General</source>
+        <target xml:lang="fr">Général</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.other" xml:space="preserve">
+        <source>Other</source>
+        <target xml:lang="fr">Autre</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.preview" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="fr">Aperçu</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.workspace" xml:space="preserve">
+        <source>Workspace</source>
+        <target xml:lang="fr">Espace de travail</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.openSettings" xml:space="preserve">
+        <source>Open settings</source>
+        <target xml:lang="fr">Ouvrir les paramètres</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.description" xml:space="preserve">
+        <source>Shortcuts available in Neos Studio, including those added by plugins.</source>
+        <target xml:lang="fr">Raccourcis disponibles dans Neos Studio, y compris ceux ajoutés par des plugins.</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.title" xml:space="preserve">
+        <source>Keyboard shortcuts</source>
+        <target xml:lang="fr">Raccourcis clavier</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.showOverview" xml:space="preserve">
+        <source>Show keyboard shortcuts</source>
+        <target xml:lang="fr">Afficher les raccourcis clavier</target>
+      </trans-unit>
+      <trans-unit id="sites.activateDomain" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="fr">Activer</target>
+      </trans-unit>
+      <trans-unit id="sites.activeSite" xml:space="preserve">
+        <source>Active site</source>
+        <target xml:lang="fr">Site actif</target>
+      </trans-unit>
+      <trans-unit id="sites.addDomain" xml:space="preserve">
+        <source>Add domain</source>
+        <target xml:lang="fr">Ajouter un domaine</target>
+      </trans-unit>
+      <trans-unit id="sites.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="fr">Actions</target>
+      </trans-unit>
+      <trans-unit id="sites.columnDomains" xml:space="preserve">
+        <source>Domains</source>
+        <target xml:lang="fr">Domaines</target>
+      </trans-unit>
+      <trans-unit id="sites.columnName" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="sites.columnPackage" xml:space="preserve">
+        <source>Package</source>
+        <target xml:lang="fr">Paquet</target>
+      </trans-unit>
+      <trans-unit id="sites.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="fr">Statut</target>
+      </trans-unit>
+      <trans-unit id="sites.create" xml:space="preserve">
+        <source>Create site</source>
+        <target xml:lang="fr">Créer le site</target>
+      </trans-unit>
+      <trans-unit id="sites.createFailed" xml:space="preserve">
+        <source>Could not create site</source>
+        <target xml:lang="fr">Impossible de créer le site</target>
+      </trans-unit>
+      <trans-unit id="sites.createFailedDetail" xml:space="preserve">
+        <source>Creating the site failed.</source>
+        <target xml:lang="fr">La création du site a échoué.</target>
+      </trans-unit>
+      <trans-unit id="sites.created" xml:space="preserve">
+        <source>The site "{0}" has been created.</source>
+        <target xml:lang="fr">Le site "{0}" a été créé.</target>
+      </trans-unit>
+      <trans-unit id="sites.createdSyncHint" xml:space="preserve">
+        <source>Synchronize your workspace to start editing the new site.</source>
+        <target xml:lang="fr">Synchronisez votre espace de travail pour commencer à modifier le nouveau site.</target>
+      </trans-unit>
+      <trans-unit id="sites.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="sites.deactivateDomain" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="fr">Désactiver</target>
+      </trans-unit>
+      <trans-unit id="sites.delete" xml:space="preserve">
+        <source>Delete site</source>
+        <target xml:lang="fr">Supprimer le site</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDescription" xml:space="preserve">
+        <source>The site, all of its content in every workspace, its domains and its asset collection are removed permanently. This cannot be undone.</source>
+        <target xml:lang="fr">Le site, tout son contenu dans chaque espace de travail, ses domaines et sa collection de ressources sont supprimés définitivement. Cette action est irréversible.</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDomain" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fr">Supprimer</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteTitle" xml:space="preserve">
+        <source>Delete site "{0}"?</source>
+        <target xml:lang="fr">Supprimer le site "{0}" ?</target>
+      </trans-unit>
+      <trans-unit id="sites.deleted" xml:space="preserve">
+        <source>The site "{0}" has been deleted.</source>
+        <target xml:lang="fr">Le site "{0}" a été supprimé.</target>
+      </trans-unit>
+      <trans-unit id="sites.domainActions" xml:space="preserve">
+        <source>Domain actions</source>
+        <target xml:lang="fr">Actions sur le domaine</target>
+      </trans-unit>
+      <trans-unit id="sites.domainFailed" xml:space="preserve">
+        <source>Could not save domain</source>
+        <target xml:lang="fr">Impossible d'enregistrer le domaine</target>
+      </trans-unit>
+      <trans-unit id="sites.domainFailedDetail" xml:space="preserve">
+        <source>Saving the domain failed.</source>
+        <target xml:lang="fr">L'enregistrement du domaine a échoué.</target>
+      </trans-unit>
+      <trans-unit id="sites.domains" xml:space="preserve">
+        <source>Domains</source>
+        <target xml:lang="fr">Domaines</target>
+      </trans-unit>
+      <trans-unit id="sites.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fr">Modifier</target>
+      </trans-unit>
+      <trans-unit id="sites.editDomain" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fr">Modifier</target>
+      </trans-unit>
+      <trans-unit id="sites.editSite" xml:space="preserve">
+        <source>Edit site</source>
+        <target xml:lang="fr">Modifier le site</target>
+      </trans-unit>
+      <trans-unit id="sites.editSiteHint" xml:space="preserve">
+        <source>Node name "{0}", package {1}.</source>
+        <target xml:lang="fr">Nom du nœud "{0}", paquet {1}.</target>
+      </trans-unit>
+      <trans-unit id="sites.hostname" xml:space="preserve">
+        <source>Hostname</source>
+        <target xml:lang="fr">Nom d'hôte</target>
+      </trans-unit>
+      <trans-unit id="sites.inactiveDomain" xml:space="preserve">
+        <source>Inactive</source>
+        <target xml:lang="fr">Inactif</target>
+      </trans-unit>
+      <trans-unit id="sites.loadFailed" xml:space="preserve">
+        <source>Could not load sites</source>
+        <target xml:lang="fr">Impossible de charger les sites</target>
+      </trans-unit>
+      <trans-unit id="sites.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="sites.newSite" xml:space="preserve">
+        <source>New site</source>
+        <target xml:lang="fr">Nouveau site</target>
+      </trans-unit>
+      <trans-unit id="sites.newSiteHint" xml:space="preserve">
+        <source>Creates a new site with an empty site node in the live workspace.</source>
+        <target xml:lang="fr">Crée un nouveau site avec un nœud de site vide dans l'espace de travail live.</target>
+      </trans-unit>
+      <trans-unit id="sites.noDomains" xml:space="preserve">
+        <source>No domains configured. The site is reachable under any host pointing at this installation.</source>
+        <target xml:lang="fr">Aucun domaine configuré. Le site est accessible via tout hôte pointant vers cette installation.</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeName" xml:space="preserve">
+        <source>Node name (optional)</source>
+        <target xml:lang="fr">Nom du nœud (optionnel)</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeNamePlaceholder" xml:space="preserve">
+        <source>Derived from the name when empty</source>
+        <target xml:lang="fr">Dérivé du nom si vide</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeType" xml:space="preserve">
+        <source>Site node type</source>
+        <target xml:lang="fr">Type de nœud du site</target>
+      </trans-unit>
+      <trans-unit id="sites.none" xml:space="preserve">
+        <source>No sites found.</source>
+        <target xml:lang="fr">Aucun site trouvé.</target>
+      </trans-unit>
+      <trans-unit id="sites.offline" xml:space="preserve">
+        <source>Offline</source>
+        <target xml:lang="fr">Hors ligne</target>
+      </trans-unit>
+      <trans-unit id="sites.online" xml:space="preserve">
+        <source>Online</source>
+        <target xml:lang="fr">En ligne</target>
+      </trans-unit>
+      <trans-unit id="sites.package" xml:space="preserve">
+        <source>Site package</source>
+        <target xml:lang="fr">Paquet du site</target>
+      </trans-unit>
+      <trans-unit id="sites.port" xml:space="preserve">
+        <source>Port</source>
+        <target xml:lang="fr">Port</target>
+      </trans-unit>
+      <trans-unit id="sites.primary" xml:space="preserve">
+        <source>Primary</source>
+        <target xml:lang="fr">Principal</target>
+      </trans-unit>
+      <trans-unit id="sites.putOnline" xml:space="preserve">
+        <source>Put online</source>
+        <target xml:lang="fr">Mettre en ligne</target>
+      </trans-unit>
+      <trans-unit id="sites.rowActions" xml:space="preserve">
+        <source>Site actions</source>
+        <target xml:lang="fr">Actions sur le site</target>
+      </trans-unit>
+      <trans-unit id="sites.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="fr">Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="sites.saveDomain" xml:space="preserve">
+        <source>Save domain</source>
+        <target xml:lang="fr">Enregistrer le domaine</target>
+      </trans-unit>
+      <trans-unit id="sites.saveFailed" xml:space="preserve">
+        <source>Could not save site</source>
+        <target xml:lang="fr">Impossible d'enregistrer le site</target>
+      </trans-unit>
+      <trans-unit id="sites.saveFailedDetail" xml:space="preserve">
+        <source>Saving the site failed.</source>
+        <target xml:lang="fr">L'enregistrement du site a échoué.</target>
+      </trans-unit>
+      <trans-unit id="sites.saved" xml:space="preserve">
+        <source>The site "{0}" has been saved.</source>
+        <target xml:lang="fr">Le site "{0}" a été enregistré.</target>
+      </trans-unit>
+      <trans-unit id="sites.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fr">Enregistrement…</target>
+      </trans-unit>
+      <trans-unit id="sites.scheme" xml:space="preserve">
+        <source>Scheme</source>
+        <target xml:lang="fr">Schéma</target>
+      </trans-unit>
+      <trans-unit id="sites.schemeAny" xml:space="preserve">
+        <source>Any scheme</source>
+        <target xml:lang="fr">Tout schéma</target>
+      </trans-unit>
+      <trans-unit id="sites.selectNodeType" xml:space="preserve">
+        <source>Select node type…</source>
+        <target xml:lang="fr">Sélectionner le type de nœud…</target>
+      </trans-unit>
+      <trans-unit id="sites.selectPackage" xml:space="preserve">
+        <source>Select package…</source>
+        <target xml:lang="fr">Sélectionner le paquet…</target>
+      </trans-unit>
+      <trans-unit id="sites.selectPlaceholder" xml:space="preserve">
+        <source>Select site…</source>
+        <target xml:lang="fr">Sélectionner un site…</target>
+      </trans-unit>
+      <trans-unit id="sites.setPrimary" xml:space="preserve">
+        <source>Set as primary</source>
+        <target xml:lang="fr">Définir comme principal</target>
+      </trans-unit>
+      <trans-unit id="sites.startOffline" xml:space="preserve">
+        <source>Start offline (hidden from visitors)</source>
+        <target xml:lang="fr">Démarrer hors ligne (invisible pour les visiteurs)</target>
+      </trans-unit>
+      <trans-unit id="sites.stateFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="fr">Impossible de changer le statut</target>
+      </trans-unit>
+      <trans-unit id="sites.stateFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="fr">Le changement de statut a échoué.</target>
+      </trans-unit>
+      <trans-unit id="sites.subtitle" xml:space="preserve">
+        <source>Websites served by this installation.</source>
+        <target xml:lang="fr">Sites web servis par cette installation.</target>
+      </trans-unit>
+      <trans-unit id="sites.synchronizeToAccess" xml:space="preserve">
+        <source>(synchronize to access)</source>
+        <target xml:lang="fr">(synchronisez pour y accéder)</target>
+      </trans-unit>
+      <trans-unit id="sites.takeOffline" xml:space="preserve">
+        <source>Take offline</source>
+        <target xml:lang="fr">Mettre hors ligne</target>
+      </trans-unit>
+      <trans-unit id="sites.title" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="fr">Sites</target>
+      </trans-unit>
+      <trans-unit id="sites.unavailable" xml:space="preserve">
+        <source>Sites are currently unavailable.</source>
+        <target xml:lang="fr">Les sites sont actuellement indisponibles.</target>
+      </trans-unit>
+      <trans-unit id="sites.unsetPrimary" xml:space="preserve">
+        <source>Unset primary</source>
+        <target xml:lang="fr">Retirer le statut principal</target>
+      </trans-unit>
+      <trans-unit id="sites.wentOffline" xml:space="preserve">
+        <source>The site "{0}" is now offline.</source>
+        <target xml:lang="fr">Le site "{0}" est maintenant hors ligne.</target>
+      </trans-unit>
+      <trans-unit id="sites.wentOnline" xml:space="preserve">
+        <source>The site "{0}" is now online.</source>
+        <target xml:lang="fr">Le site "{0}" est maintenant en ligne.</target>
+      </trans-unit>
+      <trans-unit id="tasks.activeWorkspace" xml:space="preserve">
+        <source>You are editing in this workspace</source>
+        <target xml:lang="fr">Vous éditez dans cet espace de travail</target>
+      </trans-unit>
+      <trans-unit id="tasks.addTaskWorkspace" xml:space="preserve">
+        <source>Add task workspace</source>
+        <target xml:lang="fr">Ajouter un espace de travail de tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignedTo" xml:space="preserve">
+        <source>Assigned to {0}</source>
+        <target xml:lang="fr">Assignée à {0}</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignee" xml:space="preserve">
+        <source>Assignee</source>
+        <target xml:lang="fr">Personne assignée</target>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspace" xml:space="preserve">
+        <source>Based on</source>
+        <target xml:lang="fr">Basé sur</target>
+      </trans-unit>
+      <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
+        <source>Checkout workspace</source>
+        <target xml:lang="fr">Basculer vers l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnDone" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="fr">Terminé</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnEmpty" xml:space="preserve">
+        <source>No tasks</source>
+        <target xml:lang="fr">Aucune tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnInReview" xml:space="preserve">
+        <source>In review</source>
+        <target xml:lang="fr">En relecture</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnOpen" xml:space="preserve">
+        <source>Open</source>
+        <target xml:lang="fr">Ouvertes</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+        <target xml:lang="fr">Impossible d'ajouter le commentaire</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+        <target xml:lang="fr">L'ajout du commentaire a échoué.</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+        <target xml:lang="fr">Écrire un commentaire…</target>
+      </trans-unit>
+      <trans-unit id="tasks.comments" xml:space="preserve">
+        <source>Comments</source>
+        <target xml:lang="fr">Commentaires</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentSend" xml:space="preserve">
+        <source>Send</source>
+        <target xml:lang="fr">Envoyer</target>
+      </trans-unit>
+      <trans-unit id="tasks.completed" xml:space="preserve">
+        <source>The task has been completed.</source>
+        <target xml:lang="fr">La tâche a été terminée.</target>
+      </trans-unit>
+      <trans-unit id="tasks.completeTask" xml:space="preserve">
+        <source>Complete task</source>
+        <target xml:lang="fr">Terminer la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.create" xml:space="preserve">
+        <source>Create task</source>
+        <target xml:lang="fr">Créer la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.created" xml:space="preserve">
+        <source>The task "{0}" has been created.</source>
+        <target xml:lang="fr">La tâche "{0}" a été créée.</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailed" xml:space="preserve">
+        <source>Could not create task</source>
+        <target xml:lang="fr">Impossible de créer la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailedDetail" xml:space="preserve">
+        <source>Creating the task failed.</source>
+        <target xml:lang="fr">La création de la tâche a échoué.</target>
+      </trans-unit>
+      <trans-unit id="tasks.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="tasks.delete" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="fr">Supprimer la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteConfirm" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="fr">Supprimer la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleted" xml:space="preserve">
+        <source>The task has been deleted.</source>
+        <target xml:lang="fr">La tâche a été supprimée.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteDescription" xml:space="preserve">
+        <source>This removes the workspace "{0}" including all its unpublished changes. This cannot be undone.</source>
+        <target xml:lang="fr">Cela supprime l'espace de travail "{0}" avec toutes ses modifications non publiées. Cette action est irréversible.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteTitle" xml:space="preserve">
+        <source>Delete task?</source>
+        <target xml:lang="fr">Supprimer la tâche ?</target>
+      </trans-unit>
+      <trans-unit id="tasks.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="fr">Description</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailHint" xml:space="preserve">
+        <source>Edit the task details below.</source>
+        <target xml:lang="fr">Modifiez les détails de la tâche ci-dessous.</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailReadOnly" xml:space="preserve">
+        <source>You need manage permission on this task to edit it.</source>
+        <target xml:lang="fr">Vous avez besoin du droit de gestion sur cette tâche pour la modifier.</target>
+      </trans-unit>
+      <trans-unit id="tasks.editTask" xml:space="preserve">
+        <source>Edit task</source>
+        <target xml:lang="fr">Modifier la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.hasChanges" xml:space="preserve">
+        <source>Has unpublished changes</source>
+        <target xml:lang="fr">Contient des modifications non publiées</target>
+      </trans-unit>
+      <trans-unit id="tasks.loadFailed" xml:space="preserve">
+        <source>Loading the tasks failed.</source>
+        <target xml:lang="fr">Le chargement des tâches a échoué.</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailed" xml:space="preserve">
+        <source>Could not move task</source>
+        <target xml:lang="fr">Impossible de déplacer la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailedDetail" xml:space="preserve">
+        <source>Moving the task failed.</source>
+        <target xml:lang="fr">Le déplacement de la tâche a échoué.</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTask" xml:space="preserve">
+        <source>New task</source>
+        <target xml:lang="fr">Nouvelle tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTaskHint" xml:space="preserve">
+        <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
+        <target xml:lang="fr">Une branche de tâche regroupe les modifications d'un même travail. Seules les personnes concernées la voient ; les relecteurs l'approuvent et la publient.</target>
+      </trans-unit>
+      <trans-unit id="tasks.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+        <target xml:lang="fr">Pas encore de commentaires.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
+        <source>The task has been reopened.</source>
+        <target xml:lang="fr">La tâche a été rouverte.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenTask" xml:space="preserve">
+        <source>Reopen task</source>
+        <target xml:lang="fr">Rouvrir la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.reviewComment" xml:space="preserve">
+        <source>Comment (optional)</source>
+        <target xml:lang="fr">Commentaire (optionnel)</target>
+      </trans-unit>
+      <trans-unit id="tasks.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fr">Enregistrement…</target>
+      </trans-unit>
+      <trans-unit id="tasks.selectUser" xml:space="preserve">
+        <source>Select user</source>
+        <target xml:lang="fr">Sélectionner un utilisateur</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReview" xml:space="preserve">
+        <source>Send to review</source>
+        <target xml:lang="fr">Envoyer en relecture</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReviewHint" xml:space="preserve">
+        <source>Hand the task to the reviewers. A comment helps them know what to look at.</source>
+        <target xml:lang="fr">Confiez la tâche aux relecteurs. Un commentaire les aide à savoir quoi examiner.</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusDone" xml:space="preserve">
+        <source>done</source>
+        <target xml:lang="fr">terminée</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusInReview" xml:space="preserve">
+        <source>in review</source>
+        <target xml:lang="fr">en relecture</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusOpen" xml:space="preserve">
+        <source>open</source>
+        <target xml:lang="fr">ouverte</target>
+      </trans-unit>
+      <trans-unit id="tasks.submitted" xml:space="preserve">
+        <source>The task has been submitted for review.</source>
+        <target xml:lang="fr">La tâche a été soumise pour relecture.</target>
+      </trans-unit>
+      <trans-unit id="tasks.switcherGroup" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="fr">Tâches</target>
+      </trans-unit>
+      <trans-unit id="tasks.taskBranch" xml:space="preserve">
+        <source>Task branch</source>
+        <target xml:lang="fr">Branche de tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fr">Titre</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassigned" xml:space="preserve">
+        <source>– unassigned –</source>
+        <target xml:lang="fr">– non assignée –</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassignedHint" xml:space="preserve">
+        <source>Unassigned</source>
+        <target xml:lang="fr">Non assignée</target>
+      </trans-unit>
+      <trans-unit id="tasks.updated" xml:space="preserve">
+        <source>The task has been updated.</source>
+        <target xml:lang="fr">La tâche a été mise à jour.</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailed" xml:space="preserve">
+        <source>Could not update task</source>
+        <target xml:lang="fr">Impossible de mettre à jour la tâche</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
+        <source>Updating the task failed.</source>
+        <target xml:lang="fr">La mise à jour de la tâche a échoué.</target>
+      </trans-unit>
+      <trans-unit id="tasks.viewTask" xml:space="preserve">
+        <source>View task</source>
+        <target xml:lang="fr">Voir la tâche</target>
+      </trans-unit>
+      <trans-unit id="trash.confirmBody" xml:space="preserve">
+        <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
+        <target xml:lang="fr">Il a été supprimé à l'intérieur d'un élément lui-même supprimé, cela restaure donc aussi : {0}</target>
+      </trans-unit>
+      <trans-unit id="trash.confirmTitle" xml:space="preserve">
+        <source>Restore "{0}"?</source>
+        <target xml:lang="fr">Restaurer "{0}" ?</target>
+      </trans-unit>
+      <trans-unit id="trash.deletedAt" xml:space="preserve">
+        <source>Deleted {0}</source>
+        <target xml:lang="fr">Supprimé {0}</target>
+      </trans-unit>
+      <trans-unit id="trash.deletedByAt" xml:space="preserve">
+        <source>Deleted {0} by {1}</source>
+        <target xml:lang="fr">Supprimé {0} par {1}</target>
+      </trans-unit>
+      <trans-unit id="trash.empty" xml:space="preserve">
+        <source>No deleted pages. They wait here until the deletion is published.</source>
+        <target xml:lang="fr">Aucune page supprimée. Elles attendent ici jusqu'à la publication de la suppression.</target>
+      </trans-unit>
+      <trans-unit id="trash.failed" xml:space="preserve">
+        <source>The trash could not be loaded.</source>
+        <target xml:lang="fr">La corbeille n'a pas pu être chargée.</target>
+      </trans-unit>
+      <trans-unit id="trash.loading" xml:space="preserve">
+        <source>Loading trash…</source>
+        <target xml:lang="fr">Chargement de la corbeille…</target>
+      </trans-unit>
+      <trans-unit id="trash.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change this workspace</source>
+        <target xml:lang="fr">Vous n'êtes pas autorisé à modifier cet espace de travail</target>
+      </trans-unit>
+      <trans-unit id="trash.openFailed" xml:space="preserve">
+        <source>Opening the deleted page failed</source>
+        <target xml:lang="fr">L'ouverture de la page supprimée a échoué</target>
+      </trans-unit>
+      <trans-unit id="trash.openHint" xml:space="preserve">
+        <source>Show this deleted page</source>
+        <target xml:lang="fr">Afficher cette page supprimée</target>
+      </trans-unit>
+      <trans-unit id="trash.outdated" xml:space="preserve">
+        <source>Synchronize the workspace before restoring - it is missing changes from its base workspace.</source>
+        <target xml:lang="fr">Synchronisez l'espace de travail avant de restaurer - il lui manque des modifications de son espace de travail de base.</target>
+      </trans-unit>
+      <trans-unit id="trash.restore" xml:space="preserve">
+        <source>Restore</source>
+        <target xml:lang="fr">Restaurer</target>
+      </trans-unit>
+      <trans-unit id="trash.restoreFailed" xml:space="preserve">
+        <source>Restoring failed</source>
+        <target xml:lang="fr">Échec de la restauration</target>
+      </trans-unit>
+      <trans-unit id="trash.restored" xml:space="preserve">
+        <source>Restored {0}.</source>
+        <target xml:lang="fr">{0} restauré.</target>
+      </trans-unit>
+      <trans-unit id="trash.restoredWithAncestors" xml:space="preserve">
+        <source>Restored {0} and {1} more.</source>
+        <target xml:lang="fr">{0} et {1} autres restaurés.</target>
+      </trans-unit>
+      <trans-unit id="trash.truncated" xml:space="preserve">
+        <source>Only the most recently deleted nodes are listed.</source>
+        <target xml:lang="fr">Seuls les nœuds supprimés le plus récemment sont listés.</target>
+      </trans-unit>
+      <trans-unit id="tree.clearFilter" xml:space="preserve">
+        <source>Clear filter</source>
+        <target xml:lang="fr">Effacer le filtre</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
+        <source>Contains changes in workspace "{0}"</source>
+        <target xml:lang="fr">Contient des modifications dans l'espace de travail "{0}"</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deleted" xml:space="preserve">
+        <source>Deleted</source>
+        <target xml:lang="fr">Supprimé</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deletedInherited" xml:space="preserve">
+        <source>Deleted (inherited)</source>
+        <target xml:lang="fr">Supprimé (hérité)</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
+        <target xml:lang="fr">{0} est ici</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="fr">Masqué</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInMenu" xml:space="preserve">
+        <source>Hidden in menus</source>
+        <target xml:lang="fr">Masqué dans les menus</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInherited" xml:space="preserve">
+        <source>Hidden (inherited)</source>
+        <target xml:lang="fr">Masqué (hérité)</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.modified" xml:space="preserve">
+        <source>Modified in workspace "{0}"</source>
+        <target xml:lang="fr">Modifié dans l'espace de travail "{0}"</target>
+      </trans-unit>
+      <trans-unit id="tree.documentTreeLabel" xml:space="preserve">
+        <source>Document tree</source>
+        <target xml:lang="fr">Arborescence des documents</target>
+      </trans-unit>
+      <trans-unit id="tree.emptyContent" xml:space="preserve">
+        <source>No content below this document.</source>
+        <target xml:lang="fr">Aucun contenu sous ce document.</target>
+      </trans-unit>
+      <trans-unit id="tree.emptyDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+        <target xml:lang="fr">Ce site n'a pas encore de documents.</target>
+      </trans-unit>
+      <trans-unit id="tree.filterByNodeType" xml:space="preserve">
+        <source>Filter by node type</source>
+        <target xml:lang="fr">Filtrer par type de nœud</target>
+      </trans-unit>
+      <trans-unit id="tree.loadingContent" xml:space="preserve">
+        <source>Loading content…</source>
+        <target xml:lang="fr">Chargement du contenu…</target>
+      </trans-unit>
+      <trans-unit id="tree.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+        <target xml:lang="fr">Chargement des documents…</target>
+      </trans-unit>
+      <trans-unit id="tree.newDocument" xml:space="preserve">
+        <source>New document…</source>
+        <target xml:lang="fr">Nouveau document…</target>
+      </trans-unit>
+      <trans-unit id="tree.newDocumentAria" xml:space="preserve">
+        <source>New document</source>
+        <target xml:lang="fr">Nouveau document</target>
+      </trans-unit>
+      <trans-unit id="tree.noSearchMatch" xml:space="preserve">
+        <source>No documents match the search.</source>
+        <target xml:lang="fr">Aucun document ne correspond à la recherche.</target>
+      </trans-unit>
+      <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
+        <source>Loading the outline failed</source>
+        <target xml:lang="fr">Le chargement de la structure a échoué</target>
+      </trans-unit>
+      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
+        <source>Select a document to outline its content.</source>
+        <target xml:lang="fr">Sélectionnez un document pour afficher la structure de son contenu.</target>
+      </trans-unit>
+      <trans-unit id="tree.outlinerLabel" xml:space="preserve">
+        <source>Content outliner</source>
+        <target xml:lang="fr">Structure du contenu</target>
+      </trans-unit>
+      <trans-unit id="tree.searchAriaLabel" xml:space="preserve">
+        <source>Search documents by title</source>
+        <target xml:lang="fr">Rechercher des documents par titre</target>
+      </trans-unit>
+      <trans-unit id="tree.searchFailed" xml:space="preserve">
+        <source>Searching documents failed</source>
+        <target xml:lang="fr">Échec de la recherche de documents</target>
+      </trans-unit>
+      <trans-unit id="tree.searchPlaceholder" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="fr">Rechercher des documents…</target>
+      </trans-unit>
+      <trans-unit id="tree.searchResultsLabel" xml:space="preserve">
+        <source>Document search results</source>
+        <target xml:lang="fr">Résultats de la recherche de documents</target>
+      </trans-unit>
+      <trans-unit id="tree.searchingDocuments" xml:space="preserve">
+        <source>Searching documents…</source>
+        <target xml:lang="fr">Recherche de documents…</target>
+      </trans-unit>
+      <trans-unit id="tree.treeLoadFailed" xml:space="preserve">
+        <source>Loading the tree failed</source>
+        <target xml:lang="fr">Le chargement de l'arborescence a échoué</target>
+      </trans-unit>
+      <trans-unit id="userMenu.label" xml:space="preserve">
+        <source>User menu</source>
+        <target xml:lang="fr">Menu utilisateur</target>
+      </trans-unit>
+      <trans-unit id="userMenu.logout" xml:space="preserve">
+        <source>Logout</source>
+        <target xml:lang="fr">Déconnexion</target>
+      </trans-unit>
+      <trans-unit id="userMenu.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="fr">Profil</target>
+      </trans-unit>
+      <trans-unit id="users.activate" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="fr">Activer</target>
+      </trans-unit>
+      <trans-unit id="users.activated" xml:space="preserve">
+        <source>The user "{0}" has been activated.</source>
+        <target xml:lang="fr">L'utilisateur "{0}" a été activé.</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="fr">Impossible de changer le statut</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="fr">Le changement de statut a échoué.</target>
+      </trans-unit>
+      <trans-unit id="users.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="fr">Actif</target>
+      </trans-unit>
+      <trans-unit id="users.columnAccount" xml:space="preserve">
+        <source>Account</source>
+        <target xml:lang="fr">Compte</target>
+      </trans-unit>
+      <trans-unit id="users.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="fr">Actions</target>
+      </trans-unit>
+      <trans-unit id="users.columnEmail" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="fr">E-mail</target>
+      </trans-unit>
+      <trans-unit id="users.columnName" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="users.columnRoles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="fr">Rôles</target>
+      </trans-unit>
+      <trans-unit id="users.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="fr">Statut</target>
+      </trans-unit>
+      <trans-unit id="users.create" xml:space="preserve">
+        <source>Create user</source>
+        <target xml:lang="fr">Créer l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.createFailed" xml:space="preserve">
+        <source>Could not create user</source>
+        <target xml:lang="fr">Impossible de créer l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.createFailedDetail" xml:space="preserve">
+        <source>Creating the user failed.</source>
+        <target xml:lang="fr">La création de l'utilisateur a échoué.</target>
+      </trans-unit>
+      <trans-unit id="users.created" xml:space="preserve">
+        <source>The user "{0}" has been created.</source>
+        <target xml:lang="fr">L'utilisateur "{0}" a été créé.</target>
+      </trans-unit>
+      <trans-unit id="users.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="users.deactivate" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="fr">Désactiver</target>
+      </trans-unit>
+      <trans-unit id="users.deactivated" xml:space="preserve">
+        <source>The user "{0}" has been deactivated.</source>
+        <target xml:lang="fr">L'utilisateur "{0}" a été désactivé.</target>
+      </trans-unit>
+      <trans-unit id="users.delete" xml:space="preserve">
+        <source>Delete user</source>
+        <target xml:lang="fr">Supprimer l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.deleteDescription" xml:space="preserve">
+        <source>The user, their accounts and their personal workspaces including any unpublished changes are removed permanently.</source>
+        <target xml:lang="fr">L'utilisateur, ses comptes et ses espaces de travail personnels, y compris les modifications non publiées, sont supprimés définitivement.</target>
+      </trans-unit>
+      <trans-unit id="users.deleteTitle" xml:space="preserve">
+        <source>Delete user "{0}"?</source>
+        <target xml:lang="fr">Supprimer l'utilisateur "{0}" ?</target>
+      </trans-unit>
+      <trans-unit id="users.deleted" xml:space="preserve">
+        <source>The user "{0}" has been deleted.</source>
+        <target xml:lang="fr">L'utilisateur "{0}" a été supprimé.</target>
+      </trans-unit>
+      <trans-unit id="users.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fr">Modifier</target>
+      </trans-unit>
+      <trans-unit id="users.editUser" xml:space="preserve">
+        <source>Edit user</source>
+        <target xml:lang="fr">Modifier l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.editUserHint" xml:space="preserve">
+        <source>Name, email address and roles.</source>
+        <target xml:lang="fr">Nom, adresse e-mail et rôles.</target>
+      </trans-unit>
+      <trans-unit id="users.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="fr">E-mail</target>
+      </trans-unit>
+      <trans-unit id="users.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="fr">Prénom</target>
+      </trans-unit>
+      <trans-unit id="users.inactive" xml:space="preserve">
+        <source>Inactive</source>
+        <target xml:lang="fr">Inactif</target>
+      </trans-unit>
+      <trans-unit id="users.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="users.loadFailed" xml:space="preserve">
+        <source>Could not load users</source>
+        <target xml:lang="fr">Impossible de charger les utilisateurs</target>
+      </trans-unit>
+      <trans-unit id="users.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="fr">Nouveau mot de passe</target>
+      </trans-unit>
+      <trans-unit id="users.newUser" xml:space="preserve">
+        <source>New user</source>
+        <target xml:lang="fr">Nouvel utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.newUserHint" xml:space="preserve">
+        <source>Creates a backend account on the default authentication provider.</source>
+        <target xml:lang="fr">Crée un compte backend sur le fournisseur d'authentification par défaut.</target>
+      </trans-unit>
+      <trans-unit id="users.noMatches" xml:space="preserve">
+        <source>No users match your search.</source>
+        <target xml:lang="fr">Aucun utilisateur ne correspond à votre recherche.</target>
+      </trans-unit>
+      <trans-unit id="users.none" xml:space="preserve">
+        <source>No users found.</source>
+        <target xml:lang="fr">Aucun utilisateur trouvé.</target>
+      </trans-unit>
+      <trans-unit id="users.ownAdminLocked" xml:space="preserve">
+        <source>You cannot remove your own Administrator role.</source>
+        <target xml:lang="fr">Vous ne pouvez pas retirer votre propre rôle d'administrateur.</target>
+      </trans-unit>
+      <trans-unit id="users.password" xml:space="preserve">
+        <source>Password</source>
+        <target xml:lang="fr">Mot de passe</target>
+      </trans-unit>
+      <trans-unit id="users.passwordMismatch" xml:space="preserve">
+        <source>The passwords do not match.</source>
+        <target xml:lang="fr">Les mots de passe ne correspondent pas.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordReset" xml:space="preserve">
+        <source>The password of "{0}" has been reset.</source>
+        <target xml:lang="fr">Le mot de passe de "{0}" a été réinitialisé.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailed" xml:space="preserve">
+        <source>Could not reset password</source>
+        <target xml:lang="fr">Impossible de réinitialiser le mot de passe</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailedDetail" xml:space="preserve">
+        <source>Resetting the password failed.</source>
+        <target xml:lang="fr">La réinitialisation du mot de passe a échoué.</target>
+      </trans-unit>
+      <trans-unit id="users.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="fr">Répéter le nouveau mot de passe</target>
+      </trans-unit>
+      <trans-unit id="users.repeatPassword" xml:space="preserve">
+        <source>Repeat password</source>
+        <target xml:lang="fr">Répéter le mot de passe</target>
+      </trans-unit>
+      <trans-unit id="users.resetPassword" xml:space="preserve">
+        <source>Reset password</source>
+        <target xml:lang="fr">Réinitialiser le mot de passe</target>
+      </trans-unit>
+      <trans-unit id="users.resetPasswordHint" xml:space="preserve">
+        <source>Sets a new password without requiring the current one. Active sessions of this user are ended.</source>
+        <target xml:lang="fr">Définit un nouveau mot de passe sans exiger l'actuel. Les sessions actives de cet utilisateur sont terminées.</target>
+      </trans-unit>
+      <trans-unit id="users.resetting" xml:space="preserve">
+        <source>Resetting…</source>
+        <target xml:lang="fr">Réinitialisation…</target>
+      </trans-unit>
+      <trans-unit id="users.roles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="fr">Rôles</target>
+      </trans-unit>
+      <trans-unit id="users.rowActions" xml:space="preserve">
+        <source>User actions</source>
+        <target xml:lang="fr">Actions sur l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.save" xml:space="preserve">
+        <source>Save user</source>
+        <target xml:lang="fr">Enregistrer l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailed" xml:space="preserve">
+        <source>Could not save user</source>
+        <target xml:lang="fr">Impossible d'enregistrer l'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailedDetail" xml:space="preserve">
+        <source>Saving the user failed.</source>
+        <target xml:lang="fr">L'enregistrement de l'utilisateur a échoué.</target>
+      </trans-unit>
+      <trans-unit id="users.saved" xml:space="preserve">
+        <source>The user "{0}" has been saved.</source>
+        <target xml:lang="fr">L'utilisateur "{0}" a été enregistré.</target>
+      </trans-unit>
+      <trans-unit id="users.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fr">Enregistrement…</target>
+      </trans-unit>
+      <trans-unit id="users.search" xml:space="preserve">
+        <source>Search users…</source>
+        <target xml:lang="fr">Rechercher des utilisateurs…</target>
+      </trans-unit>
+      <trans-unit id="users.subtitle" xml:space="preserve">
+        <source>Backend user accounts.</source>
+        <target xml:lang="fr">Comptes utilisateurs du backend.</target>
+      </trans-unit>
+      <trans-unit id="users.title" xml:space="preserve">
+        <source>Users</source>
+        <target xml:lang="fr">Utilisateurs</target>
+      </trans-unit>
+      <trans-unit id="users.unavailable" xml:space="preserve">
+        <source>Users are currently unavailable.</source>
+        <target xml:lang="fr">Les utilisateurs sont actuellement indisponibles.</target>
+      </trans-unit>
+      <trans-unit id="users.username" xml:space="preserve">
+        <source>Username</source>
+        <target xml:lang="fr">Nom d'utilisateur</target>
+      </trans-unit>
+      <trans-unit id="users.you" xml:space="preserve">
+        <source>You</source>
+        <target xml:lang="fr">Vous</target>
+      </trans-unit>
+      <trans-unit id="view.clickToSelect" xml:space="preserve">
+        <source>Click to select</source>
+        <target xml:lang="fr">Cliquer pour sélectionner</target>
+      </trans-unit>
+      <trans-unit id="view.copiedNodeType" xml:space="preserve">
+        <source>Copied node type to clipboard</source>
+        <target xml:lang="fr">Type de nœud copié dans le presse-papiers</target>
+      </trans-unit>
+      <trans-unit id="view.copyFailed" xml:space="preserve">
+        <source>Could not copy to clipboard</source>
+        <target xml:lang="fr">Impossible de copier dans le presse-papiers</target>
+      </trans-unit>
+      <trans-unit id="view.copyNodeType" xml:space="preserve">
+        <source>Copy node type to clipboard</source>
+        <target xml:lang="fr">Copier le type de nœud dans le presse-papiers</target>
+      </trans-unit>
+      <trans-unit id="view.created" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="fr">Créé</target>
+      </trans-unit>
+      <trans-unit id="view.dataSourceUriUnsupported" xml:space="preserve">
+        <source>dataSourceUri is not supported - register a data source and reference it via the dataSource option.</source>
+        <target xml:lang="fr">dataSourceUri n'est pas pris en charge - enregistrez une source de données et référencez-la via l'option dataSource.</target>
+      </trans-unit>
+      <trans-unit id="view.identifier" xml:space="preserve">
+        <source>Identifier</source>
+        <target xml:lang="fr">Identifiant</target>
+      </trans-unit>
+      <trans-unit id="view.lastModification" xml:space="preserve">
+        <source>Last modification</source>
+        <target xml:lang="fr">Dernière modification</target>
+      </trans-unit>
+      <trans-unit id="view.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="view.noData" xml:space="preserve">
+        <source>No data.</source>
+        <target xml:lang="fr">Aucune donnée.</target>
+      </trans-unit>
+      <trans-unit id="view.noDataSource" xml:space="preserve">
+        <source>No data source configured for this view.</source>
+        <target xml:lang="fr">Aucune source de données configurée pour cette vue.</target>
+      </trans-unit>
+      <trans-unit id="view.nodeAddress" xml:space="preserve">
+        <source>Node address</source>
+        <target xml:lang="fr">Adresse du nœud</target>
+      </trans-unit>
+      <trans-unit id="view.noneConfigured" xml:space="preserve">
+        <source>(none configured)</source>
+        <target xml:lang="fr">(aucune configurée)</target>
+      </trans-unit>
+      <trans-unit id="view.notEnoughData" xml:space="preserve">
+        <source>Not enough data for a chart.</source>
+        <target xml:lang="fr">Pas assez de données pour un graphique.</target>
+      </trans-unit>
+      <trans-unit id="view.notSupported" xml:space="preserve">
+        <source>View not supported yet: {0}</source>
+        <target xml:lang="fr">Vue pas encore prise en charge : {0}</target>
+      </trans-unit>
+      <trans-unit id="view.timeSeriesChart" xml:space="preserve">
+        <source>Time series chart</source>
+        <target xml:lang="fr">Graphique de série temporelle</target>
+      </trans-unit>
+      <trans-unit id="view.type" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fr">Type</target>
+      </trans-unit>
+      <trans-unit id="view.unavailable" xml:space="preserve">
+        <source>unavailable</source>
+        <target xml:lang="fr">indisponible</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.changed" xml:space="preserve">
+        <source>Changed</source>
+        <target xml:lang="fr">Modifié</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.moved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="fr">Déplacé</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.new" xml:space="preserve">
+        <source>New</source>
+        <target xml:lang="fr">Nouveau</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.removed" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="fr">Supprimé</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseChangeNotEmpty" xml:space="preserve">
+        <source>The workspace still has pending changes - publish or discard them before rebasing it onto another workspace.</source>
+        <target xml:lang="fr">L'espace de travail contient encore des modifications en attente - publiez-les ou rejetez-les avant de le rebaser sur un autre espace de travail.</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseChanged" xml:space="preserve">
+        <source>Base workspace changed.</source>
+        <target xml:lang="fr">Espace de travail de base changé.</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseWorkspaceFallback" xml:space="preserve">
+        <source>the base workspace</source>
+        <target xml:lang="fr">l'espace de travail de base</target>
+      </trans-unit>
+      <trans-unit id="workspace.cannotBeUndone" xml:space="preserve">
+        <source>This cannot be undone.</source>
+        <target xml:lang="fr">Cette action est irréversible.</target>
+      </trans-unit>
+      <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
+        <source>You cannot publish to this workspace</source>
+        <target xml:lang="fr">Vous ne pouvez pas publier vers cet espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.added" xml:space="preserve">
+        <source>added</source>
+        <target xml:lang="fr">ajouté</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.changed" xml:space="preserve">
+        <source>changed</source>
+        <target xml:lang="fr">modifié</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.moved" xml:space="preserve">
+        <source>moved</source>
+        <target xml:lang="fr">déplacé</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.removed" xml:space="preserve">
+        <source>removed</source>
+        <target xml:lang="fr">supprimé</target>
+      </trans-unit>
+      <trans-unit id="workspace.changesPublished" xml:space="preserve">
+        <source>Changes published.</source>
+        <target xml:lang="fr">Modifications publiées.</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+        <target xml:lang="fr">Collaboratif</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+        <target xml:lang="fr">Édition à plusieurs dans un espace de travail partagé</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
+        <target xml:lang="fr">Édition collaborative (avec tout le monde dans l'espace de travail)</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countMany" xml:space="preserve">
+        <source>{0} conflicting changes</source>
+        <target xml:lang="fr">{0} modifications en conflit</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countOne" xml:space="preserve">
+        <source>1 conflicting change</source>
+        <target xml:lang="fr">1 modification en conflit</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.description" xml:space="preserve">
+        <source>These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.</source>
+        <target xml:lang="fr">Ces modifications en attente sont en conflit avec des modifications déjà publiées vers l'espace de travail de base. Les rejeter conserve toutes vos autres modifications ; les modifications rejetées ne peuvent pas être récupérées.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardAllChanges" xml:space="preserve">
+        <source>Discard all changes</source>
+        <target xml:lang="fr">Rejeter toutes les modifications</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardConflicting" xml:space="preserve">
+        <source>Discard conflicting changes</source>
+        <target xml:lang="fr">Rejeter les modifications en conflit</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.nodeDeleted" xml:space="preserve">
+        <source>It was deleted in the target workspace since you changed it.</source>
+        <target xml:lang="fr">Il a été supprimé dans l'espace de travail cible depuis votre modification.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.partialDescription" xml:space="preserve">
+        <source>These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.</source>
+        <target xml:lang="fr">Ces modifications ne peuvent pas être publiées seules - elles dépendent d'autres modifications en attente. Publiez tout à la place, ou rejetez-les.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolveFailed" xml:space="preserve">
+        <source>Resolving conflicts failed</source>
+        <target xml:lang="fr">Échec de la résolution des conflits</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolvedPublished" xml:space="preserve">
+        <source>Conflicting changes discarded; the rest was published.</source>
+        <target xml:lang="fr">Modifications en conflit rejetées ; le reste a été publié.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="fr">Nœud inconnu</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.button" xml:space="preserve">
+        <source>Discard</source>
+        <target xml:lang="fr">Rejeter</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.failed" xml:space="preserve">
+        <source>Discarding failed</source>
+        <target xml:lang="fr">Échec du rejet</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.success" xml:space="preserve">
+        <source>Changes discarded.</source>
+        <target xml:lang="fr">Modifications rejetées.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAll" xml:space="preserve">
+        <source>Discard all</source>
+        <target xml:lang="fr">Tout rejeter</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllMany" xml:space="preserve">
+        <source>All {0} pending changes will be discarded.</source>
+        <target xml:lang="fr">Les {0} modifications en attente seront toutes rejetées.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllOne" xml:space="preserve">
+        <source>All 1 pending change will be discarded.</source>
+        <target xml:lang="fr">La seule modification en attente sera rejetée.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllTitle" xml:space="preserve">
+        <source>Discard all changes?</source>
+        <target xml:lang="fr">Rejeter toutes les modifications ?</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageMany" xml:space="preserve">
+        <source>{0} pending changes on this page will be discarded.</source>
+        <target xml:lang="fr">{0} modifications en attente sur cette page seront rejetées.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageOne" xml:space="preserve">
+        <source>1 pending change on this page will be discarded.</source>
+        <target xml:lang="fr">1 modification en attente sur cette page sera rejetée.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageTitle" xml:space="preserve">
+        <source>Discard changes on this page?</source>
+        <target xml:lang="fr">Rejeter les modifications sur cette page ?</target>
+      </trans-unit>
+      <trans-unit id="workspace.live" xml:space="preserve">
+        <source>Live</source>
+        <target xml:lang="fr">Live</target>
+      </trans-unit>
+      <trans-unit id="workspace.manyChanges" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="fr">{0} modifications</target>
+      </trans-unit>
+      <trans-unit id="workspace.moreActions" xml:space="preserve">
+        <source>More publish and discard actions</source>
+        <target xml:lang="fr">Autres actions de publication et de rejet</target>
+      </trans-unit>
+      <trans-unit id="workspace.noPendingChanges" xml:space="preserve">
+        <source>No pending changes</source>
+        <target xml:lang="fr">Aucune modification en attente</target>
+      </trans-unit>
+      <trans-unit id="workspace.oneChange" xml:space="preserve">
+        <source>1 change</source>
+        <target xml:lang="fr">1 modification</target>
+      </trans-unit>
+      <trans-unit id="workspace.pendingBadge" xml:space="preserve">
+        <source>{0} pending changes</source>
+        <target xml:lang="fr">{0} modifications en attente</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
+        <source>Publish all</source>
+        <target xml:lang="fr">Tout publier</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishDenied" xml:space="preserve">
+        <source>You are not allowed to publish to "{0}"</source>
+        <target xml:lang="fr">Vous n'êtes pas autorisé à publier vers "{0}"</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
+        <source>Publish or discard your changes first.</source>
+        <target xml:lang="fr">Publiez ou rejetez d'abord vos modifications.</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
+        <source>Publish {0} pending changes</source>
+        <target xml:lang="fr">Publier {0} modifications en attente</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
+        <source>Publish 1 pending change</source>
+        <target xml:lang="fr">Publier 1 modification en attente</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTarget" xml:space="preserve">
+        <source>Workspace to publish to</source>
+        <target xml:lang="fr">Espace de travail de destination de la publication</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
+        <source>My workspace, publishing to</source>
+        <target xml:lang="fr">Mon espace de travail, publiant vers</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishThisPage" xml:space="preserve">
+        <source>Publish this page</source>
+        <target xml:lang="fr">Publier cette page</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishing.failed" xml:space="preserve">
+        <source>Publishing failed</source>
+        <target xml:lang="fr">Échec de la publication</target>
+      </trans-unit>
+      <trans-unit id="workspace.readOnly" xml:space="preserve">
+        <source>read-only</source>
+        <target xml:lang="fr">lecture seule</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.button" xml:space="preserve">
+        <source>Review changes</source>
+        <target xml:lang="fr">Passer en revue les modifications</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
+        <source>Review pending changes between workspaces</source>
+        <target xml:lang="fr">Passer en revue les modifications en attente entre espaces de travail</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyBody" xml:space="preserve">
+        <source>The pending changes on the selected documents will be discarded. This cannot be undone.</source>
+        <target xml:lang="fr">Les modifications en attente sur les documents sélectionnés seront rejetées. Cette action est irréversible.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyTitle" xml:space="preserve">
+        <source>Discard changes on {0} documents?</source>
+        <target xml:lang="fr">Rejeter les modifications sur {0} documents ?</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneBody" xml:space="preserve">
+        <source>The pending changes on the selected document will be discarded. This cannot be undone.</source>
+        <target xml:lang="fr">Les modifications en attente sur le document sélectionné seront rejetées. Cette action est irréversible.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneTitle" xml:space="preserve">
+        <source>Discard changes on this document?</source>
+        <target xml:lang="fr">Rejeter les modifications sur ce document ?</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardSelected" xml:space="preserve">
+        <source>Discard selected</source>
+        <target xml:lang="fr">Rejeter la sélection</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="fr">Aucune modification en attente.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="fr">Aller à la page</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPageSwitches" xml:space="preserve">
+        <source>Go to page (switches the edited workspace)</source>
+        <target xml:lang="fr">Aller à la page (change l'espace de travail édité)</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hasChanges" xml:space="preserve">
+        <source>Has pending changes</source>
+        <target xml:lang="fr">Contient des modifications en attente</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="fr">Masqué</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hideChanges" xml:space="preserve">
+        <source>Hide changes</source>
+        <target xml:lang="fr">Masquer les modifications</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.showChanges" xml:space="preserve">
+        <source>Show changes</source>
+        <target xml:lang="fr">Afficher les modifications</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
+        <source>Only the most recent changes are shown.</source>
+        <target xml:lang="fr">Seules les modifications les plus récentes sont affichées.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.loading" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="fr">Chargement des modifications…</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change "{0}"</source>
+        <target xml:lang="fr">Vous n'êtes pas autorisé à modifier "{0}"</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
+        <source>Publish selected</source>
+        <target xml:lang="fr">Publier la sélection</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
+        <source>Publish selected ({0})</source>
+        <target xml:lang="fr">Publier la sélection ({0})</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectAll" xml:space="preserve">
+        <source>Select all ({0})</source>
+        <target xml:lang="fr">Tout sélectionner ({0})</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
+        <source>Select documents to publish or discard.</source>
+        <target xml:lang="fr">Sélectionnez les documents à publier ou à rejeter.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectedOf" xml:space="preserve">
+        <source>{0} of {1} selected</source>
+        <target xml:lang="fr">{0} sur {1} sélectionnés</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.sourceLabel" xml:space="preserve">
+        <source>Changes in</source>
+        <target xml:lang="fr">Modifications dans</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
+        <source>Publishing to</source>
+        <target xml:lang="fr">Publication vers</target>
+      </trans-unit>
+      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
+        <source>Review changes</source>
+        <target xml:lang="fr">Passer en revue les modifications</target>
+      </trans-unit>
+      <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
+        <source>Select workspace…</source>
+        <target xml:lang="fr">Sélectionner un espace de travail…</target>
+      </trans-unit>
+      <trans-unit id="workspace.switchFailed" xml:space="preserve">
+        <source>Switching the workspace failed</source>
+        <target xml:lang="fr">Le changement d'espace de travail a échoué</target>
+      </trans-unit>
+      <trans-unit id="workspace.switched" xml:space="preserve">
+        <source>Workspace switched.</source>
+        <target xml:lang="fr">Espace de travail changé.</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.action" xml:space="preserve">
+        <source>Synchronize</source>
+        <target xml:lang="fr">Synchroniser</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.failed" xml:space="preserve">
+        <source>Synchronizing failed</source>
+        <target xml:lang="fr">Échec de la synchronisation</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.hint" xml:space="preserve">
+        <source>Others published changes to the base workspace. Synchronize to pull them into this workspace.</source>
+        <target xml:lang="fr">D'autres personnes ont publié des modifications vers l'espace de travail de base. Synchronisez pour les récupérer dans cet espace de travail.</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.success" xml:space="preserve">
+        <source>Workspace synchronized.</source>
+        <target xml:lang="fr">Espace de travail synchronisé.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="fr">{0} modifications</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
+        <source>Close details</source>
+        <target xml:lang="fr">Fermer les détails</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
+        <source>You are here</source>
+        <target xml:lang="fr">Vous êtes ici</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="fr">Créé</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeMoved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="fr">Déplacé</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRemoved" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="fr">Supprimé</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRestored" xml:space="preserve">
+        <source>Restored</source>
+        <target xml:lang="fr">Restauré</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.propertiesChanged" xml:space="preserve">
+        <source>Properties changed</source>
+        <target xml:lang="fr">Propriétés modifiées</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.referencesChanged" xml:space="preserve">
+        <source>References changed</source>
+        <target xml:lang="fr">Références modifiées</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.renamed" xml:space="preserve">
+        <source>Renamed</source>
+        <target xml:lang="fr">Renommé</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.typeChanged" xml:space="preserve">
+        <source>Type changed</source>
+        <target xml:lang="fr">Type modifié</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.variantCreated" xml:space="preserve">
+        <source>Variant created</source>
+        <target xml:lang="fr">Variante créée</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
+        <source>Visibility changed</source>
+        <target xml:lang="fr">Visibilité modifiée</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
+        <source>Pending change</source>
+        <target xml:lang="fr">Modification en attente</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
+        <source>Base has newer changes</source>
+        <target xml:lang="fr">La base a des modifications plus récentes</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
+        <source>Personal workspace</source>
+        <target xml:lang="fr">Espace de travail personnel</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
+        <source>Shared workspace</source>
+        <target xml:lang="fr">Espace de travail partagé</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
+        <source>The workspaces could not be loaded.</source>
+        <target xml:lang="fr">Les espaces de travail n'ont pas pu être chargés.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loading" xml:space="preserve">
+        <source>Loading workspaces…</source>
+        <target xml:lang="fr">Chargement des espaces de travail…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkout" xml:space="preserve">
+        <source>Checkout</source>
+        <target xml:lang="fr">Basculer</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkoutHint" xml:space="preserve">
+        <source>Switch editing into this workspace</source>
+        <target xml:lang="fr">Basculer l'édition vers cet espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebase" xml:space="preserve">
+        <source>Rebase</source>
+        <target xml:lang="fr">Rebaser</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseHint" xml:space="preserve">
+        <source>Rebase “{0}” onto this workspace - it becomes the new base to publish to</source>
+        <target xml:lang="fr">Rebaser “{0}” sur cet espace de travail - il devient la nouvelle base de publication</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseSyncHint" xml:space="preserve">
+        <source>Rebase “{0}” onto its base again: newest changes from here flow in underneath your pending ones</source>
+        <target xml:lang="fr">Rebaser “{0}” à nouveau sur sa base : les modifications les plus récentes d'ici s'insèrent sous vos modifications en attente</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.review" xml:space="preserve">
+        <source>Review changes…</source>
+        <target xml:lang="fr">Passer en revue les modifications…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
+        <source>The base workspace has newer changes</source>
+        <target xml:lang="fr">L'espace de travail de base a des modifications plus récentes</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
+        <source>outdated</source>
+        <target xml:lang="fr">obsolète</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="fr">Nœud inconnu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="fr">Masqué</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.shown" xml:space="preserve">
+        <source>Shown</source>
+        <target xml:lang="fr">Affiché</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.nodeCount" xml:space="preserve">
+        <source>{0} (+{1} more)</source>
+        <target xml:lang="fr">{0} (+{1} autres)</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.justNow" xml:space="preserve">
+        <source>just now</source>
+        <target xml:lang="fr">à l'instant</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.minutesAgo" xml:space="preserve">
+        <source>{0}m ago</source>
+        <target xml:lang="fr">il y a {0} min</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
+        <source>{0}h ago</source>
+        <target xml:lang="fr">il y a {0} h</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.events" xml:space="preserve">
+        <source>Events</source>
+        <target xml:lang="fr">Événements</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="fr">Aucune modification en attente.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.older" xml:space="preserve">
+        <source>Older history is not shown.</source>
+        <target xml:lang="fr">L'historique plus ancien n'est pas affiché.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.olderRoot" xml:space="preserve">
+        <source>Older published history is not shown.</source>
+        <target xml:lang="fr">L'historique publié plus ancien n'est pas affiché.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.loadingDiff" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="fr">Chargement des modifications…</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.diffFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="fr">Les modifications n'ont pas pu être chargées.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
+        <source>No details available.</source>
+        <target xml:lang="fr">Aucun détail disponible.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
+        <source>yes</source>
+        <target xml:lang="fr">oui</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
+        <source>no</source>
+        <target xml:lang="fr">non</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
+        <source>empty</source>
+        <target xml:lang="fr">vide</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
+        <source>Node type</source>
+        <target xml:lang="fr">Type de nœud</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fr">Nom</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.parent" xml:space="preserve">
+        <source>Parent</source>
+        <target xml:lang="fr">Parent</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.position" xml:space="preserve">
+        <source>Position</source>
+        <target xml:lang="fr">Position</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.variant" xml:space="preserve">
+        <source>Dimension</source>
+        <target xml:lang="fr">Dimension</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.reordered" xml:space="preserve">
+        <source>Reordered among its siblings</source>
+        <target xml:lang="fr">Réordonné parmi ses frères</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="fr">Actif</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.assign" xml:space="preserve">
+        <source>Grant access</source>
+        <target xml:lang="fr">Accorder l'accès</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.assigning" xml:space="preserve">
+        <source>Assigning…</source>
+        <target xml:lang="fr">Attribution…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.baseWorkspace" xml:space="preserve">
+        <source>Base workspace</source>
+        <target xml:lang="fr">Espace de travail de base</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationPersonal" xml:space="preserve">
+        <source>Personal</source>
+        <target xml:lang="fr">Personnel</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationRoot" xml:space="preserve">
+        <source>Root</source>
+        <target xml:lang="fr">Racine</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationShared" xml:space="preserve">
+        <source>Shared</source>
+        <target xml:lang="fr">Partagé</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="fr">Actions</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnBase" xml:space="preserve">
+        <source>Base</source>
+        <target xml:lang="fr">Base</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnChanges" xml:space="preserve">
+        <source>Changes</source>
+        <target xml:lang="fr">Modifications</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnOwner" xml:space="preserve">
+        <source>Owner</source>
+        <target xml:lang="fr">Propriétaire</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnTitle" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fr">Titre</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnType" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fr">Type</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.create" xml:space="preserve">
+        <source>Create workspace</source>
+        <target xml:lang="fr">Créer l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.createFailed" xml:space="preserve">
+        <source>Could not create workspace</source>
+        <target xml:lang="fr">Impossible de créer l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.createFailedDetail" xml:space="preserve">
+        <source>Creating the workspace failed.</source>
+        <target xml:lang="fr">La création de l'espace de travail a échoué.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.created" xml:space="preserve">
+        <source>The workspace "{0}" has been created.</source>
+        <target xml:lang="fr">L'espace de travail "{0}" a été créé.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fr">Création…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.delete" xml:space="preserve">
+        <source>Delete workspace</source>
+        <target xml:lang="fr">Supprimer l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteDescription" xml:space="preserve">
+        <source>The workspace, its access assignments and its metadata are removed permanently.</source>
+        <target xml:lang="fr">L'espace de travail, ses attributions d'accès et ses métadonnées sont supprimés définitivement.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteDescriptionChanges" xml:space="preserve">
+        <source>The workspace still has unpublished changes - they are discarded and lost permanently.</source>
+        <target xml:lang="fr">L'espace de travail contient encore des modifications non publiées - elles sont rejetées et perdues définitivement.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteFailedDetail" xml:space="preserve">
+        <source>Deleting the workspace failed.</source>
+        <target xml:lang="fr">La suppression de l'espace de travail a échoué.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteTitle" xml:space="preserve">
+        <source>Delete workspace "{0}"?</source>
+        <target xml:lang="fr">Supprimer l'espace de travail "{0}" ?</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleted" xml:space="preserve">
+        <source>The workspace "{0}" has been deleted.</source>
+        <target xml:lang="fr">L'espace de travail "{0}" a été supprimé.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="fr">Description</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fr">Modifier</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.editWorkspace" xml:space="preserve">
+        <source>Edit workspace</source>
+        <target xml:lang="fr">Modifier l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.editWorkspaceHint" xml:space="preserve">
+        <source>Title and description.</source>
+        <target xml:lang="fr">Titre et description.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.loadFailed" xml:space="preserve">
+        <source>Could not load workspaces</source>
+        <target xml:lang="fr">Impossible de charger les espaces de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.manageAccess" xml:space="preserve">
+        <source>Manage access</source>
+        <target xml:lang="fr">Gérer l'accès</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.manageAccessHint" xml:space="preserve">
+        <source>Who may view, edit or manage this workspace. Owners and administrators always have full access.</source>
+        <target xml:lang="fr">Qui peut consulter, modifier ou gérer cet espace de travail. Les propriétaires et les administrateurs ont toujours un accès complet.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.newWorkspace" xml:space="preserve">
+        <source>New workspace</source>
+        <target xml:lang="fr">Nouvel espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.newWorkspaceHint" xml:space="preserve">
+        <source>A workspace collects changes until they are published to its base workspace.</source>
+        <target xml:lang="fr">Un espace de travail regroupe les modifications jusqu'à leur publication vers son espace de travail de base.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.noAssignments" xml:space="preserve">
+        <source>No access assigned yet.</source>
+        <target xml:lang="fr">Aucun accès attribué pour le moment.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.none2" xml:space="preserve">
+        <source>None</source>
+        <target xml:lang="fr">Aucun</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.pending" xml:space="preserve">
+        <source>Pending</source>
+        <target xml:lang="fr">En attente</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.removeAccess" xml:space="preserve">
+        <source>Remove access</source>
+        <target xml:lang="fr">Retirer l'accès</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.role" xml:space="preserve">
+        <source>Role</source>
+        <target xml:lang="fr">Rôle</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleAssignFailed" xml:space="preserve">
+        <source>Could not assign access</source>
+        <target xml:lang="fr">Impossible d'attribuer l'accès</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleAssignFailedDetail" xml:space="preserve">
+        <source>Assigning the access failed.</source>
+        <target xml:lang="fr">L'attribution de l'accès a échoué.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleCollaborator" xml:space="preserve">
+        <source>Collaborator</source>
+        <target xml:lang="fr">Collaborateur</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleManager" xml:space="preserve">
+        <source>Manager</source>
+        <target xml:lang="fr">Gestionnaire</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleRemoveFailed" xml:space="preserve">
+        <source>Could not remove access</source>
+        <target xml:lang="fr">Impossible de retirer l'accès</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleRemoveFailedDetail" xml:space="preserve">
+        <source>Removing the access failed.</source>
+        <target xml:lang="fr">Le retrait de l'accès a échoué.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleViewer" xml:space="preserve">
+        <source>Viewer</source>
+        <target xml:lang="fr">Lecteur</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.rolesLoadFailed" xml:space="preserve">
+        <source>Could not load access</source>
+        <target xml:lang="fr">Impossible de charger les accès</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.rowActions" xml:space="preserve">
+        <source>Workspace actions</source>
+        <target xml:lang="fr">Actions sur l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.save" xml:space="preserve">
+        <source>Save workspace</source>
+        <target xml:lang="fr">Enregistrer l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saveFailed" xml:space="preserve">
+        <source>Could not save workspace</source>
+        <target xml:lang="fr">Impossible d'enregistrer l'espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saveFailedDetail" xml:space="preserve">
+        <source>Saving the workspace failed.</source>
+        <target xml:lang="fr">L'enregistrement de l'espace de travail a échoué.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saved" xml:space="preserve">
+        <source>The workspace "{0}" has been saved.</source>
+        <target xml:lang="fr">L'espace de travail "{0}" a été enregistré.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fr">Enregistrement…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.selectSubject" xml:space="preserve">
+        <source>Select…</source>
+        <target xml:lang="fr">Sélectionner…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectGroup" xml:space="preserve">
+        <source>Group (role)</source>
+        <target xml:lang="fr">Groupe (rôle)</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectType" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fr">Type</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectUser" xml:space="preserve">
+        <source>User</source>
+        <target xml:lang="fr">Utilisateur</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subtitle" xml:space="preserve">
+        <source>Where changes live until they are published.</source>
+        <target xml:lang="fr">Là où vivent les modifications jusqu'à leur publication.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.title" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="fr">Espaces de travail</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.title2" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fr">Titre</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.unavailable" xml:space="preserve">
+        <source>Workspaces are currently unavailable.</source>
+        <target xml:lang="fr">Les espaces de travail sont actuellement indisponibles.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibility" xml:space="preserve">
+        <source>Visibility</source>
+        <target xml:lang="fr">Visibilité</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibilityPrivate" xml:space="preserve">
+        <source>Private - only you</source>
+        <target xml:lang="fr">Privé - seulement vous</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibilityShared" xml:space="preserve">
+        <source>Shared - all editors</source>
+        <target xml:lang="fr">Partagé - tous les rédacteurs</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

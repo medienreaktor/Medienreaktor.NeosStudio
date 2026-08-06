@@ -1,0 +1,3447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext" target-language="fi">
+    <body>
+      <trans-unit id="action.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="action.close" xml:space="preserve">
+        <source>Close</source>
+        <target xml:lang="fi">Sulje</target>
+      </trans-unit>
+      <trans-unit id="app.connectToApi" xml:space="preserve">
+        <source>Connect to the API</source>
+        <target xml:lang="fi">Yhdistä API:hin</target>
+      </trans-unit>
+      <trans-unit id="app.loadingStudio" xml:space="preserve">
+        <source>Loading Neos Studio…</source>
+        <target xml:lang="fi">Ladataan Neos Studiota…</target>
+      </trans-unit>
+      <trans-unit id="app.loginFailed" xml:space="preserve">
+        <source>Login failed</source>
+        <target xml:lang="fi">Kirjautuminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="app.tagline" xml:space="preserve">
+        <source>Editing environment for Neos</source>
+        <target xml:lang="fi">Muokkausympäristö Neosille</target>
+      </trans-unit>
+      <trans-unit id="clipboard.activateHint" xml:space="preserve">
+        <source>Make this the entry the next paste inserts</source>
+        <target xml:lang="fi">Käytä tätä merkintää seuraavassa liittämisessä</target>
+      </trans-unit>
+      <trans-unit id="clipboard.clear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="fi">Tyhjennä</target>
+      </trans-unit>
+      <trans-unit id="clipboard.copied" xml:space="preserve">
+        <source>Copied</source>
+        <target xml:lang="fi">Kopioitu</target>
+      </trans-unit>
+      <trans-unit id="clipboard.cutHint" xml:space="preserve">
+        <source>Cut - pasting moves it</source>
+        <target xml:lang="fi">Leikattu – liittäminen siirtää sen</target>
+      </trans-unit>
+      <trans-unit id="clipboard.empty" xml:space="preserve">
+        <source>Nothing on the clipboard. Cut or copy a document or element from its context menu.</source>
+        <target xml:lang="fi">Leikepöytä on tyhjä. Leikkaa tai kopioi dokumentti tai elementti sen kontekstivalikosta.</target>
+      </trans-unit>
+      <trans-unit id="clipboard.pasteHint" xml:space="preserve">
+        <source>Paste inserts the highlighted entry.</source>
+        <target xml:lang="fi">Liittäminen lisää korostetun merkinnän.</target>
+      </trans-unit>
+      <trans-unit id="clipboard.removeFromClipboard" xml:space="preserve">
+        <source>Remove from clipboard</source>
+        <target xml:lang="fi">Poista leikepöydältä</target>
+      </trans-unit>
+      <trans-unit id="clipboard.statusCut" xml:space="preserve">
+        <source>Cut</source>
+        <target xml:lang="fi">Leikattu</target>
+      </trans-unit>
+      <trans-unit id="common.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="fi">Toiminto epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="common.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="common.close" xml:space="preserve">
+        <source>Close</source>
+        <target xml:lang="fi">Sulje</target>
+      </trans-unit>
+      <trans-unit id="common.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fi">Poista</target>
+      </trans-unit>
+      <trans-unit id="common.resizeSidebar" xml:space="preserve">
+        <source>Resize sidebar</source>
+        <target xml:lang="fi">Muuta sivupalkin kokoa</target>
+      </trans-unit>
+      <trans-unit id="common.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="fi">Tallenna</target>
+      </trans-unit>
+      <trans-unit id="common.sidebar" xml:space="preserve">
+        <source>Sidebar</source>
+        <target xml:lang="fi">Sivupalkki</target>
+      </trans-unit>
+      <trans-unit id="common.sidebarMobileDescription" xml:space="preserve">
+        <source>Displays the mobile sidebar.</source>
+        <target xml:lang="fi">Näyttää mobiilisivupalkin.</target>
+      </trans-unit>
+      <trans-unit id="common.toastError" xml:space="preserve">
+        <source>Error</source>
+        <target xml:lang="fi">Virhe</target>
+      </trans-unit>
+      <trans-unit id="common.toastInfo" xml:space="preserve">
+        <source>Notice</source>
+        <target xml:lang="fi">Huomautus</target>
+      </trans-unit>
+      <trans-unit id="common.toastLoading" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="fi">Käsitellään…</target>
+      </trans-unit>
+      <trans-unit id="common.toastSuccess" xml:space="preserve">
+        <source>Success</source>
+        <target xml:lang="fi">Onnistui</target>
+      </trans-unit>
+      <trans-unit id="common.toggleSidebar" xml:space="preserve">
+        <source>Toggle Sidebar</source>
+        <target xml:lang="fi">Näytä/piilota sivupalkki</target>
+      </trans-unit>
+      <trans-unit id="common.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="fi">Käsitellään…</target>
+      </trans-unit>
+      <trans-unit id="creation.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="creation.create" xml:space="preserve">
+        <source>Create</source>
+        <target xml:lang="fi">Luo</target>
+      </trans-unit>
+      <trans-unit id="creation.createNewNoun" xml:space="preserve">
+        <source>Create new {0}</source>
+        <target xml:lang="fi">Luo uusi {0}</target>
+      </trans-unit>
+      <trans-unit id="creation.createType" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="fi">Luo {0}</target>
+      </trans-unit>
+      <trans-unit id="creation.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="creation.creatingFailed" xml:space="preserve">
+        <source>Creating failed</source>
+        <target xml:lang="fi">Luominen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="creation.dragHint" xml:space="preserve">
+        <source>{0} ({1}) - drag into the preview</source>
+        <target xml:lang="fi">{0} ({1}) – vedä esikatseluun</target>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
+        <source>Filter node types</source>
+        <target xml:lang="fi">Suodata solmutyyppejä</target>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypesPlaceholder" xml:space="preserve">
+        <source>Filter node types…</source>
+        <target xml:lang="fi">Suodata solmutyyppejä…</target>
+      </trans-unit>
+      <trans-unit id="creation.insertionPosition" xml:space="preserve">
+        <source>Insertion position</source>
+        <target xml:lang="fi">Lisäyskohta</target>
+      </trans-unit>
+      <trans-unit id="creation.loadingNodeTypes" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="fi">Ladataan solmutyyppejä…</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.after" xml:space="preserve">
+        <source>After</source>
+        <target xml:lang="fi">Jälkeen</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.before" xml:space="preserve">
+        <source>Before</source>
+        <target xml:lang="fi">Ennen</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.inside" xml:space="preserve">
+        <source>Inside</source>
+        <target xml:lang="fi">Sisään</target>
+      </trans-unit>
+      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
+        <source>No creatable content node types.</source>
+        <target xml:lang="fi">Ei luotavia sisältösolmutyyppejä.</target>
+      </trans-unit>
+      <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
+        <source>No node types match the filter.</source>
+        <target xml:lang="fi">Mikään solmutyyppi ei vastaa suodatinta.</target>
+      </trans-unit>
+      <trans-unit id="creation.noTypesHere" xml:space="preserve">
+        <source>No {0} types can be created here.</source>
+        <target xml:lang="fi">Tähän ei voi luoda {0}-tyyppejä.</target>
+      </trans-unit>
+      <trans-unit id="creation.nounDocument" xml:space="preserve">
+        <source>document</source>
+        <target xml:lang="fi">dokumentti</target>
+      </trans-unit>
+      <trans-unit id="creation.nounElement" xml:space="preserve">
+        <source>element</source>
+        <target xml:lang="fi">elementti</target>
+      </trans-unit>
+      <trans-unit id="creation.relativeTo" xml:space="preserve">
+        <source>Relative to “{0}”.</source>
+        <target xml:lang="fi">Suhteessa kohteeseen ”{0}”.</target>
+      </trans-unit>
+      <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
+        <source>Checking parent documents failed</source>
+        <target xml:lang="fi">Ylätason dokumenttien tarkistus epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="dimension.checkingParents" xml:space="preserve">
+        <source> Checking which parent documents are missing…</source>
+        <target xml:lang="fi"> Tarkistetaan, mitkä ylätason dokumentit puuttuvat…</target>
+      </trans-unit>
+      <trans-unit id="dimension.createAndCopy" xml:space="preserve">
+        <source>Create and copy content</source>
+        <target xml:lang="fi">Luo ja kopioi sisältö</target>
+      </trans-unit>
+      <trans-unit id="dimension.createEmpty" xml:space="preserve">
+        <source>Create empty</source>
+        <target xml:lang="fi">Luo tyhjä</target>
+      </trans-unit>
+      <trans-unit id="dimension.createTitle" xml:space="preserve">
+        <source>Create document in {0}?</source>
+        <target xml:lang="fi">Luodaanko dokumentti kohteeseen {0}?</target>
+      </trans-unit>
+      <trans-unit id="dimension.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+        <target xml:lang="fi">Variantin luominen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="dimension.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
+        <source> {0} missing parent documents will be created as well.</source>
+        <target xml:lang="fi"> Samalla luodaan myös {0} puuttuvaa ylätason dokumenttia.</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsOne" xml:space="preserve">
+        <source> 1 missing parent document will be created as well.</source>
+        <target xml:lang="fi"> Samalla luodaan myös 1 puuttuva ylätason dokumentti.</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingVariant" xml:space="preserve">
+        <source>The selected document does not exist here yet - create it?</source>
+        <target xml:lang="fi">Valittua dokumenttia ei ole täällä vielä – luodaanko se?</target>
+      </trans-unit>
+      <trans-unit id="dimension.notExistYet" xml:space="preserve">
+        <source>“{0}” does not exist in {1} yet.</source>
+        <target xml:lang="fi">”{0}” ei ole vielä olemassa kohteessa {1}.</target>
+      </trans-unit>
+      <trans-unit id="dimension.variantCreated" xml:space="preserve">
+        <source>Document variant created.</source>
+        <target xml:lang="fi">Dokumenttivariantti luotu.</target>
+      </trans-unit>
+      <trans-unit id="editing.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="editing.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="fi">Kopioi</target>
+      </trans-unit>
+      <trans-unit id="editing.copyFailed" xml:space="preserve">
+        <source>Copying failed</source>
+        <target xml:lang="fi">Kopiointi epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.createFailed" xml:space="preserve">
+        <source>Creating failed</source>
+        <target xml:lang="fi">Luominen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.createNew" xml:space="preserve">
+        <source>Create new…</source>
+        <target xml:lang="fi">Luo uusi…</target>
+      </trans-unit>
+      <trans-unit id="editing.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+        <target xml:lang="fi">Variantin luominen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.cut" xml:space="preserve">
+        <source>Cut</source>
+        <target xml:lang="fi">Leikkaa</target>
+      </trans-unit>
+      <trans-unit id="editing.cutFailed" xml:space="preserve">
+        <source>Cutting failed</source>
+        <target xml:lang="fi">Leikkaaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fi">Poista</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.description" xml:space="preserve">
+        <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
+        <target xml:lang="fi">{0} ja kaikki sen sisältö poistetaan. Tämän voi kumota hylkäämällä muutoksen työtilasta.</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
+        <source>Delete this {0}?</source>
+        <target xml:lang="fi">Poistetaanko tämä {0}?</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteFailed" xml:space="preserve">
+        <source>Deleting failed</source>
+        <target xml:lang="fi">Poistaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.document" xml:space="preserve">
+        <source>document</source>
+        <target xml:lang="fi">dokumentti</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.element" xml:space="preserve">
+        <source>element</source>
+        <target xml:lang="fi">elementti</target>
+      </trans-unit>
+      <trans-unit id="editing.hide" xml:space="preserve">
+        <source>Hide</source>
+        <target xml:lang="fi">Piilota</target>
+      </trans-unit>
+      <trans-unit id="editing.hideFailed" xml:space="preserve">
+        <source>Hiding failed</source>
+        <target xml:lang="fi">Piilottaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.moveFailed" xml:space="preserve">
+        <source>Moving failed</source>
+        <target xml:lang="fi">Siirtäminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.noParentToPaste" xml:space="preserve">
+        <source>The node has no parent to paste next to.</source>
+        <target xml:lang="fi">Solmulla ei ole ylätasoa, jonka viereen voisi liittää.</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfter" xml:space="preserve">
+        <source>Paste after</source>
+        <target xml:lang="fi">Liitä jälkeen</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfterHint" xml:space="preserve">
+        <source>Paste “{0}” after this {1}</source>
+        <target xml:lang="fi">Liitä ”{0}” tämän ({1}) jälkeen</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteFailed" xml:space="preserve">
+        <source>Pasting failed</source>
+        <target xml:lang="fi">Liittäminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteInto" xml:space="preserve">
+        <source>Paste into</source>
+        <target xml:lang="fi">Liitä sisään</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteIntoHint" xml:space="preserve">
+        <source>Paste “{0}” inside, as the last child</source>
+        <target xml:lang="fi">Liitä ”{0}” sisään viimeiseksi lapseksi</target>
+      </trans-unit>
+      <trans-unit id="editing.saveFailed" xml:space="preserve">
+        <source>Saving failed</source>
+        <target xml:lang="fi">Tallennus epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.setImageFailed" xml:space="preserve">
+        <source>Setting image failed</source>
+        <target xml:lang="fi">Kuvan asettaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.unhide" xml:space="preserve">
+        <source>Unhide</source>
+        <target xml:lang="fi">Näytä</target>
+      </trans-unit>
+      <trans-unit id="editing.unhideFailed" xml:space="preserve">
+        <source>Unhiding failed</source>
+        <target xml:lang="fi">Näyttäminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editing.variantCreated" xml:space="preserve">
+        <source>Variant created in the current dimension.</source>
+        <target xml:lang="fi">Variantti luotu nykyiseen dimensioon.</target>
+      </trans-unit>
+      <trans-unit id="editor.addAsset" xml:space="preserve">
+        <source>Add asset…</source>
+        <target xml:lang="fi">Lisää aineisto…</target>
+      </trans-unit>
+      <trans-unit id="editor.addImage" xml:space="preserve">
+        <source>Add image…</source>
+        <target xml:lang="fi">Lisää kuva…</target>
+      </trans-unit>
+      <trans-unit id="editor.apply" xml:space="preserve">
+        <source>Apply</source>
+        <target xml:lang="fi">Käytä</target>
+      </trans-unit>
+      <trans-unit id="editor.assetNotFound" xml:space="preserve">
+        <source>Asset not found</source>
+        <target xml:lang="fi">Aineistoa ei löytynyt</target>
+      </trans-unit>
+      <trans-unit id="editor.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="editor.clear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="fi">Tyhjennä</target>
+      </trans-unit>
+      <trans-unit id="editor.code.edit" xml:space="preserve">
+        <source>Edit code…</source>
+        <target xml:lang="fi">Muokkaa koodia…</target>
+      </trans-unit>
+      <trans-unit id="editor.code.empty" xml:space="preserve">
+        <source>No content yet</source>
+        <target xml:lang="fi">Ei vielä sisältöä</target>
+      </trans-unit>
+      <trans-unit id="editor.crop" xml:space="preserve">
+        <source>Crop</source>
+        <target xml:lang="fi">Rajaa</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.apply" xml:space="preserve">
+        <source>Apply crop</source>
+        <target xml:lang="fi">Käytä rajausta</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.applying" xml:space="preserve">
+        <source>Applying…</source>
+        <target xml:lang="fi">Käytetään…</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.aspectRatio" xml:space="preserve">
+        <source>Aspect ratio</source>
+        <target xml:lang="fi">Kuvasuhde</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.cannotCrop" xml:space="preserve">
+        <source>This image cannot be cropped.</source>
+        <target xml:lang="fi">Tätä kuvaa ei voi rajata.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.drawFirst" xml:space="preserve">
+        <source>Draw a crop area first.</source>
+        <target xml:lang="fi">Piirrä ensin rajausalue.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.failed" xml:space="preserve">
+        <source>Cropping failed</source>
+        <target xml:lang="fi">Rajaus epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.failedBody" xml:space="preserve">
+        <source>Cropping failed.</source>
+        <target xml:lang="fi">Rajaus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.free" xml:space="preserve">
+        <source>Free</source>
+        <target xml:lang="fi">Vapaa</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.original" xml:space="preserve">
+        <source>Original</source>
+        <target xml:lang="fi">Alkuperäinen</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.title" xml:space="preserve">
+        <source>Crop image</source>
+        <target xml:lang="fi">Rajaa kuva</target>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.nextMonth" xml:space="preserve">
+        <source>Next month</source>
+        <target xml:lang="fi">Seuraava kuukausi</target>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.prevMonth" xml:space="preserve">
+        <source>Previous month</source>
+        <target xml:lang="fi">Edellinen kuukausi</target>
+      </trans-unit>
+      <trans-unit id="editor.link.edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="fi">Muokkaa linkkiä</target>
+      </trans-unit>
+      <trans-unit id="editor.link.remove" xml:space="preserve">
+        <source>Remove link</source>
+        <target xml:lang="fi">Poista linkki</target>
+      </trans-unit>
+      <trans-unit id="editor.link.set" xml:space="preserve">
+        <source>Set link…</source>
+        <target xml:lang="fi">Aseta linkki…</target>
+      </trans-unit>
+      <trans-unit id="editor.loading" xml:space="preserve">
+        <source>Loading…</source>
+        <target xml:lang="fi">Ladataan…</target>
+      </trans-unit>
+      <trans-unit id="editor.loadingOptionsFailed" xml:space="preserve">
+        <source>Loading options failed</source>
+        <target xml:lang="fi">Vaihtoehtojen lataaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editor.noMatches" xml:space="preserve">
+        <source>No matches</source>
+        <target xml:lang="fi">Ei osumia</target>
+      </trans-unit>
+      <trans-unit id="editor.now" xml:space="preserve">
+        <source>Now</source>
+        <target xml:lang="fi">Nyt</target>
+      </trans-unit>
+      <trans-unit id="editor.range.currentValue" xml:space="preserve">
+        <source>Current value</source>
+        <target xml:lang="fi">Nykyinen arvo</target>
+      </trans-unit>
+      <trans-unit id="editor.range.maximum" xml:space="preserve">
+        <source>Maximum</source>
+        <target xml:lang="fi">Maksimi</target>
+      </trans-unit>
+      <trans-unit id="editor.range.minimum" xml:space="preserve">
+        <source>Minimum</source>
+        <target xml:lang="fi">Minimi</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
+        <source>References can be set after creation</source>
+        <target xml:lang="fi">Viittaukset voi asettaa luomisen jälkeen</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
+        <source>Type at least {0} characters to search</source>
+        <target xml:lang="fi">Kirjoita vähintään {0} merkkiä hakeaksesi</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeastOne" xml:space="preserve">
+        <source>Type at least {0} character to search</source>
+        <target xml:lang="fi">Kirjoita vähintään {0} merkki hakeaksesi</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeToSearch" xml:space="preserve">
+        <source>Type to search</source>
+        <target xml:lang="fi">Hae kirjoittamalla</target>
+      </trans-unit>
+      <trans-unit id="editor.remove" xml:space="preserve">
+        <source>Remove</source>
+        <target xml:lang="fi">Poista</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockFormat" xml:space="preserve">
+        <source>Block format</source>
+        <target xml:lang="fi">Lohkomuotoilu</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockquote" xml:space="preserve">
+        <source>Blockquote</source>
+        <target xml:lang="fi">Lohkolainaus</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.bold" xml:space="preserve">
+        <source>Bold</source>
+        <target xml:lang="fi">Lihavoitu</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.bulletList" xml:space="preserve">
+        <source>Bullet list</source>
+        <target xml:lang="fi">Järjestämätön lista</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.code" xml:space="preserve">
+        <source>Code</source>
+        <target xml:lang="fi">Koodi</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.codeBlock" xml:space="preserve">
+        <source>Code block</source>
+        <target xml:lang="fi">Koodilohko</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.heading" xml:space="preserve">
+        <source>Heading {0}</source>
+        <target xml:lang="fi">Otsikko {0}</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.horizontalRule" xml:space="preserve">
+        <source>Horizontal rule</source>
+        <target xml:lang="fi">Vaakaviiva</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.italic" xml:space="preserve">
+        <source>Italic</source>
+        <target xml:lang="fi">Kursiivi</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.link" xml:space="preserve">
+        <source>Link</source>
+        <target xml:lang="fi">Linkki</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.orderedList" xml:space="preserve">
+        <source>Ordered list</source>
+        <target xml:lang="fi">Järjestetty lista</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.paragraph" xml:space="preserve">
+        <source>Paragraph</source>
+        <target xml:lang="fi">Kappale</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.removeFormat" xml:space="preserve">
+        <source>Remove formatting</source>
+        <target xml:lang="fi">Poista muotoilu</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.strikethrough" xml:space="preserve">
+        <source>Strikethrough</source>
+        <target xml:lang="fi">Yliviivattu</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.styles" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="fi">Tyylit</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.subscript" xml:space="preserve">
+        <source>Subscript</source>
+        <target xml:lang="fi">Alaindeksi</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.superscript" xml:space="preserve">
+        <source>Superscript</source>
+        <target xml:lang="fi">Yläindeksi</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.underline" xml:space="preserve">
+        <source>Underline</source>
+        <target xml:lang="fi">Alleviivattu</target>
+      </trans-unit>
+      <trans-unit id="editor.searchFailed" xml:space="preserve">
+        <source>Search failed</source>
+        <target xml:lang="fi">Haku epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="editor.searchPlaceholder" xml:space="preserve">
+        <source>Search…</source>
+        <target xml:lang="fi">Hae…</target>
+      </trans-unit>
+      <trans-unit id="editor.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="fi">Haetaan…</target>
+      </trans-unit>
+      <trans-unit id="editor.select" xml:space="preserve">
+        <source>Select…</source>
+        <target xml:lang="fi">Valitse…</target>
+      </trans-unit>
+      <trans-unit id="editor.selectAsset" xml:space="preserve">
+        <source>Select asset…</source>
+        <target xml:lang="fi">Valitse aineisto…</target>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUnsupported" xml:space="preserve">
+        <source>Data source not supported</source>
+        <target xml:lang="fi">Tietolähdettä ei tueta</target>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUriHint" xml:space="preserve">
+        <source>editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier</source>
+        <target xml:lang="fi">editorOptions.dataSourceUri ei ole tuettu Studiossa – käytä dataSourceIdentifier-asetusta</target>
+      </trans-unit>
+      <trans-unit id="editor.selectImage" xml:space="preserve">
+        <source>Select image…</source>
+        <target xml:lang="fi">Valitse kuva…</target>
+      </trans-unit>
+      <trans-unit id="editor.time" xml:space="preserve">
+        <source>Time</source>
+        <target xml:lang="fi">Aika</target>
+      </trans-unit>
+      <trans-unit id="editor.today" xml:space="preserve">
+        <source>Today</source>
+        <target xml:lang="fi">Tänään</target>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.generateFailed" xml:space="preserve">
+        <source>Could not generate the URL path segment</source>
+        <target xml:lang="fi">URL-polun osaa ei voitu luoda</target>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
+        <source>Rebuild the URL path segment from the current page title</source>
+        <target xml:lang="fi">Luo URL-polun osa uudelleen sivun nykyisestä otsikosta</target>
+      </trans-unit>
+      <trans-unit id="graph.fit" xml:space="preserve">
+        <source>Fit to view</source>
+        <target xml:lang="fi">Sovita näkymään</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+        <target xml:lang="fi">Lähennä</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+        <target xml:lang="fi">Loitonna</target>
+      </trans-unit>
+      <trans-unit id="history.empty" xml:space="preserve">
+        <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
+        <target xml:lang="fi">Tällä sivulla ei ole julkaisemattomia muutoksia. Jokainen tekemäsi muokkaus näkyy täällä, kunnes se julkaistaan.</target>
+      </trans-unit>
+      <trans-unit id="history.loading" xml:space="preserve">
+        <source>Loading the history…</source>
+        <target xml:lang="fi">Ladataan historiaa…</target>
+      </trans-unit>
+      <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
+        <source>Editor not supported yet: {0}</source>
+        <target xml:lang="fi">Editoria ei vielä tueta: {0}</target>
+      </trans-unit>
+      <trans-unit id="inspector.no" xml:space="preserve">
+        <source>No</source>
+        <target xml:lang="fi">Ei</target>
+      </trans-unit>
+      <trans-unit id="inspector.noProperties" xml:space="preserve">
+        <source>This node type has no inspector properties.</source>
+        <target xml:lang="fi">Tällä solmutyypillä ei ole tarkastelun ominaisuuksia.</target>
+      </trans-unit>
+      <trans-unit id="inspector.nodeDeleted" xml:space="preserve">
+        <source>This node is deleted. Restore it to edit its properties again.</source>
+        <target xml:lang="fi">Tämä solmu on poistettu. Palauta se muokataksesi sen ominaisuuksia uudelleen.</target>
+      </trans-unit>
+      <trans-unit id="inspector.savingFailed" xml:space="preserve">
+        <source>Saving failed</source>
+        <target xml:lang="fi">Tallennus epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
+        <source>Select a node in the preview or the trees to inspect it.</source>
+        <target xml:lang="fi">Valitse solmu esikatselusta tai puista tarkastellaksesi sitä.</target>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
+        <source>Shines through from</source>
+        <target xml:lang="fi">Näkyy läpi kohteesta</target>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughHint" xml:space="preserve">
+        <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
+        <target xml:lang="fi">Tätä solmua ei ole vielä nykyisessä dimensiossa – muokkaaminen luo tähän itsenäisen variantin.</target>
+      </trans-unit>
+      <trans-unit id="inspector.validationError" xml:space="preserve">
+        <source>{0} validation error</source>
+        <target xml:lang="fi">{0} validointivirhe</target>
+      </trans-unit>
+      <trans-unit id="inspector.validationErrors" xml:space="preserve">
+        <source>{0} validation errors</source>
+        <target xml:lang="fi">{0} validointivirhettä</target>
+      </trans-unit>
+      <trans-unit id="inspector.yes" xml:space="preserve">
+        <source>Yes</source>
+        <target xml:lang="fi">Kyllä</target>
+      </trans-unit>
+      <trans-unit id="link.anchor" xml:space="preserve">
+        <source>Anchor</source>
+        <target xml:lang="fi">Ankkuri</target>
+      </trans-unit>
+      <trans-unit id="link.anchorPlaceholder" xml:space="preserve">
+        <source>Optional #anchor on the target page</source>
+        <target xml:lang="fi">Valinnainen #ankkuri kohdesivulla</target>
+      </trans-unit>
+      <trans-unit id="link.andBehaves" xml:space="preserve">
+        <source>and how the link behaves</source>
+        <target xml:lang="fi">ja miten linkki käyttäytyy</target>
+      </trans-unit>
+      <trans-unit id="link.apply" xml:space="preserve">
+        <source>Apply</source>
+        <target xml:lang="fi">Käytä</target>
+      </trans-unit>
+      <trans-unit id="link.asset" xml:space="preserve">
+        <source>Asset</source>
+        <target xml:lang="fi">Aineisto</target>
+      </trans-unit>
+      <trans-unit id="link.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="link.chooseLink" xml:space="preserve">
+        <source>Choose the link</source>
+        <target xml:lang="fi">Valitse linkki</target>
+      </trans-unit>
+      <trans-unit id="link.cssClass" xml:space="preserve">
+        <source>CSS class</source>
+        <target xml:lang="fi">CSS-luokka</target>
+      </trans-unit>
+      <trans-unit id="link.cssClassPlaceholder" xml:space="preserve">
+        <source>e.g. button</source>
+        <target xml:lang="fi">esim. button</target>
+      </trans-unit>
+      <trans-unit id="link.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="fi">Dokumentti</target>
+      </trans-unit>
+      <trans-unit id="link.edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="fi">Muokkaa linkkiä</target>
+      </trans-unit>
+      <trans-unit id="link.email" xml:space="preserve">
+        <source>E-Mail</source>
+        <target xml:lang="fi">Sähköposti</target>
+      </trans-unit>
+      <trans-unit id="link.emailAddress" xml:space="preserve">
+        <source>E-Mail address</source>
+        <target xml:lang="fi">Sähköpostiosoite</target>
+      </trans-unit>
+      <trans-unit id="link.emailHelp" xml:space="preserve">
+        <source>The link opens the visitor's mail client (mailto:).</source>
+        <target xml:lang="fi">Linkki avaa vierailijan sähköpostiohjelman (mailto:).</target>
+      </trans-unit>
+      <trans-unit id="link.emailPlaceholder" xml:space="preserve">
+        <source>mail@example.com</source>
+        <target xml:lang="fi">mail@example.com</target>
+      </trans-unit>
+      <trans-unit id="link.external" xml:space="preserve">
+        <source>External</source>
+        <target xml:lang="fi">Ulkoinen</target>
+      </trans-unit>
+      <trans-unit id="link.externalHelp" xml:space="preserve">
+        <source>A full web address; https:// is added when no scheme is given.</source>
+        <target xml:lang="fi">Täydellinen verkko-osoite; https:// lisätään, jos protokollaa ei anneta.</target>
+      </trans-unit>
+      <trans-unit id="link.for" xml:space="preserve">
+        <source>for</source>
+        <target xml:lang="fi">kohteelle</target>
+      </trans-unit>
+      <trans-unit id="link.insert" xml:space="preserve">
+        <source>Insert link</source>
+        <target xml:lang="fi">Lisää linkki</target>
+      </trans-unit>
+      <trans-unit id="link.linkedAsset" xml:space="preserve">
+        <source>Linked asset: {0}</source>
+        <target xml:lang="fi">Linkitetty aineisto: {0}</target>
+      </trans-unit>
+      <trans-unit id="link.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+        <target xml:lang="fi">Ladataan dokumentteja…</target>
+      </trans-unit>
+      <trans-unit id="link.noDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+        <target xml:lang="fi">Tällä sivustolla ei ole vielä dokumentteja.</target>
+      </trans-unit>
+      <trans-unit id="link.noSite" xml:space="preserve">
+        <source>No site is active - there is no document tree to pick from.</source>
+        <target xml:lang="fi">Mikään sivusto ei ole aktiivinen – dokumenttipuuta ei ole valittavana.</target>
+      </trans-unit>
+      <trans-unit id="link.noTypes" xml:space="preserve">
+        <source>No link types are registered.</source>
+        <target xml:lang="fi">Linkkityyppejä ei ole rekisteröity.</target>
+      </trans-unit>
+      <trans-unit id="link.nofollow" xml:space="preserve">
+        <source>No follow (rel="nofollow")</source>
+        <target xml:lang="fi">Ei seurata (rel="nofollow")</target>
+      </trans-unit>
+      <trans-unit id="link.openNewWindow" xml:space="preserve">
+        <source>Open in new window</source>
+        <target xml:lang="fi">Avaa uudessa ikkunassa</target>
+      </trans-unit>
+      <trans-unit id="link.options" xml:space="preserve">
+        <source>Link options</source>
+        <target xml:lang="fi">Linkin asetukset</target>
+      </trans-unit>
+      <trans-unit id="link.pickAssetFailed" xml:space="preserve">
+        <source>Picking asset failed</source>
+        <target xml:lang="fi">Aineiston valinta epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="link.remove" xml:space="preserve">
+        <source>Remove link</source>
+        <target xml:lang="fi">Poista linkki</target>
+      </trans-unit>
+      <trans-unit id="link.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+        <target xml:lang="fi">Hae aineistoja…</target>
+      </trans-unit>
+      <trans-unit id="link.targetDocument" xml:space="preserve">
+        <source>Link target document</source>
+        <target xml:lang="fi">Linkin kohdedokumentti</target>
+      </trans-unit>
+      <trans-unit id="link.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fi">Otsikko</target>
+      </trans-unit>
+      <trans-unit id="link.titlePlaceholder" xml:space="preserve">
+        <source>Shown as tooltip</source>
+        <target xml:lang="fi">Näytetään työkaluvihjeenä</target>
+      </trans-unit>
+      <trans-unit id="link.url" xml:space="preserve">
+        <source>URL</source>
+        <target xml:lang="fi">URL</target>
+      </trans-unit>
+      <trans-unit id="link.urlPlaceholder" xml:space="preserve">
+        <source>https://example.com</source>
+        <target xml:lang="fi">https://example.com</target>
+      </trans-unit>
+      <trans-unit id="media.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="fi">Toiminto epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="media.addTag" xml:space="preserve">
+        <source>Add tag…</source>
+        <target xml:lang="fi">Lisää tunniste…</target>
+      </trans-unit>
+      <trans-unit id="media.addToCollection" xml:space="preserve">
+        <source>Add to collection…</source>
+        <target xml:lang="fi">Lisää kokoelmaan…</target>
+      </trans-unit>
+      <trans-unit id="media.allCollections" xml:space="preserve">
+        <source>All collections</source>
+        <target xml:lang="fi">Kaikki kokoelmat</target>
+      </trans-unit>
+      <trans-unit id="media.allTags" xml:space="preserve">
+        <source>All tags</source>
+        <target xml:lang="fi">Kaikki tunnisteet</target>
+      </trans-unit>
+      <trans-unit id="media.allTypes" xml:space="preserve">
+        <source>All types</source>
+        <target xml:lang="fi">Kaikki tyypit</target>
+      </trans-unit>
+      <trans-unit id="media.assetCountOne" xml:space="preserve">
+        <source>{0} asset</source>
+        <target xml:lang="fi">{0} aineisto</target>
+      </trans-unit>
+      <trans-unit id="media.assetCountOther" xml:space="preserve">
+        <source>{0} assets</source>
+        <target xml:lang="fi">{0} aineistoa</target>
+      </trans-unit>
+      <trans-unit id="media.assetImported" xml:space="preserve">
+        <source>Asset imported to Neos.</source>
+        <target xml:lang="fi">Aineisto tuotu Neosiin.</target>
+      </trans-unit>
+      <trans-unit id="media.assetInUse" xml:space="preserve">
+        <source>This asset is in use and cannot be deleted.</source>
+        <target xml:lang="fi">Tämä aineisto on käytössä, eikä sitä voi poistaa.</target>
+      </trans-unit>
+      <trans-unit id="media.assetReplaced" xml:space="preserve">
+        <source>The file of "{0}" was replaced.</source>
+        <target xml:lang="fi">Kohteen "{0}" tiedosto korvattiin.</target>
+      </trans-unit>
+      <trans-unit id="media.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="fi">Peruuta</target>
+      </trans-unit>
+      <trans-unit id="media.caption" xml:space="preserve">
+        <source>Caption</source>
+        <target xml:lang="fi">Kuvateksti</target>
+      </trans-unit>
+      <trans-unit id="media.chooseAnotherFile" xml:space="preserve">
+        <source>Choose another file</source>
+        <target xml:lang="fi">Valitse toinen tiedosto</target>
+      </trans-unit>
+      <trans-unit id="media.chooseFile" xml:space="preserve">
+        <source>Choose file</source>
+        <target xml:lang="fi">Valitse tiedosto</target>
+      </trans-unit>
+      <trans-unit id="media.chooseFiles" xml:space="preserve">
+        <source>Choose files</source>
+        <target xml:lang="fi">Valitse tiedostoja</target>
+      </trans-unit>
+      <trans-unit id="media.closeUploader" xml:space="preserve">
+        <source>Close uploader</source>
+        <target xml:lang="fi">Sulje lataustyökalu</target>
+      </trans-unit>
+      <trans-unit id="media.collection" xml:space="preserve">
+        <source>Collection</source>
+        <target xml:lang="fi">Kokoelma</target>
+      </trans-unit>
+      <trans-unit id="media.collectionAddFailed" xml:space="preserve">
+        <source>Adding to collection failed</source>
+        <target xml:lang="fi">Kokoelmaan lisääminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.collectionRemoveFailed" xml:space="preserve">
+        <source>Removing from collection failed</source>
+        <target xml:lang="fi">Kokoelmasta poistaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.collections" xml:space="preserve">
+        <source>Collections</source>
+        <target xml:lang="fi">Kokoelmat</target>
+      </trans-unit>
+      <trans-unit id="media.copyright" xml:space="preserve">
+        <source>Copyright</source>
+        <target xml:lang="fi">Tekijänoikeus</target>
+      </trans-unit>
+      <trans-unit id="media.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fi">Poista</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAsset" xml:space="preserve">
+        <source>Delete asset</source>
+        <target xml:lang="fi">Poista aineisto</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetDescription" xml:space="preserve">
+        <source>The asset will be permanently removed. Assets that are still in use cannot be deleted.</source>
+        <target xml:lang="fi">Aineisto poistetaan pysyvästi. Käytössä olevia aineistoja ei voi poistaa.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetFailed" xml:space="preserve">
+        <source>Deleting the asset failed.</source>
+        <target xml:lang="fi">Aineiston poistaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetTitle" xml:space="preserve">
+        <source>Delete this asset?</source>
+        <target xml:lang="fi">Poistetaanko tämä aineisto?</target>
+      </trans-unit>
+      <trans-unit id="media.deleteCollectionDescription" xml:space="preserve">
+        <source>“{0}” will be removed. The assets inside it are kept.</source>
+        <target xml:lang="fi">”{0}” poistetaan. Sen sisältämät aineistot säilytetään.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteTagDescription" xml:space="preserve">
+        <source>“{0}” will be removed from all assets. The assets are kept.</source>
+        <target xml:lang="fi">”{0}” poistetaan kaikista aineistoista. Aineistot säilytetään.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteThis" xml:space="preserve">
+        <source>Delete this {0}?</source>
+        <target xml:lang="fi">Poistetaanko tämä {0}?</target>
+      </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="fi">Mitat</target>
+      </trans-unit>
+      <trans-unit id="media.done" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="fi">Valmis</target>
+      </trans-unit>
+      <trans-unit id="media.doubleClickToChoose" xml:space="preserve">
+        <source>— double-click to choose.</source>
+        <target xml:lang="fi">— valitse kaksoisnapsauttamalla.</target>
+      </trans-unit>
+      <trans-unit id="media.dragFileHere" xml:space="preserve">
+        <source>Drag the new file here</source>
+        <target xml:lang="fi">Vedä uusi tiedosto tähän</target>
+      </trans-unit>
+      <trans-unit id="media.dragFilesHere" xml:space="preserve">
+        <source>Drag files here</source>
+        <target xml:lang="fi">Vedä tiedostot tähän</target>
+      </trans-unit>
+      <trans-unit id="media.editAsset" xml:space="preserve">
+        <source>Edit asset</source>
+        <target xml:lang="fi">Muokkaa aineistoa</target>
+      </trans-unit>
+      <trans-unit id="media.failed" xml:space="preserve">
+        <source>Failed</source>
+        <target xml:lang="fi">Epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.filename" xml:space="preserve">
+        <source>Filename</source>
+        <target xml:lang="fi">Tiedostonimi</target>
+      </trans-unit>
+      <trans-unit id="media.for" xml:space="preserve">
+        <source>for</source>
+        <target xml:lang="fi">kohteelle</target>
+      </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+        <target xml:lang="fi">Muoto</target>
+      </trans-unit>
+      <trans-unit id="media.gridView" xml:space="preserve">
+        <source>Grid view</source>
+        <target xml:lang="fi">Ruudukkonäkymä</target>
+      </trans-unit>
+      <trans-unit id="media.importFailed" xml:space="preserve">
+        <source>Importing the asset failed</source>
+        <target xml:lang="fi">Aineiston tuonti epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.importToNeos" xml:space="preserve">
+        <source>Import to Neos</source>
+        <target xml:lang="fi">Tuo Neosiin</target>
+      </trans-unit>
+      <trans-unit id="media.importing" xml:space="preserve">
+        <source>Importing…</source>
+        <target xml:lang="fi">Tuodaan…</target>
+      </trans-unit>
+      <trans-unit id="media.keepOriginalFilename" xml:space="preserve">
+        <source>Keep the filename "{0}"</source>
+        <target xml:lang="fi">Säilytä tiedostonimi "{0}"</target>
+      </trans-unit>
+      <trans-unit id="media.listView" xml:space="preserve">
+        <source>List view</source>
+        <target xml:lang="fi">Listanäkymä</target>
+      </trans-unit>
+      <trans-unit id="media.loadingAssets" xml:space="preserve">
+        <source>Loading assets…</source>
+        <target xml:lang="fi">Ladataan aineistoja…</target>
+      </trans-unit>
+      <trans-unit id="media.loadingMore" xml:space="preserve">
+        <source>Loading more…</source>
+        <target xml:lang="fi">Ladataan lisää…</target>
+      </trans-unit>
+      <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
+        <source>Saving the metadata failed</source>
+        <target xml:lang="fi">Metatietojen tallennus epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.metadataSaved" xml:space="preserve">
+        <source>Metadata saved.</source>
+        <target xml:lang="fi">Metatiedot tallennettu.</target>
+      </trans-unit>
+      <trans-unit id="media.modified" xml:space="preserve">
+        <source>Modified</source>
+        <target xml:lang="fi">Muokattu</target>
+      </trans-unit>
+      <trans-unit id="media.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fi">Nimi</target>
+      </trans-unit>
+      <trans-unit id="media.newCollection" xml:space="preserve">
+        <source>New collection</source>
+        <target xml:lang="fi">Uusi kokoelma</target>
+      </trans-unit>
+      <trans-unit id="media.newTag" xml:space="preserve">
+        <source>New tag</source>
+        <target xml:lang="fi">Uusi tunniste</target>
+      </trans-unit>
+      <trans-unit id="media.noAssetsMatch" xml:space="preserve">
+        <source>No assets match the current filters.</source>
+        <target xml:lang="fi">Mikään aineisto ei vastaa nykyisiä suodattimia.</target>
+      </trans-unit>
+      <trans-unit id="media.noCollections" xml:space="preserve">
+        <source>No collections yet</source>
+        <target xml:lang="fi">Ei vielä kokoelmia</target>
+      </trans-unit>
+      <trans-unit id="media.noTags" xml:space="preserve">
+        <source>No tags yet</source>
+        <target xml:lang="fi">Ei vielä tunnisteita</target>
+      </trans-unit>
+      <trans-unit id="media.none" xml:space="preserve">
+        <source>None</source>
+        <target xml:lang="fi">Ei mitään</target>
+      </trans-unit>
+      <trans-unit id="media.nounCollection" xml:space="preserve">
+        <source>collection</source>
+        <target xml:lang="fi">kokoelma</target>
+      </trans-unit>
+      <trans-unit id="media.nounTag" xml:space="preserve">
+        <source>tag</source>
+        <target xml:lang="fi">tunniste</target>
+      </trans-unit>
+      <trans-unit id="media.or" xml:space="preserve">
+        <source>or</source>
+        <target xml:lang="fi">tai</target>
+      </trans-unit>
+      <trans-unit id="media.pickAsset" xml:space="preserve">
+        <source>Pick an asset</source>
+        <target xml:lang="fi">Valitse aineisto</target>
+      </trans-unit>
+      <trans-unit id="media.readOnly" xml:space="preserve">
+        <source>This asset is read-only.</source>
+        <target xml:lang="fi">Tämä aineisto on vain luettavissa.</target>
+      </trans-unit>
+      <trans-unit id="media.readOnlyBadge" xml:space="preserve">
+        <source>read-only</source>
+        <target xml:lang="fi">vain luku</target>
+      </trans-unit>
+      <trans-unit id="media.removeLabel" xml:space="preserve">
+        <source>Remove {0}</source>
+        <target xml:lang="fi">Poista {0}</target>
+      </trans-unit>
+      <trans-unit id="media.rename" xml:space="preserve">
+        <source>Rename</source>
+        <target xml:lang="fi">Nimeä uudelleen</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAsset" xml:space="preserve">
+        <source>Replace file</source>
+        <target xml:lang="fi">Korvaa tiedosto</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetDescription" xml:space="preserve">
+        <source>The new file takes the place of the current one. Title, tags, collections and every reference to this asset are kept.</source>
+        <target xml:lang="fi">Uusi tiedosto korvaa nykyisen. Otsikko, tunnisteet, kokoelmat ja kaikki viittaukset tähän aineistoon säilytetään.</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetFailed" xml:space="preserve">
+        <source>Replacing the file failed</source>
+        <target xml:lang="fi">Tiedoston korvaaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetUsageNote" xml:space="preserve">
+        <source>This asset is used {0} time(s). All usages will show the new file.</source>
+        <target xml:lang="fi">Tätä aineistoa käytetään {0} kertaa. Kaikissa käyttökohteissa näkyy uusi tiedosto.</target>
+      </trans-unit>
+      <trans-unit id="media.replacing" xml:space="preserve">
+        <source>Replacing…</source>
+        <target xml:lang="fi">Korvataan…</target>
+      </trans-unit>
+      <trans-unit id="media.renameNoun" xml:space="preserve">
+        <source>Rename {0}</source>
+        <target xml:lang="fi">Nimeä {0} uudelleen</target>
+      </trans-unit>
+      <trans-unit id="media.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="fi">Tallenna</target>
+      </trans-unit>
+      <trans-unit id="media.saveMetadata" xml:space="preserve">
+        <source>Save metadata</source>
+        <target xml:lang="fi">Tallenna metatiedot</target>
+      </trans-unit>
+      <trans-unit id="media.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fi">Tallennetaan…</target>
+      </trans-unit>
+      <trans-unit id="media.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+        <target xml:lang="fi">Hae aineistoja…</target>
+      </trans-unit>
+      <trans-unit id="media.searchAssetsAria" xml:space="preserve">
+        <source>Search assets</source>
+        <target xml:lang="fi">Hae aineistoja</target>
+      </trans-unit>
+      <trans-unit id="media.size" xml:space="preserve">
+        <source>Size</source>
+        <target xml:lang="fi">Koko</target>
+      </trans-unit>
+      <trans-unit id="media.sortNameAsc" xml:space="preserve">
+        <source>Name A–Z</source>
+        <target xml:lang="fi">Nimi A–Ö</target>
+      </trans-unit>
+      <trans-unit id="media.sortNameDesc" xml:space="preserve">
+        <source>Name Z–A</source>
+        <target xml:lang="fi">Nimi Ö–A</target>
+      </trans-unit>
+      <trans-unit id="media.sortNewest" xml:space="preserve">
+        <source>Newest first</source>
+        <target xml:lang="fi">Uusimmat ensin</target>
+      </trans-unit>
+      <trans-unit id="media.sortOldest" xml:space="preserve">
+        <source>Oldest first</source>
+        <target xml:lang="fi">Vanhimmat ensin</target>
+      </trans-unit>
+      <trans-unit id="media.source" xml:space="preserve">
+        <source>Source</source>
+        <target xml:lang="fi">Lähde</target>
+      </trans-unit>
+      <trans-unit id="media.tag" xml:space="preserve">
+        <source>Tag</source>
+        <target xml:lang="fi">Tunniste</target>
+      </trans-unit>
+      <trans-unit id="media.tagAddFailed" xml:space="preserve">
+        <source>Adding the tag failed</source>
+        <target xml:lang="fi">Tunnisteen lisääminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.tagRemoveFailed" xml:space="preserve">
+        <source>Removing the tag failed</source>
+        <target xml:lang="fi">Tunnisteen poistaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.tags" xml:space="preserve">
+        <source>Tags</source>
+        <target xml:lang="fi">Tunnisteet</target>
+      </trans-unit>
+      <trans-unit id="media.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fi">Otsikko</target>
+      </trans-unit>
+      <trans-unit id="media.type" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fi">Tyyppi</target>
+      </trans-unit>
+      <trans-unit id="media.untagged" xml:space="preserve">
+        <source>Untagged</source>
+        <target xml:lang="fi">Ilman tunnistetta</target>
+      </trans-unit>
+      <trans-unit id="media.upload" xml:space="preserve">
+        <source>Upload</source>
+        <target xml:lang="fi">Lataa</target>
+      </trans-unit>
+      <trans-unit id="media.uploadAssets" xml:space="preserve">
+        <source>Upload assets</source>
+        <target xml:lang="fi">Lataa aineistoja</target>
+      </trans-unit>
+      <trans-unit id="media.uploadFileFailed" xml:space="preserve">
+        <source>Uploading "{0}" failed</source>
+        <target xml:lang="fi">Tiedoston "{0}" lataus epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="media.usage" xml:space="preserve">
+        <source>Usage</source>
+        <target xml:lang="fi">Käyttö</target>
+      </trans-unit>
+      <trans-unit id="media.usageInaccessible" xml:space="preserve">
+        <source>+ {0} usage(s) you cannot access</source>
+        <target xml:lang="fi">+ {0} käyttökohdetta, joihin sinulla ei ole pääsyä</target>
+      </trans-unit>
+      <trans-unit id="media.usageNone" xml:space="preserve">
+        <source>Not used anywhere. Safe to delete.</source>
+        <target xml:lang="fi">Ei käytössä missään. Voi poistaa turvallisesti.</target>
+      </trans-unit>
+      <trans-unit id="media.usageUnavailable" xml:space="preserve">
+        <source>Usage information is unavailable.</source>
+        <target xml:lang="fi">Käyttötiedot eivät ole saatavilla.</target>
+      </trans-unit>
+      <trans-unit id="media.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="fi">Käsitellään…</target>
+      </trans-unit>
+      <trans-unit id="modal.adminsOnly" xml:space="preserve">
+        <source>Administrators only</source>
+        <target xml:lang="fi">Vain järjestelmänvalvojille</target>
+      </trans-unit>
+      <trans-unit id="modal.noAccess" xml:space="preserve">
+        <source>You do not have access to this section.</source>
+        <target xml:lang="fi">Sinulla ei ole pääsyä tähän osioon.</target>
+      </trans-unit>
+      <trans-unit id="modal.noPermission" xml:space="preserve">
+        <source>Not available for your account</source>
+        <target xml:lang="fi">Ei käytettävissä tililläsi</target>
+      </trans-unit>
+      <trans-unit id="modal.noSettings" xml:space="preserve">
+        <source>No settings available</source>
+        <target xml:lang="fi">Asetuksia ei ole saatavilla</target>
+      </trans-unit>
+      <trans-unit id="modal.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="fi">Profiili</target>
+      </trans-unit>
+      <trans-unit id="modal.settings" xml:space="preserve">
+        <source>Settings</source>
+        <target xml:lang="fi">Asetukset</target>
+      </trans-unit>
+      <trans-unit id="modal.settingsSections" xml:space="preserve">
+        <source>Settings sections</source>
+        <target xml:lang="fi">Asetusosiot</target>
+      </trans-unit>
+      <trans-unit id="modal.sites" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="fi">Sivustot</target>
+      </trans-unit>
+      <trans-unit id="modal.users" xml:space="preserve">
+        <source>Users</source>
+        <target xml:lang="fi">Käyttäjät</target>
+      </trans-unit>
+      <trans-unit id="modal.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="fi">Työtilat</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
+        <source>Abstract</source>
+        <target xml:lang="fi">Abstrakti</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
+        <source>Inherited</source>
+        <target xml:lang="fi">Peritty</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
+        <source>Inherited from {0}</source>
+        <target xml:lang="fi">Peritty kohteesta {0}</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
+        <source>Abstract type</source>
+        <target xml:lang="fi">Abstrakti tyyppi</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
+        <source>Content Collection</source>
+        <target xml:lang="fi">Sisältökokoelma</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
+        <source>Content</source>
+        <target xml:lang="fi">Sisältö</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="fi">Dokumentti</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
+        <source>Mixin / other</source>
+        <target xml:lang="fi">Mixin / muu</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
+        <source>The node types could not be loaded.</source>
+        <target xml:lang="fi">Solmutyyppejä ei voitu ladata.</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loading" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="fi">Ladataan solmutyyppejä…</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.matches" xml:space="preserve">
+        <source>{0} matches</source>
+        <target xml:lang="fi">{0} osumaa</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.properties" xml:space="preserve">
+        <source>Properties</source>
+        <target xml:lang="fi">Ominaisuudet</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
+        <source>Search node types by name</source>
+        <target xml:lang="fi">Hae solmutyyppejä nimellä</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
+        <source>Search node types…</source>
+        <target xml:lang="fi">Hae solmutyyppejä…</target>
+      </trans-unit>
+      <trans-unit id="notifications.clear" xml:space="preserve">
+        <source>Clear notifications</source>
+        <target xml:lang="fi">Tyhjennä ilmoitukset</target>
+      </trans-unit>
+      <trans-unit id="notifications.clearFailed" xml:space="preserve">
+        <source>Clearing failed</source>
+        <target xml:lang="fi">Tyhjennys epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="notifications.empty" xml:space="preserve">
+        <source>No notifications.</source>
+        <target xml:lang="fi">Ei ilmoituksia.</target>
+      </trans-unit>
+      <trans-unit id="notifications.label" xml:space="preserve">
+        <source>Notifications</source>
+        <target xml:lang="fi">Ilmoitukset</target>
+      </trans-unit>
+      <trans-unit id="notifications.markAllRead" xml:space="preserve">
+        <source>Mark all as read</source>
+        <target xml:lang="fi">Merkitse kaikki luetuiksi</target>
+      </trans-unit>
+      <trans-unit id="notifications.markRead" xml:space="preserve">
+        <source>Mark as read</source>
+        <target xml:lang="fi">Merkitse luetuksi</target>
+      </trans-unit>
+      <trans-unit id="notifications.markReadFailed" xml:space="preserve">
+        <source>Marking as read failed</source>
+        <target xml:lang="fi">Luetuksi merkitseminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="notifications.openTask" xml:space="preserve">
+        <source>Open the task</source>
+        <target xml:lang="fi">Avaa tehtävä</target>
+      </trans-unit>
+      <trans-unit id="notifications.unreadCount" xml:space="preserve">
+        <source>{0} unread notifications</source>
+        <target xml:lang="fi">{0} lukematonta ilmoitusta</target>
+      </trans-unit>
+      <trans-unit id="panel.collapse" xml:space="preserve">
+        <source>Collapse panel</source>
+        <target xml:lang="fi">Pienennä paneeli</target>
+      </trans-unit>
+      <trans-unit id="panel.dragHere" xml:space="preserve">
+        <source>Drag panels here</source>
+        <target xml:lang="fi">Vedä paneeleita tähän</target>
+      </trans-unit>
+      <trans-unit id="panel.expand" xml:space="preserve">
+        <source>Expand panel</source>
+        <target xml:lang="fi">Laajenna paneeli</target>
+      </trans-unit>
+      <trans-unit id="panel.loadingSites" xml:space="preserve">
+        <source>Loading sites…</source>
+        <target xml:lang="fi">Ladataan sivustoja…</target>
+      </trans-unit>
+      <trans-unit id="panel.resetLayout" xml:space="preserve">
+        <source>Reset to default</source>
+        <target xml:lang="fi">Palauta oletukset</target>
+      </trans-unit>
+      <trans-unit id="panel.title.clipboard" xml:space="preserve">
+        <source>Clipboard</source>
+        <target xml:lang="fi">Leikepöytä</target>
+      </trans-unit>
+      <trans-unit id="panel.title.create" xml:space="preserve">
+        <source>Create</source>
+        <target xml:lang="fi">Luo</target>
+      </trans-unit>
+      <trans-unit id="panel.title.documents" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="fi">Dokumentit</target>
+      </trans-unit>
+      <trans-unit id="panel.title.history" xml:space="preserve">
+        <source>History</source>
+        <target xml:lang="fi">Historia</target>
+      </trans-unit>
+      <trans-unit id="panel.title.inspector" xml:space="preserve">
+        <source>Inspector</source>
+        <target xml:lang="fi">Tarkastelu</target>
+      </trans-unit>
+      <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
+        <source>Media Library</source>
+        <target xml:lang="fi">Mediakirjasto</target>
+      </trans-unit>
+      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
+        <source>Node Types</source>
+        <target xml:lang="fi">Solmutyypit</target>
+      </trans-unit>
+      <trans-unit id="panel.title.outline" xml:space="preserve">
+        <source>Outline</source>
+        <target xml:lang="fi">Jäsennys</target>
+      </trans-unit>
+      <trans-unit id="panel.title.tasks" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="fi">Tehtävät</target>
+      </trans-unit>
+      <trans-unit id="panel.title.trash" xml:space="preserve">
+        <source>Trash</source>
+        <target xml:lang="fi">Roskakori</target>
+      </trans-unit>
+      <trans-unit id="panel.title.visualEditor" xml:space="preserve">
+        <source>Visual Editor</source>
+        <target xml:lang="fi">Visuaalinen editori</target>
+      </trans-unit>
+      <trans-unit id="panel.title.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="fi">Työtilat</target>
+      </trans-unit>
+      <trans-unit id="preview.documentDeleted" xml:space="preserve">
+        <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
+        <target xml:lang="fi">Tämä sivu on poistettu. Se palaa, kun palautat sen – tai katoaa lopullisesti, kun poisto julkaistaan.</target>
+      </trans-unit>
+      <trans-unit id="preview.openInNewTab" xml:space="preserve">
+        <source>Open page in a new tab</source>
+        <target xml:lang="fi">Avaa sivu uudessa välilehdessä</target>
+      </trans-unit>
+      <trans-unit id="preview.pageFrame" xml:space="preserve">
+        <source>Page preview</source>
+        <target xml:lang="fi">Sivun esikatselu</target>
+      </trans-unit>
+      <trans-unit id="preview.reload" xml:space="preserve">
+        <source>Reload preview</source>
+        <target xml:lang="fi">Lataa esikatselu uudelleen</target>
+      </trans-unit>
+      <trans-unit id="preview.selectDocument" xml:space="preserve">
+        <source>Select a document to preview it.</source>
+        <target xml:lang="fi">Valitse dokumentti esikatsellaksesi sitä.</target>
+      </trans-unit>
+      <trans-unit id="profile.changePassword" xml:space="preserve">
+        <source>Change password</source>
+        <target xml:lang="fi">Vaihda salasana</target>
+      </trans-unit>
+      <trans-unit id="profile.changePasswordHint" xml:space="preserve">
+        <source>Enter your current password to set a new one.</source>
+        <target xml:lang="fi">Anna nykyinen salasanasi asettaaksesi uuden.</target>
+      </trans-unit>
+      <trans-unit id="profile.changing" xml:space="preserve">
+        <source>Changing…</source>
+        <target xml:lang="fi">Vaihdetaan…</target>
+      </trans-unit>
+      <trans-unit id="profile.currentPassword" xml:space="preserve">
+        <source>Current password</source>
+        <target xml:lang="fi">Nykyinen salasana</target>
+      </trans-unit>
+      <trans-unit id="profile.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="fi">Sähköposti</target>
+      </trans-unit>
+      <trans-unit id="profile.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="fi">Etunimi</target>
+      </trans-unit>
+      <trans-unit id="profile.interfaceLanguage" xml:space="preserve">
+        <source>Interface language</source>
+        <target xml:lang="fi">Käyttöliittymän kieli</target>
+      </trans-unit>
+      <trans-unit id="profile.languageReload" xml:space="preserve">
+        <source>The new interface language applies after the next reload.</source>
+        <target xml:lang="fi">Uusi käyttöliittymän kieli tulee käyttöön seuraavan uudelleenlatauksen jälkeen.</target>
+      </trans-unit>
+      <trans-unit id="profile.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="fi">Sukunimi</target>
+      </trans-unit>
+      <trans-unit id="profile.loadFailed" xml:space="preserve">
+        <source>Could not load your profile</source>
+        <target xml:lang="fi">Profiiliasi ei voitu ladata</target>
+      </trans-unit>
+      <trans-unit id="profile.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="fi">Uusi salasana</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordChanged" xml:space="preserve">
+        <source>Your password has been changed.</source>
+        <target xml:lang="fi">Salasanasi on vaihdettu.</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailed" xml:space="preserve">
+        <source>Could not change password</source>
+        <target xml:lang="fi">Salasanaa ei voitu vaihtaa</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailedDetail" xml:space="preserve">
+        <source>Changing the password failed.</source>
+        <target xml:lang="fi">Salasanan vaihtaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordMismatch" xml:space="preserve">
+        <source>The new passwords do not match.</source>
+        <target xml:lang="fi">Uudet salasanat eivät täsmää.</target>
+      </trans-unit>
+      <trans-unit id="profile.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="fi">Toista uusi salasana</target>
+      </trans-unit>
+      <trans-unit id="profile.saveFailed" xml:space="preserve">
+        <source>Could not save profile</source>
+        <target xml:lang="fi">Profiilia ei voitu tallentaa</target>
+      </trans-unit>
+      <trans-unit id="profile.saveFailedDetail" xml:space="preserve">
+        <source>Saving your profile failed.</source>
+        <target xml:lang="fi">Profiilisi tallennus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="profile.saveProfile" xml:space="preserve">
+        <source>Save profile</source>
+        <target xml:lang="fi">Tallenna profiili</target>
+      </trans-unit>
+      <trans-unit id="profile.saved" xml:space="preserve">
+        <source>Your profile has been saved.</source>
+        <target xml:lang="fi">Profiilisi on tallennettu.</target>
+      </trans-unit>
+      <trans-unit id="profile.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fi">Tallennetaan…</target>
+      </trans-unit>
+      <trans-unit id="profile.subtitle" xml:space="preserve">
+        <source>Your personal account settings.</source>
+        <target xml:lang="fi">Henkilökohtaiset tiliasetuksesi.</target>
+      </trans-unit>
+      <trans-unit id="profile.title" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="fi">Profiili</target>
+      </trans-unit>
+      <trans-unit id="profile.unavailable" xml:space="preserve">
+        <source>Your profile is currently unavailable.</source>
+        <target xml:lang="fi">Profiilisi ei ole juuri nyt saatavilla.</target>
+      </trans-unit>
+      <trans-unit id="share.activeLinks" xml:space="preserve">
+        <source>Your active links</source>
+        <target xml:lang="fi">Aktiiviset linkkisi</target>
+      </trans-unit>
+      <trans-unit id="share.button" xml:space="preserve">
+        <source>Share</source>
+        <target xml:lang="fi">Jaa</target>
+      </trans-unit>
+      <trans-unit id="share.buttonHint" xml:space="preserve">
+        <source>Share a preview link to this page with people without a login</source>
+        <target xml:lang="fi">Jaa esikatselulinkki tähän sivuun henkilöille, joilla ei ole kirjautumista</target>
+      </trans-unit>
+      <trans-unit id="share.copied" xml:space="preserve">
+        <source>Link copied to the clipboard.</source>
+        <target xml:lang="fi">Linkki kopioitu leikepöydälle.</target>
+      </trans-unit>
+      <trans-unit id="share.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="fi">Kopioi</target>
+      </trans-unit>
+      <trans-unit id="share.copyFailed" xml:space="preserve">
+        <source>Copying failed — please copy the link manually.</source>
+        <target xml:lang="fi">Kopiointi epäonnistui — kopioi linkki manuaalisesti.</target>
+      </trans-unit>
+      <trans-unit id="share.copyOnceHint" xml:space="preserve">
+        <source>Copy the link now — for security it is shown only this once.</source>
+        <target xml:lang="fi">Kopioi linkki nyt — turvallisuussyistä se näytetään vain tämän kerran.</target>
+      </trans-unit>
+      <trans-unit id="share.create" xml:space="preserve">
+        <source>Create link</source>
+        <target xml:lang="fi">Luo linkki</target>
+      </trans-unit>
+      <trans-unit id="share.createAnother" xml:space="preserve">
+        <source>Create another link</source>
+        <target xml:lang="fi">Luo toinen linkki</target>
+      </trans-unit>
+      <trans-unit id="share.createFailed" xml:space="preserve">
+        <source>Creating the preview link failed.</source>
+        <target xml:lang="fi">Esikatselulinkin luominen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="share.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="share.description" xml:space="preserve">
+        <source>Anyone with the link can view this page read-only, without logging in, until the link expires.</source>
+        <target xml:lang="fi">Kuka tahansa linkin haltija voi katsella tätä sivua kirjautumatta, kunnes linkki vanhenee.</target>
+      </trans-unit>
+      <trans-unit id="share.expires" xml:space="preserve">
+        <source>expires {0}</source>
+        <target xml:lang="fi">vanhenee {0}</target>
+      </trans-unit>
+      <trans-unit id="share.expiry" xml:space="preserve">
+        <source>Expires after</source>
+        <target xml:lang="fi">Vanhenee</target>
+      </trans-unit>
+      <trans-unit id="share.label" xml:space="preserve">
+        <source>Label</source>
+        <target xml:lang="fi">Nimike</target>
+      </trans-unit>
+      <trans-unit id="share.revoke" xml:space="preserve">
+        <source>Revoke link</source>
+        <target xml:lang="fi">Peru linkki</target>
+      </trans-unit>
+      <trans-unit id="share.revoked" xml:space="preserve">
+        <source>The preview link was revoked.</source>
+        <target xml:lang="fi">Esikatselulinkki peruttiin.</target>
+      </trans-unit>
+      <trans-unit id="share.revokeFailed" xml:space="preserve">
+        <source>Revoking the preview link failed.</source>
+        <target xml:lang="fi">Esikatselulinkin peruminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="share.title" xml:space="preserve">
+        <source>Share preview link</source>
+        <target xml:lang="fi">Jaa esikatselulinkki</target>
+      </trans-unit>
+      <trans-unit id="share.ttl24" xml:space="preserve">
+        <source>24 hours</source>
+        <target xml:lang="fi">24 tuntia</target>
+      </trans-unit>
+      <trans-unit id="share.ttl48" xml:space="preserve">
+        <source>2 days</source>
+        <target xml:lang="fi">2 päivää</target>
+      </trans-unit>
+      <trans-unit id="share.ttl168" xml:space="preserve">
+        <source>7 days</source>
+        <target xml:lang="fi">7 päivää</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.general" xml:space="preserve">
+        <source>General</source>
+        <target xml:lang="fi">Yleiset</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.other" xml:space="preserve">
+        <source>Other</source>
+        <target xml:lang="fi">Muut</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.preview" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="fi">Esikatselu</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.workspace" xml:space="preserve">
+        <source>Workspace</source>
+        <target xml:lang="fi">Työtila</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.openSettings" xml:space="preserve">
+        <source>Open settings</source>
+        <target xml:lang="fi">Avaa asetukset</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.description" xml:space="preserve">
+        <source>Shortcuts available in Neos Studio, including those added by plugins.</source>
+        <target xml:lang="fi">Neos Studion pikanäppäimet, mukaan lukien lisäosien lisäämät.</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.title" xml:space="preserve">
+        <source>Keyboard shortcuts</source>
+        <target xml:lang="fi">Pikanäppäimet</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.showOverview" xml:space="preserve">
+        <source>Show keyboard shortcuts</source>
+        <target xml:lang="fi">Näytä pikanäppäimet</target>
+      </trans-unit>
+      <trans-unit id="sites.activateDomain" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="fi">Aktivoi</target>
+      </trans-unit>
+      <trans-unit id="sites.activeSite" xml:space="preserve">
+        <source>Active site</source>
+        <target xml:lang="fi">Aktiivinen sivusto</target>
+      </trans-unit>
+      <trans-unit id="sites.addDomain" xml:space="preserve">
+        <source>Add domain</source>
+        <target xml:lang="fi">Lisää verkkotunnus</target>
+      </trans-unit>
+      <trans-unit id="sites.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="fi">Toiminnot</target>
+      </trans-unit>
+      <trans-unit id="sites.columnDomains" xml:space="preserve">
+        <source>Domains</source>
+        <target xml:lang="fi">Verkkotunnukset</target>
+      </trans-unit>
+      <trans-unit id="sites.columnName" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fi">Nimi</target>
+      </trans-unit>
+      <trans-unit id="sites.columnPackage" xml:space="preserve">
+        <source>Package</source>
+        <target xml:lang="fi">Paketti</target>
+      </trans-unit>
+      <trans-unit id="sites.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="fi">Tila</target>
+      </trans-unit>
+      <trans-unit id="sites.create" xml:space="preserve">
+        <source>Create site</source>
+        <target xml:lang="fi">Luo sivusto</target>
+      </trans-unit>
+      <trans-unit id="sites.createFailed" xml:space="preserve">
+        <source>Could not create site</source>
+        <target xml:lang="fi">Sivustoa ei voitu luoda</target>
+      </trans-unit>
+      <trans-unit id="sites.createFailedDetail" xml:space="preserve">
+        <source>Creating the site failed.</source>
+        <target xml:lang="fi">Sivuston luominen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="sites.created" xml:space="preserve">
+        <source>The site "{0}" has been created.</source>
+        <target xml:lang="fi">Sivusto "{0}" on luotu.</target>
+      </trans-unit>
+      <trans-unit id="sites.createdSyncHint" xml:space="preserve">
+        <source>Synchronize your workspace to start editing the new site.</source>
+        <target xml:lang="fi">Synkronoi työtilasi aloittaaksesi uuden sivuston muokkaamisen.</target>
+      </trans-unit>
+      <trans-unit id="sites.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="sites.deactivateDomain" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="fi">Poista käytöstä</target>
+      </trans-unit>
+      <trans-unit id="sites.delete" xml:space="preserve">
+        <source>Delete site</source>
+        <target xml:lang="fi">Poista sivusto</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDescription" xml:space="preserve">
+        <source>The site, all of its content in every workspace, its domains and its asset collection are removed permanently. This cannot be undone.</source>
+        <target xml:lang="fi">Sivusto, kaikki sen sisältö jokaisessa työtilassa, sen verkkotunnukset ja sen aineistokokoelma poistetaan pysyvästi. Tätä ei voi kumota.</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDomain" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="fi">Poista</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteTitle" xml:space="preserve">
+        <source>Delete site "{0}"?</source>
+        <target xml:lang="fi">Poistetaanko sivusto "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="sites.deleted" xml:space="preserve">
+        <source>The site "{0}" has been deleted.</source>
+        <target xml:lang="fi">Sivusto "{0}" on poistettu.</target>
+      </trans-unit>
+      <trans-unit id="sites.domainActions" xml:space="preserve">
+        <source>Domain actions</source>
+        <target xml:lang="fi">Verkkotunnuksen toiminnot</target>
+      </trans-unit>
+      <trans-unit id="sites.domainFailed" xml:space="preserve">
+        <source>Could not save domain</source>
+        <target xml:lang="fi">Verkkotunnusta ei voitu tallentaa</target>
+      </trans-unit>
+      <trans-unit id="sites.domainFailedDetail" xml:space="preserve">
+        <source>Saving the domain failed.</source>
+        <target xml:lang="fi">Verkkotunnuksen tallennus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="sites.domains" xml:space="preserve">
+        <source>Domains</source>
+        <target xml:lang="fi">Verkkotunnukset</target>
+      </trans-unit>
+      <trans-unit id="sites.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fi">Muokkaa</target>
+      </trans-unit>
+      <trans-unit id="sites.editDomain" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fi">Muokkaa</target>
+      </trans-unit>
+      <trans-unit id="sites.editSite" xml:space="preserve">
+        <source>Edit site</source>
+        <target xml:lang="fi">Muokkaa sivustoa</target>
+      </trans-unit>
+      <trans-unit id="sites.editSiteHint" xml:space="preserve">
+        <source>Node name "{0}", package {1}.</source>
+        <target xml:lang="fi">Solmun nimi "{0}", paketti {1}.</target>
+      </trans-unit>
+      <trans-unit id="sites.hostname" xml:space="preserve">
+        <source>Hostname</source>
+        <target xml:lang="fi">Isäntänimi</target>
+      </trans-unit>
+      <trans-unit id="sites.inactiveDomain" xml:space="preserve">
+        <source>Inactive</source>
+        <target xml:lang="fi">Ei käytössä</target>
+      </trans-unit>
+      <trans-unit id="sites.loadFailed" xml:space="preserve">
+        <source>Could not load sites</source>
+        <target xml:lang="fi">Sivustoja ei voitu ladata</target>
+      </trans-unit>
+      <trans-unit id="sites.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fi">Nimi</target>
+      </trans-unit>
+      <trans-unit id="sites.newSite" xml:space="preserve">
+        <source>New site</source>
+        <target xml:lang="fi">Uusi sivusto</target>
+      </trans-unit>
+      <trans-unit id="sites.newSiteHint" xml:space="preserve">
+        <source>Creates a new site with an empty site node in the live workspace.</source>
+        <target xml:lang="fi">Luo uuden sivuston, jolla on tyhjä sivustosolmu live-työtilassa.</target>
+      </trans-unit>
+      <trans-unit id="sites.noDomains" xml:space="preserve">
+        <source>No domains configured. The site is reachable under any host pointing at this installation.</source>
+        <target xml:lang="fi">Verkkotunnuksia ei ole määritetty. Sivusto on tavoitettavissa millä tahansa tähän asennukseen osoittavalla isäntänimellä.</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeName" xml:space="preserve">
+        <source>Node name (optional)</source>
+        <target xml:lang="fi">Solmun nimi (valinnainen)</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeNamePlaceholder" xml:space="preserve">
+        <source>Derived from the name when empty</source>
+        <target xml:lang="fi">Johdetaan nimestä, jos tyhjä</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeType" xml:space="preserve">
+        <source>Site node type</source>
+        <target xml:lang="fi">Sivustosolmun tyyppi</target>
+      </trans-unit>
+      <trans-unit id="sites.none" xml:space="preserve">
+        <source>No sites found.</source>
+        <target xml:lang="fi">Sivustoja ei löytynyt.</target>
+      </trans-unit>
+      <trans-unit id="sites.offline" xml:space="preserve">
+        <source>Offline</source>
+        <target xml:lang="fi">Poissa verkosta</target>
+      </trans-unit>
+      <trans-unit id="sites.online" xml:space="preserve">
+        <source>Online</source>
+        <target xml:lang="fi">Verkossa</target>
+      </trans-unit>
+      <trans-unit id="sites.package" xml:space="preserve">
+        <source>Site package</source>
+        <target xml:lang="fi">Sivustopaketti</target>
+      </trans-unit>
+      <trans-unit id="sites.port" xml:space="preserve">
+        <source>Port</source>
+        <target xml:lang="fi">Portti</target>
+      </trans-unit>
+      <trans-unit id="sites.primary" xml:space="preserve">
+        <source>Primary</source>
+        <target xml:lang="fi">Ensisijainen</target>
+      </trans-unit>
+      <trans-unit id="sites.putOnline" xml:space="preserve">
+        <source>Put online</source>
+        <target xml:lang="fi">Aseta verkkoon</target>
+      </trans-unit>
+      <trans-unit id="sites.rowActions" xml:space="preserve">
+        <source>Site actions</source>
+        <target xml:lang="fi">Sivuston toiminnot</target>
+      </trans-unit>
+      <trans-unit id="sites.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="fi">Tallenna</target>
+      </trans-unit>
+      <trans-unit id="sites.saveDomain" xml:space="preserve">
+        <source>Save domain</source>
+        <target xml:lang="fi">Tallenna verkkotunnus</target>
+      </trans-unit>
+      <trans-unit id="sites.saveFailed" xml:space="preserve">
+        <source>Could not save site</source>
+        <target xml:lang="fi">Sivustoa ei voitu tallentaa</target>
+      </trans-unit>
+      <trans-unit id="sites.saveFailedDetail" xml:space="preserve">
+        <source>Saving the site failed.</source>
+        <target xml:lang="fi">Sivuston tallennus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="sites.saved" xml:space="preserve">
+        <source>The site "{0}" has been saved.</source>
+        <target xml:lang="fi">Sivusto "{0}" on tallennettu.</target>
+      </trans-unit>
+      <trans-unit id="sites.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fi">Tallennetaan…</target>
+      </trans-unit>
+      <trans-unit id="sites.scheme" xml:space="preserve">
+        <source>Scheme</source>
+        <target xml:lang="fi">Protokolla</target>
+      </trans-unit>
+      <trans-unit id="sites.schemeAny" xml:space="preserve">
+        <source>Any scheme</source>
+        <target xml:lang="fi">Mikä tahansa protokolla</target>
+      </trans-unit>
+      <trans-unit id="sites.selectNodeType" xml:space="preserve">
+        <source>Select node type…</source>
+        <target xml:lang="fi">Valitse solmutyyppi…</target>
+      </trans-unit>
+      <trans-unit id="sites.selectPackage" xml:space="preserve">
+        <source>Select package…</source>
+        <target xml:lang="fi">Valitse paketti…</target>
+      </trans-unit>
+      <trans-unit id="sites.selectPlaceholder" xml:space="preserve">
+        <source>Select site…</source>
+        <target xml:lang="fi">Valitse sivusto…</target>
+      </trans-unit>
+      <trans-unit id="sites.setPrimary" xml:space="preserve">
+        <source>Set as primary</source>
+        <target xml:lang="fi">Aseta ensisijaiseksi</target>
+      </trans-unit>
+      <trans-unit id="sites.startOffline" xml:space="preserve">
+        <source>Start offline (hidden from visitors)</source>
+        <target xml:lang="fi">Aloita poissa verkosta (piilotettu vierailijoilta)</target>
+      </trans-unit>
+      <trans-unit id="sites.stateFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="fi">Tilaa ei voitu muuttaa</target>
+      </trans-unit>
+      <trans-unit id="sites.stateFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="fi">Tilan muuttaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="sites.subtitle" xml:space="preserve">
+        <source>Websites served by this installation.</source>
+        <target xml:lang="fi">Tämän asennuksen palvelemat verkkosivustot.</target>
+      </trans-unit>
+      <trans-unit id="sites.synchronizeToAccess" xml:space="preserve">
+        <source>(synchronize to access)</source>
+        <target xml:lang="fi">(synkronoi käyttääksesi)</target>
+      </trans-unit>
+      <trans-unit id="sites.takeOffline" xml:space="preserve">
+        <source>Take offline</source>
+        <target xml:lang="fi">Poista verkosta</target>
+      </trans-unit>
+      <trans-unit id="sites.title" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="fi">Sivustot</target>
+      </trans-unit>
+      <trans-unit id="sites.unavailable" xml:space="preserve">
+        <source>Sites are currently unavailable.</source>
+        <target xml:lang="fi">Sivustot eivät ole juuri nyt saatavilla.</target>
+      </trans-unit>
+      <trans-unit id="sites.unsetPrimary" xml:space="preserve">
+        <source>Unset primary</source>
+        <target xml:lang="fi">Poista ensisijaisuus</target>
+      </trans-unit>
+      <trans-unit id="sites.wentOffline" xml:space="preserve">
+        <source>The site "{0}" is now offline.</source>
+        <target xml:lang="fi">Sivusto "{0}" on nyt poissa verkosta.</target>
+      </trans-unit>
+      <trans-unit id="sites.wentOnline" xml:space="preserve">
+        <source>The site "{0}" is now online.</source>
+        <target xml:lang="fi">Sivusto "{0}" on nyt verkossa.</target>
+      </trans-unit>
+      <trans-unit id="tasks.activeWorkspace" xml:space="preserve">
+        <source>You are editing in this workspace</source>
+        <target xml:lang="fi">Muokkaat tässä työtilassa</target>
+      </trans-unit>
+      <trans-unit id="tasks.addTaskWorkspace" xml:space="preserve">
+        <source>Add task workspace</source>
+        <target xml:lang="fi">Lisää tehtävätyötila</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignedTo" xml:space="preserve">
+        <source>Assigned to {0}</source>
+        <target xml:lang="fi">Osoitettu käyttäjälle {0}</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignee" xml:space="preserve">
+        <source>Assignee</source>
+        <target xml:lang="fi">Vastuuhenkilö</target>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspace" xml:space="preserve">
+        <source>Based on</source>
+        <target xml:lang="fi">Perustana</target>
+      </trans-unit>
+      <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
+        <source>Checkout workspace</source>
+        <target xml:lang="fi">Siirry työtilaan</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnDone" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="fi">Valmis</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnEmpty" xml:space="preserve">
+        <source>No tasks</source>
+        <target xml:lang="fi">Ei tehtäviä</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnInReview" xml:space="preserve">
+        <source>In review</source>
+        <target xml:lang="fi">Tarkistettavana</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnOpen" xml:space="preserve">
+        <source>Open</source>
+        <target xml:lang="fi">Avoin</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+        <target xml:lang="fi">Kommenttia ei voitu lisätä</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+        <target xml:lang="fi">Kommentin lisääminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+        <target xml:lang="fi">Kirjoita kommentti…</target>
+      </trans-unit>
+      <trans-unit id="tasks.comments" xml:space="preserve">
+        <source>Comments</source>
+        <target xml:lang="fi">Kommentit</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentSend" xml:space="preserve">
+        <source>Send</source>
+        <target xml:lang="fi">Lähetä</target>
+      </trans-unit>
+      <trans-unit id="tasks.completed" xml:space="preserve">
+        <source>The task has been completed.</source>
+        <target xml:lang="fi">Tehtävä on merkitty valmiiksi.</target>
+      </trans-unit>
+      <trans-unit id="tasks.completeTask" xml:space="preserve">
+        <source>Complete task</source>
+        <target xml:lang="fi">Merkitse tehtävä valmiiksi</target>
+      </trans-unit>
+      <trans-unit id="tasks.create" xml:space="preserve">
+        <source>Create task</source>
+        <target xml:lang="fi">Luo tehtävä</target>
+      </trans-unit>
+      <trans-unit id="tasks.created" xml:space="preserve">
+        <source>The task "{0}" has been created.</source>
+        <target xml:lang="fi">Tehtävä "{0}" on luotu.</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailed" xml:space="preserve">
+        <source>Could not create task</source>
+        <target xml:lang="fi">Tehtävää ei voitu luoda</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailedDetail" xml:space="preserve">
+        <source>Creating the task failed.</source>
+        <target xml:lang="fi">Tehtävän luominen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="tasks.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="tasks.delete" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="fi">Poista tehtävä</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteConfirm" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="fi">Poista tehtävä</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleted" xml:space="preserve">
+        <source>The task has been deleted.</source>
+        <target xml:lang="fi">Tehtävä on poistettu.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteDescription" xml:space="preserve">
+        <source>This removes the workspace "{0}" including all its unpublished changes. This cannot be undone.</source>
+        <target xml:lang="fi">Tämä poistaa työtilan "{0}" ja kaikki sen julkaisemattomat muutokset. Tätä ei voi kumota.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteTitle" xml:space="preserve">
+        <source>Delete task?</source>
+        <target xml:lang="fi">Poistetaanko tehtävä?</target>
+      </trans-unit>
+      <trans-unit id="tasks.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="fi">Kuvaus</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailHint" xml:space="preserve">
+        <source>Edit the task details below.</source>
+        <target xml:lang="fi">Muokkaa tehtävän tietoja alla.</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailReadOnly" xml:space="preserve">
+        <source>You need manage permission on this task to edit it.</source>
+        <target xml:lang="fi">Tarvitset tehtävän hallintaoikeuden muokataksesi sitä.</target>
+      </trans-unit>
+      <trans-unit id="tasks.editTask" xml:space="preserve">
+        <source>Edit task</source>
+        <target xml:lang="fi">Muokkaa tehtävää</target>
+      </trans-unit>
+      <trans-unit id="tasks.hasChanges" xml:space="preserve">
+        <source>Has unpublished changes</source>
+        <target xml:lang="fi">Sisältää julkaisemattomia muutoksia</target>
+      </trans-unit>
+      <trans-unit id="tasks.loadFailed" xml:space="preserve">
+        <source>Loading the tasks failed.</source>
+        <target xml:lang="fi">Tehtävien lataaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailed" xml:space="preserve">
+        <source>Could not move task</source>
+        <target xml:lang="fi">Tehtävää ei voitu siirtää</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailedDetail" xml:space="preserve">
+        <source>Moving the task failed.</source>
+        <target xml:lang="fi">Tehtävän siirtäminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTask" xml:space="preserve">
+        <source>New task</source>
+        <target xml:lang="fi">Uusi tehtävä</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTaskHint" xml:space="preserve">
+        <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
+        <target xml:lang="fi">Tehtävähaara kokoaa yhden työn muutokset. Vain osalliset näkevät sen; tarkastajat hyväksyvät ja julkaisevat sen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+        <target xml:lang="fi">Ei vielä kommentteja.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
+        <source>The task has been reopened.</source>
+        <target xml:lang="fi">Tehtävä on avattu uudelleen.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenTask" xml:space="preserve">
+        <source>Reopen task</source>
+        <target xml:lang="fi">Avaa tehtävä uudelleen</target>
+      </trans-unit>
+      <trans-unit id="tasks.reviewComment" xml:space="preserve">
+        <source>Comment (optional)</source>
+        <target xml:lang="fi">Kommentti (valinnainen)</target>
+      </trans-unit>
+      <trans-unit id="tasks.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fi">Tallennetaan…</target>
+      </trans-unit>
+      <trans-unit id="tasks.selectUser" xml:space="preserve">
+        <source>Select user</source>
+        <target xml:lang="fi">Valitse käyttäjä</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReview" xml:space="preserve">
+        <source>Send to review</source>
+        <target xml:lang="fi">Lähetä tarkistettavaksi</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReviewHint" xml:space="preserve">
+        <source>Hand the task to the reviewers. A comment helps them know what to look at.</source>
+        <target xml:lang="fi">Luovuta tehtävä tarkastajille. Kommentti auttaa heitä tietämään, mitä katsoa.</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusDone" xml:space="preserve">
+        <source>done</source>
+        <target xml:lang="fi">valmis</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusInReview" xml:space="preserve">
+        <source>in review</source>
+        <target xml:lang="fi">tarkistettavana</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusOpen" xml:space="preserve">
+        <source>open</source>
+        <target xml:lang="fi">avoin</target>
+      </trans-unit>
+      <trans-unit id="tasks.submitted" xml:space="preserve">
+        <source>The task has been submitted for review.</source>
+        <target xml:lang="fi">Tehtävä on lähetetty tarkistettavaksi.</target>
+      </trans-unit>
+      <trans-unit id="tasks.switcherGroup" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="fi">Tehtävät</target>
+      </trans-unit>
+      <trans-unit id="tasks.taskBranch" xml:space="preserve">
+        <source>Task branch</source>
+        <target xml:lang="fi">Tehtävähaara</target>
+      </trans-unit>
+      <trans-unit id="tasks.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fi">Otsikko</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassigned" xml:space="preserve">
+        <source>– unassigned –</source>
+        <target xml:lang="fi">– ei osoitettu –</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassignedHint" xml:space="preserve">
+        <source>Unassigned</source>
+        <target xml:lang="fi">Ei osoitettu</target>
+      </trans-unit>
+      <trans-unit id="tasks.updated" xml:space="preserve">
+        <source>The task has been updated.</source>
+        <target xml:lang="fi">Tehtävä on päivitetty.</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailed" xml:space="preserve">
+        <source>Could not update task</source>
+        <target xml:lang="fi">Tehtävää ei voitu päivittää</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
+        <source>Updating the task failed.</source>
+        <target xml:lang="fi">Tehtävän päivittäminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="tasks.viewTask" xml:space="preserve">
+        <source>View task</source>
+        <target xml:lang="fi">Näytä tehtävä</target>
+      </trans-unit>
+      <trans-unit id="trash.confirmBody" xml:space="preserve">
+        <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
+        <target xml:lang="fi">Se poistettiin jonkin niin ikään poistetun sisällä, joten tämä palauttaa myös: {0}</target>
+      </trans-unit>
+      <trans-unit id="trash.confirmTitle" xml:space="preserve">
+        <source>Restore "{0}"?</source>
+        <target xml:lang="fi">Palautetaanko "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="trash.deletedAt" xml:space="preserve">
+        <source>Deleted {0}</source>
+        <target xml:lang="fi">Poistettu {0}</target>
+      </trans-unit>
+      <trans-unit id="trash.deletedByAt" xml:space="preserve">
+        <source>Deleted {0} by {1}</source>
+        <target xml:lang="fi">Poistettu {0}, poistaja {1}</target>
+      </trans-unit>
+      <trans-unit id="trash.empty" xml:space="preserve">
+        <source>No deleted pages. They wait here until the deletion is published.</source>
+        <target xml:lang="fi">Ei poistettuja sivuja. Ne odottavat täällä, kunnes poisto julkaistaan.</target>
+      </trans-unit>
+      <trans-unit id="trash.failed" xml:space="preserve">
+        <source>The trash could not be loaded.</source>
+        <target xml:lang="fi">Roskakoria ei voitu ladata.</target>
+      </trans-unit>
+      <trans-unit id="trash.loading" xml:space="preserve">
+        <source>Loading trash…</source>
+        <target xml:lang="fi">Ladataan roskakoria…</target>
+      </trans-unit>
+      <trans-unit id="trash.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change this workspace</source>
+        <target xml:lang="fi">Sinulla ei ole oikeutta muuttaa tätä työtilaa</target>
+      </trans-unit>
+      <trans-unit id="trash.openFailed" xml:space="preserve">
+        <source>Opening the deleted page failed</source>
+        <target xml:lang="fi">Poistetun sivun avaaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="trash.openHint" xml:space="preserve">
+        <source>Show this deleted page</source>
+        <target xml:lang="fi">Näytä tämä poistettu sivu</target>
+      </trans-unit>
+      <trans-unit id="trash.outdated" xml:space="preserve">
+        <source>Synchronize the workspace before restoring - it is missing changes from its base workspace.</source>
+        <target xml:lang="fi">Synkronoi työtila ennen palauttamista – siitä puuttuu muutoksia sen perustyötilasta.</target>
+      </trans-unit>
+      <trans-unit id="trash.restore" xml:space="preserve">
+        <source>Restore</source>
+        <target xml:lang="fi">Palauta</target>
+      </trans-unit>
+      <trans-unit id="trash.restoreFailed" xml:space="preserve">
+        <source>Restoring failed</source>
+        <target xml:lang="fi">Palauttaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="trash.restored" xml:space="preserve">
+        <source>Restored {0}.</source>
+        <target xml:lang="fi">Palautettu {0}.</target>
+      </trans-unit>
+      <trans-unit id="trash.restoredWithAncestors" xml:space="preserve">
+        <source>Restored {0} and {1} more.</source>
+        <target xml:lang="fi">Palautettu {0} ja {1} muuta.</target>
+      </trans-unit>
+      <trans-unit id="trash.truncated" xml:space="preserve">
+        <source>Only the most recently deleted nodes are listed.</source>
+        <target xml:lang="fi">Vain viimeksi poistetut solmut näytetään.</target>
+      </trans-unit>
+      <trans-unit id="tree.clearFilter" xml:space="preserve">
+        <source>Clear filter</source>
+        <target xml:lang="fi">Tyhjennä suodatin</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
+        <source>Contains changes in workspace "{0}"</source>
+        <target xml:lang="fi">Sisältää muutoksia työtilassa "{0}"</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deleted" xml:space="preserve">
+        <source>Deleted</source>
+        <target xml:lang="fi">Poistettu</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deletedInherited" xml:space="preserve">
+        <source>Deleted (inherited)</source>
+        <target xml:lang="fi">Poistettu (peritty)</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
+        <target xml:lang="fi">{0} on täällä</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="fi">Piilotettu</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInMenu" xml:space="preserve">
+        <source>Hidden in menus</source>
+        <target xml:lang="fi">Piilotettu valikoista</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInherited" xml:space="preserve">
+        <source>Hidden (inherited)</source>
+        <target xml:lang="fi">Piilotettu (peritty)</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.modified" xml:space="preserve">
+        <source>Modified in workspace "{0}"</source>
+        <target xml:lang="fi">Muokattu työtilassa "{0}"</target>
+      </trans-unit>
+      <trans-unit id="tree.documentTreeLabel" xml:space="preserve">
+        <source>Document tree</source>
+        <target xml:lang="fi">Dokumenttipuu</target>
+      </trans-unit>
+      <trans-unit id="tree.emptyContent" xml:space="preserve">
+        <source>No content below this document.</source>
+        <target xml:lang="fi">Ei sisältöä tämän dokumentin alla.</target>
+      </trans-unit>
+      <trans-unit id="tree.emptyDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+        <target xml:lang="fi">Tällä sivustolla ei ole vielä dokumentteja.</target>
+      </trans-unit>
+      <trans-unit id="tree.filterByNodeType" xml:space="preserve">
+        <source>Filter by node type</source>
+        <target xml:lang="fi">Suodata solmutyypin mukaan</target>
+      </trans-unit>
+      <trans-unit id="tree.loadingContent" xml:space="preserve">
+        <source>Loading content…</source>
+        <target xml:lang="fi">Ladataan sisältöä…</target>
+      </trans-unit>
+      <trans-unit id="tree.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+        <target xml:lang="fi">Ladataan dokumentteja…</target>
+      </trans-unit>
+      <trans-unit id="tree.newDocument" xml:space="preserve">
+        <source>New document…</source>
+        <target xml:lang="fi">Uusi dokumentti…</target>
+      </trans-unit>
+      <trans-unit id="tree.newDocumentAria" xml:space="preserve">
+        <source>New document</source>
+        <target xml:lang="fi">Uusi dokumentti</target>
+      </trans-unit>
+      <trans-unit id="tree.noSearchMatch" xml:space="preserve">
+        <source>No documents match the search.</source>
+        <target xml:lang="fi">Mikään dokumentti ei vastaa hakua.</target>
+      </trans-unit>
+      <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
+        <source>Loading the outline failed</source>
+        <target xml:lang="fi">Jäsennyksen lataaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
+        <source>Select a document to outline its content.</source>
+        <target xml:lang="fi">Valitse dokumentti nähdäksesi sen sisällön jäsennyksen.</target>
+      </trans-unit>
+      <trans-unit id="tree.outlinerLabel" xml:space="preserve">
+        <source>Content outliner</source>
+        <target xml:lang="fi">Sisällön jäsennys</target>
+      </trans-unit>
+      <trans-unit id="tree.searchAriaLabel" xml:space="preserve">
+        <source>Search documents by title</source>
+        <target xml:lang="fi">Hae dokumentteja otsikolla</target>
+      </trans-unit>
+      <trans-unit id="tree.searchFailed" xml:space="preserve">
+        <source>Searching documents failed</source>
+        <target xml:lang="fi">Dokumenttien haku epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="tree.searchPlaceholder" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="fi">Hae dokumentteja…</target>
+      </trans-unit>
+      <trans-unit id="tree.searchResultsLabel" xml:space="preserve">
+        <source>Document search results</source>
+        <target xml:lang="fi">Dokumenttihaun tulokset</target>
+      </trans-unit>
+      <trans-unit id="tree.searchingDocuments" xml:space="preserve">
+        <source>Searching documents…</source>
+        <target xml:lang="fi">Haetaan dokumentteja…</target>
+      </trans-unit>
+      <trans-unit id="tree.treeLoadFailed" xml:space="preserve">
+        <source>Loading the tree failed</source>
+        <target xml:lang="fi">Puun lataaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="userMenu.label" xml:space="preserve">
+        <source>User menu</source>
+        <target xml:lang="fi">Käyttäjävalikko</target>
+      </trans-unit>
+      <trans-unit id="userMenu.logout" xml:space="preserve">
+        <source>Logout</source>
+        <target xml:lang="fi">Kirjaudu ulos</target>
+      </trans-unit>
+      <trans-unit id="userMenu.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="fi">Profiili</target>
+      </trans-unit>
+      <trans-unit id="users.activate" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="fi">Aktivoi</target>
+      </trans-unit>
+      <trans-unit id="users.activated" xml:space="preserve">
+        <source>The user "{0}" has been activated.</source>
+        <target xml:lang="fi">Käyttäjä "{0}" on aktivoitu.</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="fi">Tilaa ei voitu muuttaa</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="fi">Tilan muuttaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="users.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="fi">Aktiivinen</target>
+      </trans-unit>
+      <trans-unit id="users.columnAccount" xml:space="preserve">
+        <source>Account</source>
+        <target xml:lang="fi">Tili</target>
+      </trans-unit>
+      <trans-unit id="users.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="fi">Toiminnot</target>
+      </trans-unit>
+      <trans-unit id="users.columnEmail" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="fi">Sähköposti</target>
+      </trans-unit>
+      <trans-unit id="users.columnName" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fi">Nimi</target>
+      </trans-unit>
+      <trans-unit id="users.columnRoles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="fi">Roolit</target>
+      </trans-unit>
+      <trans-unit id="users.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="fi">Tila</target>
+      </trans-unit>
+      <trans-unit id="users.create" xml:space="preserve">
+        <source>Create user</source>
+        <target xml:lang="fi">Luo käyttäjä</target>
+      </trans-unit>
+      <trans-unit id="users.createFailed" xml:space="preserve">
+        <source>Could not create user</source>
+        <target xml:lang="fi">Käyttäjää ei voitu luoda</target>
+      </trans-unit>
+      <trans-unit id="users.createFailedDetail" xml:space="preserve">
+        <source>Creating the user failed.</source>
+        <target xml:lang="fi">Käyttäjän luominen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="users.created" xml:space="preserve">
+        <source>The user "{0}" has been created.</source>
+        <target xml:lang="fi">Käyttäjä "{0}" on luotu.</target>
+      </trans-unit>
+      <trans-unit id="users.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="users.deactivate" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="fi">Poista käytöstä</target>
+      </trans-unit>
+      <trans-unit id="users.deactivated" xml:space="preserve">
+        <source>The user "{0}" has been deactivated.</source>
+        <target xml:lang="fi">Käyttäjä "{0}" on poistettu käytöstä.</target>
+      </trans-unit>
+      <trans-unit id="users.delete" xml:space="preserve">
+        <source>Delete user</source>
+        <target xml:lang="fi">Poista käyttäjä</target>
+      </trans-unit>
+      <trans-unit id="users.deleteDescription" xml:space="preserve">
+        <source>The user, their accounts and their personal workspaces including any unpublished changes are removed permanently.</source>
+        <target xml:lang="fi">Käyttäjä, hänen tilinsä ja henkilökohtaiset työtilansa julkaisemattomine muutoksineen poistetaan pysyvästi.</target>
+      </trans-unit>
+      <trans-unit id="users.deleteTitle" xml:space="preserve">
+        <source>Delete user "{0}"?</source>
+        <target xml:lang="fi">Poistetaanko käyttäjä "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="users.deleted" xml:space="preserve">
+        <source>The user "{0}" has been deleted.</source>
+        <target xml:lang="fi">Käyttäjä "{0}" on poistettu.</target>
+      </trans-unit>
+      <trans-unit id="users.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fi">Muokkaa</target>
+      </trans-unit>
+      <trans-unit id="users.editUser" xml:space="preserve">
+        <source>Edit user</source>
+        <target xml:lang="fi">Muokkaa käyttäjää</target>
+      </trans-unit>
+      <trans-unit id="users.editUserHint" xml:space="preserve">
+        <source>Name, email address and roles.</source>
+        <target xml:lang="fi">Nimi, sähköpostiosoite ja roolit.</target>
+      </trans-unit>
+      <trans-unit id="users.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="fi">Sähköposti</target>
+      </trans-unit>
+      <trans-unit id="users.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="fi">Etunimi</target>
+      </trans-unit>
+      <trans-unit id="users.inactive" xml:space="preserve">
+        <source>Inactive</source>
+        <target xml:lang="fi">Ei aktiivinen</target>
+      </trans-unit>
+      <trans-unit id="users.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="fi">Sukunimi</target>
+      </trans-unit>
+      <trans-unit id="users.loadFailed" xml:space="preserve">
+        <source>Could not load users</source>
+        <target xml:lang="fi">Käyttäjiä ei voitu ladata</target>
+      </trans-unit>
+      <trans-unit id="users.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="fi">Uusi salasana</target>
+      </trans-unit>
+      <trans-unit id="users.newUser" xml:space="preserve">
+        <source>New user</source>
+        <target xml:lang="fi">Uusi käyttäjä</target>
+      </trans-unit>
+      <trans-unit id="users.newUserHint" xml:space="preserve">
+        <source>Creates a backend account on the default authentication provider.</source>
+        <target xml:lang="fi">Luo hallintatilin oletusarvoiselle todennuspalvelulle.</target>
+      </trans-unit>
+      <trans-unit id="users.noMatches" xml:space="preserve">
+        <source>No users match your search.</source>
+        <target xml:lang="fi">Yksikään käyttäjä ei vastaa hakuasi.</target>
+      </trans-unit>
+      <trans-unit id="users.none" xml:space="preserve">
+        <source>No users found.</source>
+        <target xml:lang="fi">Käyttäjiä ei löytynyt.</target>
+      </trans-unit>
+      <trans-unit id="users.ownAdminLocked" xml:space="preserve">
+        <source>You cannot remove your own Administrator role.</source>
+        <target xml:lang="fi">Et voi poistaa omaa järjestelmänvalvojan rooliasi.</target>
+      </trans-unit>
+      <trans-unit id="users.password" xml:space="preserve">
+        <source>Password</source>
+        <target xml:lang="fi">Salasana</target>
+      </trans-unit>
+      <trans-unit id="users.passwordMismatch" xml:space="preserve">
+        <source>The passwords do not match.</source>
+        <target xml:lang="fi">Salasanat eivät täsmää.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordReset" xml:space="preserve">
+        <source>The password of "{0}" has been reset.</source>
+        <target xml:lang="fi">Käyttäjän "{0}" salasana on nollattu.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailed" xml:space="preserve">
+        <source>Could not reset password</source>
+        <target xml:lang="fi">Salasanaa ei voitu nollata</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailedDetail" xml:space="preserve">
+        <source>Resetting the password failed.</source>
+        <target xml:lang="fi">Salasanan nollaus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="users.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="fi">Toista uusi salasana</target>
+      </trans-unit>
+      <trans-unit id="users.repeatPassword" xml:space="preserve">
+        <source>Repeat password</source>
+        <target xml:lang="fi">Toista salasana</target>
+      </trans-unit>
+      <trans-unit id="users.resetPassword" xml:space="preserve">
+        <source>Reset password</source>
+        <target xml:lang="fi">Nollaa salasana</target>
+      </trans-unit>
+      <trans-unit id="users.resetPasswordHint" xml:space="preserve">
+        <source>Sets a new password without requiring the current one. Active sessions of this user are ended.</source>
+        <target xml:lang="fi">Asettaa uuden salasanan vaatimatta nykyistä. Käyttäjän aktiiviset istunnot päätetään.</target>
+      </trans-unit>
+      <trans-unit id="users.resetting" xml:space="preserve">
+        <source>Resetting…</source>
+        <target xml:lang="fi">Nollataan…</target>
+      </trans-unit>
+      <trans-unit id="users.roles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="fi">Roolit</target>
+      </trans-unit>
+      <trans-unit id="users.rowActions" xml:space="preserve">
+        <source>User actions</source>
+        <target xml:lang="fi">Käyttäjän toiminnot</target>
+      </trans-unit>
+      <trans-unit id="users.save" xml:space="preserve">
+        <source>Save user</source>
+        <target xml:lang="fi">Tallenna käyttäjä</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailed" xml:space="preserve">
+        <source>Could not save user</source>
+        <target xml:lang="fi">Käyttäjää ei voitu tallentaa</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailedDetail" xml:space="preserve">
+        <source>Saving the user failed.</source>
+        <target xml:lang="fi">Käyttäjän tallennus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="users.saved" xml:space="preserve">
+        <source>The user "{0}" has been saved.</source>
+        <target xml:lang="fi">Käyttäjä "{0}" on tallennettu.</target>
+      </trans-unit>
+      <trans-unit id="users.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fi">Tallennetaan…</target>
+      </trans-unit>
+      <trans-unit id="users.search" xml:space="preserve">
+        <source>Search users…</source>
+        <target xml:lang="fi">Hae käyttäjiä…</target>
+      </trans-unit>
+      <trans-unit id="users.subtitle" xml:space="preserve">
+        <source>Backend user accounts.</source>
+        <target xml:lang="fi">Hallinnan käyttäjätilit.</target>
+      </trans-unit>
+      <trans-unit id="users.title" xml:space="preserve">
+        <source>Users</source>
+        <target xml:lang="fi">Käyttäjät</target>
+      </trans-unit>
+      <trans-unit id="users.unavailable" xml:space="preserve">
+        <source>Users are currently unavailable.</source>
+        <target xml:lang="fi">Käyttäjät eivät ole juuri nyt saatavilla.</target>
+      </trans-unit>
+      <trans-unit id="users.username" xml:space="preserve">
+        <source>Username</source>
+        <target xml:lang="fi">Käyttäjätunnus</target>
+      </trans-unit>
+      <trans-unit id="users.you" xml:space="preserve">
+        <source>You</source>
+        <target xml:lang="fi">Sinä</target>
+      </trans-unit>
+      <trans-unit id="view.clickToSelect" xml:space="preserve">
+        <source>Click to select</source>
+        <target xml:lang="fi">Valitse napsauttamalla</target>
+      </trans-unit>
+      <trans-unit id="view.copiedNodeType" xml:space="preserve">
+        <source>Copied node type to clipboard</source>
+        <target xml:lang="fi">Solmutyyppi kopioitu leikepöydälle</target>
+      </trans-unit>
+      <trans-unit id="view.copyFailed" xml:space="preserve">
+        <source>Could not copy to clipboard</source>
+        <target xml:lang="fi">Leikepöydälle kopiointi epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="view.copyNodeType" xml:space="preserve">
+        <source>Copy node type to clipboard</source>
+        <target xml:lang="fi">Kopioi solmutyyppi leikepöydälle</target>
+      </trans-unit>
+      <trans-unit id="view.created" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="fi">Luotu</target>
+      </trans-unit>
+      <trans-unit id="view.dataSourceUriUnsupported" xml:space="preserve">
+        <source>dataSourceUri is not supported - register a data source and reference it via the dataSource option.</source>
+        <target xml:lang="fi">dataSourceUri ei ole tuettu – rekisteröi tietolähde ja viittaa siihen dataSource-asetuksella.</target>
+      </trans-unit>
+      <trans-unit id="view.identifier" xml:space="preserve">
+        <source>Identifier</source>
+        <target xml:lang="fi">Tunniste</target>
+      </trans-unit>
+      <trans-unit id="view.lastModification" xml:space="preserve">
+        <source>Last modification</source>
+        <target xml:lang="fi">Muokattu viimeksi</target>
+      </trans-unit>
+      <trans-unit id="view.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fi">Nimi</target>
+      </trans-unit>
+      <trans-unit id="view.noData" xml:space="preserve">
+        <source>No data.</source>
+        <target xml:lang="fi">Ei tietoja.</target>
+      </trans-unit>
+      <trans-unit id="view.noDataSource" xml:space="preserve">
+        <source>No data source configured for this view.</source>
+        <target xml:lang="fi">Tälle näkymälle ei ole määritetty tietolähdettä.</target>
+      </trans-unit>
+      <trans-unit id="view.nodeAddress" xml:space="preserve">
+        <source>Node address</source>
+        <target xml:lang="fi">Solmun osoite</target>
+      </trans-unit>
+      <trans-unit id="view.noneConfigured" xml:space="preserve">
+        <source>(none configured)</source>
+        <target xml:lang="fi">(ei määritetty)</target>
+      </trans-unit>
+      <trans-unit id="view.notEnoughData" xml:space="preserve">
+        <source>Not enough data for a chart.</source>
+        <target xml:lang="fi">Ei tarpeeksi dataa kaavioon.</target>
+      </trans-unit>
+      <trans-unit id="view.notSupported" xml:space="preserve">
+        <source>View not supported yet: {0}</source>
+        <target xml:lang="fi">Näkymää ei vielä tueta: {0}</target>
+      </trans-unit>
+      <trans-unit id="view.timeSeriesChart" xml:space="preserve">
+        <source>Time series chart</source>
+        <target xml:lang="fi">Aikasarjakaavio</target>
+      </trans-unit>
+      <trans-unit id="view.type" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fi">Tyyppi</target>
+      </trans-unit>
+      <trans-unit id="view.unavailable" xml:space="preserve">
+        <source>unavailable</source>
+        <target xml:lang="fi">ei saatavilla</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.changed" xml:space="preserve">
+        <source>Changed</source>
+        <target xml:lang="fi">Muutettu</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.moved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="fi">Siirretty</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.new" xml:space="preserve">
+        <source>New</source>
+        <target xml:lang="fi">Uusi</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.removed" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="fi">Poistettu</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseChangeNotEmpty" xml:space="preserve">
+        <source>The workspace still has pending changes - publish or discard them before rebasing it onto another workspace.</source>
+        <target xml:lang="fi">Työtilassa on vielä odottavia muutoksia – julkaise tai hylkää ne ennen kuin pohjaat sen toiseen työtilaan.</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseChanged" xml:space="preserve">
+        <source>Base workspace changed.</source>
+        <target xml:lang="fi">Perustyötila vaihdettu.</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseWorkspaceFallback" xml:space="preserve">
+        <source>the base workspace</source>
+        <target xml:lang="fi">perustyötila</target>
+      </trans-unit>
+      <trans-unit id="workspace.cannotBeUndone" xml:space="preserve">
+        <source>This cannot be undone.</source>
+        <target xml:lang="fi">Tätä ei voi kumota.</target>
+      </trans-unit>
+      <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
+        <source>You cannot publish to this workspace</source>
+        <target xml:lang="fi">Et voi julkaista tähän työtilaan</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.added" xml:space="preserve">
+        <source>added</source>
+        <target xml:lang="fi">lisätty</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.changed" xml:space="preserve">
+        <source>changed</source>
+        <target xml:lang="fi">muutettu</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.moved" xml:space="preserve">
+        <source>moved</source>
+        <target xml:lang="fi">siirretty</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.removed" xml:space="preserve">
+        <source>removed</source>
+        <target xml:lang="fi">poistettu</target>
+      </trans-unit>
+      <trans-unit id="workspace.changesPublished" xml:space="preserve">
+        <source>Changes published.</source>
+        <target xml:lang="fi">Muutokset julkaistu.</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+        <target xml:lang="fi">Yhteinen</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+        <target xml:lang="fi">Muokkaus yhdessä jaetussa työtilassa</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
+        <target xml:lang="fi">Yhteismuokkaus (kaikkien työtilan käyttäjien kanssa)</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countMany" xml:space="preserve">
+        <source>{0} conflicting changes</source>
+        <target xml:lang="fi">{0} ristiriitaista muutosta</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countOne" xml:space="preserve">
+        <source>1 conflicting change</source>
+        <target xml:lang="fi">1 ristiriitainen muutos</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.description" xml:space="preserve">
+        <source>These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.</source>
+        <target xml:lang="fi">Nämä odottavat muutokset ovat ristiriidassa perustyötilaan jo julkaistujen muutosten kanssa. Niiden hylkääminen säilyttää kaikki muut muutoksesi; hylättyjä muutoksia ei voi palauttaa.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardAllChanges" xml:space="preserve">
+        <source>Discard all changes</source>
+        <target xml:lang="fi">Hylkää kaikki muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardConflicting" xml:space="preserve">
+        <source>Discard conflicting changes</source>
+        <target xml:lang="fi">Hylkää ristiriitaiset muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.nodeDeleted" xml:space="preserve">
+        <source>It was deleted in the target workspace since you changed it.</source>
+        <target xml:lang="fi">Se poistettiin kohdetyötilassa sen jälkeen, kun muutit sitä.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.partialDescription" xml:space="preserve">
+        <source>These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.</source>
+        <target xml:lang="fi">Näitä muutoksia ei voi julkaista erikseen – ne riippuvat muista odottavista muutoksista. Julkaise sen sijaan kaikki tai hylkää ne.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolveFailed" xml:space="preserve">
+        <source>Resolving conflicts failed</source>
+        <target xml:lang="fi">Ristiriitojen ratkaiseminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolvedPublished" xml:space="preserve">
+        <source>Conflicting changes discarded; the rest was published.</source>
+        <target xml:lang="fi">Ristiriitaiset muutokset hylättiin; loput julkaistiin.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="fi">Tuntematon solmu</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.button" xml:space="preserve">
+        <source>Discard</source>
+        <target xml:lang="fi">Hylkää</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.failed" xml:space="preserve">
+        <source>Discarding failed</source>
+        <target xml:lang="fi">Hylkääminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.success" xml:space="preserve">
+        <source>Changes discarded.</source>
+        <target xml:lang="fi">Muutokset hylätty.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAll" xml:space="preserve">
+        <source>Discard all</source>
+        <target xml:lang="fi">Hylkää kaikki</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllMany" xml:space="preserve">
+        <source>All {0} pending changes will be discarded.</source>
+        <target xml:lang="fi">Kaikki {0} odottavaa muutosta hylätään.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllOne" xml:space="preserve">
+        <source>All 1 pending change will be discarded.</source>
+        <target xml:lang="fi">1 odottava muutos hylätään.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllTitle" xml:space="preserve">
+        <source>Discard all changes?</source>
+        <target xml:lang="fi">Hylätäänkö kaikki muutokset?</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageMany" xml:space="preserve">
+        <source>{0} pending changes on this page will be discarded.</source>
+        <target xml:lang="fi">{0} odottavaa muutosta tällä sivulla hylätään.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageOne" xml:space="preserve">
+        <source>1 pending change on this page will be discarded.</source>
+        <target xml:lang="fi">1 odottava muutos tällä sivulla hylätään.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageTitle" xml:space="preserve">
+        <source>Discard changes on this page?</source>
+        <target xml:lang="fi">Hylätäänkö tämän sivun muutokset?</target>
+      </trans-unit>
+      <trans-unit id="workspace.live" xml:space="preserve">
+        <source>Live</source>
+        <target xml:lang="fi">Live</target>
+      </trans-unit>
+      <trans-unit id="workspace.manyChanges" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="fi">{0} muutosta</target>
+      </trans-unit>
+      <trans-unit id="workspace.moreActions" xml:space="preserve">
+        <source>More publish and discard actions</source>
+        <target xml:lang="fi">Lisää julkaisu- ja hylkäystoimintoja</target>
+      </trans-unit>
+      <trans-unit id="workspace.noPendingChanges" xml:space="preserve">
+        <source>No pending changes</source>
+        <target xml:lang="fi">Ei odottavia muutoksia</target>
+      </trans-unit>
+      <trans-unit id="workspace.oneChange" xml:space="preserve">
+        <source>1 change</source>
+        <target xml:lang="fi">1 muutos</target>
+      </trans-unit>
+      <trans-unit id="workspace.pendingBadge" xml:space="preserve">
+        <source>{0} pending changes</source>
+        <target xml:lang="fi">{0} odottavaa muutosta</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
+        <source>Publish all</source>
+        <target xml:lang="fi">Julkaise kaikki</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishDenied" xml:space="preserve">
+        <source>You are not allowed to publish to "{0}"</source>
+        <target xml:lang="fi">Sinulla ei ole oikeutta julkaista kohteeseen "{0}"</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
+        <source>Publish or discard your changes first.</source>
+        <target xml:lang="fi">Julkaise tai hylkää muutoksesi ensin.</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
+        <source>Publish {0} pending changes</source>
+        <target xml:lang="fi">Julkaise {0} odottavaa muutosta</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
+        <source>Publish 1 pending change</source>
+        <target xml:lang="fi">Julkaise 1 odottava muutos</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTarget" xml:space="preserve">
+        <source>Workspace to publish to</source>
+        <target xml:lang="fi">Työtila, johon julkaistaan</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
+        <source>My workspace, publishing to</source>
+        <target xml:lang="fi">Oma työtilani, julkaistaan kohteeseen</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishThisPage" xml:space="preserve">
+        <source>Publish this page</source>
+        <target xml:lang="fi">Julkaise tämä sivu</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishing.failed" xml:space="preserve">
+        <source>Publishing failed</source>
+        <target xml:lang="fi">Julkaisu epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="workspace.readOnly" xml:space="preserve">
+        <source>read-only</source>
+        <target xml:lang="fi">vain luku</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.button" xml:space="preserve">
+        <source>Review changes</source>
+        <target xml:lang="fi">Tarkista muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
+        <source>Review pending changes between workspaces</source>
+        <target xml:lang="fi">Tarkista työtilojen väliset odottavat muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyBody" xml:space="preserve">
+        <source>The pending changes on the selected documents will be discarded. This cannot be undone.</source>
+        <target xml:lang="fi">Valittujen dokumenttien odottavat muutokset hylätään. Tätä ei voi kumota.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyTitle" xml:space="preserve">
+        <source>Discard changes on {0} documents?</source>
+        <target xml:lang="fi">Hylätäänkö muutokset {0} dokumentissa?</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneBody" xml:space="preserve">
+        <source>The pending changes on the selected document will be discarded. This cannot be undone.</source>
+        <target xml:lang="fi">Valitun dokumentin odottavat muutokset hylätään. Tätä ei voi kumota.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneTitle" xml:space="preserve">
+        <source>Discard changes on this document?</source>
+        <target xml:lang="fi">Hylätäänkö tämän dokumentin muutokset?</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardSelected" xml:space="preserve">
+        <source>Discard selected</source>
+        <target xml:lang="fi">Hylkää valitut</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="fi">Ei odottavia muutoksia.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="fi">Siirry sivulle</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPageSwitches" xml:space="preserve">
+        <source>Go to page (switches the edited workspace)</source>
+        <target xml:lang="fi">Siirry sivulle (vaihtaa muokattavan työtilan)</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hasChanges" xml:space="preserve">
+        <source>Has pending changes</source>
+        <target xml:lang="fi">Sisältää odottavia muutoksia</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="fi">Piilotettu</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hideChanges" xml:space="preserve">
+        <source>Hide changes</source>
+        <target xml:lang="fi">Piilota muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.showChanges" xml:space="preserve">
+        <source>Show changes</source>
+        <target xml:lang="fi">Näytä muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
+        <source>Only the most recent changes are shown.</source>
+        <target xml:lang="fi">Vain viimeisimmät muutokset näytetään.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.loading" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="fi">Ladataan muutoksia…</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change "{0}"</source>
+        <target xml:lang="fi">Sinulla ei ole oikeutta muuttaa työtilaa "{0}"</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
+        <source>Publish selected</source>
+        <target xml:lang="fi">Julkaise valitut</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
+        <source>Publish selected ({0})</source>
+        <target xml:lang="fi">Julkaise valitut ({0})</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectAll" xml:space="preserve">
+        <source>Select all ({0})</source>
+        <target xml:lang="fi">Valitse kaikki ({0})</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
+        <source>Select documents to publish or discard.</source>
+        <target xml:lang="fi">Valitse dokumentit, jotka julkaistaan tai hylätään.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectedOf" xml:space="preserve">
+        <source>{0} of {1} selected</source>
+        <target xml:lang="fi">{0} / {1} valittu</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.sourceLabel" xml:space="preserve">
+        <source>Changes in</source>
+        <target xml:lang="fi">Muutokset työtilassa</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
+        <source>Publishing to</source>
+        <target xml:lang="fi">Julkaistaan kohteeseen</target>
+      </trans-unit>
+      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
+        <source>Review changes</source>
+        <target xml:lang="fi">Tarkista muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
+        <source>Select workspace…</source>
+        <target xml:lang="fi">Valitse työtila…</target>
+      </trans-unit>
+      <trans-unit id="workspace.switchFailed" xml:space="preserve">
+        <source>Switching the workspace failed</source>
+        <target xml:lang="fi">Työtilan vaihtaminen epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="workspace.switched" xml:space="preserve">
+        <source>Workspace switched.</source>
+        <target xml:lang="fi">Työtila vaihdettu.</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.action" xml:space="preserve">
+        <source>Synchronize</source>
+        <target xml:lang="fi">Synkronoi</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.failed" xml:space="preserve">
+        <source>Synchronizing failed</source>
+        <target xml:lang="fi">Synkronointi epäonnistui</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.hint" xml:space="preserve">
+        <source>Others published changes to the base workspace. Synchronize to pull them into this workspace.</source>
+        <target xml:lang="fi">Muut julkaisivat muutoksia perustyötilaan. Synkronoi tuodaksesi ne tähän työtilaan.</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.success" xml:space="preserve">
+        <source>Workspace synchronized.</source>
+        <target xml:lang="fi">Työtila synkronoitu.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="fi">{0} muutosta</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
+        <source>Close details</source>
+        <target xml:lang="fi">Sulje tiedot</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
+        <source>You are here</source>
+        <target xml:lang="fi">Olet tässä</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="fi">Luotu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeMoved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="fi">Siirretty</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRemoved" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="fi">Poistettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRestored" xml:space="preserve">
+        <source>Restored</source>
+        <target xml:lang="fi">Palautettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.propertiesChanged" xml:space="preserve">
+        <source>Properties changed</source>
+        <target xml:lang="fi">Ominaisuuksia muutettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.referencesChanged" xml:space="preserve">
+        <source>References changed</source>
+        <target xml:lang="fi">Viittauksia muutettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.renamed" xml:space="preserve">
+        <source>Renamed</source>
+        <target xml:lang="fi">Nimetty uudelleen</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.typeChanged" xml:space="preserve">
+        <source>Type changed</source>
+        <target xml:lang="fi">Tyyppi muutettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.variantCreated" xml:space="preserve">
+        <source>Variant created</source>
+        <target xml:lang="fi">Variantti luotu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
+        <source>Visibility changed</source>
+        <target xml:lang="fi">Näkyvyyttä muutettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
+        <source>Pending change</source>
+        <target xml:lang="fi">Odottava muutos</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
+        <source>Base has newer changes</source>
+        <target xml:lang="fi">Perustyötilassa on uudempia muutoksia</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
+        <source>Personal workspace</source>
+        <target xml:lang="fi">Henkilökohtainen työtila</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
+        <source>Shared workspace</source>
+        <target xml:lang="fi">Jaettu työtila</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
+        <source>The workspaces could not be loaded.</source>
+        <target xml:lang="fi">Työtiloja ei voitu ladata.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loading" xml:space="preserve">
+        <source>Loading workspaces…</source>
+        <target xml:lang="fi">Ladataan työtiloja…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkout" xml:space="preserve">
+        <source>Checkout</source>
+        <target xml:lang="fi">Siirry työtilaan</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkoutHint" xml:space="preserve">
+        <source>Switch editing into this workspace</source>
+        <target xml:lang="fi">Siirrä muokkaus tähän työtilaan</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebase" xml:space="preserve">
+        <source>Rebase</source>
+        <target xml:lang="fi">Pohjaa uudelleen</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseHint" xml:space="preserve">
+        <source>Rebase “{0}” onto this workspace - it becomes the new base to publish to</source>
+        <target xml:lang="fi">Pohjaa ”{0}” tämän työtilan päälle – siitä tulee uusi perustyötila, johon julkaistaan</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseSyncHint" xml:space="preserve">
+        <source>Rebase “{0}” onto its base again: newest changes from here flow in underneath your pending ones</source>
+        <target xml:lang="fi">Pohjaa ”{0}” uudelleen perustaansa: uusimmat muutokset täältä siirtyvät odottavien muutostesi alle</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.review" xml:space="preserve">
+        <source>Review changes…</source>
+        <target xml:lang="fi">Tarkista muutokset…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
+        <source>The base workspace has newer changes</source>
+        <target xml:lang="fi">Perustyötilassa on uudempia muutoksia</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
+        <source>outdated</source>
+        <target xml:lang="fi">vanhentunut</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="fi">Tuntematon solmu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="fi">Piilotettu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.shown" xml:space="preserve">
+        <source>Shown</source>
+        <target xml:lang="fi">Näytetty</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.nodeCount" xml:space="preserve">
+        <source>{0} (+{1} more)</source>
+        <target xml:lang="fi">{0} (+{1} muuta)</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.justNow" xml:space="preserve">
+        <source>just now</source>
+        <target xml:lang="fi">juuri nyt</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.minutesAgo" xml:space="preserve">
+        <source>{0}m ago</source>
+        <target xml:lang="fi">{0} min sitten</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
+        <source>{0}h ago</source>
+        <target xml:lang="fi">{0} h sitten</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.events" xml:space="preserve">
+        <source>Events</source>
+        <target xml:lang="fi">Tapahtumat</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="fi">Ei odottavia muutoksia.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.older" xml:space="preserve">
+        <source>Older history is not shown.</source>
+        <target xml:lang="fi">Vanhempaa historiaa ei näytetä.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.olderRoot" xml:space="preserve">
+        <source>Older published history is not shown.</source>
+        <target xml:lang="fi">Vanhempaa julkaistua historiaa ei näytetä.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.loadingDiff" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="fi">Ladataan muutoksia…</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.diffFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="fi">Muutoksia ei voitu ladata.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
+        <source>No details available.</source>
+        <target xml:lang="fi">Ei tietoja saatavilla.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
+        <source>yes</source>
+        <target xml:lang="fi">kyllä</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
+        <source>no</source>
+        <target xml:lang="fi">ei</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
+        <source>empty</source>
+        <target xml:lang="fi">tyhjä</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
+        <source>Node type</source>
+        <target xml:lang="fi">Solmutyyppi</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="fi">Nimi</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.parent" xml:space="preserve">
+        <source>Parent</source>
+        <target xml:lang="fi">Ylätaso</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.position" xml:space="preserve">
+        <source>Position</source>
+        <target xml:lang="fi">Sijainti</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.variant" xml:space="preserve">
+        <source>Dimension</source>
+        <target xml:lang="fi">Dimensio</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.reordered" xml:space="preserve">
+        <source>Reordered among its siblings</source>
+        <target xml:lang="fi">Järjestetty uudelleen sisarustensa joukossa</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="fi">Aktiivinen</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.assign" xml:space="preserve">
+        <source>Grant access</source>
+        <target xml:lang="fi">Myönnä pääsy</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.assigning" xml:space="preserve">
+        <source>Assigning…</source>
+        <target xml:lang="fi">Myönnetään…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.baseWorkspace" xml:space="preserve">
+        <source>Base workspace</source>
+        <target xml:lang="fi">Perustyötila</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationPersonal" xml:space="preserve">
+        <source>Personal</source>
+        <target xml:lang="fi">Henkilökohtainen</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationRoot" xml:space="preserve">
+        <source>Root</source>
+        <target xml:lang="fi">Juuri</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationShared" xml:space="preserve">
+        <source>Shared</source>
+        <target xml:lang="fi">Jaettu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="fi">Toiminnot</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnBase" xml:space="preserve">
+        <source>Base</source>
+        <target xml:lang="fi">Perusta</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnChanges" xml:space="preserve">
+        <source>Changes</source>
+        <target xml:lang="fi">Muutokset</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnOwner" xml:space="preserve">
+        <source>Owner</source>
+        <target xml:lang="fi">Omistaja</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnTitle" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fi">Otsikko</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnType" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fi">Tyyppi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.create" xml:space="preserve">
+        <source>Create workspace</source>
+        <target xml:lang="fi">Luo työtila</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.createFailed" xml:space="preserve">
+        <source>Could not create workspace</source>
+        <target xml:lang="fi">Työtilaa ei voitu luoda</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.createFailedDetail" xml:space="preserve">
+        <source>Creating the workspace failed.</source>
+        <target xml:lang="fi">Työtilan luominen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.created" xml:space="preserve">
+        <source>The workspace "{0}" has been created.</source>
+        <target xml:lang="fi">Työtila "{0}" on luotu.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="fi">Luodaan…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.delete" xml:space="preserve">
+        <source>Delete workspace</source>
+        <target xml:lang="fi">Poista työtila</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteDescription" xml:space="preserve">
+        <source>The workspace, its access assignments and its metadata are removed permanently.</source>
+        <target xml:lang="fi">Työtila, sen pääsyoikeudet ja metatiedot poistetaan pysyvästi.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteDescriptionChanges" xml:space="preserve">
+        <source>The workspace still has unpublished changes - they are discarded and lost permanently.</source>
+        <target xml:lang="fi">Työtilassa on vielä julkaisemattomia muutoksia – ne hylätään ja menetetään pysyvästi.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteFailedDetail" xml:space="preserve">
+        <source>Deleting the workspace failed.</source>
+        <target xml:lang="fi">Työtilan poistaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteTitle" xml:space="preserve">
+        <source>Delete workspace "{0}"?</source>
+        <target xml:lang="fi">Poistetaanko työtila "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleted" xml:space="preserve">
+        <source>The workspace "{0}" has been deleted.</source>
+        <target xml:lang="fi">Työtila "{0}" on poistettu.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="fi">Kuvaus</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="fi">Muokkaa</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.editWorkspace" xml:space="preserve">
+        <source>Edit workspace</source>
+        <target xml:lang="fi">Muokkaa työtilaa</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.editWorkspaceHint" xml:space="preserve">
+        <source>Title and description.</source>
+        <target xml:lang="fi">Otsikko ja kuvaus.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.loadFailed" xml:space="preserve">
+        <source>Could not load workspaces</source>
+        <target xml:lang="fi">Työtiloja ei voitu ladata</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.manageAccess" xml:space="preserve">
+        <source>Manage access</source>
+        <target xml:lang="fi">Hallitse pääsyä</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.manageAccessHint" xml:space="preserve">
+        <source>Who may view, edit or manage this workspace. Owners and administrators always have full access.</source>
+        <target xml:lang="fi">Kuka saa katsella, muokata tai hallita tätä työtilaa. Omistajilla ja järjestelmänvalvojilla on aina täydet oikeudet.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.newWorkspace" xml:space="preserve">
+        <source>New workspace</source>
+        <target xml:lang="fi">Uusi työtila</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.newWorkspaceHint" xml:space="preserve">
+        <source>A workspace collects changes until they are published to its base workspace.</source>
+        <target xml:lang="fi">Työtila kokoaa muutokset, kunnes ne julkaistaan sen perustyötilaan.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.noAssignments" xml:space="preserve">
+        <source>No access assigned yet.</source>
+        <target xml:lang="fi">Pääsyä ei ole vielä myönnetty.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.none2" xml:space="preserve">
+        <source>None</source>
+        <target xml:lang="fi">Ei mitään</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.pending" xml:space="preserve">
+        <source>Pending</source>
+        <target xml:lang="fi">Odottaa</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.removeAccess" xml:space="preserve">
+        <source>Remove access</source>
+        <target xml:lang="fi">Poista pääsy</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.role" xml:space="preserve">
+        <source>Role</source>
+        <target xml:lang="fi">Rooli</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleAssignFailed" xml:space="preserve">
+        <source>Could not assign access</source>
+        <target xml:lang="fi">Pääsyä ei voitu myöntää</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleAssignFailedDetail" xml:space="preserve">
+        <source>Assigning the access failed.</source>
+        <target xml:lang="fi">Pääsyn myöntäminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleCollaborator" xml:space="preserve">
+        <source>Collaborator</source>
+        <target xml:lang="fi">Muokkaaja</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleManager" xml:space="preserve">
+        <source>Manager</source>
+        <target xml:lang="fi">Hallinnoija</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleRemoveFailed" xml:space="preserve">
+        <source>Could not remove access</source>
+        <target xml:lang="fi">Pääsyä ei voitu poistaa</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleRemoveFailedDetail" xml:space="preserve">
+        <source>Removing the access failed.</source>
+        <target xml:lang="fi">Pääsyn poistaminen epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleViewer" xml:space="preserve">
+        <source>Viewer</source>
+        <target xml:lang="fi">Katselija</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.rolesLoadFailed" xml:space="preserve">
+        <source>Could not load access</source>
+        <target xml:lang="fi">Pääsyoikeuksia ei voitu ladata</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.rowActions" xml:space="preserve">
+        <source>Workspace actions</source>
+        <target xml:lang="fi">Työtilan toiminnot</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.save" xml:space="preserve">
+        <source>Save workspace</source>
+        <target xml:lang="fi">Tallenna työtila</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saveFailed" xml:space="preserve">
+        <source>Could not save workspace</source>
+        <target xml:lang="fi">Työtilaa ei voitu tallentaa</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saveFailedDetail" xml:space="preserve">
+        <source>Saving the workspace failed.</source>
+        <target xml:lang="fi">Työtilan tallennus epäonnistui.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saved" xml:space="preserve">
+        <source>The workspace "{0}" has been saved.</source>
+        <target xml:lang="fi">Työtila "{0}" on tallennettu.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="fi">Tallennetaan…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.selectSubject" xml:space="preserve">
+        <source>Select…</source>
+        <target xml:lang="fi">Valitse…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectGroup" xml:space="preserve">
+        <source>Group (role)</source>
+        <target xml:lang="fi">Ryhmä (rooli)</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectType" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="fi">Tyyppi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectUser" xml:space="preserve">
+        <source>User</source>
+        <target xml:lang="fi">Käyttäjä</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subtitle" xml:space="preserve">
+        <source>Where changes live until they are published.</source>
+        <target xml:lang="fi">Paikka, jossa muutokset odottavat julkaisua.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.title" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="fi">Työtilat</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.title2" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="fi">Otsikko</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.unavailable" xml:space="preserve">
+        <source>Workspaces are currently unavailable.</source>
+        <target xml:lang="fi">Työtilat eivät ole juuri nyt saatavilla.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibility" xml:space="preserve">
+        <source>Visibility</source>
+        <target xml:lang="fi">Näkyvyys</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibilityPrivate" xml:space="preserve">
+        <source>Private - only you</source>
+        <target xml:lang="fi">Yksityinen – vain sinä</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibilityShared" xml:space="preserve">
+        <source>Shared - all editors</source>
+        <target xml:lang="fi">Jaettu – kaikki muokkaajat</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

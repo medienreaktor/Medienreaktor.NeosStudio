@@ -1,0 +1,3447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext" target-language="lv">
+    <body>
+      <trans-unit id="action.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="action.close" xml:space="preserve">
+        <source>Close</source>
+        <target xml:lang="lv">Aizvērt</target>
+      </trans-unit>
+      <trans-unit id="app.connectToApi" xml:space="preserve">
+        <source>Connect to the API</source>
+        <target xml:lang="lv">Savienoties ar API</target>
+      </trans-unit>
+      <trans-unit id="app.loadingStudio" xml:space="preserve">
+        <source>Loading Neos Studio…</source>
+        <target xml:lang="lv">Notiek Neos Studio ielāde…</target>
+      </trans-unit>
+      <trans-unit id="app.loginFailed" xml:space="preserve">
+        <source>Login failed</source>
+        <target xml:lang="lv">Pieteikšanās neizdevās</target>
+      </trans-unit>
+      <trans-unit id="app.tagline" xml:space="preserve">
+        <source>Editing environment for Neos</source>
+        <target xml:lang="lv">Rediģēšanas vide Neos</target>
+      </trans-unit>
+      <trans-unit id="clipboard.activateHint" xml:space="preserve">
+        <source>Make this the entry the next paste inserts</source>
+        <target xml:lang="lv">Padarīt šo par ierakstu, ko ievietos nākamā ielīmēšana</target>
+      </trans-unit>
+      <trans-unit id="clipboard.clear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="lv">Iztukšot</target>
+      </trans-unit>
+      <trans-unit id="clipboard.copied" xml:space="preserve">
+        <source>Copied</source>
+        <target xml:lang="lv">Nokopēts</target>
+      </trans-unit>
+      <trans-unit id="clipboard.cutHint" xml:space="preserve">
+        <source>Cut - pasting moves it</source>
+        <target xml:lang="lv">Izgriezts - ielīmēšana to pārvietos</target>
+      </trans-unit>
+      <trans-unit id="clipboard.empty" xml:space="preserve">
+        <source>Nothing on the clipboard. Cut or copy a document or element from its context menu.</source>
+        <target xml:lang="lv">Starpliktuve ir tukša. Izgrieziet vai nokopējiet dokumentu vai elementu tā konteksta izvēlnē.</target>
+      </trans-unit>
+      <trans-unit id="clipboard.pasteHint" xml:space="preserve">
+        <source>Paste inserts the highlighted entry.</source>
+        <target xml:lang="lv">Ielīmēšana ievieto izcelto ierakstu.</target>
+      </trans-unit>
+      <trans-unit id="clipboard.removeFromClipboard" xml:space="preserve">
+        <source>Remove from clipboard</source>
+        <target xml:lang="lv">Noņemt no starpliktuves</target>
+      </trans-unit>
+      <trans-unit id="clipboard.statusCut" xml:space="preserve">
+        <source>Cut</source>
+        <target xml:lang="lv">Izgriezts</target>
+      </trans-unit>
+      <trans-unit id="common.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="lv">Darbība neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="common.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="common.close" xml:space="preserve">
+        <source>Close</source>
+        <target xml:lang="lv">Aizvērt</target>
+      </trans-unit>
+      <trans-unit id="common.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="lv">Dzēst</target>
+      </trans-unit>
+      <trans-unit id="common.resizeSidebar" xml:space="preserve">
+        <source>Resize sidebar</source>
+        <target xml:lang="lv">Mainīt sānjoslas izmēru</target>
+      </trans-unit>
+      <trans-unit id="common.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="lv">Saglabāt</target>
+      </trans-unit>
+      <trans-unit id="common.sidebar" xml:space="preserve">
+        <source>Sidebar</source>
+        <target xml:lang="lv">Sānjosla</target>
+      </trans-unit>
+      <trans-unit id="common.sidebarMobileDescription" xml:space="preserve">
+        <source>Displays the mobile sidebar.</source>
+        <target xml:lang="lv">Parāda mobilo sānjoslu.</target>
+      </trans-unit>
+      <trans-unit id="common.toastError" xml:space="preserve">
+        <source>Error</source>
+        <target xml:lang="lv">Kļūda</target>
+      </trans-unit>
+      <trans-unit id="common.toastInfo" xml:space="preserve">
+        <source>Notice</source>
+        <target xml:lang="lv">Paziņojums</target>
+      </trans-unit>
+      <trans-unit id="common.toastLoading" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="lv">Notiek apstrāde…</target>
+      </trans-unit>
+      <trans-unit id="common.toastSuccess" xml:space="preserve">
+        <source>Success</source>
+        <target xml:lang="lv">Izdevās</target>
+      </trans-unit>
+      <trans-unit id="common.toggleSidebar" xml:space="preserve">
+        <source>Toggle Sidebar</source>
+        <target xml:lang="lv">Pārslēgt sānjoslu</target>
+      </trans-unit>
+      <trans-unit id="common.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="lv">Notiek apstrāde…</target>
+      </trans-unit>
+      <trans-unit id="creation.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="creation.create" xml:space="preserve">
+        <source>Create</source>
+        <target xml:lang="lv">Izveidot</target>
+      </trans-unit>
+      <trans-unit id="creation.createNewNoun" xml:space="preserve">
+        <source>Create new {0}</source>
+        <target xml:lang="lv">Izveidot jaunu {0}</target>
+      </trans-unit>
+      <trans-unit id="creation.createType" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="lv">Izveidot {0}</target>
+      </trans-unit>
+      <trans-unit id="creation.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="creation.creatingFailed" xml:space="preserve">
+        <source>Creating failed</source>
+        <target xml:lang="lv">Izveide neizdevās</target>
+      </trans-unit>
+      <trans-unit id="creation.dragHint" xml:space="preserve">
+        <source>{0} ({1}) - drag into the preview</source>
+        <target xml:lang="lv">{0} ({1}) - velciet priekšskatījumā</target>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
+        <source>Filter node types</source>
+        <target xml:lang="lv">Filtrēt mezglu tipus</target>
+      </trans-unit>
+      <trans-unit id="creation.filterNodeTypesPlaceholder" xml:space="preserve">
+        <source>Filter node types…</source>
+        <target xml:lang="lv">Filtrēt mezglu tipus…</target>
+      </trans-unit>
+      <trans-unit id="creation.insertionPosition" xml:space="preserve">
+        <source>Insertion position</source>
+        <target xml:lang="lv">Ievietošanas pozīcija</target>
+      </trans-unit>
+      <trans-unit id="creation.loadingNodeTypes" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="lv">Notiek mezglu tipu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.after" xml:space="preserve">
+        <source>After</source>
+        <target xml:lang="lv">Pēc</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.before" xml:space="preserve">
+        <source>Before</source>
+        <target xml:lang="lv">Pirms</target>
+      </trans-unit>
+      <trans-unit id="creation.mode.inside" xml:space="preserve">
+        <source>Inside</source>
+        <target xml:lang="lv">Iekšpusē</target>
+      </trans-unit>
+      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
+        <source>No creatable content node types.</source>
+        <target xml:lang="lv">Nav izveidojamu satura mezglu tipu.</target>
+      </trans-unit>
+      <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
+        <source>No node types match the filter.</source>
+        <target xml:lang="lv">Neviens mezgla tips neatbilst filtram.</target>
+      </trans-unit>
+      <trans-unit id="creation.noTypesHere" xml:space="preserve">
+        <source>No {0} types can be created here.</source>
+        <target xml:lang="lv">Šeit nevar izveidot nevienu {0} tipu.</target>
+      </trans-unit>
+      <trans-unit id="creation.nounDocument" xml:space="preserve">
+        <source>document</source>
+        <target xml:lang="lv">dokumentu</target>
+      </trans-unit>
+      <trans-unit id="creation.nounElement" xml:space="preserve">
+        <source>element</source>
+        <target xml:lang="lv">elementu</target>
+      </trans-unit>
+      <trans-unit id="creation.relativeTo" xml:space="preserve">
+        <source>Relative to “{0}”.</source>
+        <target xml:lang="lv">Attiecībā pret “{0}”.</target>
+      </trans-unit>
+      <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
+        <source>Checking parent documents failed</source>
+        <target xml:lang="lv">Vecāku dokumentu pārbaude neizdevās</target>
+      </trans-unit>
+      <trans-unit id="dimension.checkingParents" xml:space="preserve">
+        <source> Checking which parent documents are missing…</source>
+        <target xml:lang="lv"> Notiek pārbaude, kuru vecāku dokumentu trūkst…</target>
+      </trans-unit>
+      <trans-unit id="dimension.createAndCopy" xml:space="preserve">
+        <source>Create and copy content</source>
+        <target xml:lang="lv">Izveidot un kopēt saturu</target>
+      </trans-unit>
+      <trans-unit id="dimension.createEmpty" xml:space="preserve">
+        <source>Create empty</source>
+        <target xml:lang="lv">Izveidot tukšu</target>
+      </trans-unit>
+      <trans-unit id="dimension.createTitle" xml:space="preserve">
+        <source>Create document in {0}?</source>
+        <target xml:lang="lv">Vai izveidot dokumentu {0}?</target>
+      </trans-unit>
+      <trans-unit id="dimension.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+        <target xml:lang="lv">Varianta izveide neizdevās</target>
+      </trans-unit>
+      <trans-unit id="dimension.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
+        <source> {0} missing parent documents will be created as well.</source>
+        <target xml:lang="lv"> Tiks izveidoti arī {0} trūkstošie vecāku dokumenti.</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingParentsOne" xml:space="preserve">
+        <source> 1 missing parent document will be created as well.</source>
+        <target xml:lang="lv"> Tiks izveidots arī 1 trūkstošais vecāku dokuments.</target>
+      </trans-unit>
+      <trans-unit id="dimension.missingVariant" xml:space="preserve">
+        <source>The selected document does not exist here yet - create it?</source>
+        <target xml:lang="lv">Izvēlētais dokuments šeit vēl nepastāv - vai to izveidot?</target>
+      </trans-unit>
+      <trans-unit id="dimension.notExistYet" xml:space="preserve">
+        <source>“{0}” does not exist in {1} yet.</source>
+        <target xml:lang="lv">“{0}” vēl nepastāv {1}.</target>
+      </trans-unit>
+      <trans-unit id="dimension.variantCreated" xml:space="preserve">
+        <source>Document variant created.</source>
+        <target xml:lang="lv">Dokumenta variants izveidots.</target>
+      </trans-unit>
+      <trans-unit id="editing.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="editing.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="lv">Kopēt</target>
+      </trans-unit>
+      <trans-unit id="editing.copyFailed" xml:space="preserve">
+        <source>Copying failed</source>
+        <target xml:lang="lv">Kopēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.createFailed" xml:space="preserve">
+        <source>Creating failed</source>
+        <target xml:lang="lv">Izveide neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.createNew" xml:space="preserve">
+        <source>Create new…</source>
+        <target xml:lang="lv">Izveidot jaunu…</target>
+      </trans-unit>
+      <trans-unit id="editing.createVariantFailed" xml:space="preserve">
+        <source>Creating the variant failed</source>
+        <target xml:lang="lv">Varianta izveide neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.cut" xml:space="preserve">
+        <source>Cut</source>
+        <target xml:lang="lv">Izgriezt</target>
+      </trans-unit>
+      <trans-unit id="editing.cutFailed" xml:space="preserve">
+        <source>Cutting failed</source>
+        <target xml:lang="lv">Izgriešana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="lv">Dzēst</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.description" xml:space="preserve">
+        <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
+        <target xml:lang="lv">Šo {0} un visu tā saturu noņems. To var atsaukt, atmetot šo izmaiņu darba virsmā.</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
+        <source>Delete this {0}?</source>
+        <target xml:lang="lv">Vai dzēst šo {0}?</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteFailed" xml:space="preserve">
+        <source>Deleting failed</source>
+        <target xml:lang="lv">Dzēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.document" xml:space="preserve">
+        <source>document</source>
+        <target xml:lang="lv">dokumentu</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.element" xml:space="preserve">
+        <source>element</source>
+        <target xml:lang="lv">elementu</target>
+      </trans-unit>
+      <trans-unit id="editing.hide" xml:space="preserve">
+        <source>Hide</source>
+        <target xml:lang="lv">Paslēpt</target>
+      </trans-unit>
+      <trans-unit id="editing.hideFailed" xml:space="preserve">
+        <source>Hiding failed</source>
+        <target xml:lang="lv">Paslēpšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.moveFailed" xml:space="preserve">
+        <source>Moving failed</source>
+        <target xml:lang="lv">Pārvietošana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.noParentToPaste" xml:space="preserve">
+        <source>The node has no parent to paste next to.</source>
+        <target xml:lang="lv">Mezglam nav vecāka, blakus kuram ielīmēt.</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfter" xml:space="preserve">
+        <source>Paste after</source>
+        <target xml:lang="lv">Ielīmēt aiz</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteAfterHint" xml:space="preserve">
+        <source>Paste “{0}” after this {1}</source>
+        <target xml:lang="lv">Ielīmēt “{0}” aiz šī vienuma ({1})</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteFailed" xml:space="preserve">
+        <source>Pasting failed</source>
+        <target xml:lang="lv">Ielīmēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteInto" xml:space="preserve">
+        <source>Paste into</source>
+        <target xml:lang="lv">Ielīmēt iekšā</target>
+      </trans-unit>
+      <trans-unit id="editing.pasteIntoHint" xml:space="preserve">
+        <source>Paste “{0}” inside, as the last child</source>
+        <target xml:lang="lv">Ielīmēt “{0}” iekšpusē kā pēdējo bērnu</target>
+      </trans-unit>
+      <trans-unit id="editing.saveFailed" xml:space="preserve">
+        <source>Saving failed</source>
+        <target xml:lang="lv">Saglabāšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.setImageFailed" xml:space="preserve">
+        <source>Setting image failed</source>
+        <target xml:lang="lv">Attēla iestatīšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.unhide" xml:space="preserve">
+        <source>Unhide</source>
+        <target xml:lang="lv">Atklāt</target>
+      </trans-unit>
+      <trans-unit id="editing.unhideFailed" xml:space="preserve">
+        <source>Unhiding failed</source>
+        <target xml:lang="lv">Atklāšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editing.variantCreated" xml:space="preserve">
+        <source>Variant created in the current dimension.</source>
+        <target xml:lang="lv">Variants izveidots pašreizējā dimensijā.</target>
+      </trans-unit>
+      <trans-unit id="editor.addAsset" xml:space="preserve">
+        <source>Add asset…</source>
+        <target xml:lang="lv">Pievienot resursu…</target>
+      </trans-unit>
+      <trans-unit id="editor.addImage" xml:space="preserve">
+        <source>Add image…</source>
+        <target xml:lang="lv">Pievienot attēlu…</target>
+      </trans-unit>
+      <trans-unit id="editor.apply" xml:space="preserve">
+        <source>Apply</source>
+        <target xml:lang="lv">Apstiprināt</target>
+      </trans-unit>
+      <trans-unit id="editor.assetNotFound" xml:space="preserve">
+        <source>Asset not found</source>
+        <target xml:lang="lv">Resurss nav atrasts</target>
+      </trans-unit>
+      <trans-unit id="editor.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="editor.clear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="lv">Notīrīt</target>
+      </trans-unit>
+      <trans-unit id="editor.code.edit" xml:space="preserve">
+        <source>Edit code…</source>
+        <target xml:lang="lv">Rediģēt kodu…</target>
+      </trans-unit>
+      <trans-unit id="editor.code.empty" xml:space="preserve">
+        <source>No content yet</source>
+        <target xml:lang="lv">Vēl nav satura</target>
+      </trans-unit>
+      <trans-unit id="editor.crop" xml:space="preserve">
+        <source>Crop</source>
+        <target xml:lang="lv">Apgriezt</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.apply" xml:space="preserve">
+        <source>Apply crop</source>
+        <target xml:lang="lv">Apstiprināt apgriešanu</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.applying" xml:space="preserve">
+        <source>Applying…</source>
+        <target xml:lang="lv">Notiek piemērošana…</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.aspectRatio" xml:space="preserve">
+        <source>Aspect ratio</source>
+        <target xml:lang="lv">Malu attiecība</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.cannotCrop" xml:space="preserve">
+        <source>This image cannot be cropped.</source>
+        <target xml:lang="lv">Šo attēlu nevar apgriezt.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.drawFirst" xml:space="preserve">
+        <source>Draw a crop area first.</source>
+        <target xml:lang="lv">Vispirms iezīmējiet apgriešanas apgabalu.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.failed" xml:space="preserve">
+        <source>Cropping failed</source>
+        <target xml:lang="lv">Apgriešana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.failedBody" xml:space="preserve">
+        <source>Cropping failed.</source>
+        <target xml:lang="lv">Apgriešana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.free" xml:space="preserve">
+        <source>Free</source>
+        <target xml:lang="lv">Brīva</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.original" xml:space="preserve">
+        <source>Original</source>
+        <target xml:lang="lv">Oriģināls</target>
+      </trans-unit>
+      <trans-unit id="editor.crop.title" xml:space="preserve">
+        <source>Crop image</source>
+        <target xml:lang="lv">Apgriezt attēlu</target>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.nextMonth" xml:space="preserve">
+        <source>Next month</source>
+        <target xml:lang="lv">Nākamais mēnesis</target>
+      </trans-unit>
+      <trans-unit id="editor.dateTime.prevMonth" xml:space="preserve">
+        <source>Previous month</source>
+        <target xml:lang="lv">Iepriekšējais mēnesis</target>
+      </trans-unit>
+      <trans-unit id="editor.link.edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="lv">Rediģēt saiti</target>
+      </trans-unit>
+      <trans-unit id="editor.link.remove" xml:space="preserve">
+        <source>Remove link</source>
+        <target xml:lang="lv">Noņemt saiti</target>
+      </trans-unit>
+      <trans-unit id="editor.link.set" xml:space="preserve">
+        <source>Set link…</source>
+        <target xml:lang="lv">Iestatīt saiti…</target>
+      </trans-unit>
+      <trans-unit id="editor.loading" xml:space="preserve">
+        <source>Loading…</source>
+        <target xml:lang="lv">Notiek ielāde…</target>
+      </trans-unit>
+      <trans-unit id="editor.loadingOptionsFailed" xml:space="preserve">
+        <source>Loading options failed</source>
+        <target xml:lang="lv">Opciju ielāde neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editor.noMatches" xml:space="preserve">
+        <source>No matches</source>
+        <target xml:lang="lv">Nav atbilstību</target>
+      </trans-unit>
+      <trans-unit id="editor.now" xml:space="preserve">
+        <source>Now</source>
+        <target xml:lang="lv">Tagad</target>
+      </trans-unit>
+      <trans-unit id="editor.range.currentValue" xml:space="preserve">
+        <source>Current value</source>
+        <target xml:lang="lv">Pašreizējā vērtība</target>
+      </trans-unit>
+      <trans-unit id="editor.range.maximum" xml:space="preserve">
+        <source>Maximum</source>
+        <target xml:lang="lv">Maksimums</target>
+      </trans-unit>
+      <trans-unit id="editor.range.minimum" xml:space="preserve">
+        <source>Minimum</source>
+        <target xml:lang="lv">Minimums</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
+        <source>References can be set after creation</source>
+        <target xml:lang="lv">Atsauces var iestatīt pēc izveides</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
+        <source>Type at least {0} characters to search</source>
+        <target xml:lang="lv">Ievadiet vismaz {0} rakstzīmes, lai meklētu</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeAtLeastOne" xml:space="preserve">
+        <source>Type at least {0} character to search</source>
+        <target xml:lang="lv">Ievadiet vismaz {0} rakstzīmi, lai meklētu</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.typeToSearch" xml:space="preserve">
+        <source>Type to search</source>
+        <target xml:lang="lv">Rakstiet, lai meklētu</target>
+      </trans-unit>
+      <trans-unit id="editor.remove" xml:space="preserve">
+        <source>Remove</source>
+        <target xml:lang="lv">Noņemt</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockFormat" xml:space="preserve">
+        <source>Block format</source>
+        <target xml:lang="lv">Bloka formāts</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.blockquote" xml:space="preserve">
+        <source>Blockquote</source>
+        <target xml:lang="lv">Citāts</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.bold" xml:space="preserve">
+        <source>Bold</source>
+        <target xml:lang="lv">Trekns</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.bulletList" xml:space="preserve">
+        <source>Bullet list</source>
+        <target xml:lang="lv">Nenumurēts saraksts</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.code" xml:space="preserve">
+        <source>Code</source>
+        <target xml:lang="lv">Kods</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.codeBlock" xml:space="preserve">
+        <source>Code block</source>
+        <target xml:lang="lv">Koda bloks</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.heading" xml:space="preserve">
+        <source>Heading {0}</source>
+        <target xml:lang="lv">Virsraksts {0}</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.horizontalRule" xml:space="preserve">
+        <source>Horizontal rule</source>
+        <target xml:lang="lv">Horizontāla līnija</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.italic" xml:space="preserve">
+        <source>Italic</source>
+        <target xml:lang="lv">Slīps</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.link" xml:space="preserve">
+        <source>Link</source>
+        <target xml:lang="lv">Saite</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.orderedList" xml:space="preserve">
+        <source>Ordered list</source>
+        <target xml:lang="lv">Numurēts saraksts</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.paragraph" xml:space="preserve">
+        <source>Paragraph</source>
+        <target xml:lang="lv">Paragrāfs</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.removeFormat" xml:space="preserve">
+        <source>Remove formatting</source>
+        <target xml:lang="lv">Noņemt formatējumu</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.strikethrough" xml:space="preserve">
+        <source>Strikethrough</source>
+        <target xml:lang="lv">Pārsvītrots</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.styles" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="lv">Stili</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.subscript" xml:space="preserve">
+        <source>Subscript</source>
+        <target xml:lang="lv">Apakšraksts</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.superscript" xml:space="preserve">
+        <source>Superscript</source>
+        <target xml:lang="lv">Augšraksts</target>
+      </trans-unit>
+      <trans-unit id="editor.rte.underline" xml:space="preserve">
+        <source>Underline</source>
+        <target xml:lang="lv">Pasvītrots</target>
+      </trans-unit>
+      <trans-unit id="editor.searchFailed" xml:space="preserve">
+        <source>Search failed</source>
+        <target xml:lang="lv">Meklēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="editor.searchPlaceholder" xml:space="preserve">
+        <source>Search…</source>
+        <target xml:lang="lv">Meklēt…</target>
+      </trans-unit>
+      <trans-unit id="editor.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="lv">Notiek meklēšana…</target>
+      </trans-unit>
+      <trans-unit id="editor.select" xml:space="preserve">
+        <source>Select…</source>
+        <target xml:lang="lv">Izvēlēties…</target>
+      </trans-unit>
+      <trans-unit id="editor.selectAsset" xml:space="preserve">
+        <source>Select asset…</source>
+        <target xml:lang="lv">Izvēlēties resursu…</target>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUnsupported" xml:space="preserve">
+        <source>Data source not supported</source>
+        <target xml:lang="lv">Datu avots netiek atbalstīts</target>
+      </trans-unit>
+      <trans-unit id="editor.selectBox.dataSourceUriHint" xml:space="preserve">
+        <source>editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier</source>
+        <target xml:lang="lv">editorOptions.dataSourceUri Studio netiek atbalstīts - izmantojiet dataSourceIdentifier</target>
+      </trans-unit>
+      <trans-unit id="editor.selectImage" xml:space="preserve">
+        <source>Select image…</source>
+        <target xml:lang="lv">Izvēlēties attēlu…</target>
+      </trans-unit>
+      <trans-unit id="editor.time" xml:space="preserve">
+        <source>Time</source>
+        <target xml:lang="lv">Laiks</target>
+      </trans-unit>
+      <trans-unit id="editor.today" xml:space="preserve">
+        <source>Today</source>
+        <target xml:lang="lv">Šodien</target>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.generateFailed" xml:space="preserve">
+        <source>Could not generate the URL path segment</source>
+        <target xml:lang="lv">Neizdevās ģenerēt URL ceļa segmentu</target>
+      </trans-unit>
+      <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
+        <source>Rebuild the URL path segment from the current page title</source>
+        <target xml:lang="lv">Pārbūvēt URL ceļa segmentu no pašreizējā lapas virsraksta</target>
+      </trans-unit>
+      <trans-unit id="graph.fit" xml:space="preserve">
+        <source>Fit to view</source>
+        <target xml:lang="lv">Ietilpināt skatā</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomIn" xml:space="preserve">
+        <source>Zoom in</source>
+        <target xml:lang="lv">Pietuvināt</target>
+      </trans-unit>
+      <trans-unit id="graph.zoomOut" xml:space="preserve">
+        <source>Zoom out</source>
+        <target xml:lang="lv">Attālināt</target>
+      </trans-unit>
+      <trans-unit id="history.empty" xml:space="preserve">
+        <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
+        <target xml:lang="lv">Šajā lapā nav nepublicētu izmaiņu. Katrs jūsu labojums parādās šeit, līdz tas tiek publicēts.</target>
+      </trans-unit>
+      <trans-unit id="history.loading" xml:space="preserve">
+        <source>Loading the history…</source>
+        <target xml:lang="lv">Notiek vēstures ielāde…</target>
+      </trans-unit>
+      <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
+        <source>Editor not supported yet: {0}</source>
+        <target xml:lang="lv">Redaktors vēl netiek atbalstīts: {0}</target>
+      </trans-unit>
+      <trans-unit id="inspector.no" xml:space="preserve">
+        <source>No</source>
+        <target xml:lang="lv">Nē</target>
+      </trans-unit>
+      <trans-unit id="inspector.noProperties" xml:space="preserve">
+        <source>This node type has no inspector properties.</source>
+        <target xml:lang="lv">Šim mezgla tipam nav inspektora īpašību.</target>
+      </trans-unit>
+      <trans-unit id="inspector.nodeDeleted" xml:space="preserve">
+        <source>This node is deleted. Restore it to edit its properties again.</source>
+        <target xml:lang="lv">Šis mezgls ir dzēsts. Atjaunojiet to, lai atkal rediģētu tā īpašības.</target>
+      </trans-unit>
+      <trans-unit id="inspector.savingFailed" xml:space="preserve">
+        <source>Saving failed</source>
+        <target xml:lang="lv">Saglabāšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
+        <source>Select a node in the preview or the trees to inspect it.</source>
+        <target xml:lang="lv">Izvēlieties mezglu priekšskatījumā vai kokos, lai to apskatītu.</target>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
+        <source>Shines through from</source>
+        <target xml:lang="lv">Caurspīd no</target>
+      </trans-unit>
+      <trans-unit id="inspector.shineThroughHint" xml:space="preserve">
+        <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
+        <target xml:lang="lv">Šis mezgls pašreizējā dimensijā vēl nepastāv - to rediģējot, šeit tiek izveidots neatkarīgs variants.</target>
+      </trans-unit>
+      <trans-unit id="inspector.validationError" xml:space="preserve">
+        <source>{0} validation error</source>
+        <target xml:lang="lv">{0} validācijas kļūda</target>
+      </trans-unit>
+      <trans-unit id="inspector.validationErrors" xml:space="preserve">
+        <source>{0} validation errors</source>
+        <target xml:lang="lv">{0} validācijas kļūdas</target>
+      </trans-unit>
+      <trans-unit id="inspector.yes" xml:space="preserve">
+        <source>Yes</source>
+        <target xml:lang="lv">Jā</target>
+      </trans-unit>
+      <trans-unit id="link.anchor" xml:space="preserve">
+        <source>Anchor</source>
+        <target xml:lang="lv">Enkurs</target>
+      </trans-unit>
+      <trans-unit id="link.anchorPlaceholder" xml:space="preserve">
+        <source>Optional #anchor on the target page</source>
+        <target xml:lang="lv">Neobligāts #enkurs mērķa lapā</target>
+      </trans-unit>
+      <trans-unit id="link.andBehaves" xml:space="preserve">
+        <source>and how the link behaves</source>
+        <target xml:lang="lv">un kā saite uzvedas</target>
+      </trans-unit>
+      <trans-unit id="link.apply" xml:space="preserve">
+        <source>Apply</source>
+        <target xml:lang="lv">Apstiprināt</target>
+      </trans-unit>
+      <trans-unit id="link.asset" xml:space="preserve">
+        <source>Asset</source>
+        <target xml:lang="lv">Resurss</target>
+      </trans-unit>
+      <trans-unit id="link.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="link.chooseLink" xml:space="preserve">
+        <source>Choose the link</source>
+        <target xml:lang="lv">Izvēlieties saiti</target>
+      </trans-unit>
+      <trans-unit id="link.cssClass" xml:space="preserve">
+        <source>CSS class</source>
+        <target xml:lang="lv">CSS klase</target>
+      </trans-unit>
+      <trans-unit id="link.cssClassPlaceholder" xml:space="preserve">
+        <source>e.g. button</source>
+        <target xml:lang="lv">piem., button</target>
+      </trans-unit>
+      <trans-unit id="link.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="lv">Dokuments</target>
+      </trans-unit>
+      <trans-unit id="link.edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="lv">Rediģēt saiti</target>
+      </trans-unit>
+      <trans-unit id="link.email" xml:space="preserve">
+        <source>E-Mail</source>
+        <target xml:lang="lv">E-pasts</target>
+      </trans-unit>
+      <trans-unit id="link.emailAddress" xml:space="preserve">
+        <source>E-Mail address</source>
+        <target xml:lang="lv">E-pasta adrese</target>
+      </trans-unit>
+      <trans-unit id="link.emailHelp" xml:space="preserve">
+        <source>The link opens the visitor's mail client (mailto:).</source>
+        <target xml:lang="lv">Saite atver apmeklētāja e-pasta programmu (mailto:).</target>
+      </trans-unit>
+      <trans-unit id="link.emailPlaceholder" xml:space="preserve">
+        <source>mail@example.com</source>
+        <target xml:lang="lv">mail@example.com</target>
+      </trans-unit>
+      <trans-unit id="link.external" xml:space="preserve">
+        <source>External</source>
+        <target xml:lang="lv">Ārēja</target>
+      </trans-unit>
+      <trans-unit id="link.externalHelp" xml:space="preserve">
+        <source>A full web address; https:// is added when no scheme is given.</source>
+        <target xml:lang="lv">Pilna tīmekļa adrese; ja shēma nav norādīta, tiek pievienots https://.</target>
+      </trans-unit>
+      <trans-unit id="link.for" xml:space="preserve">
+        <source>for</source>
+        <target xml:lang="lv">priekš</target>
+      </trans-unit>
+      <trans-unit id="link.insert" xml:space="preserve">
+        <source>Insert link</source>
+        <target xml:lang="lv">Ievietot saiti</target>
+      </trans-unit>
+      <trans-unit id="link.linkedAsset" xml:space="preserve">
+        <source>Linked asset: {0}</source>
+        <target xml:lang="lv">Saistītais resurss: {0}</target>
+      </trans-unit>
+      <trans-unit id="link.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+        <target xml:lang="lv">Notiek dokumentu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="link.noDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+        <target xml:lang="lv">Šajā vietnē vēl nav dokumentu.</target>
+      </trans-unit>
+      <trans-unit id="link.noSite" xml:space="preserve">
+        <source>No site is active - there is no document tree to pick from.</source>
+        <target xml:lang="lv">Neviena vietne nav aktīva - nav dokumentu koka, no kura izvēlēties.</target>
+      </trans-unit>
+      <trans-unit id="link.noTypes" xml:space="preserve">
+        <source>No link types are registered.</source>
+        <target xml:lang="lv">Nav reģistrēts neviens saites tips.</target>
+      </trans-unit>
+      <trans-unit id="link.nofollow" xml:space="preserve">
+        <source>No follow (rel="nofollow")</source>
+        <target xml:lang="lv">Nesekot (rel="nofollow")</target>
+      </trans-unit>
+      <trans-unit id="link.openNewWindow" xml:space="preserve">
+        <source>Open in new window</source>
+        <target xml:lang="lv">Atvērt jaunā logā</target>
+      </trans-unit>
+      <trans-unit id="link.options" xml:space="preserve">
+        <source>Link options</source>
+        <target xml:lang="lv">Saites opcijas</target>
+      </trans-unit>
+      <trans-unit id="link.pickAssetFailed" xml:space="preserve">
+        <source>Picking asset failed</source>
+        <target xml:lang="lv">Resursa izvēle neizdevās</target>
+      </trans-unit>
+      <trans-unit id="link.remove" xml:space="preserve">
+        <source>Remove link</source>
+        <target xml:lang="lv">Noņemt saiti</target>
+      </trans-unit>
+      <trans-unit id="link.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+        <target xml:lang="lv">Meklēt resursus…</target>
+      </trans-unit>
+      <trans-unit id="link.targetDocument" xml:space="preserve">
+        <source>Link target document</source>
+        <target xml:lang="lv">Saites mērķa dokuments</target>
+      </trans-unit>
+      <trans-unit id="link.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="link.titlePlaceholder" xml:space="preserve">
+        <source>Shown as tooltip</source>
+        <target xml:lang="lv">Tiek rādīts kā uzvedne</target>
+      </trans-unit>
+      <trans-unit id="link.url" xml:space="preserve">
+        <source>URL</source>
+        <target xml:lang="lv">URL</target>
+      </trans-unit>
+      <trans-unit id="link.urlPlaceholder" xml:space="preserve">
+        <source>https://example.com</source>
+        <target xml:lang="lv">https://example.com</target>
+      </trans-unit>
+      <trans-unit id="media.actionFailed" xml:space="preserve">
+        <source>The action failed.</source>
+        <target xml:lang="lv">Darbība neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="media.addTag" xml:space="preserve">
+        <source>Add tag…</source>
+        <target xml:lang="lv">Pievienot birku…</target>
+      </trans-unit>
+      <trans-unit id="media.addToCollection" xml:space="preserve">
+        <source>Add to collection…</source>
+        <target xml:lang="lv">Pievienot kolekcijai…</target>
+      </trans-unit>
+      <trans-unit id="media.allCollections" xml:space="preserve">
+        <source>All collections</source>
+        <target xml:lang="lv">Visas kolekcijas</target>
+      </trans-unit>
+      <trans-unit id="media.allTags" xml:space="preserve">
+        <source>All tags</source>
+        <target xml:lang="lv">Visas birkas</target>
+      </trans-unit>
+      <trans-unit id="media.allTypes" xml:space="preserve">
+        <source>All types</source>
+        <target xml:lang="lv">Visi tipi</target>
+      </trans-unit>
+      <trans-unit id="media.assetCountOne" xml:space="preserve">
+        <source>{0} asset</source>
+        <target xml:lang="lv">{0} resurss</target>
+      </trans-unit>
+      <trans-unit id="media.assetCountOther" xml:space="preserve">
+        <source>{0} assets</source>
+        <target xml:lang="lv">{0} resursi</target>
+      </trans-unit>
+      <trans-unit id="media.assetImported" xml:space="preserve">
+        <source>Asset imported to Neos.</source>
+        <target xml:lang="lv">Resurss importēts Neos.</target>
+      </trans-unit>
+      <trans-unit id="media.assetInUse" xml:space="preserve">
+        <source>This asset is in use and cannot be deleted.</source>
+        <target xml:lang="lv">Šis resurss tiek izmantots, un to nevar dzēst.</target>
+      </trans-unit>
+      <trans-unit id="media.assetReplaced" xml:space="preserve">
+        <source>The file of "{0}" was replaced.</source>
+        <target xml:lang="lv">Resursa "{0}" fails tika aizstāts.</target>
+      </trans-unit>
+      <trans-unit id="media.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target xml:lang="lv">Atcelt</target>
+      </trans-unit>
+      <trans-unit id="media.caption" xml:space="preserve">
+        <source>Caption</source>
+        <target xml:lang="lv">Paraksts</target>
+      </trans-unit>
+      <trans-unit id="media.chooseAnotherFile" xml:space="preserve">
+        <source>Choose another file</source>
+        <target xml:lang="lv">Izvēlēties citu failu</target>
+      </trans-unit>
+      <trans-unit id="media.chooseFile" xml:space="preserve">
+        <source>Choose file</source>
+        <target xml:lang="lv">Izvēlēties failu</target>
+      </trans-unit>
+      <trans-unit id="media.chooseFiles" xml:space="preserve">
+        <source>Choose files</source>
+        <target xml:lang="lv">Izvēlēties failus</target>
+      </trans-unit>
+      <trans-unit id="media.closeUploader" xml:space="preserve">
+        <source>Close uploader</source>
+        <target xml:lang="lv">Aizvērt augšupielādētāju</target>
+      </trans-unit>
+      <trans-unit id="media.collection" xml:space="preserve">
+        <source>Collection</source>
+        <target xml:lang="lv">Kolekcija</target>
+      </trans-unit>
+      <trans-unit id="media.collectionAddFailed" xml:space="preserve">
+        <source>Adding to collection failed</source>
+        <target xml:lang="lv">Pievienošana kolekcijai neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.collectionRemoveFailed" xml:space="preserve">
+        <source>Removing from collection failed</source>
+        <target xml:lang="lv">Noņemšana no kolekcijas neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.collections" xml:space="preserve">
+        <source>Collections</source>
+        <target xml:lang="lv">Kolekcijas</target>
+      </trans-unit>
+      <trans-unit id="media.copyright" xml:space="preserve">
+        <source>Copyright</source>
+        <target xml:lang="lv">Autortiesības</target>
+      </trans-unit>
+      <trans-unit id="media.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="lv">Dzēst</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAsset" xml:space="preserve">
+        <source>Delete asset</source>
+        <target xml:lang="lv">Dzēst resursu</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetDescription" xml:space="preserve">
+        <source>The asset will be permanently removed. Assets that are still in use cannot be deleted.</source>
+        <target xml:lang="lv">Resurss tiks neatgriezeniski noņemts. Resursus, kas joprojām tiek izmantoti, nevar dzēst.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetFailed" xml:space="preserve">
+        <source>Deleting the asset failed.</source>
+        <target xml:lang="lv">Resursa dzēšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteAssetTitle" xml:space="preserve">
+        <source>Delete this asset?</source>
+        <target xml:lang="lv">Vai dzēst šo resursu?</target>
+      </trans-unit>
+      <trans-unit id="media.deleteCollectionDescription" xml:space="preserve">
+        <source>“{0}” will be removed. The assets inside it are kept.</source>
+        <target xml:lang="lv">“{0}” tiks noņemta. Tajā esošie resursi tiks saglabāti.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteTagDescription" xml:space="preserve">
+        <source>“{0}” will be removed from all assets. The assets are kept.</source>
+        <target xml:lang="lv">“{0}” tiks noņemta no visiem resursiem. Resursi tiks saglabāti.</target>
+      </trans-unit>
+      <trans-unit id="media.deleteThis" xml:space="preserve">
+        <source>Delete this {0}?</source>
+        <target xml:lang="lv">Vai dzēst šo {0}?</target>
+      </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="lv">Izmēri</target>
+      </trans-unit>
+      <trans-unit id="media.done" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="lv">Gatavs</target>
+      </trans-unit>
+      <trans-unit id="media.doubleClickToChoose" xml:space="preserve">
+        <source>— double-click to choose.</source>
+        <target xml:lang="lv">— veiciet dubultklikšķi, lai izvēlētos.</target>
+      </trans-unit>
+      <trans-unit id="media.dragFileHere" xml:space="preserve">
+        <source>Drag the new file here</source>
+        <target xml:lang="lv">Velciet jauno failu šeit</target>
+      </trans-unit>
+      <trans-unit id="media.dragFilesHere" xml:space="preserve">
+        <source>Drag files here</source>
+        <target xml:lang="lv">Velciet failus šeit</target>
+      </trans-unit>
+      <trans-unit id="media.editAsset" xml:space="preserve">
+        <source>Edit asset</source>
+        <target xml:lang="lv">Rediģēt resursu</target>
+      </trans-unit>
+      <trans-unit id="media.failed" xml:space="preserve">
+        <source>Failed</source>
+        <target xml:lang="lv">Neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.filename" xml:space="preserve">
+        <source>Filename</source>
+        <target xml:lang="lv">Faila nosaukums</target>
+      </trans-unit>
+      <trans-unit id="media.for" xml:space="preserve">
+        <source>for</source>
+        <target xml:lang="lv">priekš</target>
+      </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+        <target xml:lang="lv">Formāts</target>
+      </trans-unit>
+      <trans-unit id="media.gridView" xml:space="preserve">
+        <source>Grid view</source>
+        <target xml:lang="lv">Režģa skats</target>
+      </trans-unit>
+      <trans-unit id="media.importFailed" xml:space="preserve">
+        <source>Importing the asset failed</source>
+        <target xml:lang="lv">Resursa importēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.importToNeos" xml:space="preserve">
+        <source>Import to Neos</source>
+        <target xml:lang="lv">Importēt Neos</target>
+      </trans-unit>
+      <trans-unit id="media.importing" xml:space="preserve">
+        <source>Importing…</source>
+        <target xml:lang="lv">Notiek importēšana…</target>
+      </trans-unit>
+      <trans-unit id="media.keepOriginalFilename" xml:space="preserve">
+        <source>Keep the filename "{0}"</source>
+        <target xml:lang="lv">Paturēt faila nosaukumu "{0}"</target>
+      </trans-unit>
+      <trans-unit id="media.listView" xml:space="preserve">
+        <source>List view</source>
+        <target xml:lang="lv">Saraksta skats</target>
+      </trans-unit>
+      <trans-unit id="media.loadingAssets" xml:space="preserve">
+        <source>Loading assets…</source>
+        <target xml:lang="lv">Notiek resursu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="media.loadingMore" xml:space="preserve">
+        <source>Loading more…</source>
+        <target xml:lang="lv">Notiek papildu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
+        <source>Saving the metadata failed</source>
+        <target xml:lang="lv">Metadatu saglabāšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.metadataSaved" xml:space="preserve">
+        <source>Metadata saved.</source>
+        <target xml:lang="lv">Metadati saglabāti.</target>
+      </trans-unit>
+      <trans-unit id="media.modified" xml:space="preserve">
+        <source>Modified</source>
+        <target xml:lang="lv">Mainīts</target>
+      </trans-unit>
+      <trans-unit id="media.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="media.newCollection" xml:space="preserve">
+        <source>New collection</source>
+        <target xml:lang="lv">Jauna kolekcija</target>
+      </trans-unit>
+      <trans-unit id="media.newTag" xml:space="preserve">
+        <source>New tag</source>
+        <target xml:lang="lv">Jauna birka</target>
+      </trans-unit>
+      <trans-unit id="media.noAssetsMatch" xml:space="preserve">
+        <source>No assets match the current filters.</source>
+        <target xml:lang="lv">Neviens resurss neatbilst pašreizējiem filtriem.</target>
+      </trans-unit>
+      <trans-unit id="media.noCollections" xml:space="preserve">
+        <source>No collections yet</source>
+        <target xml:lang="lv">Vēl nav kolekciju</target>
+      </trans-unit>
+      <trans-unit id="media.noTags" xml:space="preserve">
+        <source>No tags yet</source>
+        <target xml:lang="lv">Vēl nav birku</target>
+      </trans-unit>
+      <trans-unit id="media.none" xml:space="preserve">
+        <source>None</source>
+        <target xml:lang="lv">Nav</target>
+      </trans-unit>
+      <trans-unit id="media.nounCollection" xml:space="preserve">
+        <source>collection</source>
+        <target xml:lang="lv">kolekciju</target>
+      </trans-unit>
+      <trans-unit id="media.nounTag" xml:space="preserve">
+        <source>tag</source>
+        <target xml:lang="lv">birku</target>
+      </trans-unit>
+      <trans-unit id="media.or" xml:space="preserve">
+        <source>or</source>
+        <target xml:lang="lv">vai</target>
+      </trans-unit>
+      <trans-unit id="media.pickAsset" xml:space="preserve">
+        <source>Pick an asset</source>
+        <target xml:lang="lv">Izvēlieties resursu</target>
+      </trans-unit>
+      <trans-unit id="media.readOnly" xml:space="preserve">
+        <source>This asset is read-only.</source>
+        <target xml:lang="lv">Šis resurss ir tikai lasāms.</target>
+      </trans-unit>
+      <trans-unit id="media.readOnlyBadge" xml:space="preserve">
+        <source>read-only</source>
+        <target xml:lang="lv">tikai lasāms</target>
+      </trans-unit>
+      <trans-unit id="media.removeLabel" xml:space="preserve">
+        <source>Remove {0}</source>
+        <target xml:lang="lv">Noņemt {0}</target>
+      </trans-unit>
+      <trans-unit id="media.rename" xml:space="preserve">
+        <source>Rename</source>
+        <target xml:lang="lv">Pārdēvēt</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAsset" xml:space="preserve">
+        <source>Replace file</source>
+        <target xml:lang="lv">Aizstāt failu</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetDescription" xml:space="preserve">
+        <source>The new file takes the place of the current one. Title, tags, collections and every reference to this asset are kept.</source>
+        <target xml:lang="lv">Jaunais fails aizstāj pašreizējo. Nosaukums, birkas, kolekcijas un visas atsauces uz šo resursu tiks saglabātas.</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetFailed" xml:space="preserve">
+        <source>Replacing the file failed</source>
+        <target xml:lang="lv">Faila aizstāšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.replaceAssetUsageNote" xml:space="preserve">
+        <source>This asset is used {0} time(s). All usages will show the new file.</source>
+        <target xml:lang="lv">Šis resurss tiek izmantots {0} reizi(-es). Visās izmantošanas vietās būs redzams jaunais fails.</target>
+      </trans-unit>
+      <trans-unit id="media.replacing" xml:space="preserve">
+        <source>Replacing…</source>
+        <target xml:lang="lv">Notiek aizstāšana…</target>
+      </trans-unit>
+      <trans-unit id="media.renameNoun" xml:space="preserve">
+        <source>Rename {0}</source>
+        <target xml:lang="lv">Pārdēvēt {0}</target>
+      </trans-unit>
+      <trans-unit id="media.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="lv">Saglabāt</target>
+      </trans-unit>
+      <trans-unit id="media.saveMetadata" xml:space="preserve">
+        <source>Save metadata</source>
+        <target xml:lang="lv">Saglabāt metadatus</target>
+      </trans-unit>
+      <trans-unit id="media.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="lv">Notiek saglabāšana…</target>
+      </trans-unit>
+      <trans-unit id="media.searchAssets" xml:space="preserve">
+        <source>Search assets…</source>
+        <target xml:lang="lv">Meklēt resursus…</target>
+      </trans-unit>
+      <trans-unit id="media.searchAssetsAria" xml:space="preserve">
+        <source>Search assets</source>
+        <target xml:lang="lv">Meklēt resursus</target>
+      </trans-unit>
+      <trans-unit id="media.size" xml:space="preserve">
+        <source>Size</source>
+        <target xml:lang="lv">Izmērs</target>
+      </trans-unit>
+      <trans-unit id="media.sortNameAsc" xml:space="preserve">
+        <source>Name A–Z</source>
+        <target xml:lang="lv">Nosaukums A–Z</target>
+      </trans-unit>
+      <trans-unit id="media.sortNameDesc" xml:space="preserve">
+        <source>Name Z–A</source>
+        <target xml:lang="lv">Nosaukums Z–A</target>
+      </trans-unit>
+      <trans-unit id="media.sortNewest" xml:space="preserve">
+        <source>Newest first</source>
+        <target xml:lang="lv">Jaunākie vispirms</target>
+      </trans-unit>
+      <trans-unit id="media.sortOldest" xml:space="preserve">
+        <source>Oldest first</source>
+        <target xml:lang="lv">Vecākie vispirms</target>
+      </trans-unit>
+      <trans-unit id="media.source" xml:space="preserve">
+        <source>Source</source>
+        <target xml:lang="lv">Avots</target>
+      </trans-unit>
+      <trans-unit id="media.tag" xml:space="preserve">
+        <source>Tag</source>
+        <target xml:lang="lv">Birka</target>
+      </trans-unit>
+      <trans-unit id="media.tagAddFailed" xml:space="preserve">
+        <source>Adding the tag failed</source>
+        <target xml:lang="lv">Birkas pievienošana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.tagRemoveFailed" xml:space="preserve">
+        <source>Removing the tag failed</source>
+        <target xml:lang="lv">Birkas noņemšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.tags" xml:space="preserve">
+        <source>Tags</source>
+        <target xml:lang="lv">Birkas</target>
+      </trans-unit>
+      <trans-unit id="media.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="media.type" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="lv">Tips</target>
+      </trans-unit>
+      <trans-unit id="media.untagged" xml:space="preserve">
+        <source>Untagged</source>
+        <target xml:lang="lv">Bez birkām</target>
+      </trans-unit>
+      <trans-unit id="media.upload" xml:space="preserve">
+        <source>Upload</source>
+        <target xml:lang="lv">Augšupielādēt</target>
+      </trans-unit>
+      <trans-unit id="media.uploadAssets" xml:space="preserve">
+        <source>Upload assets</source>
+        <target xml:lang="lv">Augšupielādēt resursus</target>
+      </trans-unit>
+      <trans-unit id="media.uploadFileFailed" xml:space="preserve">
+        <source>Uploading "{0}" failed</source>
+        <target xml:lang="lv">"{0}" augšupielāde neizdevās</target>
+      </trans-unit>
+      <trans-unit id="media.usage" xml:space="preserve">
+        <source>Usage</source>
+        <target xml:lang="lv">Izmantojums</target>
+      </trans-unit>
+      <trans-unit id="media.usageInaccessible" xml:space="preserve">
+        <source>+ {0} usage(s) you cannot access</source>
+        <target xml:lang="lv">+ {0} izmantošanas vieta(-s), kurām nevarat piekļūt</target>
+      </trans-unit>
+      <trans-unit id="media.usageNone" xml:space="preserve">
+        <source>Not used anywhere. Safe to delete.</source>
+        <target xml:lang="lv">Nekur netiek izmantots. Var droši dzēst.</target>
+      </trans-unit>
+      <trans-unit id="media.usageUnavailable" xml:space="preserve">
+        <source>Usage information is unavailable.</source>
+        <target xml:lang="lv">Informācija par izmantojumu nav pieejama.</target>
+      </trans-unit>
+      <trans-unit id="media.working" xml:space="preserve">
+        <source>Working…</source>
+        <target xml:lang="lv">Notiek apstrāde…</target>
+      </trans-unit>
+      <trans-unit id="modal.adminsOnly" xml:space="preserve">
+        <source>Administrators only</source>
+        <target xml:lang="lv">Tikai administratoriem</target>
+      </trans-unit>
+      <trans-unit id="modal.noAccess" xml:space="preserve">
+        <source>You do not have access to this section.</source>
+        <target xml:lang="lv">Jums nav piekļuves šai sadaļai.</target>
+      </trans-unit>
+      <trans-unit id="modal.noPermission" xml:space="preserve">
+        <source>Not available for your account</source>
+        <target xml:lang="lv">Nav pieejams jūsu kontam</target>
+      </trans-unit>
+      <trans-unit id="modal.noSettings" xml:space="preserve">
+        <source>No settings available</source>
+        <target xml:lang="lv">Nav pieejamu iestatījumu</target>
+      </trans-unit>
+      <trans-unit id="modal.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="lv">Profils</target>
+      </trans-unit>
+      <trans-unit id="modal.settings" xml:space="preserve">
+        <source>Settings</source>
+        <target xml:lang="lv">Iestatījumi</target>
+      </trans-unit>
+      <trans-unit id="modal.settingsSections" xml:space="preserve">
+        <source>Settings sections</source>
+        <target xml:lang="lv">Iestatījumu sadaļas</target>
+      </trans-unit>
+      <trans-unit id="modal.sites" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="lv">Vietnes</target>
+      </trans-unit>
+      <trans-unit id="modal.users" xml:space="preserve">
+        <source>Users</source>
+        <target xml:lang="lv">Lietotāji</target>
+      </trans-unit>
+      <trans-unit id="modal.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="lv">Darba virsmas</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
+        <source>Abstract</source>
+        <target xml:lang="lv">Abstrakts</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
+        <source>Inherited</source>
+        <target xml:lang="lv">Mantots</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
+        <source>Inherited from {0}</source>
+        <target xml:lang="lv">Mantots no {0}</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
+        <source>Abstract type</source>
+        <target xml:lang="lv">Abstrakts tips</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
+        <source>Content Collection</source>
+        <target xml:lang="lv">Satura kolekcija</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
+        <source>Content</source>
+        <target xml:lang="lv">Saturs</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="lv">Dokuments</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
+        <source>Mixin / other</source>
+        <target xml:lang="lv">Mixin / cits</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
+        <source>The node types could not be loaded.</source>
+        <target xml:lang="lv">Neizdevās ielādēt mezglu tipus.</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.loading" xml:space="preserve">
+        <source>Loading node types…</source>
+        <target xml:lang="lv">Notiek mezglu tipu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.matches" xml:space="preserve">
+        <source>{0} matches</source>
+        <target xml:lang="lv">{0} atbilstības</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.properties" xml:space="preserve">
+        <source>Properties</source>
+        <target xml:lang="lv">Īpašības</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
+        <source>Search node types by name</source>
+        <target xml:lang="lv">Meklēt mezglu tipus pēc nosaukuma</target>
+      </trans-unit>
+      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
+        <source>Search node types…</source>
+        <target xml:lang="lv">Meklēt mezglu tipus…</target>
+      </trans-unit>
+      <trans-unit id="notifications.clear" xml:space="preserve">
+        <source>Clear notifications</source>
+        <target xml:lang="lv">Notīrīt paziņojumus</target>
+      </trans-unit>
+      <trans-unit id="notifications.clearFailed" xml:space="preserve">
+        <source>Clearing failed</source>
+        <target xml:lang="lv">Notīrīšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="notifications.empty" xml:space="preserve">
+        <source>No notifications.</source>
+        <target xml:lang="lv">Nav paziņojumu.</target>
+      </trans-unit>
+      <trans-unit id="notifications.label" xml:space="preserve">
+        <source>Notifications</source>
+        <target xml:lang="lv">Paziņojumi</target>
+      </trans-unit>
+      <trans-unit id="notifications.markAllRead" xml:space="preserve">
+        <source>Mark all as read</source>
+        <target xml:lang="lv">Atzīmēt visus kā izlasītus</target>
+      </trans-unit>
+      <trans-unit id="notifications.markRead" xml:space="preserve">
+        <source>Mark as read</source>
+        <target xml:lang="lv">Atzīmēt kā izlasītu</target>
+      </trans-unit>
+      <trans-unit id="notifications.markReadFailed" xml:space="preserve">
+        <source>Marking as read failed</source>
+        <target xml:lang="lv">Atzīmēšana kā izlasītu neizdevās</target>
+      </trans-unit>
+      <trans-unit id="notifications.openTask" xml:space="preserve">
+        <source>Open the task</source>
+        <target xml:lang="lv">Atvērt uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="notifications.unreadCount" xml:space="preserve">
+        <source>{0} unread notifications</source>
+        <target xml:lang="lv">{0} nelasīti paziņojumi</target>
+      </trans-unit>
+      <trans-unit id="panel.collapse" xml:space="preserve">
+        <source>Collapse panel</source>
+        <target xml:lang="lv">Sakļaut paneli</target>
+      </trans-unit>
+      <trans-unit id="panel.dragHere" xml:space="preserve">
+        <source>Drag panels here</source>
+        <target xml:lang="lv">Velciet paneļus šeit</target>
+      </trans-unit>
+      <trans-unit id="panel.expand" xml:space="preserve">
+        <source>Expand panel</source>
+        <target xml:lang="lv">Izvērst paneli</target>
+      </trans-unit>
+      <trans-unit id="panel.loadingSites" xml:space="preserve">
+        <source>Loading sites…</source>
+        <target xml:lang="lv">Notiek vietņu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="panel.resetLayout" xml:space="preserve">
+        <source>Reset to default</source>
+        <target xml:lang="lv">Atiestatīt uz noklusējumu</target>
+      </trans-unit>
+      <trans-unit id="panel.title.clipboard" xml:space="preserve">
+        <source>Clipboard</source>
+        <target xml:lang="lv">Starpliktuve</target>
+      </trans-unit>
+      <trans-unit id="panel.title.create" xml:space="preserve">
+        <source>Create</source>
+        <target xml:lang="lv">Izveidot</target>
+      </trans-unit>
+      <trans-unit id="panel.title.documents" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="lv">Dokumenti</target>
+      </trans-unit>
+      <trans-unit id="panel.title.history" xml:space="preserve">
+        <source>History</source>
+        <target xml:lang="lv">Vēsture</target>
+      </trans-unit>
+      <trans-unit id="panel.title.inspector" xml:space="preserve">
+        <source>Inspector</source>
+        <target xml:lang="lv">Inspektors</target>
+      </trans-unit>
+      <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
+        <source>Media Library</source>
+        <target xml:lang="lv">Mediju bibliotēka</target>
+      </trans-unit>
+      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
+        <source>Node Types</source>
+        <target xml:lang="lv">Mezglu tipi</target>
+      </trans-unit>
+      <trans-unit id="panel.title.outline" xml:space="preserve">
+        <source>Outline</source>
+        <target xml:lang="lv">Struktūra</target>
+      </trans-unit>
+      <trans-unit id="panel.title.tasks" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="lv">Uzdevumi</target>
+      </trans-unit>
+      <trans-unit id="panel.title.trash" xml:space="preserve">
+        <source>Trash</source>
+        <target xml:lang="lv">Atkritne</target>
+      </trans-unit>
+      <trans-unit id="panel.title.visualEditor" xml:space="preserve">
+        <source>Visual Editor</source>
+        <target xml:lang="lv">Vizuālais redaktors</target>
+      </trans-unit>
+      <trans-unit id="panel.title.workspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="lv">Darba virsmas</target>
+      </trans-unit>
+      <trans-unit id="preview.documentDeleted" xml:space="preserve">
+        <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
+        <target xml:lang="lv">Šī lapa ir dzēsta. Tā atgriežas, kad to atjaunojat, - vai pazūd pavisam, tiklīdz dzēšana tiek publicēta.</target>
+      </trans-unit>
+      <trans-unit id="preview.openInNewTab" xml:space="preserve">
+        <source>Open page in a new tab</source>
+        <target xml:lang="lv">Atvērt lapu jaunā cilnē</target>
+      </trans-unit>
+      <trans-unit id="preview.pageFrame" xml:space="preserve">
+        <source>Page preview</source>
+        <target xml:lang="lv">Lapas priekšskatījums</target>
+      </trans-unit>
+      <trans-unit id="preview.reload" xml:space="preserve">
+        <source>Reload preview</source>
+        <target xml:lang="lv">Pārlādēt priekšskatījumu</target>
+      </trans-unit>
+      <trans-unit id="preview.selectDocument" xml:space="preserve">
+        <source>Select a document to preview it.</source>
+        <target xml:lang="lv">Izvēlieties dokumentu, lai to priekšskatītu.</target>
+      </trans-unit>
+      <trans-unit id="profile.changePassword" xml:space="preserve">
+        <source>Change password</source>
+        <target xml:lang="lv">Mainīt paroli</target>
+      </trans-unit>
+      <trans-unit id="profile.changePasswordHint" xml:space="preserve">
+        <source>Enter your current password to set a new one.</source>
+        <target xml:lang="lv">Ievadiet pašreizējo paroli, lai iestatītu jaunu.</target>
+      </trans-unit>
+      <trans-unit id="profile.changing" xml:space="preserve">
+        <source>Changing…</source>
+        <target xml:lang="lv">Notiek maiņa…</target>
+      </trans-unit>
+      <trans-unit id="profile.currentPassword" xml:space="preserve">
+        <source>Current password</source>
+        <target xml:lang="lv">Pašreizējā parole</target>
+      </trans-unit>
+      <trans-unit id="profile.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="lv">E-pasts</target>
+      </trans-unit>
+      <trans-unit id="profile.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="lv">Vārds</target>
+      </trans-unit>
+      <trans-unit id="profile.interfaceLanguage" xml:space="preserve">
+        <source>Interface language</source>
+        <target xml:lang="lv">Saskarnes valoda</target>
+      </trans-unit>
+      <trans-unit id="profile.languageReload" xml:space="preserve">
+        <source>The new interface language applies after the next reload.</source>
+        <target xml:lang="lv">Jaunā saskarnes valoda stāsies spēkā pēc nākamās pārlādes.</target>
+      </trans-unit>
+      <trans-unit id="profile.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="lv">Uzvārds</target>
+      </trans-unit>
+      <trans-unit id="profile.loadFailed" xml:space="preserve">
+        <source>Could not load your profile</source>
+        <target xml:lang="lv">Neizdevās ielādēt jūsu profilu</target>
+      </trans-unit>
+      <trans-unit id="profile.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="lv">Jaunā parole</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordChanged" xml:space="preserve">
+        <source>Your password has been changed.</source>
+        <target xml:lang="lv">Jūsu parole ir nomainīta.</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailed" xml:space="preserve">
+        <source>Could not change password</source>
+        <target xml:lang="lv">Neizdevās nomainīt paroli</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordFailedDetail" xml:space="preserve">
+        <source>Changing the password failed.</source>
+        <target xml:lang="lv">Paroles maiņa neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="profile.passwordMismatch" xml:space="preserve">
+        <source>The new passwords do not match.</source>
+        <target xml:lang="lv">Jaunās paroles nesakrīt.</target>
+      </trans-unit>
+      <trans-unit id="profile.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="lv">Atkārtojiet jauno paroli</target>
+      </trans-unit>
+      <trans-unit id="profile.saveFailed" xml:space="preserve">
+        <source>Could not save profile</source>
+        <target xml:lang="lv">Neizdevās saglabāt profilu</target>
+      </trans-unit>
+      <trans-unit id="profile.saveFailedDetail" xml:space="preserve">
+        <source>Saving your profile failed.</source>
+        <target xml:lang="lv">Jūsu profila saglabāšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="profile.saveProfile" xml:space="preserve">
+        <source>Save profile</source>
+        <target xml:lang="lv">Saglabāt profilu</target>
+      </trans-unit>
+      <trans-unit id="profile.saved" xml:space="preserve">
+        <source>Your profile has been saved.</source>
+        <target xml:lang="lv">Jūsu profils ir saglabāts.</target>
+      </trans-unit>
+      <trans-unit id="profile.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="lv">Notiek saglabāšana…</target>
+      </trans-unit>
+      <trans-unit id="profile.subtitle" xml:space="preserve">
+        <source>Your personal account settings.</source>
+        <target xml:lang="lv">Jūsu personīgā konta iestatījumi.</target>
+      </trans-unit>
+      <trans-unit id="profile.title" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="lv">Profils</target>
+      </trans-unit>
+      <trans-unit id="profile.unavailable" xml:space="preserve">
+        <source>Your profile is currently unavailable.</source>
+        <target xml:lang="lv">Jūsu profils pašlaik nav pieejams.</target>
+      </trans-unit>
+      <trans-unit id="share.activeLinks" xml:space="preserve">
+        <source>Your active links</source>
+        <target xml:lang="lv">Jūsu aktīvās saites</target>
+      </trans-unit>
+      <trans-unit id="share.button" xml:space="preserve">
+        <source>Share</source>
+        <target xml:lang="lv">Kopīgot</target>
+      </trans-unit>
+      <trans-unit id="share.buttonHint" xml:space="preserve">
+        <source>Share a preview link to this page with people without a login</source>
+        <target xml:lang="lv">Kopīgojiet šīs lapas priekšskatījuma saiti ar cilvēkiem bez pieteikšanās</target>
+      </trans-unit>
+      <trans-unit id="share.copied" xml:space="preserve">
+        <source>Link copied to the clipboard.</source>
+        <target xml:lang="lv">Saite nokopēta starpliktuvē.</target>
+      </trans-unit>
+      <trans-unit id="share.copy" xml:space="preserve">
+        <source>Copy</source>
+        <target xml:lang="lv">Kopēt</target>
+      </trans-unit>
+      <trans-unit id="share.copyFailed" xml:space="preserve">
+        <source>Copying failed — please copy the link manually.</source>
+        <target xml:lang="lv">Kopēšana neizdevās — lūdzu, nokopējiet saiti manuāli.</target>
+      </trans-unit>
+      <trans-unit id="share.copyOnceHint" xml:space="preserve">
+        <source>Copy the link now — for security it is shown only this once.</source>
+        <target xml:lang="lv">Nokopējiet saiti tagad — drošības nolūkos tā tiek parādīta tikai šo vienu reizi.</target>
+      </trans-unit>
+      <trans-unit id="share.create" xml:space="preserve">
+        <source>Create link</source>
+        <target xml:lang="lv">Izveidot saiti</target>
+      </trans-unit>
+      <trans-unit id="share.createAnother" xml:space="preserve">
+        <source>Create another link</source>
+        <target xml:lang="lv">Izveidot vēl vienu saiti</target>
+      </trans-unit>
+      <trans-unit id="share.createFailed" xml:space="preserve">
+        <source>Creating the preview link failed.</source>
+        <target xml:lang="lv">Priekšskatījuma saites izveide neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="share.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="share.description" xml:space="preserve">
+        <source>Anyone with the link can view this page read-only, without logging in, until the link expires.</source>
+        <target xml:lang="lv">Ikviens, kam ir saite, var apskatīt šo lapu tikai lasīšanas režīmā bez pieteikšanās, līdz saites derīgums beidzas.</target>
+      </trans-unit>
+      <trans-unit id="share.expires" xml:space="preserve">
+        <source>expires {0}</source>
+        <target xml:lang="lv">beidzas {0}</target>
+      </trans-unit>
+      <trans-unit id="share.expiry" xml:space="preserve">
+        <source>Expires after</source>
+        <target xml:lang="lv">Derīguma termiņš</target>
+      </trans-unit>
+      <trans-unit id="share.label" xml:space="preserve">
+        <source>Label</source>
+        <target xml:lang="lv">Etiķete</target>
+      </trans-unit>
+      <trans-unit id="share.revoke" xml:space="preserve">
+        <source>Revoke link</source>
+        <target xml:lang="lv">Atsaukt saiti</target>
+      </trans-unit>
+      <trans-unit id="share.revoked" xml:space="preserve">
+        <source>The preview link was revoked.</source>
+        <target xml:lang="lv">Priekšskatījuma saite tika atsaukta.</target>
+      </trans-unit>
+      <trans-unit id="share.revokeFailed" xml:space="preserve">
+        <source>Revoking the preview link failed.</source>
+        <target xml:lang="lv">Priekšskatījuma saites atsaukšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="share.title" xml:space="preserve">
+        <source>Share preview link</source>
+        <target xml:lang="lv">Kopīgot priekšskatījuma saiti</target>
+      </trans-unit>
+      <trans-unit id="share.ttl24" xml:space="preserve">
+        <source>24 hours</source>
+        <target xml:lang="lv">24 stundas</target>
+      </trans-unit>
+      <trans-unit id="share.ttl48" xml:space="preserve">
+        <source>2 days</source>
+        <target xml:lang="lv">2 dienas</target>
+      </trans-unit>
+      <trans-unit id="share.ttl168" xml:space="preserve">
+        <source>7 days</source>
+        <target xml:lang="lv">7 dienas</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.general" xml:space="preserve">
+        <source>General</source>
+        <target xml:lang="lv">Vispārīgi</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.other" xml:space="preserve">
+        <source>Other</source>
+        <target xml:lang="lv">Citi</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.preview" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="lv">Priekšskatījums</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.category.workspace" xml:space="preserve">
+        <source>Workspace</source>
+        <target xml:lang="lv">Darba virsma</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.openSettings" xml:space="preserve">
+        <source>Open settings</source>
+        <target xml:lang="lv">Atvērt iestatījumus</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.description" xml:space="preserve">
+        <source>Shortcuts available in Neos Studio, including those added by plugins.</source>
+        <target xml:lang="lv">Neos Studio pieejamās saīsnes, ieskaitot spraudņu pievienotās.</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.overview.title" xml:space="preserve">
+        <source>Keyboard shortcuts</source>
+        <target xml:lang="lv">Tastatūras saīsnes</target>
+      </trans-unit>
+      <trans-unit id="shortcuts.showOverview" xml:space="preserve">
+        <source>Show keyboard shortcuts</source>
+        <target xml:lang="lv">Rādīt tastatūras saīsnes</target>
+      </trans-unit>
+      <trans-unit id="sites.activateDomain" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="lv">Aktivizēt</target>
+      </trans-unit>
+      <trans-unit id="sites.activeSite" xml:space="preserve">
+        <source>Active site</source>
+        <target xml:lang="lv">Aktīvā vietne</target>
+      </trans-unit>
+      <trans-unit id="sites.addDomain" xml:space="preserve">
+        <source>Add domain</source>
+        <target xml:lang="lv">Pievienot domēnu</target>
+      </trans-unit>
+      <trans-unit id="sites.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="lv">Darbības</target>
+      </trans-unit>
+      <trans-unit id="sites.columnDomains" xml:space="preserve">
+        <source>Domains</source>
+        <target xml:lang="lv">Domēni</target>
+      </trans-unit>
+      <trans-unit id="sites.columnName" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="sites.columnPackage" xml:space="preserve">
+        <source>Package</source>
+        <target xml:lang="lv">Pakotne</target>
+      </trans-unit>
+      <trans-unit id="sites.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="lv">Statuss</target>
+      </trans-unit>
+      <trans-unit id="sites.create" xml:space="preserve">
+        <source>Create site</source>
+        <target xml:lang="lv">Izveidot vietni</target>
+      </trans-unit>
+      <trans-unit id="sites.createFailed" xml:space="preserve">
+        <source>Could not create site</source>
+        <target xml:lang="lv">Neizdevās izveidot vietni</target>
+      </trans-unit>
+      <trans-unit id="sites.createFailedDetail" xml:space="preserve">
+        <source>Creating the site failed.</source>
+        <target xml:lang="lv">Vietnes izveide neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="sites.created" xml:space="preserve">
+        <source>The site "{0}" has been created.</source>
+        <target xml:lang="lv">Vietne "{0}" ir izveidota.</target>
+      </trans-unit>
+      <trans-unit id="sites.createdSyncHint" xml:space="preserve">
+        <source>Synchronize your workspace to start editing the new site.</source>
+        <target xml:lang="lv">Sinhronizējiet savu darba virsmu, lai sāktu rediģēt jauno vietni.</target>
+      </trans-unit>
+      <trans-unit id="sites.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="sites.deactivateDomain" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="lv">Deaktivizēt</target>
+      </trans-unit>
+      <trans-unit id="sites.delete" xml:space="preserve">
+        <source>Delete site</source>
+        <target xml:lang="lv">Dzēst vietni</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDescription" xml:space="preserve">
+        <source>The site, all of its content in every workspace, its domains and its asset collection are removed permanently. This cannot be undone.</source>
+        <target xml:lang="lv">Vietne, viss tās saturs visās darba virsmās, tās domēni un resursu kolekcija tiks neatgriezeniski noņemti. To nevar atsaukt.</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDomain" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="lv">Dzēst</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteTitle" xml:space="preserve">
+        <source>Delete site "{0}"?</source>
+        <target xml:lang="lv">Vai dzēst vietni "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="sites.deleted" xml:space="preserve">
+        <source>The site "{0}" has been deleted.</source>
+        <target xml:lang="lv">Vietne "{0}" ir dzēsta.</target>
+      </trans-unit>
+      <trans-unit id="sites.domainActions" xml:space="preserve">
+        <source>Domain actions</source>
+        <target xml:lang="lv">Domēna darbības</target>
+      </trans-unit>
+      <trans-unit id="sites.domainFailed" xml:space="preserve">
+        <source>Could not save domain</source>
+        <target xml:lang="lv">Neizdevās saglabāt domēnu</target>
+      </trans-unit>
+      <trans-unit id="sites.domainFailedDetail" xml:space="preserve">
+        <source>Saving the domain failed.</source>
+        <target xml:lang="lv">Domēna saglabāšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="sites.domains" xml:space="preserve">
+        <source>Domains</source>
+        <target xml:lang="lv">Domēni</target>
+      </trans-unit>
+      <trans-unit id="sites.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="lv">Rediģēt</target>
+      </trans-unit>
+      <trans-unit id="sites.editDomain" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="lv">Rediģēt</target>
+      </trans-unit>
+      <trans-unit id="sites.editSite" xml:space="preserve">
+        <source>Edit site</source>
+        <target xml:lang="lv">Rediģēt vietni</target>
+      </trans-unit>
+      <trans-unit id="sites.editSiteHint" xml:space="preserve">
+        <source>Node name "{0}", package {1}.</source>
+        <target xml:lang="lv">Mezgla nosaukums "{0}", pakotne {1}.</target>
+      </trans-unit>
+      <trans-unit id="sites.hostname" xml:space="preserve">
+        <source>Hostname</source>
+        <target xml:lang="lv">Resursdatora nosaukums</target>
+      </trans-unit>
+      <trans-unit id="sites.inactiveDomain" xml:space="preserve">
+        <source>Inactive</source>
+        <target xml:lang="lv">Neaktīvs</target>
+      </trans-unit>
+      <trans-unit id="sites.loadFailed" xml:space="preserve">
+        <source>Could not load sites</source>
+        <target xml:lang="lv">Neizdevās ielādēt vietnes</target>
+      </trans-unit>
+      <trans-unit id="sites.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="sites.newSite" xml:space="preserve">
+        <source>New site</source>
+        <target xml:lang="lv">Jauna vietne</target>
+      </trans-unit>
+      <trans-unit id="sites.newSiteHint" xml:space="preserve">
+        <source>Creates a new site with an empty site node in the live workspace.</source>
+        <target xml:lang="lv">Izveido jaunu vietni ar tukšu vietnes mezglu Live darba virsmā.</target>
+      </trans-unit>
+      <trans-unit id="sites.noDomains" xml:space="preserve">
+        <source>No domains configured. The site is reachable under any host pointing at this installation.</source>
+        <target xml:lang="lv">Nav konfigurēts neviens domēns. Vietne ir sasniedzama no jebkura resursdatora, kas norāda uz šo instalāciju.</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeName" xml:space="preserve">
+        <source>Node name (optional)</source>
+        <target xml:lang="lv">Mezgla nosaukums (neobligāts)</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeNamePlaceholder" xml:space="preserve">
+        <source>Derived from the name when empty</source>
+        <target xml:lang="lv">Ja tukšs, tiek atvasināts no nosaukuma</target>
+      </trans-unit>
+      <trans-unit id="sites.nodeType" xml:space="preserve">
+        <source>Site node type</source>
+        <target xml:lang="lv">Vietnes mezgla tips</target>
+      </trans-unit>
+      <trans-unit id="sites.none" xml:space="preserve">
+        <source>No sites found.</source>
+        <target xml:lang="lv">Nav atrasta neviena vietne.</target>
+      </trans-unit>
+      <trans-unit id="sites.offline" xml:space="preserve">
+        <source>Offline</source>
+        <target xml:lang="lv">Bezsaistē</target>
+      </trans-unit>
+      <trans-unit id="sites.online" xml:space="preserve">
+        <source>Online</source>
+        <target xml:lang="lv">Tiešsaistē</target>
+      </trans-unit>
+      <trans-unit id="sites.package" xml:space="preserve">
+        <source>Site package</source>
+        <target xml:lang="lv">Vietnes pakotne</target>
+      </trans-unit>
+      <trans-unit id="sites.port" xml:space="preserve">
+        <source>Port</source>
+        <target xml:lang="lv">Ports</target>
+      </trans-unit>
+      <trans-unit id="sites.primary" xml:space="preserve">
+        <source>Primary</source>
+        <target xml:lang="lv">Primārais</target>
+      </trans-unit>
+      <trans-unit id="sites.putOnline" xml:space="preserve">
+        <source>Put online</source>
+        <target xml:lang="lv">Pārslēgt tiešsaistē</target>
+      </trans-unit>
+      <trans-unit id="sites.rowActions" xml:space="preserve">
+        <source>Site actions</source>
+        <target xml:lang="lv">Vietnes darbības</target>
+      </trans-unit>
+      <trans-unit id="sites.save" xml:space="preserve">
+        <source>Save</source>
+        <target xml:lang="lv">Saglabāt</target>
+      </trans-unit>
+      <trans-unit id="sites.saveDomain" xml:space="preserve">
+        <source>Save domain</source>
+        <target xml:lang="lv">Saglabāt domēnu</target>
+      </trans-unit>
+      <trans-unit id="sites.saveFailed" xml:space="preserve">
+        <source>Could not save site</source>
+        <target xml:lang="lv">Neizdevās saglabāt vietni</target>
+      </trans-unit>
+      <trans-unit id="sites.saveFailedDetail" xml:space="preserve">
+        <source>Saving the site failed.</source>
+        <target xml:lang="lv">Vietnes saglabāšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="sites.saved" xml:space="preserve">
+        <source>The site "{0}" has been saved.</source>
+        <target xml:lang="lv">Vietne "{0}" ir saglabāta.</target>
+      </trans-unit>
+      <trans-unit id="sites.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="lv">Notiek saglabāšana…</target>
+      </trans-unit>
+      <trans-unit id="sites.scheme" xml:space="preserve">
+        <source>Scheme</source>
+        <target xml:lang="lv">Shēma</target>
+      </trans-unit>
+      <trans-unit id="sites.schemeAny" xml:space="preserve">
+        <source>Any scheme</source>
+        <target xml:lang="lv">Jebkura shēma</target>
+      </trans-unit>
+      <trans-unit id="sites.selectNodeType" xml:space="preserve">
+        <source>Select node type…</source>
+        <target xml:lang="lv">Izvēlēties mezgla tipu…</target>
+      </trans-unit>
+      <trans-unit id="sites.selectPackage" xml:space="preserve">
+        <source>Select package…</source>
+        <target xml:lang="lv">Izvēlēties pakotni…</target>
+      </trans-unit>
+      <trans-unit id="sites.selectPlaceholder" xml:space="preserve">
+        <source>Select site…</source>
+        <target xml:lang="lv">Izvēlēties vietni…</target>
+      </trans-unit>
+      <trans-unit id="sites.setPrimary" xml:space="preserve">
+        <source>Set as primary</source>
+        <target xml:lang="lv">Iestatīt kā primāro</target>
+      </trans-unit>
+      <trans-unit id="sites.startOffline" xml:space="preserve">
+        <source>Start offline (hidden from visitors)</source>
+        <target xml:lang="lv">Sākt bezsaistē (paslēpta no apmeklētājiem)</target>
+      </trans-unit>
+      <trans-unit id="sites.stateFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="lv">Neizdevās mainīt statusu</target>
+      </trans-unit>
+      <trans-unit id="sites.stateFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="lv">Statusa maiņa neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="sites.subtitle" xml:space="preserve">
+        <source>Websites served by this installation.</source>
+        <target xml:lang="lv">Tīmekļa vietnes, ko apkalpo šī instalācija.</target>
+      </trans-unit>
+      <trans-unit id="sites.synchronizeToAccess" xml:space="preserve">
+        <source>(synchronize to access)</source>
+        <target xml:lang="lv">(sinhronizējiet, lai piekļūtu)</target>
+      </trans-unit>
+      <trans-unit id="sites.takeOffline" xml:space="preserve">
+        <source>Take offline</source>
+        <target xml:lang="lv">Pārslēgt bezsaistē</target>
+      </trans-unit>
+      <trans-unit id="sites.title" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="lv">Vietnes</target>
+      </trans-unit>
+      <trans-unit id="sites.unavailable" xml:space="preserve">
+        <source>Sites are currently unavailable.</source>
+        <target xml:lang="lv">Vietnes pašlaik nav pieejamas.</target>
+      </trans-unit>
+      <trans-unit id="sites.unsetPrimary" xml:space="preserve">
+        <source>Unset primary</source>
+        <target xml:lang="lv">Noņemt primāro statusu</target>
+      </trans-unit>
+      <trans-unit id="sites.wentOffline" xml:space="preserve">
+        <source>The site "{0}" is now offline.</source>
+        <target xml:lang="lv">Vietne "{0}" tagad ir bezsaistē.</target>
+      </trans-unit>
+      <trans-unit id="sites.wentOnline" xml:space="preserve">
+        <source>The site "{0}" is now online.</source>
+        <target xml:lang="lv">Vietne "{0}" tagad ir tiešsaistē.</target>
+      </trans-unit>
+      <trans-unit id="tasks.activeWorkspace" xml:space="preserve">
+        <source>You are editing in this workspace</source>
+        <target xml:lang="lv">Jūs rediģējat šajā darba virsmā</target>
+      </trans-unit>
+      <trans-unit id="tasks.addTaskWorkspace" xml:space="preserve">
+        <source>Add task workspace</source>
+        <target xml:lang="lv">Pievienot uzdevuma darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignedTo" xml:space="preserve">
+        <source>Assigned to {0}</source>
+        <target xml:lang="lv">Piešķirts {0}</target>
+      </trans-unit>
+      <trans-unit id="tasks.assignee" xml:space="preserve">
+        <source>Assignee</source>
+        <target xml:lang="lv">Atbildīgais</target>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspace" xml:space="preserve">
+        <source>Based on</source>
+        <target xml:lang="lv">Bāzēts uz</target>
+      </trans-unit>
+      <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
+        <source>Checkout workspace</source>
+        <target xml:lang="lv">Pārslēgties uz darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnDone" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="lv">Pabeigts</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnEmpty" xml:space="preserve">
+        <source>No tasks</source>
+        <target xml:lang="lv">Nav uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnInReview" xml:space="preserve">
+        <source>In review</source>
+        <target xml:lang="lv">Pārskatīšanā</target>
+      </trans-unit>
+      <trans-unit id="tasks.columnOpen" xml:space="preserve">
+        <source>Open</source>
+        <target xml:lang="lv">Atvērts</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+        <target xml:lang="lv">Neizdevās pievienot komentāru</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+        <target xml:lang="lv">Komentāra pievienošana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+        <target xml:lang="lv">Rakstiet komentāru…</target>
+      </trans-unit>
+      <trans-unit id="tasks.comments" xml:space="preserve">
+        <source>Comments</source>
+        <target xml:lang="lv">Komentāri</target>
+      </trans-unit>
+      <trans-unit id="tasks.commentSend" xml:space="preserve">
+        <source>Send</source>
+        <target xml:lang="lv">Sūtīt</target>
+      </trans-unit>
+      <trans-unit id="tasks.completed" xml:space="preserve">
+        <source>The task has been completed.</source>
+        <target xml:lang="lv">Uzdevums ir pabeigts.</target>
+      </trans-unit>
+      <trans-unit id="tasks.completeTask" xml:space="preserve">
+        <source>Complete task</source>
+        <target xml:lang="lv">Pabeigt uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.create" xml:space="preserve">
+        <source>Create task</source>
+        <target xml:lang="lv">Izveidot uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.created" xml:space="preserve">
+        <source>The task "{0}" has been created.</source>
+        <target xml:lang="lv">Uzdevums "{0}" ir izveidots.</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailed" xml:space="preserve">
+        <source>Could not create task</source>
+        <target xml:lang="lv">Neizdevās izveidot uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.createFailedDetail" xml:space="preserve">
+        <source>Creating the task failed.</source>
+        <target xml:lang="lv">Uzdevuma izveide neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="tasks.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="tasks.delete" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="lv">Dzēst uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteConfirm" xml:space="preserve">
+        <source>Delete task</source>
+        <target xml:lang="lv">Dzēst uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleted" xml:space="preserve">
+        <source>The task has been deleted.</source>
+        <target xml:lang="lv">Uzdevums ir dzēsts.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteDescription" xml:space="preserve">
+        <source>This removes the workspace "{0}" including all its unpublished changes. This cannot be undone.</source>
+        <target xml:lang="lv">Tiks noņemta darba virsma "{0}" ar visām tās nepublicētajām izmaiņām. To nevar atsaukt.</target>
+      </trans-unit>
+      <trans-unit id="tasks.deleteTitle" xml:space="preserve">
+        <source>Delete task?</source>
+        <target xml:lang="lv">Vai dzēst uzdevumu?</target>
+      </trans-unit>
+      <trans-unit id="tasks.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="lv">Apraksts</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailHint" xml:space="preserve">
+        <source>Edit the task details below.</source>
+        <target xml:lang="lv">Rediģējiet uzdevuma detaļas zemāk.</target>
+      </trans-unit>
+      <trans-unit id="tasks.detailReadOnly" xml:space="preserve">
+        <source>You need manage permission on this task to edit it.</source>
+        <target xml:lang="lv">Lai rediģētu šo uzdevumu, jums vajadzīga pārvaldības atļauja.</target>
+      </trans-unit>
+      <trans-unit id="tasks.editTask" xml:space="preserve">
+        <source>Edit task</source>
+        <target xml:lang="lv">Rediģēt uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.hasChanges" xml:space="preserve">
+        <source>Has unpublished changes</source>
+        <target xml:lang="lv">Ir nepublicētas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="tasks.loadFailed" xml:space="preserve">
+        <source>Loading the tasks failed.</source>
+        <target xml:lang="lv">Uzdevumu ielāde neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailed" xml:space="preserve">
+        <source>Could not move task</source>
+        <target xml:lang="lv">Neizdevās pārvietot uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.moveFailedDetail" xml:space="preserve">
+        <source>Moving the task failed.</source>
+        <target xml:lang="lv">Uzdevuma pārvietošana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTask" xml:space="preserve">
+        <source>New task</source>
+        <target xml:lang="lv">Jauns uzdevums</target>
+      </trans-unit>
+      <trans-unit id="tasks.newTaskHint" xml:space="preserve">
+        <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
+        <target xml:lang="lv">Uzdevuma zars apkopo izmaiņas vienam darbam. To redz tikai iesaistītie; pārskatītāji to apstiprina un publicē.</target>
+      </trans-unit>
+      <trans-unit id="tasks.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+        <target xml:lang="lv">Vēl nav komentāru.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
+        <source>The task has been reopened.</source>
+        <target xml:lang="lv">Uzdevums ir atkārtoti atvērts.</target>
+      </trans-unit>
+      <trans-unit id="tasks.reopenTask" xml:space="preserve">
+        <source>Reopen task</source>
+        <target xml:lang="lv">Atkārtoti atvērt uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.reviewComment" xml:space="preserve">
+        <source>Comment (optional)</source>
+        <target xml:lang="lv">Komentārs (neobligāts)</target>
+      </trans-unit>
+      <trans-unit id="tasks.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="lv">Notiek saglabāšana…</target>
+      </trans-unit>
+      <trans-unit id="tasks.selectUser" xml:space="preserve">
+        <source>Select user</source>
+        <target xml:lang="lv">Izvēlēties lietotāju</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReview" xml:space="preserve">
+        <source>Send to review</source>
+        <target xml:lang="lv">Nosūtīt pārskatīšanai</target>
+      </trans-unit>
+      <trans-unit id="tasks.sendToReviewHint" xml:space="preserve">
+        <source>Hand the task to the reviewers. A comment helps them know what to look at.</source>
+        <target xml:lang="lv">Nododiet uzdevumu pārskatītājiem. Komentārs palīdzēs viņiem saprast, kam pievērst uzmanību.</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusDone" xml:space="preserve">
+        <source>done</source>
+        <target xml:lang="lv">pabeigts</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusInReview" xml:space="preserve">
+        <source>in review</source>
+        <target xml:lang="lv">pārskatīšanā</target>
+      </trans-unit>
+      <trans-unit id="tasks.statusOpen" xml:space="preserve">
+        <source>open</source>
+        <target xml:lang="lv">atvērts</target>
+      </trans-unit>
+      <trans-unit id="tasks.submitted" xml:space="preserve">
+        <source>The task has been submitted for review.</source>
+        <target xml:lang="lv">Uzdevums ir nosūtīts pārskatīšanai.</target>
+      </trans-unit>
+      <trans-unit id="tasks.switcherGroup" xml:space="preserve">
+        <source>Tasks</source>
+        <target xml:lang="lv">Uzdevumi</target>
+      </trans-unit>
+      <trans-unit id="tasks.taskBranch" xml:space="preserve">
+        <source>Task branch</source>
+        <target xml:lang="lv">Uzdevuma zars</target>
+      </trans-unit>
+      <trans-unit id="tasks.title" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassigned" xml:space="preserve">
+        <source>– unassigned –</source>
+        <target xml:lang="lv">– nav piešķirts –</target>
+      </trans-unit>
+      <trans-unit id="tasks.unassignedHint" xml:space="preserve">
+        <source>Unassigned</source>
+        <target xml:lang="lv">Nav piešķirts</target>
+      </trans-unit>
+      <trans-unit id="tasks.updated" xml:space="preserve">
+        <source>The task has been updated.</source>
+        <target xml:lang="lv">Uzdevums ir atjaunināts.</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailed" xml:space="preserve">
+        <source>Could not update task</source>
+        <target xml:lang="lv">Neizdevās atjaunināt uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
+        <source>Updating the task failed.</source>
+        <target xml:lang="lv">Uzdevuma atjaunināšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="tasks.viewTask" xml:space="preserve">
+        <source>View task</source>
+        <target xml:lang="lv">Skatīt uzdevumu</target>
+      </trans-unit>
+      <trans-unit id="trash.confirmBody" xml:space="preserve">
+        <source>It was deleted inside something that is deleted as well, so this also restores: {0}</source>
+        <target xml:lang="lv">Tas tika dzēsts kopā ar citu dzēstu saturu, tāpēc tiks atjaunots arī: {0}</target>
+      </trans-unit>
+      <trans-unit id="trash.confirmTitle" xml:space="preserve">
+        <source>Restore "{0}"?</source>
+        <target xml:lang="lv">Vai atjaunot "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="trash.deletedAt" xml:space="preserve">
+        <source>Deleted {0}</source>
+        <target xml:lang="lv">Dzēsts {0}</target>
+      </trans-unit>
+      <trans-unit id="trash.deletedByAt" xml:space="preserve">
+        <source>Deleted {0} by {1}</source>
+        <target xml:lang="lv">Dzēsts {0}, dzēsa {1}</target>
+      </trans-unit>
+      <trans-unit id="trash.empty" xml:space="preserve">
+        <source>No deleted pages. They wait here until the deletion is published.</source>
+        <target xml:lang="lv">Nav dzēstu lapu. Tās gaida šeit, līdz dzēšana tiek publicēta.</target>
+      </trans-unit>
+      <trans-unit id="trash.failed" xml:space="preserve">
+        <source>The trash could not be loaded.</source>
+        <target xml:lang="lv">Neizdevās ielādēt atkritni.</target>
+      </trans-unit>
+      <trans-unit id="trash.loading" xml:space="preserve">
+        <source>Loading trash…</source>
+        <target xml:lang="lv">Notiek atkritnes ielāde…</target>
+      </trans-unit>
+      <trans-unit id="trash.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change this workspace</source>
+        <target xml:lang="lv">Jums nav atļauts mainīt šo darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="trash.openFailed" xml:space="preserve">
+        <source>Opening the deleted page failed</source>
+        <target xml:lang="lv">Dzēstās lapas atvēršana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="trash.openHint" xml:space="preserve">
+        <source>Show this deleted page</source>
+        <target xml:lang="lv">Rādīt šo dzēsto lapu</target>
+      </trans-unit>
+      <trans-unit id="trash.outdated" xml:space="preserve">
+        <source>Synchronize the workspace before restoring - it is missing changes from its base workspace.</source>
+        <target xml:lang="lv">Pirms atjaunošanas sinhronizējiet darba virsmu - tai trūkst izmaiņu no tās bāzes darba virsmas.</target>
+      </trans-unit>
+      <trans-unit id="trash.restore" xml:space="preserve">
+        <source>Restore</source>
+        <target xml:lang="lv">Atjaunot</target>
+      </trans-unit>
+      <trans-unit id="trash.restoreFailed" xml:space="preserve">
+        <source>Restoring failed</source>
+        <target xml:lang="lv">Atjaunošana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="trash.restored" xml:space="preserve">
+        <source>Restored {0}.</source>
+        <target xml:lang="lv">Atjaunots {0}.</target>
+      </trans-unit>
+      <trans-unit id="trash.restoredWithAncestors" xml:space="preserve">
+        <source>Restored {0} and {1} more.</source>
+        <target xml:lang="lv">Atjaunots {0} un vēl {1}.</target>
+      </trans-unit>
+      <trans-unit id="trash.truncated" xml:space="preserve">
+        <source>Only the most recently deleted nodes are listed.</source>
+        <target xml:lang="lv">Tiek rādīti tikai pēdējie dzēstie mezgli.</target>
+      </trans-unit>
+      <trans-unit id="tree.clearFilter" xml:space="preserve">
+        <source>Clear filter</source>
+        <target xml:lang="lv">Notīrīt filtru</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
+        <source>Contains changes in workspace "{0}"</source>
+        <target xml:lang="lv">Satur izmaiņas darba virsmā "{0}"</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deleted" xml:space="preserve">
+        <source>Deleted</source>
+        <target xml:lang="lv">Dzēsts</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deletedInherited" xml:space="preserve">
+        <source>Deleted (inherited)</source>
+        <target xml:lang="lv">Dzēsts (mantots)</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.editingHere" xml:space="preserve">
+        <source>{0} is here</source>
+        <target xml:lang="lv">{0} ir šeit</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="lv">Paslēpts</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInMenu" xml:space="preserve">
+        <source>Hidden in menus</source>
+        <target xml:lang="lv">Paslēpts izvēlnēs</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.hiddenInherited" xml:space="preserve">
+        <source>Hidden (inherited)</source>
+        <target xml:lang="lv">Paslēpts (mantots)</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.modified" xml:space="preserve">
+        <source>Modified in workspace "{0}"</source>
+        <target xml:lang="lv">Mainīts darba virsmā "{0}"</target>
+      </trans-unit>
+      <trans-unit id="tree.documentTreeLabel" xml:space="preserve">
+        <source>Document tree</source>
+        <target xml:lang="lv">Dokumentu koks</target>
+      </trans-unit>
+      <trans-unit id="tree.emptyContent" xml:space="preserve">
+        <source>No content below this document.</source>
+        <target xml:lang="lv">Zem šī dokumenta nav satura.</target>
+      </trans-unit>
+      <trans-unit id="tree.emptyDocuments" xml:space="preserve">
+        <source>This site has no documents yet.</source>
+        <target xml:lang="lv">Šajā vietnē vēl nav dokumentu.</target>
+      </trans-unit>
+      <trans-unit id="tree.filterByNodeType" xml:space="preserve">
+        <source>Filter by node type</source>
+        <target xml:lang="lv">Filtrēt pēc mezgla tipa</target>
+      </trans-unit>
+      <trans-unit id="tree.loadingContent" xml:space="preserve">
+        <source>Loading content…</source>
+        <target xml:lang="lv">Notiek satura ielāde…</target>
+      </trans-unit>
+      <trans-unit id="tree.loadingDocuments" xml:space="preserve">
+        <source>Loading documents…</source>
+        <target xml:lang="lv">Notiek dokumentu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="tree.newDocument" xml:space="preserve">
+        <source>New document…</source>
+        <target xml:lang="lv">Jauns dokuments…</target>
+      </trans-unit>
+      <trans-unit id="tree.newDocumentAria" xml:space="preserve">
+        <source>New document</source>
+        <target xml:lang="lv">Jauns dokuments</target>
+      </trans-unit>
+      <trans-unit id="tree.noSearchMatch" xml:space="preserve">
+        <source>No documents match the search.</source>
+        <target xml:lang="lv">Neviens dokuments neatbilst meklēšanai.</target>
+      </trans-unit>
+      <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
+        <source>Loading the outline failed</source>
+        <target xml:lang="lv">Struktūras ielāde neizdevās</target>
+      </trans-unit>
+      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
+        <source>Select a document to outline its content.</source>
+        <target xml:lang="lv">Izvēlieties dokumentu, lai parādītu tā satura struktūru.</target>
+      </trans-unit>
+      <trans-unit id="tree.outlinerLabel" xml:space="preserve">
+        <source>Content outliner</source>
+        <target xml:lang="lv">Satura struktūra</target>
+      </trans-unit>
+      <trans-unit id="tree.searchAriaLabel" xml:space="preserve">
+        <source>Search documents by title</source>
+        <target xml:lang="lv">Meklēt dokumentus pēc nosaukuma</target>
+      </trans-unit>
+      <trans-unit id="tree.searchFailed" xml:space="preserve">
+        <source>Searching documents failed</source>
+        <target xml:lang="lv">Dokumentu meklēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="tree.searchPlaceholder" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="lv">Meklēt dokumentus…</target>
+      </trans-unit>
+      <trans-unit id="tree.searchResultsLabel" xml:space="preserve">
+        <source>Document search results</source>
+        <target xml:lang="lv">Dokumentu meklēšanas rezultāti</target>
+      </trans-unit>
+      <trans-unit id="tree.searchingDocuments" xml:space="preserve">
+        <source>Searching documents…</source>
+        <target xml:lang="lv">Notiek dokumentu meklēšana…</target>
+      </trans-unit>
+      <trans-unit id="tree.treeLoadFailed" xml:space="preserve">
+        <source>Loading the tree failed</source>
+        <target xml:lang="lv">Koka ielāde neizdevās</target>
+      </trans-unit>
+      <trans-unit id="userMenu.label" xml:space="preserve">
+        <source>User menu</source>
+        <target xml:lang="lv">Lietotāja izvēlne</target>
+      </trans-unit>
+      <trans-unit id="userMenu.logout" xml:space="preserve">
+        <source>Logout</source>
+        <target xml:lang="lv">Iziet</target>
+      </trans-unit>
+      <trans-unit id="userMenu.profile" xml:space="preserve">
+        <source>Profile</source>
+        <target xml:lang="lv">Profils</target>
+      </trans-unit>
+      <trans-unit id="users.activate" xml:space="preserve">
+        <source>Activate</source>
+        <target xml:lang="lv">Aktivizēt</target>
+      </trans-unit>
+      <trans-unit id="users.activated" xml:space="preserve">
+        <source>The user "{0}" has been activated.</source>
+        <target xml:lang="lv">Lietotājs "{0}" ir aktivizēts.</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="lv">Neizdevās mainīt statusu</target>
+      </trans-unit>
+      <trans-unit id="users.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="lv">Statusa maiņa neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="users.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="lv">Aktīvs</target>
+      </trans-unit>
+      <trans-unit id="users.columnAccount" xml:space="preserve">
+        <source>Account</source>
+        <target xml:lang="lv">Konts</target>
+      </trans-unit>
+      <trans-unit id="users.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="lv">Darbības</target>
+      </trans-unit>
+      <trans-unit id="users.columnEmail" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="lv">E-pasts</target>
+      </trans-unit>
+      <trans-unit id="users.columnName" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="lv">Vārds</target>
+      </trans-unit>
+      <trans-unit id="users.columnRoles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="lv">Lomas</target>
+      </trans-unit>
+      <trans-unit id="users.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="lv">Statuss</target>
+      </trans-unit>
+      <trans-unit id="users.create" xml:space="preserve">
+        <source>Create user</source>
+        <target xml:lang="lv">Izveidot lietotāju</target>
+      </trans-unit>
+      <trans-unit id="users.createFailed" xml:space="preserve">
+        <source>Could not create user</source>
+        <target xml:lang="lv">Neizdevās izveidot lietotāju</target>
+      </trans-unit>
+      <trans-unit id="users.createFailedDetail" xml:space="preserve">
+        <source>Creating the user failed.</source>
+        <target xml:lang="lv">Lietotāja izveide neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="users.created" xml:space="preserve">
+        <source>The user "{0}" has been created.</source>
+        <target xml:lang="lv">Lietotājs "{0}" ir izveidots.</target>
+      </trans-unit>
+      <trans-unit id="users.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="users.deactivate" xml:space="preserve">
+        <source>Deactivate</source>
+        <target xml:lang="lv">Deaktivizēt</target>
+      </trans-unit>
+      <trans-unit id="users.deactivated" xml:space="preserve">
+        <source>The user "{0}" has been deactivated.</source>
+        <target xml:lang="lv">Lietotājs "{0}" ir deaktivizēts.</target>
+      </trans-unit>
+      <trans-unit id="users.delete" xml:space="preserve">
+        <source>Delete user</source>
+        <target xml:lang="lv">Dzēst lietotāju</target>
+      </trans-unit>
+      <trans-unit id="users.deleteDescription" xml:space="preserve">
+        <source>The user, their accounts and their personal workspaces including any unpublished changes are removed permanently.</source>
+        <target xml:lang="lv">Lietotājs, viņa konti un personīgās darba virsmas, ieskaitot visas nepublicētās izmaiņas, tiks neatgriezeniski noņemti.</target>
+      </trans-unit>
+      <trans-unit id="users.deleteTitle" xml:space="preserve">
+        <source>Delete user "{0}"?</source>
+        <target xml:lang="lv">Vai dzēst lietotāju "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="users.deleted" xml:space="preserve">
+        <source>The user "{0}" has been deleted.</source>
+        <target xml:lang="lv">Lietotājs "{0}" ir dzēsts.</target>
+      </trans-unit>
+      <trans-unit id="users.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="lv">Rediģēt</target>
+      </trans-unit>
+      <trans-unit id="users.editUser" xml:space="preserve">
+        <source>Edit user</source>
+        <target xml:lang="lv">Rediģēt lietotāju</target>
+      </trans-unit>
+      <trans-unit id="users.editUserHint" xml:space="preserve">
+        <source>Name, email address and roles.</source>
+        <target xml:lang="lv">Vārds, e-pasta adrese un lomas.</target>
+      </trans-unit>
+      <trans-unit id="users.email" xml:space="preserve">
+        <source>Email</source>
+        <target xml:lang="lv">E-pasts</target>
+      </trans-unit>
+      <trans-unit id="users.firstName" xml:space="preserve">
+        <source>First name</source>
+        <target xml:lang="lv">Vārds</target>
+      </trans-unit>
+      <trans-unit id="users.inactive" xml:space="preserve">
+        <source>Inactive</source>
+        <target xml:lang="lv">Neaktīvs</target>
+      </trans-unit>
+      <trans-unit id="users.lastName" xml:space="preserve">
+        <source>Last name</source>
+        <target xml:lang="lv">Uzvārds</target>
+      </trans-unit>
+      <trans-unit id="users.loadFailed" xml:space="preserve">
+        <source>Could not load users</source>
+        <target xml:lang="lv">Neizdevās ielādēt lietotājus</target>
+      </trans-unit>
+      <trans-unit id="users.newPassword" xml:space="preserve">
+        <source>New password</source>
+        <target xml:lang="lv">Jaunā parole</target>
+      </trans-unit>
+      <trans-unit id="users.newUser" xml:space="preserve">
+        <source>New user</source>
+        <target xml:lang="lv">Jauns lietotājs</target>
+      </trans-unit>
+      <trans-unit id="users.newUserHint" xml:space="preserve">
+        <source>Creates a backend account on the default authentication provider.</source>
+        <target xml:lang="lv">Izveido aizmugursistēmas kontu noklusējuma autentifikācijas nodrošinātājā.</target>
+      </trans-unit>
+      <trans-unit id="users.noMatches" xml:space="preserve">
+        <source>No users match your search.</source>
+        <target xml:lang="lv">Neviens lietotājs neatbilst jūsu meklēšanai.</target>
+      </trans-unit>
+      <trans-unit id="users.none" xml:space="preserve">
+        <source>No users found.</source>
+        <target xml:lang="lv">Nav atrasts neviens lietotājs.</target>
+      </trans-unit>
+      <trans-unit id="users.ownAdminLocked" xml:space="preserve">
+        <source>You cannot remove your own Administrator role.</source>
+        <target xml:lang="lv">Jūs nevarat noņemt savu administratora lomu.</target>
+      </trans-unit>
+      <trans-unit id="users.password" xml:space="preserve">
+        <source>Password</source>
+        <target xml:lang="lv">Parole</target>
+      </trans-unit>
+      <trans-unit id="users.passwordMismatch" xml:space="preserve">
+        <source>The passwords do not match.</source>
+        <target xml:lang="lv">Paroles nesakrīt.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordReset" xml:space="preserve">
+        <source>The password of "{0}" has been reset.</source>
+        <target xml:lang="lv">Lietotāja "{0}" parole ir atiestatīta.</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailed" xml:space="preserve">
+        <source>Could not reset password</source>
+        <target xml:lang="lv">Neizdevās atiestatīt paroli</target>
+      </trans-unit>
+      <trans-unit id="users.passwordResetFailedDetail" xml:space="preserve">
+        <source>Resetting the password failed.</source>
+        <target xml:lang="lv">Paroles atiestatīšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="users.repeatNewPassword" xml:space="preserve">
+        <source>Repeat new password</source>
+        <target xml:lang="lv">Atkārtojiet jauno paroli</target>
+      </trans-unit>
+      <trans-unit id="users.repeatPassword" xml:space="preserve">
+        <source>Repeat password</source>
+        <target xml:lang="lv">Atkārtojiet paroli</target>
+      </trans-unit>
+      <trans-unit id="users.resetPassword" xml:space="preserve">
+        <source>Reset password</source>
+        <target xml:lang="lv">Atiestatīt paroli</target>
+      </trans-unit>
+      <trans-unit id="users.resetPasswordHint" xml:space="preserve">
+        <source>Sets a new password without requiring the current one. Active sessions of this user are ended.</source>
+        <target xml:lang="lv">Iestata jaunu paroli, nepieprasot pašreizējo. Šī lietotāja aktīvās sesijas tiks pārtrauktas.</target>
+      </trans-unit>
+      <trans-unit id="users.resetting" xml:space="preserve">
+        <source>Resetting…</source>
+        <target xml:lang="lv">Notiek atiestatīšana…</target>
+      </trans-unit>
+      <trans-unit id="users.roles" xml:space="preserve">
+        <source>Roles</source>
+        <target xml:lang="lv">Lomas</target>
+      </trans-unit>
+      <trans-unit id="users.rowActions" xml:space="preserve">
+        <source>User actions</source>
+        <target xml:lang="lv">Lietotāja darbības</target>
+      </trans-unit>
+      <trans-unit id="users.save" xml:space="preserve">
+        <source>Save user</source>
+        <target xml:lang="lv">Saglabāt lietotāju</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailed" xml:space="preserve">
+        <source>Could not save user</source>
+        <target xml:lang="lv">Neizdevās saglabāt lietotāju</target>
+      </trans-unit>
+      <trans-unit id="users.saveFailedDetail" xml:space="preserve">
+        <source>Saving the user failed.</source>
+        <target xml:lang="lv">Lietotāja saglabāšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="users.saved" xml:space="preserve">
+        <source>The user "{0}" has been saved.</source>
+        <target xml:lang="lv">Lietotājs "{0}" ir saglabāts.</target>
+      </trans-unit>
+      <trans-unit id="users.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="lv">Notiek saglabāšana…</target>
+      </trans-unit>
+      <trans-unit id="users.search" xml:space="preserve">
+        <source>Search users…</source>
+        <target xml:lang="lv">Meklēt lietotājus…</target>
+      </trans-unit>
+      <trans-unit id="users.subtitle" xml:space="preserve">
+        <source>Backend user accounts.</source>
+        <target xml:lang="lv">Aizmugursistēmas lietotāju konti.</target>
+      </trans-unit>
+      <trans-unit id="users.title" xml:space="preserve">
+        <source>Users</source>
+        <target xml:lang="lv">Lietotāji</target>
+      </trans-unit>
+      <trans-unit id="users.unavailable" xml:space="preserve">
+        <source>Users are currently unavailable.</source>
+        <target xml:lang="lv">Lietotāji pašlaik nav pieejami.</target>
+      </trans-unit>
+      <trans-unit id="users.username" xml:space="preserve">
+        <source>Username</source>
+        <target xml:lang="lv">Lietotājvārds</target>
+      </trans-unit>
+      <trans-unit id="users.you" xml:space="preserve">
+        <source>You</source>
+        <target xml:lang="lv">Jūs</target>
+      </trans-unit>
+      <trans-unit id="view.clickToSelect" xml:space="preserve">
+        <source>Click to select</source>
+        <target xml:lang="lv">Noklikšķiniet, lai izvēlētos</target>
+      </trans-unit>
+      <trans-unit id="view.copiedNodeType" xml:space="preserve">
+        <source>Copied node type to clipboard</source>
+        <target xml:lang="lv">Mezgla tips nokopēts starpliktuvē</target>
+      </trans-unit>
+      <trans-unit id="view.copyFailed" xml:space="preserve">
+        <source>Could not copy to clipboard</source>
+        <target xml:lang="lv">Neizdevās nokopēt starpliktuvē</target>
+      </trans-unit>
+      <trans-unit id="view.copyNodeType" xml:space="preserve">
+        <source>Copy node type to clipboard</source>
+        <target xml:lang="lv">Kopēt mezgla tipu starpliktuvē</target>
+      </trans-unit>
+      <trans-unit id="view.created" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="lv">Izveidots</target>
+      </trans-unit>
+      <trans-unit id="view.dataSourceUriUnsupported" xml:space="preserve">
+        <source>dataSourceUri is not supported - register a data source and reference it via the dataSource option.</source>
+        <target xml:lang="lv">dataSourceUri netiek atbalstīts - reģistrējiet datu avotu un atsaucieties uz to ar dataSource opciju.</target>
+      </trans-unit>
+      <trans-unit id="view.identifier" xml:space="preserve">
+        <source>Identifier</source>
+        <target xml:lang="lv">Identifikators</target>
+      </trans-unit>
+      <trans-unit id="view.lastModification" xml:space="preserve">
+        <source>Last modification</source>
+        <target xml:lang="lv">Pēdējās izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="view.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="lv">Vārds</target>
+      </trans-unit>
+      <trans-unit id="view.noData" xml:space="preserve">
+        <source>No data.</source>
+        <target xml:lang="lv">Nav datu.</target>
+      </trans-unit>
+      <trans-unit id="view.noDataSource" xml:space="preserve">
+        <source>No data source configured for this view.</source>
+        <target xml:lang="lv">Šim skatam nav konfigurēts datu avots.</target>
+      </trans-unit>
+      <trans-unit id="view.nodeAddress" xml:space="preserve">
+        <source>Node address</source>
+        <target xml:lang="lv">Mezgla adrese</target>
+      </trans-unit>
+      <trans-unit id="view.noneConfigured" xml:space="preserve">
+        <source>(none configured)</source>
+        <target xml:lang="lv">(nav konfigurēts)</target>
+      </trans-unit>
+      <trans-unit id="view.notEnoughData" xml:space="preserve">
+        <source>Not enough data for a chart.</source>
+        <target xml:lang="lv">Nepietiek datu diagrammai.</target>
+      </trans-unit>
+      <trans-unit id="view.notSupported" xml:space="preserve">
+        <source>View not supported yet: {0}</source>
+        <target xml:lang="lv">Skats vēl netiek atbalstīts: {0}</target>
+      </trans-unit>
+      <trans-unit id="view.timeSeriesChart" xml:space="preserve">
+        <source>Time series chart</source>
+        <target xml:lang="lv">Laikrindas diagramma</target>
+      </trans-unit>
+      <trans-unit id="view.type" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="lv">Tips</target>
+      </trans-unit>
+      <trans-unit id="view.unavailable" xml:space="preserve">
+        <source>unavailable</source>
+        <target xml:lang="lv">nav pieejams</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.changed" xml:space="preserve">
+        <source>Changed</source>
+        <target xml:lang="lv">Mainīts</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.moved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="lv">Pārvietots</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.new" xml:space="preserve">
+        <source>New</source>
+        <target xml:lang="lv">Jauns</target>
+      </trans-unit>
+      <trans-unit id="workspace.badge.removed" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="lv">Noņemts</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseChangeNotEmpty" xml:space="preserve">
+        <source>The workspace still has pending changes - publish or discard them before rebasing it onto another workspace.</source>
+        <target xml:lang="lv">Darba virsmā vēl ir nepabeigtas izmaiņas - publicējiet vai atmetiet tās, pirms pārbāzējat to uz citu darba virsmu.</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseChanged" xml:space="preserve">
+        <source>Base workspace changed.</source>
+        <target xml:lang="lv">Bāzes darba virsma nomainīta.</target>
+      </trans-unit>
+      <trans-unit id="workspace.baseWorkspaceFallback" xml:space="preserve">
+        <source>the base workspace</source>
+        <target xml:lang="lv">bāzes darba virsma</target>
+      </trans-unit>
+      <trans-unit id="workspace.cannotBeUndone" xml:space="preserve">
+        <source>This cannot be undone.</source>
+        <target xml:lang="lv">To nevar atsaukt.</target>
+      </trans-unit>
+      <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
+        <source>You cannot publish to this workspace</source>
+        <target xml:lang="lv">Jūs nevarat publicēt šajā darba virsmā</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.added" xml:space="preserve">
+        <source>added</source>
+        <target xml:lang="lv">pievienots</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.changed" xml:space="preserve">
+        <source>changed</source>
+        <target xml:lang="lv">mainīts</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.moved" xml:space="preserve">
+        <source>moved</source>
+        <target xml:lang="lv">pārvietots</target>
+      </trans-unit>
+      <trans-unit id="workspace.change.removed" xml:space="preserve">
+        <source>removed</source>
+        <target xml:lang="lv">noņemts</target>
+      </trans-unit>
+      <trans-unit id="workspace.changesPublished" xml:space="preserve">
+        <source>Changes published.</source>
+        <target xml:lang="lv">Izmaiņas publicētas.</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborative" xml:space="preserve">
+        <source>Collaborative</source>
+        <target xml:lang="lv">Sadarbības</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
+        <source>Editing together in a shared workspace</source>
+        <target xml:lang="lv">Kopīga rediģēšana koplietotā darba virsmā</target>
+      </trans-unit>
+      <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
+        <source>Collaborative editing (with everyone in the workspace)</source>
+        <target xml:lang="lv">Sadarbības rediģēšana (ar visiem darba virsmā)</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countMany" xml:space="preserve">
+        <source>{0} conflicting changes</source>
+        <target xml:lang="lv">{0} konfliktējošas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.countOne" xml:space="preserve">
+        <source>1 conflicting change</source>
+        <target xml:lang="lv">1 konfliktējoša izmaiņa</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.description" xml:space="preserve">
+        <source>These pending changes conflict with changes already published to the base workspace. Discarding them keeps all your other changes; discarded changes cannot be recovered.</source>
+        <target xml:lang="lv">Šīs nepabeigtās izmaiņas konfliktē ar izmaiņām, kas jau publicētas bāzes darba virsmā. Tās atmetot, visas pārējās jūsu izmaiņas tiek saglabātas; atmestās izmaiņas nevar atgūt.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardAllChanges" xml:space="preserve">
+        <source>Discard all changes</source>
+        <target xml:lang="lv">Atmest visas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.discardConflicting" xml:space="preserve">
+        <source>Discard conflicting changes</source>
+        <target xml:lang="lv">Atmest konfliktējošās izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.nodeDeleted" xml:space="preserve">
+        <source>It was deleted in the target workspace since you changed it.</source>
+        <target xml:lang="lv">Kopš jūs to mainījāt, tas mērķa darba virsmā ir dzēsts.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.partialDescription" xml:space="preserve">
+        <source>These changes can’t be published on their own - they depend on other pending changes. Publish everything instead, or discard them.</source>
+        <target xml:lang="lv">Šīs izmaiņas nevar publicēt atsevišķi - tās ir atkarīgas no citām nepabeigtām izmaiņām. Tā vietā publicējiet visu vai atmetiet tās.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolveFailed" xml:space="preserve">
+        <source>Resolving conflicts failed</source>
+        <target xml:lang="lv">Konfliktu atrisināšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.resolvedPublished" xml:space="preserve">
+        <source>Conflicting changes discarded; the rest was published.</source>
+        <target xml:lang="lv">Konfliktējošās izmaiņas atmestas; pārējais tika publicēts.</target>
+      </trans-unit>
+      <trans-unit id="workspace.conflict.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="lv">Nezināms mezgls</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.button" xml:space="preserve">
+        <source>Discard</source>
+        <target xml:lang="lv">Atmest</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.failed" xml:space="preserve">
+        <source>Discarding failed</source>
+        <target xml:lang="lv">Atmešana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="workspace.discard.success" xml:space="preserve">
+        <source>Changes discarded.</source>
+        <target xml:lang="lv">Izmaiņas atmestas.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAll" xml:space="preserve">
+        <source>Discard all</source>
+        <target xml:lang="lv">Atmest visu</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllMany" xml:space="preserve">
+        <source>All {0} pending changes will be discarded.</source>
+        <target xml:lang="lv">Visas {0} nepabeigtās izmaiņas tiks atmestas.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllOne" xml:space="preserve">
+        <source>All 1 pending change will be discarded.</source>
+        <target xml:lang="lv">1 nepabeigtā izmaiņa tiks atmesta.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardAllTitle" xml:space="preserve">
+        <source>Discard all changes?</source>
+        <target xml:lang="lv">Vai atmest visas izmaiņas?</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageMany" xml:space="preserve">
+        <source>{0} pending changes on this page will be discarded.</source>
+        <target xml:lang="lv">{0} nepabeigtās izmaiņas šajā lapā tiks atmestas.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageOne" xml:space="preserve">
+        <source>1 pending change on this page will be discarded.</source>
+        <target xml:lang="lv">1 nepabeigtā izmaiņa šajā lapā tiks atmesta.</target>
+      </trans-unit>
+      <trans-unit id="workspace.discardPageTitle" xml:space="preserve">
+        <source>Discard changes on this page?</source>
+        <target xml:lang="lv">Vai atmest izmaiņas šajā lapā?</target>
+      </trans-unit>
+      <trans-unit id="workspace.live" xml:space="preserve">
+        <source>Live</source>
+        <target xml:lang="lv">Live</target>
+      </trans-unit>
+      <trans-unit id="workspace.manyChanges" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="lv">{0} izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.moreActions" xml:space="preserve">
+        <source>More publish and discard actions</source>
+        <target xml:lang="lv">Vairāk publicēšanas un atmešanas darbību</target>
+      </trans-unit>
+      <trans-unit id="workspace.noPendingChanges" xml:space="preserve">
+        <source>No pending changes</source>
+        <target xml:lang="lv">Nav nepabeigtu izmaiņu</target>
+      </trans-unit>
+      <trans-unit id="workspace.oneChange" xml:space="preserve">
+        <source>1 change</source>
+        <target xml:lang="lv">1 izmaiņa</target>
+      </trans-unit>
+      <trans-unit id="workspace.pendingBadge" xml:space="preserve">
+        <source>{0} pending changes</source>
+        <target xml:lang="lv">{0} nepabeigtas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
+        <source>Publish all</source>
+        <target xml:lang="lv">Publicēt visu</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishDenied" xml:space="preserve">
+        <source>You are not allowed to publish to "{0}"</source>
+        <target xml:lang="lv">Jums nav atļauts publicēt uz "{0}"</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
+        <source>Publish or discard your changes first.</source>
+        <target xml:lang="lv">Vispirms publicējiet vai atmetiet savas izmaiņas.</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
+        <source>Publish {0} pending changes</source>
+        <target xml:lang="lv">Publicēt {0} nepabeigtās izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
+        <source>Publish 1 pending change</source>
+        <target xml:lang="lv">Publicēt 1 nepabeigto izmaiņu</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTarget" xml:space="preserve">
+        <source>Workspace to publish to</source>
+        <target xml:lang="lv">Darba virsma, kurā publicēt</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
+        <source>My workspace, publishing to</source>
+        <target xml:lang="lv">Mana darba virsma, publicē uz</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishThisPage" xml:space="preserve">
+        <source>Publish this page</source>
+        <target xml:lang="lv">Publicēt šo lapu</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishing.failed" xml:space="preserve">
+        <source>Publishing failed</source>
+        <target xml:lang="lv">Publicēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="workspace.readOnly" xml:space="preserve">
+        <source>read-only</source>
+        <target xml:lang="lv">tikai lasāms</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.button" xml:space="preserve">
+        <source>Review changes</source>
+        <target xml:lang="lv">Pārskatīt izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
+        <source>Review pending changes between workspaces</source>
+        <target xml:lang="lv">Pārskatīt nepabeigtās izmaiņas starp darba virsmām</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyBody" xml:space="preserve">
+        <source>The pending changes on the selected documents will be discarded. This cannot be undone.</source>
+        <target xml:lang="lv">Nepabeigtās izmaiņas izvēlētajos dokumentos tiks atmestas. To nevar atsaukt.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardManyTitle" xml:space="preserve">
+        <source>Discard changes on {0} documents?</source>
+        <target xml:lang="lv">Vai atmest izmaiņas {0} dokumentos?</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneBody" xml:space="preserve">
+        <source>The pending changes on the selected document will be discarded. This cannot be undone.</source>
+        <target xml:lang="lv">Nepabeigtās izmaiņas izvēlētajā dokumentā tiks atmestas. To nevar atsaukt.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardOneTitle" xml:space="preserve">
+        <source>Discard changes on this document?</source>
+        <target xml:lang="lv">Vai atmest izmaiņas šajā dokumentā?</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.discardSelected" xml:space="preserve">
+        <source>Discard selected</source>
+        <target xml:lang="lv">Atmest izvēlētos</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="lv">Nav nepabeigtu izmaiņu.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="lv">Doties uz lapu</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.goToPageSwitches" xml:space="preserve">
+        <source>Go to page (switches the edited workspace)</source>
+        <target xml:lang="lv">Doties uz lapu (pārslēdz rediģējamo darba virsmu)</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hasChanges" xml:space="preserve">
+        <source>Has pending changes</source>
+        <target xml:lang="lv">Ir nepabeigtas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="lv">Paslēpts</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.hideChanges" xml:space="preserve">
+        <source>Hide changes</source>
+        <target xml:lang="lv">Paslēpt izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.showChanges" xml:space="preserve">
+        <source>Show changes</source>
+        <target xml:lang="lv">Rādīt izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
+        <source>Only the most recent changes are shown.</source>
+        <target xml:lang="lv">Tiek rādītas tikai jaunākās izmaiņas.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.loading" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="lv">Notiek izmaiņu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.noWriteAccess" xml:space="preserve">
+        <source>You are not allowed to change "{0}"</source>
+        <target xml:lang="lv">Jums nav atļauts mainīt "{0}"</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
+        <source>Publish selected</source>
+        <target xml:lang="lv">Publicēt izvēlētos</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
+        <source>Publish selected ({0})</source>
+        <target xml:lang="lv">Publicēt izvēlētos ({0})</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectAll" xml:space="preserve">
+        <source>Select all ({0})</source>
+        <target xml:lang="lv">Izvēlēties visus ({0})</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
+        <source>Select documents to publish or discard.</source>
+        <target xml:lang="lv">Izvēlieties dokumentus, ko publicēt vai atmest.</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.selectedOf" xml:space="preserve">
+        <source>{0} of {1} selected</source>
+        <target xml:lang="lv">Izvēlēti {0} no {1}</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.sourceLabel" xml:space="preserve">
+        <source>Changes in</source>
+        <target xml:lang="lv">Izmaiņas no</target>
+      </trans-unit>
+      <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
+        <source>Publishing to</source>
+        <target xml:lang="lv">Publicēt uz</target>
+      </trans-unit>
+      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
+        <source>Review changes</source>
+        <target xml:lang="lv">Pārskatīt izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
+        <source>Select workspace…</source>
+        <target xml:lang="lv">Izvēlēties darba virsmu…</target>
+      </trans-unit>
+      <trans-unit id="workspace.switchFailed" xml:space="preserve">
+        <source>Switching the workspace failed</source>
+        <target xml:lang="lv">Darba virsmas pārslēgšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="workspace.switched" xml:space="preserve">
+        <source>Workspace switched.</source>
+        <target xml:lang="lv">Darba virsma pārslēgta.</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.action" xml:space="preserve">
+        <source>Synchronize</source>
+        <target xml:lang="lv">Sinhronizēt</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.failed" xml:space="preserve">
+        <source>Synchronizing failed</source>
+        <target xml:lang="lv">Sinhronizēšana neizdevās</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.hint" xml:space="preserve">
+        <source>Others published changes to the base workspace. Synchronize to pull them into this workspace.</source>
+        <target xml:lang="lv">Citi ir publicējuši izmaiņas bāzes darba virsmā. Sinhronizējiet, lai ievilktu tās šajā darba virsmā.</target>
+      </trans-unit>
+      <trans-unit id="workspace.sync.success" xml:space="preserve">
+        <source>Workspace synchronized.</source>
+        <target xml:lang="lv">Darba virsma sinhronizēta.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.changeCount" xml:space="preserve">
+        <source>{0} changes</source>
+        <target xml:lang="lv">{0} izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
+        <source>Close details</source>
+        <target xml:lang="lv">Aizvērt detaļas</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
+        <source>You are here</source>
+        <target xml:lang="lv">Jūs esat šeit</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
+        <source>Created</source>
+        <target xml:lang="lv">Izveidots</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeMoved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="lv">Pārvietots</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRemoved" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="lv">Noņemts</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.nodeRestored" xml:space="preserve">
+        <source>Restored</source>
+        <target xml:lang="lv">Atjaunots</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.propertiesChanged" xml:space="preserve">
+        <source>Properties changed</source>
+        <target xml:lang="lv">Īpašības mainītas</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.referencesChanged" xml:space="preserve">
+        <source>References changed</source>
+        <target xml:lang="lv">Atsauces mainītas</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.renamed" xml:space="preserve">
+        <source>Renamed</source>
+        <target xml:lang="lv">Pārdēvēts</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.typeChanged" xml:space="preserve">
+        <source>Type changed</source>
+        <target xml:lang="lv">Tips mainīts</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.variantCreated" xml:space="preserve">
+        <source>Variant created</source>
+        <target xml:lang="lv">Variants izveidots</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
+        <source>Visibility changed</source>
+        <target xml:lang="lv">Redzamība mainīta</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
+        <source>Pending change</source>
+        <target xml:lang="lv">Nepabeigta izmaiņa</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
+        <source>Base has newer changes</source>
+        <target xml:lang="lv">Bāzē ir jaunākas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
+        <source>Personal workspace</source>
+        <target xml:lang="lv">Personīgā darba virsma</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
+        <source>Shared workspace</source>
+        <target xml:lang="lv">Koplietota darba virsma</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
+        <source>The workspaces could not be loaded.</source>
+        <target xml:lang="lv">Neizdevās ielādēt darba virsmas.</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.loading" xml:space="preserve">
+        <source>Loading workspaces…</source>
+        <target xml:lang="lv">Notiek darba virsmu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkout" xml:space="preserve">
+        <source>Checkout</source>
+        <target xml:lang="lv">Pārslēgties</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.checkoutHint" xml:space="preserve">
+        <source>Switch editing into this workspace</source>
+        <target xml:lang="lv">Pārslēgt rediģēšanu uz šo darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebase" xml:space="preserve">
+        <source>Rebase</source>
+        <target xml:lang="lv">Pārbāzēt</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseHint" xml:space="preserve">
+        <source>Rebase “{0}” onto this workspace - it becomes the new base to publish to</source>
+        <target xml:lang="lv">Pārbāzēt “{0}” uz šo darba virsmu - tā kļūst par jauno bāzi, kurā publicēt</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.rebaseSyncHint" xml:space="preserve">
+        <source>Rebase “{0}” onto its base again: newest changes from here flow in underneath your pending ones</source>
+        <target xml:lang="lv">Pārbāzēt “{0}” atkal uz tās bāzi: jaunākās izmaiņas no šejienes ieplūst zem jūsu nepabeigtajām izmaiņām</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.menu.review" xml:space="preserve">
+        <source>Review changes…</source>
+        <target xml:lang="lv">Pārskatīt izmaiņas…</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdated" xml:space="preserve">
+        <source>The base workspace has newer changes</source>
+        <target xml:lang="lv">Bāzes darba virsmā ir jaunākas izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
+        <source>outdated</source>
+        <target xml:lang="lv">novecojusi</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
+        <target xml:lang="lv">Nezināms mezgls</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="lv">Paslēpts</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.shown" xml:space="preserve">
+        <source>Shown</source>
+        <target xml:lang="lv">Parādīts</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.nodeCount" xml:space="preserve">
+        <source>{0} (+{1} more)</source>
+        <target xml:lang="lv">{0} (+ vēl {1})</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.justNow" xml:space="preserve">
+        <source>just now</source>
+        <target xml:lang="lv">tikko</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.minutesAgo" xml:space="preserve">
+        <source>{0}m ago</source>
+        <target xml:lang="lv">pirms {0} min</target>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
+        <source>{0}h ago</source>
+        <target xml:lang="lv">pirms {0} h</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.events" xml:space="preserve">
+        <source>Events</source>
+        <target xml:lang="lv">Notikumi</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+        <target xml:lang="lv">Nav nepabeigtu izmaiņu.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.older" xml:space="preserve">
+        <source>Older history is not shown.</source>
+        <target xml:lang="lv">Vecāka vēsture netiek rādīta.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.olderRoot" xml:space="preserve">
+        <source>Older published history is not shown.</source>
+        <target xml:lang="lv">Vecāka publicētā vēsture netiek rādīta.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.loadingDiff" xml:space="preserve">
+        <source>Loading changes…</source>
+        <target xml:lang="lv">Notiek izmaiņu ielāde…</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.diffFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="lv">Neizdevās ielādēt izmaiņas.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
+        <source>No details available.</source>
+        <target xml:lang="lv">Nav pieejamu detaļu.</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
+        <source>yes</source>
+        <target xml:lang="lv">jā</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
+        <source>no</source>
+        <target xml:lang="lv">nē</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
+        <source>empty</source>
+        <target xml:lang="lv">tukšs</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
+        <source>Node type</source>
+        <target xml:lang="lv">Mezgla tips</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.name" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="lv">Vārds</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.parent" xml:space="preserve">
+        <source>Parent</source>
+        <target xml:lang="lv">Vecāks</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.position" xml:space="preserve">
+        <source>Position</source>
+        <target xml:lang="lv">Pozīcija</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.variant" xml:space="preserve">
+        <source>Dimension</source>
+        <target xml:lang="lv">Dimensija</target>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.reordered" xml:space="preserve">
+        <source>Reordered among its siblings</source>
+        <target xml:lang="lv">Pārkārtots starp blakuselementiem</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="lv">Aktīva</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.assign" xml:space="preserve">
+        <source>Grant access</source>
+        <target xml:lang="lv">Piešķirt piekļuvi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.assigning" xml:space="preserve">
+        <source>Assigning…</source>
+        <target xml:lang="lv">Notiek piešķiršana…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.baseWorkspace" xml:space="preserve">
+        <source>Base workspace</source>
+        <target xml:lang="lv">Bāzes darba virsma</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationPersonal" xml:space="preserve">
+        <source>Personal</source>
+        <target xml:lang="lv">Personīgā</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationRoot" xml:space="preserve">
+        <source>Root</source>
+        <target xml:lang="lv">Sakne</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.classificationShared" xml:space="preserve">
+        <source>Shared</source>
+        <target xml:lang="lv">Koplietota</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="lv">Darbības</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnBase" xml:space="preserve">
+        <source>Base</source>
+        <target xml:lang="lv">Bāze</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnChanges" xml:space="preserve">
+        <source>Changes</source>
+        <target xml:lang="lv">Izmaiņas</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnOwner" xml:space="preserve">
+        <source>Owner</source>
+        <target xml:lang="lv">Īpašnieks</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnTitle" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.columnType" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="lv">Tips</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.create" xml:space="preserve">
+        <source>Create workspace</source>
+        <target xml:lang="lv">Izveidot darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.createFailed" xml:space="preserve">
+        <source>Could not create workspace</source>
+        <target xml:lang="lv">Neizdevās izveidot darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.createFailedDetail" xml:space="preserve">
+        <source>Creating the workspace failed.</source>
+        <target xml:lang="lv">Darba virsmas izveide neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.created" xml:space="preserve">
+        <source>The workspace "{0}" has been created.</source>
+        <target xml:lang="lv">Darba virsma "{0}" ir izveidota.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.creating" xml:space="preserve">
+        <source>Creating…</source>
+        <target xml:lang="lv">Notiek izveide…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.delete" xml:space="preserve">
+        <source>Delete workspace</source>
+        <target xml:lang="lv">Dzēst darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteDescription" xml:space="preserve">
+        <source>The workspace, its access assignments and its metadata are removed permanently.</source>
+        <target xml:lang="lv">Darba virsma, tās piekļuves piešķīrumi un metadati tiks neatgriezeniski noņemti.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteDescriptionChanges" xml:space="preserve">
+        <source>The workspace still has unpublished changes - they are discarded and lost permanently.</source>
+        <target xml:lang="lv">Darba virsmā vēl ir nepublicētas izmaiņas - tās tiks atmestas un neatgriezeniski zaudētas.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteFailedDetail" xml:space="preserve">
+        <source>Deleting the workspace failed.</source>
+        <target xml:lang="lv">Darba virsmas dzēšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleteTitle" xml:space="preserve">
+        <source>Delete workspace "{0}"?</source>
+        <target xml:lang="lv">Vai dzēst darba virsmu "{0}"?</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.deleted" xml:space="preserve">
+        <source>The workspace "{0}" has been deleted.</source>
+        <target xml:lang="lv">Darba virsma "{0}" ir dzēsta.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="lv">Apraksts</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="lv">Rediģēt</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.editWorkspace" xml:space="preserve">
+        <source>Edit workspace</source>
+        <target xml:lang="lv">Rediģēt darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.editWorkspaceHint" xml:space="preserve">
+        <source>Title and description.</source>
+        <target xml:lang="lv">Nosaukums un apraksts.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.loadFailed" xml:space="preserve">
+        <source>Could not load workspaces</source>
+        <target xml:lang="lv">Neizdevās ielādēt darba virsmas</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.manageAccess" xml:space="preserve">
+        <source>Manage access</source>
+        <target xml:lang="lv">Pārvaldīt piekļuvi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.manageAccessHint" xml:space="preserve">
+        <source>Who may view, edit or manage this workspace. Owners and administrators always have full access.</source>
+        <target xml:lang="lv">Kas drīkst skatīt, rediģēt vai pārvaldīt šo darba virsmu. Īpašniekiem un administratoriem vienmēr ir pilna piekļuve.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.newWorkspace" xml:space="preserve">
+        <source>New workspace</source>
+        <target xml:lang="lv">Jauna darba virsma</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.newWorkspaceHint" xml:space="preserve">
+        <source>A workspace collects changes until they are published to its base workspace.</source>
+        <target xml:lang="lv">Darba virsma apkopo izmaiņas, līdz tās tiek publicētas tās bāzes darba virsmā.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.noAssignments" xml:space="preserve">
+        <source>No access assigned yet.</source>
+        <target xml:lang="lv">Piekļuve vēl nav piešķirta.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.none2" xml:space="preserve">
+        <source>None</source>
+        <target xml:lang="lv">Nav</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.pending" xml:space="preserve">
+        <source>Pending</source>
+        <target xml:lang="lv">Nepabeigtas</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.removeAccess" xml:space="preserve">
+        <source>Remove access</source>
+        <target xml:lang="lv">Noņemt piekļuvi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.role" xml:space="preserve">
+        <source>Role</source>
+        <target xml:lang="lv">Loma</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleAssignFailed" xml:space="preserve">
+        <source>Could not assign access</source>
+        <target xml:lang="lv">Neizdevās piešķirt piekļuvi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleAssignFailedDetail" xml:space="preserve">
+        <source>Assigning the access failed.</source>
+        <target xml:lang="lv">Piekļuves piešķiršana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleCollaborator" xml:space="preserve">
+        <source>Collaborator</source>
+        <target xml:lang="lv">Līdzstrādnieks</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleManager" xml:space="preserve">
+        <source>Manager</source>
+        <target xml:lang="lv">Pārvaldnieks</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleRemoveFailed" xml:space="preserve">
+        <source>Could not remove access</source>
+        <target xml:lang="lv">Neizdevās noņemt piekļuvi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleRemoveFailedDetail" xml:space="preserve">
+        <source>Removing the access failed.</source>
+        <target xml:lang="lv">Piekļuves noņemšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.roleViewer" xml:space="preserve">
+        <source>Viewer</source>
+        <target xml:lang="lv">Skatītājs</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.rolesLoadFailed" xml:space="preserve">
+        <source>Could not load access</source>
+        <target xml:lang="lv">Neizdevās ielādēt piekļuvi</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.rowActions" xml:space="preserve">
+        <source>Workspace actions</source>
+        <target xml:lang="lv">Darba virsmas darbības</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.save" xml:space="preserve">
+        <source>Save workspace</source>
+        <target xml:lang="lv">Saglabāt darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saveFailed" xml:space="preserve">
+        <source>Could not save workspace</source>
+        <target xml:lang="lv">Neizdevās saglabāt darba virsmu</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saveFailedDetail" xml:space="preserve">
+        <source>Saving the workspace failed.</source>
+        <target xml:lang="lv">Darba virsmas saglabāšana neizdevās.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saved" xml:space="preserve">
+        <source>The workspace "{0}" has been saved.</source>
+        <target xml:lang="lv">Darba virsma "{0}" ir saglabāta.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="lv">Notiek saglabāšana…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.selectSubject" xml:space="preserve">
+        <source>Select…</source>
+        <target xml:lang="lv">Izvēlēties…</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectGroup" xml:space="preserve">
+        <source>Group (role)</source>
+        <target xml:lang="lv">Grupa (loma)</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectType" xml:space="preserve">
+        <source>Type</source>
+        <target xml:lang="lv">Tips</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subjectUser" xml:space="preserve">
+        <source>User</source>
+        <target xml:lang="lv">Lietotājs</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.subtitle" xml:space="preserve">
+        <source>Where changes live until they are published.</source>
+        <target xml:lang="lv">Vieta, kur izmaiņas glabājas, līdz tās tiek publicētas.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.title" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="lv">Darba virsmas</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.title2" xml:space="preserve">
+        <source>Title</source>
+        <target xml:lang="lv">Nosaukums</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.unavailable" xml:space="preserve">
+        <source>Workspaces are currently unavailable.</source>
+        <target xml:lang="lv">Darba virsmas pašlaik nav pieejamas.</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibility" xml:space="preserve">
+        <source>Visibility</source>
+        <target xml:lang="lv">Redzamība</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibilityPrivate" xml:space="preserve">
+        <source>Private - only you</source>
+        <target xml:lang="lv">Privāta - tikai jūs</target>
+      </trans-unit>
+      <trans-unit id="workspacesAdmin.visibilityShared" xml:space="preserve">
+        <source>Shared - all editors</source>
+        <target xml:lang="lv">Koplietota - visi redaktori</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
