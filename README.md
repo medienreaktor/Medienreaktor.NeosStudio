@@ -15,8 +15,9 @@ Neos Studio is a modern single-page application (Vite + React + TypeScript + Tan
 Edit **together in the same workspace, live**. Every shared workspace offers a _Collaborative_ entry in the workspace switcher: pick it, and you and your colleagues edit the same content directly — no personal-workspace detours, no publish-to-see-each-other, no conflicts to untangle afterwards.
 
 - **See who's there**: avatar initials next to the switcher, markers on the document a colleague is on (document tree) and the element they're focusing (content outliner _and_ live preview, outlined in their color with a nametag).
-- **See what they do, as it happens**: colleagues' edits stream in within ~2 seconds. Changed elements re-render **in place** in the preview (out-of-band rendering — your scroll position and your own inline edits survive); structural changes refresh the trees.
-- **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through pure PHP endpoints. If it runs Neos 9, it runs multiplayer.
+- **See what they do, as it happens**: colleagues' edits stream in within ~2 seconds — or in well under a second with the realtime sidecar (below). Changed elements re-render **in place** in the preview (out-of-band rendering — your scroll position and your own inline edits survive); structural changes refresh the trees.
+- **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker required. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through pure PHP endpoints. If it runs Neos 9, it runs multiplayer.
+- **Scales up when you do**: an **optional realtime sidecar** — a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus)-based WebSocket server — upgrades the transport to instant push: presence without heartbeats, one change-feed tail per workspace instead of one poll per editor, sub-second latency. Studio falls back to plain polling automatically whenever the sidecar is unreachable, and back again when it returns. See [the realtime sidecar](#the-realtime-sidecar-optional).
 - **Emergent, not a mode**: sessions are ordinary Neos `SHARED` workspaces (create them in the Workspaces module, manage access with the usual roles). Two people in the same workspace — that _is_ the multiplayer. Publishing the session to live works exactly like publishing any workspace.
 
 ### 🗂️ Task workflow — feature branches for content
@@ -75,17 +76,17 @@ Full parity with the classic inspector — and then some:
 
 Extensibility isn't bolted on; it's the architecture. Studio's building blocks are **observable registries**:
 
-| Registry             | What you can add                                                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Panels               | Whole new workspace surfaces, docked anywhere                                                                             |
-| Inspector editors    | Custom property editors for any node type property                                                                        |
-| Inspector views      | Custom read-only views and widgets                                                                                        |
-| Validators           | Custom client-side validation                                                                                             |
-| Link editor tabs     | New link source types in the shared link modal                                                                            |
-| Modals               | App-level dialogs                                                                                                         |
-| Workspace decorators | Badges and grouping for workspaces in the switcher and administration (this is how task branches get their status colors) |
+| Registry             | What you can add                                                                                                                                                                        |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Panels               | Whole new workspace surfaces, docked anywhere                                                                                                                                           |
+| Inspector editors    | Custom property editors for any node type property                                                                                                                                      |
+| Inspector views      | Custom read-only views and widgets                                                                                                                                                      |
+| Validators           | Custom client-side validation                                                                                                                                                           |
+| Link editor tabs     | New link source types in the shared link modal                                                                                                                                          |
+| Modals               | App-level dialogs                                                                                                                                                                       |
+| Workspace decorators | Badges and grouping for workspaces in the switcher and administration (this is how task branches get their status colors)                                                               |
 | Node decorators      | Per-node visuals on every tree row: replace the type icon, layer badge overlays onto it, tint or dim the whole row (this is how hidden nodes dim and deleted nodes get their red badge) |
-| Keyboard shortcuts   | App-wide shortcuts alongside the built-in ones                                                                            |
+| Keyboard shortcuts   | App-wide shortcuts alongside the built-in ones                                                                                                                                          |
 
 Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state, and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
 
@@ -119,9 +120,54 @@ npm run build      # outputs to Resources/Public/Studio/ (committed to the repo)
 
 Open `/neos/studio` and log in with your Neos backend account. That's it — Studio lazily provisions its own OAuth client on first load; there is nothing to configure.
 
+## The realtime sidecar (optional)
+
+Multiplayer needs no extra infrastructure — but it can use some. `Resources/Private/Realtime/` ships a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus) WebSocket server that upgrades Studio's collaboration transport from HTTP polling to push. Without it, everything keeps working: collaboration falls back to plain HTTP polling against the Neos API (2s change feed, 5s presence heartbeat). The fallback is also automatic at runtime — while the sidecar is unreachable, connected Studios poll; when it comes back, they stop.
+
+One WebSocket per editing session (document name `workspace:<name>`):
+
+- **Presence** — clients announce their position as stateless messages; the sidecar keeps a server-authoritative roster per workspace (identity comes from the validated token, never from the client) and broadcasts changes instantly. No heartbeats, no TTL ghosts: a closed tab leaves with its connection.
+- **Change feed** — the sidecar tails each active workspace's event feed once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/api/realtime/workspaces/{name}/events`) and fans new events out to every editor. That replaces one API poll _per editor_ per 2s with one poll _per workspace_, and remote edits reach colleagues in well under a second.
+- **Yjs seam** — the (currently unused) Yjs document behind each connection is where collaborative text editing attaches later, without a new connection concept.
+
+### Authentication
+
+Two credentials, deliberately separate:
+
+- Every **client connection** authenticates with the editor's own OAuth bearer token. The sidecar validates it against the user-scoped API (a baseline read of `/api/workspaces/{name}/events` proves the token is alive AND the user may read that workspace) and resolves identity via `/api/me`.
+- The sidecar's own **feed reads** authenticate with a shared secret (`X-Realtime-Secret`), configured on both sides: `Medienreaktor.NeosStudio.realtime.sharedSecret` (Neos) and `REALTIME_SHARED_SECRET` (sidecar). While the Neos-side secret is empty, the server-to-server endpoint answers 404 — an unconfigured installation exposes nothing.
+
+### Running
+
+```bash
+cd DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Realtime
+npm install
+REALTIME_SHARED_SECRET=... NEOS_BASE_URL=https://your-site npm start
+```
+
+| Variable                 | Default                 | Purpose                                                     |
+| ------------------------ | ----------------------- | ----------------------------------------------------------- |
+| `PORT`                   | `1234`                  | Listen port                                                 |
+| `NEOS_BASE_URL`          | `http://127.0.0.1:8080` | Base URL of the Neos installation                           |
+| `NEOS_HOST_HEADER`       | _(none)_                | Host header override for internal hostnames                 |
+| `REALTIME_SHARED_SECRET` | _(required)_            | Must equal `Medienreaktor.NeosStudio.realtime.sharedSecret` |
+| `FEED_INTERVAL_MS`       | `1000`                  | Feed tail cadence per active workspace                      |
+
+Then point the Studio at it:
+
+```yaml
+Medienreaktor:
+  NeosStudio:
+    realtime:
+      websocketUrl: "wss://realtime.your-site.example"
+      sharedSecret: "..." # openssl rand -hex 32
+```
+
+TLS termination is expected to happen in front (reverse proxy); the sidecar itself speaks plain WS/HTTP.
+
 ## Development
 
-The SPA sources live in `Resources/Private/Studio/` (Vite, `src/`, `index.html`); the build output goes to `Resources/Public/Studio/`.
+The SPA sources live in `Resources/Private/Studio/` (Vite, `src/`, `index.html`); the build output goes to `Resources/Public/Studio/`. The realtime sidecar lives next to it in `Resources/Private/Realtime/` (plain Node, no build step).
 
 ```
 src/

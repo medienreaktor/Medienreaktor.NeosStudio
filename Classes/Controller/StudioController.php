@@ -60,6 +60,14 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(path: 'plugins')]
     protected array $plugins = [];
 
+    /**
+     * WebSocket URL of the optional realtime sidecar (see "The realtime
+     * sidecar" in the package README). Untyped: absent configuration injects
+     * null.
+     */
+    #[Flow\InjectConfiguration(path: 'realtime.websocketUrl')]
+    protected $realtimeWebsocketUrl;
+
     public function indexAction(): string
     {
         $uri = $this->request->getHttpRequest()->getUri();
@@ -96,6 +104,13 @@ class StudioController extends ActionController
             // The classic backend logout (POST, session-authenticated): ends
             // the Flow session the shell and the silent OAuth flow ride on.
             'logoutEndpoint' => $origin . '/neos/logout',
+            // Optional realtime sidecar; null keeps collaboration on HTTP
+            // polling (no extra infrastructure required).
+            'realtime' => [
+                'url' => is_string($this->realtimeWebsocketUrl) && $this->realtimeWebsocketUrl !== ''
+                    ? $this->realtimeWebsocketUrl
+                    : null,
+            ],
         ];
 
         return $this->renderSpa($config);

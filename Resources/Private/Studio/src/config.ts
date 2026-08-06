@@ -22,6 +22,13 @@ export interface StudioConfig {
   xliffEndpoint: string
   /** Classic backend logout (POST, session-authenticated). */
   logoutEndpoint: string
+  /**
+   * The optional realtime sidecar (a Hocuspocus WebSocket server, see "The
+   * realtime sidecar" in the package README). url null = not configured:
+   * collaboration falls back to plain HTTP polling, which needs no extra
+   * infrastructure.
+   */
+  realtime: { url: string | null }
 }
 
 declare global {
@@ -44,6 +51,7 @@ const fallback: StudioConfig = {
   uiMode: 'dark',
   xliffEndpoint: '/neos/xliff.json',
   logoutEndpoint: '/neos/logout',
+  realtime: { url: null },
 }
 
 // Merge so a shell built before a config field existed still works.

@@ -163,6 +163,19 @@
   httpMethods: ['DELETE']
 
 -
+  # Server-to-server: the realtime sidecar (Resources/Private/Realtime/server.js) tails
+  # workspace change feeds here, authenticated by the X-Realtime-Secret
+  # header (see RealtimeController). Sessionless like the share endpoint.
+  name: 'Studio: realtime sidecar event feed'
+  uriPattern: 'api/realtime/workspaces/{workspaceName}/events'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Realtime'
+    '@action': 'events'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
   # Public by design: the token in the path is the sole credential (see
   # ShareController). Sessionless, no privilege target.
   name: 'Studio: shared preview link (anonymous)'

@@ -30,6 +30,14 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:PublicShareAccess':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\ShareController->showAction())'
 
+    # The realtime sidecar's server-to-server feed endpoint: Everybody-granted
+    # for the same reason as the share endpoint above. The actual credential
+    # is the shared secret in the X-Realtime-Secret header, validated
+    # in-action - and while no secret is configured the action answers 404
+    # outright.
+    'Medienreaktor.NeosStudio:RealtimeFeed':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\RealtimeController->eventsAction())'
+
     # --- Task workflow -------------------------------------------------------
     # Workspace-level authorization is NOT handled by these targets: the
     # controller checks the acting user's per-workspace permissions (creator
@@ -65,6 +73,9 @@ roles:
     privileges:
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:PublicShareAccess'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:RealtimeFeed'
         permission: GRANT
 
   # Any backend editor may open the Studio; what they can actually do inside

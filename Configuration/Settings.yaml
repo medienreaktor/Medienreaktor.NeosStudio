@@ -12,6 +12,22 @@ Medienreaktor:
     #     position: 100                                                     # optional load order
     plugins: []
 
+    # The optional realtime sidecar: a Hocuspocus WebSocket server (see "The
+    # realtime sidecar" in the README) that carries presence and the workspace
+    # change feed with sub-second latency - and tails the feed ONCE per
+    # workspace instead of once per editor per 2s. Both empty = not
+    # configured: collaboration uses plain HTTP polling, which needs no extra
+    # infrastructure.
+    realtime:
+      # WebSocket URL the Studio shell connects to (wss://... in production).
+      websocketUrl: ''
+      # The sidecar's server-to-server credential: it tails workspace change
+      # feeds via /api/realtime/... with this secret in the X-Realtime-Secret
+      # header (REALTIME_SHARED_SECRET on the sidecar). Empty disables the
+      # endpoint entirely - it answers 404. Generate a long random value,
+      # e.g.: openssl rand -hex 32
+      sharedSecret: ''
+
     previewLinks:
       # Lifetime applied when a client requests none (\DateInterval spec).
       defaultLifetime: 'P2D'
@@ -104,13 +120,15 @@ Neos:
           # session/CSRF semantics - same setup as the NeosApi controllers.
           # ShareController is excluded too: the anonymous preview-link
           # endpoint is deliberately sessionless - its token is the sole
-          # credential, no backend session must ever get involved.
+          # credential, no backend session must ever get involved. Same for
+          # RealtimeController: the sidecar's server-to-server feed reads
+          # authenticate with a shared secret, never a session.
           'Neos.Neos:Backend':
             requestPatterns:
               'Medienreaktor.NeosStudio:Controllers':
                 pattern: 'ControllerObjectName'
                 patternOptions:
-                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\|ShareController).*'
+                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\|ShareController|RealtimeController).*'
 
           # Put the Studio's own API endpoints (notifications) behind the same
           # OAuth 2.1 bearer firewall as the NeosApi: request patterns of the
