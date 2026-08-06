@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   asyncDataLoaderFeature,
-  hotkeysCoreFeature,
   selectionFeature,
   type ItemInstance,
 } from '@headless-tree/core'
@@ -238,7 +237,6 @@ function OutlinerTree({
     features: [
       asyncDataLoaderFeature,
       selectionFeature,
-      hotkeysCoreFeature,
       dnd.feature,
     ],
   })

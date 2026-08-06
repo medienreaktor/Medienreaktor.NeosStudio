@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   asyncDataLoaderFeature,
-  hotkeysCoreFeature,
   selectionFeature,
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
@@ -108,7 +107,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
         }
       },
     },
-    features: [asyncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
+    features: [asyncDataLoaderFeature, selectionFeature],
   })
 
   useAutoExpand(tree, config.nodeTree.loadingDepth)

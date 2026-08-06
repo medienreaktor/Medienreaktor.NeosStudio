@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   asyncDataLoaderFeature,
-  hotkeysCoreFeature,
   selectionFeature,
   type ItemInstance,
 } from '@headless-tree/core'
@@ -165,7 +164,6 @@ export function DocumentTree({
     features: [
       asyncDataLoaderFeature,
       selectionFeature,
-      hotkeysCoreFeature,
       dnd.feature,
     ],
   })

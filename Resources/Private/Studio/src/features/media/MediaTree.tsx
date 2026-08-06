@@ -3,7 +3,6 @@ import {
   type DragTarget,
   dragAndDropFeature,
   expandAllFeature,
-  hotkeysCoreFeature,
   type ItemInstance,
   selectionFeature,
   syncDataLoaderFeature,
@@ -172,7 +171,6 @@ export function MediaTree({
     features: [
       syncDataLoaderFeature,
       selectionFeature,
-      hotkeysCoreFeature,
       expandAllFeature,
       ...(dndEnabled ? [dragAndDropFeature] : []),
     ],
