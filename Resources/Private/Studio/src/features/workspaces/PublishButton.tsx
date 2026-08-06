@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   countChangedNodes,
   useWorkspaceChanges,
@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
+import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 
@@ -53,6 +54,8 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // A discard waiting for confirmation; the dialog is open while set.
   const [pendingDiscard, setPendingDiscard] =
     useState<WorkspaceOperation | null>(null)
+  // Anchor for the confetti burst a successful "Publish all" celebrates with.
+  const publishAllRef = useRef<HTMLButtonElement>(null)
 
   const allChanges = changesResponse?.changes ?? []
   // A workspace spans every site the account edited; scope everything (the
@@ -104,6 +107,16 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
     [baseWorkspaceName],
   )
 
+  // "Publish all" (button segment and shortcut alike) celebrates success with
+  // a confetti burst off the button - the per-call onSuccess runs on top of
+  // the hook's shared toast/invalidations and stays out of the scoped publish
+  // and discard paths.
+  const publishAll = () =>
+    operation.mutate(
+      { kind: 'publish', filter: siteFilter },
+      { onSuccess: () => celebrateAround(publishAllRef.current) },
+    )
+
   // Same action and guards as the primary button segment; with nothing to
   // publish the shortcut declines so the browser keeps the keystroke.
   useKeyboardShortcut({
@@ -113,7 +126,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
     category: t('shortcuts.category.workspace', 'Workspace'),
     handler: () => {
       if (!hasChanges || !canPublish || operation.isPending) return false
-      operation.mutate({ kind: 'publish', filter: siteFilter })
+      publishAll()
     },
     allowInInput: true,
   })
@@ -123,12 +136,11 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
       {/* gap-px splits the segments with a hairline of header background */}
       <div className="flex gap-px">
         <Button
+          ref={publishAllRef}
           className={cn('rounded-r-none', segmentClasses)}
           variant={segmentVariant}
           disabled={!hasChanges || !canPublish || operation.isPending}
-          onClick={() =>
-            operation.mutate({ kind: 'publish', filter: siteFilter })
-          }
+          onClick={publishAll}
           title={
             !canPublish
               ? publishDeniedHint
