@@ -9,11 +9,7 @@ import {
 import { useSidebar } from '@/components/ui/sidebar'
 import { useModals } from '@/features/modals/ModalHost'
 import { translate as t } from '@/lib/i18n'
-import {
-  formatCombo,
-  isMacPlatform,
-  keyboardShortcutRegistry,
-} from './registry'
+import { formatCombo, keyboardShortcutRegistry } from './registry'
 import { useKeyboardShortcut } from './useKeyboardShortcut'
 
 /**
@@ -42,29 +38,26 @@ export function ShortcutHost() {
   const generalCategory = t('shortcuts.category.general', 'General')
   useKeyboardShortcut({
     id: 'sidebar.toggle',
-    combo: 'mod+b',
+    key: 'b',
     title: t('common.toggleSidebar', 'Toggle Sidebar'),
     category: generalCategory,
     handler: toggleSidebar,
-    allowInInput: true,
   })
   useKeyboardShortcut({
     id: 'settings.open',
-    // The comma follows the platform's settings convention, but on macOS
-    // ⌘+, is menu-bound in every browser (its own Settings…) and never
-    // reaches the page - Control carries it there instead.
-    combo: isMacPlatform ? 'ctrl+,' : 'mod+,',
+    // 'o' as in options - the platform's ⌘+, convention is a symbol key
+    // (layout-dependent) and menu-bound in every macOS browser.
+    key: 'o',
     title: t('shortcuts.openSettings', 'Open settings'),
     category: generalCategory,
     handler: () => openSettings(),
   })
   useKeyboardShortcut({
     id: 'shortcuts.overview',
-    // '?' is the conventional shortcut-help key. No ⌘+/ alias on macOS: on
-    // layouts where '/' needs Shift (German: Shift+7) it becomes ⌘⇧/, the
-    // system-wide Help-menu-search shortcut, which macOS consumes before the
-    // page sees it.
-    combo: isMacPlatform ? 'shift+?' : ['mod+/', 'shift+?'],
+    // The sanctioned exception to the unified accessor: '?' is the
+    // universal shortcut-help key (Gmail, GitHub, Slack). Raw combo, so it
+    // stays input-guarded - '?' is typing.
+    combo: 'shift+?',
     title: t('shortcuts.showOverview', 'Show keyboard shortcuts'),
     category: generalCategory,
     handler: () => setOverviewOpen((open) => !open),

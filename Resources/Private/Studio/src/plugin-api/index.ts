@@ -192,7 +192,10 @@ export type {
   ModalIcon,
   SettingsDialogDefinition,
 } from '@/features/modals/registry'
-export type { KeyboardShortcutDefinition } from '@/features/shortcuts/registry'
+export type {
+  KeyboardShortcutDefinition,
+  ResolvedKeyboardShortcut,
+} from '@/features/shortcuts/registry'
 export type {
   WorkspaceDecoration,
   WorkspaceDecoratorDefinition,

@@ -18,7 +18,7 @@ export function useKeyboardShortcut(
   latest.current = definition
   // Re-register only when identity or key binding changes; everything else
   // (handler, guard, labels) is read through the ref at dispatch time.
-  const comboKey = JSON.stringify(definition.combo)
+  const comboKey = JSON.stringify([definition.key, definition.combo])
   React.useEffect(() => {
     const { id } = latest.current
     keyboardShortcutRegistry.register({

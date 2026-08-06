@@ -6,8 +6,35 @@
  * plugin reloads stay idempotent, and a stable snapshot for
  * useSyncExternalStore (the shortcut overview dialog renders it).
  *
- * Combos are written as '+'-joined tokens, e.g. 'mod+shift+p' or 'mod+/'.
- * Recognised modifiers: 'mod' (⌘ on macOS, Ctrl elsewhere), 'ctrl', 'meta',
+ * ## The unified accessor
+ *
+ * Studio shortcuts share one accessor: mod+shift (⌘⇧ on macOS, Ctrl+Shift
+ * elsewhere). It is the only modifier family that is safe everywhere we need
+ * it to be: it never produces text (unlike Shift or Option, so it works
+ * during inline editing and in inputs), it dodges the single-modifier
+ * browser/OS menu shortcuts (⌘B, ⌘,), and it survives non-US layouts
+ * (Option and AltGr carry everyday characters on German keyboards).
+ * Declare shortcuts with `key: 'p'` - a single letter or digit - and the
+ * registry binds the accessor itself; consistency is structural, not a
+ * convention. Letters/digits only: symbol keys move between layouts (a
+ * German '/' is Shift+7) and shifted symbols collide with system shortcuts
+ * (⌘⇧/ is macOS Help-menu search).
+ *
+ * Some accessor keys never reach the page and are rejected at registration
+ * (see RESERVED_ACCESSOR_KEYS). Others shadow browser shortcuts the page IS
+ * allowed to take over (capture-phase dispatch preventDefault()s them):
+ * 'r' (hard reload - shadowed deliberately by the preview), 'b' (Chrome
+ * bookmarks bar), 'p' (Firefox private window / Safari print), 'o'
+ * (bookmark managers). Shadowing is a per-shortcut judgement call; the
+ * reserved list is not.
+ *
+ * ## Raw combos (the escape hatch)
+ *
+ * `combo` bypasses the accessor for the few sanctioned exceptions where a
+ * universal convention beats consistency (⇧? for the shortcut overview -
+ * the Gmail/GitHub/Slack help key). New shortcuts should use `key`.
+ * Combos are '+'-joined tokens, e.g. 'mod+shift+p' or 'shift+?'. Recognised
+ * modifiers: 'mod' (⌘ on macOS, Ctrl elsewhere), 'ctrl', 'meta',
  * 'alt'/'option', 'shift'. The final token is the key as reported by
  * KeyboardEvent.key ('p', '/', 'escape', 'arrowup', 'f5', ...). Because
  * matching uses event.key, declare shifted symbols as the symbol the shift
@@ -16,13 +43,6 @@
  * Shift held, dispatch retries the match without it, so 'mod+/' fires for
  * Ctrl+Shift+7 on a German layout just like for Ctrl+/ on a US one.
  *
- * Beware combos the browser or OS consumes before the page sees them - no
- * fallback can help there. Notably on macOS: ⌘+, is every browser's own
- * Settings… menu item, and ⌘⇧+<symbol> can hit system menu shortcuts (⌘⇧/
- * is Help-menu search - which is exactly what ⌘+/ becomes on layouts where
- * '/' needs Shift). Prefer letters/digits, and check isMacPlatform for
- * platform-specific alternatives.
- *
  * Scope: shortcuts fire on the Studio shell's own window. Keystrokes inside
  * the preview iframe stay with the guest frame (inline editing owns them).
  */
@@ -30,8 +50,18 @@
 export interface KeyboardShortcutDefinition {
   /** Unique id, e.g. 'workspace.publish'. Third-party shortcuts should namespace ('vendor.package:my-shortcut'). */
   id: string
-  /** One combo or aliases, e.g. 'mod+shift+p' or ['mod+/', 'shift+?']. */
-  combo: string | string[]
+  /**
+   * The preferred way to bind: a single letter or digit, bound under the
+   * unified accessor as mod+shift+<key>. Rejected (with a console warning)
+   * for keys the browser never hands over - see RESERVED_ACCESSOR_KEYS.
+   */
+  key?: string
+  /**
+   * Raw combo(s), e.g. 'shift+?' or ['mod+/', 'shift+?'] - the escape hatch
+   * for sanctioned exceptions to the accessor scheme. Ignored when `key` is
+   * set. One of `key` or `combo` is required.
+   */
+  combo?: string | string[]
   /** Human-readable action name, shown in the shortcut overview. */
   title: string
   /** Overview grouping label; shortcuts sharing a category list together. */
@@ -45,12 +75,34 @@ export interface KeyboardShortcutDefinition {
   handler: (event: KeyboardEvent) => void | boolean
   /**
    * Fire even while focus is in an input, textarea, select or contenteditable.
-   * Defaults to false - plain-key shortcuts must not swallow typing.
+   * Defaults to true for `key`-based shortcuts (the accessor never types
+   * text, so they are always input-safe) and false for raw combos - those
+   * must opt in, plain-key combos must not swallow typing.
    */
   allowInInput?: boolean
   /** Extra guard consulted at dispatch time; false skips this shortcut. */
   when?: () => boolean
 }
+
+/**
+ * A registered shortcut always carries its resolved combo (`key` expanded to
+ * 'mod+shift+<key>' at registration) - what dispatch and the overview use.
+ */
+export type ResolvedKeyboardShortcut = KeyboardShortcutDefinition & {
+  combo: string | string[]
+}
+
+/**
+ * Accessor keys the browser consumes before the page sees them - no
+ * capture-phase preventDefault can reclaim these, so binding them would
+ * silently do nothing (or only work on one platform). Rejected at
+ * registration:
+ * - n / t / w: new (incognito/private) window, reopen closed tab, close
+ *   window - hard-reserved in every browser.
+ * - i / j / c: DevTools, console, inspect-element on Windows/Linux Chrome,
+ *   not interceptable there; a unified binding must work on every platform.
+ */
+const RESERVED_ACCESSOR_KEYS = new Set(['n', 't', 'w', 'i', 'j', 'c'])
 
 export const isMacPlatform: boolean =
   typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
@@ -153,15 +205,17 @@ export function formatCombo(combo: string): string[] {
 }
 
 export class KeyboardShortcutRegistry {
-  private definitions = new Map<string, KeyboardShortcutDefinition>()
+  private definitions = new Map<string, ResolvedKeyboardShortcut>()
   private listeners = new Set<() => void>()
-  private snapshot: KeyboardShortcutDefinition[] = []
+  private snapshot: ResolvedKeyboardShortcut[] = []
   /** canonical combo → definitions listening on it, in registration order. */
-  private byCombo = new Map<string, KeyboardShortcutDefinition[]>()
+  private byCombo = new Map<string, ResolvedKeyboardShortcut[]>()
 
   /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
   register(definition: KeyboardShortcutDefinition): void {
-    this.definitions.set(definition.id, definition)
+    const resolved = resolveDefinition(definition)
+    if (!resolved) return
+    this.definitions.set(resolved.id, resolved)
     this.emit()
   }
 
@@ -169,12 +223,12 @@ export class KeyboardShortcutRegistry {
     if (this.definitions.delete(id)) this.emit()
   }
 
-  get(id: string): KeyboardShortcutDefinition | undefined {
+  get(id: string): ResolvedKeyboardShortcut | undefined {
     return this.definitions.get(id)
   }
 
   /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): KeyboardShortcutDefinition[] {
+  getAll(): ResolvedKeyboardShortcut[] {
     return this.snapshot
   }
 
@@ -208,7 +262,7 @@ export class KeyboardShortcutRegistry {
   }
 
   private dispatchTo(
-    matches: KeyboardShortcutDefinition[] | undefined,
+    matches: ResolvedKeyboardShortcut[] | undefined,
     event: KeyboardEvent,
   ): boolean {
     if (!matches) return false
@@ -246,6 +300,40 @@ export class KeyboardShortcutRegistry {
     }
     this.listeners.forEach((listener) => listener())
   }
+}
+
+/**
+ * Expand `key` into its accessor combo and apply the key-based defaults, or
+ * pass a raw-combo definition through. Null (plus a console warning) for
+ * definitions that must not bind: reserved or non-letter/digit accessor
+ * keys, or neither `key` nor `combo` given.
+ */
+function resolveDefinition(
+  definition: KeyboardShortcutDefinition,
+): ResolvedKeyboardShortcut | null {
+  if (definition.key !== undefined) {
+    const key = definition.key.toLowerCase()
+    if (!/^[a-z0-9]$/.test(key)) {
+      console.warn(
+        `[NeosStudio] Shortcut key must be a single letter or digit, got "${definition.key}" (${definition.id}) - not registered`,
+      )
+      return null
+    }
+    if (RESERVED_ACCESSOR_KEYS.has(key)) {
+      console.warn(
+        `[NeosStudio] Shortcut key "${key}" is browser-reserved and can never fire (${definition.id}) - not registered`,
+      )
+      return null
+    }
+    return { allowInInput: true, ...definition, combo: `mod+shift+${key}` }
+  }
+  if (definition.combo === undefined) {
+    console.warn(
+      `[NeosStudio] Shortcut needs a key or combo (${definition.id}) - not registered`,
+    )
+    return null
+  }
+  return definition as ResolvedKeyboardShortcut
 }
 
 export const keyboardShortcutRegistry = new KeyboardShortcutRegistry()

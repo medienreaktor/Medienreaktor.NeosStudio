@@ -121,14 +121,13 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // publish the shortcut declines so the browser keeps the keystroke.
   useKeyboardShortcut({
     id: 'workspace.publish',
-    combo: 'mod+shift+p',
+    key: 'p',
     title: t('workspace.publishAllChanges', 'Publish all'),
     category: t('shortcuts.category.workspace', 'Workspace'),
     handler: () => {
       if (!hasChanges || !canPublish || operation.isPending) return false
       publishAll()
     },
-    allowInInput: true,
   })
 
   return (

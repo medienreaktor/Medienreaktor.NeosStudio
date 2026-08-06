@@ -75,14 +75,15 @@ export function PreviewToolbar({
   // nothing to reload and the keystroke stays untouched.
   useKeyboardShortcut({
     id: 'preview.reload',
-    combo: 'mod+shift+r',
+    // Deliberately shadows the browser's hard reload: inside Studio,
+    // reloading "the page" means reloading the preview.
+    key: 'r',
     title: t('preview.reload', 'Reload preview'),
     category: t('shortcuts.category.preview', 'Preview'),
     handler: () => {
       if (!document) return false
       onReload()
     },
-    allowInInput: true,
   })
   return null
 }
