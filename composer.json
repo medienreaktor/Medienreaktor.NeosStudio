@@ -6,7 +6,7 @@
   "require": {
     "php": "^8.2",
     "neos/neos": "^9.1",
-    "medienreaktor/neos-api": "^1.7.5"
+    "medienreaktor/neos-api": "^1.7.6"
   },
   "autoload": {
     "psr-4": {
