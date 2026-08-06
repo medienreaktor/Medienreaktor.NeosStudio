@@ -21,6 +21,7 @@ import {
   UI_MODE_PREFERENCE,
   type UiMode,
 } from '@/lib/uiMode'
+import { UiModePicker } from '@/features/profile/UiModePicker'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
@@ -95,12 +96,6 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const [language, setLanguage] = useState(profile.interfaceLanguage)
   const savedUiMode = toUiMode(profile.preferences?.[UI_MODE_PREFERENCE])
   const [uiMode, setUiMode] = useState<UiMode>(savedUiMode)
-
-  const uiModeItems: { value: UiMode; label: string }[] = [
-    { value: 'light', label: t('profile.uiModeLight', 'Light') },
-    { value: 'dark', label: t('profile.uiModeDark', 'Dark') },
-    { value: 'system', label: t('profile.uiModeSystem', 'System') },
-  ]
 
   // Neos ships language labels as "Deutsch – German"; show the native name
   // prominently with the English name muted behind it.
@@ -234,26 +229,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
         </Select>
       </Field>
 
-      <Field
-        label={t('profile.uiMode', 'Appearance')}
-        htmlFor="profile-ui-mode"
-      >
-        <Select
-          value={uiMode}
-          onValueChange={(value) => setUiMode(value as UiMode)}
-          items={uiModeItems}
-        >
-          <SelectTrigger id="profile-ui-mode" className="w-full">
-            <SelectValue placeholder={t('profile.uiMode', 'Appearance')} />
-          </SelectTrigger>
-          <SelectContent>
-            {uiModeItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Field label={t('profile.uiMode', 'Appearance')}>
+        <UiModePicker value={uiMode} onChange={setUiMode} />
       </Field>
 
       <Button type="submit" disabled={!isDirty || mutation.isPending}>
