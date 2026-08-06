@@ -225,7 +225,7 @@ export function ImageCropDialog({
 
         {showSelector && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-neutral-600 dark:text-neutral-400">
               {t('editor.crop.aspectRatio', 'Aspect ratio')}
             </span>
             <Select
@@ -247,7 +247,7 @@ export function ImageCropDialog({
           </div>
         )}
 
-        <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-neutral-700 bg-neutral-950">
+        <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950">
           {!original ? (
             <i
               className="fas fa-spinner fa-spin text-[1.5rem] text-neutral-500"

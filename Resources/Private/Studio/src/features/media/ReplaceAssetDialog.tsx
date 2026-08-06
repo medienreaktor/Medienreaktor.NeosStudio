@@ -128,12 +128,12 @@ export function ReplaceAssetDialog({
 
         <div className="space-y-4">
           {/* The file being replaced, so it is clear what is about to change. */}
-          <div className="flex items-center gap-3 rounded-md bg-neutral-900 p-2">
-            <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded bg-neutral-800">
+          <div className="flex items-center gap-3 rounded-md bg-neutral-100 dark:bg-neutral-900 p-2">
+            <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded bg-neutral-200 dark:bg-neutral-800">
               <AssetThumb asset={asset} className="text-[1.5rem]" />
             </div>
             <div className="min-w-0 text-xs">
-              <p className="truncate text-neutral-200">{asset.filename}</p>
+              <p className="truncate text-neutral-800 dark:text-neutral-200">{asset.filename}</p>
               <p className="text-neutral-500">
                 {formatBytes(asset.fileSize)} · {asset.mediaType}
               </p>
@@ -146,7 +146,7 @@ export function ReplaceAssetDialog({
               'grid place-items-center rounded-md border-2 border-dashed p-6 text-center transition-colors',
               isDragActive
                 ? 'border-blue-500 bg-blue-500/10'
-                : 'border-neutral-700',
+                : 'border-neutral-300 dark:border-neutral-700',
             )}
           >
             <input {...getInputProps()} />
@@ -156,7 +156,7 @@ export function ReplaceAssetDialog({
                   className="fas fa-file-circle-check mb-2 text-[1.5rem] text-blue-500"
                   aria-hidden
                 />
-                <p className="max-w-full truncate text-sm text-neutral-200">
+                <p className="max-w-full truncate text-sm text-neutral-800 dark:text-neutral-200">
                   {file.name}
                 </p>
                 <p className="mb-3 text-xs text-neutral-500">
@@ -177,7 +177,7 @@ export function ReplaceAssetDialog({
                   className="fas fa-cloud-arrow-up mb-2 text-[1.5rem] text-neutral-500"
                   aria-hidden
                 />
-                <p className="text-sm text-neutral-300">
+                <p className="text-sm text-neutral-700 dark:text-neutral-300">
                   {t('media.dragFileHere', 'Drag the new file here')}
                 </p>
                 <p className="mb-3 text-xs text-neutral-500">
@@ -191,7 +191,7 @@ export function ReplaceAssetDialog({
           </div>
 
           {progress !== null && (
-            <div className="h-1 overflow-hidden rounded-full bg-neutral-800">
+            <div className="h-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
               <div
                 className="h-full bg-blue-500 transition-[width]"
                 style={{ width: `${progress * 100}%` }}
@@ -199,7 +199,7 @@ export function ReplaceAssetDialog({
             </div>
           )}
 
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-neutral-700 dark:text-neutral-300">
             <Checkbox
               checked={keepOriginalFilename}
               onCheckedChange={setKeepOriginalFilename}
@@ -213,7 +213,7 @@ export function ReplaceAssetDialog({
           </label>
 
           {usageTotal > 0 && (
-            <p className="flex items-start gap-2 rounded-md bg-neutral-900 p-2 text-xs text-neutral-400">
+            <p className="flex items-start gap-2 rounded-md bg-neutral-100 dark:bg-neutral-900 p-2 text-xs text-neutral-600 dark:text-neutral-400">
               <i
                 className="fas fa-circle-info mt-0.5 shrink-0 text-neutral-500"
                 aria-hidden

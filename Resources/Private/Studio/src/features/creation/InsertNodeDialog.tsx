@@ -345,7 +345,7 @@ function OpenInsertNodeDialog({
                           type="button"
                           disabled={resolving}
                           title={`${nodeType.label} (${nodeType.name})`}
-                          className="flex h-20 w-full flex-col items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-800 disabled:opacity-50"
+                          className="flex h-20 w-full flex-col items-center justify-center gap-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-200/40 dark:bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-200 dark:hover:bg-neutral-800 disabled:opacity-50"
                           onClick={() => void pick(nodeType.name)}
                         >
                           <NodeTypeIcon

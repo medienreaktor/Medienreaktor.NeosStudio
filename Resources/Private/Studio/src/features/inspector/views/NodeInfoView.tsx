@@ -73,9 +73,9 @@ function InfoRow({
 }) {
   return (
     <>
-      <dt className="text-neutral-400">{label}</dt>
+      <dt className="text-neutral-600 dark:text-neutral-400">{label}</dt>
       <dd
-        className="min-w-0 cursor-pointer break-all text-white select-all"
+        className="min-w-0 cursor-pointer break-all text-neutral-950 dark:text-white select-all"
         title={t('view.clickToSelect', 'Click to select')}
       >
         {children}

@@ -34,7 +34,7 @@ export function PresenceAvatars() {
         <Tooltip key={peer.userId}>
           <TooltipTrigger asChild>
             <span
-              className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-900 text-[0.65rem] font-semibold text-white select-none"
+              className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 text-[0.65rem] font-semibold text-white select-none"
               style={{ backgroundColor: peer.color }}
             >
               {peer.initials}
@@ -46,7 +46,7 @@ export function PresenceAvatars() {
       {overflow > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-900 bg-neutral-700 text-[0.65rem] font-semibold text-white select-none">
+            <span className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 bg-neutral-300 dark:bg-neutral-700 text-[0.65rem] font-semibold text-neutral-950 dark:text-white select-none">
               +{overflow}
             </span>
           </TooltipTrigger>

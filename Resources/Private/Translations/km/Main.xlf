@@ -1526,6 +1526,22 @@
         <source>Profile</source>
         <target xml:lang="km">ប្រវត្តិរូប</target>
       </trans-unit>
+      <trans-unit id="profile.uiMode" xml:space="preserve">
+        <source>Appearance</source>
+        <target xml:lang="km">រូបរាង</target>
+      </trans-unit>
+      <trans-unit id="profile.uiModeDark" xml:space="preserve">
+        <source>Dark</source>
+        <target xml:lang="km">ងងឹត</target>
+      </trans-unit>
+      <trans-unit id="profile.uiModeLight" xml:space="preserve">
+        <source>Light</source>
+        <target xml:lang="km">ភ្លឺ</target>
+      </trans-unit>
+      <trans-unit id="profile.uiModeSystem" xml:space="preserve">
+        <source>System</source>
+        <target xml:lang="km">ប្រព័ន្ធ</target>
+      </trans-unit>
       <trans-unit id="profile.unavailable" xml:space="preserve">
         <source>Your profile is currently unavailable.</source>
         <target xml:lang="km">ប្រវត្តិរូបរបស់អ្នកមិនអាចប្រើបាននៅពេលនេះទេ។</target>

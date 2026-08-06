@@ -140,7 +140,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
-    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-neutral-950/70 p-2 backdrop-blur-xs">
+    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-neutral-50/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
       <SearchInput
         value={filter.search}
         onChange={(e) => state.setSearch(e.target.value)}
@@ -337,18 +337,18 @@ function FilterButton({
     <Popover>
       <PopoverTrigger
         className={cn(
-          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm bg-neutral-700/30 hover:bg-neutral-700/50',
-          active ? 'text-white' : 'border-neutral-700 text-neutral-300 ',
+          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm bg-neutral-300/30 dark:bg-neutral-700/30 hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50',
+          active ? 'text-neutral-950 dark:text-white' : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 ',
         )}
       >
         <span
-          className={cn('shrink-0', active ? 'text-white' : 'text-neutral-500')}
+          className={cn('shrink-0', active ? 'text-neutral-950 dark:text-white' : 'text-neutral-500')}
         >
           {icon}
         </span>
         <span className="max-w-40 truncate">{label}</span>
         <i
-          className="fas fa-chevron-down text-[0.875rem] shrink-0 text-white/50"
+          className="fas fa-chevron-down text-[0.875rem] shrink-0 text-neutral-950/50 dark:text-white/50"
           aria-hidden
         />
       </PopoverTrigger>
@@ -381,7 +381,7 @@ function SourceButton({
           'flex w-full items-center gap-2 rounded px-1.5 py-1 text-left text-sm',
           active
             ? 'bg-blue-500/20 text-white'
-            : 'text-neutral-300 hover:bg-neutral-800',
+            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800',
         )}
       >
         {source.iconUri ? (
@@ -421,8 +421,8 @@ function RailButton({
       className={cn(
         'flex w-full items-center gap-1.5 border rounded-sm px-1.5 py-1 text-left text-sm',
         active
-          ? 'bg-neutral-800 text-white border-blue-500'
-          : 'hover:bg-neutral-800 border-transparent',
+          ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white border-blue-500'
+          : 'hover:bg-neutral-200 dark:hover:bg-neutral-800 border-transparent',
       )}
     >
       <span className="shrink-0">{icon}</span>

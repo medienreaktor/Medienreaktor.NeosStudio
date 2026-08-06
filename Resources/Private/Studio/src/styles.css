@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 
-/* Studio is dark-only: the dark variant is pinned to the static .dark class
-   on <html> (see index.html) instead of following the OS color scheme, so
-   shadcn components' dark: refinements always apply. */
+/* The dark variant follows the .dark class on <html> (not the OS scheme
+   directly): index.html ships it pre-set as the Studio default, and
+   lib/uiMode.ts toggles it per the user's UI mode preference (light / dark /
+   system, from /me/profile via the boot config). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
@@ -138,12 +139,18 @@
 
 @layer base {
   * {
-    @apply border-neutral-700 outline-blue-500/50;
+    @apply border-neutral-300 outline-blue-500/50 dark:border-neutral-700;
   }
   html {
     font-size: 15px;
+    /* Native UI (scrollbars, form controls) follows the theme; also enables
+       the light-dark() function used for runtime color strings in TS code. */
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
-    @apply bg-neutral-950 font-sans text-white;
+    @apply bg-neutral-50 font-sans text-neutral-950 dark:bg-neutral-950 dark:text-white;
   }
 }

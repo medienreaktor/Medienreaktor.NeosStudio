@@ -310,7 +310,7 @@ export function InspectorPanel({
         {visibleTabs && (
           <>
             {visibleTabs.length === 0 ? (
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
                 {t(
                   'inspector.noProperties',
                   'This node type has no inspector properties.',
@@ -411,12 +411,12 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border border-purple-500/60 bg-purple-900/60 p-2.5 text-xs text-purple-100"
+      className="mt-3 flex items-start gap-2 rounded-md border border-purple-500/60 bg-purple-100/60 dark:bg-purple-900/60 p-2.5 text-xs text-purple-900 dark:text-purple-100"
     >
-      <FaIcon icon="layer-group" className="mt-0.5 text-purple-300" />
+      <FaIcon icon="layer-group" className="mt-0.5 text-purple-700 dark:text-purple-300" />
       <p>
         {t('inspector.shineThroughFrom', 'Shines through from')}{' '}
-        <strong className="text-white">{origin}</strong>.{' '}
+        <strong className="text-neutral-950 dark:text-white">{origin}</strong>.{' '}
         {t(
           'inspector.shineThroughHint',
           'This node does not exist in the current dimension yet - editing it creates an independent variant here.',
@@ -444,7 +444,7 @@ function PropertyGroup({
   return (
     <CollapsibleGroup
       defaultOpen={!group.collapsed}
-      className="border-b border-neutral-700 p-2"
+      className="border-b border-neutral-300 dark:border-neutral-700 p-2"
       label={
         <>
           {group.icon && <FaIcon icon={group.icon} />}

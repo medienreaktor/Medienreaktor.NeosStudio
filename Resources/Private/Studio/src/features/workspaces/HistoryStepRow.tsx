@@ -60,12 +60,12 @@ export function HistoryStepRow({
         // Expanded reads as selected, exactly like a selected page in the
         // trees: blue border on the same rounded, slightly lifted surface.
         'rounded-sm border border-transparent',
-        expanded && 'border-blue-500 bg-neutral-800',
+        expanded && 'border-blue-500 bg-neutral-200 dark:bg-neutral-800',
       )}
     >
       <button
         type="button"
-        className="flex w-full cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-neutral-800"
+        className="flex w-full cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-neutral-200 dark:hover:bg-neutral-800"
         onClick={onToggle}
       >
         {/* Icon and label carry the change colors: additions green,
@@ -86,7 +86,7 @@ export function HistoryStepRow({
             {subject !== null && (
               <>
                 {' '}
-                <span className="text-white">{subject}</span>
+                <span className="text-neutral-950 dark:text-white">{subject}</span>
               </>
             )}
           </div>
@@ -126,7 +126,7 @@ export function HistoryStepRow({
         )}
       </button>
       {expanded && hasDetails && (
-        <div className="border-t border-neutral-800 px-2 py-1.5 text-[11px]">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 px-2 py-1.5 text-[11px]">
           <StepDiff
             workspaceName={workspaceName}
             step={step}

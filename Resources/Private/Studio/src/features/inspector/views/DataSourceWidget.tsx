@@ -40,7 +40,7 @@ export function DataSourceWidget({
 
   return (
     <div className="space-y-2">
-      {subtitle && <p className="text-xs text-neutral-400">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-neutral-600 dark:text-neutral-400">{subtitle}</p>}
       {identifier === null ? (
         <WidgetNotice
           message={
@@ -73,7 +73,7 @@ export function DataSourceWidget({
 
 function WidgetNotice({ message }: { message: string }) {
   return (
-    <p className="flex items-start gap-1.5 text-xs text-neutral-400">
+    <p className="flex items-start gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
       <i
         className="fas fa-triangle-exclamation mt-0.5 text-[0.75rem] shrink-0 text-red-500"
         aria-hidden

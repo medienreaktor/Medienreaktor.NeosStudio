@@ -220,7 +220,7 @@ export function CreateSiteDialog({
               />
             </Field>
 
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-200">
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-800 dark:text-neutral-200">
               <Checkbox
                 checked={startOffline}
                 onCheckedChange={(checked) => setStartOffline(checked === true)}

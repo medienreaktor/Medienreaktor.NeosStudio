@@ -15,6 +15,12 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { translate as t } from '@/lib/i18n'
+import {
+  applyUiMode,
+  toUiMode,
+  UI_MODE_PREFERENCE,
+  type UiMode,
+} from '@/lib/uiMode'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
@@ -81,12 +87,20 @@ export function ProfileSettings() {
   )
 }
 
-/** Name, email and interface language; only changed fields are sent. */
+/** Name, email, interface language and UI mode; only changed fields are sent. */
 function ProfileForm({ profile }: { profile: Profile }) {
   const [firstName, setFirstName] = useState(profile.firstName)
   const [lastName, setLastName] = useState(profile.lastName)
   const [email, setEmail] = useState(profile.email ?? '')
   const [language, setLanguage] = useState(profile.interfaceLanguage)
+  const savedUiMode = toUiMode(profile.preferences?.[UI_MODE_PREFERENCE])
+  const [uiMode, setUiMode] = useState<UiMode>(savedUiMode)
+
+  const uiModeItems: { value: UiMode; label: string }[] = [
+    { value: 'light', label: t('profile.uiModeLight', 'Light') },
+    { value: 'dark', label: t('profile.uiModeDark', 'Dark') },
+    { value: 'system', label: t('profile.uiModeSystem', 'System') },
+  ]
 
   // Neos ships language labels as "Deutsch – German"; show the native name
   // prominently with the English name muted behind it.
@@ -99,7 +113,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
           <span>
             {native}
             {english && (
-              <span className="ml-2 text-neutral-400">{english}</span>
+              <span className="ml-2 text-neutral-600 dark:text-neutral-400">{english}</span>
             )}
           </span>
         ),
@@ -113,6 +127,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
   if (email !== (profile.email ?? '')) changes.email = email
   if (language !== profile.interfaceLanguage)
     changes.interfaceLanguage = language
+  if (uiMode !== savedUiMode)
+    changes.preferences = { [UI_MODE_PREFERENCE]: uiMode }
   const isDirty = Object.keys(changes).length > 0
 
   const mutation = useMutation({
@@ -122,6 +138,10 @@ function ProfileForm({ profile }: { profile: Profile }) {
       queryClient.invalidateQueries({ queryKey: queryKeys.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.users })
       toast.success(t('profile.saved', 'Your profile has been saved.'))
+      // The theme switches live - no reload needed for the UI mode.
+      if (input.preferences?.[UI_MODE_PREFERENCE] !== undefined) {
+        applyUiMode(toUiMode(input.preferences[UI_MODE_PREFERENCE]))
+      }
       // Translations are loaded once at boot for the language the shell
       // injected, so a changed language only shows after a reload.
       if (input.interfaceLanguage !== undefined) {
@@ -214,6 +234,28 @@ function ProfileForm({ profile }: { profile: Profile }) {
         </Select>
       </Field>
 
+      <Field
+        label={t('profile.uiMode', 'Appearance')}
+        htmlFor="profile-ui-mode"
+      >
+        <Select
+          value={uiMode}
+          onValueChange={(value) => setUiMode(value as UiMode)}
+          items={uiModeItems}
+        >
+          <SelectTrigger id="profile-ui-mode" className="w-full">
+            <SelectValue placeholder={t('profile.uiMode', 'Appearance')} />
+          </SelectTrigger>
+          <SelectContent>
+            {uiModeItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
       <Button type="submit" disabled={!isDirty || mutation.isPending}>
         {mutation.isPending
           ? t('profile.saving', 'Saving…')
@@ -265,10 +307,10 @@ function PasswordForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <header>
-        <h3 className="text-sm font-semibold text-white">
+        <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
           {t('profile.changePassword', 'Change password')}
         </h3>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
           {t(
             'profile.changePasswordHint',
             'Enter your current password to set a new one.',

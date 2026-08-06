@@ -39,11 +39,11 @@ export function BranchHistoryPanel({
   return (
     // top-12 keeps the panel below the canvas' zoom control cluster, which
     // sits in the top-right corner above it.
-    <div className="absolute top-12 right-2 bottom-2 z-10 flex w-80 flex-col rounded-md border border-neutral-700 bg-neutral-900/95 text-xs shadow-lg backdrop-blur-xs">
+    <div className="absolute top-12 right-2 bottom-2 z-10 flex w-80 flex-col rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-100/95 dark:bg-neutral-900/95 text-xs shadow-lg backdrop-blur-xs">
       {/* Which branch this is, is said by the card the pick came from - the
           heading only names what the pane lists. */}
-      <div className="flex items-center gap-2 border-b border-neutral-800 px-3 py-2">
-        <span className="min-w-0 flex-1 truncate font-medium text-white">
+      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 px-3 py-2">
+        <span className="min-w-0 flex-1 truncate font-medium text-neutral-950 dark:text-white">
           {t('workspaceHistory.events', 'Events')}
         </span>
         <Button
@@ -78,7 +78,7 @@ export function BranchHistoryPanel({
           ))}
         </div>
         {branch.truncated && (
-          <div className="px-2 py-2 text-center text-[10px] text-neutral-600">
+          <div className="px-2 py-2 text-center text-[10px] text-neutral-400 dark:text-neutral-600">
             {branch.workspace.baseWorkspace === null
               ? t(
                   'workspaceHistory.olderRoot',

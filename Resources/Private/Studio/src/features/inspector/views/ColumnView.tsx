@@ -34,10 +34,10 @@ export const ColumnView: InspectorViewComponent = ({ node, options }) => {
         <div className="space-y-3">
           {hero && (
             <div>
-              <div className="text-2xl font-semibold text-white tabular-nums">
+              <div className="text-2xl font-semibold text-neutral-950 dark:text-white tabular-nums">
                 {dataText(data, hero.data)}
               </div>
-              <div className="text-xs text-neutral-400">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400">
                 {label(hero, 'hero')}
               </div>
             </div>
@@ -46,10 +46,10 @@ export const ColumnView: InspectorViewComponent = ({ node, options }) => {
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
               {columns.map((column, index) => (
                 <div key={index} className="min-w-0">
-                  <div className="truncate text-sm font-medium text-white tabular-nums">
+                  <div className="truncate text-sm font-medium text-neutral-950 dark:text-white tabular-nums">
                     {dataText(data, column.data)}
                   </div>
-                  <div className="truncate text-xs text-neutral-400">
+                  <div className="truncate text-xs text-neutral-600 dark:text-neutral-400">
                     {label(column, `column ${index + 1}`)}
                   </div>
                 </div>

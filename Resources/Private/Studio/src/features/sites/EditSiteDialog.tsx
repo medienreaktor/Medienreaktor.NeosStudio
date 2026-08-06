@@ -129,7 +129,7 @@ export function EditSiteDialog({
           <DialogTitle>
             {t('sites.editSite', 'Edit site')}
             {site !== null && (
-              <span className="ml-2 font-normal text-neutral-400">
+              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
                 {site.name}
               </span>
             )}
@@ -171,7 +171,7 @@ export function EditSiteDialog({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">
+                <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
                   {t('sites.domains', 'Domains')}
                 </h3>
                 {domainForm === null && (
@@ -255,7 +255,7 @@ function DomainRow({
       <span className="flex min-w-0 items-center gap-2">
         <span
           className={
-            domain.active ? 'truncate text-neutral-200' : 'truncate text-neutral-500'
+            domain.active ? 'truncate text-neutral-800 dark:text-neutral-200' : 'truncate text-neutral-500'
           }
         >
           {domain.url}

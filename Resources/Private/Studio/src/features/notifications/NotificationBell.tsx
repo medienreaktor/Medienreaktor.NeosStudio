@@ -78,7 +78,7 @@ export function NotificationBell() {
               })
             : t('notifications.label', 'Notifications')
         }
-        className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-white select-none hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+        className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-950 dark:text-white select-none hover:text-neutral-950 dark:hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
       >
         <i className="fas fa-bell text-[0.8rem]" aria-hidden />
         {unreadCount > 0 && (
@@ -90,7 +90,7 @@ export function NotificationBell() {
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center justify-between">
-            <span className="font-medium text-white">
+            <span className="font-medium text-neutral-950 dark:text-white">
               {t('notifications.label', 'Notifications')}
             </span>
             {/* One header action: while anything is unread, mark all read;
@@ -98,7 +98,7 @@ export function NotificationBell() {
             {unreadCount > 0 ? (
               <button
                 type="button"
-                className="cursor-pointer text-xs text-neutral-400 hover:text-white"
+                className="cursor-pointer text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
                 onClick={() => markAllRead.mutate()}
                 disabled={markAllRead.isPending}
               >
@@ -108,7 +108,7 @@ export function NotificationBell() {
               notifications.length > 0 && (
                 <button
                   type="button"
-                  className="cursor-pointer text-xs text-neutral-400 hover:text-white"
+                  className="cursor-pointer text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
                   onClick={() => clear.mutate()}
                   disabled={clear.isPending}
                 >
@@ -181,11 +181,11 @@ function NotificationRow({
         aria-hidden
       />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-white">
+        <span className="block truncate text-sm font-medium text-neutral-950 dark:text-white">
           {notification.title}
         </span>
         {notification.message && (
-          <span className="mt-0.5 line-clamp-3 block text-xs text-neutral-400">
+          <span className="mt-0.5 line-clamp-3 block text-xs text-neutral-600 dark:text-neutral-400">
             {notification.message}
           </span>
         )}

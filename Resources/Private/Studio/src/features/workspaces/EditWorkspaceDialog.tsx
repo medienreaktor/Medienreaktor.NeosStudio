@@ -87,7 +87,7 @@ export function EditWorkspaceDialog({
           <DialogTitle>
             {t('workspacesAdmin.editWorkspace', 'Edit workspace')}
             {workspace !== null && (
-              <span className="ml-2 font-normal text-neutral-400">
+              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
                 {workspace.name}
               </span>
             )}

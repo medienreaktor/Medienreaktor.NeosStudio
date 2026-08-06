@@ -101,7 +101,7 @@ export function WorkspaceRolesDialog({
           <DialogTitle>
             {t('workspacesAdmin.manageAccess', 'Manage access')}
             {workspace !== null && (
-              <span className="ml-2 font-normal text-neutral-400">
+              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
                 {workspace.title || workspace.name}
               </span>
             )}
@@ -145,7 +145,7 @@ export function WorkspaceRolesDialog({
                         className={`fas ${assignment.subjectType === 'USER' ? 'fa-user' : 'fa-users'} text-xs text-neutral-500`}
                         aria-hidden
                       />
-                      <span className="truncate text-neutral-200">
+                      <span className="truncate text-neutral-800 dark:text-neutral-200">
                         {assignment.label}
                       </span>
                       <Badge variant="secondary">

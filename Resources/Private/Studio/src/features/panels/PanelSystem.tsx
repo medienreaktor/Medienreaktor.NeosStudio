@@ -648,7 +648,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
           <div
             data-panel-group
             className={cn(
-              'flex min-h-0 min-w-0 flex-col overflow-hidden bg-neutral-900 text-white',
+              'flex min-h-0 min-w-0 flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-900 text-neutral-950 dark:text-white',
               !group.collapsed && 'flex-1',
               attentionDimClasses(group, attention),
             )}
@@ -669,7 +669,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
         <div
           data-panel-drop="dock"
           data-region={region}
-          className="grid flex-1 place-items-center text-xs text-neutral-400"
+          className="grid flex-1 place-items-center text-xs text-neutral-600 dark:text-neutral-400"
         >
           {t('panel.dragHere', 'Drag panels here')}
         </div>
@@ -729,7 +729,7 @@ export function SecondaryDock({
   return (
     <div
       className={cn(
-        'relative flex shrink-0 flex-col bg-neutral-900',
+        'relative flex shrink-0 flex-col bg-neutral-100 dark:bg-neutral-900',
         // Collapsed: take no width and drop the border so no bar shows - only
         // the expand button, overlaid on the top-right of the main region.
         showCollapsed ? 'w-0' : 'border-l',
@@ -741,7 +741,7 @@ export function SecondaryDock({
           type="button"
           aria-label={t('panel.expand', 'Expand panel')}
           onClick={() => setCollapsed(false)}
-          className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
+          className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
         >
           <i className="fas fa-angles-left text-xs" aria-hidden />
         </button>
@@ -756,7 +756,7 @@ export function SecondaryDock({
               type="button"
               aria-label={t('panel.collapse', 'Collapse panel')}
               onClick={() => setCollapsed(true)}
-              className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-400 hover:text-white"
+              className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
             >
               <i className="fas fa-angles-right text-xs" aria-hidden />
             </button>
@@ -785,7 +785,7 @@ function FloatingGroupWindow({
         .map((panel) => definitions.get(panel)?.title ?? panel)
         .join(', ')}
       className={cn(
-        'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-900 text-white shadow-lg',
+        'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-100 dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-lg',
         hidden && 'hidden',
         attentionDimClasses(group, attention),
       )}
@@ -839,7 +839,7 @@ function GroupTabBar({
         // so the centered tabs don't shift by the border width on toggle.
         'flex shrink-0 items-center',
         group.collapsed && 'border-b-transparent',
-        dropIndex !== null && 'bg-neutral-800/40',
+        dropIndex !== null && 'bg-neutral-200/40 dark:bg-neutral-800/40',
       )}
     >
       {group.panels.map((panel, index) => (
@@ -853,8 +853,8 @@ function GroupTabBar({
             className={cn(
               'cursor-grab touch-none px-2 py-1 text-xs font-medium select-none border-t',
               panel === group.active
-                ? 'bg-neutral-950 text-white border-blue-500'
-                : 'text-neutral-400 hover:text-white border-transparent',
+                ? 'bg-neutral-50 dark:bg-neutral-950 text-neutral-950 dark:text-white border-blue-500'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white border-transparent',
               // A panel asking for attention gets a solid blue tab so it reads
               // as the place to look, whether or not it is the active tab.
               attention.has(panel) &&
@@ -910,7 +910,7 @@ function GroupBody({
       data-region={stacking ? region : undefined}
       data-group-id={group.id}
       className={cn(
-        'flex min-h-0 flex-1 flex-col bg-neutral-950',
+        'flex min-h-0 flex-1 flex-col bg-neutral-50 dark:bg-neutral-950',
         collapsed && 'hidden',
         // A panel asking for attention frames its content (not the tab bar) in
         // blue, tying together with its blue tab above.
@@ -945,7 +945,7 @@ function GroupBody({
 function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
   return (
     <div
-      className="pointer-events-none fixed z-120 rounded-md border bg-neutral-900 px-2 py-1 text-xs shadow-md"
+      className="pointer-events-none fixed z-120 rounded-md border bg-neutral-100 dark:bg-neutral-900 px-2 py-1 text-xs shadow-md"
       style={{ left: drag.pointer.x + 12, top: drag.pointer.y + 12 }}
     >
       {title}

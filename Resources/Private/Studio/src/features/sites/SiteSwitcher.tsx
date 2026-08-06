@@ -35,7 +35,7 @@ export function SiteSwitcher({
       <SelectTrigger title={t('sites.activeSite', 'Active site')}>
         <div className="flex items-center gap-2">
           <i
-            className={`fa fa-globe fa-fw text-[0.7rem] text-neutral-400`}
+            className={`fa fa-globe fa-fw text-[0.7rem] text-neutral-600 dark:text-neutral-400`}
             aria-hidden
           />
           <SelectValue

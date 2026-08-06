@@ -18,7 +18,7 @@ function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={htmlFor}
-        className="block text-sm font-medium text-neutral-200"
+        className="block text-sm font-medium text-neutral-800 dark:text-neutral-200"
       >
         {label}
       </label>

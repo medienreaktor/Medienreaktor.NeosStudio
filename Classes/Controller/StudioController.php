@@ -87,6 +87,11 @@ class StudioController extends ActionController
             // Label translations: the SPA loads the core's XLIFF-as-JSON
             // bundle for the backend user's interface language at boot.
             'interfaceLanguage' => $this->userService->getInterfaceLanguage(),
+            // The user's UI mode preference (same value /me/profile serves),
+            // injected so the shell can theme itself before the first API
+            // roundtrip. Schema-less preference array: coerce out-of-range
+            // values to the dark default.
+            'uiMode' => $this->uiMode(),
             'xliffEndpoint' => $origin . '/neos/xliff.json',
             // The classic backend logout (POST, session-authenticated): ends
             // the Flow session the shell and the silent OAuth flow ride on.
@@ -94,6 +99,18 @@ class StudioController extends ActionController
         ];
 
         return $this->renderSpa($config);
+    }
+
+    /**
+     * The backend user's Studio UI mode ("light" | "dark" | "system"), read
+     * from the same `studio.uiMode` user preference the /me/profile endpoint
+     * manages. Dark is the Studio default.
+     */
+    private function uiMode(): string
+    {
+        $uiMode = $this->userService->getUserPreference('studio.uiMode');
+
+        return in_array($uiMode, ['light', 'dark', 'system'], true) ? $uiMode : 'dark';
     }
 
     private function ensureClient(string $redirectUri): void

@@ -19,10 +19,10 @@ export type ChangeTone = 'add' | 'change' | 'remove' | 'variant'
 
 /** Text color per tone - the 400 tier for legibility on the dark surface. */
 export const TONE_TEXT_CLASSES: Record<ChangeTone, string> = {
-  add: 'text-green-400',
-  change: 'text-blue-400',
-  remove: 'text-red-400',
-  variant: 'text-purple-400',
+  add: 'text-green-600 dark:text-green-400',
+  change: 'text-blue-600 dark:text-blue-400',
+  remove: 'text-red-600 dark:text-red-400',
+  variant: 'text-purple-600 dark:text-purple-400',
 }
 
 /**

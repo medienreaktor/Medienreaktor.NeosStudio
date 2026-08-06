@@ -25,7 +25,11 @@ export function WorkspaceDecorationBadges({
           key={index}
           title={decoration.label}
           className="inline-flex items-center rounded-sm border border-current px-1 py-px align-middle text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
-          style={{ color: decoration.color ?? 'var(--color-neutral-400)' }}
+          style={{
+            color:
+              decoration.color ??
+              'light-dark(var(--color-neutral-600), var(--color-neutral-400))',
+          }}
         >
           {decoration.badge}
         </span>

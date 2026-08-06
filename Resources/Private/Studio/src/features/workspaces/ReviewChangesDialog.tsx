@@ -77,7 +77,7 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
         <span
           key={badge.key}
           className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-white',
+            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-neutral-950 dark:text-white',
             TONE_BG_CLASSES[badge.tone],
           )}
         >
@@ -414,7 +414,7 @@ export function ReviewChangesDialog({
 
           <div className="flex flex-wrap items-center gap-3 pb-3">
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-400">
+              <span className="text-xs text-neutral-600 dark:text-neutral-400">
                 {t('workspace.review.sourceLabel', 'Changes in')}
               </span>
               <Select
@@ -449,7 +449,7 @@ export function ReviewChangesDialog({
               aria-hidden
             />
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-400">
+              <span className="text-xs text-neutral-600 dark:text-neutral-400">
                 {t('workspace.review.targetLabel', 'Publishing to')}
               </span>
               <Select
@@ -473,7 +473,7 @@ export function ReviewChangesDialog({
           </div>
 
           {documents.length > 0 && (
-            <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-800 pb-2 text-sm text-neutral-300">
+            <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 text-sm text-neutral-700 dark:text-neutral-300">
               <Checkbox
                 checked={allSelected}
                 indeterminate={selectedCount > 0 && !allSelected}
@@ -523,8 +523,8 @@ export function ReviewChangesDialog({
                         // itself does not light the item up).
                         'rounded-sm border border-transparent transition-colors',
                         isSelected
-                          ? 'border-blue-500 bg-neutral-800'
-                          : 'has-[>label:hover]:bg-neutral-800',
+                          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
+                          : 'has-[>label:hover]:bg-neutral-200 dark:has-[>label:hover]:bg-neutral-800',
                       )}
                     >
                       <label className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5">
@@ -539,7 +539,7 @@ export function ReviewChangesDialog({
                             // The icon's own line box is shorter than the
                             // title's (12px glyph, 14px text), so it needs the
                             // difference to sit on the title's baseline.
-                            'mt-1 shrink-0 text-white',
+                            'mt-1 shrink-0 text-neutral-950 dark:text-white',
                             document.hidden && 'opacity-50',
                           )}
                         />
@@ -562,7 +562,7 @@ export function ReviewChangesDialog({
                             )}
                           </div>
                           {breadcrumb.length > 0 && (
-                            <div className="truncate text-xs text-neutral-400">
+                            <div className="truncate text-xs text-neutral-600 dark:text-neutral-400">
                               {breadcrumb.join(' › ')}
                             </div>
                           )}
@@ -580,7 +580,7 @@ export function ReviewChangesDialog({
                         {document.documentAddress && canNavigate && (
                           <button
                             type="button"
-                            className="mt-0.5 shrink-0 text-xs text-blue-400 hover:underline"
+                            className="mt-0.5 shrink-0 text-xs text-blue-600 dark:text-blue-400 hover:underline"
                             title={
                               reviewingActive
                                 ? t('workspace.review.goToPage', 'Go to page')
@@ -645,7 +645,7 @@ export function ReviewChangesDialog({
             )}
           </div>
 
-          <DialogFooter className="border-t border-neutral-800 pt-4">
+          <DialogFooter className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
             <Button
               variant="secondary"
               onClick={() => onOpenChange(false)}
@@ -667,7 +667,7 @@ export function ReviewChangesDialog({
               title={canPublish ? undefined : publishDeniedHint}
               className={
                 selectedCount > 0 && canPublish
-                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
                   : undefined
               }
               onClick={() => run('publish')}

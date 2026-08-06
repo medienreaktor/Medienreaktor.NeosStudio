@@ -82,7 +82,7 @@ export function PropertyEditor({
       )
     return (
       <>
-        <div className="flex items-center gap-1.5 text-purple-300">
+        <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300">
           {editor}
           <ScopeHint scope={property.scope} />
         </div>
@@ -116,7 +116,7 @@ export function Labeled({
         className={cn(
           'mb-1 flex items-center gap-1.5 text-xs',
           // Purple marks dimension-spanning edits, matching the dimension UI.
-          spansVariants ? 'text-purple-300' : 'text-white',
+          spansVariants ? 'text-purple-700 dark:text-purple-300' : 'text-neutral-950 dark:text-white',
         )}
       >
         {label}
@@ -147,7 +147,7 @@ function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
     <Tooltip>
       <TooltipTrigger
         aria-label={hint}
-        className="cursor-help text-purple-300 hover:text-purple-200"
+        className="cursor-help text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200"
       >
         <i className="fas fa-right-left text-[0.75rem]" aria-hidden />
       </TooltipTrigger>
@@ -166,7 +166,7 @@ function ReadOnlyValue({
 }) {
   return (
     <div
-      className="min-h-9 rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-400"
+      className="min-h-9 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-600 dark:text-neutral-400"
       title={t(
         'inspector.editorNotSupported',
         'Editor not supported yet: {0}',

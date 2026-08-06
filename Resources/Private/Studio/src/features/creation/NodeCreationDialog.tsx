@@ -353,7 +353,7 @@ function ElementEditor({
 
   return (
     <label className="flex flex-col gap-1.5 text-sm">
-      <span className="text-xs font-medium text-neutral-400">
+      <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
         {element.label}
         {element.required && <span className="text-red-500"> *</span>}
       </span>

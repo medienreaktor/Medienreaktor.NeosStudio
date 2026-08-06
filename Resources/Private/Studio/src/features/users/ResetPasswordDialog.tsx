@@ -75,7 +75,7 @@ export function ResetPasswordDialog({
           <DialogTitle>
             {t('users.resetPassword', 'Reset password')}
             {user !== null && (
-              <span className="ml-2 font-normal text-neutral-400">
+              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
                 {user.label}
               </span>
             )}

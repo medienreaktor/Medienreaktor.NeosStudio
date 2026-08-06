@@ -15,13 +15,13 @@
 
 const COLOR = {
   punct: 'text-neutral-500',
-  tag: 'text-blue-400',
-  attr: 'text-orange-300',
-  string: 'text-green-400',
+  tag: 'text-blue-600 dark:text-blue-400',
+  attr: 'text-orange-700 dark:text-orange-300',
+  string: 'text-green-600 dark:text-green-400',
   comment: 'text-neutral-500 italic',
-  entity: 'text-orange-400',
-  number: 'text-orange-400',
-  keyword: 'text-blue-400',
+  entity: 'text-orange-600 dark:text-orange-400',
+  number: 'text-orange-600 dark:text-orange-400',
+  keyword: 'text-blue-600 dark:text-blue-400',
 } as const
 
 /** Highlighting mode; markup is the default since the editor is HTML-first. */

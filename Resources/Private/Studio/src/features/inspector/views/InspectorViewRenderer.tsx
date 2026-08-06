@@ -23,7 +23,7 @@ export function InspectorViewRenderer({
     return (
       <Labeled label={view.label}>
         <div
-          className="min-h-9 rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm text-neutral-400"
+          className="min-h-9 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400"
           title={t('view.notSupported', 'View not supported yet: {0}', [
             view.view ?? t('view.noneConfigured', '(none configured)'),
           ])}

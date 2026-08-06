@@ -132,7 +132,7 @@ function DataSourceSelectBox({
   if (identifier === null) {
     return (
       <div
-        className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-700 px-3 py-2 text-sm text-neutral-400"
+        className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400"
         title={t(
           'editor.selectBox.dataSourceUriHint',
           'editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier',
@@ -293,7 +293,7 @@ function SingleSelect({
             current !== null ? (
               selectedItem(current)
             ) : (
-              <span className="text-neutral-400">{placeholder}</span>
+              <span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>
             )
           }
         </SelectValue>
@@ -303,7 +303,7 @@ function SingleSelect({
             the user clear the value. */}
         {allowEmpty && (
           <SelectItem value={null}>
-            <span className="text-neutral-400">{placeholder}</span>
+            <span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>
           </SelectItem>
         )}
         <GroupedOptions items={items} />
@@ -398,13 +398,13 @@ function MultiSelectList({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-2 text-sm',
+              'flex h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-2 text-sm',
               dragIndex === index && 'opacity-50',
             )}
           >
             {draggable && (
               <i
-                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-600"
+                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-400 dark:text-neutral-600"
                 aria-hidden
               />
             )}
@@ -437,7 +437,7 @@ function MultiSelectList({
       >
         <SelectTrigger className="w-full">
           <SelectValue>
-            {() => <span className="text-neutral-400">{placeholder}</span>}
+            {() => <span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>

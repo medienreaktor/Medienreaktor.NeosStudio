@@ -85,7 +85,7 @@ export function TaskViewDialog({
         {/* The header carries everything about the task itself - title +
             status, description, assignee, actions; the body below is the
             conversation. The dialog's built-in X closes it. */}
-        <DialogHeader className="gap-3 border-b border-neutral-800 pb-4">
+        <DialogHeader className="gap-3 border-b border-neutral-200 dark:border-neutral-800 pb-4">
           <div className="min-w-0 pr-8">
             <DialogTitle className="flex items-center gap-2">
               {task?.workspace?.title || task?.workspaceName}
@@ -107,7 +107,7 @@ export function TaskViewDialog({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div
-              className="flex items-center gap-2 text-sm text-white"
+              className="flex items-center gap-2 text-sm text-neutral-950 dark:text-white"
               title={t('tasks.assignee', 'Assignee')}
             >
               {task?.assignee ? (
@@ -122,10 +122,10 @@ export function TaskViewDialog({
                 </>
               ) : (
                 <>
-                  <span className="flex size-5 items-center justify-center rounded-full bg-neutral-700 text-[0.55rem] text-neutral-400 select-none">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-700 text-[0.55rem] text-neutral-600 dark:text-neutral-400 select-none">
                     ?
                   </span>
-                  <span className="text-neutral-400">
+                  <span className="text-neutral-600 dark:text-neutral-400">
                     {t('tasks.unassignedHint', 'Unassigned')}
                   </span>
                 </>
@@ -197,7 +197,7 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
 
   return (
     <div>
-      <div className="text-xs text-neutral-400">
+      <div className="text-xs text-neutral-600 dark:text-neutral-400">
         {t('tasks.comments', 'Comments')}
       </div>
 
@@ -221,11 +221,11 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
               {presenceInitials(comment.authorLabel ?? '?')}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="w-fit max-w-full rounded-lg rounded-tl-none bg-neutral-800 px-3 py-1.5">
-                <div className="text-xs font-semibold text-white">
+              <div className="w-fit max-w-full rounded-lg rounded-tl-none bg-neutral-200 dark:bg-neutral-800 px-3 py-1.5">
+                <div className="text-xs font-semibold text-neutral-950 dark:text-white">
                   {comment.authorLabel ?? comment.author}
                 </div>
-                <div className="text-sm wrap-break-word whitespace-pre-line text-neutral-200">
+                <div className="text-sm wrap-break-word whitespace-pre-line text-neutral-800 dark:text-neutral-200">
                   {comment.text}
                 </div>
               </div>

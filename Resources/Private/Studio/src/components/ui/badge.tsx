@@ -10,12 +10,12 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-blue-500 text-white [a&]:hover:bg-blue-500/90',
-        secondary: 'bg-neutral-800 text-white [a&]:hover:bg-neutral-800/90',
+        secondary: 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white [a&]:hover:bg-neutral-200/90 dark:[a&]:hover:bg-neutral-800/90',
         destructive:
           'bg-red-500 text-white focus-visible:ring-red-500/20 dark:bg-red-500/60 dark:focus-visible:ring-red-500/40 [a&]:hover:bg-red-500/90',
         outline:
-          'border-neutral-700 text-white [a&]:hover:bg-neutral-800 [a&]:hover:text-white',
-        ghost: '[a&]:hover:bg-neutral-800 [a&]:hover:text-white',
+          'border-neutral-300 dark:border-neutral-700 text-neutral-950 dark:text-white [a&]:hover:bg-neutral-200 dark:[a&]:hover:bg-neutral-800 [a&]:hover:text-neutral-950 dark:[a&]:hover:text-white',
+        ghost: '[a&]:hover:bg-neutral-200 dark:[a&]:hover:bg-neutral-800 [a&]:hover:text-neutral-950 dark:[a&]:hover:text-white',
         link: 'text-blue-500 underline-offset-4 [a&]:hover:underline',
       },
     },

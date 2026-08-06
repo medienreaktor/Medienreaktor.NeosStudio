@@ -80,11 +80,11 @@ function ModalHost({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
           data-slot="modal-overlay"
-          className="fixed inset-0 z-200 bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
+          className="fixed inset-0 z-200 bg-neutral-50/80 dark:bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
         />
         <DialogPrimitive.Popup
           data-slot="modal-content"
-          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border bg-neutral-950 text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
+          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border bg-neutral-50 dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
         >
           {open.kind === 'settings' && (
             <SettingsModal
@@ -110,13 +110,13 @@ function ModalHeader({
 }) {
   return (
     <header className="flex shrink-0 items-center gap-3 border-b px-4 py-2.5">
-      <DialogPrimitive.Title className="text-lg font-semibold text-white">
+      <DialogPrimitive.Title className="text-lg font-semibold text-neutral-950 dark:text-white">
         {title}
       </DialogPrimitive.Title>
       <div className="ml-auto flex items-center gap-2">
         {children}
         <DialogPrimitive.Close
-          className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+          className="rounded-md p-1.5 text-neutral-600 dark:text-neutral-400 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
           aria-label={t('action.close', 'Close')}
         >
           <i className="fas fa-xmark text-[1rem]" aria-hidden />
@@ -151,7 +151,7 @@ function SettingsModal({
           className="w-56 shrink-0 overflow-y-auto p-2"
         >
           {sections.length === 0 && (
-            <p className="px-2 py-1.5 text-xs text-neutral-400">
+            <p className="px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400">
               {t('modal.noSettings', 'No settings available')}
             </p>
           )}
@@ -205,10 +205,10 @@ function SettingsNavItem({
       className={cn(
         'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors',
         !enabled
-          ? 'cursor-not-allowed text-neutral-600'
+          ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600'
           : isActive
-            ? 'bg-neutral-800 text-white'
-            : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white',
+            ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white'
+            : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 hover:text-neutral-950 dark:hover:text-white',
       )}
     >
       {section.icon && (
@@ -236,7 +236,7 @@ function SettingsSectionBody({
   const enabled = section.useEnabled ? section.useEnabled() : true
   if (!enabled) {
     return (
-      <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-400">
+      <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
         {section.disabledReason ??
           t('modal.noAccess', 'You do not have access to this section.')}
       </div>

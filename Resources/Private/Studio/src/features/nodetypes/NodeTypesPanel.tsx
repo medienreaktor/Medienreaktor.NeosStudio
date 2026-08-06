@@ -104,7 +104,7 @@ function CardSection({
   onToggle: () => void
 }) {
   return (
-    <div className="border-t border-white/10 px-3">
+    <div className="border-t border-neutral-950/10 dark:border-white/10 px-3">
       <CollapsibleGroup
         label={<span className="truncate">{title}</span>}
         open={open}
@@ -114,7 +114,7 @@ function CardSection({
         {rows.map((row) => (
           <div
             key={(row.isReference ? 'ref:' : 'prop:') + row.name}
-            className={cn('flex items-center gap-1 text-[10px] text-white')}
+            className={cn('flex items-center gap-1 text-[10px] text-neutral-950 dark:text-white')}
             style={{ height: ROW_HEIGHT }}
             title={
               row.inheritedFrom
@@ -126,12 +126,12 @@ function CardSection({
           >
             {row.isReference && (
               <i
-                className="fas fa-link fa-fw shrink-0 text-[7px] text-white/50"
+                className="fas fa-link fa-fw shrink-0 text-[7px] text-neutral-950/50 dark:text-white/50"
                 aria-hidden
               />
             )}
             <span className="truncate">{row.name}</span>
-            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-white/50">
+            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
               {row.type}
             </span>
           </div>
@@ -189,7 +189,9 @@ const GraphSurface = memo(function GraphSurface({
               d={edgePath(from, to)}
               fill="none"
               stroke={
-                active ? 'var(--color-blue-500)' : 'var(--color-neutral-600)'
+                active
+                  ? 'var(--color-blue-500)'
+                  : 'light-dark(var(--color-neutral-400), var(--color-neutral-600))'
               }
               strokeWidth={active ? 2 : 1}
               opacity={highlight !== null && !active ? 0.25 : 1}
@@ -224,11 +226,11 @@ const GraphSurface = memo(function GraphSurface({
               className="flex flex-col justify-center gap-0.5 px-3"
               style={{ height: HEADER_HEIGHT }}
             >
-              <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-white">
+              <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-neutral-950 dark:text-white">
                 <i
                   className={cn(
                     model.icon ? faClassName(model.icon) : 'fas fa-cube',
-                    'fa-fw shrink-0 text-[0.7rem] text-white',
+                    'fa-fw shrink-0 text-[0.7rem] text-neutral-950 dark:text-white',
                   )}
                   aria-hidden
                 />
@@ -236,12 +238,12 @@ const GraphSurface = memo(function GraphSurface({
                   {model.label}
                 </span>
                 {model.abstract && (
-                  <span className="ml-auto shrink-0 rounded-sm bg-neutral-800 px-1 text-[8px] tracking-wide text-white/50 uppercase">
+                  <span className="ml-auto shrink-0 rounded-sm bg-neutral-200 dark:bg-neutral-800 px-1 text-[8px] tracking-wide text-neutral-950/50 dark:text-white/50 uppercase">
                     {t('nodeTypes.abstract', 'Abstract')}
                   </span>
                 )}
               </div>
-              <div className="truncate font-mono text-[9px] text-white/50">
+              <div className="truncate font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
                 {model.name}
               </div>
             </div>
@@ -281,7 +283,7 @@ function Legend() {
     { kind: 'other', label: t('nodeTypes.legend.other', 'Mixin / other') },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-900/80 p-2 text-[10px] text-white/50 backdrop-blur-xs">
+    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-100/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
@@ -411,7 +413,7 @@ export function NodeTypesPanel() {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-2 pr-32">
             <SearchInput
               wrapperClassName="pointer-events-auto max-w-64"
-              className="bg-neutral-900/80 backdrop-blur-xs"
+              className="bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-xs"
               value={term}
               onChange={(event) => {
                 matchCursor.current = 0
@@ -430,7 +432,7 @@ export function NodeTypesPanel() {
               )}
             />
             {term.trim() !== '' && (
-              <span className="shrink-0 text-xs text-white/50">
+              <span className="shrink-0 text-xs text-neutral-950/50 dark:text-white/50">
                 {t('nodeTypes.matches', '{0} matches', [matches.length])}
               </span>
             )}
@@ -443,7 +445,7 @@ export function NodeTypesPanel() {
             />
           )}
           {isError && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/50">
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-950/50 dark:text-white/50">
               {t('nodeTypes.loadFailed', 'The node types could not be loaded.')}
             </div>
           )}

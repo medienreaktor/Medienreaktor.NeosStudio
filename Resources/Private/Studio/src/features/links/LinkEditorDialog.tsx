@@ -110,7 +110,7 @@ export function LinkEditorDialog({
         </DialogHeader>
 
         {types.length === 0 ? (
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
             {t('link.noTypes', 'No link types are registered.')}
           </p>
         ) : (
@@ -162,7 +162,7 @@ export function LinkEditorDialog({
               />
               {t('link.nofollow', 'No follow (rel="nofollow")')}
             </label>
-            <label className="flex flex-col gap-1 text-xs text-neutral-400">
+            <label className="flex flex-col gap-1 text-xs text-neutral-600 dark:text-neutral-400">
               {t('link.cssClass', 'CSS class')}
               <Input
                 value={cssClass}
@@ -171,7 +171,7 @@ export function LinkEditorDialog({
                 className="h-8 text-sm"
               />
             </label>
-            <label className="flex flex-col gap-1 text-xs text-neutral-400">
+            <label className="flex flex-col gap-1 text-xs text-neutral-600 dark:text-neutral-400">
               {t('link.title', 'Title')}
               <Input
                 value={title}

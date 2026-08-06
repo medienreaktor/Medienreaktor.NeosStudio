@@ -10,9 +10,9 @@ import type { TaskStatus } from '@/api/tasks'
 export function taskStatusColor(status: TaskStatus): string {
   switch (status) {
     case 'DONE':
-      return 'var(--color-green-400)'
+      return 'light-dark(var(--color-green-600), var(--color-green-400))'
     case 'IN_REVIEW':
-      return 'var(--color-orange-400)'
+      return 'light-dark(var(--color-orange-600), var(--color-orange-400))'
     default:
       return 'var(--color-blue-500)'
   }

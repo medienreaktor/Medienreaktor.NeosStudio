@@ -198,7 +198,7 @@ export function TasksBoard() {
             <div
               key={column.status}
               className={`flex min-w-56 flex-1 flex-col border transition-colors ${
-                droppable ? 'bg-neutral-900' : 'bg-neutral-900/50'
+                droppable ? 'bg-neutral-100 dark:bg-neutral-900' : 'bg-neutral-100/50 dark:bg-neutral-900/50'
               }`}
               onDragOver={(event) => {
                 if (droppable) event.preventDefault()
@@ -234,7 +234,7 @@ export function TasksBoard() {
                   </>
                 )}
                 {!isLoading && columnTasks.length === 0 && (
-                  <div className="rounded-md border border-dashed border-neutral-800 py-4 text-center text-xs text-neutral-600">
+                  <div className="rounded-md border border-dashed border-neutral-200 dark:border-neutral-800 py-4 text-center text-xs text-neutral-400 dark:text-neutral-600">
                     {t('tasks.columnEmpty', 'No tasks')}
                   </div>
                 )}
@@ -317,10 +317,10 @@ export function TasksBoard() {
 /** Placeholder card mirroring TaskCard's frame: title, description, avatar. */
 function TaskCardSkeleton() {
   return (
-    <div className="flex flex-col gap-1.5 rounded-md border border-transparent bg-neutral-800 px-2.5 py-2">
-      <Skeleton className="h-3.5 w-2/3 bg-neutral-700/60" />
+    <div className="flex flex-col gap-1.5 rounded-md border border-transparent bg-neutral-200 dark:bg-neutral-800 px-2.5 py-2">
+      <Skeleton className="h-3.5 w-2/3 bg-neutral-300/60 dark:bg-neutral-700/60" />
       <div className="mt-0.5 flex items-center">
-        <Skeleton className="size-5 rounded-full bg-neutral-700/60" />
+        <Skeleton className="size-5 rounded-full bg-neutral-300/60 dark:bg-neutral-700/60" />
       </div>
     </div>
   )
@@ -358,7 +358,7 @@ function TaskCard({
       <ContextMenuTrigger
         render={
           <div
-            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-900 hover:bg-neutral-800 px-2.5 py-2 text-[0.78rem] text-neutral-200 ${
+            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-2 text-[0.78rem] text-neutral-800 dark:text-neutral-200 ${
               active ? 'border-blue-500' : 'border-transparent'
             } ${draggable ? 'active:cursor-grabbing' : ''}`}
             title={
@@ -384,7 +384,7 @@ function TaskCard({
           />
         }
       >
-        <span className="font-semibold text-white">
+        <span className="font-semibold text-neutral-950 dark:text-white">
           {task.workspace?.title || task.workspaceName}
         </span>
 
@@ -404,7 +404,7 @@ function TaskCard({
               </span>
             ) : (
               <span
-                className="flex size-5 items-center justify-center rounded-full bg-neutral-700 text-[0.55rem] text-neutral-400 select-none"
+                className="flex size-5 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-700 text-[0.55rem] text-neutral-600 dark:text-neutral-400 select-none"
                 title={t('tasks.unassignedHint', 'Unassigned')}
               >
                 ?
@@ -414,7 +414,7 @@ function TaskCard({
           <span className="flex items-center gap-2">
             {task.commentCount > 0 && (
               <span
-                className="flex items-center gap-1 text-xs text-neutral-400"
+                className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400"
                 title={t('tasks.comments', 'Comments')}
               >
                 <i className="fas fa-comment text-[0.65rem]" aria-hidden />
@@ -423,7 +423,7 @@ function TaskCard({
             )}
             {task.workspace?.hasPublishableChanges && (
               <span
-                className="size-1.5 rounded-full bg-orange-400"
+                className="size-1.5 rounded-full bg-orange-600 dark:bg-orange-400"
                 title={t('tasks.hasChanges', 'Has unpublished changes')}
               />
             )}

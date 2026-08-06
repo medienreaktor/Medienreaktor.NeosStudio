@@ -106,7 +106,7 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
   loading: (
     <i
-      className="fas fa-spinner fa-spin text-[1rem] shrink-0 text-neutral-400"
+      className="fas fa-spinner fa-spin text-[1rem] shrink-0 text-neutral-600 dark:text-neutral-400"
       aria-hidden
     />
   ),
@@ -122,7 +122,7 @@ function ToastList() {
       // Base UI drives the stacking/swipe geometry through these CSS vars; the
       // `after` gap keeps the collapsed stack hoverable between toasts.
       className={cn(
-        'absolute right-0 bottom-0 left-auto w-full rounded-lg border bg-neutral-900 p-4 pr-8 text-white shadow-lg select-none',
+        'absolute right-0 bottom-0 left-auto w-full rounded-lg border bg-neutral-100 dark:bg-neutral-900 p-4 pr-8 text-neutral-950 dark:text-white shadow-lg select-none',
         'z-[calc(1000-var(--toast-index))] transform-[translateX(var(--toast-swipe-movement-x))_translateY(calc(var(--toast-swipe-movement-y)+calc(min(var(--toast-index),10)*-15px)))_scale(calc(max(0,1-(var(--toast-index)*0.1))))]',
         'transition-all [transition-property:transform,opacity] duration-300 ease-out',
         "after:absolute after:bottom-full after:left-0 after:h-4.25 after:w-full after:content-['']",
@@ -138,16 +138,16 @@ function ToastList() {
             <ToastPrimitive.Title className="text-sm leading-tight font-medium" />
           )}
           {toast.description && (
-            <ToastPrimitive.Description className="text-sm leading-snug wrap-break-word text-neutral-400" />
+            <ToastPrimitive.Description className="text-sm leading-snug wrap-break-word text-neutral-600 dark:text-neutral-400" />
           )}
           {toast.actionProps && (
-            <ToastPrimitive.Action className="mt-1 inline-flex h-7 w-fit items-center rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-neutral-800" />
+            <ToastPrimitive.Action className="mt-1 inline-flex h-7 w-fit items-center rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-800" />
           )}
         </div>
       </div>
       <ToastPrimitive.Close
         aria-label={t('common.close', 'Close')}
-        className="absolute top-3 right-3 rounded-xs text-neutral-400 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+        className="absolute top-3 right-3 rounded-xs text-neutral-600 dark:text-neutral-400 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
       >
         <i className="fas fa-xmark text-[1rem]" aria-hidden />
       </ToastPrimitive.Close>

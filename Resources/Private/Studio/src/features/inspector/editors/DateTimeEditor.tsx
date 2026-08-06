@@ -116,11 +116,11 @@ export const DateTimeEditor: PropertyEditorComponent = ({
             />
           }
         >
-          <i className="fas fa-calendar text-neutral-400" aria-hidden />
+          <i className="fas fa-calendar text-neutral-600 dark:text-neutral-400" aria-hidden />
           {date ? (
             phpFormat(date, format)
           ) : (
-            <span className="text-neutral-400">{placeholder}</span>
+            <span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>
           )}
         </PopoverTrigger>
         {date && !disabled && (
@@ -128,7 +128,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
           <button
             type="button"
             aria-label={t('editor.clear', 'Clear')}
-            className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-neutral-400 hover:bg-neutral-800 hover:text-white"
+            className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white"
             onClick={() => commit(null)}
           >
             <i className="fas fa-xmark text-[0.875rem]" aria-hidden />
@@ -161,7 +161,7 @@ export const DateTimeEditor: PropertyEditorComponent = ({
           <Button
             variant="ghost"
             size="sm"
-            className="text-neutral-400"
+            className="text-neutral-600 dark:text-neutral-400"
             onClick={() => commit(null)}
           >
             {t('editor.clear', 'Clear')}
@@ -232,7 +232,7 @@ function MonthCalendar({
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAY_LABELS.map((label, index) => (
-          <div key={index} className="py-1 text-xs text-neutral-400">
+          <div key={index} className="py-1 text-xs text-neutral-600 dark:text-neutral-400">
             {label}
           </div>
         ))}
@@ -247,11 +247,11 @@ function MonthCalendar({
               onClick={() => onSelect(day)}
               className={cn(
                 'flex h-8 items-center justify-center rounded-md text-sm',
-                outside ? 'text-neutral-600' : 'text-white',
+                outside ? 'text-neutral-400 dark:text-neutral-600' : 'text-neutral-950 dark:text-white',
                 isSelected
                   ? 'bg-blue-500 text-white hover:bg-blue-500/90'
-                  : 'hover:bg-neutral-800',
-                !isSelected && isToday && 'ring-1 ring-neutral-600',
+                  : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
+                !isSelected && isToday && 'ring-1 ring-neutral-400 dark:ring-neutral-600',
               )}
             >
               {day.getDate()}
@@ -290,10 +290,10 @@ function TimePicker({
     <div
       className={cn(
         'flex items-center gap-2',
-        withDivider && 'mt-3 border-t border-neutral-800 pt-3',
+        withDivider && 'mt-3 border-t border-neutral-200 dark:border-neutral-800 pt-3',
       )}
     >
-      <span className="text-xs text-neutral-400">
+      <span className="text-xs text-neutral-600 dark:text-neutral-400">
         {t('editor.time', 'Time')}
       </span>
       <div className="ml-auto flex items-center gap-1">
@@ -312,7 +312,7 @@ function TimePicker({
             ))}
           </SelectContent>
         </Select>
-        <span className="text-neutral-400">:</span>
+        <span className="text-neutral-600 dark:text-neutral-400">:</span>
         <Select
           value={String(minutes)}
           onValueChange={(next) => onChange(hours, Number(next))}

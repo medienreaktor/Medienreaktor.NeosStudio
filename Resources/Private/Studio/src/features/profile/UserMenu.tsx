@@ -49,7 +49,7 @@ export function UserMenu() {
         {/* GroupLabel must live inside a Group (Base UI error 31 otherwise). */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            <span className="block truncate font-medium text-white">
+            <span className="block truncate font-medium text-neutral-950 dark:text-white">
               {name}
             </span>
             {me.account && me.account !== name && (

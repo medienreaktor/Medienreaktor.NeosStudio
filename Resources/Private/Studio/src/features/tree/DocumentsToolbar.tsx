@@ -51,7 +51,7 @@ export function DocumentsToolbar({
   const filterActive = typeFilter.length > 0
 
   return (
-    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950/50 backdrop-blur-xs p-2">
+    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-50/50 dark:bg-neutral-950/50 backdrop-blur-xs p-2">
       <SearchInput
         value={searchTerm}
         onChange={(event) => onSearchTermChange(event.target.value)}

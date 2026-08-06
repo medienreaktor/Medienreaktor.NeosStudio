@@ -191,7 +191,7 @@ export function ShareLinkDialog({
                 {t('share.copy', 'Copy')}
               </Button>
             </div>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-neutral-600 dark:text-neutral-400">
               {t(
                 'share.copyOnceHint',
                 'Copy the link now — for security it is shown only this once.',
@@ -218,7 +218,7 @@ export function ShareLinkDialog({
                 {links.map((link) => (
                   <li
                     key={link.id}
-                    className="flex items-center gap-2 rounded px-1 py-0.5 pl-2 text-sm hover:bg-neutral-800"
+                    className="flex items-center gap-2 rounded px-1 py-0.5 pl-2 text-sm hover:bg-neutral-200 dark:hover:bg-neutral-800"
                   >
                     <span
                       className="min-w-0 flex-1 truncate"
@@ -227,7 +227,7 @@ export function ShareLinkDialog({
                       {link.label}
                     </span>
                     <span
-                      className="shrink-0 text-xs text-neutral-400"
+                      className="shrink-0 text-xs text-neutral-600 dark:text-neutral-400"
                       title={new Date(link.expiresAt).toLocaleString()}
                     >
                       {t('share.expires', 'expires {0}', [

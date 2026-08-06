@@ -118,7 +118,7 @@ export const RangeEditor: PropertyEditorComponent = ({
           title={t('editor.range.currentValue', 'Current value')}
         />
         {opts.unit && (
-          <span className="text-xs pr-2 text-neutral-400">{opts.unit}</span>
+          <span className="text-xs pr-2 text-neutral-600 dark:text-neutral-400">{opts.unit}</span>
         )}
       </span>
       <div className="min-w-0 flex-1 pr-2">
@@ -139,7 +139,7 @@ export const RangeEditor: PropertyEditorComponent = ({
             }
           />
         </div>
-        <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
+        <div className="flex items-center justify-between gap-2 text-xs text-neutral-600 dark:text-neutral-400">
           <span title={t('editor.range.minimum', 'Minimum')}>
             {opts.minLabel ?? `${opts.min}${opts.unit}`}
           </span>

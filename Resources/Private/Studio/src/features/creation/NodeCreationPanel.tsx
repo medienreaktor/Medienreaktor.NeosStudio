@@ -54,7 +54,7 @@ export function NodeCreationPanel() {
   return (
     <div className="@container flex min-h-full flex-col">
       {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-950/50 p-2 backdrop-blur-xs">
+      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-neutral-50/50 dark:bg-neutral-950/50 p-2 backdrop-blur-xs">
         <SearchInput
           placeholder={t(
             'creation.filterNodeTypesPlaceholder',
@@ -104,7 +104,7 @@ export function NodeCreationPanel() {
                       '{0} ({1}) - drag into the preview',
                       [nodeType.label, nodeType.name],
                     )}
-                    className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-700 bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-800 active:cursor-grabbing"
+                    className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-200/40 dark:bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-200 dark:hover:bg-neutral-800 active:cursor-grabbing"
                     onDragStart={(event) => {
                       event.dataTransfer.effectAllowed = 'copy'
                       event.dataTransfer.setData(

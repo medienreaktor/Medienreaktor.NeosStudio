@@ -161,15 +161,15 @@ function AssetRow({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        'flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 p-2',
+        'flex items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 p-2',
         dragging && 'opacity-50',
       )}
     >
       <i
-        className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-600"
+        className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-400 dark:text-neutral-600"
         aria-hidden
       />
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-900">
+      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (
@@ -179,7 +179,7 @@ function AssetRow({
           />
         ) : (
           <i
-            className="fas fa-paperclip text-[1.25rem] text-neutral-600"
+            className="fas fa-paperclip text-[1.25rem] text-neutral-400 dark:text-neutral-600"
             aria-hidden
           />
         )}

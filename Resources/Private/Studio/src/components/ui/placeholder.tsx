@@ -19,14 +19,14 @@ function Placeholder({
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-neutral-400',
+        'flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-neutral-600 dark:text-neutral-400',
         className,
       )}
       {...props}
     >
       {icon && (
         <i
-          className={cn('fas text-[1.75rem] text-neutral-600', icon)}
+          className={cn('fas text-[1.75rem] text-neutral-400 dark:text-neutral-600', icon)}
           aria-hidden
         />
       )}

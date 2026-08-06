@@ -647,7 +647,7 @@ export function PreviewPane({
               opacity: layer.ready ? 1 : 0,
               pointerEvents: layer.ready ? 'auto' : 'none',
             }}
-            className="absolute inset-0 h-full w-full border-0 bg-white transition-opacity duration-50 ease-out"
+            className="absolute inset-0 h-full w-full border-0 bg-neutral-950 dark:bg-white transition-opacity duration-50 ease-out"
           />
         ))}
       </div>

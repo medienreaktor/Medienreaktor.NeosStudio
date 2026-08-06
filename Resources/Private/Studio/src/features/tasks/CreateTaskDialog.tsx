@@ -196,7 +196,7 @@ export function CreateTaskDialog({
                 <SelectTrigger id="task-create-assignee" className="w-full">
                   <SelectValue
                     placeholder={t('tasks.selectUser', 'Select user')}
-                    className="data-placeholder:text-neutral-400"
+                    className="data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-400"
                   />
                 </SelectTrigger>
                 <SelectContent>

@@ -92,7 +92,7 @@ function changeLabel(change: WorkspacePendingDiffChange): string {
 function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
   if (change.kind === 'position') {
     return (
-      <div className="text-neutral-400">
+      <div className="text-neutral-600 dark:text-neutral-400">
         {t('workspaceHistory.change.reordered', 'Reordered among its siblings')}
       </div>
     )
@@ -106,15 +106,15 @@ function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
   )
   return (
     <div className="min-w-0">
-      <div className="truncate text-[10px] font-medium text-neutral-400">
+      <div className="truncate text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
         {changeLabel(change)}
       </div>
       {oldText !== newText && (
-        <div className="wrap-break-word text-red-400/90 line-through">
+        <div className="wrap-break-word text-red-600/90 dark:text-red-400/90 line-through">
           {oldText ?? empty}
         </div>
       )}
-      <div className="wrap-break-word text-green-400/90">
+      <div className="wrap-break-word text-green-600/90 dark:text-green-400/90">
         {newText ?? empty}
       </div>
     </div>
@@ -153,7 +153,7 @@ function DiffEvent({
           >
             {eventTypeLabel(event.type, event.tag)}
           </span>
-          <span className="truncate text-white">
+          <span className="truncate text-neutral-950 dark:text-white">
             {event.nodeLabel ??
               event.nodeAggregateId ??
               t('workspaceGraph.unknownNode', 'Unknown node')}
@@ -234,7 +234,7 @@ export function NodeDiff({ node }: { node: WorkspaceDocumentDiffNode }) {
         <span className={cn('shrink-0', TONE_TEXT_CLASSES[status.tone])}>
           {kind?.label ?? status.label()}
         </span>
-        <span className="truncate text-white">
+        <span className="truncate text-neutral-950 dark:text-white">
           {node.nodeLabel ??
             node.nodeAggregateId ??
             t('workspaceGraph.unknownNode', 'Unknown node')}

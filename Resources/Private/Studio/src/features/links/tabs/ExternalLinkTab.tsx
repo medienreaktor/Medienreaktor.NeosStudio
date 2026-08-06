@@ -25,7 +25,7 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-neutral-400" htmlFor="link-external-url">
+      <label className="text-xs text-neutral-600 dark:text-neutral-400" htmlFor="link-external-url">
         {t('link.url', 'URL')}
       </label>
       <Input

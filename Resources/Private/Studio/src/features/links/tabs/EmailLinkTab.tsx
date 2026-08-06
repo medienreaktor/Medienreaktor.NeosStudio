@@ -12,7 +12,7 @@ export function EmailLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-neutral-400" htmlFor="link-email-address">
+      <label className="text-xs text-neutral-600 dark:text-neutral-400" htmlFor="link-email-address">
         {t('link.emailAddress', 'E-Mail address')}
       </label>
       <Input

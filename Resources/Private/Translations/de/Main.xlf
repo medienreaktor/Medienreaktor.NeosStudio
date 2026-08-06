@@ -1526,6 +1526,22 @@
         <source>Profile</source>
         <target xml:lang="de">Profil</target>
       </trans-unit>
+      <trans-unit id="profile.uiMode" xml:space="preserve">
+        <source>Appearance</source>
+        <target xml:lang="de">Erscheinungsbild</target>
+      </trans-unit>
+      <trans-unit id="profile.uiModeDark" xml:space="preserve">
+        <source>Dark</source>
+        <target xml:lang="de">Dunkel</target>
+      </trans-unit>
+      <trans-unit id="profile.uiModeLight" xml:space="preserve">
+        <source>Light</source>
+        <target xml:lang="de">Hell</target>
+      </trans-unit>
+      <trans-unit id="profile.uiModeSystem" xml:space="preserve">
+        <source>System</source>
+        <target xml:lang="de">System</target>
+      </trans-unit>
       <trans-unit id="profile.unavailable" xml:space="preserve">
         <source>Your profile is currently unavailable.</source>
         <target xml:lang="de">Dein Profil ist derzeit nicht verfügbar.</target>

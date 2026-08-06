@@ -87,7 +87,7 @@ export function AssetDetailsDialog({
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left: preview + read-only metadata. */}
           <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
-            <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-900 p-2">
+            <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900 p-2">
               <AssetThumb asset={asset} preview />
             </div>
 
@@ -471,10 +471,10 @@ function AssignTree({
 }) {
   return (
     <Popover>
-      <PopoverTrigger className="mt-1 flex h-7 w-full items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-700/30 px-2 text-xs text-neutral-300 hover:bg-neutral-700/50">
+      <PopoverTrigger className="mt-1 flex h-7 w-full items-center gap-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 dark:bg-neutral-700/30 px-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50">
         <span className="truncate">{placeholder}</span>
         <i
-          className="fas fa-chevron-down ml-auto shrink-0 text-[0.75rem] text-white/50"
+          className="fas fa-chevron-down ml-auto shrink-0 text-[0.75rem] text-neutral-950/50 dark:text-white/50"
           aria-hidden
         />
       </PopoverTrigger>
@@ -507,12 +507,12 @@ function AssignTree({
 
 function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="flex items-center gap-1 rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-200">
+    <span className="flex items-center gap-1 rounded bg-neutral-200 dark:bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-800 dark:text-neutral-200">
       {label}
       <button
         type="button"
         onClick={onRemove}
-        className="text-neutral-500 hover:text-neutral-200"
+        className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
         aria-label={t('media.removeLabel', 'Remove {0}', [label])}
       >
         <i className="fas fa-xmark text-[0.75rem]" aria-hidden />
@@ -530,7 +530,7 @@ function Field({
 }) {
   return (
     <div>
-      <h3 className="mb-1 flex items-center gap-1.5 text-xs text-white">
+      <h3 className="mb-1 flex items-center gap-1.5 text-xs text-neutral-950 dark:text-white">
         {label}
       </h3>
       {children}
@@ -548,7 +548,7 @@ function Meta({
   return (
     <>
       <dt className="text-neutral-500">{label}</dt>
-      <dd className={cn('truncate text-right text-neutral-300')}>{children}</dd>
+      <dd className={cn('truncate text-right text-neutral-700 dark:text-neutral-300')}>{children}</dd>
     </>
   )
 }

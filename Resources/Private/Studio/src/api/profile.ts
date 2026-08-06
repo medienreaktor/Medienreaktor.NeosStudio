@@ -15,6 +15,12 @@ export interface Profile {
   interfaceLanguage: string
   /** Locale identifier => label, the options for the language picker. */
   availableLanguages: Record<string, string>
+  /**
+   * Free-form per-user preferences. The server stores keys verbatim and has
+   * no schema - clients bring their own namespaced keys (Studio uses
+   * "studio.uiMode" etc.) and must validate what they read back.
+   */
+  preferences: Record<string, unknown>
 }
 
 export interface ProfileResponse {
@@ -26,6 +32,8 @@ export interface UpdateProfileInput {
   lastName?: string
   email?: string
   interfaceLanguage?: string
+  /** Partial merge: only the given keys are written, null deletes a key. */
+  preferences?: Record<string, unknown>
 }
 
 export function useProfile(enabled = true) {

@@ -45,7 +45,7 @@ export function RolesField({
             return (
               <label
                 key={role.identifier}
-                className="flex cursor-pointer items-center gap-2.5 py-0.5 text-sm text-neutral-200 has-[[disabled]]:cursor-not-allowed"
+                className="flex cursor-pointer items-center gap-2.5 py-0.5 text-sm text-neutral-800 dark:text-neutral-200 has-[[disabled]]:cursor-not-allowed"
               >
                 <Checkbox
                   checked={value.includes(role.identifier)}

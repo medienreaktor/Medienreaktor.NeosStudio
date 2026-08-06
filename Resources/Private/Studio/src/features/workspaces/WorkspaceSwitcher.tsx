@@ -35,15 +35,17 @@ import {
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
 
 /**
- * The darkest ramp shade of a tint, used as the trigger background: theme
- * variables like 'var(--color-blue-500)' map onto their ramp's 950 shade,
- * arbitrary decoration colors approximate it by mixing into near-black.
+ * The faintest ramp shade of a tint (950 in dark mode, 50 in light - via the
+ * color-scheme-driven light-dark() function), used as the trigger background:
+ * theme variables like 'var(--color-blue-500)' map onto their ramp's edge
+ * shade, arbitrary decoration colors approximate it by mixing into the
+ * theme's near-black/near-white.
  */
 function darkestShade(tint: string): string {
   const ramp = tint.match(/^var\(--color-([a-z]+)-\d{2,3}\)$/)
   return ramp
-    ? `var(--color-${ramp[1]}-950)`
-    : `color-mix(in srgb, ${tint} 20%, var(--color-neutral-950))`
+    ? `light-dark(var(--color-${ramp[1]}-50), var(--color-${ramp[1]}-950))`
+    : `color-mix(in srgb, ${tint} 20%, light-dark(var(--color-neutral-50), var(--color-neutral-950)))`
 }
 
 /**
@@ -216,7 +218,8 @@ export function WorkspaceSwitcher({
     ? (decorationsFor(activeWorkspace, decorators)[0] ?? null)
     : null
   const tint = collaborative
-    ? (activeDecoration?.color ?? 'var(--color-purple-400)')
+    ? (activeDecoration?.color ??
+      'light-dark(var(--color-purple-600), var(--color-purple-400))')
     : null
 
   const currentLabel = collaborative
@@ -267,18 +270,18 @@ export function WorkspaceSwitcher({
                 }
               : undefined
           }
-          className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-700 bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50"
+          className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex items-center gap-2">
             <i
               className={`fa fa-fw text-[0.7rem] ${
                 switchBase.isPending
-                  ? 'fa-spinner fa-spin text-neutral-400'
+                  ? 'fa-spinner fa-spin text-neutral-600 dark:text-neutral-400'
                   : activeDecoration
                     ? `fa-${activeDecoration.icon ?? 'code-branch'}`
                     : collaborative
                       ? 'fa-users'
-                      : 'fa-layer-group text-neutral-400'
+                      : 'fa-layer-group text-neutral-600 dark:text-neutral-400'
               }`}
               style={
                 tint && !switchBase.isPending ? { color: tint } : undefined
@@ -288,7 +291,7 @@ export function WorkspaceSwitcher({
             <span className="hidden @[48rem]:inline">{currentLabel}</span>
           </span>
           <i
-            className="fas fa-chevron-down text-[1rem] text-white/50"
+            className="fas fa-chevron-down text-[1rem] text-neutral-950/50 dark:text-white/50"
             aria-hidden
           />
         </DropdownMenuTrigger>
@@ -320,7 +323,7 @@ export function WorkspaceSwitcher({
                       for reviewing, but flagged. */}
                   {!rebaseBlocked && !workspace.permissions.write && (
                     <span
-                      className="ml-1.5 text-xs text-neutral-400"
+                      className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400"
                       title={t(
                         'workspace.cannotPublishHere',
                         'You cannot publish to this workspace',
@@ -359,7 +362,7 @@ export function WorkspaceSwitcher({
                     />
                     {workspaceLabel(workspace)}
                     {!workspace.permissions.write && (
-                      <span className="ml-1.5 text-xs text-neutral-400">
+                      <span className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                         <i className="fas fa-lock" aria-hidden />{' '}
                         {t('workspace.readOnly', 'read-only')}
                       </span>
@@ -463,7 +466,7 @@ export function WorkspaceSwitcher({
                       {workspaceLabel(workspace)}
                       <WorkspaceDecorationBadges workspace={workspace} />
                       {!workspace.permissions.write && (
-                        <span className="ml-1.5 text-xs text-neutral-400">
+                        <span className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                           <i className="fas fa-lock" aria-hidden />{' '}
                           {t('workspace.readOnly', 'read-only')}
                         </span>

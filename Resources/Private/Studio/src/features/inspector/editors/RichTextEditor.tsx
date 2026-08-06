@@ -121,7 +121,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
   const isEmpty = editor?.isEmpty ?? true
 
   return (
-    <div className="rounded-md border border-neutral-700 shadow-xs transition-[color,box-shadow] focus-within:border-blue-500 dark:bg-neutral-700/30">
+    <div className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 dark:bg-neutral-700/30 shadow-xs transition-[color,box-shadow] focus-within:border-blue-500">
       {editor && (
         <Toolbar
           editor={editor}
@@ -133,7 +133,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
         {placeholder && isEmpty && (
           <span
             aria-hidden
-            className="pointer-events-none absolute top-2 left-3 text-sm text-neutral-400"
+            className="pointer-events-none absolute top-2 left-3 text-sm text-neutral-600 dark:text-neutral-400"
           >
             {placeholder}
           </span>
@@ -151,9 +151,9 @@ export const RichTextEditor: PropertyEditorComponent = ({
             '[&_.tiptap_:is(h4,h5,h6)]:font-bold',
             '[&_.tiptap_ul]:list-disc [&_.tiptap_ol]:list-decimal',
             '[&_.tiptap_:is(ul,ol)]:pl-5',
-            '[&_.tiptap_blockquote]:border-l-2 [&_.tiptap_blockquote]:border-neutral-700 [&_.tiptap_blockquote]:pl-3 [&_.tiptap_blockquote]:text-neutral-400',
-            '[&_.tiptap_pre]:rounded [&_.tiptap_pre]:bg-neutral-800 [&_.tiptap_pre]:p-2 [&_.tiptap_pre]:font-mono [&_.tiptap_pre]:text-xs',
-            '[&_.tiptap_hr]:my-2 [&_.tiptap_hr]:border-neutral-700',
+            '[&_.tiptap_blockquote]:border-l-2 [&_.tiptap_blockquote]:border-neutral-300 dark:[&_.tiptap_blockquote]:border-neutral-700 [&_.tiptap_blockquote]:pl-3 [&_.tiptap_blockquote]:text-neutral-600 dark:[&_.tiptap_blockquote]:text-neutral-400',
+            '[&_.tiptap_pre]:rounded [&_.tiptap_pre]:bg-neutral-200 dark:[&_.tiptap_pre]:bg-neutral-800 [&_.tiptap_pre]:p-2 [&_.tiptap_pre]:font-mono [&_.tiptap_pre]:text-xs',
+            '[&_.tiptap_hr]:my-2 [&_.tiptap_hr]:border-neutral-300 dark:[&_.tiptap_hr]:border-neutral-700',
             '[&_.tiptap_a]:text-blue-500 [&_.tiptap_a]:underline',
             '[&_.tiptap_p+p]:mt-2',
           )}
@@ -194,7 +194,7 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       disabled={disabled}
-      className={cn(active && 'bg-neutral-800 text-blue-500')}
+      className={cn(active && 'bg-neutral-200 dark:bg-neutral-800 text-blue-500')}
       onMouseDown={(event) => {
         event.preventDefault()
         if (!runOnClick) onRun()
@@ -300,7 +300,7 @@ function Toolbar({
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-700 p-1">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-300 dark:border-neutral-700 p-1">
       {formatting.block && blockChoices.length > 1 && (
         <Select
           items={blockChoices}
@@ -481,7 +481,7 @@ function Toolbar({
                     aria-hidden
                   />
                   {style.name}
-                  <span className="ml-auto pl-2 font-mono text-xs text-neutral-400">
+                  <span className="ml-auto pl-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
                     {`<${style.element}>`}
                   </span>
                 </DropdownMenuItem>

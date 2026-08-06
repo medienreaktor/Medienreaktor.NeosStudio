@@ -37,7 +37,7 @@ export function ClipboardPanel() {
   return (
     <div className="flex flex-col gap-1 p-2">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs text-neutral-400">
+        <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {t('clipboard.pasteHint', 'Paste inserts the highlighted entry.')}
         </span>
         <Button variant="ghost" size="xs" onClick={clipboardClear}>
@@ -69,7 +69,7 @@ function ClipboardRow({
     <div
       className={cn(
         'group flex items-center gap-1 rounded-sm border border-transparent pr-1',
-        active ? 'border-blue-500 bg-neutral-800' : 'hover:bg-neutral-800',
+        active ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800' : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
       )}
     >
       <button
@@ -86,7 +86,7 @@ function ClipboardRow({
         onClick={() => clipboardActivate(entry.id)}
       >
         <span
-          className="shrink-0 text-neutral-400"
+          className="shrink-0 text-neutral-600 dark:text-neutral-400"
           title={
             entry.mode === 'cut'
               ? t('clipboard.cutHint', 'Cut - pasting moves it')
@@ -101,14 +101,14 @@ function ClipboardRow({
             aria-hidden
           />
         </span>
-        <span className="shrink-0 text-white">
+        <span className="shrink-0 text-neutral-950 dark:text-white">
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={entry.nodeType} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block overflow-hidden text-sm text-ellipsis whitespace-nowrap">
             {entry.label}
           </span>
-          <span className="block text-xs text-neutral-400 capitalize">
+          <span className="block text-xs text-neutral-600 dark:text-neutral-400 capitalize">
             {entry.mode === 'cut'
               ? t('clipboard.statusCut', 'Cut')
               : t('clipboard.copied', 'Copied')}{' '}

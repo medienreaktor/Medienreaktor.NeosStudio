@@ -103,7 +103,7 @@ export function EditUserDialog({
           <DialogTitle>
             {t('users.editUser', 'Edit user')}
             {user !== null && (
-              <span className="ml-2 font-normal text-neutral-400">
+              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
                 {user.label}
               </span>
             )}

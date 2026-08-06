@@ -94,7 +94,7 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // publish permission on the base workspace.
   const segmentClasses =
     hasChanges && canPublish
-      ? 'bg-green-500 text-white hover:bg-green-600'
+      ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
       : undefined
   const segmentVariant =
     hasChanges && canPublish ? ('default' as const) : ('secondary' as const)

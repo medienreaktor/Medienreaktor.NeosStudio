@@ -42,7 +42,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
     <tfoot
       data-slot="table-footer"
       className={cn(
-        'border-t bg-neutral-800/50 font-medium [&>tr]:last:border-b-0',
+        'border-t bg-neutral-200/50 dark:bg-neutral-800/50 font-medium [&>tr]:last:border-b-0',
         className,
       )}
       {...props}
@@ -55,7 +55,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
     <tr
       data-slot="table-row"
       className={cn(
-        'border-b border-neutral-700 transition-colors hover:bg-neutral-800/50 data-[state=selected]:bg-neutral-800',
+        'border-b border-neutral-300 dark:border-neutral-700 transition-colors hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 data-[state=selected]:bg-neutral-200 dark:data-[state=selected]:bg-neutral-800',
         className,
       )}
       {...props}
@@ -68,7 +68,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     <th
       data-slot="table-head"
       className={cn(
-        'h-9 px-2 text-left align-middle font-medium whitespace-nowrap text-neutral-400',
+        'h-9 px-2 text-left align-middle font-medium whitespace-nowrap text-neutral-600 dark:text-neutral-400',
         className,
       )}
       {...props}
@@ -93,7 +93,7 @@ function TableCaption({
   return (
     <caption
       data-slot="table-caption"
-      className={cn('mt-2 text-sm text-neutral-400', className)}
+      className={cn('mt-2 text-sm text-neutral-600 dark:text-neutral-400', className)}
       {...props}
     />
   )

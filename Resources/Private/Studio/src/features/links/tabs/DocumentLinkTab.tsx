@@ -129,7 +129,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-950 p-1">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 p-1">
         <TreeList
           tree={tree}
           label={t('link.targetDocument', 'Link target document')}
@@ -144,7 +144,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
           }
         />
       </div>
-      <label className="flex items-center gap-2 text-xs text-neutral-400">
+      <label className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
         <span className="shrink-0">{t('link.anchor', 'Anchor')}</span>
         <Input
           value={anchor}

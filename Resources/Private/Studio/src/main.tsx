@@ -36,6 +36,11 @@ import { registerBuiltinPropertyEditors } from './features/inspector/editors'
 import { registerBuiltinValidators } from './features/inspector/validators'
 import { registerBuiltinNodeDecorators } from './features/tree/builtinDecorators'
 import { installPluginApiGlobals } from './plugin-api'
+import { initUiMode } from './lib/uiMode'
+
+// Theme first: apply the user's UI mode preference (from the boot config)
+// before anything renders, so a non-default mode never flashes dark.
+initUiMode()
 
 // Publish React and the plugin API on `window` before anything else, so the
 // deferred plugin `type="module"` tags the StudioController injects after this

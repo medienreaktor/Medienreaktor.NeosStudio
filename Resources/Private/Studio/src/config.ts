@@ -13,6 +13,11 @@ export interface StudioConfig {
   structureTree: { loadingDepth: number }
   /** The backend user's interface language preference (e.g. "en", "de"). */
   interfaceLanguage: string
+  /**
+   * The backend user's UI mode preference; applied before mount so the shell
+   * never flashes the wrong theme. Dark is the Studio default.
+   */
+  uiMode: 'light' | 'dark' | 'system'
   /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */
   xliffEndpoint: string
   /** Classic backend logout (POST, session-authenticated). */
@@ -36,6 +41,7 @@ const fallback: StudioConfig = {
   nodeTree: { loadingDepth: 4 },
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',
+  uiMode: 'dark',
   xliffEndpoint: '/neos/xliff.json',
   logoutEndpoint: '/neos/logout',
 }

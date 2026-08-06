@@ -85,10 +85,10 @@ export function MediaUploader({
     items.length > 0 && items.every((item) => item.status !== 'uploading')
 
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center bg-neutral-950/80 p-8">
-      <div className="w-full max-w-md rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
-          <h2 className="text-sm font-medium text-neutral-200">
+    <div className="absolute inset-0 z-20 grid place-items-center bg-neutral-50/80 dark:bg-neutral-950/80 p-8">
+      <div className="w-full max-w-md rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 shadow-xl">
+        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 px-4 py-3">
+          <h2 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
             {t('media.uploadAssets', 'Upload assets')}
           </h2>
           <Button
@@ -108,7 +108,7 @@ export function MediaUploader({
               'grid place-items-center rounded-md border-2 border-dashed p-8 text-center transition-colors',
               isDragActive
                 ? 'border-blue-500 bg-blue-500/10'
-                : 'border-neutral-700',
+                : 'border-neutral-300 dark:border-neutral-700',
             )}
           >
             <input {...getInputProps()} />
@@ -116,7 +116,7 @@ export function MediaUploader({
               className="fas fa-cloud-arrow-up mb-2 text-[2rem] text-neutral-500"
               aria-hidden
             />
-            <p className="text-sm text-neutral-300">
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
               {t('media.dragFilesHere', 'Drag files here')}
             </p>
             <p className="mb-3 text-xs text-neutral-500">
@@ -132,7 +132,7 @@ export function MediaUploader({
               {items.map((item) => (
                 <li key={item.id} className="text-xs">
                   <div className="mb-1 flex justify-between">
-                    <span className="truncate text-neutral-300">
+                    <span className="truncate text-neutral-700 dark:text-neutral-300">
                       {item.name}
                     </span>
                     <span
@@ -150,7 +150,7 @@ export function MediaUploader({
                           : `${Math.round(item.progress * 100)}%`}
                     </span>
                   </div>
-                  <div className="h-1 overflow-hidden rounded-full bg-neutral-800">
+                  <div className="h-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                     <div
                       className={cn(
                         'h-full transition-[width]',
@@ -166,7 +166,7 @@ export function MediaUploader({
         </div>
 
         {allDone && (
-          <div className="border-t border-neutral-800 px-4 py-3 text-right">
+          <div className="border-t border-neutral-200 dark:border-neutral-800 px-4 py-3 text-right">
             <Button size="sm" onClick={onClose}>
               {t('media.done', 'Done')}
             </Button>

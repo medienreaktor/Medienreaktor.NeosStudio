@@ -79,14 +79,14 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-700 bg-neutral-950 px-3 py-2.5 text-sm text-neutral-400 hover:border-neutral-500 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2.5 text-sm text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-950 dark:hover:text-white"
         >
           <i className="fas fa-link text-[1rem]" aria-hidden />
           {t('editor.link.set', 'Set link…')}
         </button>
       ) : (
-        <div className="flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 py-1 pr-1 pl-2.5">
-          <span className="shrink-0 text-[1rem] text-neutral-400">{icon}</span>
+        <div className="flex items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 py-1 pr-1 pl-2.5">
+          <span className="shrink-0 text-[1rem] text-neutral-600 dark:text-neutral-400">{icon}</span>
           <span className="min-w-0 flex-1 truncate text-sm" title={href}>
             {label}
           </span>

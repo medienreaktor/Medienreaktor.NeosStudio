@@ -49,10 +49,10 @@ const REFRESH_INTERVAL = 30_000
 const DOT_RADIUS = 6
 
 const CLASSIFICATION_ICONS: Record<string, string> = {
-  ROOT: 'fas fa-earth-americas text-white',
+  ROOT: 'fas fa-earth-americas text-neutral-950 dark:text-white',
   SHARED: 'fas fa-users text-purple-500',
-  PRIVATE: 'fas fa-lock text-white/50',
-  PERSONAL: 'fas fa-user text-white/50',
+  PRIVATE: 'fas fa-lock text-neutral-950/50 dark:text-white/50',
+  PERSONAL: 'fas fa-user text-neutral-950/50 dark:text-white/50',
 }
 
 function workspaceLabel(workspace: Workspace): string {
@@ -172,7 +172,7 @@ const GraphSurface = memo(function GraphSurface({
               key={`${branch.workspace.name}:${dot.step.id}`}
               data-graph-id={`event:${branch.workspace.name}:${dot.step.id}`}
               className={cn(
-                'absolute cursor-pointer rounded-full border-2 bg-neutral-950 transition-transform',
+                'absolute cursor-pointer rounded-full border-2 bg-neutral-50 dark:bg-neutral-950 transition-transform',
                 selected && cn('scale-150', SELECTED_RING),
                 dimmed(branch.workspace.name) && 'opacity-20',
               )}
@@ -226,21 +226,21 @@ const GraphSurface = memo(function GraphSurface({
               }}
             >
               <div className="flex flex-col gap-0.5 px-3 py-2">
-                <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-white">
+                <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-neutral-950 dark:text-white">
                   <i
                     className={cn(
                       CLASSIFICATION_ICONS[workspace.classification] ??
-                        'fas fa-layer-group text-white/50',
+                        'fas fa-layer-group text-neutral-950/50 dark:text-white/50',
                       'fa-fw shrink-0 text-[0.7rem]',
                     )}
                     aria-hidden
                   />
                   <span className="truncate">{workspaceLabel(workspace)}</span>
                 </div>
-                <div className="truncate font-mono text-[9px] text-white/50">
+                <div className="truncate font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
                   {workspace.name}
                 </div>
-                <div className="flex items-center gap-2 text-[9px] text-white">
+                <div className="flex items-center gap-2 text-[9px] text-neutral-950 dark:text-white">
                   {branch.branchFrom !== null && (
                     <span>
                       {t('workspaceGraph.changeCount', '{0} changes', [
@@ -288,7 +288,7 @@ const GraphSurface = memo(function GraphSurface({
                 }}
                 title={t('workspaceGraph.youAreHere', 'You are here')}
               >
-                <span className="text-[11px] leading-none font-bold tracking-widest text-white">
+                <span className="text-[11px] leading-none font-bold tracking-widest text-neutral-950 dark:text-white">
                   HEAD
                 </span>
               </div>
@@ -572,7 +572,7 @@ export function WorkspaceGraphPanel() {
             />
           )}
           {isError && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-600 dark:text-neutral-400">
               {t(
                 'workspaceGraph.loadFailed',
                 'The workspaces could not be loaded.',

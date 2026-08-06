@@ -197,12 +197,12 @@ function SiteRow({
   })
 
   return (
-    <TableRow className="text-neutral-200">
+    <TableRow className="text-neutral-800 dark:text-neutral-200">
       <TableCell>
-        <span className="font-medium text-white">{site.name}</span>
+        <span className="font-medium text-neutral-950 dark:text-white">{site.name}</span>
         <span className="ml-2 text-xs text-neutral-500">{site.nodeName}</span>
       </TableCell>
-      <TableCell className="text-neutral-400">
+      <TableCell className="text-neutral-600 dark:text-neutral-400">
         {site.siteResourcesPackageKey}
       </TableCell>
       <TableCell>
@@ -224,13 +224,13 @@ function SiteRow({
       </TableCell>
       <TableCell>
         {site.state === 'online' ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-300">
+          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
             <span className="size-1.5 rounded-full bg-green-500" />
             {t('sites.online', 'Online')}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-neutral-500">
-            <span className="size-1.5 rounded-full bg-neutral-600" />
+            <span className="size-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600" />
             {t('sites.offline', 'Offline')}
           </span>
         )}

@@ -246,9 +246,9 @@ function WorkspaceRow({
     !isActive
 
   return (
-    <TableRow className="text-neutral-200">
+    <TableRow className="text-neutral-800 dark:text-neutral-200">
       <TableCell>
-        <span className="font-medium text-white">
+        <span className="font-medium text-neutral-950 dark:text-white">
           {workspace.title || workspace.name}
         </span>
         <span className="ml-2 text-xs text-neutral-500">{workspace.name}</span>
@@ -258,7 +258,7 @@ function WorkspaceRow({
           </Badge>
         )}
       </TableCell>
-      <TableCell className="text-neutral-400">
+      <TableCell className="text-neutral-600 dark:text-neutral-400">
         {workspace.baseWorkspace ?? (
           <span className="text-neutral-500">—</span>
         )}
@@ -271,12 +271,12 @@ function WorkspaceRow({
           <WorkspaceDecorationBadges workspace={workspace} />
         </span>
       </TableCell>
-      <TableCell className="text-neutral-400">
+      <TableCell className="text-neutral-600 dark:text-neutral-400">
         {ownerLabel ?? <span className="text-neutral-500">—</span>}
       </TableCell>
       <TableCell>
         {workspace.hasPublishableChanges ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-300">
+          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
             <span className="size-1.5 rounded-full bg-amber-500" />
             {t('workspacesAdmin.pending', 'Pending')}
           </span>

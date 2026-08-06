@@ -122,7 +122,7 @@ export function TrashPanel() {
   return (
     <div className="flex flex-col gap-1 p-2">
       {outdated && (
-        <p className="mb-1 rounded-sm bg-neutral-800 px-2 py-1.5 text-xs text-amber-400">
+        <p className="mb-1 rounded-sm bg-neutral-200 dark:bg-neutral-800 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400">
           <i className="fas fa-fw fa-triangle-exclamation" aria-hidden />{' '}
           {t(
             'trash.outdated',
@@ -217,7 +217,7 @@ function TrashRow({
     <div
       className={cn(
         'group flex items-center gap-1 rounded-sm border border-transparent pr-1',
-        selected ? 'border-blue-500 bg-neutral-800' : 'hover:bg-neutral-800',
+        selected ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800' : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
       )}
     >
       <button
@@ -243,14 +243,14 @@ function TrashRow({
           .join('\n')}
         onClick={onSelect}
       >
-        <span className="shrink-0 text-white">
+        <span className="shrink-0 text-neutral-950 dark:text-white">
           <FaIcon icon={item.icon ?? 'fa-file'} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block overflow-hidden text-sm text-ellipsis whitespace-nowrap">
             {item.label}
           </span>
-          <span className="block overflow-hidden text-xs text-ellipsis whitespace-nowrap text-neutral-400">
+          <span className="block overflow-hidden text-xs text-ellipsis whitespace-nowrap text-neutral-600 dark:text-neutral-400">
             {location}
           </span>
         </span>
@@ -261,7 +261,7 @@ function TrashRow({
         className={cn(
           // White at rest, green under the pointer: restoring is the one
           // additive action here, but it should not shout from every row.
-          'shrink-0 text-white hover:text-green-400',
+          'shrink-0 text-neutral-950 dark:text-white hover:text-green-600 dark:hover:text-green-400',
           // Revealed on hover like the clipboard's row action; a running or
           // unavailable restore stays visible so its state can be seen.
           !restoring &&
