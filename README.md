@@ -84,11 +84,12 @@ Extensibility isn't bolted on; it's the architecture. Studio's building blocks a
 | Link editor tabs     | New link source types in the shared link modal                                                                            |
 | Modals               | App-level dialogs                                                                                                         |
 | Workspace decorators | Badges and grouping for workspaces in the switcher and administration (this is how task branches get their status colors) |
+| Node decorators      | Per-node visuals on every tree row: replace the type icon, layer badge overlays onto it, tint or dim the whole row (this is how hidden nodes dim and deleted nodes get their red badge) |
 | Keyboard shortcuts   | App-wide shortcuts alongside the built-in ones                                                                            |
 
 Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state, and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
 
-**Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel and a custom inspector editor (a color picker) from a completely separate package.
+**Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel, a custom inspector editor (a color picker) and a node decorator from a completely separate package.
 
 ## The package family
 

@@ -65,18 +65,22 @@ export function useNodeEditRefresh<T>(
       // leaves.
       //
       // Snapshot the parent list BEFORE invalidating anything: a non-optimistic
-      // invalidateChildrenIds deletes childrenIds[itemId] synchronously (before
-      // its first await), so walking the map after the edited node's own
-      // invalidation would find its entry already gone and stop at level 1 -
-      // which is exactly the "only the top two levels update" bug.
+      // invalidateChildrenIds would delete childrenIds[itemId] synchronously
+      // (before its first await), so walking the map after the edited node's
+      // own invalidation would find its entry already gone and stop at level 1
+      // - the "only the top two levels update" bug. Optimistic invalidation
+      // keeps the entries, but the snapshot stays cheap insurance.
       const parents = loadedParentsInSubtree(address, childrenIds)
       const item = tree.getItemInstance(address)
       // The node's own data (label, tags) - its parent isn't in `parents`, so
       // refresh it directly. getItemInstance also resolves the tree root, so
       // edits reported for the root still refresh its direct children below.
-      void item?.invalidateItemData()
+      // Optimistic (like the wildcard path above): the row keeps showing its
+      // stale data until the refetch lands, instead of flashing to a skeleton
+      // whose null data also makes leaves grow a folder caret for a moment.
+      void item?.invalidateItemData(true)
       for (const parentId of parents) {
-        void tree.getItemInstance(parentId)?.invalidateChildrenIds()
+        void tree.getItemInstance(parentId)?.invalidateChildrenIds(true)
       }
     }
   }, [lastEdit, tree, rootId])
