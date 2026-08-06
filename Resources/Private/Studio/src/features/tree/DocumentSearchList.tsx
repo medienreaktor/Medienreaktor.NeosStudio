@@ -12,6 +12,7 @@ import { Placeholder } from '@/components/ui/placeholder'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { useNodeDecorators } from './decorators'
 import { nodeDecor } from './nodeDecor'
 import { usePendingChanges } from './usePendingChanges'
 
@@ -40,6 +41,7 @@ export function DocumentSearchList({
   onSelect?: (node: NodeDto) => void
 }) {
   const { data: nodeTypes } = useNodeTypes()
+  const decorators = useNodeDecorators()
   const pendingChanges = usePendingChanges(workspaceName)
   const results = useFilteredDescendants(
     site.nodeAddress,
@@ -80,7 +82,7 @@ export function DocumentSearchList({
       aria-label={t('tree.searchResultsLabel', 'Document search results')}
     >
       {nodes.map((node) => {
-        const decor = nodeDecor(node, nodeTypes, pendingChanges)
+        const decor = nodeDecor(node, nodeTypes, pendingChanges, [], decorators)
         return (
           <button
             key={node.address}
@@ -99,6 +101,7 @@ export function DocumentSearchList({
             <span className="min-w-0 flex-1">
               <span
                 className={cn('block truncate', decor.dimmed && 'opacity-50')}
+                style={{ color: decor.color, opacity: decor.opacity }}
               >
                 {nodeLabel(node)}
               </span>

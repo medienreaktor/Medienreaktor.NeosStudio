@@ -592,8 +592,35 @@ export interface SettingsDialogDefinition extends RegistryDefinition {
  * plugin reloads stay idempotent, and a stable snapshot for
  * useSyncExternalStore (the shortcut overview dialog renders it).
  *
- * Combos are written as '+'-joined tokens, e.g. 'mod+shift+p' or 'mod+/'.
- * Recognised modifiers: 'mod' (⌘ on macOS, Ctrl elsewhere), 'ctrl', 'meta',
+ * ## The unified accessor
+ *
+ * Studio shortcuts share one accessor: mod+shift (⌘⇧ on macOS, Ctrl+Shift
+ * elsewhere). It is the only modifier family that is safe everywhere we need
+ * it to be: it never produces text (unlike Shift or Option, so it works
+ * during inline editing and in inputs), it dodges the single-modifier
+ * browser/OS menu shortcuts (⌘B, ⌘,), and it survives non-US layouts
+ * (Option and AltGr carry everyday characters on German keyboards).
+ * Declare shortcuts with `key: 'p'` - a single letter or digit - and the
+ * registry binds the accessor itself; consistency is structural, not a
+ * convention. Letters/digits only: symbol keys move between layouts (a
+ * German '/' is Shift+7) and shifted symbols collide with system shortcuts
+ * (⌘⇧/ is macOS Help-menu search).
+ *
+ * Some accessor keys never reach the page and are rejected at registration
+ * (see RESERVED_ACCESSOR_KEYS). Others shadow browser shortcuts the page IS
+ * allowed to take over (capture-phase dispatch preventDefault()s them):
+ * 'r' (hard reload - shadowed deliberately by the preview), 'b' (Chrome
+ * bookmarks bar), 'p' (Firefox private window / Safari print), 'o'
+ * (bookmark managers). Shadowing is a per-shortcut judgement call; the
+ * reserved list is not.
+ *
+ * ## Raw combos (the escape hatch)
+ *
+ * `combo` bypasses the accessor for the few sanctioned exceptions where a
+ * universal convention beats consistency (⇧? for the shortcut overview -
+ * the Gmail/GitHub/Slack help key). New shortcuts should use `key`.
+ * Combos are '+'-joined tokens, e.g. 'mod+shift+p' or 'shift+?'. Recognised
+ * modifiers: 'mod' (⌘ on macOS, Ctrl elsewhere), 'ctrl', 'meta',
  * 'alt'/'option', 'shift'. The final token is the key as reported by
  * KeyboardEvent.key ('p', '/', 'escape', 'arrowup', 'f5', ...). Because
  * matching uses event.key, declare shifted symbols as the symbol the shift
@@ -602,21 +629,24 @@ export interface SettingsDialogDefinition extends RegistryDefinition {
  * Shift held, dispatch retries the match without it, so 'mod+/' fires for
  * Ctrl+Shift+7 on a German layout just like for Ctrl+/ on a US one.
  *
- * Beware combos the browser or OS consumes before the page sees them - no
- * fallback can help there. Notably on macOS: ⌘+, is every browser's own
- * Settings… menu item, and ⌘⇧+<symbol> can hit system menu shortcuts (⌘⇧/
- * is Help-menu search - which is exactly what ⌘+/ becomes on layouts where
- * '/' needs Shift). Prefer letters/digits, and check isMacPlatform for
- * platform-specific alternatives.
- *
  * Scope: shortcuts fire on the Studio shell's own window. Keystrokes inside
  * the preview iframe stay with the guest frame (inline editing owns them).
  */
 export interface KeyboardShortcutDefinition {
 	/** Unique id, e.g. 'workspace.publish'. Third-party shortcuts should namespace ('vendor.package:my-shortcut'). */
 	id: string;
-	/** One combo or aliases, e.g. 'mod+shift+p' or ['mod+/', 'shift+?']. */
-	combo: string | string[];
+	/**
+	 * The preferred way to bind: a single letter or digit, bound under the
+	 * unified accessor as mod+shift+<key>. Rejected (with a console warning)
+	 * for keys the browser never hands over - see RESERVED_ACCESSOR_KEYS.
+	 */
+	key?: string;
+	/**
+	 * Raw combo(s), e.g. 'shift+?' or ['mod+/', 'shift+?'] - the escape hatch
+	 * for sanctioned exceptions to the accessor scheme. Ignored when `key` is
+	 * set. One of `key` or `combo` is required.
+	 */
+	combo?: string | string[];
 	/** Human-readable action name, shown in the shortcut overview. */
 	title: string;
 	/** Overview grouping label; shortcuts sharing a category list together. */
@@ -630,12 +660,21 @@ export interface KeyboardShortcutDefinition {
 	handler: (event: KeyboardEvent) => void | boolean;
 	/**
 	 * Fire even while focus is in an input, textarea, select or contenteditable.
-	 * Defaults to false - plain-key shortcuts must not swallow typing.
+	 * Defaults to true for `key`-based shortcuts (the accessor never types
+	 * text, so they are always input-safe) and false for raw combos - those
+	 * must opt in, plain-key combos must not swallow typing.
 	 */
 	allowInInput?: boolean;
 	/** Extra guard consulted at dispatch time; false skips this shortcut. */
 	when?: () => boolean;
 }
+/**
+ * A registered shortcut always carries its resolved combo (`key` expanded to
+ * 'mod+shift+<key>' at registration) - what dispatch and the overview use.
+ */
+export type ResolvedKeyboardShortcut = KeyboardShortcutDefinition & {
+	combo: string | string[];
+};
 export declare const isMacPlatform: boolean;
 declare class KeyboardShortcutRegistry {
 	private definitions;
@@ -646,9 +685,9 @@ declare class KeyboardShortcutRegistry {
 	/** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
 	register(definition: KeyboardShortcutDefinition): void;
 	unregister(id: string): void;
-	get(id: string): KeyboardShortcutDefinition | undefined;
+	get(id: string): ResolvedKeyboardShortcut | undefined;
 	/** Stable snapshot in registration order - changes identity only on (un)register. */
-	getAll(): KeyboardShortcutDefinition[];
+	getAll(): ResolvedKeyboardShortcut[];
 	subscribe(listener: () => void): () => void;
 	/**
 	 * Route a keydown to the matching shortcut. Later registrations win on a
@@ -668,6 +707,99 @@ declare class KeyboardShortcutRegistry {
  * unmounting unregisters - a shortcut only exists while its action does.
  */
 export declare function useKeyboardShortcut(definition: KeyboardShortcutDefinition): void;
+export interface NodeTypeDto {
+	name: string;
+	abstract: boolean;
+	/** Declared (not transitive) super types. */
+	superTypes: string[];
+	/** Untranslated ui.label id, if configured. */
+	label: string | null;
+	/** ui.icon as configured - a Font Awesome name by Neos convention. */
+	icon: string | null;
+	/** ui.group - only node types with a group are user-creatable (Neos convention). */
+	group: string | null;
+	/** ui.position within the group. */
+	position: string | number | null;
+}
+export type NodeTypeMap = Map<string, NodeTypeDto>;
+/**
+ * The node-decorator registry: how tree rows (document tree, content
+ * outliner, search results, document pickers) get their type icon and their
+ * state visuals. A decorator maps a node to a decoration - swap the icon,
+ * layer a small badge onto its corner, tint or dim the whole row - and every
+ * surface listing nodes shows the same marks.
+ *
+ * The shell's own visuals go through this seam too (see
+ * registerBuiltinNodeDecorators in builtinDecorators.ts): the configured
+ * ui.icon, the dimming of hidden / hidden-in-menu nodes, the red badges for
+ * explicitly hidden and deleted nodes. A plugin registers exactly the same
+ * way for its own concerns - a lock overlay on access-restricted pages, a
+ * tint for nodes in a review state, whatever its package knows about.
+ *
+ * Modelled on the other registries (see features/workspaces/decorators.ts):
+ * a small observable store, register-replaces-by-id, stable snapshot for
+ * useSyncExternalStore.
+ */
+/** A small badge layered onto a corner of the node's type icon. */
+export interface NodeDecorationOverlay {
+	/** Font Awesome icon name, any syntax `ui.icon` accepts (e.g. "circle-xmark"). */
+	icon: string;
+	/** Badge color (any CSS color, preferably a theme variable like 'var(--color-red-500)'); defaults to red. */
+	color?: string;
+	/** Tooltip / accessible description, e.g. "Deleted". */
+	label?: string;
+	/** Icon corner the badge sits on. Defaults to 'bottom-right'. */
+	position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+}
+/** The visual contribution of one decorator to one node's row. */
+export interface NodeDecoration {
+	/**
+	 * Replace the row's type icon - a Font Awesome name, any syntax `ui.icon`
+	 * accepts. Decorators run in `order`; the last one to set an icon wins, so
+	 * a plugin (default order 100) overrides the built-in type icon (order 0).
+	 */
+	icon?: string;
+	/** Badge layered onto the icon. Overlays from all decorators accumulate. */
+	overlay?: NodeDecorationOverlay;
+	/** Text color for the whole row (icon + label) - any CSS color. Last one wins. */
+	color?: string;
+	/** Opacity for the whole row (icon + label), 0..1. The lowest contributed value wins. */
+	opacity?: number;
+	/** Tooltip line for the row's icon. Lines from all decorators stack. */
+	title?: string;
+}
+/** What a decorator gets to look at besides the node itself. */
+export interface NodeDecorationContext {
+	/** The node type map, once loaded - for icon/type lookups. */
+	nodeTypes: NodeTypeMap | undefined;
+}
+export interface NodeDecoratorDefinition {
+	/** Unique id. Third-party entries should namespace ('vendor.package:lock'). */
+	id: string;
+	/** Sort weight; lower runs first (and gets overridden by later ones). Defaults to 100. */
+	order?: number;
+	/**
+	 * Return the decoration for this node, or null for "not applicable".
+	 * Called during render for every visible row - must be cheap and pure
+	 * (derive from the node object: tags, properties, nodeType).
+	 */
+	decorate: (node: NodeDto, context: NodeDecorationContext) => NodeDecoration | null;
+}
+declare class NodeDecoratorRegistry {
+	private definitions;
+	private listeners;
+	private snapshot;
+	/** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
+	register(definition: NodeDecoratorDefinition): void;
+	unregister(id: string): void;
+	/**
+	 * Stable snapshot sorted by `order` then registration order - changes
+	 * identity only on (un)register, so useSyncExternalStore stays quiet.
+	 */
+	getAll(): NodeDecoratorDefinition[];
+	subscribe(listener: () => void): () => void;
+	private emit;
+}
 export interface Workspace {
 	name: string;
 	baseWorkspace: string | null;
@@ -794,6 +926,14 @@ export declare const shortcuts: KeyboardShortcutRegistry;
  * `extensions` data. See {@link WorkspaceDecoratorDefinition}.
  */
 export declare const workspaceDecorators: WorkspaceDecoratorRegistry;
+/**
+ * Register/unregister node decorators - per-node visuals on every tree row
+ * (document tree, content outliner, search results, pickers): replace the
+ * type icon, layer a badge onto its corner, tint or dim the whole row. The
+ * shell's own type icon and hidden/deleted marks run through this registry
+ * too. See {@link NodeDecoratorDefinition}.
+ */
+export declare const nodeDecorators: NodeDecoratorRegistry;
 /** Options accepted by the toast helpers. */
 export interface ToastOptions {
 	/** Bold heading; defaults to a per-kind label ("Success", "Error", …). */
@@ -827,6 +967,7 @@ export interface NeosStudioPluginApi {
 	modals: typeof modals;
 	shortcuts: typeof shortcuts;
 	workspaceDecorators: typeof workspaceDecorators;
+	nodeDecorators: typeof nodeDecorators;
 	isMacPlatform: typeof isMacPlatform;
 	useStudio: typeof useStudio;
 	useKeyboardShortcut: typeof useKeyboardShortcut;

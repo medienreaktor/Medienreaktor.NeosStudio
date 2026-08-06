@@ -27,6 +27,7 @@ import {
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { Placeholder } from '@/components/ui/placeholder'
+import { useNodeDecorators } from './decorators'
 import { nodeDecor } from './nodeDecor'
 import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
@@ -131,6 +132,7 @@ function OutlinerTree({
   // while loading rather than a misleading "no content" state.
   const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
+  const decorators = useNodeDecorators()
   const pendingChanges = usePendingChanges(workspaceName)
   // Collaborators mark the content node they focus (empty outside a
   // collaborative session - the default context renders nothing).
@@ -290,6 +292,7 @@ function OutlinerTree({
             peers.filter(
               (peer) => peer.focusedAggregateId === data.aggregateId,
             ),
+            decorators,
           )
           return data.address === cutAddress
             ? { ...decor, dimmed: true }

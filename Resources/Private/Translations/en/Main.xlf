@@ -1673,6 +1673,12 @@
       <trans-unit id="tree.decor.containsChanges" xml:space="preserve">
         <source>Contains changes in workspace "{0}"</source>
       </trans-unit>
+      <trans-unit id="tree.decor.deleted" xml:space="preserve">
+        <source>Deleted</source>
+      </trans-unit>
+      <trans-unit id="tree.decor.deletedInherited" xml:space="preserve">
+        <source>Deleted (inherited)</source>
+      </trans-unit>
       <trans-unit id="tree.decor.editingHere" xml:space="preserve">
         <source>{0} is here</source>
       </trans-unit>

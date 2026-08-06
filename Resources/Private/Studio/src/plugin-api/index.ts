@@ -64,6 +64,10 @@ import {
 } from '@/features/shortcuts/registry'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 import {
+  NodeDecoratorRegistry,
+  nodeDecoratorRegistry,
+} from '@/features/tree/decorators'
+import {
   WorkspaceDecoratorRegistry,
   workspaceDecoratorRegistry,
 } from '@/features/workspaces/decorators'
@@ -108,6 +112,14 @@ export const shortcuts: KeyboardShortcutRegistry = keyboardShortcutRegistry
  */
 export const workspaceDecorators: WorkspaceDecoratorRegistry =
   workspaceDecoratorRegistry
+/**
+ * Register/unregister node decorators - per-node visuals on every tree row
+ * (document tree, content outliner, search results, pickers): replace the
+ * type icon, layer a badge onto its corner, tint or dim the whole row. The
+ * shell's own type icon and hidden/deleted marks run through this registry
+ * too. See {@link NodeDecoratorDefinition}.
+ */
+export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
 
 export { useStudio, useKeyboardShortcut }
 
@@ -200,7 +212,14 @@ export type {
   WorkspaceDecoration,
   WorkspaceDecoratorDefinition,
 } from '@/features/workspaces/decorators'
+export type {
+  NodeDecoration,
+  NodeDecorationContext,
+  NodeDecorationOverlay,
+  NodeDecoratorDefinition,
+} from '@/features/tree/decorators'
 export type { Workspace } from '@/api/workspaces'
+export type { NodeTypeDto, NodeTypeMap } from '@/api/nodeTypes'
 
 /** The shape published at `window.NeosStudio` for plugin bundles to consume. */
 export interface NeosStudioPluginApi {
@@ -213,6 +232,7 @@ export interface NeosStudioPluginApi {
   modals: typeof modals
   shortcuts: typeof shortcuts
   workspaceDecorators: typeof workspaceDecorators
+  nodeDecorators: typeof nodeDecorators
   isMacPlatform: typeof isMacPlatform
   useStudio: typeof useStudio
   useKeyboardShortcut: typeof useKeyboardShortcut
@@ -251,6 +271,7 @@ export function installPluginApiGlobals(): void {
     modals,
     shortcuts,
     workspaceDecorators,
+    nodeDecorators,
     isMacPlatform,
     useStudio,
     useKeyboardShortcut,

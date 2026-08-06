@@ -2230,6 +2230,14 @@
         <source>Contains changes in workspace "{0}"</source>
         <target xml:lang="de">Enthält Änderungen im Arbeitsbereich „{0}“</target>
       </trans-unit>
+      <trans-unit id="tree.decor.deleted" xml:space="preserve">
+        <source>Deleted</source>
+        <target xml:lang="de">Gelöscht</target>
+      </trans-unit>
+      <trans-unit id="tree.decor.deletedInherited" xml:space="preserve">
+        <source>Deleted (inherited)</source>
+        <target xml:lang="de">Gelöscht (geerbt)</target>
+      </trans-unit>
       <trans-unit id="tree.decor.editingHere" xml:space="preserve">
         <source>{0} is here</source>
         <target xml:lang="de">{0} ist hier</target>

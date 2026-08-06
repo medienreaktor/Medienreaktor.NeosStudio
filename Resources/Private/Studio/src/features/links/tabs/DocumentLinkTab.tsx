@@ -17,6 +17,7 @@ import { config } from '@/config'
 import { Input } from '@/components/ui/input'
 import { Placeholder } from '@/components/ui/placeholder'
 import { useStudio } from '@/app/StudioContext'
+import { useNodeDecorators } from '@/features/tree/decorators'
 import { nodeDecor } from '@/features/tree/nodeDecor'
 import { TreeList } from '@/features/tree/TreeList'
 import { useAutoExpand } from '@/features/tree/useAutoExpand'
@@ -43,6 +44,7 @@ type TreeItemData = NodeDto | typeof ROOT_ID
 export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
   const { site } = useStudio()
   const { data: nodeTypes } = useNodeTypes()
+  const decorators = useNodeDecorators()
   const parsed = href !== null ? parseDocumentUri(href) : null
   // The anchor is owned here (typing must not wait for a picked document);
   // the picked document travels through the href draft.
@@ -138,7 +140,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
           decorate={(data) =>
             data === ROOT_ID || data === null
               ? null
-              : nodeDecor(data, nodeTypes, null)
+              : nodeDecor(data, nodeTypes, null, [], decorators)
           }
         />
       </div>

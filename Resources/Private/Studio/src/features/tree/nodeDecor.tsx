@@ -1,42 +1,65 @@
 import type { ReactNode } from 'react'
 import type { NodeTypeMap } from '@/api/nodeTypes'
-import { isExplicitlyHidden, type NodeDto } from '@/api/nodes'
+import type { NodeDto } from '@/api/nodes'
 import type { PresencePeer } from '@/features/collaboration/PresenceContext'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { NodeTypeIcon } from './nodeTypeIcon'
+import {
+  mergeNodeDecorations,
+  nodeDecoratorRegistry,
+  type NodeDecoratorDefinition,
+} from './decorators'
+import { faClassName } from './nodeTypeIcon'
 import type { PendingChanges } from './usePendingChanges'
 
 export interface TreeRowDecor {
   icon?: ReactNode
   markers?: ReactNode
+  /** Binary row dimming (the cut clipboard entry, media tree states). */
   dimmed?: boolean
+  /** Row text color contributed by node decorators (icon + label). */
+  color?: string
+  /** Row opacity contributed by node decorators (icon + label). */
+  opacity?: number
 }
 
 /**
- * Row decorations shared by the document tree and the content outliner.
+ * Badge corner offsets on the type icon, by NodeDecorationOverlay position.
+ * At most 2px outside the icon box: the rows clip their content
+ * (overflow-hidden), so a badge reaching further out gets cropped.
+ */
+const OVERLAY_POSITION = {
+  'top-left': '-top-0.5 -left-0.5',
+  'top-right': '-top-0.5 -right-0.5',
+  'bottom-left': '-bottom-0.5 -left-0.5',
+  'bottom-right': '-bottom-0.5 -right-0.5',
+} as const
+
+/**
+ * Row decorations shared by the document tree, the content outliner, the
+ * search results and the document pickers.
  *
- * Visibility states dim the whole row (icon + label), including nodes only
- * hidden by inheritance from a hidden ancestor. A red x badge is layered onto
- * the type icon only for explicitly hidden nodes (the disabled tag set on the
- * node itself) - not for descendants that merely inherit the subtree tag.
- * Dirty markers on the right:
- * filled dot for changes on the node itself, hollow dot for documents that
- * contain changed content.
- * Presence: collaborators standing on this node render as small initials
- * chips in their color (before the dirty markers).
+ * Icon, overlay badges, row color and row opacity come from the node
+ * decorator registry (see decorators.ts) - the built-in decorators cover the
+ * configured type icon, hidden/hidden-in-menu dimming with the red x badge,
+ * and the deleted badge; plugins contribute theirs the same way. The base
+ * icon dims and tints with the row; badges stay crisp.
+ *
+ * Dirty markers on the right: filled dot for changes on the node itself,
+ * hollow dot for documents that contain changed content. Presence:
+ * collaborators standing on this node render as small initials chips in
+ * their color (before the dirty markers).
  */
 export function nodeDecor(
   node: NodeDto,
   nodeTypes: NodeTypeMap | undefined,
   changed: PendingChanges | null,
   peersHere: PresencePeer[] = [],
+  // Render-subscribed callers pass useNodeDecorators(); the fallback serves
+  // plain-function contexts (same registry, just no re-render on register).
+  decorators: NodeDecoratorDefinition[] = nodeDecoratorRegistry.getAll(),
 ): TreeRowDecor {
-  const hidden = node.tags.all.includes('disabled')
-  const hiddenInherited = node.tags.inherited.includes('disabled')
-  const hiddenExplicitly = isExplicitlyHidden(node)
-  const hiddenInMenu = node.properties['hiddenInMenu']?.value === true
-  const dimmed = hidden || hiddenInMenu
+  const decoration = mergeNodeDecorations(node, { nodeTypes }, decorators)
   const isDirty = changed !== null && changed.ids.has(node.aggregateId)
   const containsDirty =
     !isDirty && changed !== null && changed.documentIds.has(node.aggregateId)
@@ -79,32 +102,41 @@ export function nodeDecor(
     )
   }
 
-  const iconTitle = hidden
-    ? hiddenInherited
-      ? t('tree.decor.hiddenInherited', 'Hidden (inherited)')
-      : t('tree.decor.hidden', 'Hidden')
-    : hiddenInMenu
-      ? t('tree.decor.hiddenInMenu', 'Hidden in menus')
-      : undefined
-
   return {
     icon: (
-      <span className="relative" title={iconTitle}>
-        {/* Dim the type icon with the label; the alert badge stays crisp. */}
-        <NodeTypeIcon
-          nodeTypes={nodeTypes}
-          nodeTypeName={node.nodeType}
-          className={cn(dimmed && 'opacity-50')}
+      <span
+        className="relative"
+        title={
+          decoration.titles.length > 0
+            ? decoration.titles.join('\n')
+            : undefined
+        }
+      >
+        <i
+          className={cn(
+            faClassName(decoration.icon ?? 'cube'),
+            'fa-fw text-[0.75rem]',
+          )}
+          style={{ color: decoration.color, opacity: decoration.opacity }}
+          aria-hidden
         />
-        {hiddenExplicitly && (
+        {decoration.overlays.map((overlay, index) => (
           <i
-            className="fas fa-circle-xmark absolute -bottom-1 -right-1 rounded-full bg-neutral-900 text-[0.6rem] text-red-500"
+            key={index}
+            title={overlay.label}
+            className={cn(
+              faClassName(overlay.icon),
+              'absolute rounded-full bg-neutral-900 text-[0.6rem]',
+              OVERLAY_POSITION[overlay.position ?? 'bottom-right'],
+            )}
+            style={{ color: overlay.color ?? 'var(--color-red-500)' }}
             aria-hidden
           />
-        )}
+        ))}
       </span>
     ),
-    dimmed,
+    color: decoration.color,
+    opacity: decoration.opacity,
     markers: markers.length > 0 ? markers : undefined,
   }
 }

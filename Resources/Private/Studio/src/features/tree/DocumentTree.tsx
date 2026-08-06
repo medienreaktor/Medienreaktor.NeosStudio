@@ -26,6 +26,7 @@ import {
   type NodeMenuAction,
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
+import { useNodeDecorators } from './decorators'
 import { nodeDecor } from './nodeDecor'
 import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
@@ -75,6 +76,7 @@ export function DocumentTree({
   // spinner while the root loads and a real empty state only afterwards.
   const [rootLoaded, setRootLoaded] = useState(false)
   const { data: nodeTypes } = useNodeTypes()
+  const decorators = useNodeDecorators()
   const pendingChanges = usePendingChanges(workspaceName)
   // Collaborators mark the document they are standing on ({} outside a
   // collaborative session - the default context renders nothing).
@@ -215,6 +217,7 @@ export function DocumentTree({
             peers.filter(
               (peer) => peer.documentAggregateId === data.aggregateId,
             ),
+            decorators,
           )
           return data.address === cutAddress
             ? { ...decor, dimmed: true }

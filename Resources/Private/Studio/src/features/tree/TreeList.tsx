@@ -183,6 +183,7 @@ export function TreeList<T>({
                   'overflow-hidden text-ellipsis motion-safe:animate-fade-in',
                   decor?.dimmed && 'opacity-50',
                 )}
+                style={{ color: decor?.color, opacity: decor?.opacity }}
               >
                 {item.getItemName()}
               </span>

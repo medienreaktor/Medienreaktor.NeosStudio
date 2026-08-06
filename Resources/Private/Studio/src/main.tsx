@@ -34,6 +34,7 @@ import { registerBuiltinPanels } from './features/panels/builtin'
 import { registerBuiltinTaskWorkflow } from './features/tasks/builtin'
 import { registerBuiltinPropertyEditors } from './features/inspector/editors'
 import { registerBuiltinValidators } from './features/inspector/validators'
+import { registerBuiltinNodeDecorators } from './features/tree/builtinDecorators'
 import { installPluginApiGlobals } from './plugin-api'
 
 // Publish React and the plugin API on `window` before anything else, so the
@@ -43,15 +44,16 @@ import { installPluginApiGlobals } from './plugin-api'
 // plugin registering after mount just triggers a re-render.
 installPluginApiGlobals()
 
-// Built-in panels, property editors, inspector views, validators, link types
-// and modal screens register before mount, exactly like third-party ones
-// would from a plugin entry point.
+// Built-in panels, property editors, inspector views, validators, link types,
+// modal screens and node decorators register before mount, exactly like
+// third-party ones would from a plugin entry point.
 registerBuiltinPanels()
 registerBuiltinPropertyEditors()
 registerBuiltinInspectorViews()
 registerBuiltinValidators()
 registerBuiltinLinkTypes()
 registerBuiltinModals()
+registerBuiltinNodeDecorators()
 // After the other builtins so the Tasks tab lands after their main-region tabs.
 registerBuiltinTaskWorkflow()
 
