@@ -34,6 +34,8 @@
  */
 
 import { Server } from '@hocuspocus/server'
+import { request as httpRequest } from 'node:http'
+import { request as httpsRequest } from 'node:https'
 
 const PORT = Number(process.env.PORT ?? 1234)
 const NEOS_BASE_URL = (process.env.NEOS_BASE_URL ?? 'http://127.0.0.1:8080').replace(/\/+$/, '')
@@ -54,10 +56,39 @@ if (SHARED_SECRET === '') {
 const workspaceOf = (documentName) =>
   documentName.startsWith('workspace:') ? documentName.slice('workspace:'.length) : null
 
-const neosFetch = (path, headers = {}) => {
-  if (NEOS_HOST_HEADER) headers = { ...headers, host: NEOS_HOST_HEADER }
-  return fetch(NEOS_BASE_URL + path, { headers })
-}
+/**
+ * Fetch-alike over node:http - deliberately NOT global fetch(): WHATWG fetch
+ * treats Host as a forbidden header and silently strips it, so NEOS_HOST_HEADER
+ * would never reach Neos. Redirects are not followed - an API endpoint that
+ * redirects (e.g. a non-www rewrite catching the internal hostname) is a
+ * misconfiguration better surfaced as a failed probe than silently chased.
+ */
+const neosFetch = (path, headers = {}) =>
+  new Promise((resolve, reject) => {
+    if (NEOS_HOST_HEADER) headers = { ...headers, host: NEOS_HOST_HEADER }
+    const url = new URL(NEOS_BASE_URL + path)
+    const request = (url.protocol === 'https:' ? httpsRequest : httpRequest)(
+      url,
+      { headers },
+      (response) => {
+        let body = ''
+        response.setEncoding('utf8')
+        response.on('data', (chunk) => (body += chunk))
+        response.on('end', () =>
+          resolve({
+            ok: response.statusCode >= 200 && response.statusCode < 300,
+            status: response.statusCode,
+            json: async () => JSON.parse(body),
+          }),
+        )
+      },
+    )
+    // A hung connection would otherwise stall the feed's setTimeout chain
+    // forever (ticks never overlap by design, they wait for the response).
+    request.setTimeout(30_000, () => request.destroy(new Error('request timed out')))
+    request.on('error', reject)
+    request.end()
+  })
 
 /**
  * Per-workspace session state, keyed by document name. Lives exactly as long
