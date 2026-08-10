@@ -1,6 +1,6 @@
 {
   "name": "@medienreaktor/neos-studio",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Public plugin API type declarations for Neos Studio. Consumed by plugin packages; the shell provides the implementation at runtime on window.NeosStudio.",
   "license": "GPL-3.0-or-later",
   "types": "index.d.ts",
