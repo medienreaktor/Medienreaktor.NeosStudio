@@ -68,6 +68,9 @@ const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
 const PRESENCE_CLASS = 'neos-studio-presence'
 const PRESENCE_BADGE_CLASS = 'neos-studio-presence-badge'
 const PRESENCE_BADGE_EDITING_CLASS = 'neos-studio-presence-badge--editing'
+/** A collaborator holds the edit lock on this element: clicks are swallowed
+ * and the cursor says "not yours right now". */
+const LOCKED_CLASS = 'neos-studio-locked'
 
 /** The Neos brand purple (purple-500 of the shell palette), for the
  *  shine-through indicators - the guest styles are literal CSS, no Tailwind. */
@@ -774,6 +777,13 @@ function isStudioUi(target: HTMLElement): boolean {
 function onClick(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
   if (!target?.closest) return
+  // A collaborator holds the edit lock here: the element is off-limits -
+  // swallow the click entirely (no selection, no link, no caret attempt).
+  if (target.closest(`.${LOCKED_CLASS}`)) {
+    event.preventDefault()
+    event.stopPropagation()
+    return
+  }
   const anchor = target.closest<HTMLAnchorElement>('a[href]')
   if (anchor && handleLinkClick(event, anchor)) return
   const wrapper = target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
@@ -846,9 +856,9 @@ function onMouseOver(event: MouseEvent): void {
   if (target?.closest?.(`#${SHINE_BUTTON_ID}`)) return
 
   // In-place image picker: a rendered image whose property is known gets the
-  // hover overlay; anything else hides it.
+  // hover overlay; anything else hides it. Locked elements offer nothing.
   const image = target?.closest ? target.closest<HTMLElement>('img') : null
-  if (image && resolveImageTarget(image)) {
+  if (image && !image.closest(`.${LOCKED_CLASS}`) && resolveImageTarget(image)) {
     if (image !== hoveredImage) showImageOverlay(image)
   } else {
     hideImageOverlay()
@@ -867,9 +877,13 @@ function onMouseOver(event: MouseEvent): void {
     hideShineVariantButton()
   }
 
-  const wrapper = target?.closest
+  const hoverTarget = target?.closest
     ? target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
     : null
+  // Locked elements do not light up on hover - they are not a target.
+  const wrapper = hoverTarget?.classList.contains(LOCKED_CLASS)
+    ? null
+    : hoverTarget
   if (wrapper === hoveredElement) return
   hoveredElement?.classList.remove(HOVER_CLASS)
   hoveredElement = wrapper
@@ -1204,6 +1218,12 @@ function injectPresenceStyles(): void {
       padding: 0 7px;
       white-space: nowrap;
     }
+    /* A locked element is not clickable/editable for anyone but its holder:
+       no insert caret, no pointer - the cursor states it plainly. */
+    [${WRAPPER_ATTRIBUTE}].${LOCKED_CLASS},
+    [${WRAPPER_ATTRIBUTE}].${LOCKED_CLASS} * {
+      cursor: not-allowed !important;
+    }
   `
   document.head.appendChild(style)
 }
@@ -1258,6 +1278,11 @@ function renderPresence(): void {
     element.classList.remove(PRESENCE_CLASS)
     element.style.removeProperty('--neos-studio-presence-color')
   }
+  for (const element of document.querySelectorAll<HTMLElement>(
+    `.${LOCKED_CLASS}`,
+  )) {
+    element.classList.remove(LOCKED_CLASS)
+  }
   // Badge slots per element, so several people on one element stack side by
   // side instead of on top of each other.
   const slots = new Map<HTMLElement, number>()
@@ -1309,7 +1334,9 @@ function renderPresence(): void {
           post({ type: 'neos-studio/editing-rejected', name: user.name })
         }
         // Element-level lock: every inline text of the claimed element
-        // becomes read-only, not just the property being typed in.
+        // becomes read-only, not just the property being typed in - and the
+        // element as a whole stops being a click target (see onClick).
+        wrapper.classList.add(LOCKED_CLASS)
         for (const propertyElement of propertyElementsOf(wrapper)) {
           setPropertyLocked(propertyElement, true)
           lockedPropertyElements.add(propertyElement)
