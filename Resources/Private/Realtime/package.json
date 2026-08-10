@@ -1,6 +1,6 @@
 {
   "name": "@medienreaktor/neos-studio-realtime",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "description": "Realtime sidecar for Neos Studio: a Hocuspocus WebSocket server carrying presence and the workspace change feed (and, later, collaborative Yjs documents).",
   "type": "module",
