@@ -2,12 +2,13 @@ import { useMemo, useRef, useState } from 'react'
 import { dimensionSpacePointLabel, useDimensions } from '@/api/dimensions'
 import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
 import {
+  DOCUMENT_NODE_TYPE,
   isDeleted,
   isShineThrough,
   nodeLabel,
   useNodeAncestors,
 } from '@/api/nodes'
-import { useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
+import { isOfType, useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -254,11 +255,10 @@ export function InspectorPanel({
     // always reloads the page, and _hidden never resolves to 'none' - the
     // Hidable mixin configures no reload flag (the classic UI dims hidden
     // elements client-side), but Studio's dimming attribute is server-
-    // rendered, so content elements re-render out-of-band. Documents keep
-    // the 'page' their Document-mixin reloadPageIfChanged resolves to (menus
-    // change), as does any unknown property (not in the schema) - better one
-    // reload than a stale preview.
-    const reload =
+    // rendered, so content elements re-render out-of-band. An unknown
+    // property (not in the schema) reloads the page - better one reload
+    // than a stale preview.
+    const configuredReload =
       propertyName === NODE_TYPE_PROPERTY
         ? 'page'
         : propertyName === HIDDEN_PROPERTY
@@ -266,6 +266,18 @@ export function InspectorPanel({
             ? 'page'
             : 'element'
           : (propertySchema?.reload ?? 'page')
+    // Documents never take the element path: a document is not rendered as a
+    // swappable element (no metadata wrapper in the markup), so the classic
+    // UI reloads the guest frame for document-level reloadIfChanged - and so
+    // does Studio. Going through the out-of-band machinery would only add a
+    // guest roundtrip that ends in the same reload, with its timeout as a
+    // failure mode. Unknown node types (map not loaded yet) count as
+    // documents - a page reload is always correct, just not minimal.
+    const isDocument =
+      nodeTypes === undefined ||
+      isOfType(nodeTypes, node.nodeType, DOCUMENT_NODE_TYPE)
+    const reload =
+      configuredReload === 'element' && isDocument ? 'page' : configuredReload
     persist
       .then(() => onNodeEdited?.(node.address, { reload }))
       .catch((e: unknown) =>
