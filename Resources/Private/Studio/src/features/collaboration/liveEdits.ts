@@ -17,6 +17,9 @@ export interface LiveEdit {
   /** Unlike the lock claim, a live tick always names its concrete text. */
   property: string
   value: string
+  /** The typist's caret as a ProseMirror document position in `value` -
+   * collaborators render it as a caret line. Null on ticks without one. */
+  cursor: number | null
 }
 
 type Listener = (edit: LiveEdit) => void

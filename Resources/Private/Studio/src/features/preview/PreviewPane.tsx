@@ -357,6 +357,7 @@ export function PreviewPane({
               nodeAggregateId: decodeNodeAddress(address).aggregateId,
               property: message.property,
               value: message.value,
+              cursor: message.cursor,
             })
           } catch {
             /* malformed contextpath - live typing is cosmetic */
@@ -661,6 +662,7 @@ export function PreviewPane({
         aggregateId: edit.nodeAggregateId,
         property: edit.property,
         value: edit.value,
+        cursor: edit.cursor,
       })
     })
     // postToGuest reads the frame ref - stable across renders.

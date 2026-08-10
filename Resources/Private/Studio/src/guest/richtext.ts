@@ -47,8 +47,9 @@ export interface RichTextHooks {
   commit(element: HTMLElement, html: string): void
   /** The editor gained focus or its content changed - reposition chrome. */
   activity(): void
-  /** Throttled while typing: the current content, for the live-typing stream. */
-  liveUpdate?(element: HTMLElement, html: string): void
+  /** Throttled while typing: the current content and the caret (a ProseMirror
+   * document position), for the live-typing stream. */
+  liveUpdate?(element: HTMLElement, html: string, cursor: number): void
   /** The user started (true) / stopped (false) editing this property - the
    * basis of the collaboration edit lock. */
   editingState?(element: HTMLElement, editing: boolean): void
@@ -226,7 +227,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     COMMIT_MAX_WAIT_MS,
   )
   const emitLiveUpdate = throttle(() => {
-    hooks.liveUpdate?.(element, editor.getHTML())
+    hooks.liveUpdate?.(element, editor.getHTML(), editor.state.selection.head)
   }, LIVE_UPDATE_THROTTLE_MS)
 
   const editor = new Editor({
@@ -265,7 +266,13 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       hooks.activity()
       hooks.editingState?.(element, true)
     },
-    onSelectionUpdate: ({ editor }) => updateToolbars(editor),
+    onSelectionUpdate: ({ editor }) => {
+      updateToolbars(editor)
+      // Caret moves without typing tick the live stream too, so the remote
+      // caret follows clicks and arrow keys, not only keystrokes.
+      if (editor.isFocused && editor.isEditable && !applyingRemote)
+        emitLiveUpdate()
+    },
     onUpdate: ({ editor }) => {
       refreshEmptyState(element, editor)
       updateToolbars(editor)
@@ -359,4 +366,26 @@ export function applyRemotePropertyContent(
  * discards unpersisted keystrokes and blurs. */
 export function ejectFromProperty(element: HTMLElement): void {
   editorsByElement.get(element)?.eject()
+}
+
+/**
+ * The viewport rectangle of a document position inside a property editor -
+ * where a collaborator's caret sits (their live stream carries the position
+ * against the same HTML this editor just applied, so it maps 1:1; clamping
+ * covers the moment between ticks). Null when unresolvable.
+ */
+export function remoteCaretRect(
+  element: HTMLElement,
+  pos: number,
+): { left: number; top: number; bottom: number } | null {
+  const managed = editorsByElement.get(element)
+  if (!managed) return null
+  const view = managed.editor.view
+  try {
+    return view.coordsAtPos(
+      Math.max(0, Math.min(pos, view.state.doc.content.size)),
+    )
+  } catch {
+    return null
+  }
 }

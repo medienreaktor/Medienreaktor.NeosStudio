@@ -103,6 +103,7 @@ export function startWebsocketTransport(
             nodeAggregateId: message.nodeAggregateId,
             property: message.property,
             value: message.value,
+            cursor: typeof message.cursor === 'number' ? message.cursor : null,
           })
           break
       }

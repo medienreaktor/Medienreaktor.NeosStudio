@@ -35,6 +35,7 @@ import {
   applyRemotePropertyContent,
   ejectFromProperty,
   mountRichTextEditors,
+  remoteCaretRect,
   setPropertyLocked,
   type RichTextHooks,
 } from './richtext'
@@ -68,6 +69,7 @@ const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
 const PRESENCE_CLASS = 'neos-studio-presence'
 const PRESENCE_BADGE_CLASS = 'neos-studio-presence-badge'
 const PRESENCE_BADGE_EDITING_CLASS = 'neos-studio-presence-badge--editing'
+const PRESENCE_CARET_CLASS = 'neos-studio-presence-caret'
 /** A collaborator holds the edit lock on this element: clicks are swallowed
  * and the cursor says "not yours right now". */
 const LOCKED_CLASS = 'neos-studio-locked'
@@ -737,11 +739,16 @@ function commitProperty(element: HTMLElement, value: string): void {
   }
 }
 
-/** Stream the in-progress content to the host (live typing, throttled). */
-function liveUpdateProperty(element: HTMLElement, value: string): void {
+/** Stream the in-progress content to the host (live typing, throttled).
+ * cursor is the typist's caret as a ProseMirror position in `value`. */
+function liveUpdateProperty(
+  element: HTMLElement,
+  value: string,
+  cursor: number,
+): void {
   const identity = propertyIdentity(element)
   if (identity) {
-    post({ type: 'neos-studio/live-edit', ...identity, value })
+    post({ type: 'neos-studio/live-edit', ...identity, value, cursor })
   }
 }
 
@@ -1190,8 +1197,26 @@ function onDragLeaveDocument(event: DragEvent): void {
  * scrolling and layout changes, like the other floating affordances.
  */
 let presenceHighlights: PresenceHighlight[] = []
+
+/** A rendered presence badge: pinned to its element's top left corner - or,
+ * for an editing badge with a known live caret, riding on that caret line. */
+interface PresenceBadgeEntry {
+  badge: HTMLElement
+  element: HTMLElement
+  /** Editing badges only: the caret line and whose live caret to follow. */
+  caret?: { line: HTMLElement; aggregateId: string }
+}
+
 /** Live badges and the elements they are pinned to, in render order. */
-let presenceBadges: { badge: HTMLElement; element: HTMLElement }[] = []
+let presenceBadges: PresenceBadgeEntry[] = []
+
+/**
+ * The last live-typing caret per node (property + ProseMirror position),
+ * fed by the collaborators' stream ticks. Rendered for whoever holds the
+ * edit claim on that node; entries whose claim vanished are pruned on the
+ * next roster render.
+ */
+const liveCarets = new Map<string, { property: string; cursor: number }>()
 
 function injectPresenceStyles(): void {
   const style = document.createElement('style')
@@ -1218,11 +1243,28 @@ function injectPresenceStyles(): void {
       padding: 0 7px;
       white-space: nowrap;
     }
-    /* A locked element is not clickable/editable for anyone but its holder:
-       no insert caret, no pointer - the cursor states it plainly. */
-    [${WRAPPER_ATTRIBUTE}].${LOCKED_CLASS},
+    /* A collaborator's live caret inside the text they are editing: a steady
+       line in their color (steady, not blinking - the blinking caret is the
+       reader's own); their badge rides on top of it while a position is
+       known. */
+    .${PRESENCE_CARET_CLASS} {
+      position: fixed;
+      z-index: 2147483644;
+      width: 2px;
+      border-radius: 1px;
+      pointer-events: none;
+    }
+    /* A locked element is fully inert for anyone but its holder: the wrapper
+       keeps receiving pointer events (so the not-allowed cursor shows and
+       onClick can swallow the click), but everything inside it takes none -
+       no caret placement, no editor focus (which would raise the rich-text
+       toolbar), no links, no hover affordances. */
+    [${WRAPPER_ATTRIBUTE}].${LOCKED_CLASS} {
+      cursor: not-allowed !important;
+    }
     [${WRAPPER_ATTRIBUTE}].${LOCKED_CLASS} * {
       cursor: not-allowed !important;
+      pointer-events: none !important;
     }
   `
   document.head.appendChild(style)
@@ -1270,8 +1312,21 @@ let lockedPropertyElements = new Set<HTMLElement>()
 /** Rebuild all presence decor from the current roster (also called after an
  * out-of-band element swap - the old badges point at replaced DOM). */
 function renderPresence(): void {
-  for (const { badge } of presenceBadges) badge.remove()
+  for (const { badge, caret } of presenceBadges) {
+    badge.remove()
+    caret?.line.remove()
+  }
   presenceBadges = []
+  // Live carets belong to edit claims - a caret whose claim vanished from
+  // the roster (holder released, left, or lost the element) goes with it.
+  const claimedAggregateIds = new Set(
+    presenceHighlights.flatMap((user) =>
+      user.editing !== null ? [user.editing.aggregateId] : [],
+    ),
+  )
+  for (const aggregateId of liveCarets.keys()) {
+    if (!claimedAggregateIds.has(aggregateId)) liveCarets.delete(aggregateId)
+  }
   for (const element of document.querySelectorAll<HTMLElement>(
     `.${PRESENCE_CLASS}`,
   )) {
@@ -1290,7 +1345,7 @@ function renderPresence(): void {
     element: HTMLElement,
     user: PresenceHighlight,
     editing: boolean,
-  ) => {
+  ): PresenceBadgeEntry => {
     const badge = document.createElement('div')
     badge.className = PRESENCE_BADGE_CLASS
     badge.textContent = editing ? `✏ ${user.initials}` : user.initials
@@ -1301,7 +1356,9 @@ function renderPresence(): void {
     const slot = slots.get(element) ?? 0
     slots.set(element, slot + 1)
     badge.dataset.slot = String(slot)
-    presenceBadges.push({ badge, element })
+    const entry: PresenceBadgeEntry = { badge, element }
+    presenceBadges.push(entry)
+    return entry
   }
   // The edit locks: peers' actively edited texts become read-only here. The
   // sweep unlocks everything first, so a lock that vanished from the roster
@@ -1348,7 +1405,16 @@ function renderPresence(): void {
                 user.editing.property,
               )
             : null) ?? wrapper
-        addBadge(badgeAnchor, user, true)
+        const entry = addBadge(badgeAnchor, user, true)
+        // The holder's live caret (fed by their typing stream) renders as a
+        // caret line in their color; the badge moves onto it whenever a
+        // position is known (see positionPresenceBadges).
+        const line = document.createElement('div')
+        line.className = PRESENCE_CARET_CLASS
+        line.style.backgroundColor = user.color
+        line.style.display = 'none'
+        document.body.appendChild(line)
+        entry.caret = { line, aggregateId: user.editing.aggregateId }
       }
     }
   }
@@ -1356,7 +1422,34 @@ function renderPresence(): void {
 }
 
 function positionPresenceBadges(): void {
-  for (const { badge, element } of presenceBadges) {
+  for (const { badge, element, caret } of presenceBadges) {
+    // An editing badge rides on the holder's live caret when its position is
+    // known and resolvable in this DOM - the badge becomes the caret's name
+    // flag, like the collaborative editors people know.
+    if (caret !== undefined) {
+      const live = liveCarets.get(caret.aggregateId)
+      const propertyElement =
+        live === undefined
+          ? null
+          : findPropertyElement(caret.aggregateId, live.property)
+      const rect =
+        live !== undefined && propertyElement !== null
+          ? remoteCaretRect(propertyElement, live.cursor)
+          : null
+      if (rect !== null) {
+        caret.line.style.display = 'block'
+        caret.line.style.left = `${rect.left - 1}px`
+        caret.line.style.top = `${rect.top}px`
+        caret.line.style.height = `${rect.bottom - rect.top}px`
+        badge.style.display = 'block'
+        badge.style.left = `${rect.left - 1}px`
+        badge.style.top = `${rect.top - 24}px`
+        continue
+      }
+      caret.line.style.display = 'none'
+    }
+    // Everything else (and editing badges without a caret yet) pins to the
+    // element's top left corner.
     if (!element.isConnected) {
       badge.style.display = 'none'
       continue
@@ -1477,6 +1570,15 @@ function onHostMessage(event: MessageEvent): void {
     const element = findPropertyElement(message.aggregateId, message.property)
     if (element) {
       applyRemotePropertyContent(element, message.value)
+      // Remember where their caret sits in the applied content - the
+      // presence render draws it once (or while) the roster names them the
+      // holder of this element.
+      if (message.cursor !== null) {
+        liveCarets.set(message.aggregateId, {
+          property: message.property,
+          cursor: message.cursor,
+        })
+      }
       schedulePresenceUpdate()
     }
   }

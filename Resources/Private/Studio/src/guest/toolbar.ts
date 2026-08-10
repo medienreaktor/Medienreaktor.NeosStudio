@@ -448,6 +448,13 @@ const blockToolbar = new Toolbar('block', positionBlock)
  * block bar at the caret's block, nothing when the two coincide.
  */
 export function updateToolbars(editor: Editor): void {
+  // Only a focused, editable editor owns a toolbar. Editors fire update and
+  // selection events without either: applying a collaborator's live-typing
+  // tick to a locked editor calls setContent, and that must never raise the
+  // bars on an element the local user is not in. Just return (no hide) - a
+  // DIFFERENT editor may legitimately be showing its toolbar right now, and
+  // this editor's own bars are taken down by its blur.
+  if (!editor.isEditable || !editor.isFocused) return
   const { selection } = editor.state
   // A cell selection (dragging across table cells) is non-empty but is not a
   // text range - it drives the table ops (merge, ...), so route it to the

@@ -313,6 +313,8 @@ const server = new Server({
           nodeAggregateId: message.nodeAggregateId,
           property: message.property,
           value: message.value,
+          // The sender's caret position, for the collaborators' caret line.
+          cursor: typeof message.cursor === 'number' ? message.cursor : null,
         }),
         (target) => target !== connection,
       )

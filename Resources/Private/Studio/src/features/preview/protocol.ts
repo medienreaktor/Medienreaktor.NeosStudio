@@ -53,6 +53,8 @@ export type GuestToHostMessage =
       contextPath: string
       property: string
       value: string
+      /** The sender's caret as a ProseMirror document position in `value`. */
+      cursor: number
     }
   /**
    * A node type dragged from the creation panel was dropped into a content
@@ -234,4 +236,7 @@ export type HostToGuestMessage =
       aggregateId: string
       property: string
       value: string
+      /** Their caret as a ProseMirror document position in `value` - drawn
+       * as a colored caret line; null when the tick carried none. */
+      cursor: number | null
     }
