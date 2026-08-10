@@ -38,7 +38,7 @@ prototype(Neos.Neos:ContentElementWrapping) {
     # below, which attributes each <img> precisely. Studio preview only; null
     # renders no attribute.
     data-__neos-studio-image-property = ${MedienreaktorStudio.singleImageProperty(node)}
-    data-__neos-studio-image-property.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+    data-__neos-studio-image-property.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio' || request.controllerPackageKey == 'Medienreaktor.NeosApi'}
   }
 }
 
@@ -52,7 +52,7 @@ prototype(Neos.Neos:ContentElementWrapping) {
 # Studio variant apart from the classic/frontend one.
 prototype(Neos.Neos:ImageTag) {
   attributes.data-__neos-studio-image-property = ${MedienreaktorStudio.imageProperty(node, this.asset)}
-  attributes.data-__neos-studio-image-property.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+  attributes.data-__neos-studio-image-property.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio' || request.controllerPackageKey == 'Medienreaktor.NeosApi'}
 }
 
 # Inline-editable properties carry their configured placeholder
@@ -62,16 +62,24 @@ prototype(Neos.Neos:ImageTag) {
 # invite editing. Only for Studio preview requests; the classic UI brings its
 # own placeholder rendering (CKEditor) and its markup stays untouched. The
 # GlobalCacheIdentifiers discriminator below keeps the cached variants apart.
+#
+# "Studio preview requests" are two kinds of request: full pages served by the
+# Studio's own PreviewController, and single-element fragments rendered
+# out-of-band through the NeosApi render endpoint (which the Studio swaps into
+# the live page after an edit). Both need identical markup - a fragment missing
+# these attributes would remount its inline editors with the permissive block
+# defaults and visibly break the text rendering. The classic UI renders through
+# neither package, so its markup stays untouched either way.
 prototype(Neos.Neos:Editable) {
   renderer.editable.renderer.attributes.data-__neos-studio-placeholder = ${MedienreaktorStudio.inlinePlaceholder(props.node, props.property)}
-  renderer.editable.renderer.attributes.data-__neos-studio-placeholder.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+  renderer.editable.renderer.attributes.data-__neos-studio-placeholder.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio' || request.controllerPackageKey == 'Medienreaktor.NeosApi'}
 
   # The property's NodeType inline-editing config, so the guest can constrain
   # the editor schema and toolbar to what the property allows (see
   # richtext.ts / formatting.ts). Only for Studio preview requests, and only
   # when the property actually declares editor options.
   renderer.editable.renderer.attributes.data-__neos-studio-formatting = ${Json.stringify(MedienreaktorStudio.inlineFormatting(props.node, props.property))}
-  renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+  renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio' || request.controllerPackageKey == 'Medienreaktor.NeosApi'}
   renderer.editable.renderer.attributes.data-__neos-studio-formatting.@if.hasConfig = ${MedienreaktorStudio.inlineFormatting(props.node, props.property) != null}
 
   # Editable's own `block` flag decides whether the property renders as a
@@ -84,7 +92,7 @@ prototype(Neos.Neos:Editable) {
   # permissive (block) default. Rendered as the inverse, present only for
   # inline editables, because Fusion drops false- and null-valued attributes.
   renderer.editable.renderer.attributes.data-__neos-studio-inline = ${props.block ? null : 'true'}
-  renderer.editable.renderer.attributes.data-__neos-studio-inline.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+  renderer.editable.renderer.attributes.data-__neos-studio-inline.@if.forStudioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio' || request.controllerPackageKey == 'Medienreaktor.NeosApi'}
 }
 
 # The Studio preview must not depend on Neos.Neos.Ui: when it is installed,
@@ -107,7 +115,11 @@ prototype(Neos.Neos:Page) {
 # The conditions above make the rendered page differ between Studio preview
 # requests and classic UI / frontend requests for the same node - the content
 # cache must not serve one variant for the other, so every cache identifier
-# carries the discriminator.
+# carries the discriminator. NeosApi requests count as Studio previews (the
+# out-of-band fragments, see above), which also lets a fragment render share
+# its cache entries with the Studio's full-page renders instead of living in
+# a bucket of its own; core's renderingMode identifier keeps edit-mode entries
+# apart from frontend ones within it.
 prototype(Neos.Fusion:GlobalCacheIdentifiers) {
-  studioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio'}
+  studioPreview = ${request.controllerPackageKey == 'Medienreaktor.NeosStudio' || request.controllerPackageKey == 'Medienreaktor.NeosApi'}
 }

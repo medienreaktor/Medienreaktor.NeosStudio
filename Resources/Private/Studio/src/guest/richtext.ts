@@ -341,11 +341,34 @@ export function mountRichTextEditors(
   hooks: RichTextHooks,
 ): void {
   injectEditorStyles()
-  for (const element of root.querySelectorAll<HTMLElement>(
-    `[${PROPERTY_ATTRIBUTE}]`,
-  )) {
+  // querySelectorAll never matches the root itself, but a swapped element can
+  // carry the editable directly (single-property elements) - include it.
+  const rootItself =
+    root instanceof HTMLElement && root.hasAttribute(PROPERTY_ATTRIBUTE)
+      ? [root]
+      : []
+  for (const element of [
+    ...rootItself,
+    ...root.querySelectorAll<HTMLElement>(`[${PROPERTY_ATTRIBUTE}]`),
+  ]) {
     if (element.closest(`[${SHINE_THROUGH_ATTRIBUTE}]`)) continue
     mountEditor(element, hooks)
+  }
+}
+
+/**
+ * Destroy the editors mounted under (or on) `root` and forget them - called
+ * before an out-of-band element swap replaces the subtree, so the replaced
+ * DOM's editors do not linger in the registry (and TipTap tears down its
+ * listeners). Any pending commit was already flushed by the blur that
+ * preceded the swap; destroying cancels only what a blur would have no-oped.
+ */
+export function unmountRichTextEditors(root: HTMLElement): void {
+  for (const [element, managed] of editorsByElement) {
+    if (root === element || root.contains(element)) {
+      managed.editor.destroy()
+      editorsByElement.delete(element)
+    }
   }
 }
 

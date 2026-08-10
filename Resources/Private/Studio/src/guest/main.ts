@@ -37,6 +37,7 @@ import {
   mountRichTextEditors,
   remoteCaretRect,
   setPropertyLocked,
+  unmountRichTextEditors,
   type RichTextHooks,
 } from './richtext'
 import { TOOLBAR_CLASS } from './toolbar'
@@ -977,18 +978,27 @@ function childElementsOf(collection: HTMLElement): HTMLElement[] {
 }
 
 /**
- * Mounts a standing "Add content" button into every collection without any
- * child content elements - the only entry point into an empty collection
- * (there is nothing to hover for the element "+" button). Clicking opens the
- * host's insertion dialog with the collection as the "inside" target. After
- * the creation the preview reloads, so the buttons never need updating live.
+ * Mounts a standing "Add content" button into every collection under `root`
+ * without any child content elements - the only entry point into an empty
+ * collection (there is nothing to hover for the element "+" button). Clicking
+ * opens the host's insertion dialog with the collection as the "inside"
+ * target. After a creation the preview reloads; an out-of-band element swap
+ * re-runs this scoped to the fresh subtree instead.
  */
-function mountCollectionAddButtons(): void {
-  for (const collection of document.querySelectorAll<HTMLElement>(
-    `[${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}]`,
-  )) {
+function mountCollectionAddButtons(root: ParentNode = document): void {
+  const selector = `[${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}]`
+  // querySelectorAll never matches the root itself; a swapped element could
+  // be (or sit inside) a collection of its own.
+  const rootItself =
+    root instanceof HTMLElement && root.matches(selector) ? [root] : []
+  for (const collection of [
+    ...rootItself,
+    ...root.querySelectorAll<HTMLElement>(selector),
+  ]) {
     const contextPath = collection.getAttribute(WRAPPER_ATTRIBUTE)
     if (!contextPath || childElementsOf(collection).length > 0) continue
+    // Already carries its button (possible on re-runs after a swap).
+    if (collection.querySelector(`:scope > .${COLLECTION_ADD_CLASS}`)) continue
     const button = document.createElement('button')
     button.type = 'button'
     button.className = COLLECTION_ADD_CLASS
@@ -1482,8 +1492,16 @@ function replaceElement(aggregateId: string, html: string): boolean {
   // draft and the caret. Report success anyway - the skipped refresh is the
   // deliberate phase-1 concurrency stopgap (last write wins on blur); a
   // failure return would trigger a full page reload, which is worse.
+  // document.hasFocus() is load-bearing: activeElement keeps pointing at the
+  // last-focused editable even after the user clicked into the shell (the
+  // inspector, the asset picker). Without it, the swap after the user's OWN
+  // edit - e.g. assigning an image while a caret was left in the element's
+  // text - would be skipped silently and the preview would keep the stale
+  // markup. Only a caret the user actually holds (the guest document has
+  // focus) defers the swap.
   const active = document.activeElement
   if (
+    document.hasFocus() &&
     active instanceof HTMLElement &&
     element.contains(active) &&
     (active.isContentEditable || active.closest('[contenteditable="true"]'))
@@ -1512,12 +1530,18 @@ function replaceElement(aggregateId: string, html: string): boolean {
   hideImageOverlay()
   hideShineVariantButton()
 
+  // The old subtree's TipTap editors are gone with it - tear them down so
+  // the registry does not accumulate disconnected editors across swaps.
+  unmountRichTextEditors(element)
   element.replaceWith(replacement)
   // Re-run the full index: the swapped subtree's elements (including nested
   // ones) re-map to their fresh DOM nodes; ids that vanished with the old
   // markup simply keep a stale, disconnected entry - reads check isConnected.
   indexWrappedElements()
   mountRichTextEditors(replacement, richTextHooks)
+  // Empty collections inside the fresh markup need their standing "Add
+  // content" entry point again (scoped: elsewhere they already have one).
+  mountCollectionAddButtons(replacement)
   if (wasSelected) {
     selectedElement = null
     select(replacement, { notifyHost: false })

@@ -137,6 +137,16 @@ export function InspectorPanel({
     }))
   }
 
+  // The tab the user picked. Deliberately NOT implemented by remounting the
+  // Tabs on visibility changes: a ClientEval edit can change the visible
+  // property set mid-commit (assigning an image reveals its dependent
+  // fields), and a remount would destroy every editor's in-flight state -
+  // the freshly picked image would re-seed from the not-yet-refetched node
+  // and visibly vanish. Instead the selection is controlled, and the render
+  // below falls back to the first tab whenever the picked one is not
+  // currently visible (hidden by ClientEval, or gone with a type change).
+  const [selectedTab, setSelectedTab] = useState<string | null>(null)
+
   // The parent node is only fetched when an expression actually mentions
   // parentNode - most configurations never do.
   const needsParentNode = useMemo(() => clientEvalUsesParentNode(tabs), [tabs])
@@ -320,13 +330,17 @@ export function InspectorPanel({
                 )}
               </p>
             ) : (
-              // Remount on node type change and when ClientEval changes the
-              // set of visible tabs: the available tabs differ, and the
-              // initially selected tab resets to the first one (also rescues
-              // the selection when the selected tab was just hidden).
+              // Controlled selection, falling back to the first tab when the
+              // picked one is not among the visible ones - never a remount,
+              // so the property editors (and their in-flight drafts) survive
+              // ClientEval visibility changes and node switches.
               <Tabs
-                key={`${node.nodeType}:${visibleTabs.map((tab) => tab.id).join(',')}`}
-                defaultValue={visibleTabs[0].id}
+                value={
+                  visibleTabs.some((tab) => tab.id === selectedTab)
+                    ? selectedTab
+                    : visibleTabs[0].id
+                }
+                onValueChange={(value) => setSelectedTab(value as string)}
               >
                 <TabsList>
                   {visibleTabs.map((tab) => {
