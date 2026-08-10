@@ -25,9 +25,12 @@ import { translate as t } from '@/lib/i18n'
  *
  * A stored value is only ever an identifier (see assetValue.ts), so the asset
  * to display is resolved from the API. A fresh pick is held locally too, so the
- * preview updates instantly, ahead of the resolve. State is seeded once from
- * `value` and thereafter owned here - the inspector remounts the editor (keyed
- * by node + property) when the edited subject changes, which resets it.
+ * preview updates instantly, ahead of the resolve. State is seeded from
+ * `value` and owned here between value changes - the inspector remounts the
+ * editor (keyed by node + property) when the edited subject changes, and the
+ * sync below adopts a `value` that changed underneath (the node refetch after
+ * a pick through the preview's image overlay, a collaborator's edit), which
+ * this editor would otherwise never learn about.
  */
 export function AssetFieldEditor({
   subject,
@@ -40,6 +43,21 @@ export function AssetFieldEditor({
   const [identifier, setIdentifier] = useState(() => referenceIdentifier(value))
   const [picked, setPicked] = useState<MediaAsset | null>(null)
   const [cropOpen, setCropOpen] = useState(false)
+
+  // Adopt external value changes: when the refetched node carries a different
+  // identifier than the one this editor last saw AND holds, someone else set
+  // the property (preview overlay pick, collaborator) - re-seed from it. The
+  // editor's own pick is not "external": by the time the refetch lands, the
+  // held identifier already matches, so the instant local preview survives.
+  const valueIdentifier = referenceIdentifier(value)
+  const [seenValueIdentifier, setSeenValueIdentifier] = useState(valueIdentifier)
+  if (valueIdentifier !== seenValueIdentifier) {
+    setSeenValueIdentifier(valueIdentifier)
+    if (valueIdentifier !== identifier) {
+      setIdentifier(valueIdentifier)
+      setPicked(null)
+    }
+  }
 
   // Stored identifiers are always local, so they resolve against 'neos'.
   const query = useAsset('neos', identifier)

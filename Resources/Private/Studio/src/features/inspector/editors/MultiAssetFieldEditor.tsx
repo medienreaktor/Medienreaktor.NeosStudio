@@ -26,9 +26,11 @@ import {
  * session live at a time), so this appends the chosen asset to the list. Order
  * is meaningful (it is the stored order), so rows can be dragged to reorder.
  * Each row resolves its asset from the API for display; a fresh pick is cached
- * locally so it shows instantly, ahead of the resolve. State is seeded once
- * from `value` and thereafter owned here - the inspector remounts the editor
- * (keyed by node + property) when the edited subject changes, which resets it.
+ * locally so it shows instantly, ahead of the resolve. State is seeded from
+ * `value` and owned here between value changes - the inspector remounts the
+ * editor (keyed by node + property) when the edited subject changes, and the
+ * sync below adopts a `value` that changed underneath (an external edit this
+ * editor would otherwise never learn about).
  */
 export function MultiAssetFieldEditor({
   subject,
@@ -42,6 +44,22 @@ export function MultiAssetFieldEditor({
   const [pickedById, setPickedById] = useState<Record<string, MediaAsset>>({})
   // The row being dragged, tracked while a reorder is in progress.
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+
+  // Adopt external value changes (same discipline as AssetFieldEditor): a
+  // refetched list that differs from both the last-seen one and the held one
+  // was changed by someone else - re-seed from it. The editor's own commits
+  // already hold the new list when the refetch lands, and a drag in progress
+  // is never interrupted (its drop commits, and that commit round-trips).
+  const listKey = (list: AssetReference[]) =>
+    list.map((ref) => ref.__identifier).join('|')
+  const valueRefs = referenceList(value)
+  const [seenValueKey, setSeenValueKey] = useState(() => listKey(valueRefs))
+  if (listKey(valueRefs) !== seenValueKey) {
+    setSeenValueKey(listKey(valueRefs))
+    if (listKey(valueRefs) !== listKey(refs) && dragIndex === null) {
+      setRefs(valueRefs)
+    }
+  }
 
   // Committing an empty list unsets the property, matching the single editor.
   const commit = (next: AssetReference[]) => {
