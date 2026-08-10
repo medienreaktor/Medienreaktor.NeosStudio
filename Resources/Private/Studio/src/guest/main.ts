@@ -31,7 +31,13 @@ import type {
   PresenceHighlight,
 } from '../features/preview/protocol'
 import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
-import { mountRichTextEditors } from './richtext'
+import {
+  applyRemotePropertyContent,
+  ejectFromProperty,
+  mountRichTextEditors,
+  setPropertyLocked,
+  type RichTextHooks,
+} from './richtext'
 import { TOOLBAR_CLASS } from './toolbar'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
@@ -61,6 +67,7 @@ const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
 const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
 const PRESENCE_CLASS = 'neos-studio-presence'
 const PRESENCE_BADGE_CLASS = 'neos-studio-presence-badge'
+const PRESENCE_BADGE_EDITING_CLASS = 'neos-studio-presence-badge--editing'
 
 /** The Neos brand purple (purple-500 of the shell palette), for the
  *  shine-through indicators - the guest styles are literal CSS, no Tailwind. */
@@ -701,21 +708,58 @@ function parentCollectionContextPath(element: HTMLElement): string | null {
 }
 
 /**
- * Report a committed inline edit to the host (the rich-text engine calls this
- * on blur with the property's serialized HTML). Resolves the node identity the
- * same way the old contentEditable path did: the editable wrapping carries it
- * directly, otherwise it falls back to the enclosing content element wrapper.
+ * The identity of an inline-editable property element, resolved the same way
+ * the old contentEditable path did: the editable wrapping carries the node's
+ * contextPath directly, otherwise it falls back to the enclosing content
+ * element wrapper.
  */
-function commitProperty(element: HTMLElement, value: string): void {
+function propertyIdentity(
+  element: HTMLElement,
+): { contextPath: string; property: string } | null {
   const property = element.getAttribute(PROPERTY_ATTRIBUTE)
   const contextPath =
     element
       .closest(`[${EDITABLE_NODE_ATTRIBUTE}]`)
       ?.getAttribute(EDITABLE_NODE_ATTRIBUTE) ??
     element.closest(`[${WRAPPER_ATTRIBUTE}]`)?.getAttribute(WRAPPER_ATTRIBUTE)
-  if (property && contextPath) {
-    post({ type: 'neos-studio/property-changed', contextPath, property, value })
+  return property && contextPath ? { contextPath, property } : null
+}
+
+/** Report an inline edit to the host for persistence (the rich-text engine
+ * calls this debounced while typing and flushed on blur). */
+function commitProperty(element: HTMLElement, value: string): void {
+  const identity = propertyIdentity(element)
+  if (identity) {
+    post({ type: 'neos-studio/property-changed', ...identity, value })
   }
+}
+
+/** Stream the in-progress content to the host (live typing, throttled). */
+function liveUpdateProperty(element: HTMLElement, value: string): void {
+  const identity = propertyIdentity(element)
+  if (identity) {
+    post({ type: 'neos-studio/live-edit', ...identity, value })
+  }
+}
+
+/**
+ * The inline text the user is typing in right now - what a lost lock
+ * arbitration ejects from. Guest-internal: the lock CLAIM itself derives
+ * from the shell's element selection, not from typing.
+ */
+let ownEditingElement: HTMLElement | null = null
+
+function reportEditingState(element: HTMLElement, editing: boolean): void {
+  ownEditingElement = editing ? element : null
+}
+
+/** The hooks every rich-text mount gets (initial page and re-mounts after
+ * out-of-band element swaps alike). */
+const richTextHooks: RichTextHooks = {
+  commit: commitProperty,
+  activity: () => scheduleHandleUpdate(),
+  liveUpdate: liveUpdateProperty,
+  editingState: reportEditingState,
 }
 
 /** The guest's own floating UI - clicks on it are not clicks on the page. */
@@ -1154,9 +1198,54 @@ function injectPresenceStyles(): void {
       pointer-events: none;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
+    /* The edit-lock badge: a pill ("✏ AB") on the locked text itself. */
+    .${PRESENCE_BADGE_EDITING_CLASS} {
+      width: auto;
+      padding: 0 7px;
+      white-space: nowrap;
+    }
   `
   document.head.appendChild(style)
 }
+
+/**
+ * The inline-editable property element of a node, resolved via the wrapper
+ * index. Nested content elements render their own properties inside the
+ * outer wrapper's subtree, so a candidate only counts when this wrapper is
+ * its nearest one.
+ */
+function findPropertyElement(
+  aggregateId: string,
+  property: string,
+): HTMLElement | null {
+  const wrapper = elementsByAggregateId.get(aggregateId)
+  if (!wrapper || !wrapper.isConnected) return null
+  for (const candidate of wrapper.querySelectorAll<HTMLElement>(
+    `[${PROPERTY_ATTRIBUTE}="${CSS.escape(property)}"]`,
+  )) {
+    if (candidate.closest(`[${WRAPPER_ATTRIBUTE}]`) === wrapper)
+      return candidate
+  }
+  // The wrapper may itself carry the editable (single-property elements).
+  return wrapper.getAttribute(PROPERTY_ATTRIBUTE) === property ? wrapper : null
+}
+
+/** Every inline-editable property element belonging to this node (not to a
+ * nested content element) - the scope of an element-level edit lock. */
+function propertyElementsOf(wrapper: HTMLElement): HTMLElement[] {
+  const result: HTMLElement[] = []
+  if (wrapper.hasAttribute(PROPERTY_ATTRIBUTE)) result.push(wrapper)
+  for (const candidate of wrapper.querySelectorAll<HTMLElement>(
+    `[${PROPERTY_ATTRIBUTE}]`,
+  )) {
+    if (candidate.closest(`[${WRAPPER_ATTRIBUTE}]`) === wrapper)
+      result.push(candidate)
+  }
+  return result
+}
+
+/** Property elements currently locked by a collaborator, for unlock sweeps. */
+let lockedPropertyElements = new Set<HTMLElement>()
 
 /** Rebuild all presence decor from the current roster (also called after an
  * out-of-band element swap - the old badges point at replaced DOM). */
@@ -1172,21 +1261,69 @@ function renderPresence(): void {
   // Badge slots per element, so several people on one element stack side by
   // side instead of on top of each other.
   const slots = new Map<HTMLElement, number>()
-  for (const user of presenceHighlights) {
-    const element = elementsByAggregateId.get(user.aggregateId)
-    if (!element || !element.isConnected) continue
-    element.classList.add(PRESENCE_CLASS)
-    element.style.setProperty('--neos-studio-presence-color', user.color)
+  const addBadge = (
+    element: HTMLElement,
+    user: PresenceHighlight,
+    editing: boolean,
+  ) => {
     const badge = document.createElement('div')
     badge.className = PRESENCE_BADGE_CLASS
-    badge.textContent = user.initials
-    badge.title = user.name
+    badge.textContent = editing ? `✏ ${user.initials}` : user.initials
+    badge.title = editing ? `${user.name} is editing` : user.name
     badge.style.backgroundColor = user.color
+    if (editing) badge.classList.add(PRESENCE_BADGE_EDITING_CLASS)
     document.body.appendChild(badge)
     const slot = slots.get(element) ?? 0
     slots.set(element, slot + 1)
     badge.dataset.slot = String(slot)
     presenceBadges.push({ badge, element })
+  }
+  // The edit locks: peers' actively edited texts become read-only here. The
+  // sweep unlocks everything first, so a lock that vanished from the roster
+  // (peer blurred, left, or timed out) releases without bookkeeping.
+  for (const element of lockedPropertyElements) {
+    if (element.isConnected) setPropertyLocked(element, false)
+  }
+  lockedPropertyElements = new Set()
+  for (const user of presenceHighlights) {
+    if (user.focusedAggregateId !== null) {
+      const element = elementsByAggregateId.get(user.focusedAggregateId)
+      if (element && element.isConnected) {
+        element.classList.add(PRESENCE_CLASS)
+        element.style.setProperty('--neos-studio-presence-color', user.color)
+        addBadge(element, user, false)
+      }
+    }
+    if (user.editing !== null) {
+      const wrapper = elementsByAggregateId.get(user.editing.aggregateId)
+      if (wrapper && wrapper.isConnected) {
+        // The server arbitrates lock claims (first one wins) - a peer in
+        // the roster IS the holder. If the own user is typing inside this
+        // very element, they lost the race: discard the unpersisted
+        // keystrokes and leave before the lock lands (persisting them
+        // would clobber the winner's text).
+        if (ownEditingElement && wrapper.contains(ownEditingElement)) {
+          const ejected = ownEditingElement
+          ownEditingElement = null
+          ejectFromProperty(ejected)
+          post({ type: 'neos-studio/editing-rejected', name: user.name })
+        }
+        // Element-level lock: every inline text of the claimed element
+        // becomes read-only, not just the property being typed in.
+        for (const propertyElement of propertyElementsOf(wrapper)) {
+          setPropertyLocked(propertyElement, true)
+          lockedPropertyElements.add(propertyElement)
+        }
+        const badgeAnchor =
+          (user.editing.property !== null
+            ? findPropertyElement(
+                user.editing.aggregateId,
+                user.editing.property,
+              )
+            : null) ?? wrapper
+        addBadge(badgeAnchor, user, true)
+      }
+    }
   }
   positionPresenceBadges()
 }
@@ -1260,10 +1397,7 @@ function replaceElement(aggregateId: string, html: string): boolean {
   // ones) re-map to their fresh DOM nodes; ids that vanished with the old
   // markup simply keep a stale, disconnected entry - reads check isConnected.
   indexWrappedElements()
-  mountRichTextEditors(replacement, {
-    commit: commitProperty,
-    activity: scheduleHandleUpdate,
-  })
+  mountRichTextEditors(replacement, richTextHooks)
   if (wasSelected) {
     selectedElement = null
     select(replacement, { notifyHost: false })
@@ -1309,6 +1443,16 @@ function onHostMessage(event: MessageEvent): void {
     presenceHighlights = message.users
     renderPresence()
   }
+  if (message?.type === 'neos-studio/live-edit-apply') {
+    // A collaborator's live typing: paint their current content into the
+    // (locked) editor. Ephemeral - the change feed delivers the truth once
+    // their edit persists.
+    const element = findPropertyElement(message.aggregateId, message.property)
+    if (element) {
+      applyRemotePropertyContent(element, message.value)
+      schedulePresenceUpdate()
+    }
+  }
   if (message?.type === 'neos-studio/creation-drag-start')
     startDrag(message.nodeTypeName)
   if (message?.type === 'neos-studio/creation-drag-end') endDrag()
@@ -1323,13 +1467,10 @@ function init(): void {
   injectPresenceStyles()
   indexWrappedElements()
   mountCollectionAddButtons()
-  // Rich-text inline editing: mount a TipTap editor on every editable
-  // property. Commit-on-blur posts the change to the host; typing and focus
-  // keep the floating element handle attached as the layout shifts.
-  mountRichTextEditors(document, {
-    commit: commitProperty,
-    activity: scheduleHandleUpdate,
-  })
+  // Rich-text inline editing: a TipTap editor on every editable property.
+  // Commits post to the host debounced while typing and flushed on blur;
+  // typing also streams live updates and holds the collaboration edit lock.
+  mountRichTextEditors(document, richTextHooks)
   document.addEventListener('click', onClick, true)
   document.addEventListener('mouseover', onMouseOver)
   document.addEventListener('dragover', onDragOver)

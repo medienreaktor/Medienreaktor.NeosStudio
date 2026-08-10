@@ -294,9 +294,9 @@ function VisualEditorPanel() {
     navigateToNode,
     reportInlineEdit,
   } = useStudio()
-  // Collaborators standing on the previewed document whose focused node can
-  // be highlighted in the page - the guest outlines those elements in the
-  // person's color with an initials badge.
+  // Collaborators standing on the previewed document: the guest outlines
+  // their focused elements in the person's color with an initials badge, and
+  // locks the inline text a peer is editing (read-only + editing badge).
   const { peers } = usePresence()
   const documentAggregateId = selectedDocument
     ? aggregateIdOf(selectedDocument.address)
@@ -307,10 +307,17 @@ function VisualEditorPanel() {
         .filter(
           (peer) =>
             peer.documentAggregateId === documentAggregateId &&
-            peer.focusedAggregateId !== null,
+            (peer.focusedAggregateId !== null ||
+              peer.editingElement !== null),
         )
         .map((peer) => ({
-          aggregateId: peer.focusedAggregateId as string,
+          focusedAggregateId: peer.focusedAggregateId,
+          editing: peer.editingElement
+            ? {
+                aggregateId: peer.editingElement.nodeAggregateId,
+                property: peer.editingElement.property,
+              }
+            : null,
           color: peer.color,
           initials: peer.initials,
           name: peer.name,

@@ -25,7 +25,12 @@ import {
 import {
   createVariant,
   persistPropertyChange,
+  persistPropertyChangeQueued,
 } from '@/features/editing/persistProperty'
+import {
+  publishLocalLiveEdit,
+  subscribeRemoteLiveEdits,
+} from '@/features/collaboration/liveEdits'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { imageReference, localIdentifierFor } from '@/api/assetValue'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
@@ -320,7 +325,10 @@ export function PreviewPane({
           break
         case 'neos-studio/property-changed': {
           const address = addressFromContextPath(message.contextPath)
-          persistPropertyChange(address, message.property, message.value)
+          // Queued: typing commits arrive every 1.5-5s and must never
+          // overlap in flight - newer values coalesce behind the running
+          // save, latest wins.
+          persistPropertyChangeQueued(address, message.property, message.value)
             .then(() => onNodeEditedRef.current?.(address))
             .catch((e: unknown) =>
               toast.error(e, {
@@ -329,6 +337,31 @@ export function PreviewPane({
             )
           break
         }
+        case 'neos-studio/editing-rejected':
+          // Lost the lock arbitration: the guest already reverted and left
+          // the editor; tell the user what happened to their keystrokes.
+          toast.info(
+            t(
+              'collaboration.editingRejected',
+              '{name} is already editing this element - your changes were not saved.',
+              { name: message.name },
+            ),
+          )
+          break
+        case 'neos-studio/live-edit':
+          // The own live-typing stream: hand to the collaboration channel;
+          // the realtime transport (if any) fans it out to peers.
+          try {
+            const address = addressFromContextPath(message.contextPath)
+            publishLocalLiveEdit({
+              nodeAggregateId: decodeNodeAddress(address).aggregateId,
+              property: message.property,
+              value: message.value,
+            })
+          } catch {
+            /* malformed contextpath - live typing is cosmetic */
+          }
+          break
         case 'neos-studio/create-node-request':
           try {
             setPendingCreation({
@@ -605,7 +638,7 @@ export function PreviewPane({
   }, [update?.token])
 
   // Push the collaborators' positions into the guest (also right after it
-  // boots, so a reloaded frame regains the presence decor).
+  // boots, so a reloaded frame regains the presence decor and edit locks).
   useEffect(() => {
     if (!guestReady) return
     const frame = activeFrameRef.current?.contentWindow
@@ -616,6 +649,23 @@ export function PreviewPane({
     }
     frame.postMessage(message, window.location.origin)
   }, [guestReady, presence])
+
+  // Forward collaborators' live-typing ticks into the guest, which paints
+  // them into the locked inline text. The guest ignores ticks for elements
+  // not on this page.
+  useEffect(() => {
+    if (!guestReady) return
+    return subscribeRemoteLiveEdits((edit) => {
+      postToGuest({
+        type: 'neos-studio/live-edit-apply',
+        aggregateId: edit.nodeAggregateId,
+        property: edit.property,
+        value: edit.value,
+      })
+    })
+    // postToGuest reads the frame ref - stable across renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestReady])
 
   if (!document || !src) {
     return (

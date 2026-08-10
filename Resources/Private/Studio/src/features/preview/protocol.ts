@@ -36,9 +36,20 @@ export type GuestToHostMessage =
   | { type: 'neos-studio/document-selected' }
   /** The user followed a link to another document (from its preview URI). */
   | { type: 'neos-studio/navigate-to-node'; contextPath: string }
-  /** An inline edit was committed (blur with changed content). */
+  /** An inline edit should be persisted (debounced while typing, on blur). */
   | {
       type: 'neos-studio/property-changed'
+      contextPath: string
+      property: string
+      value: string
+    }
+  /**
+   * Live-typing stream (throttled): the current content of the inline text
+   * being edited, for collaborators' previews. Ephemeral - persistence goes
+   * through property-changed.
+   */
+  | {
+      type: 'neos-studio/live-edit'
       contextPath: string
       property: string
       value: string
@@ -125,6 +136,12 @@ export type GuestToHostMessage =
       attributes: LinkAttributes | null
     }
   /**
+   * The user lost the edit-lock arbitration (a collaborator was faster into
+   * the same element): the guest discarded the unpersisted keystrokes and
+   * left the editor; the host informs the user. name is the lock holder's.
+   */
+  | { type: 'neos-studio/editing-rejected'; name: string }
+  /**
    * Reply to element-info-request: where (and whether) the node is rendered
    * on this page. fusionPath is the element's rendering entry point (the
    * data-__neos-fusion-path attribute), null when the node has no rendered
@@ -147,10 +164,16 @@ export type GuestToHostMessage =
 
 /**
  * A collaborator's live position on the rendered page: the element of the
- * node they focus gets an outline in their color plus an initials badge.
+ * node they focus gets an outline in their color plus an initials badge, and
+ * the inline text they are editing is locked (read-only with an editing
+ * badge) for everyone else.
  */
 export interface PresenceHighlight {
-  aggregateId: string
+  /** The node whose element they focus; null = none rendered on this page. */
+  focusedAggregateId: string | null
+  /** The element they hold the edit lock on (claimed by selection); property
+   * names the inline text being typed in when known (badge placement). */
+  editing: { aggregateId: string; property: string | null } | null
   color: string
   initials: string
   name: string
@@ -200,4 +223,15 @@ export type HostToGuestMessage =
       requestId: number
       aggregateId: string
       html: string
+    }
+  /**
+   * A collaborator's live-typing stream tick: show this content in their
+   * (locked) inline text. Ephemeral - the authoritative state follows via
+   * the change feed once their edit persists.
+   */
+  | {
+      type: 'neos-studio/live-edit-apply'
+      aggregateId: string
+      property: string
+      value: string
     }

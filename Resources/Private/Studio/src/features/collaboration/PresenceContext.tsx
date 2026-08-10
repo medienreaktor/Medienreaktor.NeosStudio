@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { PresenceUser } from '@/api/collaboration'
+import type { EditingElement, PresenceUser } from '@/api/collaboration'
 
 /**
  * A colleague present in the same editing workspace, enriched with the
@@ -7,6 +7,9 @@ import type { PresenceUser } from '@/api/collaboration'
  * peer - the roster is filtered before it lands here.
  */
 export interface PresencePeer extends PresenceUser {
+  /** Normalized by the bridge: null when the roster carries no claim (the
+   * API's presence responses never do - locks are a sidecar concept). */
+  editingElement: EditingElement | null
   color: string
   initials: string
 }

@@ -28,6 +28,9 @@ export function startPollingTransport(
   let position = initialPosition
 
   // --- Presence ------------------------------------------------------------
+  // Deliberately WITHOUT the editingElement claim: edit locks are a Studio/
+  // sidecar concept, not an API one - the REST API carries plain presence
+  // only. No sidecar means no locks, and that is by design.
   const beat = () => {
     sendPresenceHeartbeat(workspaceName, {
       documentAggregateId: position.documentAggregateId,

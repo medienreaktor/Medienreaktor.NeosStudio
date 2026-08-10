@@ -88,15 +88,51 @@ const ensureSession = (documentName, document) => {
 
 /**
  * The roster wire format matches the polling presence endpoint's `users`, so
- * the Studio's transport layer needs no translation. Two tabs of the same
- * user collapse into one entry (the most recently updated), mirroring the
- * API's one-entry-per-user semantics.
+ * the Studio's transport layer needs no translation.
+ *
+ * Edit-lock ARBITRATION happens here: connections store their DESIRED claim
+ * (the element they have selected); per element, the EARLIEST claim wins and
+ * only the winner's claim broadcasts as `editingElement`. Recomputed on
+ * every broadcast, so a released element auto-promotes the next claimant -
+ * whoever selected it while it was held gets the lock the moment the holder
+ * moves away, without re-selecting.
  */
 const broadcastRoster = (session) => {
+  const winners = new Map() // nodeAggregateId -> { socketId, at }
+  for (const [socketId, entry] of session.roster) {
+    if (!entry.claim) continue
+    const current = winners.get(entry.claim.nodeAggregateId)
+    if (
+      !current ||
+      entry.claim.at < current.at ||
+      (entry.claim.at === current.at && socketId < current.socketId)
+    ) {
+      winners.set(entry.claim.nodeAggregateId, { socketId, at: entry.claim.at })
+    }
+  }
+  // Two tabs of the same user collapse into one roster row, mirroring the
+  // API's one-entry-per-user semantics - preferring the connection holding
+  // a granted claim, so a user's second tab never hides their lock.
   const byUser = new Map()
-  for (const entry of session.roster.values()) {
+  for (const [socketId, entry] of session.roster) {
+    const row = {
+      userId: entry.userId,
+      name: entry.name,
+      documentAggregateId: entry.documentAggregateId,
+      focusedAggregateId: entry.focusedAggregateId,
+      dimensionSpacePoint: entry.dimensionSpacePoint,
+      editingElement:
+        entry.claim && winners.get(entry.claim.nodeAggregateId)?.socketId === socketId
+          ? { nodeAggregateId: entry.claim.nodeAggregateId, property: entry.claim.property }
+          : null,
+      updatedAt: entry.updatedAt,
+    }
     const existing = byUser.get(entry.userId)
-    if (!existing || entry.updatedAt >= existing.updatedAt) byUser.set(entry.userId, entry)
+    const preferRow =
+      !existing ||
+      (row.editingElement !== null && existing.editingElement === null) ||
+      (existing.editingElement === null && row.updatedAt >= existing.updatedAt)
+    if (preferRow) byUser.set(entry.userId, row)
   }
   const users = [...byUser.values()].map(({ updatedAt, ...user }) => user)
   session.document.broadcastStateless(JSON.stringify({ type: 'presence', users }))
@@ -206,6 +242,8 @@ const server = new Server({
       documentAggregateId: null,
       focusedAggregateId: null,
       dimensionSpacePoint: null,
+      /** The DESIRED edit-lock claim: {nodeAggregateId, property, at}. */
+      claim: null,
       updatedAt: Date.now(),
     })
     broadcastRoster(session)
@@ -220,19 +258,65 @@ const server = new Server({
     } catch {
       return
     }
-    if (message.type !== 'position') return
-    const entry = session.roster.get(connection.socketId)
-    if (!entry) return
-    entry.documentAggregateId =
-      typeof message.documentAggregateId === 'string' ? message.documentAggregateId : null
-    entry.focusedAggregateId =
-      typeof message.focusedAggregateId === 'string' ? message.focusedAggregateId : null
-    entry.dimensionSpacePoint =
-      message.dimensionSpacePoint && typeof message.dimensionSpacePoint === 'object'
-        ? message.dimensionSpacePoint
-        : null
-    entry.updatedAt = Date.now()
-    broadcastRoster(session)
+    if (message.type === 'position') {
+      const entry = session.roster.get(connection.socketId)
+      if (!entry) return
+      entry.documentAggregateId =
+        typeof message.documentAggregateId === 'string' ? message.documentAggregateId : null
+      entry.focusedAggregateId =
+        typeof message.focusedAggregateId === 'string' ? message.focusedAggregateId : null
+      entry.dimensionSpacePoint =
+        message.dimensionSpacePoint && typeof message.dimensionSpacePoint === 'object'
+          ? message.dimensionSpacePoint
+          : null
+      // The selected element - the DESIRED edit-lock claim. Stored as-is;
+      // broadcastRoster arbitrates (earliest claim per element wins). The
+      // claim time survives re-sends of the same element, so a holder's
+      // position updates never cost them their seniority.
+      if (
+        message.editingElement &&
+        typeof message.editingElement.nodeAggregateId === 'string'
+      ) {
+        const nodeAggregateId = message.editingElement.nodeAggregateId
+        entry.claim = {
+          nodeAggregateId,
+          property:
+            typeof message.editingElement.property === 'string'
+              ? message.editingElement.property
+              : null,
+          at:
+            entry.claim?.nodeAggregateId === nodeAggregateId
+              ? entry.claim.at
+              : Date.now(),
+        }
+      } else {
+        entry.claim = null
+      }
+      entry.updatedAt = Date.now()
+      broadcastRoster(session)
+      return
+    }
+    if (message.type === 'liveEdit') {
+      // The live-typing stream: relay the sender's current text to everyone
+      // else in the workspace. Ephemeral and cosmetic - persistence flows
+      // through the API and the change feed like any other edit.
+      if (
+        typeof message.nodeAggregateId !== 'string' ||
+        typeof message.property !== 'string' ||
+        typeof message.value !== 'string'
+      ) {
+        return
+      }
+      session.document.broadcastStateless(
+        JSON.stringify({
+          type: 'liveEdit',
+          nodeAggregateId: message.nodeAggregateId,
+          property: message.property,
+          value: message.value,
+        }),
+        (target) => target !== connection,
+      )
+    }
   },
 
   async onDisconnect({ documentName, socketId }) {

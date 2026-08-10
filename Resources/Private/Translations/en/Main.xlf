@@ -497,6 +497,12 @@
       <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
         <source>Select a node in the preview or the trees to inspect it.</source>
       </trans-unit>
+      <trans-unit id="collaboration.editingRejected" xml:space="preserve">
+        <source>{name} is already editing this element - your changes were not saved.</source>
+      </trans-unit>
+      <trans-unit id="inspector.elementLockedHint" xml:space="preserve">
+        <source>is editing this element right now - it is locked until they are done.</source>
+      </trans-unit>
       <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
         <source>Shines through from</source>
       </trans-unit>

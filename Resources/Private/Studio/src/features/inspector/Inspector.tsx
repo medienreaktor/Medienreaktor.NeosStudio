@@ -21,6 +21,8 @@ import {
   persistPropertyChange,
   persistReferenceChange,
 } from '@/features/editing/persistProperty'
+import { aggregateIdOf } from '@/api/nodeAddress'
+import { usePresence } from '@/features/collaboration/PresenceContext'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import {
@@ -305,6 +307,7 @@ export function InspectorPanel({
           {nodeLabel(node)}
         </h2>
         <ShineThroughNotice node={node} />
+        <ElementLockNotice node={node} />
       </div>
       <div className="">
         {visibleTabs && (
@@ -420,6 +423,40 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
         {t(
           'inspector.shineThroughHint',
           'This node does not exist in the current dimension yet - editing it creates an independent variant here.',
+        )}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Alert under the inspector header while a collaborator holds the edit lock
+ * on this element (they have it selected in a realtime session). Advisory,
+ * like the preview's lock rendering: locks are a Studio/sidecar concept and
+ * deliberately not enforced by the API.
+ */
+function ElementLockNotice({ node }: { node: NodeDto }) {
+  const { peers } = usePresence()
+  const holder = peers.find(
+    (peer) =>
+      peer.editingElement !== null &&
+      peer.editingElement.nodeAggregateId === aggregateIdOf(node.address),
+  )
+  if (!holder) return null
+  return (
+    <div
+      role="status"
+      className="mt-3 flex items-start gap-2 rounded-md border p-2.5 text-xs"
+      style={{ borderColor: holder.color }}
+    >
+      <i className="fas fa-pen mt-0.5" style={{ color: holder.color }} />
+      <p>
+        <strong className="text-neutral-950 dark:text-white">
+          {holder.name}
+        </strong>{' '}
+        {t(
+          'inspector.elementLockedHint',
+          'is editing this element right now - it is locked until they are done.',
         )}
       </p>
     </div>

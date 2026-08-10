@@ -1,6 +1,7 @@
 import { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider'
 import type { PresenceUser, WorkspaceFeedEvent } from '@/api/collaboration'
 import { getValidAccessToken } from '@/auth/oauth'
+import type { LiveEdit } from './liveEdits'
 import type {
   CollaborationPosition,
   CollaborationTransport,
@@ -16,6 +17,7 @@ type ServerMessage =
   | { type: 'presence'; users: PresenceUser[] }
   | { type: 'events'; events: WorkspaceFeedEvent[] }
   | { type: 'workspaceChanged' }
+  | ({ type: 'liveEdit' } & LiveEdit)
 
 /**
  * The WebSocket transport: one Hocuspocus connection per collaborative
@@ -96,6 +98,13 @@ export function startWebsocketTransport(
         case 'workspaceChanged':
           callbacks.onWorkspaceChanged()
           break
+        case 'liveEdit':
+          callbacks.onLiveEdit?.({
+            nodeAggregateId: message.nodeAggregateId,
+            property: message.property,
+            value: message.value,
+          })
+          break
       }
     },
     onAuthenticationFailed({ reason }) {
@@ -115,6 +124,13 @@ export function startWebsocketTransport(
     updatePosition(next) {
       position = next
       sendPosition()
+    },
+    sendLiveEdit(edit) {
+      try {
+        provider.sendStateless(JSON.stringify({ type: 'liveEdit', ...edit }))
+      } catch {
+        /* not connected - live typing is cosmetic, the save will arrive */
+      }
     },
     stop() {
       disposed = true

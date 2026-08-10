@@ -57,12 +57,29 @@ export function fetchWorkspaceEvents(
   )
 }
 
+/**
+ * The content element a user has claimed - peers see it locked. Claimed by
+ * SELECTING the element (documents are never claimed); property names the
+ * inline text being typed in when known, for badge placement.
+ *
+ * Edit locks are a Studio/sidecar concept, NOT an API one: claims travel
+ * exclusively over the realtime sidecar's roster. The REST API's presence
+ * endpoint knows nothing about them - without the sidecar there are no
+ * locks, by design.
+ */
+export interface EditingElement {
+  nodeAggregateId: string
+  property: string | null
+}
+
 export interface PresenceUser {
   userId: string
   name: string
   documentAggregateId: string | null
   focusedAggregateId: string | null
   dimensionSpacePoint: Record<string, string> | null
+  /** Sidecar rosters only; absent in the API's presence responses. */
+  editingElement?: EditingElement | null
 }
 
 export interface PresenceResponse {

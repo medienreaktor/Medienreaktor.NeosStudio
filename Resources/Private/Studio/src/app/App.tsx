@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   beginLogin,
   getTokens,
@@ -14,11 +14,13 @@ import {
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
 import {
+  DOCUMENT_NODE_TYPE,
   fetchNode,
   isDeleted,
   type NodeDto,
   useNodeVariants,
 } from '@/api/nodes'
+import { isOfType, useNodeTypes } from '@/api/nodeTypes'
 import {
   addressInDimension,
   addressInWorkspace,
@@ -46,6 +48,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { StudioProvider, type StudioContextValue } from '@/app/StudioContext'
+import type { EditingElement } from '@/api/collaboration'
 import { CollaborationBridge } from '@/features/collaboration/CollaborationBridge'
 import { PresenceAvatars } from '@/features/collaboration/PresenceAvatars'
 import {
@@ -194,6 +197,23 @@ export function App() {
     peers: PresencePeer[]
     you: string | null
   }>({ peers: [], you: null })
+
+  // The content element the user has SELECTED - their edit-lock claim.
+  // Selection is the claim unit (no need to be typing): it survives window
+  // switches naturally and matches "I am working on this element". Documents
+  // are never claimed - they are the shared canvas of the multiplayer
+  // session. Server-side arbitration grants each element to the earliest
+  // claim; releasing (selecting elsewhere) auto-promotes the next claimant.
+  const { data: nodeTypeMap } = useNodeTypes(auth === 'authenticated')
+  const editingElement = useMemo<EditingElement | null>(() => {
+    if (!inspectedNode || !nodeTypeMap) return null
+    if (isOfType(nodeTypeMap, inspectedNode.nodeType, DOCUMENT_NODE_TYPE))
+      return null
+    return {
+      nodeAggregateId: aggregateIdOf(inspectedNode.address),
+      property: null,
+    }
+  }, [inspectedNode, nodeTypeMap])
 
   const { data: dimensionsResponse } = useDimensions(auth === 'authenticated')
   const dimensions = dimensionsResponse?.dimensions ?? []
@@ -645,6 +665,7 @@ export function App() {
                       sitesResponse?.dimensionSpacePoint ??
                       null
                     }
+                    editingElement={editingElement}
                     onPresence={setPresence}
                     onRemoteContentChange={remoteContentChanged}
                     onRemoteWorkspaceChange={remoteWorkspaceChanged}

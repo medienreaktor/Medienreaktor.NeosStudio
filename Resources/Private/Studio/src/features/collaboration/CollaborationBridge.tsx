@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react'
-import type { PresenceUser, WorkspaceFeedEvent } from '@/api/collaboration'
+import type {
+  EditingElement,
+  PresenceUser,
+  WorkspaceFeedEvent,
+} from '@/api/collaboration'
 import {
   dimensionSpacePointEquals,
   type DimensionSpacePoint,
 } from '@/api/dimensions'
 import { config } from '@/config'
+import { publishRemoteLiveEdit, subscribeLocalLiveEdits } from './liveEdits'
 import { startPollingTransport } from './pollingTransport'
 import { startWebsocketTransport } from './websocketTransport'
 import type { CollaborationTransport, TransportCallbacks } from './transport'
@@ -48,6 +53,7 @@ export function CollaborationBridge({
   documentAggregateId,
   focusedAggregateId,
   dimensionSpacePoint,
+  editingElement,
   onPresence,
   onRemoteContentChange,
   onRemoteWorkspaceChange,
@@ -58,6 +64,8 @@ export function CollaborationBridge({
   documentAggregateId: string | null
   focusedAggregateId: string | null
   dimensionSpacePoint: DimensionSpacePoint | null
+  /** The inline text being edited right now - announced as the edit lock. */
+  editingElement: EditingElement | null
   onPresence: (state: { peers: PresencePeer[]; you: string | null }) => void
   onRemoteContentChange: (nodeAggregateIds: string[]) => void
   onRemoteWorkspaceChange: () => void
@@ -79,11 +87,13 @@ export function CollaborationBridge({
     documentAggregateId,
     focusedAggregateId,
     dimensionSpacePoint,
+    editingElement,
   })
   positionRef.current = {
     documentAggregateId,
     focusedAggregateId,
     dimensionSpacePoint,
+    editingElement,
   }
   const ownUserIdRef = useRef(ownUserId)
   ownUserIdRef.current = ownUserId
@@ -101,6 +111,10 @@ export function CollaborationBridge({
         .filter((user) => user.userId !== self)
         .map((user) => ({
           ...user,
+          // Only sidecar rosters carry edit-lock claims; the API's presence
+          // responses do not have the field at all (locks are not an API
+          // concept) - normalize so consumers can rely on null.
+          editingElement: user.editingElement ?? null,
           color: presenceColor(user.userId),
           initials: presenceInitials(user.name),
         }))
@@ -150,6 +164,9 @@ export function CollaborationBridge({
       onRoster: handleRoster,
       onEvents: handleEvents,
       onWorkspaceChanged: () => callbacksRef.current.onRemoteWorkspaceChange(),
+      // Collaborators' live-typing ticks flow to the guest via the channel
+      // (the PreviewPane subscribes on the other end).
+      onLiveEdit: publishRemoteLiveEdit,
     }
 
     // --- Transport selection + polling fallback -----------------------------
@@ -208,8 +225,15 @@ export function CollaborationBridge({
     }
     transportsRef.current = transports
 
+    // The own user's live-typing ticks (published by the PreviewPane from
+    // guest messages) go out through whichever transport can carry them.
+    const unsubscribeLiveEdits = subscribeLocalLiveEdits((edit) => {
+      for (const transport of transports) transport.sendLiveEdit?.(edit)
+    })
+
     return () => {
       disposed = true
+      unsubscribeLiveEdits()
       if (fallbackTimer !== null) clearTimeout(fallbackTimer)
       for (const transport of [...transports]) transport.stop()
       transportsRef.current = []
@@ -217,10 +241,10 @@ export function CollaborationBridge({
     }
   }, [workspaceName])
 
-  // A document/focus change announces the new position out-of-band, so
-  // colleagues' indicators follow in one feed cycle instead of one interval -
-  // WITHOUT restarting the transport (a torn-down connection on every node
-  // click would defeat a persistent socket).
+  // A document/focus/editing change announces the new position out-of-band,
+  // so colleagues' indicators (and edit locks) follow in one feed cycle
+  // instead of one interval - WITHOUT restarting the transport (a torn-down
+  // connection on every node click would defeat a persistent socket).
   const mounted = useRef(false)
   useEffect(() => {
     if (!mounted.current) {
@@ -231,7 +255,12 @@ export function CollaborationBridge({
     for (const transport of transportsRef.current) {
       transport.updatePosition(positionRef.current)
     }
-  }, [documentAggregateId, focusedAggregateId])
+  }, [
+    documentAggregateId,
+    focusedAggregateId,
+    editingElement?.nodeAggregateId,
+    editingElement?.property,
+  ])
 
   return null
 }

@@ -1,11 +1,18 @@
-import type { PresenceUser, WorkspaceFeedEvent } from '@/api/collaboration'
+import type {
+  EditingElement,
+  PresenceUser,
+  WorkspaceFeedEvent,
+} from '@/api/collaboration'
 import type { DimensionSpacePoint } from '@/api/dimensions'
+import type { LiveEdit } from './liveEdits'
 
 /** "Where am I": what a presence announcement carries. */
 export interface CollaborationPosition {
   documentAggregateId: string | null
   focusedAggregateId: string | null
   dimensionSpacePoint: DimensionSpacePoint | null
+  /** The inline text being edited right now - peers lock it. */
+  editingElement: EditingElement | null
 }
 
 /**
@@ -29,11 +36,21 @@ export interface TransportCallbacks {
    * incremental updates cannot describe this.
    */
   onWorkspaceChanged: () => void
+  /**
+   * A collaborator's live-typing tick. Only push transports deliver these;
+   * polling has no live typing (the change feed shows saves instead).
+   */
+  onLiveEdit?: (edit: LiveEdit) => void
 }
 
 export interface CollaborationTransport {
-  /** Announce a moved position (document/focus/dimension) right away. */
+  /** Announce a moved position (document/focus/dimension/editing) right away. */
   updatePosition(position: CollaborationPosition): void
+  /**
+   * Stream the own user's live-typing tick to collaborators. Optional:
+   * polling cannot carry a 200ms stream and simply does not implement it.
+   */
+  sendLiveEdit?(edit: LiveEdit): void
   /** Tear down loops/connections; announces leaving where possible. */
   stop(): void
 }
