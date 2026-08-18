@@ -104,25 +104,6 @@ function injectStyles(): void {
       outline: 2px solid rgba(0, 173, 238, 1.0);
       outline-offset: 5px;
     }
-    /* Content collections are structural containers, not content: their
-       bounds stay faintly visible at all times, hover and selection render
-       dashed purple instead of the content-element blue, and a minimum
-       height keeps empty collections visible and clickable. */
-    [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}] {
-      outline: none !important;
-    }
-    [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}].${HOVER_CLASS}:not(.${SELECTED_CLASS})  {
-      background-color: rgba(0, 173, 238, 0.1);
-      outline: none !important;
-    }
-    [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}] {
-      background-color: rgba(0, 173, 238, 0.1);
-      outline: none !important;
-    }
-    [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}].${SELECTED_CLASS} {
-      background-color: rgba(0, 173, 238, 0.2);
-      outline: none !important;
-    }
     /* Explicitly hidden elements stay editable but read as invisible-to-
        visitors; the opacity dims their whole subtree. */
     [${WRAPPER_ATTRIBUTE}][${HIDDEN_ATTRIBUTE}] {
@@ -357,6 +338,16 @@ function injectStyles(): void {
 }
 
 function indexWrappedElements(): void {
+  // Rebuilt from scratch, FIRST occurrence per node wins: document order
+  // lists ancestors before descendants, so on sites that stamp an element's
+  // metadata twice (core wrapping at the element level plus a site-specific
+  // wrapper around its inner content area, both carrying the same node) the
+  // index resolves to the OUTERMOST wrapper - the whole element. Everything
+  // keyed by node identity must agree on that unit: an out-of-band fragment
+  // always starts at the element's outermost wrapper, so swapping it into an
+  // inner slot would nest the element's own chrome inside itself, doubling
+  // it on every edit.
+  elementsByAggregateId.clear()
   for (const element of document.querySelectorAll<HTMLElement>(
     `[${WRAPPER_ATTRIBUTE}]`,
   )) {
@@ -364,12 +355,37 @@ function indexWrappedElements(): void {
       const address = JSON.parse(
         element.getAttribute(WRAPPER_ATTRIBUTE) ?? '',
       ) as { aggregateId?: string }
-      if (typeof address.aggregateId === 'string')
+      if (
+        typeof address.aggregateId === 'string' &&
+        !elementsByAggregateId.has(address.aggregateId)
+      )
         elementsByAggregateId.set(address.aggregateId, element)
     } catch {
       /* malformed attribute - skip the element */
     }
   }
+}
+
+/**
+ * The outermost wrapper of the same node. Clicks and hovers land on the
+ * innermost wrapper under the pointer, but node-identity features (selection,
+ * the edit lock, the out-of-band swap unit, the host's outline) work on
+ * whole elements - on double-stamped elements those differ.
+ */
+function outermostWrapper(element: HTMLElement): HTMLElement {
+  try {
+    const address = JSON.parse(
+      element.getAttribute(WRAPPER_ATTRIBUTE) ?? '',
+    ) as { aggregateId?: string }
+    const indexed =
+      typeof address.aggregateId === 'string'
+        ? elementsByAggregateId.get(address.aggregateId)
+        : undefined
+    if (indexed?.isConnected && indexed.contains(element)) return indexed
+  } catch {
+    /* malformed attribute - keep the element as-is */
+  }
+  return element
 }
 
 function select(
@@ -796,7 +812,9 @@ function onClick(event: MouseEvent): void {
   if (anchor && handleLinkClick(event, anchor)) return
   const wrapper = target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
   if (wrapper) {
-    select(wrapper, { notifyHost: true })
+    // Resolve double-stamped elements to their outermost wrapper, so the
+    // selection outline matches the swap unit and the host-driven outline.
+    select(outermostWrapper(wrapper), { notifyHost: true })
     return
   }
   // A click outside every content element (and outside the guest's own
@@ -866,7 +884,11 @@ function onMouseOver(event: MouseEvent): void {
   // In-place image picker: a rendered image whose property is known gets the
   // hover overlay; anything else hides it. Locked elements offer nothing.
   const image = target?.closest ? target.closest<HTMLElement>('img') : null
-  if (image && !image.closest(`.${LOCKED_CLASS}`) && resolveImageTarget(image)) {
+  if (
+    image &&
+    !image.closest(`.${LOCKED_CLASS}`) &&
+    resolveImageTarget(image)
+  ) {
     if (image !== hoveredImage) showImageOverlay(image)
   } else {
     hideImageOverlay()
@@ -1510,9 +1532,27 @@ function replaceElement(aggregateId: string, html: string): boolean {
   }
   const template = document.createElement('template')
   template.innerHTML = html
-  const replacement = template.content.querySelector<HTMLElement>(
+  // The fragment can contain several metadata wrappers: nested child nodes,
+  // and sites that stamp the edited element itself a second time around its
+  // inner content area. Swap in the outermost wrapper OF THIS NODE (its
+  // first occurrence in document order) - never blindly the fragment's first
+  // wrapper, and never an inner same-node one.
+  let replacement: HTMLElement | null = null
+  for (const candidate of template.content.querySelectorAll<HTMLElement>(
     `[${WRAPPER_ATTRIBUTE}]`,
-  )
+  )) {
+    try {
+      const address = JSON.parse(
+        candidate.getAttribute(WRAPPER_ATTRIBUTE) ?? '',
+      ) as { aggregateId?: string }
+      if (address.aggregateId === aggregateId) {
+        replacement = candidate
+        break
+      }
+    } catch {
+      /* malformed attribute - skip the candidate */
+    }
+  }
   if (!replacement) return false
 
   const wasSelected =
