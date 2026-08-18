@@ -1414,6 +1414,10 @@
         <source>Workspaces</source>
         <target xml:lang="ru">Рабочие области</target>
       </trans-unit>
+      <trans-unit id="preview.button" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="ru">Предпросмотр</target>
+      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="ru">Эта страница удалена. Она вернётся, если её восстановить, — или исчезнет окончательно после публикации удаления.</target>

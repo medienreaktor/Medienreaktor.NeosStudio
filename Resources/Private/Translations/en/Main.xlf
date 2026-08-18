@@ -1067,6 +1067,9 @@
       <trans-unit id="panel.title.workspaces" xml:space="preserve">
         <source>Workspaces</source>
       </trans-unit>
+      <trans-unit id="preview.button" xml:space="preserve">
+        <source>Preview</source>
+      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
       </trans-unit>

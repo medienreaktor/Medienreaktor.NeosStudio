@@ -68,6 +68,7 @@ import {
   PanelsProvider,
   SecondaryDock,
 } from '@/features/panels/PanelSystem'
+import { PreviewButton } from '@/features/preview/PreviewButton'
 import { PreviewToolbar } from '@/features/preview/PreviewPane'
 import { ShortcutHost } from '@/features/shortcuts/ShortcutHost'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
@@ -834,7 +835,10 @@ export function App() {
                           />
                         )}
                       {selectedDocument && (
-                        <ShareButton document={selectedDocument} />
+                        <>
+                          <PreviewButton document={selectedDocument} />
+                          <ShareButton document={selectedDocument} />
+                        </>
                       )}
                       {activeWorkspace && (
                         <>

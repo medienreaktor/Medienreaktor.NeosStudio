@@ -1414,6 +1414,10 @@
         <source>Workspaces</source>
         <target xml:lang="pt-BR">Espaços de trabalho</target>
       </trans-unit>
+      <trans-unit id="preview.button" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="pt-BR">Pré-visualização</target>
+      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="pt-BR">Esta página está excluída. Ela volta quando você a restaura - ou desaparece de vez assim que a exclusão for publicada.</target>

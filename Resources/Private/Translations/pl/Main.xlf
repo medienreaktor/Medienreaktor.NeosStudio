@@ -1414,6 +1414,10 @@
         <source>Workspaces</source>
         <target xml:lang="pl">Obszary robocze</target>
       </trans-unit>
+      <trans-unit id="preview.button" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="pl">Podgląd</target>
+      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="pl">Ta strona jest usunięta. Wróci, gdy ją przywrócisz – albo zniknie na stałe, gdy usunięcie zostanie opublikowane.</target>

@@ -1414,6 +1414,10 @@
         <source>Workspaces</source>
         <target xml:lang="zh-CN">工作区</target>
       </trans-unit>
+      <trans-unit id="preview.button" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="zh-CN">预览</target>
+      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="zh-CN">此页面已被删除。恢复后它会回来——一旦删除被发布，它将永久消失。</target>

@@ -1414,6 +1414,10 @@
         <source>Workspaces</source>
         <target xml:lang="fi">Työtilat</target>
       </trans-unit>
+      <trans-unit id="preview.button" xml:space="preserve">
+        <source>Preview</source>
+        <target xml:lang="fi">Esikatselu</target>
+      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="fi">Tämä sivu on poistettu. Se palaa, kun palautat sen – tai katoaa lopullisesti, kun poisto julkaistaan.</target>
