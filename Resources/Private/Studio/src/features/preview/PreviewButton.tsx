@@ -23,7 +23,7 @@ export function PreviewButton({ document }: { document: NodeDto }) {
         rel="noreferrer"
       >
         <i className="fas fa-fw fa-arrow-up-right-from-square" aria-hidden />
-        <span className="hidden @[64rem]:inline">
+        <span className="hidden @[80rem]:inline">
           {t('preview.button', 'Preview')}
         </span>
       </a>

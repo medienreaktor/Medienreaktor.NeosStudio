@@ -58,7 +58,7 @@ export function ReviewButton({
           )}
         >
           <i className="fas fa-fw fa-list-check" aria-hidden />
-          <span className="hidden @[64rem]:inline">
+          <span className="hidden @[80rem]:inline">
             {t('workspace.review.button', 'Review')}
           </span>
         </Button>

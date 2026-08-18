@@ -117,7 +117,7 @@ export function DimensionSwitcher({
                   />
                 )}
                 <SelectValue
-                  className="hidden @[64rem]:inline"
+                  className="hidden @[80rem]:inline"
                   placeholder={dimension.label}
                 />
               </div>

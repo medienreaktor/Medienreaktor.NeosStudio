@@ -23,7 +23,7 @@ export function ShareButton({ document }: { document: NodeDto }) {
         )}
       >
         <i className="fas fa-fw fa-share-nodes" aria-hidden />
-        <span className="hidden @[64rem]:inline">
+        <span className="hidden @[80rem]:inline">
           {t('share.button', 'Share')}
         </span>
       </Button>

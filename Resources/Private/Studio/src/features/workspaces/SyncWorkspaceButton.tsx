@@ -42,7 +42,9 @@ export function SyncWorkspaceButton({
           className={`fas fa-fw fa-rotate ${rebase.isPending ? 'fa-spin' : ''}`}
           aria-hidden
         />
-        {t('workspace.sync.action', 'Synchronize')}
+        <span className="hidden @[80rem]:inline">
+          {t('workspace.sync.action', 'Synchronize')}
+        </span>
       </Button>
 
       <ConflictResolutionDialog

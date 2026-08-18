@@ -288,7 +288,9 @@ export function WorkspaceSwitcher({
               }
               aria-hidden
             />
-            <span className="hidden @[48rem]:inline">{currentLabel}</span>
+            <span className="hidden @[56rem]:inline max-w-48 truncate">
+              {currentLabel}
+            </span>
           </span>
           <i
             className="fas fa-chevron-down text-[1rem] text-neutral-950/50 dark:text-white/50"

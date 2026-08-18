@@ -27,7 +27,7 @@ export function PresenceAvatars() {
 
   return (
     <div
-      className="hidden @[56rem]:flex items-center -space-x-1.5"
+      className="hidden @[64rem]:flex items-center -space-x-1.5"
       data-slot="presence-avatars"
     >
       {shown.map((peer) => (

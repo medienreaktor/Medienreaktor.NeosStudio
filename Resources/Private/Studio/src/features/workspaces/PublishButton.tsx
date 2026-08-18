@@ -158,7 +158,9 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
             className={`fas fa-fw ${operation.isPending ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
             aria-hidden
           />
-          {t('workspace.publishAllChanges', 'Publish all')}
+          <span className="hidden @[56rem]:inline">
+            {t('workspace.publishAllChanges', 'Publish all')}
+          </span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
