@@ -145,8 +145,13 @@ export function renderNodeElement(
   address: string,
   fusionPath: string,
 ): Promise<string> {
+  // The v parameter (ignored by the server) makes every render URL unique:
+  // consecutive edits of the same element would otherwise repeat the exact
+  // same GET, and Safari answers repeated URLs from its HTTP cache - stale
+  // entries stored under earlier, weaker caching headers included, which
+  // response headers alone can never evict.
   return apiFetch<string>(
-    `/nodes/${address}/render?mode=inPlace&fusionPath=${encodeURIComponent(fusionPath)}`,
+    `/nodes/${address}/render?mode=inPlace&fusionPath=${encodeURIComponent(fusionPath)}&v=${Date.now()}`,
   )
 }
 

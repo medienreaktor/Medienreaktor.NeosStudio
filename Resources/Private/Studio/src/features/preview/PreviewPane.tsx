@@ -260,7 +260,15 @@ export function PreviewPane({
     setLayers((previous) => {
       if (previous[previous.length - 1]?.loadKey === loadKey) return previous
       const background = previous.filter((layer) => layer.ready).slice(-1)
-      return [...background, { id, src, loadKey, ready: false }]
+      // The v parameter (ignored by the server) makes every load's URL
+      // unique: reloading the same document repeats the exact same GET
+      // otherwise, and Safari answers repeated URLs from its HTTP cache -
+      // stale entries stored under earlier, weaker caching headers included,
+      // which response headers alone can never evict.
+      return [
+        ...background,
+        { id, src: `${src}&v=${Date.now()}`, loadKey, ready: false },
+      ]
     })
   }, [loadKey, src])
 

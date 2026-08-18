@@ -176,6 +176,12 @@ class StudioController extends ActionController
     private function renderSpa(array $config): string
     {
         $this->response->setContentType('text/html');
+        // Without explicit caching headers Safari heuristically caches the
+        // shell - and with it the reference to a hashed bundle that no longer
+        // exists after the next deploy (or, worse, a stale bundle it also
+        // cached). The shell must always be fetched fresh; the hashed assets
+        // it references cache themselves just fine.
+        $this->response->setHttpHeader('Cache-Control', 'private, no-store');
 
         // Use Flow's resource:// stream wrapper - __DIR__ would point at the
         // compiled proxy class in the cache, not at the package.
