@@ -118,7 +118,12 @@ class PreviewController extends ActionController
             $this->throwStatus(404, 'The node is not located inside a site.');
         }
 
-        $this->response->setHttpHeader('Cache-Control', 'no-cache');
+        // no-store, not no-cache: the preview URL for a document never
+        // changes, and Safari serves "no-cache" responses from its HTTP cache
+        // without revalidating - a reloaded iframe would show the page as it
+        // was before the edit until a hard reload. The page is per-user
+        // workspace content anyway; nothing should ever store it.
+        $this->response->setHttpHeader('Cache-Control', 'private, no-store');
 
         $this->view->setOption('renderingModeName', $renderingMode->name);
         $this->view->assignMultiple([
@@ -148,7 +153,7 @@ class PreviewController extends ActionController
             // A returned response replaces $this->response - re-apply the header.
             return $result
                 ->withBody(Utils::streamFor($html))
-                ->withHeader('Cache-Control', 'no-cache');
+                ->withHeader('Cache-Control', 'private, no-store');
         }
         return $html;
     }

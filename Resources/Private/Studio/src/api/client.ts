@@ -51,7 +51,18 @@ export async function apiFetch<T>(
     const headers: Record<string, string> = {}
     if (token) headers['Authorization'] = `Bearer ${token}`
     if (body !== undefined) headers['Content-Type'] = 'application/json'
-    return fetch(config.apiBase + path, { method, headers, body })
+    // cache no-store: never let the browser's HTTP cache answer an API read.
+    // Repeated reads often reuse the identical URL (the out-of-band /render
+    // of an element after each edit, node refetches after a command), and
+    // Safari serves such fetches from its cache without revalidating unless
+    // storing is forbidden outright - the editing UI would keep seeing
+    // pre-edit state. Freshness caching lives in TanStack Query, not here.
+    return fetch(config.apiBase + path, {
+      method,
+      headers,
+      body,
+      cache: 'no-store',
+    })
   }
 
   const token = await getValidAccessToken()
