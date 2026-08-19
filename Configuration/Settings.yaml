@@ -12,6 +12,12 @@ Medienreaktor:
     #     position: 100                                                     # optional load order
     plugins: []
 
+    # Show a menu next to the logo listing the classic ("legacy") Neos
+    # backend modules. The list mirrors the old backend's module menu: built
+    # from Neos.Neos.modules, filtered by the backend user's privileges,
+    # labels translated into their interface language. Set false to hide it.
+    enableLegacyModules: true
+
     # The optional realtime sidecar: a Hocuspocus WebSocket server (see "The
     # realtime sidecar" in the README) that carries presence and the workspace
     # change feed with sub-second latency - and tails the feed ONCE per
@@ -20,34 +26,34 @@ Medienreaktor:
     # infrastructure.
     realtime:
       # WebSocket URL the Studio shell connects to (wss://... in production).
-      websocketUrl: ''
+      websocketUrl: ""
       # The sidecar's server-to-server credential: it tails workspace change
       # feeds via /api/realtime/... with this secret in the X-Realtime-Secret
       # header (REALTIME_SHARED_SECRET on the sidecar). Empty disables the
       # endpoint entirely - it answers 404. Generate a long random value,
       # e.g.: openssl rand -hex 32
-      sharedSecret: ''
+      sharedSecret: ""
 
     previewLinks:
       # Lifetime applied when a client requests none (\DateInterval spec).
-      defaultLifetime: 'P2D'
+      defaultLifetime: "P2D"
       # Hard ceiling - requested lifetimes are clamped to this, so no client
       # (and no misconfigured defaultLifetime) can mint longer-lived links.
-      maxLifetime: 'P7D'
+      maxLifetime: "P7D"
 
     taskWorkflow:
       # Flow role whose members act as reviewers ("super editors") for task
       # workspaces: they get MANAGER on every task workspace and are notified
       # when a task is submitted for review. LivePublisher is the natural
       # default - whoever may publish to live may approve tasks.
-      reviewerRole: 'Neos.Neos:LivePublisher'
+      reviewerRole: "Neos.Neos:LivePublisher"
 
   # Contribute the task metadata to the NeosApi workspace JSON: appears as
   # workspace.extensions['Medienreaktor.NeosStudio:task'] and drives the task
   # badges and the Tasks board in the shell.
   NeosApi:
     workspaceDataEnrichers:
-      'Medienreaktor.NeosStudio:task':
+      "Medienreaktor.NeosStudio:task":
         enricher: 'Medienreaktor\NeosStudio\Service\TaskWorkspaceDataEnricher'
 
 Neos:
@@ -56,10 +62,10 @@ Neos:
   # content graph projection.
   ContentRepositoryRegistry:
     presets:
-      'default':
+      "default":
         contentGraphProjection:
           catchUpHooks:
-            'Medienreaktor.NeosStudio:TaskWorkspaceLifecycle':
+            "Medienreaktor.NeosStudio:TaskWorkspaceLifecycle":
               factoryObjectName: Medienreaktor\NeosStudio\CatchUpHook\TaskWorkspaceLifecycleHookFactory
 
   Neos:
@@ -67,7 +73,7 @@ Neos:
       autoInclude:
         # Extends Neos.Neos:ContentElementWrapping with the collection marker
         # attribute the Studio guest script styles (see Root.fusion).
-        'Medienreaktor.NeosStudio': true
+        "Medienreaktor.NeosStudio": true
 
     userInterface:
       translation:
@@ -75,7 +81,7 @@ Neos:
         # endpoint the classic backend uses; the SPA loads them at boot and
         # resolves them via lib/i18n's translate()/useTranslate helper.
         autoInclude:
-          'Medienreaktor.NeosStudio':
+          "Medienreaktor.NeosStudio":
             - Main
 
     moduleConfiguration:
@@ -83,31 +89,31 @@ Neos:
       # module. BackendRedirectionService picks the first entry the user's
       # roles can access, so editors without the Studio privilege still fall
       # back to 'content'.
-      preferredStartModules: ['studio', 'content', 'user/usersettings']
+      preferredStartModules: ["studio", "content", "user/usersettings"]
 
     modules:
       # Main-level backend menu entry, placed above "Content" (which declares
       # position 'start'). The module controller redirects to the standalone
       # Studio shell at /neos/studio instead of rendering in the module chrome.
       studio:
-        position: 'before content'
-        label: 'Neos Studio'
+        position: "before content"
+        label: "Neos Studio"
         controller: 'Medienreaktor\NeosStudio\Controller\StudioModuleController'
-        description: 'API-first editing UI for Neos'
-        icon: 'fas fa-rocket'
-        mainStylesheet: 'Lite'
+        description: "API-first editing UI for Neos"
+        icon: "fas fa-rocket"
+        mainStylesheet: "Lite"
 
   Fusion:
     defaultContext:
       # Allowed-child-node-type lookup for the collection drop-target markup
       # (see Root.fusion).
-      'MedienreaktorStudio': 'Medienreaktor\NeosStudio\Eel\StudioHelper'
+      "MedienreaktorStudio": 'Medienreaktor\NeosStudio\Eel\StudioHelper'
 
   Flow:
     mvc:
       routes:
-        'Medienreaktor.NeosStudio':
-          position: 'before Neos.Neos'
+        "Medienreaktor.NeosStudio":
+          position: "before Neos.Neos"
 
     security:
       authentication:
@@ -123,10 +129,10 @@ Neos:
           # credential, no backend session must ever get involved. Same for
           # RealtimeController: the sidecar's server-to-server feed reads
           # authenticate with a shared secret, never a session.
-          'Neos.Neos:Backend':
+          "Neos.Neos:Backend":
             requestPatterns:
-              'Medienreaktor.NeosStudio:Controllers':
-                pattern: 'ControllerObjectName'
+              "Medienreaktor.NeosStudio:Controllers":
+                pattern: "ControllerObjectName"
                 patternOptions:
                   controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\|ShareController|RealtimeController).*'
 
@@ -134,9 +140,9 @@ Neos:
           # OAuth 2.1 bearer firewall as the NeosApi: request patterns of the
           # same type are OR-combined, so this extends the provider to this
           # package's Controller\Api namespace.
-          'Medienreaktor.NeosApi:Bearer':
+          "Medienreaktor.NeosApi:Bearer":
             requestPatterns:
-              'Medienreaktor.NeosStudio:ApiControllers':
-                pattern: 'ControllerObjectName'
+              "Medienreaktor.NeosStudio:ApiControllers":
+                pattern: "ControllerObjectName"
                 patternOptions:
                   controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\Api\.*'

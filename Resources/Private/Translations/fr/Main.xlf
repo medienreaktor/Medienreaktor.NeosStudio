@@ -14,6 +14,14 @@
         <source>Connect to the API</source>
         <target xml:lang="fr">Se connecter à l'API</target>
       </trans-unit>
+      <trans-unit id="app.legacyModules" xml:space="preserve">
+        <source>Backend modules</source>
+        <target xml:lang="fr">Modules du backend</target>
+      </trans-unit>
+      <trans-unit id="app.legacyUi" xml:space="preserve">
+        <source>Legacy UI</source>
+        <target xml:lang="fr">Legacy UI</target>
+      </trans-unit>
       <trans-unit id="app.loadingStudio" xml:space="preserve">
         <source>Loading Neos Studio…</source>
         <target xml:lang="fr">Chargement de Neos Studio…</target>

@@ -7,8 +7,11 @@ namespace Medienreaktor\NeosStudio\Controller;
 use Medienreaktor\NeosApi\Domain\Model\OAuthClient;
 use Medienreaktor\NeosApi\Domain\Repository\OAuthClientRepository;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\I18n\Locale;
+use Neos\Flow\I18n\Translator;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\Neos\Controller\Backend\MenuHelper;
 use Neos\Neos\Service\UserService;
 
 /**
@@ -68,6 +71,19 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(path: 'realtime.websocketUrl')]
     protected $realtimeWebsocketUrl;
 
+    /**
+     * Whether the shell offers the classic backend modules in a menu next to
+     * the logo. Untyped: absent configuration injects null.
+     */
+    #[Flow\InjectConfiguration(path: 'enableLegacyModules')]
+    protected $enableLegacyModules;
+
+    #[Flow\Inject]
+    protected MenuHelper $menuHelper;
+
+    #[Flow\Inject]
+    protected Translator $translator;
+
     public function indexAction(): string
     {
         $uri = $this->request->getHttpRequest()->getUri();
@@ -111,6 +127,9 @@ class StudioController extends ActionController
                     ? $this->realtimeWebsocketUrl
                     : null,
             ],
+            // The classic backend modules for the legacy-modules menu; empty
+            // unless enableLegacyModules is set (the shell hides the menu).
+            'legacyModules' => $this->legacyModules(),
         ];
 
         return $this->renderSpa($config);
@@ -126,6 +145,123 @@ class StudioController extends ActionController
         $uiMode = $this->userService->getUserPreference('studio.uiMode');
 
         return in_array($uiMode, ['light', 'dark', 'system'], true) ? $uiMode : 'dark';
+    }
+
+    /**
+     * The classic backend modules for the shell's legacy-modules menu: the
+     * same privilege-filtered list the old UI's menu shows, built by the core
+     * MenuHelper from the Neos.Neos.modules settings. Labels are translated
+     * here (into the backend user's interface language) so the SPA renders
+     * them as-is - unlike the Studio's own labels they can come from any
+     * package/source and are not guaranteed to be in the XLIFF bundle the
+     * shell loads.
+     *
+     * @return array<int, array{label: string, icon: string, uri: string, submodules: array<int, array{label: string, icon: string, uri: string}>}>
+     */
+    private function legacyModules(): array
+    {
+        if ($this->enableLegacyModules !== true) {
+            return [];
+        }
+
+        $moduleList = $this->menuHelper->buildModuleList($this->controllerContext);
+
+        // 'studio' and 'content' are folded into a synthesized "Content"
+        // group heading the menu (see below) instead of appearing as two
+        // top-level entries.
+        $modules = [];
+        $contentGroup = $this->contentGroup($moduleList);
+        if ($contentGroup['submodules'] !== []) {
+            $modules[] = $contentGroup;
+        }
+        foreach ($moduleList as $moduleName => $module) {
+            if ($moduleName === 'studio' || $moduleName === 'content' || $module['hideInMenu'] === true) {
+                continue;
+            }
+            $submodules = [];
+            foreach ($module['submodules'] as $submodule) {
+                if ($submodule['hideInMenu'] === true) {
+                    continue;
+                }
+                $submodules[] = [
+                    'label' => $this->translateModuleLabel((string)$submodule['label']),
+                    'icon' => (string)$submodule['icon'],
+                    'uri' => (string)$submodule['uri'],
+                ];
+            }
+            $modules[] = [
+                'label' => $this->translateModuleLabel((string)$module['label']),
+                'icon' => (string)$module['icon'],
+                'uri' => (string)$module['uri'],
+                'submodules' => $submodules,
+            ];
+        }
+
+        return $modules;
+    }
+
+    /**
+     * The "Content" group heading the legacy-modules menu: "Neos Studio"
+     * (this shell's own backend-module entry) plus "Legacy UI" - the classic
+     * content module, present only when Neos.Neos.Ui is installed (it
+     * registers 'content') and the user's privileges grant it.
+     *
+     * @param array<string, array<string, mixed>> $moduleList
+     * @return array{label: string, icon: string, uri: string, submodules: array<int, array{label: string, icon: string, uri: string}>}
+     */
+    private function contentGroup(array $moduleList): array
+    {
+        $submodules = [];
+        $studioModule = $moduleList['studio'] ?? null;
+        if ($studioModule !== null && $studioModule['hideInMenu'] !== true) {
+            $submodules[] = [
+                'label' => $this->translateModuleLabel((string)$studioModule['label']),
+                'icon' => (string)$studioModule['icon'],
+                'uri' => (string)$studioModule['uri'],
+            ];
+        }
+        $contentModule = $moduleList['content'] ?? null;
+        if ($contentModule !== null && $contentModule['hideInMenu'] !== true) {
+            $submodules[] = [
+                'label' => $this->translateModuleLabel('Medienreaktor.NeosStudio:Main:app.legacyUi'),
+                'icon' => (string)$contentModule['icon'],
+                'uri' => (string)$contentModule['uri'],
+            ];
+        }
+
+        return [
+            // The same label the classic UI's content module carries; it
+            // lives in Neos.Neos, so it resolves without Neos.Neos.Ui too.
+            'label' => $this->translateModuleLabel('Neos.Neos:Main:content'),
+            'icon' => '',
+            'uri' => (string)($studioModule['uri'] ?? $contentModule['uri'] ?? ''),
+            'submodules' => $submodules,
+        ];
+    }
+
+    /**
+     * Resolve a "Package:Source:trans.unit.id" module label in the backend
+     * user's interface language; plain strings (and unresolvable ids) pass
+     * through unchanged.
+     */
+    private function translateModuleLabel(string $label): string
+    {
+        $parts = explode(':', $label, 3);
+        if (count($parts) !== 3) {
+            return $label;
+        }
+        try {
+            return $this->translator->translateById(
+                $parts[2],
+                [],
+                null,
+                new Locale($this->userService->getInterfaceLanguage()),
+                $parts[1],
+                $parts[0]
+            ) ?? $label;
+        } catch (\Exception) {
+            return $label;
+        }
     }
 
     private function ensureClient(string $redirectUri): void

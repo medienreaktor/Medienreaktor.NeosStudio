@@ -14,6 +14,14 @@
         <source>Connect to the API</source>
         <target xml:lang="zh-CN">连接到 API</target>
       </trans-unit>
+      <trans-unit id="app.legacyModules" xml:space="preserve">
+        <source>Backend modules</source>
+        <target xml:lang="zh-CN">后台模块</target>
+      </trans-unit>
+      <trans-unit id="app.legacyUi" xml:space="preserve">
+        <source>Legacy UI</source>
+        <target xml:lang="zh-CN">Legacy UI</target>
+      </trans-unit>
       <trans-unit id="app.loadingStudio" xml:space="preserve">
         <source>Loading Neos Studio…</source>
         <target xml:lang="zh-CN">正在加载 Neos Studio…</target>

@@ -1,3 +1,14 @@
+/** One classic backend module in the legacy-modules menu. */
+export interface LegacyModule {
+  /** Already translated server-side (into the interface language). */
+  label: string
+  /** FontAwesome classes, e.g. "fas fa-briefcase". */
+  icon: string
+  /** Absolute URI of the module inside the classic backend. */
+  uri: string
+  submodules: Array<Omit<LegacyModule, 'submodules'>>
+}
+
 export interface StudioConfig {
   clientId: string
   authorizeEndpoint: string
@@ -29,6 +40,12 @@ export interface StudioConfig {
    * infrastructure.
    */
   realtime: { url: string | null }
+  /**
+   * The classic backend modules shown in the menu next to the logo -
+   * privilege-filtered and label-translated server-side. Empty hides the
+   * menu; the enableLegacyModules setting (on by default) controls it.
+   */
+  legacyModules: LegacyModule[]
 }
 
 declare global {
@@ -52,6 +69,7 @@ const fallback: StudioConfig = {
   xliffEndpoint: '/neos/xliff.json',
   logoutEndpoint: '/neos/logout',
   realtime: { url: null },
+  legacyModules: [],
 }
 
 // Merge so a shell built before a config field existed still works.
