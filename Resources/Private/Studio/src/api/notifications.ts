@@ -24,7 +24,9 @@ export interface NotificationsResponse {
   unreadCount: number
 }
 
-const POLL_INTERVAL_MS = 30_000
+// Deliberately slow: own actions invalidate the cache directly, the poll only
+// picks up notifications produced elsewhere - background delivery, not live.
+const POLL_INTERVAL_MS = 300_000
 
 /**
  * The user's notifications, polled - there is no push channel, matching the

@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
 import {
-  clearReadNotifications,
   markAllNotificationsRead,
   markNotificationsRead,
   useNotifications,
@@ -23,7 +22,8 @@ import { requestTaskFocus } from '@/features/tasks/focus'
 import { translate as t } from '@/lib/i18n'
 
 /**
- * The notification bell in the sidebar header, next to the user menu. Shows
+ * The notification bell in the sidebar header, next to the user menu. Only
+ * present while something is unread - no unread notifications, no bell. Shows
  * the unread count and opens the list of recent notifications; producers are
  * backend packages going through the NotificationService (the payload shape is
  * theirs, the shell renders title/message/time generically).
@@ -52,18 +52,9 @@ export function NotificationBell() {
       }),
   })
 
-  const clear = useMutation({
-    mutationFn: clearReadNotifications,
-    onSuccess: () => void invalidate(),
-    onError: (error) =>
-      toast.error(error, {
-        title: t('notifications.clearFailed', 'Clearing failed'),
-      }),
-  })
-
-  // Render nothing until the first poll resolves - the bell appears with the
-  // rest of the header content once the session is established (like UserMenu).
-  if (!data) return null
+  // The bell exists only while something is unread; the hook above keeps
+  // polling regardless, so it reappears when a new notification arrives.
+  if (!data || data.unreadCount === 0) return null
 
   const { notifications, unreadCount } = data
 
@@ -93,29 +84,16 @@ export function NotificationBell() {
             <span className="font-medium text-neutral-950 dark:text-white">
               {t('notifications.label', 'Notifications')}
             </span>
-            {/* One header action: while anything is unread, mark all read;
-                once everything is read, clear the list instead. */}
-            {unreadCount > 0 ? (
-              <button
-                type="button"
-                className="cursor-pointer text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
-                onClick={() => markAllRead.mutate()}
-                disabled={markAllRead.isPending}
-              >
-                {t('notifications.markAllRead', 'Mark all as read')}
-              </button>
-            ) : (
-              notifications.length > 0 && (
-                <button
-                  type="button"
-                  className="cursor-pointer text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
-                  onClick={() => clear.mutate()}
-                  disabled={clear.isPending}
-                >
-                  {t('notifications.clear', 'Clear notifications')}
-                </button>
-              )
-            )}
+            {/* Marking everything read hides the bell (and this menu) - the
+                notifications had their moment, there is no archive view. */}
+            <button
+              type="button"
+              className="cursor-pointer text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+              onClick={() => markAllRead.mutate()}
+              disabled={markAllRead.isPending}
+            >
+              {t('notifications.markAllRead', 'Mark all as read')}
+            </button>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {notifications.length === 0 ? (

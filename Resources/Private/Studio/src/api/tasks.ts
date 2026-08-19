@@ -46,7 +46,7 @@ export function useTasks(enabled = true) {
     queryKey: queryKeys.tasks,
     queryFn: () => apiFetch<{ tasks: Task[] }>('/tasks'),
     enabled,
-    refetchInterval: 30_000,
+    refetchInterval: 300_000,
   })
 }
 
