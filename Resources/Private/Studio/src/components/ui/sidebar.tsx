@@ -267,7 +267,20 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <i className="fas fa-bars" aria-hidden />
+      {/* The shadcn default trigger glyph (lucide PanelLeft), inlined -
+          FontAwesome free has no comparable panel icon. */}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M9 3v18" />
+      </svg>
       <span className="sr-only">
         {t('common.toggleSidebar', 'Toggle Sidebar')}
       </span>
