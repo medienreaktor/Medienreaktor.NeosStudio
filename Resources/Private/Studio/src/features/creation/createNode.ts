@@ -20,6 +20,13 @@ export interface CreateNodeRequest {
 export async function createNode(
   request: CreateNodeRequest,
   initialPropertyValues: Record<string, unknown> = {},
+  /**
+   * Creation-dialog element values (serialized form). The API runs the node
+   * type's server-side nodeCreationHandlers with them (promoted elements,
+   * Flowpack.NodeTemplates, ...) - classic-UI parity. Explicit
+   * initialPropertyValues win over handler output.
+   */
+  elements: Record<string, unknown> = {},
 ): Promise<string> {
   const parent = decodeNodeAddress(request.parentAddress)
   const nodeAggregateId = crypto.randomUUID()
@@ -38,6 +45,9 @@ export async function createNode(
   }
   if (Object.keys(initialPropertyValues).length > 0) {
     payload.initialPropertyValues = initialPropertyValues
+  }
+  if (Object.keys(elements).length > 0) {
+    payload.elements = elements
   }
 
   await executeCommands([{ type: 'CreateNodeAggregateWithNode', payload }])

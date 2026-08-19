@@ -61,8 +61,10 @@ function fallbackSlug(text: string): string {
  * without a creation dialog are created immediately, without any UI.
  *
  * Element values whose name matches a property become initial property
- * values; other elements (classic UI: input to server-side node creation
- * handlers, which the plain CR command path does not run) are ignored.
+ * values (authoritative: the API lets explicit property values win); all
+ * element values are additionally sent along as "elements", the input to the
+ * node type's server-side node creation handlers (promoted elements,
+ * Flowpack.NodeTemplates, ...), which the API runs like the classic UI does.
  */
 export function CreateNodeFlow({
   request,
@@ -143,10 +145,11 @@ export function CreateNodeFlow({
     setCreating(true)
     const properties = schema?.configuration.properties ?? {}
     const initialPropertyValues: Record<string, unknown> = {}
+    const elementValues: Record<string, unknown> = {}
     for (const [name, value] of Object.entries(submittedValues)) {
-      if (!(name in properties)) continue
       if (value === undefined || value === null || value === '') continue
-      initialPropertyValues[name] = value
+      elementValues[name] = value
+      if (name in properties) initialPropertyValues[name] = value
     }
     try {
       // Documents need a URL from birth: derive uriPathSegment from the
@@ -167,7 +170,7 @@ export function CreateNodeFlow({
           text,
         ).catch(() => fallbackSlug(text))
       }
-      onCreated(await createNode(request, initialPropertyValues))
+      onCreated(await createNode(request, initialPropertyValues, elementValues))
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
       // With a dialog open the user can retry or cancel; without one the
