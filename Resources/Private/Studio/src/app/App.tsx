@@ -11,6 +11,11 @@ import {
   dimensionSpacePointEquals,
   useDimensions,
 } from '@/api/dimensions'
+import {
+  allowsDimensionSpacePoint,
+  allowsSite,
+  allowsWorkspace,
+} from '@/api/accessRoles'
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
 import {
@@ -55,6 +60,10 @@ import {
   PresenceProvider,
   type PresencePeer,
 } from '@/features/collaboration/PresenceContext'
+import {
+  useAccess,
+  useActiveSiteForAccess,
+} from '@/features/access/useAccess'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import {
@@ -149,6 +158,10 @@ export function App() {
   const { data: me, error: meError } = useMe(auth === 'authenticated')
   const { sidebarWidth, isResizing, resizeHandleProps } = useResizableSidebar()
   const { data: workspacesResponse } = useWorkspaces(auth === 'authenticated')
+  // The dynamic access roles assigned to this user, if any. Everything below
+  // narrows by them; unrestricted users (and administrators) see every check
+  // answer "yes", so the shell behaves exactly as it did without the feature.
+  const access = useAccess(auth === 'authenticated')
 
   // The editing context. Default (classic model): editing happens in the
   // personal workspace and the switcher only retargets where a publish goes
@@ -170,12 +183,18 @@ export function App() {
         (w) =>
           w.name === editingWorkspaceName &&
           w.classification === 'SHARED' &&
-          w.permissions.write,
+          w.permissions.write &&
+          allowsWorkspace(access, w.name, w.classification),
       ) ?? null)
     : null
   const activeWorkspace = collaborativeWorkspace ?? personalWorkspace
+  // Workspaces an access role excludes never reach the switcher - the content
+  // repository refuses to read them anyway, so offering them would only ever
+  // produce an error.
   const baseTargets = workspaces.filter(
-    (w) => w.classification === 'ROOT' || w.classification === 'SHARED',
+    (w) =>
+      (w.classification === 'ROOT' || w.classification === 'SHARED') &&
+      allowsWorkspace(access, w.name, w.classification),
   )
 
   // A remembered collaborative context that no longer resolves (workspace
@@ -186,13 +205,38 @@ export function App() {
       (w) =>
         w.name === editingWorkspaceName &&
         w.classification === 'SHARED' &&
-        w.permissions.write,
+        w.permissions.write &&
+        allowsWorkspace(access, w.name, w.classification),
     )
     if (!stillValid) {
       setEditingWorkspaceName(null)
       localStorage.removeItem(EDITING_WORKSPACE_KEY)
     }
-  }, [workspacesResponse, editingWorkspaceName])
+  }, [workspacesResponse, editingWorkspaceName, access])
+
+  // A role can withhold the personal workspace, which is the shell's default
+  // editing context - such a user has to work directly in a shared workspace.
+  // Move them into the first one they may write to, rather than leaving them
+  // pointed at a workspace every read of which is refused.
+  useEffect(() => {
+    if (!workspacesResponse || editingWorkspaceName !== null) return
+    if (
+      personalWorkspace === null ||
+      allowsWorkspace(access, personalWorkspace.name, 'PERSONAL')
+    ) {
+      return
+    }
+    const fallback = workspacesResponse.workspaces.find(
+      (w) =>
+        w.classification === 'SHARED' &&
+        w.permissions.write &&
+        allowsWorkspace(access, w.name, w.classification),
+    )
+    if (fallback) {
+      setEditingWorkspaceName(fallback.name)
+      localStorage.setItem(EDITING_WORKSPACE_KEY, fallback.name)
+    }
+  }, [workspacesResponse, editingWorkspaceName, personalWorkspace, access])
 
   // Who else is in the collaborative session (fed by the bridge below).
   const [presence, setPresence] = useState<{
@@ -229,11 +273,21 @@ export function App() {
   // dimension configuration no longer allows (config changed since it was
   // stored) is dropped in favor of the backend default.
   const allowedPoints = dimensionsResponse?.allowedDimensionSpacePoints
+  // Dimensions an access role excludes never reach the switcher. Same
+  // reasoning as the workspaces: the content repository would refuse the
+  // write, so offering the switch only produces an error later.
+  const allowedEditablePoints = useMemo(
+    () =>
+      (allowedPoints ?? []).filter((point) =>
+        allowsDimensionSpacePoint(access, point),
+      ),
+    [allowedPoints, access],
+  )
   useEffect(() => {
     if (!dimensionSpacePoint) return
     if (
       allowedPoints &&
-      !allowedPoints.some((point) =>
+      !allowedEditablePoints.some((point) =>
         dimensionSpacePointEquals(point, dimensionSpacePoint),
       )
     ) {
@@ -245,7 +299,7 @@ export function App() {
       DIMENSION_SPACE_POINT_KEY,
       JSON.stringify(dimensionSpacePoint),
     )
-  }, [dimensionSpacePoint, allowedPoints])
+  }, [dimensionSpacePoint, allowedPoints, allowedEditablePoints])
   // Set when the user picked a dimension the selected document does not exist
   // in - the create-variant dialog is open for this target point.
   const [variantRequest, setVariantRequest] =
@@ -348,8 +402,10 @@ export function App() {
 
   // The editing shell only deals in online sites; offline ones exist solely
   // for the sites administration (which fetches the full listing itself).
+  // Sites outside the user's access roles drop out here, which is all it
+  // takes: the switcher, the tree and the restored selection all read this.
   const sites = (sitesResponse?.sites ?? []).filter(
-    (site) => site.state === 'online',
+    (site) => site.state === 'online' && allowsSite(access, site.nodeName),
   )
   // Starts from the site remembered across reloads; a stored name that no
   // longer matches simply falls back to the first site below.
@@ -364,6 +420,10 @@ export function App() {
   useEffect(() => {
     if (siteNodeName) localStorage.setItem(SELECTED_SITE_KEY, siteNodeName)
   }, [siteNodeName])
+
+  // Site restrictions are per site, and the synchronous consumers (the tree
+  // row decorator) only ever see a bare node - tell them which site is open.
+  useActiveSiteForAccess(activeSite?.nodeName ?? null)
 
   useEffect(() => {
     ;(async () => {
@@ -767,10 +827,7 @@ export function App() {
                       {dimensions.length > 0 && sitesResponse && (
                         <DimensionSwitcher
                           dimensions={dimensions}
-                          allowedPoints={
-                            dimensionsResponse?.allowedDimensionSpacePoints ??
-                            []
-                          }
+                          allowedPoints={allowedEditablePoints}
                           value={
                             dimensionSpacePoint ??
                             sitesResponse.dimensionSpacePoint

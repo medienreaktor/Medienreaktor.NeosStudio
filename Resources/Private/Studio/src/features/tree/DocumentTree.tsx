@@ -56,6 +56,7 @@ export function DocumentTree({
   onNodeAction,
   onMoved,
   onCreateNew,
+  filterDocuments,
 }: {
   site: Site
   workspaceName: string
@@ -70,6 +71,16 @@ export function DocumentTree({
   onMoved?: (affectedAddresses: string[]) => void
   /** "Create new…" was picked in the context menu for this target. */
   onCreateNew?: (target: NodeMenuTarget) => void
+  /**
+   * Drops documents from the tree - access roles that refuse a branch
+   * outright. Applied to loaded children only, never to the site node: the
+   * tree's own root has to stay, or there is nothing to render at all.
+   *
+   * Filtering here rather than in the caller is deliberate: children arrive
+   * asynchronously per branch, so a row can only be kept out at the moment
+   * its parent's list resolves.
+   */
+  filterDocuments?: (nodes: NodeDto[]) => NodeDto[]
 }) {
   const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
   // Flips once the site node's children have resolved, so the tree can show a
@@ -144,7 +155,7 @@ export function DocumentTree({
             return [{ id: siteNode.address, data: siteNode as TreeItemData }]
           }
           const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
-          return children.map((node) => ({
+          return (filterDocuments?.(children) ?? children).map((node) => ({
             id: node.address,
             data: node as TreeItemData,
           }))

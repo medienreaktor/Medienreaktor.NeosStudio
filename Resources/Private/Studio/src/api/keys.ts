@@ -51,6 +51,12 @@ export const queryKeys = {
   users: ['users'] as const,
   /** The assignable-role catalog - nested under `users` so invalidating users covers it. */
   userRoles: ['users', 'roles'] as const,
+  /** Prefix covering the access-role catalogue AND the own effective access. */
+  accessAll: ['access'] as const,
+  /** The dynamic access roles (administration). */
+  accessRoles: ['access', 'roles'] as const,
+  /** The caller's own effective access - what the shell narrows its UI by. */
+  myAccess: ['access', 'me'] as const,
   dataSources: {
     all: ['dataSources'] as const,
     /** One data source invocation - keyed by everything that reaches getData(). */

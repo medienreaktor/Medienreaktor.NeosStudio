@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchNode, isDeleted, nodeLabel, type NodeDto } from '@/api/nodes'
 import { aggregateIdOf } from '@/api/nodeAddress'
 import { useStudio } from '@/app/StudioContext'
+import { documentAccessState } from '@/features/access/useAccess'
 import { usePresence } from '@/features/collaboration/PresenceContext'
 import { ClipboardPanel } from '@/features/clipboard/ClipboardPanel'
 import {
@@ -136,6 +137,15 @@ function DocumentsPanel() {
             lastEdit={lastEdit}
             onSelect={selectDocument}
             onMoved={nodesEdited}
+            // Branches an access role refuses outright leave the tree; pages
+            // merely outside a role stay, dimmed and locked by the access
+            // decorator - they are often the path to a branch it does grant.
+            filterDocuments={(nodes) =>
+              nodes.filter(
+                (node) =>
+                  documentAccessState(node, site.nodeName) !== 'hidden',
+              )
+            }
             onCreateNew={(target) =>
               setInsertRequest({
                 referenceAddress: target.address,

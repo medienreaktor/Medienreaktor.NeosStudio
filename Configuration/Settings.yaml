@@ -41,6 +41,31 @@ Medienreaktor:
       # (and no misconfigured defaultLifetime) can mint longer-lived links.
       maxLifetime: "P7D"
 
+    # Dynamic access roles: named restriction sets (sites, page tree,
+    # dimensions, workspaces, capabilities) that administrators create in the
+    # Studio and assign to backend users. See Domain/Model/AccessRole.
+    accessControl:
+      # Flow roles that access control never applies to. Administrators are
+      # the natural default: someone has to be able to fix a role that locked
+      # everyone out, and the administration UI itself must stay reachable.
+      bypassRoles:
+        - "Neos.Neos:Administrator"
+
+      # What a user with NO access role assigned may do. false (the default)
+      # means "everything", so installing this package changes nothing until
+      # an administrator actually assigns a role - and an editor can never be
+      # locked out by simply forgetting them. true turns the absence of a role
+      # into a deny-all, for installations that want access to be opt-in.
+      restrictUnassignedUsers: false
+
+      # Whether the content repository REFUSES writes outside a user's roles,
+      # or the roles only shape the Studio's UI. Enabled means a restriction
+      # holds even against a hand-crafted API request; disabled means the
+      # roles are a usability feature, not a security boundary. Either way
+      # nothing applies to users without a role (see above), so leaving this
+      # on is safe to roll out.
+      enforceContentRepository: true
+
     taskWorkflow:
       # Flow role whose members act as reviewers ("super editors") for task
       # workspaces: they get MANAGER on every task workspace and are notified
@@ -56,6 +81,11 @@ Medienreaktor:
       "Medienreaktor.NeosStudio:task":
         enricher: 'Medienreaktor\NeosStudio\Service\TaskWorkspaceDataEnricher'
 
+    # Surfaces "may I administer access roles?" in /me.permissions, which is
+    # what gates the Roles section in the Studio's settings modal.
+    accountPermissions:
+      accessRoles: "Medienreaktor.NeosStudio:Api.AccessRoles.Write"
+
 Neos:
   # React to workspace lifecycle events (published -> task DONE +
   # notifications, removed -> sidecar cleanup) via a catch-up hook on the
@@ -63,6 +93,16 @@ Neos:
   ContentRepositoryRegistry:
     presets:
       "default":
+        # Narrow the content repository's authorization by the Studio's access
+        # roles. The factory wraps Neos' own provider and can only ever add a
+        # "no" on top of it (see Security/AccessControlAuthProvider), and users
+        # without an assigned role are not restricted at all - so this changes
+        # nothing until roles are actually handed out. Set
+        # accessControl.enforceContentRepository to false above to keep the
+        # roles as a pure UI feature without touching the write path.
+        authProvider:
+          factoryObjectName: Medienreaktor\NeosStudio\Security\AccessControlAuthProviderFactory
+
         contentGraphProjection:
           catchUpHooks:
             "Medienreaktor.NeosStudio:TaskWorkspaceLifecycle":

@@ -54,6 +54,25 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:Api.Tasks.Write':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete|addComment)Action())'
 
+    # --- Access roles --------------------------------------------------------
+    # The caller's OWN effective access: which sites, branches, dimensions and
+    # workspaces their access roles leave open. Strictly self-describing - it
+    # reports the restrictions the caller is already living inside - so every
+    # editor gets it; the Studio needs it to shape its UI.
+    'Medienreaktor.NeosStudio:Api.Access.Own':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\AccessRolesController->meAction())'
+
+    # Reading the role catalogue: who may go where. Administrators only,
+    # matching the classic Users module - it maps the editorial team onto the
+    # site structure.
+    'Medienreaktor.NeosStudio:Api.AccessRoles.Read':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\AccessRolesController->indexAction())'
+
+    # Creating, editing and deleting roles, and assigning members.
+    # Administrators only - this is where access is granted and taken away.
+    'Medienreaktor.NeosStudio:Api.AccessRoles.Write':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\AccessRolesController->(create|update|delete|setMembers)Action())'
+
     # Approve a task: mark it done after its changes were published through
     # the review flow. Does not publish itself - publishing rights are
     # enforced by the content repository on the publish endpoints.
@@ -102,6 +121,20 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Write'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.Access.Own'
+        permission: GRANT
+
+  # Access roles decide where the editorial team may work - granting and
+  # revoking that is administration, like user management.
+  'Neos.Neos:Administrator':
+    privileges:
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.AccessRoles.Read'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.AccessRoles.Write'
         permission: GRANT
 
   'Neos.Neos:LivePublisher':

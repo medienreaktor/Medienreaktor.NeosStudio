@@ -1,6 +1,71 @@
 #
 # Studio shell API (OAuth bearer secured, same firewall as Medienreaktor.NeosApi)
 #
+
+# --- Access roles --------------------------------------------------------
+# The caller's OWN effective access comes first: every editor may read it,
+# while everything below is administration.
+-
+  name: 'Studio API: own effective access'
+  uriPattern: 'api/access/me'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\AccessRoles'
+    '@action': 'me'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: access roles list'
+  uriPattern: 'api/access/roles'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\AccessRoles'
+    '@action': 'index'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: create access role'
+  uriPattern: 'api/access/roles'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\AccessRoles'
+    '@action': 'create'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+# Before the {roleId} routes below - a longer, more specific pattern must win.
+-
+  name: 'Studio API: set access role members'
+  uriPattern: 'api/access/roles/{roleId}/members'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\AccessRoles'
+    '@action': 'setMembers'
+    '@format': 'json'
+  httpMethods: ['PUT']
+
+-
+  name: 'Studio API: update access role'
+  uriPattern: 'api/access/roles/{roleId}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\AccessRoles'
+    '@action': 'update'
+    '@format': 'json'
+  httpMethods: ['PATCH']
+
+-
+  name: 'Studio API: delete access role'
+  uriPattern: 'api/access/roles/{roleId}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\AccessRoles'
+    '@action': 'delete'
+    '@format': 'json'
+  httpMethods: ['DELETE']
+
 -
   name: 'Studio API: tasks list'
   uriPattern: 'api/tasks'
