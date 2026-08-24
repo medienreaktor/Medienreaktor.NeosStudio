@@ -124,7 +124,12 @@ export function AccessRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="xl">
+      {/* Wider than the xl preset: seven tabs do not fit its width in every
+          language (German "Berechtigungen" alone overflows it), and the tab
+          strip would scroll by a few dozen pixels - which reads as a
+          cut-off tab, not as something scrollable. The page-tree picker
+          inside earns the extra room anyway. */}
+      <DialogContent size="xl" className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>
             {role === null

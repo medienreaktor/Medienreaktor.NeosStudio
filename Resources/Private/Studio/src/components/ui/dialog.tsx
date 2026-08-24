@@ -82,7 +82,15 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-200 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-6 shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
+          // grid-cols-[minmax(0,1fr)] is load-bearing: the implicit column of
+          // a bare `grid` is auto-sized, which resolves to MAX-content and
+          // grows past the dialog's own max-width as soon as one child does
+          // not fit - a wide tab strip, a long unbreakable string, a table.
+          // Every child then stretches to that oversized track and spills out
+          // to the right of the dialog's box, visibly so for anything with a
+          // background or border. Capping the track at 1fr keeps it inside
+          // the padding box, so those children scroll or wrap instead.
+          'fixed top-1/2 left-1/2 z-200 grid w-full grid-cols-[minmax(0,1fr)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-6 shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
           dialogSizes[size],
           className,
         )}
