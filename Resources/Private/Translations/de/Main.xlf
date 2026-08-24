@@ -606,6 +606,10 @@
         <source>No {0} types can be created here.</source>
         <target xml:lang="de">Hier können keine {0}-Typen erstellt werden.</target>
       </trans-unit>
+      <trans-unit id="creation.notPermitted" xml:space="preserve">
+        <source>Your access role does not let you add content to this page.</source>
+        <target xml:lang="de">Deine Zugriffsrolle erlaubt dir nicht, auf dieser Seite Inhalte hinzuzufügen.</target>
+      </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
         <target xml:lang="de">Dokument</target>

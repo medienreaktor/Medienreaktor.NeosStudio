@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchNode, isDeleted, nodeLabel, type NodeDto } from '@/api/nodes'
 import { aggregateIdOf } from '@/api/nodeAddress'
 import { useStudio } from '@/app/StudioContext'
-import { documentAccessState } from '@/features/access/useAccess'
+import {
+  documentAccessState,
+  useNodeEditable,
+} from '@/features/access/useAccess'
 import { usePresence } from '@/features/collaboration/PresenceContext'
 import { ClipboardPanel } from '@/features/clipboard/ClipboardPanel'
 import {
@@ -28,6 +31,7 @@ import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
 import { DocumentsToolbar } from '@/features/tree/DocumentsToolbar'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { Button } from '@/components/ui/button'
+import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -39,6 +43,35 @@ import { panelRegistry } from './registry'
  * a propless component reading app state via useStudio(), wrapped around the
  * reusable feature component.
  */
+
+/**
+ * The node-type palette, withheld when the access role does not let the
+ * account create inside the open document.
+ *
+ * Worth gating even though the drop happens elsewhere: the palette is where
+ * the gesture STARTS. The preview still renders in edit mode (the role may
+ * well allow editing, just not creating), so its collections would still light
+ * up as drop targets and the refusal would only arrive after the drag - which
+ * is the whole failure mode this is meant to avoid.
+ */
+function CreatePanel() {
+  const { selectedDocument } = useStudio()
+  const canCreate = useNodeEditable(selectedDocument, 'createNodes')
+
+  if (!canCreate) {
+    return (
+      <Placeholder
+        icon="fa-lock"
+        title={t(
+          'creation.notPermitted',
+          'Your access role does not let you add content to this page.',
+        )}
+      />
+    )
+  }
+
+  return <NodeCreationPanel />
+}
 
 /**
  * Shared refresh semantics after a tree context-menu action: hide/unhide
@@ -79,6 +112,7 @@ function DocumentsPanel() {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedTerm, setDebouncedTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<string[]>([])
+  const canCreateDocuments = useNodeEditable(selectedDocument, 'createNodes')
   // The reference pickers' search cadence: 300 ms debounce before the fetch.
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300)
@@ -97,7 +131,9 @@ function DocumentsPanel() {
         onSearchTermChange={setSearchTerm}
         typeFilter={typeFilter}
         onTypeFilterChange={setTypeFilter}
-        createDisabled={!selectedDocument}
+        // Creating a document creates it INSIDE (or next to) the selected
+        // one, so it is that node's create permission that decides.
+        createDisabled={!selectedDocument || !canCreateDocuments}
         onCreate={() =>
           selectedDocument &&
           setInsertRequest({
@@ -142,8 +178,7 @@ function DocumentsPanel() {
             // decorator - they are often the path to a branch it does grant.
             filterDocuments={(nodes) =>
               nodes.filter(
-                (node) =>
-                  documentAccessState(node, site.nodeName) !== 'hidden',
+                (node) => documentAccessState(node, site.nodeName) !== 'hidden',
               )
             }
             onCreateNew={(target) =>
@@ -319,8 +354,7 @@ function VisualEditorPanel() {
         .filter(
           (peer) =>
             peer.documentAggregateId === documentAggregateId &&
-            (peer.focusedAggregateId !== null ||
-              peer.editingElement !== null),
+            (peer.focusedAggregateId !== null || peer.editingElement !== null),
         )
         .map((peer) => ({
           focusedAggregateId: peer.focusedAggregateId,
@@ -433,7 +467,7 @@ export function registerBuiltinPanels(): void {
   panelRegistry.register({
     id: 'create',
     title: t('panel.title.create', 'Create'),
-    component: NodeCreationPanel,
+    component: CreatePanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
