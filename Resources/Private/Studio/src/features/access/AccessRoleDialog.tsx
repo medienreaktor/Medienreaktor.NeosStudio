@@ -609,7 +609,6 @@ const CAPABILITY_ORDER: AccessCapability[] = [
   'createNodes',
   'deleteNodes',
   'moveNodes',
-  'manageMedia',
 ]
 
 /**
@@ -648,14 +647,6 @@ function capabilityLabel(
         hint: t(
           'accessRoles.capMoveHint',
           'Reordering and drag-and-drop in the page tree.',
-        ),
-      }
-    case 'manageMedia':
-      return {
-        label: t('accessRoles.capMedia', 'Manage media'),
-        hint: t(
-          'accessRoles.capMediaHint',
-          'Upload, edit and delete assets in the media library.',
         ),
       }
     default:

@@ -71,12 +71,6 @@
       <trans-unit id="accessRoles.capEditHint" xml:space="preserve">
         <source>Change properties, references, and show/hide pages.</source>
       </trans-unit>
-      <trans-unit id="accessRoles.capMedia" xml:space="preserve">
-        <source>Manage media</source>
-      </trans-unit>
-      <trans-unit id="accessRoles.capMediaHint" xml:space="preserve">
-        <source>Upload, edit and delete assets in the media library.</source>
-      </trans-unit>
       <trans-unit id="accessRoles.capMove" xml:space="preserve">
         <source>Move pages and content</source>
       </trans-unit>

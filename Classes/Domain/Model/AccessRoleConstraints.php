@@ -26,13 +26,18 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
      * The capability flags a role can withhold. Absent from the stored map =
      * granted, so adding a capability here never retroactively locks anyone
      * out of something they could do before the upgrade.
+     *
+     * Deliberately limited to what the content repository can actually be
+     * held to (see the AccessControlAuthProvider's command mapping). A media
+     * flag, for instance, would have to be enforced on the asset endpoints
+     * rather than on CR commands - and a switch that only looks like it does
+     * something is worse than no switch at all.
      */
     public const CAPABILITIES = [
         'editNodes',
         'createNodes',
         'deleteNodes',
         'moveNodes',
-        'manageMedia',
     ];
 
     /**

@@ -35,7 +35,10 @@ export interface NodeTreeRule {
 
 /** Capability names the server currently knows; the listing endpoint reports them. */
 export type AccessCapability =
-  'editNodes' | 'createNodes' | 'deleteNodes' | 'moveNodes' | 'manageMedia'
+  | 'editNodes'
+  | 'createNodes'
+  | 'deleteNodes'
+  | 'moveNodes'
 
 export interface AccessRoleConstraints {
   /** Empty = every site. */
