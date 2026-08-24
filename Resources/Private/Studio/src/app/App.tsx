@@ -60,10 +60,7 @@ import {
   PresenceProvider,
   type PresencePeer,
 } from '@/features/collaboration/PresenceContext'
-import {
-  useAccess,
-  useActiveSiteForAccess,
-} from '@/features/access/useAccess'
+import { useAccess, useActiveSiteForAccess } from '@/features/access/useAccess'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import {
@@ -827,7 +824,14 @@ export function App() {
                       {dimensions.length > 0 && sitesResponse && (
                         <DimensionSwitcher
                           dimensions={dimensions}
-                          allowedPoints={allowedEditablePoints}
+                          // The configuration's full set, so values it
+                          // rules out still read as "does not exist" - the
+                          // access-restricted ones render locked instead.
+                          allowedPoints={
+                            dimensionsResponse?.allowedDimensionSpacePoints ??
+                            []
+                          }
+                          permittedPoints={allowedEditablePoints}
                           value={
                             dimensionSpacePoint ??
                             sitesResponse.dimensionSpacePoint

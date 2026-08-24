@@ -594,6 +594,10 @@
         <source>Relative to “{0}”.</source>
         <target xml:lang="de">Relativ zu „{0}“.</target>
       </trans-unit>
+      <trans-unit id="dimension.accessLocked" xml:space="preserve">
+        <source>Outside your access role - an administrator can widen it.</source>
+        <target xml:lang="de">Außerhalb deiner Zugriffsrolle – eine Administratorin kann sie erweitern.</target>
+      </trans-unit>
       <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
         <source>Checking parent documents failed</source>
         <target xml:lang="de">Übergeordnete Dokumente prüfen fehlgeschlagen</target>
