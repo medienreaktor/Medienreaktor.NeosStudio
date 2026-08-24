@@ -18,6 +18,7 @@ import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
 import { config } from '@/config'
+import { documentAccessState } from '@/features/access/useAccess'
 import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
 import { usePresence } from '@/features/collaboration/PresenceContext'
@@ -174,11 +175,7 @@ export function DocumentTree({
         }
       },
     },
-    features: [
-      asyncDataLoaderFeature,
-      selectionFeature,
-      dnd.feature,
-    ],
+    features: [asyncDataLoaderFeature, selectionFeature, dnd.feature],
   })
 
   // The visible root is the site node (level 0), so the site itself plus
@@ -206,6 +203,9 @@ export function DocumentTree({
       hidden: isExplicitlyHidden(data),
       tethered:
         data.classification === 'tethered' || data.address === site.nodeAddress,
+      // Rows outside the role are reachable (they are the path to what is
+      // inside it) but nothing on them may change.
+      readOnly: documentAccessState(data, site.nodeName) !== 'allowed',
       anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
     })
   }

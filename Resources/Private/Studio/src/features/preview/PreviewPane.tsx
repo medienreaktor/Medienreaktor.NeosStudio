@@ -6,6 +6,7 @@ import { toast } from '@/components/ui/toast'
 import { Placeholder } from '@/components/ui/placeholder'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
+import { useNodeEditable } from '@/features/access/useAccess'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
   type CreationDrag,
@@ -224,10 +225,19 @@ export function PreviewPane({
   // place on a page that is deleted, and click-to-select would hand out
   // addresses of nodes that no read outside this preview resolves.
   const documentDeleted = document !== null && isDeleted(document)
+  // A page outside the account's access roles renders the same way: without
+  // the editing guest. Withholding "inPlace" is what actually disarms it -
+  // the metadata markup the guest needs for inline editing, click-to-select
+  // and creation drop targets is simply never emitted, so there is nothing to
+  // disable afterwards and no way to click into an edit the server would
+  // refuse. Locking the guest from the shell instead would leave that markup
+  // in the page and the ban one message away from being missed.
+  const documentEditable = useNodeEditable(document)
+  const documentReadOnly = documentDeleted || !documentEditable
   const src = document
     ? previewUrl(
         document.address,
-        documentDeleted ? undefined : 'inPlace',
+        documentReadOnly ? undefined : 'inPlace',
         documentDeleted,
       )
     : null
@@ -278,10 +288,11 @@ export function PreviewPane({
     const top = layers[layers.length - 1]
     if (!top?.ready) return
     activeFrameRef.current = framesRef.current.get(top.id) ?? null
-    // A deleted page carries no guest, so the bridge stays down: every
-    // guest-facing feature (selection sync, drop targets, inline editing)
-    // would be posting into a page with nobody listening.
-    setGuestReady(!documentDeleted)
+    // A page rendered without the guest (deleted, or outside the account's
+    // access roles) leaves the bridge down: every guest-facing feature
+    // (selection sync, drop targets, inline editing) would be posting into a
+    // page with nobody listening.
+    setGuestReady(!documentReadOnly)
     if (layers.length <= 1) return
     const timer = setTimeout(() => {
       setLayers((previous) => {
@@ -699,7 +710,9 @@ export function PreviewPane({
             src={layer.src}
             title={t('preview.pageFrame', 'Page preview')}
             onLoad={() => {
-              if (documentDeleted) markLayerReady(layer.id)
+              // Guest-less pages have to report their own readiness, or the
+              // layer never fades in.
+              if (documentReadOnly) markLayerReady(layer.id)
             }}
             // Until it is ready the incoming frame is invisible on top - keep
             // clicks flowing to the outgoing frame still painted beneath it.

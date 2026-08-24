@@ -23,9 +23,11 @@ import {
   persistReferenceChange,
 } from '@/features/editing/persistProperty'
 import { aggregateIdOf } from '@/api/nodeAddress'
+import { useNodeEditable } from '@/features/access/useAccess'
 import { usePresence } from '@/features/collaboration/PresenceContext'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import {
   clientEvalNode,
   clientEvalUsesParentNode,
@@ -111,6 +113,10 @@ export function InspectorPanel({
 }) {
   const { data: nodeTypes } = useNodeTypes()
   const { data: schema } = useNodeTypeSchema(node?.nodeType ?? null)
+  // Pages outside the account's access roles are shown, not edited - the
+  // content repository would refuse the save anyway, and finding that out
+  // after typing a paragraph is the worst possible moment to learn it.
+  const editable = useNodeEditable(node)
   const tabs = useMemo(
     () => (schema ? buildInspectorSchema(schema) : null),
     [schema],
@@ -208,6 +214,9 @@ export function InspectorPanel({
   }, [visibleTabs, node, transientValues])
 
   const save = (propertyName: string, value: unknown) => {
+    // The editors are inert while locked, so this cannot normally fire -
+    // it is here so no future surface can route a write around the lock.
+    if (!editable) return
     if (!node) return
     // Reflect the commit in the ClientEval context right away - editors
     // without an editing phase (checkbox, select) never report live changes,
@@ -330,8 +339,12 @@ export function InspectorPanel({
         </h2>
         <ShineThroughNotice node={node} />
         <ElementLockNotice node={node} />
+        {!editable && <AccessLockNotice />}
       </div>
-      <div className="">
+      {/* inert, not just dimmed: it takes the whole subtree out of the tab
+          order and swallows every event, so a locked editor cannot be reached
+          by keyboard either - which pointer-events-none would not manage. */}
+      <div inert={!editable} className={cn(!editable && 'opacity-60')}>
         {visibleTabs && (
           <>
             {visibleTabs.length === 0 ? (
@@ -442,7 +455,10 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
       role="status"
       className="mt-3 flex items-start gap-2 rounded-md border border-purple-500/60 bg-purple-100/60 dark:bg-purple-900/60 p-2.5 text-xs text-purple-900 dark:text-purple-100"
     >
-      <FaIcon icon="layer-group" className="mt-0.5 text-purple-700 dark:text-purple-300" />
+      <FaIcon
+        icon="layer-group"
+        className="mt-0.5 text-purple-700 dark:text-purple-300"
+      />
       <p>
         {t('inspector.shineThroughFrom', 'Shines through from')}{' '}
         <strong className="text-neutral-950 dark:text-white">{origin}</strong>.{' '}
@@ -461,6 +477,28 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
  * like the preview's lock rendering: locks are a Studio/sidecar concept and
  * deliberately not enforced by the API.
  */
+/**
+ * Why the editors are inert: this page is not inside the access role the
+ * account works under. Deliberately says who to ask rather than only what is
+ * forbidden - the editor cannot lift this themselves.
+ */
+function AccessLockNotice() {
+  return (
+    <div
+      role="status"
+      className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+    >
+      <i className="fas fa-lock mt-0.5" aria-hidden />
+      <p>
+        {t(
+          'inspector.accessLockedHint',
+          'This page is outside your access role — you can read it, but not change it. An administrator can widen the role.',
+        )}
+      </p>
+    </div>
+  )
+}
+
 function ElementLockNotice({ node }: { node: NodeDto }) {
   const { peers } = usePresence()
   const holder = peers.find(

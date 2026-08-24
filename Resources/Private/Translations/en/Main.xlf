@@ -779,6 +779,9 @@
       <trans-unit id="history.loading" xml:space="preserve">
         <source>Loading the history…</source>
       </trans-unit>
+      <trans-unit id="inspector.accessLockedHint" xml:space="preserve">
+        <source>This page is outside your access role — you can read it, but not change it. An administrator can widen the role.</source>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
       </trans-unit>
