@@ -24,6 +24,7 @@ import {
   type Formatting,
   type RawFormattingConfig,
 } from '@/guest/formatting'
+import { serializedHtml } from '@/guest/serialize'
 import {
   isStyleActive,
   isStyleAvailable,
@@ -40,8 +41,8 @@ export const RICH_TEXT_EDITOR = 'Neos.Neos/Inspector/Editors/RichTextEditor'
  * The inspector's rich text editor: the same TipTap engine that powers inline
  * editing in the preview (same schema mapping, so a property permits exactly
  * what its NodeType's `formatting` flags declare), mounted as an inspector
- * field with a persistent toolbar. Commits getHTML() on blur like the inline
- * editors; Escape reverts to the last committed markup.
+ * field with a persistent toolbar. Commits serializedHtml() on blur like the
+ * inline editors; Escape reverts to the last committed markup.
  */
 export const RichTextEditor: PropertyEditorComponent = ({
   value,
@@ -90,17 +91,17 @@ export const RichTextEditor: PropertyEditorComponent = ({
         },
       },
       onCreate: ({ editor }) => {
-        committedHtml = editor.getHTML()
+        committedHtml = serializedHtml(editor)
       },
       onUpdate: ({ editor }) => {
-        callbacks.current.onChange?.(editor.getHTML())
+        callbacks.current.onChange?.(serializedHtml(editor))
         refresh()
       },
       onSelectionUpdate: refresh,
       onFocus: refresh,
       onBlur: ({ editor }) => {
         refresh()
-        const html = editor.getHTML()
+        const html = serializedHtml(editor)
         if (html === committedHtml) return
         committedHtml = html
         callbacks.current.onCommit(html)

@@ -19,8 +19,10 @@
  * to the host.
  *
  * TipTap mounts by appending its own contenteditable (.tiptap) into the
- * property element, so `editor.getHTML()` returns the property value without
- * the host wrapper - exactly what Neos stores.
+ * property element, so the serialized content is the property value without
+ * the host wrapper. Serialization goes through serializedHtml() (never raw
+ * getHTML()), which flattens the paragraphs TipTap's schema puts inside list
+ * items and table cells into the markup Neos stores (see serialize.ts).
  */
 import { Editor } from '@tiptap/core'
 import {
@@ -28,6 +30,7 @@ import {
   parseFormatting,
   setEditorFormatting,
 } from './formatting'
+import { serializedHtml } from './serialize'
 import { hideToolbars, updateToolbars } from './toolbar'
 
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
@@ -42,8 +45,8 @@ const COMMIT_MAX_WAIT_MS = 5_000
 const LIVE_UPDATE_THROTTLE_MS = 200
 
 export interface RichTextHooks {
-  /** Changed content should be persisted; html is getHTML(). Fired debounced
-   * while typing and flushed on blur. */
+  /** Changed content should be persisted; html is serializedHtml(). Fired
+   * debounced while typing and flushed on blur. */
   commit(element: HTMLElement, html: string): void
   /** The editor gained focus or its content changed - reposition chrome. */
   activity(): void
@@ -216,7 +219,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
   let applyingRemote = false
 
   const commitIfChanged = () => {
-    const html = editor.getHTML()
+    const html = serializedHtml(editor)
     if (html === committedHtml) return
     committedHtml = html
     hooks.commit(element, html)
@@ -227,7 +230,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     COMMIT_MAX_WAIT_MS,
   )
   const emitLiveUpdate = throttle(() => {
-    hooks.liveUpdate?.(element, editor.getHTML(), editor.state.selection.head)
+    hooks.liveUpdate?.(element, serializedHtml(editor), editor.state.selection.head)
   }, LIVE_UPDATE_THROTTLE_MS)
 
   const editor = new Editor({
@@ -258,7 +261,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       },
     },
     onCreate: ({ editor }) => {
-      committedHtml = editor.getHTML()
+      committedHtml = serializedHtml(editor)
       refreshEmptyState(element, editor)
     },
     onFocus: ({ editor }) => {
@@ -314,7 +317,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       }
       // The stream shows what the peer will commit - adopt it as the
       // baseline so a later local edit diffs against current reality.
-      committedHtml = editor.getHTML()
+      committedHtml = serializedHtml(editor)
       refreshEmptyState(element, editor)
     },
     eject() {
