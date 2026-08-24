@@ -741,7 +741,7 @@ export function SecondaryDock({
           type="button"
           aria-label={t('panel.expand', 'Expand panel')}
           onClick={() => setCollapsed(false)}
-          className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+          className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
         >
           <i className="fas fa-angles-left text-xs" aria-hidden />
         </button>
@@ -756,7 +756,7 @@ export function SecondaryDock({
               type="button"
               aria-label={t('panel.collapse', 'Collapse panel')}
               onClick={() => setCollapsed(true)}
-              className="absolute top-0 right-0 z-10 grid w-8 h-6 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+              className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
             >
               <i className="fas fa-angles-right text-xs" aria-hidden />
             </button>
@@ -851,7 +851,7 @@ function GroupTabBar({
             onPointerDown={(e) => onTabPointerDown(e, group.id, panel)}
             onContextMenu={(e) => onTabContextMenu(e, group.id, panel)}
             className={cn(
-              'cursor-grab touch-none px-2 py-1 text-xs font-medium select-none border-t',
+              'cursor-grab touch-none px-3 py-1.5 text-xs font-medium select-none border-t',
               panel === group.active
                 ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white border-blue-500'
                 : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white border-transparent',

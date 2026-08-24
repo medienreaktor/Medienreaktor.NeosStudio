@@ -65,9 +65,9 @@ export function AssetList({
   }
 
   return (
-    <div className="min-h-0 flex-1 pt-12 overflow-y-auto @container">
+    <div className="min-h-0 flex-1 pt-14 overflow-y-auto @container">
       {view === 'grid' ? (
-        <div className="grid grid-cols-2 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6 @[56rem]:grid-cols-7 @[64rem]:grid-cols-8 @[72rem]:grid-cols-9 @[80rem]:grid-cols-10 gap-2 p-2 pt-0">
+        <div className="grid grid-cols-2 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6 @[56rem]:grid-cols-7 @[64rem]:grid-cols-8 @[72rem]:grid-cols-9 @[80rem]:grid-cols-10 gap-2 p-3 pt-0">
           {assets.map((asset) => (
             <GridCard
               key={assetKey(asset)}
@@ -85,16 +85,16 @@ export function AssetList({
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm text-left text-xs text-neutral-500">
             <tr>
-              <th className="px-2 py-1 font-medium">
+              <th className="px-3 py-1 font-medium">
                 {t('media.name', 'Name')}
               </th>
-              <th className="px-2 py-1 font-medium">
+              <th className="px-3 py-1 font-medium">
                 {t('media.type', 'Type')}
               </th>
-              <th className="px-2 py-1 font-medium">
+              <th className="px-3 py-1 font-medium">
                 {t('media.size', 'Size')}
               </th>
-              <th className="px-2 py-1 font-medium">
+              <th className="px-3 py-1 font-medium">
                 {t('media.modified', 'Modified')}
               </th>
             </tr>
@@ -209,7 +209,7 @@ function ListRow({
           : 'hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50',
       )}
     >
-      <td className="px-2 py-1">
+      <td className="px-3 py-1">
         <div className="flex items-center gap-2">
           <div className="grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-white/50 dark:bg-neutral-950/50">
             <AssetThumb asset={asset} className="size-5" />
@@ -219,13 +219,13 @@ function ListRow({
           </span>
         </div>
       </td>
-      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">
+      <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
         {asset.assetType}
       </td>
-      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">
+      <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
         {formatBytes(asset.fileSize)}
       </td>
-      <td className="px-2 py-1 text-neutral-950/50 dark:text-white/50">
+      <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
         {formatDate(asset.lastModified)}
       </td>
     </tr>

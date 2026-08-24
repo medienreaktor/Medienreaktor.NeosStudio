@@ -51,7 +51,7 @@ export function DocumentsToolbar({
   const filterActive = typeFilter.length > 0
 
   return (
-    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-2">
+    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-3">
       <SearchInput
         className={floatingControl}
         value={searchTerm}

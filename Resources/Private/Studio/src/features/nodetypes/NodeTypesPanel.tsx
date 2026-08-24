@@ -285,7 +285,7 @@ function Legend() {
     { kind: 'other', label: t('nodeTypes.legend.other', 'Mixin / other') },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
+    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-col gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
@@ -412,7 +412,7 @@ export function NodeTypesPanel() {
       onPick={setSelected}
       overlay={
         <>
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-2 pr-32">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3 pr-32">
             <SearchInput
               wrapperClassName="pointer-events-auto max-w-64"
               className={floatingControl}

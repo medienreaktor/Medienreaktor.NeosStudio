@@ -85,7 +85,7 @@ export function HistoryPanel() {
     )
   }
   return (
-    <div className="flex flex-col gap-0.5 p-1.5 text-xs">
+    <div className="flex flex-col gap-0.5 p-2.5 text-xs">
       {steps.map((step) => (
         <HistoryStepRow
           key={step.id}

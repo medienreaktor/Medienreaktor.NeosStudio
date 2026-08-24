@@ -140,7 +140,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
-    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 p-2">
+    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 p-3">
       <SearchInput
         value={filter.search}
         onChange={(e) => state.setSearch(e.target.value)}

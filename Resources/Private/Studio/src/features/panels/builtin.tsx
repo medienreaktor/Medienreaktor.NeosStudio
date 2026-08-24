@@ -109,7 +109,7 @@ function DocumentsPanel() {
           })
         }
       />
-      <div className="flex min-h-0 flex-1 flex-col p-2">
+      <div className="flex min-h-0 flex-1 flex-col p-3 pt-0">
         {filtering && (
           <DocumentSearchList
             site={site}
@@ -191,7 +191,7 @@ function OutlinePanel() {
   } = useStudio()
   const [insertRequest, setInsertRequest] = useState<InsertRequest | null>(null)
   return (
-    <div className="p-2">
+    <div className="p-3">
       <ContentOutliner
         document={selectedDocument}
         workspaceName={workspaceName}

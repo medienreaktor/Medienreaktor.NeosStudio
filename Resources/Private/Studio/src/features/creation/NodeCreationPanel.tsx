@@ -55,7 +55,7 @@ export function NodeCreationPanel() {
   return (
     <div className="@container flex min-h-full flex-col">
       {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-2">
+      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-3">
         <SearchInput
           className={floatingControl}
           placeholder={t(
@@ -67,7 +67,7 @@ export function NodeCreationPanel() {
           onChange={(event) => setFilter(event.target.value)}
         />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 pt-0">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-0">
         {visibleGroups.length === 0 && (
           <Placeholder
             icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}

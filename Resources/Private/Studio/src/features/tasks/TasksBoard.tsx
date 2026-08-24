@@ -178,14 +178,14 @@ export function TasksBoard() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center justify-end px-2 pt-2">
+      <div className="flex shrink-0 items-center justify-end px-3 pt-3">
         <Button size="sm" onClick={() => setCreating(true)}>
           <i className="fas fa-plus" aria-hidden />
           {t('tasks.newTask', 'New task')}
         </Button>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-stretch gap-2 overflow-x-auto p-2">
+      <div className="flex min-h-0 flex-1 items-stretch gap-2 overflow-x-auto p-3">
         {COLUMNS.map((column) => {
           const columnTasks = tasks.filter(
             (task) => task.status === column.status,

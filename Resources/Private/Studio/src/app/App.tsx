@@ -734,7 +734,7 @@ export function App() {
                       </div>
                     </div>
                   </SidebarHeader>
-                  <SidebarContent className="overflow-hidden p-2">
+                  <SidebarContent className="overflow-hidden p-1 pt-2">
                     <PanelDock region="sidebar" />
                   </SidebarContent>
                   <SidebarResizeHandle {...resizeHandleProps} />

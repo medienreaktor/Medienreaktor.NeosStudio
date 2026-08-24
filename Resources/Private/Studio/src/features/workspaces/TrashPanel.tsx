@@ -120,7 +120,7 @@ export function TrashPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-1 p-2">
+    <div className="flex flex-col gap-1 p-3">
       {outdated && (
         <p className="mb-1 rounded-sm bg-neutral-200 dark:bg-neutral-800 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400">
           <i className="fas fa-fw fa-triangle-exclamation" aria-hidden />{' '}

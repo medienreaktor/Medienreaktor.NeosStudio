@@ -35,7 +35,7 @@ export function ClipboardPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-1 p-2">
+    <div className="flex flex-col gap-1 p-3">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {t('clipboard.pasteHint', 'Paste inserts the highlighted entry.')}

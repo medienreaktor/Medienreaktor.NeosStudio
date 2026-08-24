@@ -248,7 +248,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     return (
       <div className="relative h-full min-h-0 overflow-hidden">
         {overlay}
-        <div className="pointer-events-none absolute top-0 right-0 z-10 p-2">
+        <div className="pointer-events-none absolute top-0 right-0 z-10 p-3">
           <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-1 backdrop-blur-xs">
             <Button
               variant="ghost"

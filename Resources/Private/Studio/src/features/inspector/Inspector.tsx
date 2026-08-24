@@ -304,7 +304,7 @@ export function InspectorPanel({
   if (isDeleted(node)) {
     return (
       <div className="text-sm">
-        <div className="px-2 py-4">
+        <div className="px-3 py-4">
           <h2 className="flex items-center gap-2 font-semibold">
             <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
             {nodeLabel(node)}
@@ -323,7 +323,7 @@ export function InspectorPanel({
 
   return (
     <div className="text-sm">
-      <div className="py-4 px-2">
+      <div className="py-4 px-3">
         <h2 className="flex items-center gap-2 font-semibold">
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
           {nodeLabel(node)}
@@ -507,7 +507,7 @@ function PropertyGroup({
   return (
     <CollapsibleGroup
       defaultOpen={!group.collapsed}
-      className="border-b border-neutral-300 dark:border-neutral-700 p-2"
+      className="border-b border-neutral-300 dark:border-neutral-700 p-3"
       label={
         <>
           {group.icon && <FaIcon icon={group.icon} />}
