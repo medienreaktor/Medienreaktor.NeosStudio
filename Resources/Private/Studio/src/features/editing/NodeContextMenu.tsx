@@ -44,6 +44,12 @@ export interface NodeMenuTarget {
   hidden: boolean
   /** Tethered (autocreated) nodes can neither be hidden nor deleted. */
   tethered: boolean
+  /**
+   * Outside the account's access roles: everything that would change the node
+   * is disabled. Copy stays available - it reads, and where the copy may be
+   * pasted is the paste target's own question.
+   */
+  readOnly?: boolean
   /** Viewport rect the menu is anchored to (a point for right-clicks). */
   anchor: { x: number; y: number; width: number; height: number }
 }
@@ -246,6 +252,7 @@ export function NodeContextMenu({
             {onCreateNew && (
               <>
                 <DropdownMenuItem
+                  disabled={target.readOnly}
                   onClick={() => {
                     onClose()
                     onCreateNew(target)
@@ -260,7 +267,7 @@ export function NodeContextMenu({
             {clipboardKind !== undefined && (
               <>
                 <DropdownMenuItem
-                  disabled={target.tethered}
+                  disabled={target.tethered || target.readOnly}
                   onClick={() => runCapture(target, 'cut')}
                 >
                   <i className="fas fa-fw fa-scissors" aria-hidden />
@@ -276,7 +283,7 @@ export function NodeContextMenu({
                 {clipboardEntry && (
                   <>
                     <DropdownMenuItem
-                      disabled={!canPasteInto}
+                      disabled={!canPasteInto || target.readOnly}
                       title={t(
                         'editing.pasteIntoHint',
                         'Paste “{0}” inside, as the last child',
@@ -288,7 +295,7 @@ export function NodeContextMenu({
                       {t('editing.pasteInto', 'Paste into')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      disabled={!canPasteAfter}
+                      disabled={!canPasteAfter || target.readOnly}
                       title={t(
                         'editing.pasteAfterHint',
                         'Paste “{0}” after this {1}',
@@ -306,7 +313,7 @@ export function NodeContextMenu({
             )}
             {target.hidden ? (
               <DropdownMenuItem
-                disabled={target.tethered}
+                disabled={target.tethered || target.readOnly}
                 onClick={() => runVisibilityAction(target, 'unhide')}
               >
                 <i className="fas fa-fw fa-eye" aria-hidden />
@@ -314,7 +321,7 @@ export function NodeContextMenu({
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
-                disabled={target.tethered}
+                disabled={target.tethered || target.readOnly}
                 onClick={() => runVisibilityAction(target, 'hide')}
               >
                 <i className="fas fa-fw fa-eye-slash" aria-hidden />
@@ -323,7 +330,7 @@ export function NodeContextMenu({
             )}
             <DropdownMenuItem
               variant="destructive"
-              disabled={target.tethered}
+              disabled={target.tethered || target.readOnly}
               onClick={() => {
                 setPendingDelete(target)
                 onClose()

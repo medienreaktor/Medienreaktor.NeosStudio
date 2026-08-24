@@ -1038,6 +1038,10 @@
         <source>Loading the history…</source>
         <target xml:lang="de">Verlauf wird geladen…</target>
       </trans-unit>
+      <trans-unit id="inspector.accessLockedHint" xml:space="preserve">
+        <source>This page is outside your access role — you can read it, but not change it. An administrator can widen the role.</source>
+        <target xml:lang="de">Diese Seite liegt außerhalb deiner Zugriffsrolle – du kannst sie lesen, aber nicht ändern. Eine Administratorin kann die Rolle erweitern.</target>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="de">Editor wird noch nicht unterstützt: {0}</target>

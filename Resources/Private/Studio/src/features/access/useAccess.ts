@@ -5,7 +5,7 @@ import {
   useMyAccess,
   type EffectiveAccess,
 } from '@/api/accessRoles'
-import { observedIdPath, type NodeDto } from '@/api/nodes'
+import { observedIdPath, useNodeAncestors, type NodeDto } from '@/api/nodes'
 
 /**
  * The acting user's effective access, plus the module-level snapshot the
@@ -69,4 +69,42 @@ export function documentAccessState(
   access: EffectiveAccess | undefined = snapshot,
 ): 'allowed' | 'restricted' | 'hidden' {
   return nodeAccessState(access, observedIdPath(node.aggregateId), siteNodeName)
+}
+
+/**
+ * Whether this node may be edited - the gate every editing surface asks
+ * before offering anything (the inspector, the preview's inline editing, the
+ * context menus).
+ *
+ * Unlike the tree decoration above this does NOT settle for observed
+ * ancestry. A row in the tree was always walked to from the top, so its
+ * ancestors are known; a node reached any other way - restored from
+ * localStorage on reload, clicked in the preview, followed from a link - has
+ * none, and an ancestor-relative rule evaluated against a one-element path
+ * answers by accident. Editing is the decision that must not be accidental,
+ * so it asks the server for the real chain (cached per address, and only ever
+ * fetched for accounts a role actually restricts).
+ *
+ * Fails closed while that chain is in flight: for a restricted account the
+ * brief lock resolves into an unlocked editor, whereas the other way round
+ * hands out an editor whose save the server would refuse.
+ */
+export function useNodeEditable(node: NodeDto | null): boolean {
+  const access = useAccess()
+  const restricted = access !== undefined && !access.unrestricted
+  const { data: ancestors, isPending } = useNodeAncestors(
+    restricted && node !== null ? node.address : null,
+  )
+
+  if (node === null || !restricted) return true
+  // isPending covers "not fetched yet"; a failed fetch resolves to no
+  // ancestors, which the rules below then evaluate against the node alone.
+  if (isPending) return false
+
+  const idPath = [
+    node.aggregateId,
+    ...(ancestors ?? []).map((ancestor) => ancestor.aggregateId),
+  ]
+
+  return nodeAccessState(access, idPath, activeSiteNodeName) === 'allowed'
 }
