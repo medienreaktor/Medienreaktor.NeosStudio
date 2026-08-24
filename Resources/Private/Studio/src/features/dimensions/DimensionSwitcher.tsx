@@ -46,6 +46,14 @@ function resolveSwitch(
  * disabled; when a combination is not allowed, the other coordinates snap to
  * the closest allowed point.
  *
+ * Two different reasons make a value unpickable, and they must not look the
+ * same. The content dimension configuration can rule a combination out - that
+ * is the model saying "this does not exist", and a plain disabled row says it
+ * well enough. An access role ruling it out is somebody deciding "not for
+ * you", which deserves to be named: those rows carry a lock and a tooltip, so
+ * an editor missing their language asks an administrator instead of filing a
+ * bug about a broken dropdown.
+ *
  * With documentCoverage set (a document is selected), values whose target
  * point the document does not exist in are muted and marked with a "+";
  * choosing one raises onCreateVariant instead of switching, so the caller
@@ -54,13 +62,21 @@ function resolveSwitch(
 export function DimensionSwitcher({
   dimensions,
   allowedPoints,
+  permittedPoints = allowedPoints,
   value,
   onChange,
   documentCoverage,
   onCreateVariant,
 }: {
   dimensions: ContentDimension[]
+  /** Every dimension space point the content dimension configuration allows. */
   allowedPoints: DimensionSpacePoint[]
+  /**
+   * The subset of those the account's access roles permit. Switching only
+   * ever targets one of these; the difference to allowedPoints is exactly
+   * what renders locked. Defaults to allowedPoints (no access restrictions).
+   */
+  permittedPoints?: DimensionSpacePoint[]
   /** The dimension space point currently in effect */
   value: DimensionSpacePoint
   onChange: (point: DimensionSpacePoint) => void
@@ -96,7 +112,7 @@ export function DimensionSwitcher({
                 value,
                 dimension.id,
                 v as string,
-                allowedPoints,
+                permittedPoints,
               )
               if (!next || dimensionSpacePointEquals(next, value)) return
               if (!documentExistsAt(next) && onCreateVariant) {
@@ -128,22 +144,31 @@ export function DimensionSwitcher({
                   value,
                   dimension.id,
                   dimensionValue.value,
-                  allowedPoints,
+                  permittedPoints,
                 )
+                // Reachable in the content model but with no permitted point
+                // to land on: an access role, not the model, is what stops it.
+                const locked =
+                  reachable.has(dimensionValue.value) && target === null
                 const missingVariant =
                   target !== null && !documentExistsAt(target)
                 return (
                   <SelectItem
                     key={dimensionValue.value}
                     value={dimensionValue.value}
-                    disabled={!reachable.has(dimensionValue.value)}
+                    disabled={!reachable.has(dimensionValue.value) || locked}
                     title={
-                      missingVariant
+                      locked
                         ? t(
-                            'dimension.missingVariant',
-                            'The selected document does not exist here yet - create it?',
+                            'dimension.accessLocked',
+                            'Outside your access role - an administrator can widen it.',
                           )
-                        : undefined
+                        : missingVariant
+                          ? t(
+                              'dimension.missingVariant',
+                              'The selected document does not exist here yet - create it?',
+                            )
+                          : undefined
                     }
                   >
                     {/* Specializations are listed right after their generalization;
@@ -155,6 +180,9 @@ export function DimensionSwitcher({
                       }}
                     >
                       {dimensionValue.label}
+                      {locked && (
+                        <i className="fas fa-lock text-[0.75rem]" aria-hidden />
+                      )}
                       {missingVariant && (
                         <i
                           className="fas fa-plus text-[0.875rem]"

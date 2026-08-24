@@ -446,6 +446,9 @@
       <trans-unit id="creation.relativeTo" xml:space="preserve">
         <source>Relative to “{0}”.</source>
       </trans-unit>
+      <trans-unit id="dimension.accessLocked" xml:space="preserve">
+        <source>Outside your access role - an administrator can widen it.</source>
+      </trans-unit>
       <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
         <source>Checking parent documents failed</source>
       </trans-unit>
