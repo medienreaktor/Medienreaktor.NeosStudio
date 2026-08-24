@@ -177,7 +177,7 @@ function HintPopover({
       >
         <i className={cn('fas text-[0.75rem]', icon)} aria-hidden />
       </PopoverTrigger>
-      <PopoverContent className="max-w-72 p-3 text-xs leading-relaxed">
+      <PopoverContent className="max-w-72 py-2 px-3 text-xs leading-relaxed">
         {children}
       </PopoverContent>
     </Popover>
