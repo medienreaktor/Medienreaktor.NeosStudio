@@ -60,7 +60,12 @@ import {
   PresenceProvider,
   type PresencePeer,
 } from '@/features/collaboration/PresenceContext'
-import { useAccess, useActiveSiteForAccess } from '@/features/access/useAccess'
+import {
+  useAccess,
+  useActiveSiteForAccess,
+  useWorkspaceClassificationsForAccess,
+} from '@/features/access/useAccess'
+import { WorkspaceLockoutDialog } from '@/features/access/WorkspaceLockoutDialog'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import {
@@ -421,6 +426,9 @@ export function App() {
   // Site restrictions are per site, and the synchronous consumers (the tree
   // row decorator) only ever see a bare node - tell them which site is open.
   useActiveSiteForAccess(activeSite?.nodeName ?? null)
+  // Same reason: a node names its workspace, not how that workspace is
+  // classified - and live is treated differently from shared and personal.
+  useWorkspaceClassificationsForAccess(workspaces)
 
   useEffect(() => {
     ;(async () => {
@@ -931,6 +939,18 @@ export function App() {
                     <PanelDock region="main" />
                     <SecondaryDock visibleForMainPanel="visual-editor" />
                   </div>
+
+                  {/* Blocking, undismissable: a role handed out mid-session
+                    can leave the account writing into a workspace the content
+                    repository now refuses. Better one dialog than a stream of
+                    failed saves. */}
+                  <WorkspaceLockoutDialog
+                    access={access}
+                    workspaces={workspaces}
+                    personalWorkspace={personalWorkspace}
+                    activeWorkspace={activeWorkspace}
+                    onSwitchEditingContext={switchEditingContext}
+                  />
 
                   {variantRequest && selectedDocument && activeWorkspace && (
                     <CreateVariantDialog

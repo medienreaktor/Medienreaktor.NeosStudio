@@ -2,7 +2,9 @@ import { useEffect } from 'react'
 
 import {
   nodeAccessState,
+  permits,
   useMyAccess,
+  type AccessCapability,
   type EffectiveAccess,
 } from '@/api/accessRoles'
 import { observedIdPath, useNodeAncestors, type NodeDto } from '@/api/nodes'
@@ -21,6 +23,7 @@ import { observedIdPath, useNodeAncestors, type NodeDto } from '@/api/nodes'
 
 let snapshot: EffectiveAccess | undefined
 let activeSiteNodeName = ''
+let workspaceClassifications = new Map<string, string>()
 
 /**
  * Subscribe to the own effective access. Safe to call from anywhere - the
@@ -45,6 +48,21 @@ export function useActiveSiteForAccess(siteNodeName: string | null): void {
   useEffect(() => {
     activeSiteNodeName = siteNodeName ?? ''
   }, [siteNodeName])
+}
+
+/**
+ * Tell the synchronous consumers how each workspace is classified. Access
+ * roles treat live (ROOT) differently from shared and personal ones, and a
+ * node carries only its workspace's NAME.
+ */
+export function useWorkspaceClassificationsForAccess(
+  workspaces: { name: string; classification: string }[],
+): void {
+  useEffect(() => {
+    workspaceClassifications = new Map(
+      workspaces.map((workspace) => [workspace.name, workspace.classification]),
+    )
+  }, [workspaces])
 }
 
 /**
@@ -89,7 +107,10 @@ export function documentAccessState(
  * brief lock resolves into an unlocked editor, whereas the other way round
  * hands out an editor whose save the server would refuse.
  */
-export function useNodeEditable(node: NodeDto | null): boolean {
+export function useNodeEditable(
+  node: NodeDto | null,
+  capability: AccessCapability = 'editNodes',
+): boolean {
   const access = useAccess()
   const restricted = access !== undefined && !access.unrestricted
   const { data: ancestors, isPending } = useNodeAncestors(
@@ -101,10 +122,40 @@ export function useNodeEditable(node: NodeDto | null): boolean {
   // ancestors, which the rules below then evaluate against the node alone.
   if (isPending) return false
 
-  const idPath = [
-    node.aggregateId,
-    ...(ancestors ?? []).map((ancestor) => ancestor.aggregateId),
-  ]
+  return permits(access, {
+    siteNodeName: activeSiteNodeName,
+    idPath: [
+      node.aggregateId,
+      ...(ancestors ?? []).map((ancestor) => ancestor.aggregateId),
+    ],
+    dimensionCoordinates: node.dimensionSpacePoint,
+    workspaceName: node.workspace,
+    workspaceClassification: classificationOf(node.workspace),
+    capability,
+  })
+}
 
-  return nodeAccessState(access, idPath, activeSiteNodeName) === 'allowed'
+/**
+ * The synchronous sibling of useNodeEditable, for the surfaces that cannot
+ * call a hook per row (tree rows, drag-and-drop callbacks). Settles for the
+ * observed ancestry, which those surfaces do have: they walked the tree down
+ * to the node.
+ */
+export function nodePermits(
+  node: NodeDto,
+  capability: AccessCapability,
+  access: EffectiveAccess | undefined = snapshot,
+): boolean {
+  return permits(access, {
+    siteNodeName: activeSiteNodeName,
+    idPath: observedIdPath(node.aggregateId),
+    dimensionCoordinates: node.dimensionSpacePoint,
+    workspaceName: node.workspace,
+    workspaceClassification: classificationOf(node.workspace),
+    capability,
+  })
+}
+
+function classificationOf(workspaceName: string): string {
+  return workspaceClassifications.get(workspaceName) ?? 'UNKNOWN'
 }

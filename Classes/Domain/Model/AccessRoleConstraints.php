@@ -134,6 +134,52 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
     }
 
     /**
+     * Does this ONE role permit the whole operation - every axis it touches at
+     * once?
+     *
+     * This is the authoritative check, and the per-axis methods below exist
+     * for shaping lists, not for deciding writes. The difference matters as
+     * soon as an account holds two roles: asking "may I write?" and "in this
+     * workspace?" separately and OR-ing each across all roles lets a role that
+     * grants only the workspace combine with one that grants only the writing,
+     * and the account ends up doing something neither role allows. Every axis
+     * has to be satisfied by the SAME role.
+     *
+     * Null (or empty) arguments mean "not applicable to this operation" and
+     * are skipped - creating a workspace has no node, a page-tree rule has
+     * nothing to say about it.
+     *
+     * @param array<int, string> $idPath node aggregate id first, ancestors outwards; [] = no node
+     * @param array<string, string> $dimensionCoordinates [] = no dimension
+     */
+    public function permits(
+        string $siteNodeName = '',
+        array $idPath = [],
+        array $dimensionCoordinates = [],
+        ?string $workspaceName = null,
+        string $workspaceClassification = 'UNKNOWN',
+        ?string $capability = null,
+    ): bool {
+        if ($siteNodeName !== '' && !$this->allowsSite($siteNodeName)) {
+            return false;
+        }
+        if ($idPath !== [] && !$this->allowsNodePath($idPath)) {
+            return false;
+        }
+        if ($dimensionCoordinates !== [] && !$this->allowsDimensionSpacePoint($dimensionCoordinates)) {
+            return false;
+        }
+        if ($workspaceName !== null && !$this->allowsWorkspaceEditing($workspaceName, $workspaceClassification)) {
+            return false;
+        }
+        if ($capability !== null && !$this->allowsCapability($capability)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param array<string, string> $coordinates a dimension space point
      */
     public function allowsDimensionSpacePoint(array $coordinates): bool
