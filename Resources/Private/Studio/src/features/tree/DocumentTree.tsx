@@ -18,7 +18,7 @@ import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import type { Site } from '@/api/sites'
 import { config } from '@/config'
-import { documentAccessState } from '@/features/access/useAccess'
+import { permittedActionsOn } from '@/features/access/permittedActions'
 import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
 import { usePresence } from '@/features/collaboration/PresenceContext'
@@ -204,8 +204,9 @@ export function DocumentTree({
       tethered:
         data.classification === 'tethered' || data.address === site.nodeAddress,
       // Rows outside the role are reachable (they are the path to what is
-      // inside it) but nothing on them may change.
-      readOnly: documentAccessState(data, site.nodeName) !== 'allowed',
+      // inside it) but nothing on them may change; inside it, the role's
+      // capabilities still decide action by action.
+      permitted: permittedActionsOn(data, site.nodeName),
       anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
     })
   }

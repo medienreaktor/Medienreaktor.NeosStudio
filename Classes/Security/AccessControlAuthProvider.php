@@ -160,21 +160,68 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         }
         [$address, $capability] = $requirement;
 
-        if (!$access->allowsCapability($capability)) {
-            return Privilege::denied(sprintf('Your access role(s) do not allow the "%s" capability', $capability));
-        }
-        if (!$access->allowsDimensionSpacePoint($address->dimensionSpacePoint->coordinates)) {
-            return Privilege::denied(sprintf('Dimension "%s" is not part of your access role(s)', $address->dimensionSpacePoint->toJson()));
-        }
-
         $subgraph = $this->contentGraphReadModel
             ->getContentGraph($address->workspaceName)
             ->getSubgraph($address->dimensionSpacePoint, VisibilityConstraints::createEmpty());
-        if (!$this->accessControlService->allowsNode($access, $subgraph, $address->aggregateId)) {
-            return Privilege::denied(sprintf('Node "%s" is outside the page tree your access role(s) cover', $address->aggregateId->value));
+        [$idPath, $siteNodeName] = $this->accessControlService->nodeContext($subgraph, $address->aggregateId);
+        $coordinates = $address->dimensionSpacePoint->coordinates;
+        $classification = $this->classificationOf($address->workspaceName);
+
+        // ONE role has to permit all of it. Asking the axes separately and
+        // OR-ing each across the roles would let a role granting only the
+        // workspace combine with one granting only the writing.
+        if ($access->permits($siteNodeName, $idPath, $coordinates, $address->workspaceName->value, $classification, $capability)) {
+            return null;
         }
 
-        return null;
+        return Privilege::denied($this->explainDenial(
+            $access,
+            $siteNodeName,
+            $idPath,
+            $coordinates,
+            $address,
+            $classification,
+            $capability
+        ));
+    }
+
+    /**
+     * Why the operation was refused. The decision above is one conjunction, so
+     * naming a reason means asking the axes again - purely to say something
+     * more useful than "not allowed". The first axis no role satisfies at all
+     * is the closest thing to a cause; when every axis is individually fine
+     * the roles simply do not line up, and that is worth saying too.
+     *
+     * @param array<int, string> $idPath
+     * @param array<string, string> $coordinates
+     */
+    private function explainDenial(
+        EffectiveAccess $access,
+        string $siteNodeName,
+        array $idPath,
+        array $coordinates,
+        NodeAddress $address,
+        string $classification,
+        string $capability,
+    ): string {
+        if ($capability !== '' && !$access->allowsCapability($capability)) {
+            return sprintf('Your access role(s) do not allow the "%s" capability', $capability);
+        }
+        if (!$access->allowsWorkspaceEditing($address->workspaceName->value, $classification)) {
+            return sprintf('Workspace "%s" is not part of your access role(s)', $address->workspaceName->value);
+        }
+        if ($coordinates !== [] && !$access->allowsDimensionSpacePoint($coordinates)) {
+            return sprintf('Dimension "%s" is not part of your access role(s)', $address->dimensionSpacePoint->toJson());
+        }
+        if ($idPath !== [] && !$access->allowsNode($idPath, $siteNodeName)) {
+            return sprintf('Node "%s" is outside the page tree your access role(s) cover', $address->aggregateId->value);
+        }
+
+        return sprintf(
+            'No single access role of yours covers this operation on node "%s" (workspace "%s")',
+            $address->aggregateId->value,
+            $address->workspaceName->value
+        );
     }
 
     /**

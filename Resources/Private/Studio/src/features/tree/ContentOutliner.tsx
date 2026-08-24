@@ -18,7 +18,7 @@ import {
 import { isNotFound } from '@/api/client'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { config } from '@/config'
-import { documentAccessState } from '@/features/access/useAccess'
+import { permittedActionsOn } from '@/features/access/permittedActions'
 import { translate as t } from '@/lib/i18n'
 import { useClipboard } from '@/features/clipboard/clipboardStore'
 import { usePresence } from '@/features/collaboration/PresenceContext'
@@ -267,9 +267,9 @@ function OutlinerTree({
       parentAddress: item.getParent()?.getId() ?? null,
       hidden: isExplicitlyHidden(data),
       tethered: data.classification === 'tethered',
-      // Content follows its document: inside a page the role does not cover,
-      // nothing may change either.
-      readOnly: documentAccessState(data) !== 'allowed',
+      // Content follows its document: inside a page the role does not cover
+      // nothing may change, and inside one it does the capabilities decide.
+      permitted: permittedActionsOn(data),
       anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
     })
   }

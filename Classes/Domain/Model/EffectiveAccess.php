@@ -56,6 +56,40 @@ final readonly class EffectiveAccess
         return new self(false, $roles, sprintf('Restricted by %d access role(s)', count($roles)));
     }
 
+    /**
+     * The authoritative check: is there ONE role that permits this operation
+     * on every axis at once?
+     *
+     * The per-axis methods below answer "could any role allow this at all",
+     * which is what shaping a list needs - which sites to offer, which
+     * workspaces to put in the switcher. Deciding a write with them would be
+     * wrong: OR-ing each axis separately lets a role granting only the
+     * workspace combine with one granting only the writing, and the account
+     * does something neither role allows.
+     *
+     * @param array<int, string> $idPath node aggregate id first, ancestors outwards; [] = no node
+     * @param array<string, string> $dimensionCoordinates [] = no dimension
+     */
+    public function permits(
+        string $siteNodeName = '',
+        array $idPath = [],
+        array $dimensionCoordinates = [],
+        ?string $workspaceName = null,
+        string $workspaceClassification = 'UNKNOWN',
+        ?string $capability = null,
+    ): bool {
+        return $this->anyRole(
+            static fn (AccessRoleConstraints $c) => $c->permits(
+                $siteNodeName,
+                $idPath,
+                $dimensionCoordinates,
+                $workspaceName,
+                $workspaceClassification,
+                $capability,
+            )
+        );
+    }
+
     public function allowsSite(string $siteNodeName): bool
     {
         return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowsSite($siteNodeName));

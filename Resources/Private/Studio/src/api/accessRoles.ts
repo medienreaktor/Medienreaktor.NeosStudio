@@ -272,6 +272,68 @@ function roleAllowsNodePath(
   return !c.nodeTreeRules.some((rule) => rule.mode === 'ALLOW')
 }
 
+/**
+ * What one operation touches. Absent fields are axes the operation does not
+ * have - creating a workspace has no node, so page-tree rules must not veto
+ * it.
+ */
+export interface AccessRequest {
+  siteNodeName?: string
+  /** Node aggregate id first, then its ancestors outwards. */
+  idPath?: string[]
+  dimensionCoordinates?: Record<string, string>
+  workspaceName?: string
+  /** ROOT, PERSONAL, SHARED or UNKNOWN. */
+  workspaceClassification?: string
+  capability?: AccessCapability
+}
+
+/**
+ * The authoritative check, mirroring EffectiveAccess::permits(): is there ONE
+ * role that permits this operation on every axis at once?
+ *
+ * The single-axis helpers below answer "could any role allow this at all",
+ * which is what shaping a list needs. Deciding whether an editing affordance
+ * may be offered is this one - OR-ing the axes separately lets a role granting
+ * only the workspace combine with one granting only the writing, and the UI
+ * offers exactly what the server then refuses.
+ */
+export function permits(
+  access: EffectiveAccess | undefined,
+  request: AccessRequest,
+): boolean {
+  return anyRole(access, (c) => {
+    if (request.siteNodeName && !roleAllowsSite(c, request.siteNodeName))
+      return false
+    if (request.idPath?.length && !roleAllowsNodePath(c, request.idPath))
+      return false
+    if (
+      request.dimensionCoordinates &&
+      Object.keys(request.dimensionCoordinates).length > 0 &&
+      !roleAllowsDimensions(c, request.dimensionCoordinates)
+    ) {
+      return false
+    }
+    if (
+      request.workspaceName !== undefined &&
+      !roleAllowsWorkspaceEditing(
+        c,
+        request.workspaceName,
+        request.workspaceClassification ?? 'UNKNOWN',
+      )
+    ) {
+      return false
+    }
+    if (
+      request.capability !== undefined &&
+      c.capabilities[request.capability] === false
+    ) {
+      return false
+    }
+    return true
+  })
+}
+
 function anyRole(
   access: EffectiveAccess | undefined,
   predicate: (c: AccessRoleConstraints) => boolean,

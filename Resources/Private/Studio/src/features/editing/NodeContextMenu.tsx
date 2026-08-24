@@ -45,11 +45,20 @@ export interface NodeMenuTarget {
   /** Tethered (autocreated) nodes can neither be hidden nor deleted. */
   tethered: boolean
   /**
-   * Outside the account's access roles: everything that would change the node
-   * is disabled. Copy stays available - it reads, and where the copy may be
-   * pasted is the paste target's own question.
+   * What the account's access roles allow ON THIS NODE, per action. Absent =
+   * everything (the unrestricted case). Copy is deliberately not in here: it
+   * reads, and where the copy may be pasted is the paste target's own
+   * question.
    */
-  readOnly?: boolean
+  permitted?: {
+    /** Create inside it - "Create new…" and both paste directions. */
+    create: boolean
+    /** Change it - hide and unhide. */
+    edit: boolean
+    delete: boolean
+    /** Take it away from here - cut. */
+    move: boolean
+  }
   /** Viewport rect the menu is anchored to (a point for right-clicks). */
   anchor: { x: number; y: number; width: number; height: number }
 }
@@ -252,7 +261,7 @@ export function NodeContextMenu({
             {onCreateNew && (
               <>
                 <DropdownMenuItem
-                  disabled={target.readOnly}
+                  disabled={target.permitted?.create === false}
                   onClick={() => {
                     onClose()
                     onCreateNew(target)
@@ -267,7 +276,7 @@ export function NodeContextMenu({
             {clipboardKind !== undefined && (
               <>
                 <DropdownMenuItem
-                  disabled={target.tethered || target.readOnly}
+                  disabled={target.tethered || target.permitted?.move === false}
                   onClick={() => runCapture(target, 'cut')}
                 >
                   <i className="fas fa-fw fa-scissors" aria-hidden />
@@ -283,7 +292,9 @@ export function NodeContextMenu({
                 {clipboardEntry && (
                   <>
                     <DropdownMenuItem
-                      disabled={!canPasteInto || target.readOnly}
+                      disabled={
+                        !canPasteInto || target.permitted?.create === false
+                      }
                       title={t(
                         'editing.pasteIntoHint',
                         'Paste “{0}” inside, as the last child',
@@ -295,7 +306,9 @@ export function NodeContextMenu({
                       {t('editing.pasteInto', 'Paste into')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      disabled={!canPasteAfter || target.readOnly}
+                      disabled={
+                        !canPasteAfter || target.permitted?.create === false
+                      }
                       title={t(
                         'editing.pasteAfterHint',
                         'Paste “{0}” after this {1}',
@@ -313,7 +326,7 @@ export function NodeContextMenu({
             )}
             {target.hidden ? (
               <DropdownMenuItem
-                disabled={target.tethered || target.readOnly}
+                disabled={target.tethered || target.permitted?.edit === false}
                 onClick={() => runVisibilityAction(target, 'unhide')}
               >
                 <i className="fas fa-fw fa-eye" aria-hidden />
@@ -321,7 +334,7 @@ export function NodeContextMenu({
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
-                disabled={target.tethered || target.readOnly}
+                disabled={target.tethered || target.permitted?.edit === false}
                 onClick={() => runVisibilityAction(target, 'hide')}
               >
                 <i className="fas fa-fw fa-eye-slash" aria-hidden />
@@ -330,7 +343,7 @@ export function NodeContextMenu({
             )}
             <DropdownMenuItem
               variant="destructive"
-              disabled={target.tethered || target.readOnly}
+              disabled={target.tethered || target.permitted?.delete === false}
               onClick={() => {
                 setPendingDelete(target)
                 onClose()

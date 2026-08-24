@@ -5,6 +5,21 @@
       <trans-unit id="access.decor.restricted" xml:space="preserve">
         <source>Outside your access role — read only</source>
       </trans-unit>
+      <trans-unit id="access.lockoutBase" xml:space="preserve">
+        <source>Your workspace publishes into "{0}", which your access role no longer covers. Pick a workspace you may publish into to continue.</source>
+      </trans-unit>
+      <trans-unit id="access.lockoutContext" xml:space="preserve">
+        <source>You are editing in "{0}", which your access role no longer covers. Pick a workspace you may work in to continue.</source>
+      </trans-unit>
+      <trans-unit id="access.lockoutNoTarget" xml:space="preserve">
+        <source>Your access role currently covers no workspace you could switch to. An administrator has to widen it.</source>
+      </trans-unit>
+      <trans-unit id="access.lockoutRebaseFailed" xml:space="preserve">
+        <source>Switching failed. Publish or discard your pending changes first, then try again.</source>
+      </trans-unit>
+      <trans-unit id="access.lockoutTitle" xml:space="preserve">
+        <source>Your workspace is no longer available</source>
+      </trans-unit>
       <trans-unit id="accessRoles.activated" xml:space="preserve">
         <source>The role "{0}" is active again.</source>
       </trans-unit>

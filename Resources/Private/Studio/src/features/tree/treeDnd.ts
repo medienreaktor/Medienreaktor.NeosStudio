@@ -4,7 +4,7 @@ import {
   type ItemInstance,
 } from '@headless-tree/core'
 import { queryKeys } from '@/api/keys'
-import { documentAccessState } from '@/features/access/useAccess'
+import { nodePermits } from '@/features/access/useAccess'
 import { fetchAllowedChildNodeTypes, type NodeDto } from '@/api/nodes'
 import { queryClient } from '@/app/queryClient'
 import { toast } from '@/components/ui/toast'
@@ -79,8 +79,9 @@ export function buildTreeDnd<T>({
             node.classification !== 'tethered' &&
             node.classification !== 'root' &&
             // A move is a write on the node itself - refused outside the
-            // account's access roles, so it must not start.
-            documentAccessState(node) === 'allowed'
+            // account's access roles (and by a role that withholds moving),
+            // so it must not start.
+            nodePermits(node, 'moveNodes')
           )
         })
         if (!draggable) return false
@@ -104,8 +105,9 @@ export function buildTreeDnd<T>({
         const parent = nodeOf(target.item)
         if (parent === null) return false
         // The new parent gains a child, which is a write on IT - a page
-        // outside the roles takes none.
-        if (documentAccessState(parent) !== 'allowed') return false
+        // outside the roles takes none, nor does one whose role withholds
+        // creating.
+        if (!nodePermits(parent, 'createNodes')) return false
         const allowed = allowedTypesOf(parent.address)
         if (allowed === undefined) {
           // Not warmed yet (e.g. a just-loaded row): fetch and disallow for

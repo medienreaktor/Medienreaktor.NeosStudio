@@ -102,17 +102,20 @@ class AccessControlService
     }
 
     /**
-     * The full node check: resolve the node's ancestor chain and its site,
-     * then ask the roles. Nodes that cannot be resolved are allowed - an
-     * unresolvable node is not a node this feature has anything to say about,
-     * and the content repository will fail the operation on its own terms.
+     * Where a node sits: its ancestor chain (node first, root last) and the
+     * site it belongs to - the two things page-tree and site rules are
+     * evaluated against.
+     *
+     * A node that cannot be resolved yields an empty context, which every
+     * caller reads as "these axes do not apply". That is the fail-open half
+     * of this service: an unresolvable node is not one this feature has
+     * anything to say about, and the content repository will fail the
+     * operation on its own terms anyway.
+     *
+     * @return array{0: array<int, string>, 1: string} [idPath, siteNodeName]
      */
-    public function allowsNode(EffectiveAccess $access, ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): bool
+    public function nodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): array
     {
-        if ($access->unrestricted) {
-            return true;
-        }
-
         try {
             $idPath = [$nodeAggregateId->value];
             $siteNodeName = '';
@@ -132,10 +135,10 @@ class AccessControlService
                 $previous = $ancestor;
             }
         } catch (\Throwable) {
-            return true;
+            return [[], ''];
         }
 
-        return $access->allowsNode($idPath, $siteNodeName);
+        return [$idPath, $siteNodeName];
     }
 
     /**

@@ -226,6 +226,68 @@ class AccessRoleConstraintsTest extends UnitTestCase
     }
 
     /**
+     * The reason permits() exists. Two roles - one grants working in Entwurf
+     * with full capabilities, the other grants live but read-only. Asking the
+     * axes separately says yes to writing in live (the workspace via the
+     * second role, the capability via the first), which is something neither
+     * role allows.
+     *
+     * @test
+     */
+    public function everyAxisMustBeSatisfiedByTheSameRole(): void
+    {
+        $draft = $this->role(AccessRoleConstraints::create(workspaceNames: ['entwurf']));
+        $liveReadOnly = $this->role(AccessRoleConstraints::create(
+            workspaceNames: ['live'],
+            capabilities: ['editNodes' => false],
+        ));
+        $access = EffectiveAccess::restrictedBy([$draft, $liveReadOnly]);
+
+        // Per axis, both answer yes - which is exactly the trap.
+        self::assertTrue($access->allowsWorkspaceEditing('live', 'ROOT'));
+        self::assertTrue($access->allowsCapability('editNodes'));
+
+        // Together, no single role covers it.
+        self::assertFalse($access->permits(
+            workspaceName: 'live',
+            workspaceClassification: 'ROOT',
+            capability: 'editNodes',
+        ));
+        // ... while the same write in Entwurf is covered by the first role.
+        self::assertTrue($access->permits(
+            workspaceName: 'entwurf',
+            workspaceClassification: 'SHARED',
+            capability: 'editNodes',
+        ));
+        // Reading live is still fine - that is the second role's whole point.
+        self::assertTrue($access->allowsWorkspaceRead('live', 'ROOT'));
+    }
+
+    /**
+     * @test
+     */
+    public function permitsSkipsAxesTheOperationDoesNotTouch(): void
+    {
+        $access = EffectiveAccess::restrictedBy([
+            $this->role(AccessRoleConstraints::create(
+                siteNodeNames: ['first'],
+                nodeTreeRules: [NodeTreeRule::create('ALLOW', 'first', 'branch')],
+            )),
+        ]);
+
+        // No node and no site named: creating a workspace has neither, and the
+        // page-tree whitelist must not veto it.
+        self::assertTrue($access->permits(workspaceName: 'entwurf', workspaceClassification: 'SHARED'));
+        // Name the node, and the whitelist applies again.
+        self::assertFalse($access->permits(
+            siteNodeName: 'first',
+            idPath: ['elsewhere', 'root'],
+            workspaceName: 'entwurf',
+            workspaceClassification: 'SHARED',
+        ));
+    }
+
+    /**
      * @test
      */
     public function noAssignedRoleMeansUnrestricted(): void
