@@ -1,4 +1,5 @@
 import { useMe } from '@/api/me'
+import { AccessRolesAdministration } from '@/features/access/AccessRolesAdministration'
 import { ProfileSettings } from '@/features/profile/ProfileSettings'
 import { SitesAdministration } from '@/features/sites/SitesAdministration'
 import { UserAdministration } from '@/features/users/UserAdministration'
@@ -16,6 +17,7 @@ import { settingsDialogRegistry } from './registry'
 /** Well-known built-in ids, namespaced under the Neos vendor. */
 export const PROFILE_SETTINGS = 'neos:profile'
 export const USERS_SETTINGS = 'neos:users'
+export const ACCESS_ROLES_SETTINGS = 'neos:access-roles'
 export const SITES_SETTINGS = 'neos:sites'
 export const WORKSPACES_SETTINGS = 'neos:workspaces'
 
@@ -41,6 +43,16 @@ export function registerBuiltinModals(): void {
     // User administration is administrators only (the /users endpoint 403s
     // otherwise); non-admins still see the entry, disabled.
     useEnabled: () => useMe().data?.permissions.users ?? false,
+    disabledReason: t('modal.adminsOnly', 'Administrators only'),
+  })
+  settingsDialogRegistry.register({
+    id: ACCESS_ROLES_SETTINGS,
+    title: t('modal.accessRoles', 'Access roles'),
+    icon: 'user-shield',
+    component: AccessRolesAdministration,
+    // Right after the users it restricts - the two are read together.
+    order: 15,
+    useEnabled: () => useMe().data?.permissions.accessRoles ?? false,
     disabledReason: t('modal.adminsOnly', 'Administrators only'),
   })
   settingsDialogRegistry.register({

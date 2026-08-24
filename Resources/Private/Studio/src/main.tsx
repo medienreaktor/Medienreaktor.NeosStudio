@@ -35,6 +35,7 @@ import { registerBuiltinTaskWorkflow } from './features/tasks/builtin'
 import { registerBuiltinPropertyEditors } from './features/inspector/editors'
 import { registerBuiltinValidators } from './features/inspector/validators'
 import { registerBuiltinNodeDecorators } from './features/tree/builtinDecorators'
+import { registerAccessNodeDecorator } from './features/access/accessDecorator'
 import { installPluginApiGlobals } from './plugin-api'
 import { initUiMode } from './lib/uiMode'
 
@@ -59,6 +60,8 @@ registerBuiltinValidators()
 registerBuiltinLinkTypes()
 registerBuiltinModals()
 registerBuiltinNodeDecorators()
+// After the built-in decorators so the lock badge layers on top of the type icon.
+registerAccessNodeDecorator()
 // After the other builtins so the Tasks tab lands after their main-region tabs.
 registerBuiltinTaskWorkflow()
 

@@ -3,6 +3,7 @@ import { queryClient } from '@/app/queryClient'
 import { apiFetch } from './client'
 import { dimensionSpacePointEquals } from './dimensions'
 import { queryKeys } from './keys'
+import { aggregateIdOf } from './nodeAddress'
 
 export interface SerializedPropertyValue {
   value: unknown
@@ -360,6 +361,42 @@ export function useFilteredDescendants(
 }
 
 /**
+ * Parent aggregate id per child aggregate id, observed while reading
+ * children. Aggregate ids are stable across workspaces and dimensions, so one
+ * map serves every subgraph - and structural moves refresh the children list
+ * that fills it, which overwrites the entry.
+ *
+ * Kept outside the query cache on purpose: this is a fact about the content
+ * graph, not a cached response, and consumers need it synchronously during
+ * render (row decoration walks a node's ancestry).
+ */
+const observedNodeParents = new Map<string, string>()
+
+/**
+ * The ancestry of a node as far as it has been observed, node first and root
+ * last - the shape ancestor-relative rules are evaluated against.
+ *
+ * "As far as observed" is the honest contract: a node reached without ever
+ * reading its parent's children yields just itself. Callers that need the
+ * full chain for a decision must either have walked the tree down to the node
+ * (which the trees do) or ask the server, which always knows.
+ */
+export function observedIdPath(aggregateId: string): string[] {
+  const path = [aggregateId]
+  const seen = new Set(path)
+  let current = observedNodeParents.get(aggregateId)
+  // The `seen` guard is not paranoia about cycles in the content graph but
+  // about a stale map during a move: two entries can briefly point at each
+  // other, and an unguarded walk would hang the render.
+  while (current !== undefined && !seen.has(current)) {
+    path.push(current)
+    seen.add(current)
+    current = observedNodeParents.get(current)
+  }
+  return path
+}
+
+/**
  * Fetches child nodes and seeds each child into its own node query cache, so
  * a later fetchNode()/useNode() for a child resolves without a request.
  */
@@ -379,6 +416,7 @@ export async function fetchChildren(
         `/nodes/${address}/children${queryString(nodeTypes, includeDeleted)}`,
       ),
   })
+  const parentAggregateId = aggregateIdOf(address)
   for (const node of nodes) {
     // Seed under the same filter this list was fetched with, so a later
     // fetchNode(address, nodeTypes) with a matching filter resolves from
@@ -388,6 +426,7 @@ export async function fetchChildren(
       queryKeys.nodes.byAddress(node.address, nodeTypes, includeDeleted),
       node,
     )
+    observedNodeParents.set(node.aggregateId, parentAggregateId)
   }
   return nodes
 }

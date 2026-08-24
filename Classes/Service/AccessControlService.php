@@ -1,0 +1,237 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Medienreaktor\NeosStudio\Service;
+
+use Medienreaktor\NeosStudio\Domain\Model\AccessRole;
+use Medienreaktor\NeosStudio\Domain\Model\AccessRoleConstraints;
+use Medienreaktor\NeosStudio\Domain\Model\EffectiveAccess;
+use Medienreaktor\NeosStudio\Domain\Repository\AccessRoleRepository;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindAncestorNodesFilter;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateClassification;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Security\Context as SecurityContext;
+use Neos\Flow\Security\Policy\Role;
+use Neos\Neos\Domain\Model\UserId;
+use Neos\Neos\Domain\Service\UserService;
+
+/**
+ * Resolves what the acting user may reach, from the dynamic access roles
+ * assigned to them.
+ *
+ * Two properties this service is built around, both of them deliberate:
+ *
+ * 1. **It fails open.** Every path that cannot answer the question - no
+ *    security context yet, no Neos user behind the account, the tables not
+ *    migrated, the database unreachable - returns "unrestricted". This code
+ *    sits in front of every content repository write and every Studio
+ *    request; a bug here must degrade to "no extra restrictions", never to a
+ *    locked-out editorial team.
+ *
+ * 2. **It is empty by default.** A user with no role assigned is
+ *    unrestricted, so installing the feature changes nothing until an
+ *    administrator assigns a role. Distributions that want the stricter
+ *    reading - "unassigned means no access" - flip
+ *    `accessControl.restrictUnassignedUsers`, which turns the absence of a
+ *    role into a deny-all instead.
+ *
+ * The result is memoised per request: authorization asks the same question
+ * dozens of times per page and the answer cannot change mid-request.
+ */
+#[Flow\Scope('singleton')]
+class AccessControlService
+{
+    #[Flow\Inject]
+    protected AccessRoleRepository $accessRoleRepository;
+
+    #[Flow\Inject]
+    protected UserService $userService;
+
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
+
+    /**
+     * @var array{bypassRoles: array<int, string>, restrictUnassignedUsers: bool, enforceContentRepository: bool}
+     */
+    #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosStudio', path: 'accessControl')]
+    protected array $settings = [];
+
+    /**
+     * Memoised per request, keyed by user id ('' = no user).
+     *
+     * @var array<string, EffectiveAccess>
+     */
+    private array $effectiveAccessCache = [];
+
+    /**
+     * The acting user's effective access. The security context decides:
+     * whoever holds one of the configured bypass roles (administrators by
+     * default) is never restricted.
+     */
+    public function effectiveAccessForCurrentUser(): EffectiveAccess
+    {
+        if ($this->hasBypassRole()) {
+            return EffectiveAccess::unrestricted('Account holds an access-control bypass role');
+        }
+
+        return $this->effectiveAccessForUser($this->currentUserId());
+    }
+
+    public function effectiveAccessForUser(?UserId $userId): EffectiveAccess
+    {
+        $cacheKey = $userId?->value ?? '';
+        if (isset($this->effectiveAccessCache[$cacheKey])) {
+            return $this->effectiveAccessCache[$cacheKey];
+        }
+
+        return $this->effectiveAccessCache[$cacheKey] = $this->resolveEffectiveAccess($userId);
+    }
+
+    /**
+     * Whether the content repository should refuse writes outside a user's
+     * roles, or restrictions only shape the Studio's UI. On either setting the
+     * roles mean the same thing - this only decides how hard the "no" is.
+     */
+    public function isEnforcedInContentRepository(): bool
+    {
+        return (bool)($this->settings['enforceContentRepository'] ?? true);
+    }
+
+    /**
+     * The full node check: resolve the node's ancestor chain and its site,
+     * then ask the roles. Nodes that cannot be resolved are allowed - an
+     * unresolvable node is not a node this feature has anything to say about,
+     * and the content repository will fail the operation on its own terms.
+     */
+    public function allowsNode(EffectiveAccess $access, ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): bool
+    {
+        if ($access->unrestricted) {
+            return true;
+        }
+
+        try {
+            $idPath = [$nodeAggregateId->value];
+            $siteNodeName = '';
+            // Ordered closest-ancestor-first, so appending keeps the "index is
+            // distance from the node" property allowsNodePath() relies on.
+            $ancestors = $subgraph->findAncestorNodes($nodeAggregateId, FindAncestorNodesFilter::create());
+            $previous = $subgraph->findNodeById($nodeAggregateId);
+            foreach ($ancestors as $ancestor) {
+                /** @var Node $ancestor */
+                if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {
+                    // The child of the sites root IS the site node - and the
+                    // node itself when it has no non-root ancestor at all.
+                    $siteNodeName = $previous?->name?->value ?? '';
+                    break;
+                }
+                $idPath[] = $ancestor->aggregateId->value;
+                $previous = $ancestor;
+            }
+        } catch (\Throwable) {
+            return true;
+        }
+
+        return $access->allowsNode($idPath, $siteNodeName);
+    }
+
+    /**
+     * @return array<int, string> the Flow roles that skip access control
+     */
+    public function bypassRoles(): array
+    {
+        $roles = $this->settings['bypassRoles'] ?? [];
+
+        return is_array($roles) ? array_values(array_filter(array_map('strval', $roles))) : [];
+    }
+
+    private function resolveEffectiveAccess(?UserId $userId): EffectiveAccess
+    {
+        if ($userId === null) {
+            // No Neos user behind the request: CLI, anonymous frontend, a
+            // client-credentials token. Nothing to restrict against.
+            return EffectiveAccess::unrestricted('No Neos user for this request');
+        }
+
+        try {
+            $roles = $this->accessRoleRepository->findActiveByMember($userId);
+        } catch (\Throwable) {
+            // Tables not migrated yet, database unreachable - fail open.
+            return EffectiveAccess::unrestricted('Access roles are unavailable');
+        }
+
+        if ($roles === []) {
+            return ($this->settings['restrictUnassignedUsers'] ?? false)
+                ? EffectiveAccess::restrictedBy([$this->denyAllRole()])
+                : EffectiveAccess::unrestricted('No access role assigned');
+        }
+
+        return EffectiveAccess::restrictedBy($roles);
+    }
+
+    /**
+     * The synthetic role that `restrictUnassignedUsers` gives to users
+     * without an assignment: no site, hence nothing.
+     */
+    private function denyAllRole(): AccessRole
+    {
+        $now = new \DateTimeImmutable();
+
+        return new AccessRole(
+            '00000000-0000-0000-0000-000000000000',
+            'unassigned',
+            'Unassigned',
+            'Synthetic role for users without an access role assignment.',
+            AccessRoleConstraints::create(
+                // Names no site and no workspace can have, so every lookup
+                // against them misses and the role allows nothing.
+                siteNodeNames: ['\0-none'],
+                workspaceNames: ['\0-none'],
+                allowPersonalWorkspace: false,
+                allowPublishToLive: false,
+                allowWorkspaceCreation: false,
+                capabilities: array_fill_keys(AccessRoleConstraints::CAPABILITIES, false),
+            ),
+            true,
+            $now,
+            $now,
+        );
+    }
+
+    private function currentUserId(): ?UserId
+    {
+        try {
+            return $this->userService->getCurrentUser()?->getId();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function hasBypassRole(): bool
+    {
+        $bypassRoles = $this->bypassRoles();
+        if ($bypassRoles === []) {
+            return false;
+        }
+        try {
+            if (!$this->securityContext->canBeInitialized()) {
+                // Too early to tell (e.g. during compile time) - and too early
+                // for anything to be authorized against, either.
+                return true;
+            }
+            foreach ($this->securityContext->getRoles() as $role) {
+                /** @var Role $role */
+                if (in_array($role->getIdentifier(), $bypassRoles, true)) {
+                    return true;
+                }
+            }
+        } catch (\Throwable) {
+            return true;
+        }
+
+        return false;
+    }
+}

@@ -32,6 +32,17 @@ Content work, organized like code: every task is a **feature branch**. Creating 
 - **Notifications built in**: a bell in the top bar collects assignments, review requests, reopens, comments and completions — clicking one jumps straight to the task.
 - **Ordinary Neos underneath**: task branches are plain `SHARED` workspaces plus task metadata, with access through standard workspace roles — the creator and reviewers manage, the assignee collaborates, and uninvolved editors never see task branches at all. Publishing, syncing and conflict resolution work like on any workspace.
 
+### 🔐 Access roles — restrict who reaches what
+
+Dynamic, editable **access roles**: name a set of restrictions and assign editors to it, in the UI, without touching `Policy.yaml` or deploying anything. What the classic distributions solved with Sandstorm.NeosAcl, rebuilt for Neos 9 — where the node-level privilege targets that approach relied on no longer exist.
+
+- **Four axes, one role**: which **sites**, which branches of the **page tree**, which **dimensions**, which **workspaces** — plus the coarse capabilities (edit, create, delete, move, media) a role may exercise inside them.
+- **Pick branches from the tree**: the page-tree tab browses the real document tree; select a page, then allow or deny it, with or without its sub-pages. Allow rules turn the tree into a whitelist, deny rules cut single pages back out — the rule nearest a page wins, so "the whole section except this one page" is two clicks.
+- **Permissive by default, at every turn**: a fresh role restricts nothing, an empty list means "all", and a user with **no role assigned is unrestricted** — installing this changes nothing until an administrator hands a role out. Administrators are exempt by design, so a role can never lock the last admin out.
+- **Additive**: assign someone two roles and they may do what either allows. Never the intersection, never a surprise.
+- **Enforced, not just drawn**: the roles narrow the Studio's UI *and* the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. It only ever *narrows* Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
+- **Visible in the tree**: pages outside a role dim and get a lock badge — they stay navigable, because they are often the path to a branch the role *does* grant. Explicitly denied branches disappear entirely.
+
 ### ⚡ Blazingly fast, everywhere
 
 - **Instant loads** — a static Vite-built SPA served at `/neos/studio`, with TanStack Query caching and background revalidation. Navigating between documents doesn't reload the world; it reuses what's already in the cache.

@@ -2,6 +2,303 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext">
     <body>
+      <trans-unit id="access.decor.restricted" xml:space="preserve">
+        <source>Outside your access role — read only</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.activated" xml:space="preserve">
+        <source>The role "{0}" is active again.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.active" xml:space="preserve">
+        <source>Active</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPersonal" xml:space="preserve">
+        <source>May use their personal workspace</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPersonalHint" xml:space="preserve">
+        <source>Off forces this role to edit directly in a shared workspace.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPublish" xml:space="preserve">
+        <source>May publish to live</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPublishHint" xml:space="preserve">
+        <source>Off means changes can only be handed on for review.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
+        <source>May create workspaces</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeBranches" xml:space="preserve">
+        <source>{0} branch(es)</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeCapabilities" xml:space="preserve">
+        <source>{0} restricted</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeDenied" xml:space="preserve">
+        <source>{0} blocked</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeDimensions" xml:space="preserve">
+        <source>Dimensions</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeNoPublish" xml:space="preserve">
+        <source>No publishing</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeNoPublishDetail" xml:space="preserve">
+        <source>Cannot publish to the live workspace.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeSites" xml:space="preserve">
+        <source>{0} site(s)</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeWorkspaces" xml:space="preserve">
+        <source>{0} workspace(s)</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capCreate" xml:space="preserve">
+        <source>Create pages and content</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capCreateHint" xml:space="preserve">
+        <source>Also covers creating a page in another dimension.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capDelete" xml:space="preserve">
+        <source>Delete pages and content</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capEdit" xml:space="preserve">
+        <source>Edit content</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capEditHint" xml:space="preserve">
+        <source>Change properties, references, and show/hide pages.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMedia" xml:space="preserve">
+        <source>Manage media</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMediaHint" xml:space="preserve">
+        <source>Upload, edit and delete assets in the media library.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMove" xml:space="preserve">
+        <source>Move pages and content</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMoveHint" xml:space="preserve">
+        <source>Reordering and drag-and-drop in the page tree.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.capabilitiesHint" xml:space="preserve">
+        <source>What members may do inside everything above. Untick to take a capability away.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnActions" xml:space="preserve">
+        <source>Actions</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnMembers" xml:space="preserve">
+        <source>Members</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnName" xml:space="preserve">
+        <source>Role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnScope" xml:space="preserve">
+        <source>Restrictions</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnStatus" xml:space="preserve">
+        <source>Status</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.create" xml:space="preserve">
+        <source>Create role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.created" xml:space="preserve">
+        <source>The role "{0}" has been created.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.deactivated" xml:space="preserve">
+        <source>The role "{0}" is paused — it no longer restricts its members.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.delete" xml:space="preserve">
+        <source>Delete role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleteDescription" xml:space="preserve">
+        <source>The role and its memberships are removed. Its members keep their Neos roles and simply stop being restricted by it.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleteTitle" xml:space="preserve">
+        <source>Delete role "{0}"?</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleted" xml:space="preserve">
+        <source>The role "{0}" has been deleted.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.description" xml:space="preserve">
+        <source>Description</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.descriptionPlaceholder" xml:space="preserve">
+        <source>What this role is for — the next administrator will thank you.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.dialogHint" xml:space="preserve">
+        <source>Everything left untouched stays open. Members keep their Neos roles — this only narrows where those roles apply.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionAll" xml:space="preserve">
+        <source>all values</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionsHint" xml:space="preserve">
+        <source>Tick the dimension values this role may edit. A dimension with nothing ticked stays fully open.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionsNone" xml:space="preserve">
+        <source>This installation has no content dimensions.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.edit" xml:space="preserve">
+        <source>Edit</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.editRole" xml:space="preserve">
+        <source>Edit role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.enforcementOff" xml:space="preserve">
+        <source>Enforcement in the content repository is switched off — these roles shape the editing UI, but do not block direct API requests.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.identifierHint" xml:space="preserve">
+        <source>Identifier: {0}</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.label" xml:space="preserve">
+        <source>Name</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.labelPlaceholder" xml:space="preserve">
+        <source>e.g. Editors North</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.loadFailed" xml:space="preserve">
+        <source>Could not load access roles</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.memberCount" xml:space="preserve">
+        <source>{0} member(s)</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.memberExempt" xml:space="preserve">
+        <source>Exempt: {0}</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.membersHint" xml:space="preserve">
+        <source>Who this role applies to. Roles are additive: someone in two roles may do what either allows.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.newRole" xml:space="preserve">
+        <source>New role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.noMatches" xml:space="preserve">
+        <source>No roles match your search.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.none" xml:space="preserve">
+        <source>No access roles yet. Everyone works unrestricted until you create one.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.pause" xml:space="preserve">
+        <source>Pause</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.paused" xml:space="preserve">
+        <source>Paused</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.resume" xml:space="preserve">
+        <source>Resume</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.rowActions" xml:space="preserve">
+        <source>Role actions</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.save" xml:space="preserve">
+        <source>Save role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.saveFailed" xml:space="preserve">
+        <source>Could not save role</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.saveFailedDetail" xml:space="preserve">
+        <source>Saving the role failed.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.saved" xml:space="preserve">
+        <source>The role "{0}" has been saved.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.saving" xml:space="preserve">
+        <source>Saving…</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.search" xml:space="preserve">
+        <source>Search roles…</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesHint" xml:space="preserve">
+        <source>Tick the sites this role may work on. Nothing ticked means every site — including sites added later.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.subtitle" xml:space="preserve">
+        <source>Restrict what editors reach: sites, page-tree branches, dimensions and workspaces.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabCapabilities" xml:space="preserve">
+        <source>Permissions</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabDimensions" xml:space="preserve">
+        <source>Dimensions</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabGeneral" xml:space="preserve">
+        <source>General</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabMembers" xml:space="preserve">
+        <source>Members</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabSites" xml:space="preserve">
+        <source>Sites</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabTree" xml:space="preserve">
+        <source>Page tree</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
+        <source>Workspaces</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.title" xml:space="preserve">
+        <source>Access roles</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeAllow" xml:space="preserve">
+        <source>Allow</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeClear" xml:space="preserve">
+        <source>Clear</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeDeny" xml:space="preserve">
+        <source>Deny</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeEmpty" xml:space="preserve">
+        <source>This site has no pages yet.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeHint" xml:space="preserve">
+        <source>Without a rule the whole page tree is open. Add an allow rule and everything outside it closes; add deny rules to cut single pages out of a branch. The nearest rule to a page wins.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeIncludeDescendants" xml:space="preserve">
+        <source>Include sub-pages</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
+        <source>Page tree</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
+        <source>Loading pages…</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeNoSites" xml:space="preserve">
+        <source>No site to browse — every site is excluded by the Sites tab.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeOnlyThisPage" xml:space="preserve">
+        <source>This page only</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRemoveRule" xml:space="preserve">
+        <source>Remove rule</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRuleBranch" xml:space="preserve">
+        <source>Rule applies to this page and everything below</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRulePage" xml:space="preserve">
+        <source>Rule applies to this page only</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSelectFirst" xml:space="preserve">
+        <source>Select a page above to allow or deny it.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSelected" xml:space="preserve">
+        <source>Selected:</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSiteUnavailable" xml:space="preserve">
+        <source>This site has no node in the live workspace.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.unavailable" xml:space="preserve">
+        <source>Access roles are currently unavailable.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.unrestricted" xml:space="preserve">
+        <source>Unrestricted</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesHint" xml:space="preserve">
+        <source>Which shared workspaces this role may enter. Nothing ticked means all of them. The live workspace always stays readable — the website is rendered from it.</source>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesNone" xml:space="preserve">
+        <source>There are no shared workspaces yet.</source>
+      </trans-unit>
       <trans-unit id="action.cancel" xml:space="preserve">
         <source>Cancel</source>
       </trans-unit>
@@ -49,6 +346,9 @@
       </trans-unit>
       <trans-unit id="clipboard.statusCut" xml:space="preserve">
         <source>Cut</source>
+      </trans-unit>
+      <trans-unit id="collaboration.editingRejected" xml:space="preserve">
+        <source>{name} is already editing this element - your changes were not saved.</source>
       </trans-unit>
       <trans-unit id="common.actionFailed" xml:space="preserve">
         <source>The action failed.</source>
@@ -488,6 +788,9 @@
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
       </trans-unit>
+      <trans-unit id="inspector.elementLockedHint" xml:space="preserve">
+        <source>is editing this element right now - it is locked until they are done.</source>
+      </trans-unit>
       <trans-unit id="inspector.help" xml:space="preserve">
         <source>Help</source>
       </trans-unit>
@@ -505,12 +808,6 @@
       </trans-unit>
       <trans-unit id="inspector.selectNodeHint" xml:space="preserve">
         <source>Select a node in the preview or the trees to inspect it.</source>
-      </trans-unit>
-      <trans-unit id="collaboration.editingRejected" xml:space="preserve">
-        <source>{name} is already editing this element - your changes were not saved.</source>
-      </trans-unit>
-      <trans-unit id="inspector.elementLockedHint" xml:space="preserve">
-        <source>is editing this element right now - it is locked until they are done.</source>
       </trans-unit>
       <trans-unit id="inspector.shineThroughFrom" xml:space="preserve">
         <source>Shines through from</source>
@@ -827,6 +1124,9 @@
       <trans-unit id="media.rename" xml:space="preserve">
         <source>Rename</source>
       </trans-unit>
+      <trans-unit id="media.renameNoun" xml:space="preserve">
+        <source>Rename {0}</source>
+      </trans-unit>
       <trans-unit id="media.replaceAsset" xml:space="preserve">
         <source>Replace file</source>
       </trans-unit>
@@ -841,9 +1141,6 @@
       </trans-unit>
       <trans-unit id="media.replacing" xml:space="preserve">
         <source>Replacing…</source>
-      </trans-unit>
-      <trans-unit id="media.renameNoun" xml:space="preserve">
-        <source>Rename {0}</source>
       </trans-unit>
       <trans-unit id="media.save" xml:space="preserve">
         <source>Save</source>
@@ -922,6 +1219,9 @@
       </trans-unit>
       <trans-unit id="media.working" xml:space="preserve">
         <source>Working…</source>
+      </trans-unit>
+      <trans-unit id="modal.accessRoles" xml:space="preserve">
+        <source>Access roles</source>
       </trans-unit>
       <trans-unit id="modal.adminsOnly" xml:space="preserve">
         <source>Administrators only</source>
@@ -1223,23 +1523,23 @@
       <trans-unit id="share.revoke" xml:space="preserve">
         <source>Revoke link</source>
       </trans-unit>
-      <trans-unit id="share.revoked" xml:space="preserve">
-        <source>The preview link was revoked.</source>
-      </trans-unit>
       <trans-unit id="share.revokeFailed" xml:space="preserve">
         <source>Revoking the preview link failed.</source>
       </trans-unit>
+      <trans-unit id="share.revoked" xml:space="preserve">
+        <source>The preview link was revoked.</source>
+      </trans-unit>
       <trans-unit id="share.title" xml:space="preserve">
         <source>Share preview link</source>
+      </trans-unit>
+      <trans-unit id="share.ttl168" xml:space="preserve">
+        <source>7 days</source>
       </trans-unit>
       <trans-unit id="share.ttl24" xml:space="preserve">
         <source>24 hours</source>
       </trans-unit>
       <trans-unit id="share.ttl48" xml:space="preserve">
         <source>2 days</source>
-      </trans-unit>
-      <trans-unit id="share.ttl168" xml:space="preserve">
-        <source>7 days</source>
       </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>
@@ -1511,29 +1811,29 @@
       <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
         <source>Write a comment…</source>
       </trans-unit>
-      <trans-unit id="tasks.comments" xml:space="preserve">
-        <source>Comments</source>
-      </trans-unit>
       <trans-unit id="tasks.commentSend" xml:space="preserve">
         <source>Send</source>
       </trans-unit>
-      <trans-unit id="tasks.completed" xml:space="preserve">
-        <source>The task has been completed.</source>
+      <trans-unit id="tasks.comments" xml:space="preserve">
+        <source>Comments</source>
       </trans-unit>
       <trans-unit id="tasks.completeTask" xml:space="preserve">
         <source>Complete task</source>
       </trans-unit>
+      <trans-unit id="tasks.completed" xml:space="preserve">
+        <source>The task has been completed.</source>
+      </trans-unit>
       <trans-unit id="tasks.create" xml:space="preserve">
         <source>Create task</source>
-      </trans-unit>
-      <trans-unit id="tasks.created" xml:space="preserve">
-        <source>The task "{0}" has been created.</source>
       </trans-unit>
       <trans-unit id="tasks.createFailed" xml:space="preserve">
         <source>Could not create task</source>
       </trans-unit>
       <trans-unit id="tasks.createFailedDetail" xml:space="preserve">
         <source>Creating the task failed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.created" xml:space="preserve">
+        <source>The task "{0}" has been created.</source>
       </trans-unit>
       <trans-unit id="tasks.creating" xml:space="preserve">
         <source>Creating…</source>
@@ -1544,14 +1844,14 @@
       <trans-unit id="tasks.deleteConfirm" xml:space="preserve">
         <source>Delete task</source>
       </trans-unit>
-      <trans-unit id="tasks.deleted" xml:space="preserve">
-        <source>The task has been deleted.</source>
-      </trans-unit>
       <trans-unit id="tasks.deleteDescription" xml:space="preserve">
         <source>This removes the workspace "{0}" including all its unpublished changes. This cannot be undone.</source>
       </trans-unit>
       <trans-unit id="tasks.deleteTitle" xml:space="preserve">
         <source>Delete task?</source>
+      </trans-unit>
+      <trans-unit id="tasks.deleted" xml:space="preserve">
+        <source>The task has been deleted.</source>
       </trans-unit>
       <trans-unit id="tasks.description" xml:space="preserve">
         <source>Description</source>
@@ -1586,11 +1886,11 @@
       <trans-unit id="tasks.noComments" xml:space="preserve">
         <source>No comments yet.</source>
       </trans-unit>
-      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
-        <source>The task has been reopened.</source>
-      </trans-unit>
       <trans-unit id="tasks.reopenTask" xml:space="preserve">
         <source>Reopen task</source>
+      </trans-unit>
+      <trans-unit id="tasks.reopenedToast" xml:space="preserve">
+        <source>The task has been reopened.</source>
       </trans-unit>
       <trans-unit id="tasks.reviewComment" xml:space="preserve">
         <source>Comment (optional)</source>
@@ -1634,14 +1934,14 @@
       <trans-unit id="tasks.unassignedHint" xml:space="preserve">
         <source>Unassigned</source>
       </trans-unit>
-      <trans-unit id="tasks.updated" xml:space="preserve">
-        <source>The task has been updated.</source>
-      </trans-unit>
       <trans-unit id="tasks.updateFailed" xml:space="preserve">
         <source>Could not update task</source>
       </trans-unit>
       <trans-unit id="tasks.updateFailedDetail" xml:space="preserve">
         <source>Updating the task failed.</source>
+      </trans-unit>
+      <trans-unit id="tasks.updated" xml:space="preserve">
+        <source>The task has been updated.</source>
       </trans-unit>
       <trans-unit id="tasks.viewTask" xml:space="preserve">
         <source>View task</source>
@@ -2213,9 +2513,6 @@
       <trans-unit id="workspace.review.hideChanges" xml:space="preserve">
         <source>Hide changes</source>
       </trans-unit>
-      <trans-unit id="workspace.review.showChanges" xml:space="preserve">
-        <source>Show changes</source>
-      </trans-unit>
       <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
         <source>Only the most recent changes are shown.</source>
       </trans-unit>
@@ -2239,6 +2536,9 @@
       </trans-unit>
       <trans-unit id="workspace.review.selectedOf" xml:space="preserve">
         <source>{0} of {1} selected</source>
+      </trans-unit>
+      <trans-unit id="workspace.review.showChanges" xml:space="preserve">
+        <source>Show changes</source>
       </trans-unit>
       <trans-unit id="workspace.review.sourceLabel" xml:space="preserve">
         <source>Changes in</source>
@@ -2275,9 +2575,6 @@
       </trans-unit>
       <trans-unit id="workspaceGraph.closeDetails" xml:space="preserve">
         <source>Close details</source>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
-        <source>You are here</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.event.nodeCreated" xml:space="preserve">
         <source>Created</source>
@@ -2351,17 +2648,17 @@
       <trans-unit id="workspaceGraph.outdatedShort" xml:space="preserve">
         <source>outdated</source>
       </trans-unit>
-      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
-        <source>Unknown node</source>
-      </trans-unit>
       <trans-unit id="workspaceGraph.step.hidden" xml:space="preserve">
         <source>Hidden</source>
+      </trans-unit>
+      <trans-unit id="workspaceGraph.step.nodeCount" xml:space="preserve">
+        <source>{0} (+{1} more)</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.step.shown" xml:space="preserve">
         <source>Shown</source>
       </trans-unit>
-      <trans-unit id="workspaceGraph.step.nodeCount" xml:space="preserve">
-        <source>{0} (+{1} more)</source>
+      <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
+        <source>{0}h ago</source>
       </trans-unit>
       <trans-unit id="workspaceGraph.time.justNow" xml:space="preserve">
         <source>just now</source>
@@ -2369,44 +2666,17 @@
       <trans-unit id="workspaceGraph.time.minutesAgo" xml:space="preserve">
         <source>{0}m ago</source>
       </trans-unit>
-      <trans-unit id="workspaceGraph.time.hoursAgo" xml:space="preserve">
-        <source>{0}h ago</source>
+      <trans-unit id="workspaceGraph.unknownNode" xml:space="preserve">
+        <source>Unknown node</source>
       </trans-unit>
-      <trans-unit id="workspaceHistory.events" xml:space="preserve">
-        <source>Events</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.empty" xml:space="preserve">
-        <source>No pending changes.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.older" xml:space="preserve">
-        <source>Older history is not shown.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.olderRoot" xml:space="preserve">
-        <source>Older published history is not shown.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.loadingDiff" xml:space="preserve">
-        <source>Loading changes…</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.diffFailed" xml:space="preserve">
-        <source>The changes could not be loaded.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
-        <source>No details available.</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
-        <source>yes</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
-        <source>no</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
-        <source>empty</source>
-      </trans-unit>
-      <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
-        <source>Node type</source>
+      <trans-unit id="workspaceGraph.youAreHere" xml:space="preserve">
+        <source>You are here</source>
       </trans-unit>
       <trans-unit id="workspaceHistory.change.name" xml:space="preserve">
         <source>Name</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
+        <source>Node type</source>
       </trans-unit>
       <trans-unit id="workspaceHistory.change.parent" xml:space="preserve">
         <source>Parent</source>
@@ -2414,11 +2684,41 @@
       <trans-unit id="workspaceHistory.change.position" xml:space="preserve">
         <source>Position</source>
       </trans-unit>
+      <trans-unit id="workspaceHistory.change.reordered" xml:space="preserve">
+        <source>Reordered among its siblings</source>
+      </trans-unit>
       <trans-unit id="workspaceHistory.change.variant" xml:space="preserve">
         <source>Dimension</source>
       </trans-unit>
-      <trans-unit id="workspaceHistory.change.reordered" xml:space="preserve">
-        <source>Reordered among its siblings</source>
+      <trans-unit id="workspaceHistory.diffFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.empty" xml:space="preserve">
+        <source>No pending changes.</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.events" xml:space="preserve">
+        <source>Events</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.loadingDiff" xml:space="preserve">
+        <source>Loading changes…</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.noDetails" xml:space="preserve">
+        <source>No details available.</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.older" xml:space="preserve">
+        <source>Older history is not shown.</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.olderRoot" xml:space="preserve">
+        <source>Older published history is not shown.</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
+        <source>empty</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
+        <source>no</source>
+      </trans-unit>
+      <trans-unit id="workspaceHistory.value.yes" xml:space="preserve">
+        <source>yes</source>
       </trans-unit>
       <trans-unit id="workspacesAdmin.active" xml:space="preserve">
         <source>Active</source>

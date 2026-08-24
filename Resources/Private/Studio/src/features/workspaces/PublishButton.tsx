@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react'
+import { allowsPublishToLive } from '@/api/accessRoles'
 import {
   countChangedNodes,
   useWorkspaceChanges,
+  useWorkspaces,
   type Workspace,
   type WorkspaceOperationFilter,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
+import { useAccess } from '@/features/access/useAccess'
 import { Button } from '@/components/ui/button'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import {
@@ -45,7 +48,18 @@ import { translate as t } from '@/lib/i18n'
  */
 export function PublishButton({ workspace }: { workspace: Workspace }) {
   const workspaceName = workspace.name
-  const canPublish = workspace.permissions.publish
+  const access = useAccess()
+  const { data: workspacesResponse } = useWorkspaces()
+  // "May publish to live" is a role restriction on the base being a ROOT
+  // workspace, not on this workspace - publishing into a shared review
+  // workspace stays open to editors who may not go live themselves.
+  const publishesToRoot =
+    workspacesResponse?.workspaces.find(
+      (candidate) => candidate.name === workspace.baseWorkspace,
+    )?.classification === 'ROOT'
+  const canPublish =
+    workspace.permissions.publish &&
+    (!publishesToRoot || allowsPublishToLive(access))
   // Same query the trees' dirty markers use, so button and badges agree.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
   const { site, selectedDocument, navigateToNode } = useStudio()
