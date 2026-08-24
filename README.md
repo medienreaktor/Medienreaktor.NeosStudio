@@ -41,7 +41,7 @@ Dynamic, editable **access roles**: name a set of restrictions and assign editor
 - **Permissive by default, at every turn**: a fresh role restricts nothing, an empty list means "all", and a user with **no role assigned is unrestricted** — installing this changes nothing until an administrator hands a role out. Administrators are exempt by design, so a role can never lock the last admin out.
 - **Additive**: assign someone two roles and they may do what either allows. Never the intersection, never a surprise.
 - **Enforced, not just drawn**: the roles narrow the Studio's UI *and* the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. It only ever *narrows* Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
-- **Visible in the tree**: pages outside a role dim and get a lock badge — they stay navigable, because they are often the path to a branch the role *does* grant. Explicitly denied branches disappear entirely.
+- **The tree shows the role, not the site**: only the granted branches and the path down to them appear. The ancestors on that path render dimmed with a lock badge — signposts, not workspaces — and everything else is gone from the tree entirely. The path is resolved server-side per request, so moving a page never strands the branch below it.
 
 ### ⚡ Blazingly fast, everywhere
 
