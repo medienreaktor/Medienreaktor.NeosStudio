@@ -90,7 +90,7 @@ function DocumentsPanel() {
   // server-side result list (all matching documents, regardless of depth).
   const filtering = debouncedTerm !== '' || typeFilter.length > 0
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="relative flex h-full flex-col">
       <DocumentsToolbar
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
@@ -109,7 +109,9 @@ function DocumentsPanel() {
           })
         }
       />
-      <div className="flex min-h-0 flex-1 flex-col p-3 pt-0">
+      {/* pt-14 clears the absolute toolbar (56px) so content starts below it
+          and scrolls underneath its gradient. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 pt-14">
         {filtering && (
           <DocumentSearchList
             site={site}

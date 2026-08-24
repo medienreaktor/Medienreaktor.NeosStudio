@@ -120,12 +120,15 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
           'link.noSite',
           'No site is active - there is no document tree to pick from.',
         )}
+        className="p-3"
       />
     )
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    // TabsContent carries no padding (the media tab is edge-to-edge), so
+    // every tab brings its own p-3.
+    <div className="flex h-full min-h-0 flex-col gap-2 p-3">
       <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-1">
         <TreeList
           tree={tree}

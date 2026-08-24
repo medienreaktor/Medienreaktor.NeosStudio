@@ -718,10 +718,6 @@
         <source>Apply</source>
         <target xml:lang="de">Übernehmen</target>
       </trans-unit>
-      <trans-unit id="link.asset" xml:space="preserve">
-        <source>Asset</source>
-        <target xml:lang="de">Asset</target>
-      </trans-unit>
       <trans-unit id="link.cancel" xml:space="preserve">
         <source>Cancel</source>
         <target xml:lang="de">Abbrechen</target>
@@ -778,13 +774,13 @@
         <source>Insert link</source>
         <target xml:lang="de">Link einfügen</target>
       </trans-unit>
-      <trans-unit id="link.linkedAsset" xml:space="preserve">
-        <source>Linked asset: {0}</source>
-        <target xml:lang="de">Verknüpftes Asset: {0}</target>
-      </trans-unit>
       <trans-unit id="link.loadingDocuments" xml:space="preserve">
         <source>Loading documents…</source>
         <target xml:lang="de">Dokumente werden geladen…</target>
+      </trans-unit>
+      <trans-unit id="link.media" xml:space="preserve">
+        <source>Media</source>
+        <target xml:lang="de">Medien</target>
       </trans-unit>
       <trans-unit id="link.noDocuments" xml:space="preserve">
         <source>This site has no documents yet.</source>

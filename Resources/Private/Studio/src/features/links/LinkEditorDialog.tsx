@@ -134,7 +134,9 @@ export function LinkEditorDialog({
                 // which an auto-height flex column resolves as "content", so
                 // the panel would grow with the expanded document tree and
                 // blow the dialog past the viewport instead of honoring h-80.
-                className="h-80 max-h-[50vh] min-h-0 flex-none p-3"
+                // No padding here - each tab owns its own (p-3), so the media
+                // tab can scroll edge-to-edge under its overlay header.
+                className="h-80 max-h-[50vh] min-h-0 flex-none"
               >
                 <type.component
                   href={drafts[type.id] ?? null}

@@ -26,7 +26,7 @@ export function registerBuiltinLinkTypes(): void {
   })
   linkEditorRegistry.register({
     id: ASSET_LINK_TYPE,
-    label: t('link.asset', 'Asset'),
+    label: t('link.media', 'Media'),
     icon: <i className="fas fa-paperclip" aria-hidden />,
     component: AssetLinkTab,
     matches: isAssetUri,

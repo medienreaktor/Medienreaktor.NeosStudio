@@ -13,7 +13,7 @@ import {
 import { SearchInput } from '@/components/ui/search-input'
 import { useCreatableNodeTypes } from '@/features/creation/creatableNodeTypes'
 import { translate as t } from '@/lib/i18n'
-import { cn, floatingControl } from '@/lib/utils'
+import { cn, floatingControl, toolbarFade } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
 
 // Module-level so useCreatableNodeTypes' memo key stays stable across renders.
@@ -51,7 +51,15 @@ export function DocumentsToolbar({
   const filterActive = typeFilter.length > 0
 
   return (
-    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-3">
+    <div
+      className={cn(
+        // Absolute overlay (not sticky) like the Media Library header: Safari
+        // shows a 1px line of scrolled content above stuck sticky elements.
+        // The panel provides the positioning context and pt-14 clearance.
+        'absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3',
+        toolbarFade,
+      )}
+    >
       <SearchInput
         className={floatingControl}
         value={searchTerm}

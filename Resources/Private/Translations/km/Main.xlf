@@ -710,10 +710,6 @@
         <source>Apply</source>
         <target xml:lang="km">អនុវត្ត</target>
       </trans-unit>
-      <trans-unit id="link.asset" xml:space="preserve">
-        <source>Asset</source>
-        <target xml:lang="km">មេឌា</target>
-      </trans-unit>
       <trans-unit id="link.cancel" xml:space="preserve">
         <source>Cancel</source>
         <target xml:lang="km">បោះបង់</target>
@@ -770,13 +766,13 @@
         <source>Insert link</source>
         <target xml:lang="km">បញ្ចូលតំណ</target>
       </trans-unit>
-      <trans-unit id="link.linkedAsset" xml:space="preserve">
-        <source>Linked asset: {0}</source>
-        <target xml:lang="km">មេឌាដែលបានភ្ជាប់៖ {0}</target>
-      </trans-unit>
       <trans-unit id="link.loadingDocuments" xml:space="preserve">
         <source>Loading documents…</source>
         <target xml:lang="km">កំពុងផ្ទុកឯកសារ…</target>
+      </trans-unit>
+      <trans-unit id="link.media" xml:space="preserve">
+        <source>Media</source>
+        <target xml:lang="km">មេឌា</target>
       </trans-unit>
       <trans-unit id="link.noDocuments" xml:space="preserve">
         <source>This site has no documents yet.</source>

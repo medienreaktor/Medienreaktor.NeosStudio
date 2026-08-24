@@ -539,9 +539,6 @@
       <trans-unit id="link.apply" xml:space="preserve">
         <source>Apply</source>
       </trans-unit>
-      <trans-unit id="link.asset" xml:space="preserve">
-        <source>Asset</source>
-      </trans-unit>
       <trans-unit id="link.cancel" xml:space="preserve">
         <source>Cancel</source>
       </trans-unit>
@@ -584,11 +581,11 @@
       <trans-unit id="link.insert" xml:space="preserve">
         <source>Insert link</source>
       </trans-unit>
-      <trans-unit id="link.linkedAsset" xml:space="preserve">
-        <source>Linked asset: {0}</source>
-      </trans-unit>
       <trans-unit id="link.loadingDocuments" xml:space="preserve">
         <source>Loading documents…</source>
+      </trans-unit>
+      <trans-unit id="link.media" xml:space="preserve">
+        <source>Media</source>
       </trans-unit>
       <trans-unit id="link.noDocuments" xml:space="preserve">
         <source>This site has no documents yet.</source>

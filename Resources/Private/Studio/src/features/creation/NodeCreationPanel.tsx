@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { translate as t } from '@/lib/i18n'
-import { floatingControl } from '@/lib/utils'
+import { cn, floatingControl, toolbarFade } from '@/lib/utils'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
@@ -53,9 +53,15 @@ export function NodeCreationPanel() {
     : groups
 
   return (
-    <div className="@container flex min-h-full flex-col">
-      {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-3">
+    <div className="@container relative flex h-full flex-col">
+      {/* Same absolute overlay toolbar as the documents panel
+          (DocumentsToolbar) - sticky shows a 1px seam in Safari. */}
+      <div
+        className={cn(
+          'absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3',
+          toolbarFade,
+        )}
+      >
         <SearchInput
           className={floatingControl}
           placeholder={t(
@@ -67,7 +73,9 @@ export function NodeCreationPanel() {
           onChange={(event) => setFilter(event.target.value)}
         />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-0">
+      {/* pt-14 clears the absolute toolbar (56px) so content starts below it
+          and scrolls underneath its gradient. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 pt-14">
         {visibleGroups.length === 0 && (
           <Placeholder
             icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}

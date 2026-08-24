@@ -1,16 +1,12 @@
 import { useMemo, useState } from 'react'
 
-import {
-  DEFAULT_ASSET_FILTER,
-  useAsset,
-  useAssets,
-  type MediaAsset,
-} from '@/api/media'
+import { DEFAULT_ASSET_FILTER, useAssets, type MediaAsset } from '@/api/media'
 import { localIdentifierFor } from '@/api/assetValue'
 import { toast } from '@/components/ui/toast'
 import { AssetList } from '@/features/media/AssetList'
 import { assetKey } from '@/features/media/useMediaBrowserState'
 import { translate as t } from '@/lib/i18n'
+import { cn, floatingControl } from '@/lib/utils'
 import { assetUri, parseAssetUri } from '../linkValue'
 import type { LinkTypeTabProps } from '../registry'
 import { SearchInput } from '@/components/ui/search-input'
@@ -30,9 +26,6 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   const query = useAssets(filter)
   const assets = query.data?.pages.flatMap((page) => page.assets) ?? []
 
-  // Stored identifiers are always local, so they resolve against 'neos'.
-  const current = useAsset('neos', identifier)
-
   const pick = (asset: MediaAsset) => {
     localIdentifierFor(asset)
       .then((id) => onChange(assetUri(id)))
@@ -44,38 +37,44 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col gap-2">
-      <div className="absolute left-0 top-0 right-0 z-10 p-px">
-        <div className="relative w-full rounded-sm bg-white/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
-          <SearchInput
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={t('link.searchAssets', 'Search assets…')}
-          />
-        </div>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-        <AssetList
-          assets={assets}
-          view="grid"
-          activeKey={
-            identifier !== null
-              ? assetKey({ assetSource: 'neos', identifier })
-              : null
-          }
-          onSelect={pick}
-          onActivate={pick}
-          isLoading={query.isLoading}
-          isFetchingNextPage={query.isFetchingNextPage}
-          hasNextPage={query.hasNextPage ?? false}
-          onLoadMore={() => query.fetchNextPage()}
+    // Same absolute overlay toolbar as the Media Library (MediaHeader): the
+    // grid scrolls edge-to-edge under the toolbar's gradient (AssetList
+    // brings the matching pt-14 clearance).
+    <div className="relative flex h-full min-h-0 flex-col">
+      <div
+        className={cn(
+          // -top-px: the dialog is centered via translate(-50%), so at odd
+          // dialog sizes the toolbar's top edge sits on a half pixel and
+          // antialiases - a 1px line of the grid shows above it. Overlapping
+          // upward paints grey on the tab panel's identical grey. No harm.
+          'absolute inset-x-0 -top-px z-10 flex items-center p-3',
+          // Not the shared toolbarFade: inside the dialog the tab panel is
+          // neutral-50/900 (see TabsContent), not the panels' white/950.
+          'bg-gradient-to-t from-transparent to-neutral-50 dark:to-neutral-900',
+        )}
+      >
+        <SearchInput
+          className={floatingControl}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t('link.searchAssets', 'Search assets…')}
         />
       </div>
-      {current.data && (
-        <p className="truncate text-xs text-neutral-600 dark:text-neutral-400">
-          {t('link.linkedAsset', 'Linked asset: {0}', [current.data.label])}
-        </p>
-      )}
+      <AssetList
+        assets={assets}
+        view="grid"
+        activeKey={
+          identifier !== null
+            ? assetKey({ assetSource: 'neos', identifier })
+            : null
+        }
+        onSelect={pick}
+        onActivate={pick}
+        isLoading={query.isLoading}
+        isFetchingNextPage={query.isFetchingNextPage}
+        hasNextPage={query.hasNextPage ?? false}
+        onLoadMore={() => query.fetchNextPage()}
+      />
     </div>
   )
 }
