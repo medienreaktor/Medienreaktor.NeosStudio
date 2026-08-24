@@ -1,14 +1,17 @@
 import type { PropertyScope } from '@/api/nodeTypes'
 import type { SerializedPropertyValue } from '@/api/nodes'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import type { InspectorProperty } from './inspectorSchema'
+import type {
+  InspectorProperty,
+  InspectorPropertyHelp,
+} from './inspectorSchema'
 import { ValidationErrors } from './validators/ValidationErrors'
 
 /**
@@ -42,7 +45,11 @@ export function PropertyEditor({
   const definition = usePropertyEditor(property.editor)
   if (!definition) {
     return (
-      <Labeled label={property.label} scope={property.scope}>
+      <Labeled
+        label={property.label}
+        scope={property.scope}
+        help={property.help}
+      >
         <ReadOnlyValue property={property} value={value} />
       </Labeled>
     )
@@ -71,9 +78,10 @@ export function PropertyEditor({
 
   if (definition.rendersOwnLabel) {
     // The editor owns the label line (e.g. the checkbox label beside the box),
-    // so the scope hint sits next to the whole control instead; the wrapper's
-    // text color tints the editor's own label text purple by inheritance.
-    if (property.scope === 'node')
+    // so the help and scope hints sit next to the whole control instead; the
+    // wrapper's text color tints the editor's own label text purple by
+    // inheritance when edits span dimension variants.
+    if (property.scope === 'node' && !property.help)
       return (
         <>
           {editor}
@@ -82,16 +90,22 @@ export function PropertyEditor({
       )
     return (
       <>
-        <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300">
+        <div
+          className={cn(
+            'flex items-center gap-1.5',
+            property.scope !== 'node' && 'text-purple-700 dark:text-purple-300',
+          )}
+        >
           {editor}
-          <ScopeHint scope={property.scope} />
+          {property.help && <HelpHint help={property.help} />}
+          {property.scope !== 'node' && <ScopeHint scope={property.scope} />}
         </div>
         {inlineErrors}
       </>
     )
   }
   return (
-    <Labeled label={property.label} scope={property.scope}>
+    <Labeled label={property.label} scope={property.scope} help={property.help}>
       {editor}
       {inlineErrors}
     </Labeled>
@@ -102,28 +116,95 @@ export function PropertyEditor({
 export function Labeled({
   label,
   scope,
+  help,
   children,
 }: {
   label: string
   /** When given and not "node", the label carries the variant-spanning hint icon. */
   scope?: PropertyScope
+  /** When given, the label carries the ui.help popover trigger. */
+  help?: InspectorPropertyHelp | null
   children: React.ReactNode
 }) {
   const spansVariants = scope !== undefined && scope !== 'node'
   return (
     <>
-      <label
+      <div
         className={cn(
           'mb-1 flex items-center gap-1.5 text-xs',
           // Purple marks dimension-spanning edits, matching the dimension UI.
-          spansVariants ? 'text-purple-700 dark:text-purple-300' : 'text-neutral-950 dark:text-white',
+          spansVariants
+            ? 'text-purple-700 dark:text-purple-300'
+            : 'text-neutral-950 dark:text-white',
         )}
       >
-        {label}
+        {/* The hint icons sit OUTSIDE the label element: a label forwards
+            clicks to its first labelable descendant, which would open the
+            popover from anywhere on the label text. */}
+        <label>{label}</label>
+        {help && <HelpHint help={help} />}
         {spansVariants && <ScopeHint scope={scope} />}
-      </label>
+      </div>
       {children}
     </>
+  )
+}
+
+/**
+ * A hint beside a property label: a small icon toggling a popover - opened
+ * by clicking the icon itself, never the surrounding label. Shared by the
+ * ui.help and property-scope hints so both look and behave identically.
+ */
+function HintPopover({
+  icon,
+  label,
+  className,
+  children,
+}: {
+  /** FontAwesome icon name, e.g. "fa-circle-question". */
+  icon: string
+  /** Accessible name for the trigger icon. */
+  label: string
+  /** Color classes for the trigger icon. */
+  className: string
+  children: React.ReactNode
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger
+        aria-label={label}
+        className={cn('cursor-help', className)}
+      >
+        <i className={cn('fas text-[0.75rem]', icon)} aria-hidden />
+      </PopoverTrigger>
+      <PopoverContent className="max-w-72 p-3 text-xs leading-relaxed">
+        {children}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+/**
+ * The ui.help affordance beside a property label: a question-mark icon
+ * opening a popover with the integrator's guidance - the message, and the
+ * thumbnail when one resolved (mirroring the classic UI's help popover).
+ */
+function HelpHint({ help }: { help: InspectorPropertyHelp }) {
+  return (
+    <HintPopover
+      icon="fa-circle-question"
+      label={t('inspector.help', 'Help')}
+      className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+    >
+      {help.thumbnail && (
+        <img
+          src={help.thumbnail}
+          alt=""
+          className={cn('max-w-full rounded', help.message && 'mb-2')}
+        />
+      )}
+      {help.message && <p className="whitespace-pre-wrap">{help.message}</p>}
+    </HintPopover>
   )
 }
 
@@ -144,15 +225,13 @@ function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
     translateLabel(`Neos.Neos.Ui:Main:propertyScope.${scope}`) ??
     SCOPE_HINTS[scope]
   return (
-    <Tooltip>
-      <TooltipTrigger
-        aria-label={hint}
-        className="cursor-help text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200"
-      >
-        <i className="fas fa-right-left text-[0.75rem]" aria-hidden />
-      </TooltipTrigger>
-      <TooltipContent>{hint}</TooltipContent>
-    </Tooltip>
+    <HintPopover
+      icon="fa-right-left"
+      label={hint}
+      className="text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200"
+    >
+      {hint}
+    </HintPopover>
   )
 }
 

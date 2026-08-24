@@ -181,6 +181,12 @@ export interface PropertyConfig {
   validation?: Record<string, unknown> | null
   ui?: {
     label?: string | null
+    /**
+     * Integrator-written guidance for editors. The server has already done
+     * the heavy lifting: `message: i18n` arrives expanded to a full XLIFF id
+     * and `thumbnail` resolved from a resource:// URI to a public URL.
+     */
+    help?: { message?: string | null; thumbnail?: string | null } | null
     reloadIfChanged?: boolean
     reloadPageIfChanged?: boolean
     inlineEditable?: boolean

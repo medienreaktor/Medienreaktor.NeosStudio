@@ -488,6 +488,9 @@
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
       </trans-unit>
+      <trans-unit id="inspector.help" xml:space="preserve">
+        <source>Help</source>
+      </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
       </trans-unit>

@@ -650,6 +650,10 @@
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="da">Editoren understøttes ikke endnu: {0}</target>
       </trans-unit>
+      <trans-unit id="inspector.help" xml:space="preserve">
+        <source>Help</source>
+        <target xml:lang="da">Hjælp</target>
+      </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
         <target xml:lang="da">Nej</target>

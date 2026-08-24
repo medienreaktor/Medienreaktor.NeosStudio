@@ -650,6 +650,10 @@
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="km">កម្មវិធីកែសម្រួលមិនទាន់ត្រូវបានគាំទ្រនៅឡើយទេ៖ {0}</target>
       </trans-unit>
+      <trans-unit id="inspector.help" xml:space="preserve">
+        <source>Help</source>
+        <target xml:lang="km">ជំនួយ</target>
+      </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
         <target xml:lang="km">ទេ</target>

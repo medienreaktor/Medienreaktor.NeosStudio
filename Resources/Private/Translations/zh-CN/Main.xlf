@@ -650,6 +650,10 @@
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="zh-CN">尚不支持的编辑器：{0}</target>
       </trans-unit>
+      <trans-unit id="inspector.help" xml:space="preserve">
+        <source>Help</source>
+        <target xml:lang="zh-CN">帮助</target>
+      </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
         <target xml:lang="zh-CN">否</target>

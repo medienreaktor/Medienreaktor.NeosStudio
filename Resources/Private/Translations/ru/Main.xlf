@@ -650,6 +650,10 @@
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="ru">Редактор пока не поддерживается: {0}</target>
       </trans-unit>
+      <trans-unit id="inspector.help" xml:space="preserve">
+        <source>Help</source>
+        <target xml:lang="ru">Справка</target>
+      </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
         <target xml:lang="ru">Нет</target>

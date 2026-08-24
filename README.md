@@ -61,6 +61,7 @@ Full parity with the classic inspector — and then some:
 - **Views**: NodeInfo, Column, Table and TimeSeries views plus data-source-driven widgets — through a views registry.
 - **Validators**: the `Neos.Neos/Validation` built-ins with live inline errors, tab badges and save-blocking — through a validators registry.
 - **ClientEval** support (`ClientEval:` expressions for hidden state and editor options), transient values, and **dimension shine-through indicators** with one-click "create variant" — in the inspector _and_ directly in the preview.
+- **Property help** (`ui.help.message` and `ui.help.thumbnail`) — a popover beside the property label, just like the classic UI.
 
 ### 🌐 Full editing environment
 

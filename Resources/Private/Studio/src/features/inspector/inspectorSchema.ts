@@ -38,6 +38,14 @@ export interface InspectorProperty {
    * the change does not affect the rendered output.
    */
   reload: 'none' | 'element' | 'page'
+  /** ui.help, resolved: null unless a message or thumbnail actually renders. */
+  help: InspectorPropertyHelp | null
+}
+
+/** Resolved ui.help content - shown in a popover next to the property label. */
+export interface InspectorPropertyHelp {
+  message: string | null
+  thumbnail: string | null
 }
 
 /**
@@ -127,6 +135,44 @@ export function plainEditorOption(
   if (typeof value !== 'string' || value === '') return undefined
   if (looksLikeI18nId(value)) return translateLabel(value) ?? undefined
   return value
+}
+
+/**
+ * Resolves a property's ui.help block. The server already expanded
+ * `message: i18n` to a full XLIFF id, so all that is left is translating it -
+ * an id the bundle cannot resolve is dropped, as showing the raw id would be
+ * worse than no help. Thumbnails arrive as configured (the server-side
+ * enrichment resolves resource:// URIs only for node-type-level help, not
+ * per property), so a resource:// URI is rewritten to its published static
+ * URL here, like the classic UI's EditorEnvelope does. Returns null when
+ * nothing renderable remains, so callers can gate the affordance on it.
+ */
+function resolveHelp(
+  help:
+    { message?: string | null; thumbnail?: string | null } | null | undefined,
+): InspectorPropertyHelp | null {
+  let message = help?.message || null
+  if (message !== null && looksLikeI18nId(message)) {
+    message = translateLabel(message)
+  }
+  const thumbnail = resolveResourceUri(help?.thumbnail || null)
+  if (message === null && thumbnail === null) return null
+  return { message, thumbnail }
+}
+
+/**
+ * Rewrites a resource:// URI to the published static resource URL. Flow
+ * publishes a package's Resources/Public/ directory to
+ * /_Resources/Static/Packages/<PackageKey>/ - the "Public" segment is
+ * stripped, so both the proper Flow form
+ * (resource://Vendor.Package/Public/Images/x.png) and the classic UI's
+ * quirky one without the Public segment map to the same URL.
+ */
+function resolveResourceUri(uri: string | null): string | null {
+  if (uri === null || !uri.startsWith('resource://')) return uri
+  const match = /^resource:\/\/([^/]+)\/(?:Public\/)?(.+)$/.exec(uri)
+  if (!match) return null
+  return `/_Resources/Static/Packages/${match[1]}/${match[2]}`
 }
 
 /**
@@ -269,6 +315,7 @@ export function buildInspectorSchema(
             hidden: propertyConfig.ui?.inspector?.hidden ?? false,
             scope: propertyConfig.scope ?? 'node',
             validation: propertyConfig.validation ?? {},
+            help: resolveHelp(propertyConfig.ui?.help),
             reload: propertyConfig.ui?.reloadPageIfChanged
               ? 'page'
               : propertyConfig.ui?.reloadIfChanged
