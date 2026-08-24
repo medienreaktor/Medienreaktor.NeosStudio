@@ -130,7 +130,11 @@ export function LinkEditorDialog({
               <TabsContent
                 key={type.id}
                 value={type.id}
-                className="h-80 min-h-0 p-3"
+                // flex-none is load-bearing: the base flex-1 has basis 0%,
+                // which an auto-height flex column resolves as "content", so
+                // the panel would grow with the expanded document tree and
+                // blow the dialog past the viewport instead of honoring h-80.
+                className="h-80 max-h-[50vh] min-h-0 flex-none p-3"
               >
                 <type.component
                   href={drafts[type.id] ?? null}
