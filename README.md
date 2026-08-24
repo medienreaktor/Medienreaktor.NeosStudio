@@ -36,7 +36,7 @@ Content work, organized like code: every task is a **feature branch**. Creating 
 
 Dynamic, editable **access roles**: name a set of restrictions and assign editors to it, in the UI, without touching `Policy.yaml` or deploying anything. What the classic distributions solved with Sandstorm.NeosAcl, rebuilt for Neos 9 — where the node-level privilege targets that approach relied on no longer exist.
 
-- **Four axes, one role**: which **sites**, which branches of the **page tree**, which **dimensions**, which **workspaces** — plus the coarse capabilities (edit, create, delete, move, media) a role may exercise inside them.
+- **Four axes, one role**: which **sites**, which branches of the **page tree**, which **dimensions**, which **workspaces** — plus the coarse capabilities (edit, create, delete, move) a role may exercise inside them.
 - **Pick branches from the tree**: the page-tree tab browses the real document tree; select a page, then allow or deny it, with or without its sub-pages. Allow rules turn the tree into a whitelist, deny rules cut single pages back out — the rule nearest a page wins, so "the whole section except this one page" is two clicks.
 - **Permissive by default, at every turn**: a fresh role restricts nothing, an empty list means "all", and a user with **no role assigned is unrestricted** — installing this changes nothing until an administrator hands a role out. Administrators are exempt by design, so a role can never lock the last admin out.
 - **Additive**: assign someone two roles and they may do what either allows. Never the intersection, never a surprise.

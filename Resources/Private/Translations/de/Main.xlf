@@ -94,14 +94,6 @@
         <source>Change properties, references, and show/hide pages.</source>
         <target xml:lang="de">Eigenschaften und Referenzen ändern, Seiten ein- und ausblenden.</target>
       </trans-unit>
-      <trans-unit id="accessRoles.capMedia" xml:space="preserve">
-        <source>Manage media</source>
-        <target xml:lang="de">Medien verwalten</target>
-      </trans-unit>
-      <trans-unit id="accessRoles.capMediaHint" xml:space="preserve">
-        <source>Upload, edit and delete assets in the media library.</source>
-        <target xml:lang="de">Assets in der Medienverwaltung hochladen, bearbeiten und löschen.</target>
-      </trans-unit>
       <trans-unit id="accessRoles.capMove" xml:space="preserve">
         <source>Move pages and content</source>
         <target xml:lang="de">Seiten und Inhalte verschieben</target>
