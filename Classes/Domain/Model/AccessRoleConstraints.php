@@ -156,21 +156,52 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
     }
 
     /**
-     * Root workspaces - live above all - stay readable for everyone: the
-     * frontend renders from live, and a role that accidentally cut it off
-     * would take the website down for its members, not just their editing.
-     * The restriction is about *shared* workspaces, which is where editorial
-     * collaboration happens.
+     * May the account READ this workspace?
+     *
+     * Root workspaces - live above all - stay readable for everyone, and this
+     * is not a courtesy: the frontend renders from live, so a role that cut
+     * it off would take the website down for its own members rather than
+     * merely narrowing their editing.
      *
      * @param string $classification ROOT, PERSONAL, SHARED or UNKNOWN
      */
-    public function allowsWorkspace(string $workspaceName, string $classification): bool
+    public function allowsWorkspaceRead(string $workspaceName, string $classification): bool
     {
         return match ($classification) {
             'PERSONAL' => $this->allowPersonalWorkspace,
-            'SHARED' => $this->workspaceNames === [] || in_array($workspaceName, $this->workspaceNames, true),
+            'SHARED' => $this->listAllows($workspaceName),
             default => true,
         };
+    }
+
+    /**
+     * May the account WORK in this workspace - edit in it, target it as a
+     * publish base, join it collaboratively?
+     *
+     * Unlike reading, live gets no exemption here. "Restricted to Entwurf"
+     * has to mean the editor cannot also just switch back to live and work
+     * there, or the restriction says nothing at all. Being able to *see* live
+     * and being allowed to *change* it are separate questions, and this is
+     * the second one.
+     *
+     * An empty list still means every workspace, live included - so a role
+     * that does not mention workspaces changes nothing.
+     *
+     * @param string $classification ROOT, PERSONAL, SHARED or UNKNOWN
+     */
+    public function allowsWorkspaceEditing(string $workspaceName, string $classification): bool
+    {
+        return match ($classification) {
+            'PERSONAL' => $this->allowPersonalWorkspace,
+            // UNKNOWN covers workspaces created outside Neos' own service;
+            // they carry no editorial meaning, so they follow the list too.
+            default => $this->listAllows($workspaceName),
+        };
+    }
+
+    private function listAllows(string $workspaceName): bool
+    {
+        return $this->workspaceNames === [] || in_array($workspaceName, $this->workspaceNames, true);
     }
 
     /** Unknown capability names are granted - see self::CAPABILITIES. */

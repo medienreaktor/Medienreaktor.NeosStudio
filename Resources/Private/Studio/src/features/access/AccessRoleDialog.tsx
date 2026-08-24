@@ -520,8 +520,13 @@ function WorkspacesTab({
   onChange: (partial: Partial<AccessRoleConstraints>) => void
 }) {
   const { data } = useWorkspaces()
-  const shared = (data?.workspaces ?? []).filter(
-    (workspace) => workspace.classification === 'SHARED',
+  // Live is listed too, not just the shared workspaces: ticking any of them
+  // takes live off the list as well, so an administrator who wants "Entwurf
+  // and live" has to be able to say so.
+  const selectable = (data?.workspaces ?? []).filter(
+    (workspace) =>
+      workspace.classification === 'SHARED' ||
+      workspace.classification === 'ROOT',
   )
 
   return (
@@ -529,11 +534,11 @@ function WorkspacesTab({
       <TabIntro>
         {t(
           'accessRoles.workspacesHint',
-          'Which shared workspaces this role may enter. Nothing ticked means all of them. The live workspace always stays readable — the website is rendered from it.',
+          'Which workspaces this role may work in — edit in, publish into, join collaboratively. Nothing ticked means all of them, including live. Tick any and everything else is out, live included. Live stays readable either way; the website is rendered from it.',
         )}
       </TabIntro>
 
-      {shared.length === 0 ? (
+      {selectable.length === 0 ? (
         <Placeholder
           icon="fa-layer-group"
           title={t(
@@ -544,7 +549,7 @@ function WorkspacesTab({
         />
       ) : (
         <div className="space-y-0.5">
-          {shared.map((workspace) => (
+          {selectable.map((workspace) => (
             <CheckboxRow
               key={workspace.name}
               checked={constraints.workspaceNames.includes(workspace.name)}
@@ -562,6 +567,11 @@ function WorkspacesTab({
               <span className="ml-2 text-xs text-neutral-500">
                 {workspace.name}
               </span>
+              {workspace.classification === 'ROOT' && (
+                <Badge variant="secondary" className="ml-2">
+                  {t('accessRoles.workspaceLive', 'Live')}
+                </Badge>
+              )}
             </CheckboxRow>
           ))}
         </div>
