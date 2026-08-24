@@ -9,6 +9,10 @@ use Medienreaktor\NeosStudio\Domain\Model\AccessRole;
 use Medienreaktor\NeosStudio\Domain\Model\AccessRoleConstraints;
 use Medienreaktor\NeosStudio\Domain\Repository\AccessRoleRepository;
 use Medienreaktor\NeosStudio\Service\AccessControlService;
+use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Utility\Algorithms;
 use Neos\Neos\Domain\Model\UserId;
@@ -204,10 +208,46 @@ class AccessRolesController extends AbstractApiController
     {
         $this->requireScope('neos.read');
 
+        $access = $this->accessControlService->effectiveAccessForCurrentUser();
+
         return $this->json([
-            'access' => $this->accessControlService->effectiveAccessForCurrentUser()->toArray(),
+            'access' => $access->toArray() + [
+                // The ancestors of the granted branches, so the shell can show
+                // the path to them instead of stranding them in a tree whose
+                // upper levels it hid. Resolved in live: page hierarchy is the
+                // same across workspaces for this purpose, and live is the one
+                // workspace every account may read.
+                'pathAnchors' => $this->accessControlService->pathAnchorsFor(
+                    $access,
+                    $this->liveSubgraph()
+                ),
+            ],
             'capabilities' => AccessRoleConstraints::CAPABILITIES,
         ]);
+    }
+
+    /**
+     * The live subgraph in the content repository's first root dimension -
+     * ancestry is what is read from it, and that does not meaningfully differ
+     * between dimensions.
+     *
+     * Deliberately WITHOUT visibility constraints: a hidden (or soft-removed)
+     * page is still a row in the backend's page tree, so it still has to
+     * count as a path anchor. Reading it through the account's normal
+     * constraints would drop it from the ancestor chain and strand the
+     * granted branch underneath it - visible to nobody, for no reason the
+     * editor could see. Nothing leaks either way: anchors only ever decide
+     * whether a row is drawn, never what it contains.
+     */
+    private function liveSubgraph(): ContentSubgraphInterface
+    {
+        $contentRepository = $this->getContentRepository();
+        $dimensionSpacePoint = array_values($contentRepository->getVariationGraph()->getRootGeneralizations())[0]
+            ?? DimensionSpacePoint::createWithoutDimensions();
+
+        return $contentRepository
+            ->getContentGraph(WorkspaceName::forLive())
+            ->getSubgraph($dimensionSpacePoint, VisibilityConstraints::createEmpty());
     }
 
     /**

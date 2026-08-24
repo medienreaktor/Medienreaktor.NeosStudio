@@ -98,6 +98,15 @@ export interface EffectiveAccess {
    * cut into a branch another role grants.
    */
   roles: EffectiveAccessRole[]
+  /**
+   * Node aggregate ids of every ancestor of every granted branch. They are
+   * not granted themselves, but the tree shows them read-only anyway - a role
+   * granting "Products / Pumps" grants neither "Products" nor the site node,
+   * and hiding those would leave the editor with an empty tree and no way
+   * down to the one branch they may edit. Resolved server-side per request,
+   * because ancestry changes whenever a page is moved.
+   */
+  pathAnchors: string[]
 }
 
 export interface MyAccessResponse {
@@ -318,17 +327,6 @@ export function allowsNode(
 }
 
 /**
- * Whether the page tree is narrowed at all. The tree only pays for
- * ancestor-aware filtering when some role actually carries rules.
- */
-export function restrictsNodeTree(
-  access: EffectiveAccess | undefined,
-): boolean {
-  if (!access || access.unrestricted) return false
-  return access.roles.some((role) => role.constraints.nodeTreeRules.length > 0)
-}
-
-/**
  * What one role has to say about a node: it grants it, it explicitly refuses
  * it, or the node simply falls outside the branches the role whitelists.
  */
@@ -356,13 +354,17 @@ function roleVerdict(c: AccessRoleConstraints, idPath: string[]): RoleVerdict {
 /**
  * How a page-tree row should be treated:
  *
- * - `allowed` — the role covers it; edit normally.
- * - `restricted` — outside the role's branches, but not refused. Shown,
- *   dimmed and locked, because it may well be the *path* to a branch the role
- *   does grant - hiding it would strand the branch below with no way to
- *   navigate to it.
- * - `hidden` — every applicable role refuses it outright. An explicit "deny
- *   this branch" is a statement about visibility, so the row goes away.
+ * - `allowed` — a role covers it; edit normally.
+ * - `restricted` — not granted, but on the way to something that is (see
+ *   `pathAnchors`). Shown dimmed and locked: it is a signpost, not a
+ *   workspace.
+ * - `hidden` — not granted and not on the way anywhere. The row goes away
+ *   entirely; there is nothing an editor could do with it and nothing below
+ *   it they could reach.
+ *
+ * Note that an explicitly denied page still shows as `restricted` when a
+ * deeper page inside it IS granted - "deny the section, allow one page in
+ * it" has to stay reachable to mean anything.
  *
  * @param idPath node aggregate id first, then its ancestors outwards
  */
@@ -384,7 +386,9 @@ export function nodeAccessState(
     roleVerdict(role.constraints, idPath),
   )
   if (verdicts.includes('allow')) return 'allowed'
-  return verdicts.every((verdict) => verdict === 'deny')
-    ? 'hidden'
-    : 'restricted'
+
+  // Not granted - so it only earns a row if something granted lives below it.
+  return (access.pathAnchors ?? []).includes(idPath[0])
+    ? 'restricted'
+    : 'hidden'
 }

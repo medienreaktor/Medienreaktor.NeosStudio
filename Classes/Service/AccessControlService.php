@@ -139,6 +139,59 @@ class AccessControlService
     }
 
     /**
+     * The nodes that must stay visible even though the roles do not grant
+     * them: every ancestor of every branch a role DOES grant.
+     *
+     * Without this the page tree would strand its own content. A role that
+     * grants "Products / Pumps" grants neither "Products" nor the site node,
+     * yet hiding those leaves the editor with an empty tree and no way to
+     * reach the one branch they may edit. So the ancestors stay - shown
+     * read-only, as signposts.
+     *
+     * Resolved server-side on every read rather than stored with the rule:
+     * ancestry changes whenever a page is moved, and a stale copy would hide
+     * exactly the path an editor needs. The client caches the answer for a
+     * few minutes, so this costs one traversal per allow rule per session.
+     *
+     * @return array<int, string> node aggregate ids, ancestors of allow rules
+     */
+    public function pathAnchorsFor(EffectiveAccess $access, ContentSubgraphInterface $subgraph): array
+    {
+        if ($access->unrestricted) {
+            return [];
+        }
+
+        $anchors = [];
+        foreach ($access->roles as $role) {
+            foreach ($role->constraints->nodeTreeRules as $rule) {
+                if (!$rule->isAllow()) {
+                    continue;
+                }
+                try {
+                    $ancestors = $subgraph->findAncestorNodes(
+                        NodeAggregateId::fromString($rule->nodeAggregateId),
+                        FindAncestorNodesFilter::create()
+                    );
+                } catch (\Throwable) {
+                    // A rule pointing at a node that no longer resolves simply
+                    // contributes no anchors.
+                    continue;
+                }
+                foreach ($ancestors as $ancestor) {
+                    /** @var Node $ancestor */
+                    // The sites root is never rendered as a tree row.
+                    if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {
+                        continue;
+                    }
+                    $anchors[$ancestor->aggregateId->value] = true;
+                }
+            }
+        }
+
+        return array_keys($anchors);
+    }
+
+    /**
      * @return array<int, string> the Flow roles that skip access control
      */
     public function bypassRoles(): array
