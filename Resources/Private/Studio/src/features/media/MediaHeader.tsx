@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { translate as t } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { cn, floatingControl } from '@/lib/utils'
 import { MediaItemActions, type MediaMenuTarget } from './MediaItemMenu'
 import { collectionToNode, MediaTree, tagToNode } from './MediaTree'
 import type { MediaBrowserController } from './useMediaBrowserState'
@@ -140,13 +140,14 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
-    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 bg-white/70 dark:bg-neutral-950/70 p-2 backdrop-blur-xs">
+    <div className="@container absolute top-0 right-0 left-0 z-10 flex shrink-0 flex-wrap items-center gap-2 p-2">
       <SearchInput
         value={filter.search}
         onChange={(e) => state.setSearch(e.target.value)}
         placeholder={t('media.searchAssets', 'Search assets…')}
         aria-label={t('media.searchAssetsAria', 'Search assets')}
         wrapperClassName="min-w-40"
+        className={floatingControl}
       />
 
       <Select
@@ -157,7 +158,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
           label: type === 'All' ? t('media.allTypes', 'All types') : type,
         }))}
       >
-        <SelectTrigger className="h-8 w-32" size="sm">
+        <SelectTrigger className={cn('h-8 w-32', floatingControl)} size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -294,7 +295,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             label: t(sort.labelKey, sort.label),
           }))}
         >
-          <SelectTrigger className="h-8 w-36" size="sm">
+          <SelectTrigger className={cn('h-8 w-36', floatingControl)} size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -337,7 +338,8 @@ function FilterButton({
     <Popover>
       <PopoverTrigger
         className={cn(
-          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm bg-neutral-300/30 dark:bg-neutral-700/30 hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50',
+          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50',
+          floatingControl,
           active
             ? 'text-neutral-950 dark:text-white'
             : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 ',

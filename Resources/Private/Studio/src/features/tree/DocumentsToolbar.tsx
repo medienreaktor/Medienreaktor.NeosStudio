@@ -13,7 +13,7 @@ import {
 import { SearchInput } from '@/components/ui/search-input'
 import { useCreatableNodeTypes } from '@/features/creation/creatableNodeTypes'
 import { translate as t } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { cn, floatingControl } from '@/lib/utils'
 import { NodeTypeIcon } from './nodeTypeIcon'
 
 // Module-level so useCreatableNodeTypes' memo key stays stable across renders.
@@ -51,8 +51,9 @@ export function DocumentsToolbar({
   const filterActive = typeFilter.length > 0
 
   return (
-    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-white/50 dark:bg-neutral-950/50 backdrop-blur-xs p-2">
+    <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-2">
       <SearchInput
+        className={floatingControl}
         value={searchTerm}
         onChange={(event) => onSearchTermChange(event.target.value)}
         placeholder={t('tree.searchPlaceholder', 'Search documents…')}
@@ -67,7 +68,10 @@ export function DocumentsToolbar({
               title={t('tree.filterByNodeType', 'Filter by node type')}
               aria-label={t('tree.filterByNodeType', 'Filter by node type')}
               disabled={creatable === null}
-              className={cn(filterActive && 'border-blue-500 text-blue-500')}
+              className={cn(
+                floatingControl,
+                filterActive && 'border-blue-500 text-blue-500',
+              )}
             />
           }
         >

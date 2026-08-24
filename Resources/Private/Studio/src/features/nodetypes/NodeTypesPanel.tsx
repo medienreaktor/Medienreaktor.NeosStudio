@@ -10,7 +10,7 @@ import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { cn, floatingControl } from '@/lib/utils'
 import {
   buildCardModels,
   type CardKind,
@@ -415,7 +415,7 @@ export function NodeTypesPanel() {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-2 pr-32">
             <SearchInput
               wrapperClassName="pointer-events-auto max-w-64"
-              className="bg-neutral-50/80 dark:bg-neutral-900/80 backdrop-blur-xs"
+              className={floatingControl}
               value={term}
               onChange={(event) => {
                 matchCursor.current = 0

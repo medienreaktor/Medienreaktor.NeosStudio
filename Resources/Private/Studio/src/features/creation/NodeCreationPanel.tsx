@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { translate as t } from '@/lib/i18n'
+import { floatingControl } from '@/lib/utils'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
@@ -54,8 +55,9 @@ export function NodeCreationPanel() {
   return (
     <div className="@container flex min-h-full flex-col">
       {/* Same fixed overlay toolbar as the documents panel (DocumentsToolbar). */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 bg-white/50 dark:bg-neutral-950/50 p-2 backdrop-blur-xs">
+      <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 p-2">
         <SearchInput
+          className={floatingControl}
           placeholder={t(
             'creation.filterNodeTypesPlaceholder',
             'Filter node types…',
