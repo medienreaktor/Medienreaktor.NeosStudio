@@ -35,10 +35,7 @@ export interface NodeTreeRule {
 
 /** Capability names the server currently knows; the listing endpoint reports them. */
 export type AccessCapability =
-  | 'editNodes'
-  | 'createNodes'
-  | 'deleteNodes'
-  | 'moveNodes'
+  'editNodes' | 'createNodes' | 'deleteNodes' | 'moveNodes'
 
 export interface AccessRoleConstraints {
   /** Empty = every site. */
@@ -213,18 +210,38 @@ function roleAllowsDimensions(
   })
 }
 
-function roleAllowsWorkspace(
+function listAllowsWorkspace(
+  c: AccessRoleConstraints,
+  workspaceName: string,
+): boolean {
+  return (
+    c.workspaceNames.length === 0 || c.workspaceNames.includes(workspaceName)
+  )
+}
+
+function roleAllowsWorkspaceRead(
   c: AccessRoleConstraints,
   workspaceName: string,
   classification: string,
 ): boolean {
   if (classification === 'PERSONAL') return c.allowPersonalWorkspace
-  if (classification === 'SHARED')
-    return (
-      c.workspaceNames.length === 0 || c.workspaceNames.includes(workspaceName)
-    )
-  // Root workspaces (live above all) stay available for everyone.
+  if (classification === 'SHARED') return listAllowsWorkspace(c, workspaceName)
+  // Root workspaces (live above all) stay READABLE for everyone: the frontend
+  // renders from live, so cutting it off would take the website down for the
+  // members rather than narrowing their editing.
   return true
+}
+
+function roleAllowsWorkspaceEditing(
+  c: AccessRoleConstraints,
+  workspaceName: string,
+  classification: string,
+): boolean {
+  if (classification === 'PERSONAL') return c.allowPersonalWorkspace
+  // Live gets no exemption here: "restricted to Entwurf" has to also mean
+  // "cannot switch back to live and work there". An empty list still means
+  // every workspace, live included.
+  return listAllowsWorkspace(c, workspaceName)
 }
 
 /**
@@ -277,13 +294,28 @@ export function allowsDimensionSpacePoint(
   return anyRole(access, (c) => roleAllowsDimensions(c, coordinates))
 }
 
-export function allowsWorkspace(
+/** May the account SEE this workspace's content? */
+export function allowsWorkspaceRead(
   access: EffectiveAccess | undefined,
   workspaceName: string,
   classification: string,
 ): boolean {
   return anyRole(access, (c) =>
-    roleAllowsWorkspace(c, workspaceName, classification),
+    roleAllowsWorkspaceRead(c, workspaceName, classification),
+  )
+}
+
+/**
+ * May the account WORK in it - edit in it, target it as a publish base, join
+ * it collaboratively? The workspace switcher offers exactly these.
+ */
+export function allowsWorkspaceEditing(
+  access: EffectiveAccess | undefined,
+  workspaceName: string,
+  classification: string,
+): boolean {
+  return anyRole(access, (c) =>
+    roleAllowsWorkspaceEditing(c, workspaceName, classification),
   )
 }
 

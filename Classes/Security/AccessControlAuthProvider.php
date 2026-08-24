@@ -19,6 +19,7 @@ use Neos\ContentRepository\Core\Feature\Security\Dto\UserId as ContentRepository
 use Neos\ContentRepository\Core\Feature\SubtreeTagging\Command\TagSubtree;
 use Neos\ContentRepository\Core\Feature\SubtreeTagging\Command\UntagSubtree;
 use Neos\ContentRepository\Core\Feature\WorkspaceCreation\Command\CreateWorkspace;
+use Neos\ContentRepository\Core\Feature\WorkspaceModification\Command\ChangeBaseWorkspace;
 use Neos\ContentRepository\Core\Feature\WorkspacePublication\Command\PublishIndividualNodesFromWorkspace;
 use Neos\ContentRepository\Core\Feature\WorkspacePublication\Command\PublishWorkspace;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphReadModelInterface;
@@ -46,10 +47,13 @@ use Neos\Neos\Domain\Service\WorkspaceService;
  * a node or a workspace leaves the core's decision standing rather than
  * blocking an editor over a bug in a restriction check.
  *
- * Read access is narrowed for shared workspaces only. Root workspaces (live)
- * stay readable for everyone - the frontend renders from live, so cutting it
- * off would take the site down for the very people the role is meant to
- * shape, not just their editing.
+ * Reading and working in a workspace are asked separately, and live is the
+ * reason why. Root workspaces stay READABLE for everyone: the frontend
+ * renders from live, so cutting it off would take the website down for the
+ * very people the role is meant to shape. Working in one is a different
+ * question and gets no such exemption - "restricted to Entwurf" has to also
+ * mean "cannot simply switch back to live and edit there", including via the
+ * base-workspace retargeting the Studio's workspace switcher performs.
  *
  * @internal
  */
@@ -84,7 +88,7 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         if ($access === null) {
             return $privilege;
         }
-        if (!$access->allowsWorkspace($workspaceName->value, $this->classificationOf($workspaceName))) {
+        if (!$access->allowsWorkspaceRead($workspaceName->value, $this->classificationOf($workspaceName))) {
             return Privilege::denied(sprintf('Workspace "%s" is not part of your access role(s)', $workspaceName->value));
         }
 
@@ -119,14 +123,28 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
      */
     private function denialFor(CommandInterface $command, EffectiveAccess $access): ?Privilege
     {
-        // Every command carrying a workspace is bound by the workspace rules.
+        // Every command carrying a workspace is bound by the workspace rules -
+        // the EDITING ones, which unlike reading give live no exemption.
         $workspaceName = $this->workspaceNameOf($command);
-        if ($workspaceName !== null && !$access->allowsWorkspace($workspaceName->value, $this->classificationOf($workspaceName))) {
+        if ($workspaceName !== null && !$this->allowsEditingIn($access, $workspaceName)) {
             return Privilege::denied(sprintf('Workspace "%s" is not part of your access role(s)', $workspaceName->value));
         }
 
-        if ($command instanceof CreateWorkspace && !$access->allowsWorkspaceCreation()) {
-            return Privilege::denied('Your access role(s) do not allow creating workspaces');
+        if ($command instanceof CreateWorkspace) {
+            if (!$access->allowsWorkspaceCreation()) {
+                return Privilege::denied('Your access role(s) do not allow creating workspaces');
+            }
+            if (!$this->allowsEditingIn($access, $command->baseWorkspaceName)) {
+                return Privilege::denied(sprintf('Base workspace "%s" is not part of your access role(s)', $command->baseWorkspaceName->value));
+            }
+        }
+
+        // Retargeting where a publish goes is how the Studio's switcher
+        // "changes workspace" - so the NEW BASE has to be one the roles cover,
+        // or "restricted to Entwurf" is one dropdown entry away from meaning
+        // nothing.
+        if ($command instanceof ChangeBaseWorkspace && !$this->allowsEditingIn($access, $command->baseWorkspaceName)) {
+            return Privilege::denied(sprintf('Base workspace "%s" is not part of your access role(s)', $command->baseWorkspaceName->value));
         }
 
         if (($command instanceof PublishWorkspace || $command instanceof PublishIndividualNodesFromWorkspace)
@@ -215,6 +233,11 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         $access = $this->accessControlService->effectiveAccessForCurrentUser();
 
         return $access->unrestricted ? null : $access;
+    }
+
+    private function allowsEditingIn(EffectiveAccess $access, WorkspaceName $workspaceName): bool
+    {
+        return $access->allowsWorkspaceEditing($workspaceName->value, $this->classificationOf($workspaceName));
     }
 
     private function workspaceNameOf(CommandInterface $command): ?WorkspaceName

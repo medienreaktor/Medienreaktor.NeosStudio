@@ -72,9 +72,17 @@ final readonly class EffectiveAccess
     /**
      * @param string $classification ROOT, PERSONAL, SHARED or UNKNOWN
      */
-    public function allowsWorkspace(string $workspaceName, string $classification): bool
+    public function allowsWorkspaceRead(string $workspaceName, string $classification): bool
     {
-        return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowsWorkspace($workspaceName, $classification));
+        return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowsWorkspaceRead($workspaceName, $classification));
+    }
+
+    /**
+     * @param string $classification ROOT, PERSONAL, SHARED or UNKNOWN
+     */
+    public function allowsWorkspaceEditing(string $workspaceName, string $classification): bool
+    {
+        return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowsWorkspaceEditing($workspaceName, $classification));
     }
 
     public function allowsPublishToLive(): bool

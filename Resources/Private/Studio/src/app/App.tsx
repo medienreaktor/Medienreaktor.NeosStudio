@@ -14,7 +14,7 @@ import {
 import {
   allowsDimensionSpacePoint,
   allowsSite,
-  allowsWorkspace,
+  allowsWorkspaceEditing,
 } from '@/api/accessRoles'
 import { useMe } from '@/api/me'
 import { queryKeys } from '@/api/keys'
@@ -181,7 +181,7 @@ export function App() {
           w.name === editingWorkspaceName &&
           w.classification === 'SHARED' &&
           w.permissions.write &&
-          allowsWorkspace(access, w.name, w.classification),
+          allowsWorkspaceEditing(access, w.name, w.classification),
       ) ?? null)
     : null
   const activeWorkspace = collaborativeWorkspace ?? personalWorkspace
@@ -191,7 +191,7 @@ export function App() {
   const baseTargets = workspaces.filter(
     (w) =>
       (w.classification === 'ROOT' || w.classification === 'SHARED') &&
-      allowsWorkspace(access, w.name, w.classification),
+      allowsWorkspaceEditing(access, w.name, w.classification),
   )
 
   // A remembered collaborative context that no longer resolves (workspace
@@ -203,7 +203,7 @@ export function App() {
         w.name === editingWorkspaceName &&
         w.classification === 'SHARED' &&
         w.permissions.write &&
-        allowsWorkspace(access, w.name, w.classification),
+        allowsWorkspaceEditing(access, w.name, w.classification),
     )
     if (!stillValid) {
       setEditingWorkspaceName(null)
@@ -219,7 +219,7 @@ export function App() {
     if (!workspacesResponse || editingWorkspaceName !== null) return
     if (
       personalWorkspace === null ||
-      allowsWorkspace(access, personalWorkspace.name, 'PERSONAL')
+      allowsWorkspaceEditing(access, personalWorkspace.name, 'PERSONAL')
     ) {
       return
     }
@@ -227,7 +227,7 @@ export function App() {
       (w) =>
         w.classification === 'SHARED' &&
         w.permissions.write &&
-        allowsWorkspace(access, w.name, w.classification),
+        allowsWorkspaceEditing(access, w.name, w.classification),
     )
     if (fallback) {
       setEditingWorkspaceName(fallback.name)

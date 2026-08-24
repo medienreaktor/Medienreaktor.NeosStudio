@@ -287,8 +287,11 @@
       <trans-unit id="accessRoles.unrestricted" xml:space="preserve">
         <source>Unrestricted</source>
       </trans-unit>
+      <trans-unit id="accessRoles.workspaceLive" xml:space="preserve">
+        <source>Live</source>
+      </trans-unit>
       <trans-unit id="accessRoles.workspacesHint" xml:space="preserve">
-        <source>Which shared workspaces this role may enter. Nothing ticked means all of them. The live workspace always stays readable — the website is rendered from it.</source>
+        <source>Which workspaces this role may work in — edit in, publish into, join collaboratively. Nothing ticked means all of them, including live. Tick any and everything else is out, live included. Live stays readable either way; the website is rendered from it.</source>
       </trans-unit>
       <trans-unit id="accessRoles.workspacesNone" xml:space="preserve">
         <source>There are no shared workspaces yet.</source>

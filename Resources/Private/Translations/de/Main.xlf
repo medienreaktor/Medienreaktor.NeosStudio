@@ -382,9 +382,13 @@
         <source>Unrestricted</source>
         <target xml:lang="de">Uneingeschränkt</target>
       </trans-unit>
+      <trans-unit id="accessRoles.workspaceLive" xml:space="preserve">
+        <source>Live</source>
+        <target xml:lang="de">Live</target>
+      </trans-unit>
       <trans-unit id="accessRoles.workspacesHint" xml:space="preserve">
-        <source>Which shared workspaces this role may enter. Nothing ticked means all of them. The live workspace always stays readable — the website is rendered from it.</source>
-        <target xml:lang="de">Welche geteilten Workspaces diese Rolle betreten darf. Keine Auswahl bedeutet alle. Der Live-Workspace bleibt immer lesbar – aus ihm wird die Website ausgeliefert.</target>
+        <source>Which workspaces this role may work in — edit in, publish into, join collaboratively. Nothing ticked means all of them, including live. Tick any and everything else is out, live included. Live stays readable either way; the website is rendered from it.</source>
+        <target xml:lang="de">In welchen Workspaces diese Rolle arbeiten darf – bearbeiten, hineinveröffentlichen, kollaborativ beitreten. Keine Auswahl bedeutet alle, auch Live. Sobald einer angehakt ist, fällt alles andere raus – Live eingeschlossen. Lesbar bleibt Live in jedem Fall; daraus wird die Website ausgeliefert.</target>
       </trans-unit>
       <trans-unit id="accessRoles.workspacesNone" xml:space="preserve">
         <source>There are no shared workspaces yet.</source>

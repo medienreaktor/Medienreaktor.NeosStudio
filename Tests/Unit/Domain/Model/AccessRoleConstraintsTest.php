@@ -128,10 +128,38 @@ class AccessRoleConstraintsTest extends UnitTestCase
             allowPersonalWorkspace: false,
         );
 
-        self::assertTrue($constraints->allowsWorkspace('live', 'ROOT'));
-        self::assertTrue($constraints->allowsWorkspace('review', 'SHARED'));
-        self::assertFalse($constraints->allowsWorkspace('campaign', 'SHARED'));
-        self::assertFalse($constraints->allowsWorkspace('user-jane', 'PERSONAL'));
+        // Live has to stay readable or the frontend breaks for the members.
+        self::assertTrue($constraints->allowsWorkspaceRead('live', 'ROOT'));
+        self::assertTrue($constraints->allowsWorkspaceRead('review', 'SHARED'));
+        self::assertFalse($constraints->allowsWorkspaceRead('campaign', 'SHARED'));
+        self::assertFalse($constraints->allowsWorkspaceRead('user-jane', 'PERSONAL'));
+    }
+
+    /**
+     * The distinction the whole workspace restriction rests on: being able to
+     * SEE live is not being allowed to WORK in it.
+     *
+     * @test
+     */
+    public function aNarrowedListExcludesLiveFromEditingEvenThoughItStaysReadable(): void
+    {
+        $constraints = AccessRoleConstraints::create(workspaceNames: ['review']);
+
+        self::assertTrue($constraints->allowsWorkspaceRead('live', 'ROOT'));
+        self::assertFalse($constraints->allowsWorkspaceEditing('live', 'ROOT'));
+        self::assertTrue($constraints->allowsWorkspaceEditing('review', 'SHARED'));
+        self::assertFalse($constraints->allowsWorkspaceEditing('campaign', 'SHARED'));
+    }
+
+    /**
+     * @test
+     */
+    public function anEmptyWorkspaceListLeavesEvenLiveEditable(): void
+    {
+        $constraints = AccessRoleConstraints::unrestricted();
+
+        self::assertTrue($constraints->allowsWorkspaceEditing('live', 'ROOT'));
+        self::assertTrue($constraints->allowsWorkspaceEditing('anything', 'SHARED'));
     }
 
     /**
