@@ -129,7 +129,7 @@ class AccessControlService
      *
      * @return array{0: array<int, string>, 1: string} [idPath, siteNodeName]
      */
-    public function nodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): array
+    public function nodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId, ?Node $node = null): array
     {
         // Keyed by workspace and dimension too: ancestry is a property of the
         // subgraph, not of the aggregate id alone.
@@ -138,13 +138,25 @@ class AccessControlService
             return $this->nodeContextCache[$cacheKey];
         }
 
-        return $this->nodeContextCache[$cacheKey] = $this->resolveNodeContext($subgraph, $nodeAggregateId);
+        [$idPath, $siteNodeName] = $this->resolveNodeContext($subgraph, $nodeAggregateId, $node);
+
+        // One walk answers for the whole chain, not just its head: the context
+        // of each ancestor is a suffix of this one, with the same site. Filling
+        // those in costs nothing and pays off in exactly the listings that hurt
+        // - a flat descendants listing contains a node's ancestors as rows of
+        // its own, and each of them is now free.
+        $prefix = $subgraph->getWorkspaceName()->value . '|' . $subgraph->getDimensionSpacePoint()->hash . '|';
+        foreach (array_values($idPath) as $index => $ancestorId) {
+            $this->nodeContextCache[$prefix . $ancestorId] ??= [array_slice($idPath, $index), $siteNodeName];
+        }
+
+        return $this->nodeContextCache[$cacheKey];
     }
 
     /**
      * @return array{0: array<int, string>, 1: string}
      */
-    private function resolveNodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): array
+    private function resolveNodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId, ?Node $node): array
     {
         try {
             $idPath = [$nodeAggregateId->value];
@@ -152,7 +164,10 @@ class AccessControlService
             // Ordered closest-ancestor-first, so appending keeps the "index is
             // distance from the node" property allowsNodePath() relies on.
             $ancestors = $subgraph->findAncestorNodes($nodeAggregateId, FindAncestorNodesFilter::create());
-            $previous = $subgraph->findNodeById($nodeAggregateId);
+            // Only needed to name the site when the node IS the site node.
+            // Callers listing nodes already hold them - that halves the
+            // queries this costs, from two per node to one.
+            $previous = $node ?? $subgraph->findNodeById($nodeAggregateId);
             foreach ($ancestors as $ancestor) {
                 /** @var Node $ancestor */
                 if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {

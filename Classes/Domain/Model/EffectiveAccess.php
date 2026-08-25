@@ -150,6 +150,29 @@ final readonly class EffectiveAccess
     }
 
     /**
+     * Whether any assigned role narrows by WHERE a node sits - its site or its
+     * place in the page tree.
+     *
+     * The escape hatch for the read filter: resolving that position costs a
+     * subgraph query per node, and a role that only restricts workspaces,
+     * dimensions or capabilities has no use for it. Asking first turns those
+     * roles from "one query per row" into free.
+     */
+    public function narrowsByNodePosition(): bool
+    {
+        if ($this->unrestricted) {
+            return false;
+        }
+        foreach ($this->roles as $role) {
+            if ($role->constraints->nodeTreeRules !== [] || $role->constraints->siteNodeNames !== []) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * How a node should be treated in a listing - the server-side twin of the
      * client's nodeAccessState():
      *
