@@ -89,7 +89,13 @@ function changeLabel(change: WorkspacePendingDiffChange): string {
   }
 }
 
-function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
+/**
+ * One property's before/after. Exported because the side-by-side compare view
+ * shows the same rows for the change it is on - which is the only way to read
+ * a change that has no visible representation on the page (an alt text, an
+ * SEO title, a link target).
+ */
+export function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
   if (change.kind === 'position') {
     return (
       <div className="text-neutral-600 dark:text-neutral-400">

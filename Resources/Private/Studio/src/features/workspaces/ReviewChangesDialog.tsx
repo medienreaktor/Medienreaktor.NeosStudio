@@ -3,7 +3,6 @@ import {
   useWorkspaceDocumentChanges,
   useWorkspaceDocumentDiff,
   type Workspace,
-  type WorkspaceDocumentChange,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
@@ -25,72 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CompareDialog } from '@/features/compare/CompareDialog'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
+import { ChangeBadges, workspaceLabel } from './changeDisplay'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
-import { TONE_BG_CLASSES } from './historyLabels'
 import { NodeDiff } from './StepDiff'
 import { useWorkspacePublishing } from './useWorkspacePublishing'
-
-/**
- * The change verbs a document row can carry, in display priority order. Their
- * fill comes from the shared tone palette, so a review badge and a history
- * step speak of the same change in the same color: additions green, removals
- * red, modifications (moved as well as edited) blue.
- */
-const CHANGE_BADGES = [
-  {
-    key: 'created',
-    label: 'New',
-    labelKey: 'workspace.badge.new',
-    icon: 'fa-plus',
-    tone: 'add',
-  },
-  {
-    key: 'deleted',
-    label: 'Removed',
-    labelKey: 'workspace.badge.removed',
-    icon: 'fa-trash-can',
-    tone: 'remove',
-  },
-  {
-    key: 'moved',
-    label: 'Moved',
-    labelKey: 'workspace.badge.moved',
-    icon: 'fa-arrows-up-down-left-right',
-    tone: 'change',
-  },
-  {
-    key: 'changed',
-    label: 'Changed',
-    labelKey: 'workspace.badge.changed',
-    icon: 'fa-pen',
-    tone: 'change',
-  },
-] as const
-
-function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
-  return (
-    <span className="flex flex-wrap gap-1">
-      {CHANGE_BADGES.filter((badge) => document[badge.key]).map((badge) => (
-        <span
-          key={badge.key}
-          className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-neutral-950 dark:text-white',
-            TONE_BG_CLASSES[badge.tone],
-          )}
-        >
-          <i
-            className={`fas fa-fw ${badge.icon} text-[0.625rem]`}
-            aria-hidden
-          />
-          {t(badge.labelKey, badge.label)}
-        </span>
-      ))}
-    </span>
-  )
-}
 
 /**
  * The expanded body of a document row: the document's NET diff against the
@@ -135,14 +76,6 @@ function DocumentDiff({
       )}
     </div>
   )
-}
-
-/** "Live" for the root workspace, the title (or name) otherwise. */
-function workspaceLabel(workspace: Workspace | undefined, name: string) {
-  if (!workspace) return name
-  return workspace.classification === 'ROOT'
-    ? t('workspace.live', 'Live')
-    : workspace.title || workspace.name
 }
 
 /**
@@ -207,6 +140,14 @@ export function ReviewChangesDialog({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   /** Documents whose change details (diffs) are unfolded. */
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  /**
+   * The document the side-by-side compare view opened on; null while it is
+   * closed. The list here answers "what changed", the compare view answers
+   * "does it look right" - so it opens from a row and takes the whole screen.
+   */
+  const [compareDocumentId, setCompareDocumentId] = useState<string | null>(
+    null,
+  )
 
   // Every open starts fresh on the requested (or active) workspace - the
   // closed dialog does not carry a stale review over to the next one.
@@ -215,6 +156,7 @@ export function ReviewChangesDialog({
       setSourceName(initialSourceName ?? activeWorkspace.name)
       setSelectedIds(new Set())
       setExpandedIds(new Set())
+      setCompareDocumentId(null)
     }
   }, [open, activeWorkspace.name, initialSourceName])
 
@@ -255,6 +197,7 @@ export function ReviewChangesDialog({
     setSourceName(name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
+    setCompareDocumentId(null)
   }
 
   const pickTarget = (name: string) => {
@@ -577,10 +520,34 @@ export function ReviewChangesDialog({
                             </span>
                           </div>
                         </div>
+                        {/* Comparing is the main thing to DO with a row, so
+                            it reads as a button with a word on it, not as one
+                            more glyph among the row's small affordances. */}
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="shrink-0"
+                          title={t(
+                            'compare.openHint',
+                            'Compare this page side by side',
+                          )}
+                          onClick={(event) => {
+                            // Don't toggle the row's checkbox.
+                            event.preventDefault()
+                            setCompareDocumentId(id)
+                          }}
+                        >
+                          <i
+                            className="fas fa-fw fa-code-compare"
+                            aria-hidden
+                          />
+                          {t('compare.openButton', 'Compare')}
+                        </Button>
                         {document.documentAddress && canNavigate && (
-                          <button
-                            type="button"
-                            className="mt-0.5 shrink-0 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="shrink-0 text-blue-600 dark:text-blue-400"
                             title={
                               reviewingActive
                                 ? t('workspace.review.goToPage', 'Go to page')
@@ -599,11 +566,12 @@ export function ReviewChangesDialog({
                               className="fas fa-fw fa-arrow-up-right-from-square"
                               aria-hidden
                             />
-                          </button>
+                          </Button>
                         )}
-                        <button
-                          type="button"
-                          className="mt-0.5 shrink-0 cursor-pointer text-xs"
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          className="shrink-0"
                           title={
                             isExpanded
                               ? t(
@@ -630,7 +598,7 @@ export function ReviewChangesDialog({
                             )}
                             aria-hidden
                           />
-                        </button>
+                        </Button>
                       </label>
                       {isExpanded && source && (
                         <DocumentDiff
@@ -737,6 +705,23 @@ export function ReviewChangesDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {source && (
+        <CompareDialog
+          open={compareDocumentId !== null}
+          onOpenChange={(next) => !next && setCompareDocumentId(null)}
+          source={source}
+          workspaces={workspaces}
+          documents={documents}
+          initialDocumentId={compareDocumentId}
+          canNavigate={canNavigate}
+          onOpenPage={(address) => {
+            setCompareDocumentId(null)
+            goToDocument(address)
+          }}
+          onPublished={onPublished}
+        />
+      )}
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}

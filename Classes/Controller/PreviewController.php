@@ -37,6 +37,10 @@ use Psr\Http\Message\ResponseInterface;
  *   content-element metadata markup, which the Studio will need for
  *   click-to-select and in-place editing
  *
+ * The "compare" flag is orthogonal to it: an edit-mode render carrying the
+ * read-only compare script instead of the editing guest, for the side-by-side
+ * review of a workspace against its base (see features/compare in the SPA).
+ *
  * Access requires a logged-in backend user: the Neos.Neos:Backend session
  * provider covers this controller (see Settings.yaml) and the method
  * privilege below is granted to editors (see Policy.yaml). The iframe is
@@ -66,7 +70,7 @@ class PreviewController extends ActionController
     #[Flow\Inject]
     protected SecurityContext $securityContext;
 
-    public function showAction(string $node, string $mode = RenderingMode::FRONTEND, bool $includeDeleted = false): ResponseInterface|string
+    public function showAction(string $node, string $mode = RenderingMode::FRONTEND, bool $includeDeleted = false, bool $compare = false): ResponseInterface|string
     {
         try {
             $renderingMode = $this->renderingModeService->findByName($mode);
@@ -143,10 +147,17 @@ class PreviewController extends ActionController
         // guest-frame additions are inert outside its host: Guest.html only
         // aliases window.parent.neos and loads a stylesheet - the interactive
         // guest app is injected by the classic host at runtime, never here.
+        //
+        // The compare view asks for the same metadata markup but a different
+        // script: it reviews a workspace side by side against its base, where
+        // nothing may be edited. Withholding the editing guest is what makes
+        // the page inert - every interactive affordance (click-to-select,
+        // inline editors, element handles, drop targets) is mounted by that
+        // script alone, so its stand-in simply never creates them.
         $result = $this->view->render();
         $html = $result instanceof ResponseInterface ? (string)$result->getBody() : (string)$result;
         if ($renderingMode->isEdit) {
-            $html = $this->injectGuestScript($html);
+            $html = $this->injectScript($html, $compare ? 'compare.js' : 'guest.js');
         }
 
         if ($result instanceof ResponseInterface) {
@@ -185,19 +196,21 @@ class PreviewController extends ActionController
     }
 
     /**
-     * Adds the guest script (click-to-select, inline editing, host bridge)
-     * to a rendered edit-mode page. The script is built by the Studio
-     * frontend build (vite.guest.config.ts) with a stable filename.
+     * Adds one of the Studio's iframe scripts to a rendered edit-mode page:
+     * "guest.js" (click-to-select, inline editing, host bridge) for editing,
+     * "compare.js" (change markers, scroll reporting) for the compare view.
+     * Both are built by the Studio frontend build (vite.guest.config.ts,
+     * vite.compare.config.ts) with stable filenames.
      */
-    private function injectGuestScript(string $html): string
+    private function injectScript(string $html, string $fileName): string
     {
-        $scriptFile = 'resource://Medienreaktor.NeosStudio/Public/Studio/guest.js';
+        $scriptFile = 'resource://Medienreaktor.NeosStudio/Public/Studio/' . $fileName;
         if (!is_file($scriptFile)) {
             return $html;
         }
         // Same static publishing target the SPA build uses as its base URL
         // (see vite.config.ts); mtime busts browser caches across rebuilds.
-        $scriptUri = '/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/guest.js?v=' . filemtime($scriptFile);
+        $scriptUri = '/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/' . $fileName . '?v=' . filemtime($scriptFile);
         $scriptTag = '<script src="' . htmlspecialchars($scriptUri, ENT_QUOTES) . '"></script>';
 
         $bodyEnd = strripos($html, '</body>');
