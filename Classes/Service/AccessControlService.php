@@ -68,6 +68,21 @@ class AccessControlService
     private array $effectiveAccessCache = [];
 
     /**
+     * Ancestry per node aggregate id, and path anchors per role set. Both are
+     * asked once per node of every listing the API serves, and neither can
+     * change mid-request - without this a 50-row tree listing would walk the
+     * graph 50 times and resolve the anchors 50 times over.
+     *
+     * @var array<string, array{0: array<int, string>, 1: string}>
+     */
+    private array $nodeContextCache = [];
+
+    /**
+     * @var array<string, array<int, string>>
+     */
+    private array $pathAnchorCache = [];
+
+    /**
      * The acting user's effective access. The security context decides:
      * whoever holds one of the configured bypass roles (administrators by
      * default) is never restricted.
@@ -116,6 +131,21 @@ class AccessControlService
      */
     public function nodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): array
     {
+        // Keyed by workspace and dimension too: ancestry is a property of the
+        // subgraph, not of the aggregate id alone.
+        $cacheKey = $subgraph->getWorkspaceName()->value . '|' . $subgraph->getDimensionSpacePoint()->hash . '|' . $nodeAggregateId->value;
+        if (isset($this->nodeContextCache[$cacheKey])) {
+            return $this->nodeContextCache[$cacheKey];
+        }
+
+        return $this->nodeContextCache[$cacheKey] = $this->resolveNodeContext($subgraph, $nodeAggregateId);
+    }
+
+    /**
+     * @return array{0: array<int, string>, 1: string}
+     */
+    private function resolveNodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId): array
+    {
         try {
             $idPath = [$nodeAggregateId->value];
             $siteNodeName = '';
@@ -163,6 +193,11 @@ class AccessControlService
         if ($access->unrestricted) {
             return [];
         }
+        $cacheKey = $subgraph->getWorkspaceName()->value . '|' . $subgraph->getDimensionSpacePoint()->hash
+            . '|' . implode(',', array_map(static fn (AccessRole $role) => $role->id, $access->roles));
+        if (isset($this->pathAnchorCache[$cacheKey])) {
+            return $this->pathAnchorCache[$cacheKey];
+        }
 
         $anchors = [];
         foreach ($access->roles as $role) {
@@ -191,7 +226,7 @@ class AccessControlService
             }
         }
 
-        return array_keys($anchors);
+        return $this->pathAnchorCache[$cacheKey] = array_keys($anchors);
     }
 
     /**

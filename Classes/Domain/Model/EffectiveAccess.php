@@ -150,6 +150,48 @@ final readonly class EffectiveAccess
     }
 
     /**
+     * How a node should be treated in a listing - the server-side twin of the
+     * client's nodeAccessState():
+     *
+     *  - 'allowed'    a role covers it
+     *  - 'restricted' not covered, but on the way to something that is, so it
+     *                 stays listed (read-only) - hiding it would strand the
+     *                 granted branch below with no way to navigate to it
+     *  - 'hidden'     neither; nothing an editor could do with it and nothing
+     *                 below it they could reach
+     *
+     * @param array<int, string> $idPath node aggregate id first, ancestors outwards
+     * @param array<int, string> $pathAnchors ancestors of every granted branch
+     * @return string 'allowed', 'restricted' or 'hidden'
+     */
+    public function nodeVisibility(array $idPath, string $siteNodeName, array $pathAnchors): string
+    {
+        if ($this->unrestricted) {
+            return 'allowed';
+        }
+        // A role that does not cover this site has no opinion about pages in it.
+        $applicable = array_filter(
+            $this->roles,
+            static fn (AccessRole $role) => $siteNodeName === '' || $role->constraints->allowsSite($siteNodeName)
+        );
+        if ($applicable === []) {
+            return 'hidden';
+        }
+
+        $verdicts = array_map(
+            static fn (AccessRole $role) => $role->constraints->nodePathVerdict($idPath),
+            array_values($applicable)
+        );
+        if (in_array('allow', $verdicts, true)) {
+            return 'allowed';
+        }
+
+        // Not granted - so it only stays listed if something granted lives
+        // below it.
+        return in_array($idPath[0] ?? '', $pathAnchors, true) ? 'restricted' : 'hidden';
+    }
+
+    /**
      * The wire format for the Studio shell, which re-evaluates the same rules
      * client-side to shape its UI. Roles travel individually and complete,
      * because the OR-per-role semantics above cannot be expressed as one
