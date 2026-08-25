@@ -6,7 +6,7 @@
   "require": {
     "php": "^8.2",
     "neos/neos": "^9.1",
-    "medienreaktor/neos-api": "^1.12.1"
+    "medienreaktor/neos-api": "^1.13.0"
   },
   "autoload": {
     "psr-4": {
@@ -18,7 +18,7 @@
       "package-key": "Medienreaktor.NeosStudio"
     },
     "branch-alias": {
-      "dev-main": "1.12.x-dev"
+      "dev-main": "1.13.x-dev"
     }
   }
 }
