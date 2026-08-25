@@ -61,6 +61,15 @@ export type StudioContextValue = {
    */
   checkoutWorkspace: (workspaceName: string) => void
   /**
+   * Work TOWARDS a workspace: re-bases the personal workspace onto it, so
+   * editing continues in the own workspace and "publish" hands the work up
+   * into that one. What checking a task branch out means - the branch is the
+   * target, not the desk. Resolves false when the switch was refused (e.g. the
+   * personal workspace still holds unpublished changes); the reason is
+   * surfaced to the user by the implementation.
+   */
+  workOnWorkspace: (workspaceName: string) => Promise<boolean>
+  /**
    * Report inline edits made inside the preview: bumps outliner labels without
    * the refetch/reload the inspector path needs (the iframe already rendered
    * the change live).

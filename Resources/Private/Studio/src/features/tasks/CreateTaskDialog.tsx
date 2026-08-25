@@ -3,10 +3,11 @@ import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
-import { createTask, type Task } from '@/api/tasks'
+import { createTask, useTasks, type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
+import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -46,10 +47,29 @@ export function CreateTaskDialog({
 }) {
   const { data: usersData } = useUsers()
   const { data: workspacesData } = useWorkspaces(open)
+  const { personalWorkspaceName } = useStudio()
+  const { data: tasksData } = useTasks(open)
+
+  /**
+   * Where a new task branch hangs by default: the workspace its creator
+   * publishes into anyway - their own personal workspace's base.
+   *
+   * NOT live. A task is a side branch of ordinary editorial work, and in a
+   * setup that reviews through a shared draft, hanging it off live means every
+   * publish out of a task bypasses that draft and goes straight to the public
+   * site. Which is neither what "publish" means anywhere else in the UI, nor
+   * something the act itself gives any hint of.
+   */
+  const defaultBase =
+    tasksData?.defaultBaseWorkspace ??
+    (workspacesData?.workspaces ?? []).find(
+      (workspace) => workspace.name === personalWorkspaceName,
+    )?.baseWorkspace ??
+    'live'
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [baseWorkspace, setBaseWorkspace] = useState('live')
+  const [baseWorkspace, setBaseWorkspace] = useState(defaultBase)
   // null = unassigned; the trigger then shows the "Select user" placeholder.
   const [assignee, setAssignee] = useState<string | null>(null)
 
@@ -57,10 +77,10 @@ export function CreateTaskDialog({
     if (open) {
       setTitle('')
       setDescription('')
-      setBaseWorkspace('live')
+      setBaseWorkspace(defaultBase)
       setAssignee(null)
     }
-  }, [open])
+  }, [open, defaultBase])
 
   // Base candidates: live and shared workspaces (incl. other task branches -
   // stacking a task on a feature branch is legitimate).
@@ -183,6 +203,20 @@ export function CreateTaskDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {/* Where publishing out of this task will land. Said at the
+                  moment the branch is created, because that is the only
+                  moment the choice is being made - afterwards it is invisible
+                  and every publish silently follows it. */}
+              <span className="mt-1 block text-xs text-neutral-600 dark:text-neutral-400">
+                {t(
+                  'tasks.baseWorkspaceHint',
+                  'Publishing this task later goes to "{0}".',
+                  [
+                    baseItems.find((item) => item.value === baseWorkspace)
+                      ?.label ?? baseWorkspace,
+                  ],
+                )}
+              </span>
             </Field>
             <Field
               label={t('tasks.assignee', 'Assignee')}

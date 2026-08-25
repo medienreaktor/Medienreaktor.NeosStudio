@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
+import { groupComments, useReviewComments } from '@/api/reviewComments'
 import {
   useWorkspaceDocumentChanges,
   useWorkspaceDocumentDiff,
   type Workspace,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
+import { toast } from '@/components/ui/toast'
+import { CommentThread } from '@/features/review/CommentThread'
+import { RequestChangesDialog } from '@/features/review/RequestChangesDialog'
+import { useTaskVerdict } from '@/features/review/useTaskVerdict'
+import { taskStatusColor, taskStatusLabel } from '@/features/tasks/status'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { LoadingState } from '@/components/ui/spinner'
@@ -101,6 +107,7 @@ export function ReviewChangesDialog({
   workspaces,
   activeWorkspace,
   initialSourceName,
+  initialCompareDocumentId,
   open,
   onOpenChange,
   onNavigate,
@@ -116,6 +123,11 @@ export function ReviewChangesDialog({
    * re-pick any pair inside the dialog.
    */
   initialSourceName?: string
+  /**
+   * Open the side-by-side comparison on this page right away - what a remark
+   * notification leads to, since the remark is about a change on that page.
+   */
+  initialCompareDocumentId?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -148,6 +160,10 @@ export function ReviewChangesDialog({
   const [compareDocumentId, setCompareDocumentId] = useState<string | null>(
     null,
   )
+  /** The conversation panel next to the list; open when there is one. */
+  const [showComments, setShowComments] = useState(false)
+  /** Handing the task back, with the reason the reviewer is about to write. */
+  const [requestingChanges, setRequestingChanges] = useState(false)
 
   // Every open starts fresh on the requested (or active) workspace - the
   // closed dialog does not carry a stale review over to the next one.
@@ -156,9 +172,10 @@ export function ReviewChangesDialog({
       setSourceName(initialSourceName ?? activeWorkspace.name)
       setSelectedIds(new Set())
       setExpandedIds(new Set())
-      setCompareDocumentId(null)
+      setCompareDocumentId(initialCompareDocumentId ?? null)
+      setRequestingChanges(false)
     }
-  }, [open, activeWorkspace.name, initialSourceName])
+  }, [open, activeWorkspace.name, initialSourceName, initialCompareDocumentId])
 
   const source =
     sources.find((w) => w.name === sourceName) ??
@@ -222,6 +239,28 @@ export function ReviewChangesDialog({
   const { operation, resolve, pendingConflict, setPendingConflict } =
     useWorkspacePublishing(source?.name ?? '')
 
+  // The task behind the reviewed workspace, if it is a task branch at all.
+  // It rides on the workspace object (the enricher's contribution), so having
+  // the workflow here costs no extra request - and a plain shared draft simply
+  // has none, which is what leaves its review a publish/discard decision.
+  const verdict = useTaskVerdict(source)
+  const task = verdict.task
+
+  const { data: commentsData } = useReviewComments(source?.name ?? null, open)
+  const { general: generalComments, openByDocument } = useMemo(
+    () => groupComments(commentsData?.comments ?? []),
+    [commentsData],
+  )
+  const hasComments = (commentsData?.comments.length ?? 0) > 0
+
+  // A review that was asked something shows the conversation; silence stays
+  // out of the way. Only on open and when switching workspaces - closing the
+  // panel by hand must not be undone by the next poll.
+  useEffect(() => {
+    if (open) setShowComments(hasComments)
+  }, [open, source?.name, hasComments])
+
+
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev)
@@ -273,22 +312,63 @@ export function ReviewChangesDialog({
     )
   }
 
+  /**
+   * Whether this publish will also complete the task - and it is the CONTENT
+   * REPOSITORY that decides, not this dialog.
+   *
+   * Publishing a selection of documents is `PublishIndividualNodesFromWorkspace`,
+   * which reports its event as `partial: !$remainingCommands->isEmpty()`
+   * (WorkspaceCommandHandler): cover everything the workspace has, and the
+   * publish is a FULL one. The task workflow's catch-up hook completes task
+   * branches on exactly that event - so selecting all and publishing has always
+   * completed the task, through the core, with nothing in the UI saying so.
+   *
+   * The dialog cannot prevent it without disarming the hook for the CLI and
+   * the Workspace module too. What it can do is stop it from being a surprise:
+   * the footer says it before, the toast confirms it after.
+   */
+  const publishCompletesTask =
+    task !== null &&
+    task.status !== 'DONE' &&
+    selectedCount > 0 &&
+    selectedCount === documents.length &&
+    documents.length === (data?.documents.length ?? 0)
+
   const run = (kind: 'publish' | 'discard') => {
     const ids = selected.map((d) => d.documentAggregateId)
     if (ids.length === 0 || !source) return
     const sourceWorkspaceName = source.name
+    const completesTask = kind === 'publish' && publishCompletesTask
     operation.mutate(
       { kind, filter: { documents: ids } },
       {
         onSuccess: () => {
           setSelectedIds(new Set())
-          if (kind === 'publish') onPublished?.(sourceWorkspaceName)
+          if (kind !== 'publish') return
+          onPublished?.(sourceWorkspaceName)
+          if (completesTask) {
+            toast.success(t('tasks.completed', 'The task has been completed.'))
+          }
         },
       },
     )
   }
 
-  const busy = operation.isPending
+  /**
+   * The reviewed task has nothing left to publish - the work is out, only the
+   * bookkeeping is missing. Measured against the WHOLE workspace, not against
+   * the list on screen: that one is scoped to the active site, and a task that
+   * also touched another site is not finished just because this site's share
+   * is.
+   */
+  const readyToComplete =
+    task !== null &&
+    task.status !== 'DONE' &&
+    (data?.documents.length ?? 0) === 0 &&
+    !(source?.hasPublishableChanges ?? false) &&
+    (source?.permissions.manage ?? false)
+
+  const busy = operation.isPending || verdict.isPending
   const reviewingActive = source?.name === activeWorkspace.name
   const canPublish = source?.permissions.publish ?? false
   // Discarding rewrites the reviewed workspace - needs write access on it (a
@@ -342,18 +422,55 @@ export function ReviewChangesDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-        <DialogContent size="xl" className="flex max-h-[90vh] flex-col">
+        <DialogContent
+          size={showComments ? '2xl' : 'xl'}
+          className="flex max-h-[90vh] flex-col"
+        >
           <DialogHeader>
             <DialogTitle>
               {t('workspace.reviewChanges', 'Review changes')}
             </DialogTitle>
             <DialogDescription>
-              {t(
-                'workspace.review.selectDescription',
-                'Select documents to publish or discard.',
-              )}
+              {task
+                ? t(
+                    'review.taskDescription',
+                    'Look at the changes, then approve them or hand the task back.',
+                  )
+                : t(
+                    'workspace.review.selectDescription',
+                    'Select documents to publish or discard.',
+                  )}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Whose work this is and where it stands. The reviewer arrives
+              from a notification or a board card and would otherwise be
+              looking at a bare list of pages. */}
+          {task && (
+            <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-3 text-sm dark:border-neutral-800">
+              <i
+                className="fas fa-code-branch text-xs"
+                style={{ color: taskStatusColor(task.status) }}
+                aria-hidden
+              />
+              <span className="truncate font-medium text-neutral-950 dark:text-white">
+                {sourceLabel}
+              </span>
+              <span
+                className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
+                style={{ color: taskStatusColor(task.status) }}
+              >
+                {taskStatusLabel(task.status)}
+              </span>
+              {task.assigneeLabel && (
+                <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                  {t('tasks.assignedTo', 'Assigned to {0}', [
+                    task.assigneeLabel,
+                  ])}
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-3 pb-3">
             <div className="flex flex-col gap-1">
@@ -413,8 +530,32 @@ export function ReviewChangesDialog({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* The conversation is part of the review, not a place to go
+                afterwards - so it opens right here, next to the changes it is
+                about. */}
+            <Button
+              size="sm"
+              variant={showComments ? 'secondary' : 'ghost'}
+              className="mt-4 ml-auto"
+              title={t(
+                'review.commentsHint',
+                'Discuss these changes with everyone involved',
+              )}
+              onClick={() => setShowComments((value) => !value)}
+            >
+              <i className="fas fa-fw fa-comments" aria-hidden />
+              {t('review.comments', 'Comments')}
+              {hasComments && (
+                <span className="ml-1 tabular-nums text-neutral-600 dark:text-neutral-400">
+                  {commentsData?.comments.length}
+                </span>
+              )}
+            </Button>
           </div>
 
+          <div className="flex min-h-0 flex-1 gap-4">
+            <div className="flex min-w-0 flex-1 flex-col">
           {documents.length > 0 && (
             <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 text-sm text-neutral-700 dark:text-neutral-300">
               <Checkbox
@@ -442,7 +583,14 @@ export function ReviewChangesDialog({
             ) : documents.length === 0 ? (
               <Placeholder
                 icon="fa-check"
-                title={t('workspace.review.empty', 'No pending changes.')}
+                title={
+                  readyToComplete
+                    ? t(
+                        'review.allPublished',
+                        'Nothing left to publish — the task can be completed.',
+                      )
+                    : t('workspace.review.empty', 'No pending changes.')
+                }
                 className="py-8"
               />
             ) : (
@@ -518,6 +666,26 @@ export function ReviewChangesDialog({
                                     document.changeCount,
                                   ])}
                             </span>
+                            {/* Remarks still waiting on somebody. The page
+                                cannot show WHICH change they sit on - that is
+                                the comparison's job - but it must show that
+                                there are some, or they are only found by
+                                opening every page. */}
+                            {(openByDocument.get(id) ?? 0) > 0 && (
+                              <span
+                                className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                                title={t(
+                                  'review.openRemarksHint',
+                                  'Open remarks on changes of this page',
+                                )}
+                              >
+                                <i
+                                  className="fas fa-comment-dots"
+                                  aria-hidden
+                                />
+                                {openByDocument.get(id)}
+                              </span>
+                            )}
                           </div>
                         </div>
                         {/* Comparing is the main thing to DO with a row, so
@@ -612,17 +780,51 @@ export function ReviewChangesDialog({
               </ul>
             )}
           </div>
+            </div>
+
+            {showComments && source && (
+              <aside className="flex w-80 shrink-0 flex-col border-l border-neutral-200 pl-4 dark:border-neutral-800">
+                <div className="shrink-0 text-xs text-neutral-600 dark:text-neutral-400">
+                  {t('review.comments', 'Comments')}
+                </div>
+                <CommentThread
+                  className="mt-2 flex min-h-0 flex-1 flex-col"
+                  listClassName="min-h-0 flex-1 overflow-y-auto"
+                  workspaceName={source.name}
+                  comments={generalComments}
+                  canManage={source.permissions.manage}
+                  emptyLabel={t(
+                    'review.noCommentsHint',
+                    'Nothing said yet. Remarks about a single change belong in the side-by-side comparison.',
+                  )}
+                />
+              </aside>
+            )}
+          </div>
+
+          {/* The three answers a review has, in the order they are meant to
+              read. Discarding is deliberately NOT one of them: it destroys the
+              author's work, which is a thing to do to your OWN changes, never
+              a reviewer's way of saying no. It keeps its place, on the far
+              side of the footer, away from the verdict. */}
+          {/* Said before the click, not discovered after it. */}
+          {publishCompletesTask && (
+            <div className="flex items-center gap-2 pt-3 text-xs text-neutral-600 dark:text-neutral-400">
+              <i
+                className="fas fa-circle-info text-blue-600 dark:text-blue-400"
+                aria-hidden
+              />
+              {t(
+                'review.publishCompletesTask',
+                'This publishes everything the branch has — which completes the task.',
+              )}
+            </div>
+          )}
 
           <DialogFooter className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
             <Button
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              disabled={busy}
-            >
-              {t('action.close', 'Close')}
-            </Button>
-            <Button
               variant="destructive"
+              className="mr-auto"
               disabled={selectedCount === 0 || !canDiscard || busy}
               title={canDiscard ? undefined : discardDeniedHint}
               onClick={() => setConfirmDiscard(true)}
@@ -631,27 +833,70 @@ export function ReviewChangesDialog({
               {t('workspace.review.discardSelected', 'Discard selected')}
             </Button>
             <Button
-              disabled={selectedCount === 0 || !canPublish || busy}
-              title={canPublish ? undefined : publishDeniedHint}
-              className={
-                selectedCount > 0 && canPublish
-                  ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
-                  : undefined
-              }
-              onClick={() => run('publish')}
+              variant="secondary"
+              onClick={() => onOpenChange(false)}
+              disabled={busy}
             >
-              <i
-                className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
-                aria-hidden
-              />
-              {selectedCount > 0
-                ? t(
-                    'workspace.review.publishSelectedCount',
-                    'Publish selected ({0})',
-                    [selectedCount],
-                  )
-                : t('workspace.review.publishSelected', 'Publish selected')}
+              {t('action.close', 'Close')}
             </Button>
+            {task !== null && task.status !== 'DONE' && (
+              <Button
+                variant="secondary"
+                className="text-amber-700 dark:text-amber-400"
+                disabled={!canDiscard || busy}
+                title={
+                  canDiscard
+                    ? t(
+                        'review.requestChangesButtonHint',
+                        'Send the task back with what needs doing — nothing is published or discarded',
+                      )
+                    : discardDeniedHint
+                }
+                onClick={() => setRequestingChanges(true)}
+              >
+                <i className="fas fa-fw fa-rotate-left" aria-hidden />
+                {t('review.requestChanges', 'Request changes')}
+              </Button>
+            )}
+            {/* Nothing left to publish on a task that is still open: the one
+                sensible next act takes the primary slot, instead of a publish
+                button that could not do anything anyway. */}
+            {readyToComplete ? (
+              <Button
+                disabled={busy}
+                className="bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600"
+                onClick={() => verdict.complete()}
+              >
+                <i
+                  className={`fas fa-fw ${verdict.isPending ? 'fa-spinner fa-spin' : 'fa-check'}`}
+                  aria-hidden
+                />
+                {t('tasks.completeTask', 'Complete task')}
+              </Button>
+            ) : (
+              <Button
+                disabled={selectedCount === 0 || !canPublish || busy}
+                title={canPublish ? undefined : publishDeniedHint}
+                className={
+                  selectedCount > 0 && canPublish
+                    ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
+                    : undefined
+                }
+                onClick={() => run('publish')}
+              >
+                <i
+                  className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
+                  aria-hidden
+                />
+                {selectedCount > 0
+                  ? t(
+                      'workspace.review.publishSelectedCount',
+                      'Publish selected ({0})',
+                      [selectedCount],
+                    )
+                  : t('workspace.review.publishSelected', 'Publish selected')}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -722,6 +967,15 @@ export function ReviewChangesDialog({
           onPublished={onPublished}
         />
       )}
+
+      <RequestChangesDialog
+        open={requestingChanges}
+        onOpenChange={(next) => !next && setRequestingChanges(false)}
+        pending={verdict.isPending}
+        onSubmit={(reason) =>
+          verdict.requestChanges(reason, () => setRequestingChanges(false))
+        }
+      />
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}

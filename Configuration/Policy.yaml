@@ -44,15 +44,30 @@ privilegeTargets:
     # and reviewers manage, the assignee writes), and the content repository
     # enforces publish rights structurally.
 
-    # Read the task list (filtered to workspaces the account may read) and a
-    # task's comment thread (read access on the workspace checked in-action).
+    # Read the task list, filtered to the workspaces the account may read.
     'Medienreaktor.NeosStudio:Api.Tasks.Read':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(index|comments)Action())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->indexAction())'
 
     # Create tasks and drive the workflow (update, assign, submit, reopen,
-    # delete, comment).
+    # delete).
     'Medienreaktor.NeosStudio:Api.Tasks.Write':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete|addComment)Action())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\TasksController->(create|update|assign|submit|reopen|delete)Action())'
+
+    # --- Review comments -----------------------------------------------------
+    # The conversation about a workspace's pending changes - the general thread
+    # and the remarks pinned to single changes. Hangs off the workspace, not
+    # off a task, so a plain shared draft under review has one too.
+    #
+    # Workspace-level authorization is checked in-action: reading the workspace
+    # is the bar for reading AND joining its conversation (whoever may look at
+    # the changes may say something about them), settling or removing someone
+    # else's remark additionally needs write resp. manage. These targets only
+    # gate the endpoints as such.
+    'Medienreaktor.NeosStudio:Api.ReviewComments.Read':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\ReviewCommentsController->indexAction())'
+
+    'Medienreaktor.NeosStudio:Api.ReviewComments.Write':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\ReviewCommentsController->(create|resolve|delete)Action())'
 
     # --- Access roles --------------------------------------------------------
     # The caller's OWN effective access: which sites, branches, dimensions and
@@ -121,6 +136,12 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Write'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.ReviewComments.Read'
+        permission: GRANT
+      -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.ReviewComments.Write'
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Access.Own'

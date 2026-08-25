@@ -31,6 +31,8 @@ export const queryKeys = {
       ['workspaces', name, 'document-diff', documentId] as const,
     roles: (name: string) => ['workspaces', name, 'roles'] as const,
     trash: (name: string) => ['workspaces', name, 'trash'] as const,
+    /** The review conversation - general thread and pinned comments in one. */
+    comments: (name: string) => ['workspaces', name, 'comments'] as const,
   },
   nodeTypes: {
     all: ['nodeTypes'] as const,
@@ -45,9 +47,6 @@ export const queryKeys = {
   tasks: ['tasks'] as const,
   /** The user's own shareable preview links (the Share dialog's list). */
   previewLinks: ['previewLinks'] as const,
-  /** One task's comment thread - under `tasks` so invalidating tasks covers it. */
-  taskComments: (workspaceName: string) =>
-    ['tasks', workspaceName, 'comments'] as const,
   users: ['users'] as const,
   /** The assignable-role catalog - nested under `users` so invalidating users covers it. */
   userRoles: ['users', 'roles'] as const,

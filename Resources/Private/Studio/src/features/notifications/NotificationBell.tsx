@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/toast'
 import { requestPanelReveal } from '@/features/panels/reveal'
+import { requestReviewFocus } from '@/features/review/focus'
 import { requestTaskFocus } from '@/features/tasks/focus'
 import { translate as t } from '@/lib/i18n'
 
@@ -110,13 +111,28 @@ export function NotificationBell() {
                     if (notification.readAt === null) {
                       markRead.mutate([notification.id])
                     }
-                    // Task notifications carry their workspace: give the
-                    // user the context - reveal the board, open the task.
+                    // Notifications carry the workspace they are about; the
+                    // payload's target says WHERE that workspace is worth
+                    // looking at. A remark on a change leads to the review
+                    // (and to the page it sits on) - opening a task card for
+                    // it would land on a board that may not even list the
+                    // workspace, because a plain draft is no task branch.
                     const workspaceName = notification.payload.workspaceName
-                    if (typeof workspaceName === 'string') {
-                      requestPanelReveal('tasks')
-                      requestTaskFocus(workspaceName)
+                    if (typeof workspaceName !== 'string') return
+                    if (notification.payload.target === 'review') {
+                      const documentAggregateId =
+                        notification.payload.documentAggregateId
+                      requestReviewFocus({
+                        workspaceName,
+                        documentAggregateId:
+                          typeof documentAggregateId === 'string'
+                            ? documentAggregateId
+                            : undefined,
+                      })
+                      return
                     }
+                    requestPanelReveal('tasks')
+                    requestTaskFocus(workspaceName)
                   }}
                 />
               ))}
@@ -137,6 +153,7 @@ function NotificationRow({
 }) {
   const unread = notification.readAt === null
   const hasTarget = typeof notification.payload.workspaceName === 'string'
+  const opensReview = notification.payload.target === 'review'
 
   return (
     // A real menu item so clicking closes the menu and keyboard navigation
@@ -146,7 +163,9 @@ function NotificationRow({
       onClick={onOpen}
       title={
         hasTarget
-          ? t('notifications.openTask', 'Open the task')
+          ? opensReview
+            ? t('notifications.openReview', 'Open the review')
+            : t('notifications.openTask', 'Open the task')
           : unread
             ? t('notifications.markRead', 'Mark as read')
             : undefined

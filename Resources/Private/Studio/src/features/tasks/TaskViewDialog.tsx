@@ -1,15 +1,6 @@
-import { useState, type FormEvent } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import {
-  addTaskComment,
-  useTaskComments,
-  type Task,
-  type TaskStatus,
-} from '@/api/tasks'
+import { groupComments, useReviewComments } from '@/api/reviewComments'
+import { type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
-import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -18,37 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
-import { toast } from '@/components/ui/toast'
 import {
   presenceColor,
   presenceInitials,
 } from '@/features/collaboration/presenceColors'
+import { CommentThread } from '@/features/review/CommentThread'
 import { translate as t } from '@/lib/i18n'
-import { taskStatusColor } from './status'
-
-/** "5 min ago"-style timestamp; older than a week reads as a plain date. */
-function timeAgo(iso: string): string {
-  const seconds = (Date.now() - new Date(iso).getTime()) / 1000
-  const format = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
-  if (seconds < 60) return format.format(0, 'minute')
-  if (seconds < 3600) return format.format(-Math.floor(seconds / 60), 'minute')
-  if (seconds < 86400) return format.format(-Math.floor(seconds / 3600), 'hour')
-  if (seconds < 604800)
-    return format.format(-Math.floor(seconds / 86400), 'day')
-  return new Date(iso).toLocaleDateString()
-}
-
-function statusLabel(status: TaskStatus): string {
-  switch (status) {
-    case 'DONE':
-      return t('tasks.statusDone', 'done')
-    case 'IN_REVIEW':
-      return t('tasks.statusInReview', 'in review')
-    default:
-      return t('tasks.statusOpen', 'open')
-  }
-}
+import { taskStatusColor, taskStatusLabel } from './status'
 
 /**
  * The read-only task view - what a card click or a notification opens.
@@ -94,7 +61,7 @@ export function TaskViewDialog({
                   className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
                   style={{ color: taskStatusColor(task.status) }}
                 >
-                  {statusLabel(task.status)}
+                  {taskStatusLabel(task.status)}
                 </span>
               )}
             </DialogTitle>
@@ -140,7 +107,7 @@ export function TaskViewDialog({
                 onClick={() => task && onCheckout(task)}
               >
                 <i className="fas fa-code-branch" aria-hidden />
-                {t('tasks.checkoutWorkspace', 'Checkout workspace')}
+                {t('tasks.checkoutWorkspace', 'Work on this task')}
               </Button>
               <Button
                 type="button"
@@ -156,117 +123,66 @@ export function TaskViewDialog({
           </div>
         </DialogHeader>
 
-        <TaskComments workspaceName={task?.workspaceName ?? null} />
+        <TaskComments
+          workspaceName={task?.workspaceName ?? null}
+          canManage={canManage}
+        />
       </DialogContent>
     </Dialog>
   )
 }
 
 /**
- * The task's conversation, social-media style: avatar, name + bubble,
- * relative time, composer at the bottom (Enter sends, Shift+Enter breaks).
+ * The task's conversation - the workspace's general thread (see
+ * CommentThread). Remarks pinned to single changes are deliberately not mixed
+ * in: without the change next to them they read out of context, so they are
+ * only counted here and belong to the compare view.
  */
-function TaskComments({ workspaceName }: { workspaceName: string | null }) {
-  const { data } = useTaskComments(workspaceName)
-  const [text, setText] = useState('')
-
-  const send = useMutation({
-    mutationFn: () => addTaskComment(workspaceName ?? '', text.trim()),
-    onSuccess: () => {
-      setText('')
-      // The tasks prefix covers this thread's key AND the board's per-card
-      // commentCount - the badge updates immediately, not on the next poll.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
-    },
-    onError: (error) =>
-      toast.error(
-        apiErrorDescription(
-          error,
-          t('tasks.commentFailedDetail', 'Adding the comment failed.'),
-        ),
-        { title: t('tasks.commentFailed', 'Could not add comment') },
-      ),
-  })
-
-  const submit = (event?: FormEvent) => {
-    event?.preventDefault()
-    if (workspaceName && text.trim() !== '' && !send.isPending) send.mutate()
-  }
-
-  const comments = data?.comments ?? []
+function TaskComments({
+  workspaceName,
+  canManage,
+}: {
+  workspaceName: string | null
+  canManage: boolean
+}) {
+  const { data } = useReviewComments(workspaceName)
+  const { general, openByDocument } = groupComments(data?.comments ?? [])
+  const pinnedOpen = [...openByDocument.values()].reduce(
+    (sum, count) => sum + count,
+    0,
+  )
 
   return (
     <div>
-      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-        {t('tasks.comments', 'Comments')}
-      </div>
-
-      <div className="mt-2 flex max-h-64 flex-col gap-3 overflow-y-auto">
-        {comments.length === 0 && (
-          <div className="text-xs text-neutral-500">
-            {t('tasks.noComments', 'No comments yet.')}
-          </div>
+      <div className="flex items-center justify-between gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+        <span>{t('review.comments', 'Comments')}</span>
+        {pinnedOpen > 0 && (
+          <span
+            className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+            title={t(
+              'review.pinnedOpenHint',
+              'Open remarks on single changes — they show up in the side-by-side comparison',
+            )}
+          >
+            <i className="fas fa-comment-dots" aria-hidden />
+            {pinnedOpen === 1
+              ? t('review.onePinnedOpen', '1 open remark on a change')
+              : t('review.manyPinnedOpen', '{0} open remarks on changes', [
+                  pinnedOpen,
+                ])}
+          </span>
         )}
-        {comments.map((comment) => (
-          <div key={comment.id} className="flex items-start gap-2">
-            <span
-              className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.6rem] font-semibold text-white select-none"
-              style={{
-                backgroundColor: comment.author
-                  ? presenceColor(comment.author)
-                  : 'var(--color-neutral-700)',
-              }}
-              aria-hidden
-            >
-              {presenceInitials(comment.authorLabel ?? '?')}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="w-fit max-w-full rounded-lg rounded-tl-none bg-neutral-200 dark:bg-neutral-800 px-3 py-1.5">
-                <div className="text-xs font-semibold text-neutral-950 dark:text-white">
-                  {comment.authorLabel ?? comment.author}
-                </div>
-                <div className="text-sm wrap-break-word whitespace-pre-line text-neutral-800 dark:text-neutral-200">
-                  {comment.text}
-                </div>
-              </div>
-              <div
-                className="mt-0.5 text-[0.65rem] text-neutral-500"
-                title={new Date(comment.createdAt).toLocaleString()}
-              >
-                {timeAgo(comment.createdAt)}
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
 
-      <form onSubmit={submit} className="mt-3 flex items-end gap-2">
-        <Textarea
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              submit()
-            }
-          }}
-          placeholder={t('tasks.commentPlaceholder', 'Write a comment…')}
-          rows={3}
-          className="flex-1"
+      {workspaceName !== null && (
+        <CommentThread
+          className="mt-2"
+          listClassName="max-h-64 overflow-y-auto"
+          workspaceName={workspaceName}
+          comments={general}
+          canManage={canManage}
         />
-        <Button
-          type="submit"
-          size="icon"
-          title={t('tasks.commentSend', 'Send')}
-          aria-label={t('tasks.commentSend', 'Send')}
-          disabled={text.trim() === '' || send.isPending}
-        >
-          <i
-            className={`fas ${send.isPending ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}
-            aria-hidden
-          />
-        </Button>
-      </form>
+      )}
     </div>
   )
 }

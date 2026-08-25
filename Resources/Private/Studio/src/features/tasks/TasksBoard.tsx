@@ -32,10 +32,12 @@ import {
   presenceColor,
   presenceInitials,
 } from '@/features/collaboration/presenceColors'
+import { RequestChangesDialog } from '@/features/review/RequestChangesDialog'
 import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import { translate as t } from '@/lib/i18n'
 import { taskStatusColor } from './status'
 import { CreateTaskDialog } from './CreateTaskDialog'
+import { SendToReviewDialog } from './SendToReviewDialog'
 import { consumeTaskFocus, usePendingTaskFocus } from './focus'
 import { TaskDetailDialog } from './TaskDetailDialog'
 import { TaskViewDialog } from './TaskViewDialog'
@@ -51,7 +53,9 @@ const COLUMNS: { status: TaskStatus; title: () => string }[] = [
  * card drives the workflow: to "In review" = submit, back to "Open" = reopen.
  * Dropping on "Done" deliberately does NOT publish blindly - it opens the
  * Review Changes dialog on the task workspace so the reviewer picks what to
- * publish; once a publish succeeded the task is completed and the card moves.
+ * publish, and completing stays their own next act there. Publishing never
+ * moves a card by itself: a status that changes as a side effect of a green
+ * button is not something anyone can see coming.
  * Clicking a card (or a notification) opens the read-only task view, which
  * offers checkout and the edit dialog; the card's context menu reaches both
  * dialogs directly.
@@ -67,6 +71,10 @@ export function TasksBoard() {
   const [editing, setEditing] = useState<Task | null>(null)
   const [deleting, setDeleting] = useState<Task | null>(null)
   const [reviewing, setReviewing] = useState<Task | null>(null)
+  /** Dragged into "In review" - about to say what the reviewers should look at. */
+  const [submitting, setSubmitting] = useState<Task | null>(null)
+  /** Dragged back to "Open" - about to say what needs doing. */
+  const [sendingBack, setSendingBack] = useState<Task | null>(null)
 
   const workspaces = workspacesData?.workspaces ?? []
   const activeWorkspace =
@@ -109,8 +117,15 @@ export function TasksBoard() {
   }
 
   const move = useMutation({
-    mutationFn: ({ task, target }: { task: Task; target: TaskStatus }) =>
-      transitionTask(task.workspaceName, target),
+    mutationFn: ({
+      task,
+      target,
+      note,
+    }: {
+      task: Task
+      target: TaskStatus
+      note?: string
+    }) => transitionTask(task.workspaceName, target, note),
     onError: (mutationError) =>
       toast.error(
         apiErrorDescription(
@@ -125,10 +140,22 @@ export function TasksBoard() {
   const onDrop = (task: Task, target: TaskStatus) => {
     if (task.status === target) return
     if (target === 'DONE' && task.workspace?.hasPublishableChanges) {
-      // Publishing is the reviewer's explicit decision: open the review
-      // dialog on the task workspace; completion follows the publish.
-      // With nothing to publish the task just completes directly.
+      // Unpublished work cannot just be declared done: open the review on the
+      // task workspace so the reviewer sees what is still pending and decides.
+      // With nothing pending, dropping on "Done" IS the decision.
       setReviewing(task)
+      return
+    }
+    // Both sideways moves want a word - submitting says what to look at,
+    // sending back says what to fix - and both keep it in the task's thread.
+    // The workspace switcher's menu has always asked; dragging the card is
+    // the same action and must not quietly skip the question.
+    if (target === 'IN_REVIEW') {
+      setSubmitting(task)
+      return
+    }
+    if (target === 'OPEN') {
+      setSendingBack(task)
       return
     }
     move.mutate(
@@ -143,28 +170,28 @@ export function TasksBoard() {
     )
   }
 
+  // A publish went out - close up shop, but leave the card where it is. The
+  // task completes when someone says so: in the review dialog, whose primary
+  // action turns into "complete task" the moment nothing is pending, or by
+  // dropping the card here.
   const onPublished = (sourceWorkspaceName: string) => {
     if (reviewing && sourceWorkspaceName === reviewing.workspaceName) {
-      move.mutate(
-        { task: reviewing, target: 'DONE' },
-        {
-          onSuccess: () =>
-            toast.success(t('tasks.completed', 'The task has been completed.')),
-        },
-      )
       setReviewing(null)
     }
   }
 
+  /**
+   * Take the task on: the personal workspace is re-based onto its branch, so
+   * editing continues where it always happens and publishing hands the work
+   * INTO the task. The branch is the target, not the desk - which is what
+   * makes "publish" mean the same thing here as everywhere else.
+   */
   const checkout = (task: Task) => {
     setViewing(null)
     setEditing(null)
-    // Already the editing context: switching would no-op, so no toast either.
-    if (task.workspaceName === studio.workspaceName) return
-    studio.checkoutWorkspace(task.workspaceName)
-    // The same toast a switch via the workspace switcher shows - checking a
-    // task branch out IS that switch, just triggered from the board.
-    toast.success(t('workspace.switched', 'Workspace switched.'))
+    void studio.workOnWorkspace(task.workspaceName).then((switched) => {
+      if (switched) toast.success(t('workspace.switched', 'Workspace switched.'))
+    })
   }
 
   if (error) {
@@ -270,6 +297,30 @@ export function TasksBoard() {
         open={creating}
         onOpenChange={setCreating}
         onCreated={checkout}
+      />
+      <SendToReviewDialog
+        open={submitting !== null}
+        onOpenChange={(open) => !open && setSubmitting(null)}
+        pending={move.isPending}
+        onSubmit={(comment) => {
+          if (!submitting) return
+          move.mutate(
+            { task: submitting, target: 'IN_REVIEW', note: comment || undefined },
+            { onSuccess: () => setSubmitting(null) },
+          )
+        }}
+      />
+      <RequestChangesDialog
+        open={sendingBack !== null}
+        onOpenChange={(open) => !open && setSendingBack(null)}
+        pending={move.isPending}
+        onSubmit={(reason) => {
+          if (!sendingBack) return
+          move.mutate(
+            { task: sendingBack, target: 'OPEN', note: reason },
+            { onSuccess: () => setSendingBack(null) },
+          )
+        }}
       />
       <TaskViewDialog
         task={viewing}
@@ -423,11 +474,25 @@ function TaskCard({
                 {task.commentCount}
               </span>
             )}
-            {task.workspace?.hasPublishableChanges && (
+            {task.workspace?.hasPublishableChanges ? (
               <span
                 className="size-1.5 rounded-full bg-orange-600 dark:bg-orange-400"
                 title={t('tasks.hasChanges', 'Has unpublished changes')}
               />
+            ) : (
+              // Under review with nothing left to publish: the work is out,
+              // only the card has not caught up. Completing stays a deliberate
+              // act, so the board says so rather than doing it.
+              task.status === 'IN_REVIEW' && (
+                <i
+                  className="fas fa-check text-[0.65rem] text-green-600 dark:text-green-400"
+                  title={t(
+                    'tasks.readyToComplete',
+                    'Nothing left to publish — the task can be completed',
+                  )}
+                  aria-hidden
+                />
+              )
             )}
           </span>
         </div>
@@ -444,7 +509,7 @@ function TaskCard({
           </ContextMenuItem>
           <ContextMenuItem disabled={!canWrite || active} onClick={onCheckout}>
             <i className="fas fa-code-branch w-4 text-center" aria-hidden />
-            {t('tasks.checkoutWorkspace', 'Checkout workspace')}
+            {t('tasks.checkoutWorkspace', 'Work on this task')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem

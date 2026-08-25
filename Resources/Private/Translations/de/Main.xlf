@@ -422,6 +422,10 @@
         <source>Close</source>
         <target xml:lang="de">Schließen</target>
       </trans-unit>
+      <trans-unit id="action.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target xml:lang="de">Löschen</target>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
         <target xml:lang="de">Mit der API verbinden</target>
@@ -550,6 +554,18 @@
         <source>Change {0} of {1}</source>
         <target xml:lang="de">Änderung {0} von {1}</target>
       </trans-unit>
+      <trans-unit id="compare.commentPlaceholder" xml:space="preserve">
+        <source>What should happen with this change?</source>
+        <target xml:lang="de">Was soll mit dieser Änderung passieren?</target>
+      </trans-unit>
+      <trans-unit id="compare.commentsHint" xml:space="preserve">
+        <source>Leave a remark on the change under review</source>
+        <target xml:lang="de">Eine Anmerkung zur betrachteten Änderung hinterlassen</target>
+      </trans-unit>
+      <trans-unit id="compare.commentsOnChange" xml:space="preserve">
+        <source>Remarks on this change</source>
+        <target xml:lang="de">Anmerkungen zu dieser Änderung</target>
+      </trans-unit>
       <trans-unit id="compare.description" xml:space="preserve">
         <source>"{0}" as it is now, next to how "{1}" would publish it.</source>
         <target xml:lang="de">„{0}“ im aktuellen Stand, daneben der Stand, den „{1}“ veröffentlichen würde.</target>
@@ -622,6 +638,10 @@
         <source>No marked changes</source>
         <target xml:lang="de">Keine markierten Änderungen</target>
       </trans-unit>
+      <trans-unit id="compare.noCommentsOnChange" xml:space="preserve">
+        <source>Nothing said about this change yet.</source>
+        <target xml:lang="de">Zu dieser Änderung wurde noch nichts gesagt.</target>
+      </trans-unit>
       <trans-unit id="compare.noVisibleCounterpart" xml:space="preserve">
         <source>Not visible on the page — only here</source>
         <target xml:lang="de">Auf der Seite nicht sichtbar – nur hier</target>
@@ -669,6 +689,10 @@
       <trans-unit id="compare.selectChange" xml:space="preserve">
         <source>Step through the changes to read what each one replaced.</source>
         <target xml:lang="de">Durch die Änderungen blättern, um zu lesen, was jede ersetzt hat.</target>
+      </trans-unit>
+      <trans-unit id="compare.selectChangeToComment" xml:space="preserve">
+        <source>Step to a change to comment on it.</source>
+        <target xml:lang="de">Zu einer Änderung springen, um sie zu kommentieren.</target>
       </trans-unit>
       <trans-unit id="compare.selectDocument" xml:space="preserve">
         <source>Pick a page on the left to compare it.</source>
@@ -1930,6 +1954,10 @@
         <source>Marking as read failed</source>
         <target xml:lang="de">Als gelesen markieren fehlgeschlagen</target>
       </trans-unit>
+      <trans-unit id="notifications.openReview" xml:space="preserve">
+        <source>Open the review</source>
+        <target xml:lang="de">Review öffnen</target>
+      </trans-unit>
       <trans-unit id="notifications.openTask" xml:space="preserve">
         <source>Open the task</source>
         <target xml:lang="de">Aufgabe öffnen</target>
@@ -2141,6 +2169,110 @@
       <trans-unit id="profile.unavailable" xml:space="preserve">
         <source>Your profile is currently unavailable.</source>
         <target xml:lang="de">Dein Profil ist derzeit nicht verfügbar.</target>
+      </trans-unit>
+      <trans-unit id="review.allPublished" xml:space="preserve">
+        <source>Nothing left to publish — the task can be completed.</source>
+        <target xml:lang="de">Nichts mehr offen – die Aufgabe kann abgeschlossen werden.</target>
+      </trans-unit>
+      <trans-unit id="review.changesRequested" xml:space="preserve">
+        <source>The task went back to its author.</source>
+        <target xml:lang="de">Die Aufgabe ist zurück beim Autor.</target>
+      </trans-unit>
+      <trans-unit id="review.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+        <target xml:lang="de">Kommentar konnte nicht hinzugefügt werden</target>
+      </trans-unit>
+      <trans-unit id="review.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+        <target xml:lang="de">Das Hinzufügen des Kommentars ist fehlgeschlagen.</target>
+      </trans-unit>
+      <trans-unit id="review.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+        <target xml:lang="de">Kommentar schreiben …</target>
+      </trans-unit>
+      <trans-unit id="review.commentSend" xml:space="preserve">
+        <source>Send</source>
+        <target xml:lang="de">Senden</target>
+      </trans-unit>
+      <trans-unit id="review.comments" xml:space="preserve">
+        <source>Comments</source>
+        <target xml:lang="de">Kommentare</target>
+      </trans-unit>
+      <trans-unit id="review.commentsHint" xml:space="preserve">
+        <source>Discuss these changes with everyone involved</source>
+        <target xml:lang="de">Diese Änderungen mit allen Beteiligten besprechen</target>
+      </trans-unit>
+      <trans-unit id="review.deleteFailed" xml:space="preserve">
+        <source>Could not delete the comment</source>
+        <target xml:lang="de">Kommentar konnte nicht gelöscht werden</target>
+      </trans-unit>
+      <trans-unit id="review.manyPinnedOpen" xml:space="preserve">
+        <source>{0} open remarks on changes</source>
+        <target xml:lang="de">{0} offene Anmerkungen an Änderungen</target>
+      </trans-unit>
+      <trans-unit id="review.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+        <target xml:lang="de">Noch keine Kommentare.</target>
+      </trans-unit>
+      <trans-unit id="review.noCommentsHint" xml:space="preserve">
+        <source>Nothing said yet. Remarks about a single change belong in the side-by-side comparison.</source>
+        <target xml:lang="de">Noch nichts gesagt. Anmerkungen zu einzelnen Änderungen gehören in den Vergleich.</target>
+      </trans-unit>
+      <trans-unit id="review.onePinnedOpen" xml:space="preserve">
+        <source>1 open remark on a change</source>
+        <target xml:lang="de">1 offene Anmerkung an einer Änderung</target>
+      </trans-unit>
+      <trans-unit id="review.openRemarksHint" xml:space="preserve">
+        <source>Open remarks on changes of this page</source>
+        <target xml:lang="de">Offene Anmerkungen an Änderungen dieser Seite</target>
+      </trans-unit>
+      <trans-unit id="review.pinnedOpenHint" xml:space="preserve">
+        <source>Open remarks on single changes — they show up in the side-by-side comparison</source>
+        <target xml:lang="de">Offene Anmerkungen an einzelnen Änderungen – sie stehen im Vergleich</target>
+      </trans-unit>
+      <trans-unit id="review.publishCompletesTask" xml:space="preserve">
+        <source>This publishes everything the branch has — which completes the task.</source>
+        <target xml:lang="de">Damit geht alles raus, was der Branch hat – die Aufgabe wird dabei abgeschlossen.</target>
+      </trans-unit>
+      <trans-unit id="review.requestChanges" xml:space="preserve">
+        <source>Request changes</source>
+        <target xml:lang="de">Änderungen erbeten</target>
+      </trans-unit>
+      <trans-unit id="review.requestChangesButtonHint" xml:space="preserve">
+        <source>Send the task back with what needs doing — nothing is published or discarded</source>
+        <target xml:lang="de">Aufgabe mit dem Nötigen zurückgeben – es wird nichts veröffentlicht und nichts verworfen</target>
+      </trans-unit>
+      <trans-unit id="review.requestChangesHint" xml:space="preserve">
+        <source>The task goes back to its author. Nothing is published and nothing is discarded — their work stays as it is.</source>
+        <target xml:lang="de">Die Aufgabe geht zurück an den Autor. Es wird nichts veröffentlicht und nichts verworfen – die Arbeit bleibt erhalten.</target>
+      </trans-unit>
+      <trans-unit id="review.requestChangesReason" xml:space="preserve">
+        <source>What needs to change?</source>
+        <target xml:lang="de">Was soll geändert werden?</target>
+      </trans-unit>
+      <trans-unit id="review.resolve" xml:space="preserve">
+        <source>Mark done</source>
+        <target xml:lang="de">Als erledigt markieren</target>
+      </trans-unit>
+      <trans-unit id="review.resolveFailed" xml:space="preserve">
+        <source>Could not update the comment</source>
+        <target xml:lang="de">Kommentar konnte nicht aktualisiert werden</target>
+      </trans-unit>
+      <trans-unit id="review.resolved" xml:space="preserve">
+        <source>Done</source>
+        <target xml:lang="de">Erledigt</target>
+      </trans-unit>
+      <trans-unit id="review.taskDescription" xml:space="preserve">
+        <source>Look at the changes, then approve them or hand the task back.</source>
+        <target xml:lang="de">Die Änderungen ansehen und die Aufgabe dann freigeben oder zurückgeben.</target>
+      </trans-unit>
+      <trans-unit id="review.unresolve" xml:space="preserve">
+        <source>Reopen</source>
+        <target xml:lang="de">Wieder öffnen</target>
+      </trans-unit>
+      <trans-unit id="review.verdictFailed" xml:space="preserve">
+        <source>The task could not be updated</source>
+        <target xml:lang="de">Die Aufgabe konnte nicht aktualisiert werden</target>
       </trans-unit>
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
@@ -2558,9 +2690,17 @@
         <source>Based on</source>
         <target xml:lang="de">Basiert auf</target>
       </trans-unit>
+      <trans-unit id="tasks.baseWorkspaceHint" xml:space="preserve">
+        <source>Publishing this task later goes to "{0}".</source>
+        <target xml:lang="de">Veröffentlichen aus dieser Aufgabe geht später nach „{0}“.</target>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspaceLocked" xml:space="preserve">
+        <source>Publishing this task goes to "{0}". To move it elsewhere, publish or discard its open changes first.</source>
+        <target xml:lang="de">Veröffentlichen aus dieser Aufgabe geht nach „{0}“. Zum Umhängen erst die offenen Änderungen veröffentlichen oder verwerfen.</target>
+      </trans-unit>
       <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
-        <source>Checkout workspace</source>
-        <target xml:lang="de">Arbeitsbereich auschecken</target>
+        <source>Work on this task</source>
+        <target xml:lang="de">An dieser Aufgabe arbeiten</target>
       </trans-unit>
       <trans-unit id="tasks.columnDone" xml:space="preserve">
         <source>Done</source>
@@ -2577,22 +2717,6 @@
       <trans-unit id="tasks.columnOpen" xml:space="preserve">
         <source>Open</source>
         <target xml:lang="de">Offen</target>
-      </trans-unit>
-      <trans-unit id="tasks.commentFailed" xml:space="preserve">
-        <source>Could not add comment</source>
-        <target xml:lang="de">Kommentar konnte nicht hinzugefügt werden</target>
-      </trans-unit>
-      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
-        <source>Adding the comment failed.</source>
-        <target xml:lang="de">Das Hinzufügen des Kommentars ist fehlgeschlagen.</target>
-      </trans-unit>
-      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
-        <source>Write a comment…</source>
-        <target xml:lang="de">Kommentar schreiben …</target>
-      </trans-unit>
-      <trans-unit id="tasks.commentSend" xml:space="preserve">
-        <source>Send</source>
-        <target xml:lang="de">Senden</target>
       </trans-unit>
       <trans-unit id="tasks.comments" xml:space="preserve">
         <source>Comments</source>
@@ -2686,9 +2810,9 @@
         <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
         <target xml:lang="de">Ein Aufgaben-Branch sammelt Änderungen für ein Vorhaben. Nur beteiligte Personen sehen ihn; Prüfer geben ihn frei und veröffentlichen ihn.</target>
       </trans-unit>
-      <trans-unit id="tasks.noComments" xml:space="preserve">
-        <source>No comments yet.</source>
-        <target xml:lang="de">Noch keine Kommentare.</target>
+      <trans-unit id="tasks.readyToComplete" xml:space="preserve">
+        <source>Nothing left to publish — the task can be completed</source>
+        <target xml:lang="de">Nichts mehr offen – die Aufgabe kann abgeschlossen werden</target>
       </trans-unit>
       <trans-unit id="tasks.reopenTask" xml:space="preserve">
         <source>Reopen task</source>
@@ -3450,9 +3574,17 @@
         <source>Publish {0} pending changes</source>
         <target xml:lang="de">{0} ausstehende Änderungen veröffentlichen</target>
       </trans-unit>
+      <trans-unit id="workspace.publishPendingManyTo" xml:space="preserve">
+        <source>Publish {0} pending changes to "{1}"</source>
+        <target xml:lang="de">{0} ausstehende Änderungen nach „{1}“ veröffentlichen</target>
+      </trans-unit>
       <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
         <source>Publish 1 pending change</source>
         <target xml:lang="de">1 ausstehende Änderung veröffentlichen</target>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingOneTo" xml:space="preserve">
+        <source>Publish 1 pending change to "{0}"</source>
+        <target xml:lang="de">Eine ausstehende Änderung nach „{0}“ veröffentlichen</target>
       </trans-unit>
       <trans-unit id="workspace.publishTarget" xml:space="preserve">
         <source>Workspace to publish to</source>
