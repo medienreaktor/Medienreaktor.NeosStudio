@@ -538,6 +538,154 @@
         <source>Working…</source>
         <target xml:lang="de">Wird ausgeführt…</target>
       </trans-unit>
+      <trans-unit id="compare.afterCaption" xml:space="preserve">
+        <source>After</source>
+        <target xml:lang="de">Nachher</target>
+      </trans-unit>
+      <trans-unit id="compare.beforeCaption" xml:space="preserve">
+        <source>Before</source>
+        <target xml:lang="de">Vorher</target>
+      </trans-unit>
+      <trans-unit id="compare.changePosition" xml:space="preserve">
+        <source>Change {0} of {1}</source>
+        <target xml:lang="de">Änderung {0} von {1}</target>
+      </trans-unit>
+      <trans-unit id="compare.description" xml:space="preserve">
+        <source>"{0}" as it is now, next to how "{1}" would publish it.</source>
+        <target xml:lang="de">„{0}“ im aktuellen Stand, daneben der Stand, den „{1}“ veröffentlichen würde.</target>
+      </trans-unit>
+      <trans-unit id="compare.details" xml:space="preserve">
+        <source>Details</source>
+        <target xml:lang="de">Details</target>
+      </trans-unit>
+      <trans-unit id="compare.detailsHint" xml:space="preserve">
+        <source>Show the values this change replaced</source>
+        <target xml:lang="de">Zeigt die Werte, die diese Änderung ersetzt hat</target>
+      </trans-unit>
+      <trans-unit id="compare.dimensionHint" xml:space="preserve">
+        <source>This page exists once per dimension and is edited once per dimension — pick the version to review</source>
+        <target xml:lang="de">Diese Seite existiert je Dimension einmal und wird je Dimension einzeln bearbeitet – wähle die Version, die geprüft werden soll</target>
+      </trans-unit>
+      <trans-unit id="compare.discardDocument" xml:space="preserve">
+        <source>Discard this page</source>
+        <target xml:lang="de">Diese Seite verwerfen</target>
+      </trans-unit>
+      <trans-unit id="compare.emptyBase" xml:space="preserve">
+        <source>This page is new — it does not exist in "{0}" yet.</source>
+        <target xml:lang="de">Diese Seite ist neu – in „{0}“ gibt es sie noch nicht.</target>
+      </trans-unit>
+      <trans-unit id="compare.emptyTarget" xml:space="preserve">
+        <source>This page will be removed from "{0}" when the changes are published.</source>
+        <target xml:lang="de">Diese Seite wird beim Veröffentlichen aus „{0}“ entfernt.</target>
+      </trans-unit>
+      <trans-unit id="compare.frameFailed" xml:space="preserve">
+        <source>This version of the page could not be rendered.</source>
+        <target xml:lang="de">Diese Version der Seite konnte nicht dargestellt werden.</target>
+      </trans-unit>
+      <trans-unit id="compare.frameLoading" xml:space="preserve">
+        <source>Rendering…</source>
+        <target xml:lang="de">Wird dargestellt…</target>
+      </trans-unit>
+      <trans-unit id="compare.frameTitle" xml:space="preserve">
+        <source>Page version</source>
+        <target xml:lang="de">Seitenversion</target>
+      </trans-unit>
+      <trans-unit id="compare.manyDocuments" xml:space="preserve">
+        <source>{0} changed pages</source>
+        <target xml:lang="de">{0} geänderte Seiten</target>
+      </trans-unit>
+      <trans-unit id="compare.mark.changed" xml:space="preserve">
+        <source>Changed</source>
+        <target xml:lang="de">Geändert</target>
+      </trans-unit>
+      <trans-unit id="compare.mark.created" xml:space="preserve">
+        <source>New</source>
+        <target xml:lang="de">Neu</target>
+      </trans-unit>
+      <trans-unit id="compare.mark.moved" xml:space="preserve">
+        <source>Moved</source>
+        <target xml:lang="de">Verschoben</target>
+      </trans-unit>
+      <trans-unit id="compare.mark.removed" xml:space="preserve">
+        <source>Removed</source>
+        <target xml:lang="de">Entfernt</target>
+      </trans-unit>
+      <trans-unit id="compare.mark.variant" xml:space="preserve">
+        <source>Variant</source>
+        <target xml:lang="de">Variante</target>
+      </trans-unit>
+      <trans-unit id="compare.nextChange" xml:space="preserve">
+        <source>Next change</source>
+        <target xml:lang="de">Nächste Änderung</target>
+      </trans-unit>
+      <trans-unit id="compare.noChanges" xml:space="preserve">
+        <source>No marked changes</source>
+        <target xml:lang="de">Keine markierten Änderungen</target>
+      </trans-unit>
+      <trans-unit id="compare.noVisibleCounterpart" xml:space="preserve">
+        <source>Not visible on the page — only here</source>
+        <target xml:lang="de">Auf der Seite nicht sichtbar – nur hier</target>
+      </trans-unit>
+      <trans-unit id="compare.oneDocument" xml:space="preserve">
+        <source>1 changed page</source>
+        <target xml:lang="de">1 geänderte Seite</target>
+      </trans-unit>
+      <trans-unit id="compare.openButton" xml:space="preserve">
+        <source>Compare</source>
+        <target xml:lang="de">Vergleichen</target>
+      </trans-unit>
+      <trans-unit id="compare.openHint" xml:space="preserve">
+        <source>Compare this page side by side</source>
+        <target xml:lang="de">Diese Seite nebeneinander vergleichen</target>
+      </trans-unit>
+      <trans-unit id="compare.openPage" xml:space="preserve">
+        <source>Open page</source>
+        <target xml:lang="de">Seite öffnen</target>
+      </trans-unit>
+      <trans-unit id="compare.otherDimension" xml:space="preserve">
+        <source>not your dimension</source>
+        <target xml:lang="de">nicht deine Dimension</target>
+      </trans-unit>
+      <trans-unit id="compare.otherDimensionHint" xml:space="preserve">
+        <source>You are editing another dimension — this page has no changes there.</source>
+        <target xml:lang="de">Du bearbeitest gerade eine andere Dimension – dort hat diese Seite keine Änderungen.</target>
+      </trans-unit>
+      <trans-unit id="compare.pageProperties" xml:space="preserve">
+        <source>Page properties</source>
+        <target xml:lang="de">Seiteneigenschaften</target>
+      </trans-unit>
+      <trans-unit id="compare.previousChange" xml:space="preserve">
+        <source>Previous change</source>
+        <target xml:lang="de">Vorherige Änderung</target>
+      </trans-unit>
+      <trans-unit id="compare.publishDocument" xml:space="preserve">
+        <source>Publish this page</source>
+        <target xml:lang="de">Diese Seite veröffentlichen</target>
+      </trans-unit>
+      <trans-unit id="compare.removedDetail" xml:space="preserve">
+        <source>This element will be removed.</source>
+        <target xml:lang="de">Dieses Element wird entfernt.</target>
+      </trans-unit>
+      <trans-unit id="compare.selectChange" xml:space="preserve">
+        <source>Step through the changes to read what each one replaced.</source>
+        <target xml:lang="de">Durch die Änderungen blättern, um zu lesen, was jede ersetzt hat.</target>
+      </trans-unit>
+      <trans-unit id="compare.selectDocument" xml:space="preserve">
+        <source>Pick a page on the left to compare it.</source>
+        <target xml:lang="de">Links eine Seite auswählen, um sie zu vergleichen.</target>
+      </trans-unit>
+      <trans-unit id="compare.syncScroll" xml:space="preserve">
+        <source>Sync scrolling</source>
+        <target xml:lang="de">Synchron scrollen</target>
+      </trans-unit>
+      <trans-unit id="compare.syncScrollHint" xml:space="preserve">
+        <source>Scroll both versions together</source>
+        <target xml:lang="de">Beide Versionen gemeinsam scrollen</target>
+      </trans-unit>
+      <trans-unit id="compare.title" xml:space="preserve">
+        <source>Compare changes</source>
+        <target xml:lang="de">Änderungen vergleichen</target>
+      </trans-unit>
       <trans-unit id="creation.cancel" xml:space="preserve">
         <source>Cancel</source>
         <target xml:lang="de">Abbrechen</target>

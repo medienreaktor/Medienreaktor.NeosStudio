@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && vite build --config vite.guest.config.ts",
+    "build": "tsc && vite build && vite build --config vite.guest.config.ts && vite build --config vite.compare.config.ts",
     "preview": "vite preview",
     "format": "prettier --write src",
     "format:check": "prettier --check src"
