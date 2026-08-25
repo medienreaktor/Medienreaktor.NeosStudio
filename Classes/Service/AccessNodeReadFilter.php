@@ -43,8 +43,12 @@ class AccessNodeReadFilter implements NodeReadFilterInterface
             return $nodes;
         }
         $access = $this->accessControlService->effectiveAccessForCurrentUser();
-        // The overwhelmingly common case - no ancestry resolved at all.
-        if ($access->unrestricted) {
+        // Two ways out before the graph is touched at all, and between them
+        // they cover nearly every request: an unrestricted account (everyone
+        // without a role, and every administrator), and a role that narrows
+        // by workspace, dimension or capability but not by WHERE a node sits -
+        // which is the only thing a listing filter could act on.
+        if ($access->unrestricted || !$access->narrowsByNodePosition()) {
             return $nodes;
         }
 
@@ -53,7 +57,9 @@ class AccessNodeReadFilter implements NodeReadFilterInterface
         return array_values(array_filter(
             $nodes,
             function (Node $node) use ($access, $subgraph, $anchors): bool {
-                [$idPath, $siteNodeName] = $this->accessControlService->nodeContext($subgraph, $node->aggregateId);
+                // The node is passed along so the resolver does not have to
+                // look up what the caller already holds.
+                [$idPath, $siteNodeName] = $this->accessControlService->nodeContext($subgraph, $node->aggregateId, $node);
                 // An unresolvable node yields an empty context; leave it in
                 // rather than losing a row for a reason nobody can see.
                 if ($idPath === []) {
