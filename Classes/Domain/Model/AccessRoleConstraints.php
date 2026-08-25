@@ -289,6 +289,33 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
         return !$this->hasAllowRules();
     }
 
+    /**
+     * What this role has to say about a node: it grants it, it explicitly
+     * refuses it, or the node simply falls outside the branches it whitelists.
+     * The three-way answer that {@see EffectiveAccess::nodeVisibility()} needs
+     * and the plain boolean above cannot give.
+     *
+     * @param array<int, string> $idPath node aggregate id first, ancestors outwards
+     * @return string 'allow', 'deny' or 'outside'
+     */
+    public function nodePathVerdict(array $idPath): string
+    {
+        if ($this->nodeTreeRules === []) {
+            return 'allow';
+        }
+        foreach (array_values($idPath) as $distance => $nodeAggregateId) {
+            foreach ($this->nodeTreeRules as $rule) {
+                if ($rule->matches($nodeAggregateId, $distance)) {
+                    return $rule->isAllow() ? 'allow' : 'deny';
+                }
+            }
+        }
+
+        // Nothing matched: a pure deny list leaves the rest of the tree open,
+        // allow rules turn it into a whitelist and this node is not on it.
+        return $this->hasAllowRules() ? 'outside' : 'allow';
+    }
+
     public function hasAllowRules(): bool
     {
         foreach ($this->nodeTreeRules as $rule) {

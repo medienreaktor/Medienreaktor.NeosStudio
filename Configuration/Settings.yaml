@@ -81,6 +81,14 @@ Medienreaktor:
       "Medienreaktor.NeosStudio:task":
         enricher: 'Medienreaktor\NeosStudio\Service\TaskWorkspaceDataEnricher'
 
+    # Narrow every node listing the API serves to what the caller's access
+    # roles leave reachable. Closes the one gap the client cannot: a document
+    # search returns hits from anywhere under the site, and the client has no
+    # ancestry for a scattered hit to judge it by.
+    nodeReadFilters:
+      "Medienreaktor.NeosStudio:accessRoles":
+        filter: 'Medienreaktor\NeosStudio\Service\AccessNodeReadFilter'
+
     # Surfaces "may I administer access roles?" in /me.permissions, which is
     # what gates the Roles section in the Studio's settings modal.
     accountPermissions:
