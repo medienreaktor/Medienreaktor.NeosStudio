@@ -41,10 +41,20 @@ export function taskOf(workspace: Workspace): TaskExtension | null {
   return task ? (task as TaskExtension) : null
 }
 
+export interface TasksResponse {
+  tasks: Task[]
+  /**
+   * The workspace a new task would be based on - and therefore where
+   * publishing out of it would land. Resolved server-side from configuration
+   * (see taskWorkflow.defaultBaseWorkspace); null without a user-bound token.
+   */
+  defaultBaseWorkspace: string | null
+}
+
 export function useTasks(enabled = true) {
   return useQuery({
     queryKey: queryKeys.tasks,
-    queryFn: () => apiFetch<{ tasks: Task[] }>('/tasks'),
+    queryFn: () => apiFetch<TasksResponse>('/tasks'),
     enabled,
     refetchInterval: 300_000,
   })
@@ -80,51 +90,30 @@ export function updateTask(
  * The endpoint realizing a status transition - moving INTO a column drives
  * the workflow: to review = submit, back to open = reopen, to done = approve.
  * Approving does NOT publish - the board opens the Review Changes dialog
- * first and completes the task afterwards. Submitting takes an optional
- * comment for the reviewers (it joins the task's comment thread).
+ * first and completes the task afterwards.
+ *
+ * Both directions carry a note, and both keep it: submitting says what to look
+ * at, reopening says what to fix, and either way it joins the task's comment
+ * thread rather than living only in a notification that is read once and gone.
+ * The two endpoints name the field differently (`comment` / `reason`), which
+ * is why this maps it instead of passing it through - sending the wrong one
+ * silently drops the text.
  */
 export function transitionTask(
   workspaceName: string,
   target: TaskStatus,
-  comment?: string,
+  note?: string,
 ): Promise<{ task: Task }> {
   const action =
     target === 'IN_REVIEW' ? 'submit' : target === 'DONE' ? 'approve' : 'reopen'
+  const body = !note
+    ? {}
+    : action === 'reopen'
+      ? { reason: note }
+      : { comment: note }
   return apiFetch<{ task: Task }>(
     `/tasks/${encodeURIComponent(workspaceName)}/${action}`,
-    { method: 'POST', body: comment ? { comment } : {} },
-  )
-}
-
-/** One comment on a task, as served by GET /api/tasks/{name}/comments. */
-export interface TaskComment {
-  id: number
-  author: string | null
-  /** Resolved server-side, so it never depends on the users listing. */
-  authorLabel: string | null
-  text: string
-  createdAt: string
-}
-
-/** The task's comment thread, oldest first. Pass null while no task is open. */
-export function useTaskComments(workspaceName: string | null) {
-  return useQuery({
-    queryKey: queryKeys.taskComments(workspaceName ?? ''),
-    queryFn: () =>
-      apiFetch<{ comments: TaskComment[] }>(
-        `/tasks/${encodeURIComponent(workspaceName ?? '')}/comments`,
-      ),
-    enabled: workspaceName !== null,
-  })
-}
-
-export function addTaskComment(
-  workspaceName: string,
-  text: string,
-): Promise<{ comment: TaskComment }> {
-  return apiFetch<{ comment: TaskComment }>(
-    `/tasks/${encodeURIComponent(workspaceName)}/comments`,
-    { method: 'POST', body: { text } },
+    { method: 'POST', body },
   )
 }
 

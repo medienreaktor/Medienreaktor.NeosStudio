@@ -317,6 +317,9 @@
       <trans-unit id="action.close" xml:space="preserve">
         <source>Close</source>
       </trans-unit>
+      <trans-unit id="action.delete" xml:space="preserve">
+        <source>Delete</source>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
       </trans-unit>
@@ -413,6 +416,15 @@
       <trans-unit id="compare.changePosition" xml:space="preserve">
         <source>Change {0} of {1}</source>
       </trans-unit>
+      <trans-unit id="compare.commentPlaceholder" xml:space="preserve">
+        <source>What should happen with this change?</source>
+      </trans-unit>
+      <trans-unit id="compare.commentsHint" xml:space="preserve">
+        <source>Leave a remark on the change under review</source>
+      </trans-unit>
+      <trans-unit id="compare.commentsOnChange" xml:space="preserve">
+        <source>Remarks on this change</source>
+      </trans-unit>
       <trans-unit id="compare.description" xml:space="preserve">
         <source>"{0}" as it is now, next to how "{1}" would publish it.</source>
       </trans-unit>
@@ -467,6 +479,9 @@
       <trans-unit id="compare.noChanges" xml:space="preserve">
         <source>No marked changes</source>
       </trans-unit>
+      <trans-unit id="compare.noCommentsOnChange" xml:space="preserve">
+        <source>Nothing said about this change yet.</source>
+      </trans-unit>
       <trans-unit id="compare.noVisibleCounterpart" xml:space="preserve">
         <source>Not visible on the page — only here</source>
       </trans-unit>
@@ -502,6 +517,9 @@
       </trans-unit>
       <trans-unit id="compare.selectChange" xml:space="preserve">
         <source>Step through the changes to read what each one replaced.</source>
+      </trans-unit>
+      <trans-unit id="compare.selectChangeToComment" xml:space="preserve">
+        <source>Step to a change to comment on it.</source>
       </trans-unit>
       <trans-unit id="compare.selectDocument" xml:space="preserve">
         <source>Pick a page on the left to compare it.</source>
@@ -1448,6 +1466,9 @@
       <trans-unit id="notifications.markReadFailed" xml:space="preserve">
         <source>Marking as read failed</source>
       </trans-unit>
+      <trans-unit id="notifications.openReview" xml:space="preserve">
+        <source>Open the review</source>
+      </trans-unit>
       <trans-unit id="notifications.openTask" xml:space="preserve">
         <source>Open the task</source>
       </trans-unit>
@@ -1606,6 +1627,84 @@
       </trans-unit>
       <trans-unit id="profile.unavailable" xml:space="preserve">
         <source>Your profile is currently unavailable.</source>
+      </trans-unit>
+      <trans-unit id="review.allPublished" xml:space="preserve">
+        <source>Nothing left to publish — the task can be completed.</source>
+      </trans-unit>
+      <trans-unit id="review.changesRequested" xml:space="preserve">
+        <source>The task went back to its author.</source>
+      </trans-unit>
+      <trans-unit id="review.commentFailed" xml:space="preserve">
+        <source>Could not add comment</source>
+      </trans-unit>
+      <trans-unit id="review.commentFailedDetail" xml:space="preserve">
+        <source>Adding the comment failed.</source>
+      </trans-unit>
+      <trans-unit id="review.commentPlaceholder" xml:space="preserve">
+        <source>Write a comment…</source>
+      </trans-unit>
+      <trans-unit id="review.commentSend" xml:space="preserve">
+        <source>Send</source>
+      </trans-unit>
+      <trans-unit id="review.comments" xml:space="preserve">
+        <source>Comments</source>
+      </trans-unit>
+      <trans-unit id="review.commentsHint" xml:space="preserve">
+        <source>Discuss these changes with everyone involved</source>
+      </trans-unit>
+      <trans-unit id="review.deleteFailed" xml:space="preserve">
+        <source>Could not delete the comment</source>
+      </trans-unit>
+      <trans-unit id="review.manyPinnedOpen" xml:space="preserve">
+        <source>{0} open remarks on changes</source>
+      </trans-unit>
+      <trans-unit id="review.noComments" xml:space="preserve">
+        <source>No comments yet.</source>
+      </trans-unit>
+      <trans-unit id="review.noCommentsHint" xml:space="preserve">
+        <source>Nothing said yet. Remarks about a single change belong in the side-by-side comparison.</source>
+      </trans-unit>
+      <trans-unit id="review.onePinnedOpen" xml:space="preserve">
+        <source>1 open remark on a change</source>
+      </trans-unit>
+      <trans-unit id="review.openRemarksHint" xml:space="preserve">
+        <source>Open remarks on changes of this page</source>
+      </trans-unit>
+      <trans-unit id="review.pinnedOpenHint" xml:space="preserve">
+        <source>Open remarks on single changes — they show up in the side-by-side comparison</source>
+      </trans-unit>
+      <trans-unit id="review.publishCompletesTask" xml:space="preserve">
+        <source>This publishes everything the branch has — which completes the task.</source>
+      </trans-unit>
+      <trans-unit id="review.requestChanges" xml:space="preserve">
+        <source>Request changes</source>
+      </trans-unit>
+      <trans-unit id="review.requestChangesButtonHint" xml:space="preserve">
+        <source>Send the task back with what needs doing — nothing is published or discarded</source>
+      </trans-unit>
+      <trans-unit id="review.requestChangesHint" xml:space="preserve">
+        <source>The task goes back to its author. Nothing is published and nothing is discarded — their work stays as it is.</source>
+      </trans-unit>
+      <trans-unit id="review.requestChangesReason" xml:space="preserve">
+        <source>What needs to change?</source>
+      </trans-unit>
+      <trans-unit id="review.resolve" xml:space="preserve">
+        <source>Mark done</source>
+      </trans-unit>
+      <trans-unit id="review.resolveFailed" xml:space="preserve">
+        <source>Could not update the comment</source>
+      </trans-unit>
+      <trans-unit id="review.resolved" xml:space="preserve">
+        <source>Done</source>
+      </trans-unit>
+      <trans-unit id="review.taskDescription" xml:space="preserve">
+        <source>Look at the changes, then approve them or hand the task back.</source>
+      </trans-unit>
+      <trans-unit id="review.unresolve" xml:space="preserve">
+        <source>Reopen</source>
+      </trans-unit>
+      <trans-unit id="review.verdictFailed" xml:space="preserve">
+        <source>The task could not be updated</source>
       </trans-unit>
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
@@ -1919,8 +2018,14 @@
       <trans-unit id="tasks.baseWorkspace" xml:space="preserve">
         <source>Based on</source>
       </trans-unit>
+      <trans-unit id="tasks.baseWorkspaceHint" xml:space="preserve">
+        <source>Publishing this task later goes to "{0}".</source>
+      </trans-unit>
+      <trans-unit id="tasks.baseWorkspaceLocked" xml:space="preserve">
+        <source>Publishing this task goes to "{0}". To move it elsewhere, publish or discard its open changes first.</source>
+      </trans-unit>
       <trans-unit id="tasks.checkoutWorkspace" xml:space="preserve">
-        <source>Checkout workspace</source>
+        <source>Work on this task</source>
       </trans-unit>
       <trans-unit id="tasks.columnDone" xml:space="preserve">
         <source>Done</source>
@@ -1933,18 +2038,6 @@
       </trans-unit>
       <trans-unit id="tasks.columnOpen" xml:space="preserve">
         <source>Open</source>
-      </trans-unit>
-      <trans-unit id="tasks.commentFailed" xml:space="preserve">
-        <source>Could not add comment</source>
-      </trans-unit>
-      <trans-unit id="tasks.commentFailedDetail" xml:space="preserve">
-        <source>Adding the comment failed.</source>
-      </trans-unit>
-      <trans-unit id="tasks.commentPlaceholder" xml:space="preserve">
-        <source>Write a comment…</source>
-      </trans-unit>
-      <trans-unit id="tasks.commentSend" xml:space="preserve">
-        <source>Send</source>
       </trans-unit>
       <trans-unit id="tasks.comments" xml:space="preserve">
         <source>Comments</source>
@@ -2015,8 +2108,8 @@
       <trans-unit id="tasks.newTaskHint" xml:space="preserve">
         <source>A task branch collects changes for one job. Only involved people see it; reviewers approve and publish it.</source>
       </trans-unit>
-      <trans-unit id="tasks.noComments" xml:space="preserve">
-        <source>No comments yet.</source>
+      <trans-unit id="tasks.readyToComplete" xml:space="preserve">
+        <source>Nothing left to publish — the task can be completed</source>
       </trans-unit>
       <trans-unit id="tasks.reopenTask" xml:space="preserve">
         <source>Reopen task</source>
@@ -2588,8 +2681,14 @@
       <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
         <source>Publish {0} pending changes</source>
       </trans-unit>
+      <trans-unit id="workspace.publishPendingManyTo" xml:space="preserve">
+        <source>Publish {0} pending changes to "{1}"</source>
+      </trans-unit>
       <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
         <source>Publish 1 pending change</source>
+      </trans-unit>
+      <trans-unit id="workspace.publishPendingOneTo" xml:space="preserve">
+        <source>Publish 1 pending change to "{0}"</source>
       </trans-unit>
       <trans-unit id="workspace.publishTarget" xml:space="preserve">
         <source>Workspace to publish to</source>

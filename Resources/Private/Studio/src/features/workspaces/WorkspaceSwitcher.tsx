@@ -26,6 +26,7 @@ import {
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { CreateTaskDialog } from '@/features/tasks/CreateTaskDialog'
+import { RequestChangesDialog } from '@/features/review/RequestChangesDialog'
 import { SendToReviewDialog } from '@/features/tasks/SendToReviewDialog'
 import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import {
@@ -90,15 +91,28 @@ export function WorkspaceSwitcher({
   const [creatingTask, setCreatingTask] = React.useState(false)
   const [reviewing, setReviewing] = React.useState(false)
   const [submittingReview, setSubmittingReview] = React.useState(false)
+  /** Reopening the checked-out task - about to say what needs doing. */
+  const [sendingBack, setSendingBack] = React.useState(false)
   // The full readable list for the review dialog (the `targets` prop is only
   // the base-workspace subset).
   const { data: workspacesData } = useWorkspaces()
 
-  // Workflow actions for the checked-out task branch (the submenu on its
-  // entry): submit / reopen transition directly, completing routes through
-  // the review dialog while changes are pending - the same semantics as the
-  // Tasks board.
-  const activeTask = taskOf(activeWorkspace)
+  /**
+   * The task being worked on - the branch the personal workspace publishes
+   * INTO, not the workspace being edited. Taking a task on re-bases the
+   * personal workspace onto it, so the task is the target and editing stays
+   * where it always is; the workflow actions therefore hang off the base, not
+   * off the active workspace.
+   *
+   * Editing directly inside a task branch (the collaborative mode) still
+   * resolves here too, because then the active workspace IS the branch.
+   */
+  const taskWorkspace = collaborative
+    ? (taskOf(activeWorkspace) !== null ? activeWorkspace : null)
+    : (targets.find(
+        (workspace) => workspace.name === personalWorkspace.baseWorkspace,
+      ) ?? null)
+  const activeTask = taskWorkspace ? taskOf(taskWorkspace) : null
   const taskTransition = useMutation({
     mutationFn: ({
       target,
@@ -106,9 +120,10 @@ export function WorkspaceSwitcher({
     }: {
       target: TaskStatus
       comment?: string
-    }) => transitionTask(activeWorkspace.name, target, comment),
+    }) => transitionTask(taskWorkspace?.name ?? activeWorkspace.name, target, comment),
     onSuccess: (_response, { target }) => {
       if (target === 'IN_REVIEW') setSubmittingReview(false)
+      if (target === 'OPEN') setSendingBack(false)
       toast.success(
         target === 'IN_REVIEW'
           ? t('tasks.submitted', 'The task has been submitted for review.')
@@ -132,9 +147,9 @@ export function WorkspaceSwitcher({
   })
 
   const completeTask = () => {
-    // Pending changes: the reviewer picks what to publish first; the task
-    // completes after the publish. Nothing pending: complete directly.
-    if (activeWorkspace.hasPublishableChanges) setReviewing(true)
+    // Pending changes on the BRANCH: the reviewer picks what to publish first.
+    // Nothing pending: complete directly.
+    if (taskWorkspace?.hasPublishableChanges) setReviewing(true)
     else taskTransition.mutate({ target: 'DONE' })
   }
 
@@ -190,12 +205,13 @@ export function WorkspaceSwitcher({
   // their own labeled group below. The current base workspace is never
   // claimed away - it is the selected value.
   const decorators = useWorkspaceDecorators()
+  // The workspace currently worked towards keeps its group: a task branch is
+  // the publish target AND a task, and its entry is where the workflow
+  // actions hang.
   const groupOf = (workspace: Workspace): string | null =>
-    workspace.name === personalWorkspace.baseWorkspace
-      ? null
-      : (decorationsFor(workspace, decorators).find(
-          (decoration) => decoration.switcherGroup,
-        )?.switcherGroup ?? null)
+    decorationsFor(workspace, decorators).find(
+      (decoration) => decoration.switcherGroup,
+    )?.switcherGroup ?? null
 
   const standardTargets = targets.filter((workspace) => !groupOf(workspace))
   const sharedTargets = standardTargets.filter(
@@ -211,16 +227,18 @@ export function WorkspaceSwitcher({
     ])
   }
 
-  // Tint the whole trigger by the editing context: purple for a plain
+  // Tint the whole trigger by what is being worked on: purple for a plain
   // collaborative workspace (matching the multiplayer icon), a decorated
-  // workspace's own color (e.g. the task status color) when it brings one.
-  const activeDecoration = collaborative
-    ? (decorationsFor(activeWorkspace, decorators)[0] ?? null)
+  // workspace's own color (e.g. the task status color) when it brings one -
+  // whether that workspace is being edited in or published into.
+  const decoratedWorkspace = collaborative ? activeWorkspace : taskWorkspace
+  const activeDecoration = decoratedWorkspace
+    ? (decorationsFor(decoratedWorkspace, decorators)[0] ?? null)
     : null
   const tint = collaborative
     ? (activeDecoration?.color ??
       'light-dark(var(--color-purple-600), var(--color-purple-400))')
-    : null
+    : (activeDecoration?.color ?? null)
 
   const currentLabel = collaborative
     ? workspaceLabel(activeWorkspace)
@@ -394,13 +412,12 @@ export function WorkspaceSwitcher({
                     />
                   )
                   const isActiveTask =
-                    activeTask !== null &&
-                    workspace.name === activeWorkspace.name
+                    activeTask !== null && workspace.name === taskWorkspace?.name
                   // The checked-out task nests its workflow actions as a
                   // submenu; the other entries check the workspace out.
                   if (isActiveTask) {
                     return (
-                      <DropdownMenuSub key={`edit:${workspace.name}`}>
+                      <DropdownMenuSub key={`base:${workspace.name}`}>
                         <DropdownMenuSubTrigger className="pl-8">
                           <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
                             <i
@@ -439,9 +456,7 @@ export function WorkspaceSwitcher({
                           {activeTask.status !== 'OPEN' &&
                             activeWorkspace.permissions.write && (
                               <DropdownMenuItem
-                                onClick={() =>
-                                  taskTransition.mutate({ target: 'OPEN' })
-                                }
+                                onClick={() => setSendingBack(true)}
                               >
                                 <i
                                   className="fas fa-rotate-left w-4 text-center"
@@ -456,13 +471,13 @@ export function WorkspaceSwitcher({
                   }
                   return (
                     <DropdownMenuCheckboxItem
-                      key={`edit:${workspace.name}`}
-                      checked={value === `edit:${workspace.name}`}
+                      key={`base:${workspace.name}`}
+                      checked={value === `base:${workspace.name}`}
                       closeOnClick
-                      // Checking the workspace out means editing in it
-                      // directly, which needs write access.
+                      // Taking a task on means publishing INTO its branch,
+                      // which needs write access on it.
                       disabled={!workspace.permissions.write}
-                      onClick={() => pick(`edit:${workspace.name}`)}
+                      onClick={() => pick(`base:${workspace.name}`)}
                     >
                       {icon}
                       {workspaceLabel(workspace)}
@@ -495,6 +510,14 @@ export function WorkspaceSwitcher({
         // switcher means "I want to work in it now".
         onCreated={(task) => onSwitchEditingContext(task.workspaceName)}
       />
+      <RequestChangesDialog
+        open={sendingBack}
+        onOpenChange={setSendingBack}
+        pending={taskTransition.isPending}
+        onSubmit={(reason) =>
+          taskTransition.mutate({ target: 'OPEN', comment: reason })
+        }
+      />
       <SendToReviewDialog
         open={submittingReview}
         onOpenChange={setSubmittingReview}
@@ -514,11 +537,10 @@ export function WorkspaceSwitcher({
           open={reviewing}
           onOpenChange={(open) => !open && setReviewing(false)}
           onNavigate={navigateToNodeInWorkspace}
+          // Completing is the review dialog's own decision now (it knows
+          // whether EVERYTHING was approved); this just closes up.
           onPublished={(sourceWorkspaceName) => {
-            if (sourceWorkspaceName === activeWorkspace.name) {
-              taskTransition.mutate({ target: 'DONE' })
-              setReviewing(false)
-            }
+            if (sourceWorkspaceName === activeWorkspace.name) setReviewing(false)
           }}
         />
       )}

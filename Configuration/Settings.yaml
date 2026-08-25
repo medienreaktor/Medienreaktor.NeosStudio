@@ -73,6 +73,18 @@ Medienreaktor:
       # default - whoever may publish to live may approve tasks.
       reviewerRole: "Neos.Neos:LivePublisher"
 
+      # Where a new task branch hangs, and therefore where publishing OUT of a
+      # task lands. null = derive it from the creator's own personal workspace
+      # base, which is the workspace they publish into anyway.
+      #
+      # Set this wherever the editorial flow runs through a shared draft: a
+      # task based on live bypasses that draft entirely, so publishing a task
+      # puts content on the public site in one step - which is not what
+      # publishing means anywhere else in the UI. Deriving it per creator is
+      # not enough there either, because personal workspaces are often based
+      # on live themselves.
+      # defaultBaseWorkspace: 'entwurf'
+
   # Contribute the task metadata to the NeosApi workspace JSON: appears as
   # workspace.extensions['Medienreaktor.NeosStudio:task'] and drives the task
   # badges and the Tasks board in the shell.

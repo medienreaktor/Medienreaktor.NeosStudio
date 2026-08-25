@@ -5,6 +5,7 @@ import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { assignTask, updateTask, type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
+import { changeBaseWorkspace, useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -45,20 +46,50 @@ export function TaskDetailDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const { data: usersData } = useUsers()
+  const { data: workspacesData } = useWorkspaces(task !== null)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [assignee, setAssignee] = useState(UNASSIGNED)
+  const [baseWorkspace, setBaseWorkspace] = useState('live')
 
   useEffect(() => {
     if (task) {
       setTitle(task.workspace?.title ?? task.workspaceName)
       setDescription(task.workspace?.description ?? '')
       setAssignee(task.assignee ?? UNASSIGNED)
+      setBaseWorkspace(task.workspace?.baseWorkspace ?? 'live')
     }
   }, [task])
 
   const canManage = task?.workspace?.permissions.manage ?? false
+
+  /**
+   * Re-basing rewrites the branch onto another workspace, which the content
+   * repository refuses while it still holds unpublished changes - there would
+   * be nothing left to replay them onto. Publish or discard them first.
+   */
+  const hasPendingChanges = task?.workspace?.hasPublishableChanges ?? false
+  const canChangeBase = canManage && !hasPendingChanges
+
+  // Bases on offer: live and shared workspaces, minus the task itself.
+  const baseItems = (workspacesData?.workspaces ?? [])
+    .filter(
+      (workspace) =>
+        workspace.name !== task?.workspaceName &&
+        (workspace.classification === 'ROOT' ||
+          workspace.classification === 'SHARED'),
+    )
+    .map((workspace) => ({
+      value: workspace.name,
+      label:
+        workspace.classification === 'ROOT'
+          ? t('workspace.live', 'Live')
+          : workspace.title || workspace.name,
+    }))
+  if (!baseItems.some((item) => item.value === baseWorkspace)) {
+    baseItems.unshift({ value: baseWorkspace, label: baseWorkspace })
+  }
 
   const assigneeItems = [
     { value: UNASSIGNED, label: t('tasks.unassigned', '– unassigned –') },
@@ -78,6 +109,12 @@ export function TaskDetailDialog({
       const newAssignee = assignee === UNASSIGNED ? null : assignee
       if (newAssignee !== (task.assignee ?? null)) {
         await assignTask(task.workspaceName, newAssignee)
+      }
+      // Where the task publishes to. The one edit here that moves content
+      // rather than metadata, so it goes last - a refused rebase must not take
+      // the rest of the form down with it.
+      if (canChangeBase && baseWorkspace !== task.workspace?.baseWorkspace) {
+        await changeBaseWorkspace(task.workspaceName, baseWorkspace)
       }
     },
     onSuccess: () => {
@@ -166,6 +203,52 @@ export function TaskDetailDialog({
                 ))}
               </SelectContent>
             </Select>
+          </Field>
+
+          {/* Where this task publishes to. Invisible everywhere else, yet it
+              decides whether finishing the task puts content on the public
+              site or into the shared draft - so it is editable here rather
+              than frozen at creation. */}
+          <Field
+            label={t('tasks.baseWorkspace', 'Based on')}
+            htmlFor="task-detail-base"
+          >
+            <Select
+              value={baseWorkspace}
+              onValueChange={(value) => setBaseWorkspace(value as string)}
+              items={baseItems}
+              disabled={!canChangeBase}
+            >
+              <SelectTrigger id="task-detail-base" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {baseItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="mt-1 block text-xs text-neutral-600 dark:text-neutral-400">
+              {hasPendingChanges
+                ? t(
+                    'tasks.baseWorkspaceLocked',
+                    'Publishing this task goes to "{0}". To move it elsewhere, publish or discard its open changes first.',
+                    [
+                      baseItems.find((item) => item.value === baseWorkspace)
+                        ?.label ?? baseWorkspace,
+                    ],
+                  )
+                : t(
+                    'tasks.baseWorkspaceHint',
+                    'Publishing this task later goes to "{0}".',
+                    [
+                      baseItems.find((item) => item.value === baseWorkspace)
+                        ?.label ?? baseWorkspace,
+                    ],
+                  )}
+            </span>
           </Field>
 
           <DialogFooter className="items-center">

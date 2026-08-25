@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   countChangedNodes,
   useWorkspaceChanges,
@@ -6,6 +6,10 @@ import {
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
+import {
+  consumeReviewFocus,
+  usePendingReviewFocus,
+} from '@/features/review/focus'
 import { translate as t } from '@/lib/i18n'
 import { ReviewChangesDialog } from './ReviewChangesDialog'
 
@@ -30,6 +34,23 @@ export function ReviewButton({
   onNavigate: (address: string, workspaceName: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  /**
+   * Where an incoming request wants the review pointed (a clicked remark
+   * notification). Cleared when the button itself is used - that means "review
+   * what I am working on", not "the thing somebody linked me to".
+   */
+  const [focus, setFocus] = useState<{
+    workspaceName: string
+    documentAggregateId?: string
+  } | null>(null)
+
+  const pendingFocus = usePendingReviewFocus()
+  useEffect(() => {
+    if (pendingFocus === null) return
+    setFocus(pendingFocus)
+    setOpen(true)
+    consumeReviewFocus()
+  }, [pendingFocus])
   // Same query the Publish button and the trees' dirty markers use, so the
   // bubble always agrees with them.
   const { data: changesResponse } = useWorkspaceChanges(activeWorkspace.name)
@@ -51,7 +72,10 @@ export function ReviewButton({
       <div className="relative">
         <Button
           variant="secondary"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setFocus(null)
+            setOpen(true)
+          }}
           title={t(
             'workspace.review.buttonHint',
             'Review pending changes between workspaces',
@@ -77,6 +101,8 @@ export function ReviewButton({
       <ReviewChangesDialog
         workspaces={workspaces}
         activeWorkspace={activeWorkspace}
+        initialSourceName={focus?.workspaceName}
+        initialCompareDocumentId={focus?.documentAggregateId}
         open={open}
         onOpenChange={setOpen}
         onNavigate={onNavigate}

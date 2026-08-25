@@ -24,13 +24,35 @@ Edit **together in the same workspace, live**. Every shared workspace offers a _
 
 Content work, organized like code: every task is a **feature branch**. Creating a task spins up a workspace of its own, so an editor can pick a task up, check it out, do the work and send it to review — without touching live or stepping on anyone else's changes.
 
-- **A Kanban board, as a panel**: task branches as cards in status columns — _Open_, _In review_, _Done_ — with assignee and comment count. **Dragging a card drives the workflow**: into _In review_ submits the task, back to _Open_ reopens it.
+- **A Kanban board, as a panel**: task branches as cards in status columns — _Open_, _In review_, _Done_ — with assignee and comment count. **Dragging a card drives the workflow**: into _In review_ hands the task over, back to _Open_ sends it back — and both ask what to say about it first, exactly as the workspace switcher's menu does.
 - **Review before done**: dropping a card on _Done_ never publishes blindly — it opens the Review Changes dialog on the task's workspace, so a reviewer inspects the changes and picks what to publish. Reviewers are whoever holds the configurable reviewer role (default: `Neos.Neos:LivePublisher`).
 - **Completion is event-driven**: a catch-up hook on the Content Repository's event stream watches task workspaces — once the branch is fully published, the task flips to done and everyone involved is notified, no matter which surface (or API client) triggered the publish.
-- **One-click checkout** from the board, the task dialog or the workspace switcher, where task branches sit in their own group with **status-colored badges**. Creating a task — from the switcher or the board — checks it out for you immediately.
-- **Comments on tasks**: every task carries its own discussion thread; submitting for review and reopening take a comment, too.
+- **The branch is the target, not the desk**: taking a task on re-bases your personal workspace onto its branch, so editing continues where it always happens and **"publish" hands your work INTO the task**. The task branch is then published onward at review time — the same move as opening a pull request and merging it, in that order. The topbar's publish button names its destination (`Publish all → Aufgabe 1`), because in a stack of live / draft / task branches "publish" alone says nothing.
+- **One click** from the board, the task dialog or the workspace switcher, where task branches sit in their own group with **status-colored badges**. Creating a task — from the switcher or the board — puts you on it immediately. A personal workspace has exactly one base, so this is one task at a time; switching needs your own workspace empty, which the Content Repository enforces and the UI explains.
+- Editing *inside* a shared branch — several people on one workspace, seeing each other type — is still available for any workspace through the Workspaces graph. Tasks deliberately use the other mode.
+- **Nothing said is lost**: the comment written when submitting and the reason a reviewer gave when handing the task back both join the task's thread. A notification is read once and gone; what a review asked for is still there tomorrow.
 - **Notifications built in**: a bell in the top bar collects assignments, review requests, reopens, comments and completions — clicking one jumps straight to the task.
 - **Ordinary Neos underneath**: task branches are plain `SHARED` workspaces plus task metadata, with access through standard workspace roles — the creator and reviewers manage, the assignee collaborates, and uninvolved editors never see task branches at all. Publishing, syncing and conflict resolution work like on any workspace.
+
+### 💬 Review conversation — comments where the change is
+
+A review is a conversation, and it belongs next to what it is about — not in a dialog you have to leave the review to open.
+
+- **Comments hang off the workspace, not off the task**: the review most installations actually run is a shared draft against live, which is no task branch. It gets a thread too. A task's thread is simply that thread, plus what its transitions wrote into it.
+- **A remark can be pinned to a single change** — one node, in one dimension, on one page. Pinned remarks show up beside the two rendered versions in the compare view, so "this headline is too long" sits next to the headline instead of describing it. All three coordinates are needed: the same element is edited independently per dimension, so a remark on the German headline never surfaces on the English one.
+- **Pinned remarks can be settled.** An open one is something still to do; settling folds it away. Pages carry a badge with their open count in the change list and in the compare view's page list, so nothing waits unnoticed on a page nobody opened.
+- **Everyone in the conversation hears about it**: previous participants plus whoever the workspace names personally. Group grants are deliberately skipped — a shared draft grants collaboration to a whole editor role, and mailing the entire team on every remark is how notifications get muted.
+- Clicking a comment notification opens the **review** on that workspace and the page the remark sits on, not a task board that may not even list it.
+
+### ⚖️ A review with a verdict
+
+The review dialog answers with a decision, not just with a publish button.
+
+- **Request changes** — hands the task back with a required reason. Nothing is published, nothing is discarded, the author's work stays exactly as it is.
+- **Discard stays out of the verdict.** It destroys the author's work, which is something to do to your *own* changes — never a reviewer's way of saying no. It keeps its place on the far side of the footer.
+- **A publish that empties the branch completes the task — and the dialog says so before you click.** That coupling is not the UI's invention: publishing a selection is `PublishIndividualNodesFromWorkspace`, which reports `partial: !$remainingCommands->isEmpty()`, so covering everything makes it a *full* publish — and the task workflow's catch-up hook completes task branches on exactly that event, whatever triggered it. Publishing a subset stays partial and leaves the task open. The footer spells the consequence out while the selection still covers everything, and the toast confirms it afterwards.
+- **Nothing left to publish?** Then *completing* takes over the dialog's primary slot — for the case where the branch was emptied by discarding, or reopened after its changes went out. A card in _In review_ with nothing pending is marked on the board, so it cannot sit there unnoticed either.
+- The reviewed task's **title, status and assignee** ride on the workspace object the dialog already has, so the reviewer always knows whose work they are looking at.
 
 ### 🔎 Side-by-side review — the pull request, for pages
 
@@ -41,6 +63,7 @@ Reviewing a workspace should not mean reading property values. **Compare changes
 - **Step through the changes**: next/previous jumps both frames to the element under review and highlights it, starting on the first change when the page opens.
 - **Decide right there**: publish or discard the page on screen, page by page, with the same conflict resolution the review dialog uses.
 - **Every change reads out, marked or not**: a rendered page can only show what it renders. An alt text, a link target, an SEO title, a page setting — all of them go live with the rest and none of them are visible in a picture of the page. The detail panel below the frames lists the before/after values of the change under review, and changes with nothing to point at stay in the walkthrough, labelled as invisible instead of dropped.
+- **Comment on the change under review**: a side panel carries the remarks pinned to it, and stepping to the next change swaps the conversation with it.
 - **Read-only by construction**: the frames render the ordinary edit-mode markup but carry a compare script instead of the editing guest — there is no inline editor to open, and no click that could reach one.
 
 Sites can widen what gets marked. Neos' editing markup only annotates the properties it renders as inline-editable text, so anything a site renders into something else — an image, a background, an aria-label — has nothing to attach a mark to. Naming the properties on the element solves it:
@@ -198,7 +221,7 @@ TLS termination is expected to happen in front (reverse proxy); the sidecar itse
 
 ## Development
 
-The SPA sources live in `Resources/Private/Studio/` (Vite, `src/`, `index.html`); the build output goes to `Resources/Public/Studio/`. The realtime sidecar lives next to it in `Resources/Private/Realtime/` (plain Node, no build step).
+The SPA sources live in `Resources/Private/Studio/` (Vite, `src/`, `index.html`); the build output goes to `Resources/Public/Studio/`. `npm run build` runs three Vite builds into it: the SPA, then the two iframe scripts as self-contained IIFEs with stable filenames the PHP side references (`guest.js`, `compare.js`). The realtime sidecar lives next to it in `Resources/Private/Realtime/` (plain Node, no build step).
 
 ```
 src/
@@ -209,10 +232,12 @@ src/
   components/ui/        shadcn-style components on Base UI primitives (owned code)
   features/             one folder per feature: tree, inspector, preview, media,
                         panels, creation, clipboard, editing, links, dimensions,
-                        workspaces, tasks, notifications, collaboration, sites,
-                        users, profile, modals, shortcuts
+                        workspaces, compare, tasks, notifications, collaboration,
+                        sites, users, profile, modals, shortcuts
   guest/                the script injected into the preview iframe:
                         inline editing, TipTap RTE, toolbar, link editing
+  compare/              the read-only script injected into the side-by-side
+                        review frames: change markers, anchors, scroll sync
   plugin-api/           the public plugin API surface (window.NeosStudio)
   lib/, hooks/          shared utilities
 ```

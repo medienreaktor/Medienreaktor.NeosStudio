@@ -37,6 +37,22 @@ export function useDimensions(enabled = true) {
   })
 }
 
+/**
+ * Stable identity of a dimension space point, for grouping and comparing.
+ * Sorted, so the same coordinates always produce the same key regardless of
+ * how many dimensions a content repository configures or in which order they
+ * arrived.
+ */
+export function dimensionSpacePointKey(
+  point: DimensionSpacePoint | null | undefined,
+): string {
+  if (!point) return ''
+  return Object.keys(point)
+    .sort()
+    .map((name) => `${name}=${point[name]}`)
+    .join('&')
+}
+
 export function dimensionSpacePointEquals(
   a: DimensionSpacePoint,
   b: DimensionSpacePoint,

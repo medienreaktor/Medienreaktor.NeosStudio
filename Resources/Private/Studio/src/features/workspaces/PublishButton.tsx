@@ -53,10 +53,27 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
   // "May publish to live" is a role restriction on the base being a ROOT
   // workspace, not on this workspace - publishing into a shared review
   // workspace stays open to editors who may not go live themselves.
-  const publishesToRoot =
+  const baseWorkspace =
     workspacesResponse?.workspaces.find(
       (candidate) => candidate.name === workspace.baseWorkspace,
-    )?.classification === 'ROOT'
+    ) ?? null
+  const publishesToRoot = baseWorkspace?.classification === 'ROOT'
+  /**
+   * Where this button sends the work.
+   *
+   * Named on the button itself, because "publish" alone says nothing in a
+   * setup with several stacked workspaces: from a personal workspace it means
+   * the shared draft, from a task branch it means that branch's base, and
+   * whether that base is the draft or the public site is invisible everywhere
+   * else. The one button that cannot be undone should not be the one that
+   * keeps its destination to itself.
+   */
+  const targetLabel =
+    workspace.baseWorkspace === null
+      ? null
+      : publishesToRoot
+        ? t('workspace.live', 'Live')
+        : (baseWorkspace?.title ?? '') || workspace.baseWorkspace
   const canPublish =
     workspace.permissions.publish &&
     (!publishesToRoot || allowsPublishToLive(access))
@@ -159,11 +176,15 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
               ? publishDeniedHint
               : hasChanges
                 ? changeCount === 1
-                  ? t('workspace.publishPendingOne', 'Publish 1 pending change')
+                  ? t(
+                      'workspace.publishPendingOneTo',
+                      'Publish 1 pending change to "{0}"',
+                      [targetLabel ?? ''],
+                    )
                   : t(
-                      'workspace.publishPendingMany',
-                      'Publish {0} pending changes',
-                      [changeCount],
+                      'workspace.publishPendingManyTo',
+                      'Publish {0} pending changes to "{1}"',
+                      [changeCount, targetLabel ?? ''],
                     )
                 : t('workspace.noPendingChanges', 'No pending changes')
           }
@@ -174,6 +195,9 @@ export function PublishButton({ workspace }: { workspace: Workspace }) {
           />
           <span className="hidden @[56rem]:inline">
             {t('workspace.publishAllChanges', 'Publish all')}
+            {targetLabel !== null && (
+              <span className="opacity-75"> → {targetLabel}</span>
+            )}
           </span>
         </Button>
         <DropdownMenu>
