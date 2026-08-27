@@ -26,6 +26,7 @@ export function TreeList<T>({
   loadingText,
   decorate,
   onItemContextMenu,
+  selectOnContextMenu = false,
   rootless = false,
 }: {
   tree: TreeInstance<T>
@@ -46,6 +47,14 @@ export function TreeList<T>({
   decorate?: (data: T) => TreeRowDecor | null
   /** Right-click on a row; when set, the browser menu is suppressed. */
   onItemContextMenu?: (item: ItemInstance<T>, event: React.MouseEvent) => void
+  /**
+   * Right-clicking a row outside the current selection first makes it the
+   * selection (and the shift anchor), file-manager style - for trees whose
+   * context menu acts on the selected rows. Off by default: a tree whose
+   * selection mirrors outside state (e.g. the media tree's active filter)
+   * must not have a right-click desync the highlight.
+   */
+  selectOnContextMenu?: boolean
   /**
    * For forests (many top-level items) rather than a single visible root:
    * level-0 rows keep their expand arrow and indent from level 0, instead of
@@ -130,7 +139,7 @@ export function TreeList<T>({
                 // current selection makes it the selection (and the shift
                 // anchor), right-clicking inside it keeps the selection - so
                 // the menu always acts on the highlighted rows.
-                if (!item.isSelected()) {
+                if (selectOnContextMenu && !item.isSelected()) {
                   tree.setSelectedItems([item.getId()])
                   tree.getDataRef<{
                     selectUpToAnchorId?: string

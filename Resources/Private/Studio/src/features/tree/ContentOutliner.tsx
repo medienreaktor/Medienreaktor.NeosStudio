@@ -321,6 +321,7 @@ function OutlinerTree({
             : decor
         }}
         onItemContextMenu={openMenu}
+        selectOnContextMenu
       />
       <NodeContextMenu
         target={menu?.target ?? null}

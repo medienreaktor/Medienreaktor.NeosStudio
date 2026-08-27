@@ -258,6 +258,7 @@ export function DocumentTree({
             : decor
         }}
         onItemContextMenu={openMenu}
+        selectOnContextMenu
       />
       <NodeContextMenu
         target={menu?.target ?? null}
