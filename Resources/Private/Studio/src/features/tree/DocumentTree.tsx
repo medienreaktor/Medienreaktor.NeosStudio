@@ -28,6 +28,7 @@ import {
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
 import { useNodeDecorators } from './decorators'
+import { contextMenuItems } from './menuSelection'
 import { nodeDecor } from './nodeDecor'
 import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
@@ -66,8 +67,11 @@ export function DocumentTree({
   /** Last reported edit - refreshes those items (labels, children lists). */
   lastEdit?: NodeEdit | null
   onSelect?: (node: NodeDto) => void
-  /** A context-menu action (hide/unhide/delete) succeeded for this target. */
-  onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  /**
+   * A context-menu action (hide/unhide/delete) succeeded for these targets -
+   * one entry normally, several when the menu acted on a multi-selection.
+   */
+  onNodeAction?: (action: NodeMenuAction, targets: NodeMenuTarget[]) => void
   /** A drag-and-drop move succeeded; addresses whose children changed. */
   onMoved?: (affectedAddresses: string[]) => void
   /** "Create new…" was picked in the context menu for this target. */
@@ -83,7 +87,12 @@ export function DocumentTree({
    */
   filterDocuments?: (nodes: NodeDto[]) => NodeDto[]
 }) {
-  const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
+  // The open context menu: the clicked target plus every selected target the
+  // bulk actions apply to (just the clicked one outside multi-select).
+  const [menu, setMenu] = useState<{
+    target: NodeMenuTarget
+    selection: NodeMenuTarget[]
+  } | null>(null)
   // Flips once the site node's children have resolved, so the tree can show a
   // spinner while the root loads and a real empty state only afterwards.
   const [rootLoaded, setRootLoaded] = useState(false)
@@ -187,28 +196,41 @@ export function DocumentTree({
   // structural changes (a deleted document) appear.
   useNodeEditRefresh(tree, lastEdit, ROOT_ID)
 
-  // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
+  // Right-click on a row: the shared hide/unhide/delete menu at the pointer,
+  // acting on the whole multi-selection when the clicked row is part of one.
   // The site node is the tree's anchor - hiding or deleting the site you are
   // standing in is not offered, same as for tethered documents.
   const openMenu = (
     item: ItemInstance<TreeItemData>,
     event: React.MouseEvent,
   ) => {
-    const data = item.getItemData()
-    if (data === ROOT_ID || data === null) return
-    const parentId = item.getParent()?.getId() ?? null
-    setMenuTarget({
-      address: data.address,
-      parentAddress: parentId === ROOT_ID ? null : parentId,
-      hidden: isExplicitlyHidden(data),
-      tethered:
-        data.classification === 'tethered' || data.address === site.nodeAddress,
-      // Rows outside the role are reachable (they are the path to what is
-      // inside it) but nothing on them may change; inside it, the role's
-      // capabilities still decide action by action.
-      permitted: permittedActionsOn(data, site.nodeName),
-      anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
-    })
+    const anchor = { x: event.clientX, y: event.clientY, width: 0, height: 0 }
+    const toTarget = (
+      row: ItemInstance<TreeItemData>,
+    ): NodeMenuTarget | null => {
+      const data = row.getItemData()
+      if (data === ROOT_ID || data === null) return null
+      const parentId = row.getParent()?.getId() ?? null
+      return {
+        address: data.address,
+        parentAddress: parentId === ROOT_ID ? null : parentId,
+        hidden: isExplicitlyHidden(data),
+        tethered:
+          data.classification === 'tethered' ||
+          data.address === site.nodeAddress,
+        // Rows outside the role are reachable (they are the path to what is
+        // inside it) but nothing on them may change; inside it, the role's
+        // capabilities still decide action by action.
+        permitted: permittedActionsOn(data, site.nodeName),
+        anchor,
+      }
+    }
+    const target = toTarget(item)
+    if (target === null) return
+    const selection = contextMenuItems(tree, item)
+      .map(toTarget)
+      .filter((rowTarget): rowTarget is NodeMenuTarget => rowTarget !== null)
+    setMenu({ target, selection })
   }
 
   return (
@@ -238,11 +260,13 @@ export function DocumentTree({
         onItemContextMenu={openMenu}
       />
       <NodeContextMenu
-        target={menuTarget}
+        target={menu?.target ?? null}
+        selection={menu?.selection}
         entityLabel={t('editing.entity.document', 'document')}
+        entityLabelPlural={t('editing.entity.documents', 'documents')}
         clipboardKind="document"
-        onClose={() => setMenuTarget(null)}
-        onDone={(action, target) => onNodeAction?.(action, target)}
+        onClose={() => setMenu(null)}
+        onDone={(action, targets) => onNodeAction?.(action, targets)}
         onPasted={(affectedAddresses) => onMoved?.(affectedAddresses)}
         onCreateNew={onCreateNew}
       />

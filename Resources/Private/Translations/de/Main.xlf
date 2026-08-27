@@ -714,9 +714,17 @@
         <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
         <target xml:lang="de">Das {0} und alles darin Enthaltene wird entfernt. Dies kann durch Verwerfen der Änderung im Arbeitsbereich rückgängig gemacht werden.</target>
       </trans-unit>
+      <trans-unit id="editing.deleteConfirm.descriptionMany" xml:space="preserve">
+        <source>The selected {0} and everything inside them will be removed. This is undone by discarding the changes from the workspace.</source>
+        <target xml:lang="de">Die ausgewählten {0} und alles darin Enthaltene werden entfernt. Dies kann durch Verwerfen der Änderungen im Arbeitsbereich rückgängig gemacht werden.</target>
+      </trans-unit>
       <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
         <source>Delete this {0}?</source>
         <target xml:lang="de">Dieses {0} löschen?</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.titleMany" xml:space="preserve">
+        <source>Delete {0} {1}?</source>
+        <target xml:lang="de">{0} {1} löschen?</target>
       </trans-unit>
       <trans-unit id="editing.deleteFailed" xml:space="preserve">
         <source>Deleting failed</source>
@@ -726,9 +734,17 @@
         <source>document</source>
         <target xml:lang="de">Dokument</target>
       </trans-unit>
+      <trans-unit id="editing.entity.documents" xml:space="preserve">
+        <source>documents</source>
+        <target xml:lang="de">Dokumente</target>
+      </trans-unit>
       <trans-unit id="editing.entity.element" xml:space="preserve">
         <source>element</source>
         <target xml:lang="de">Element</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.elements" xml:space="preserve">
+        <source>elements</source>
+        <target xml:lang="de">Elemente</target>
       </trans-unit>
       <trans-unit id="editing.hide" xml:space="preserve">
         <source>Hide</source>

@@ -29,6 +29,7 @@ import {
 } from '@/features/editing/NodeContextMenu'
 import { Placeholder } from '@/components/ui/placeholder'
 import { useNodeDecorators } from './decorators'
+import { contextMenuItems } from './menuSelection'
 import { nodeDecor } from './nodeDecor'
 import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
@@ -60,8 +61,11 @@ export function ContentOutliner({
   /** Last inline edit from the preview - refreshes that item's label. */
   lastEdit?: NodeEdit | null
   onSelect?: (node: NodeDto) => void
-  /** A context-menu action (hide/unhide/delete) succeeded for this target. */
-  onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  /**
+   * A context-menu action (hide/unhide/delete) succeeded for these targets -
+   * one entry normally, several when the menu acted on a multi-selection.
+   */
+  onNodeAction?: (action: NodeMenuAction, targets: NodeMenuTarget[]) => void
   /** A drag-and-drop move succeeded; addresses whose children changed. */
   onMoved?: (affectedAddresses: string[]) => void
   /** "Create new…" was picked in the context menu for this target. */
@@ -120,11 +124,16 @@ function OutlinerTree({
   selectedAddress: string | null
   lastEdit: NodeEdit | null
   onSelect?: (node: NodeDto) => void
-  onNodeAction?: (action: NodeMenuAction, target: NodeMenuTarget) => void
+  onNodeAction?: (action: NodeMenuAction, targets: NodeMenuTarget[]) => void
   onMoved?: (affectedAddresses: string[]) => void
   onCreateNew?: (target: NodeMenuTarget) => void
 }) {
-  const [menuTarget, setMenuTarget] = useState<NodeMenuTarget | null>(null)
+  // The open context menu: the clicked target plus every selected target the
+  // bulk actions apply to (just the clicked one outside multi-select).
+  const [menu, setMenu] = useState<{
+    target: NodeMenuTarget
+    selection: NodeMenuTarget[]
+  } | null>(null)
   // Outlining a DELETED page (selected from the trash): its content inherits
   // the "removed" tag, so every read here has to ask for deleted nodes or the
   // outline comes back empty.
@@ -253,25 +262,38 @@ function OutlinerTree({
   // were invalidated by the save; unchanged items resolve from the cache.
   useNodeEditRefresh(tree, lastEdit, ROOT_ID)
 
-  // Right-click on a row: the shared hide/unhide/delete menu at the pointer.
+  // Right-click on a row: the shared hide/unhide/delete menu at the pointer,
+  // acting on the whole multi-selection when the clicked row is part of one.
   // The document itself is the outliner's anchor - it belongs to the
   // document tree, so no menu is offered for it here.
   const openMenu = (
     item: ItemInstance<TreeItemData>,
     event: React.MouseEvent,
   ) => {
-    const data = item.getItemData()
-    if (!data || data === ROOT_ID || data.address === document.address) return
-    setMenuTarget({
-      address: data.address,
-      parentAddress: item.getParent()?.getId() ?? null,
-      hidden: isExplicitlyHidden(data),
-      tethered: data.classification === 'tethered',
-      // Content follows its document: inside a page the role does not cover
-      // nothing may change, and inside one it does the capabilities decide.
-      permitted: permittedActionsOn(data),
-      anchor: { x: event.clientX, y: event.clientY, width: 0, height: 0 },
-    })
+    const anchor = { x: event.clientX, y: event.clientY, width: 0, height: 0 }
+    const toTarget = (
+      row: ItemInstance<TreeItemData>,
+    ): NodeMenuTarget | null => {
+      const data = row.getItemData()
+      if (!data || data === ROOT_ID || data.address === document.address)
+        return null
+      return {
+        address: data.address,
+        parentAddress: row.getParent()?.getId() ?? null,
+        hidden: isExplicitlyHidden(data),
+        tethered: data.classification === 'tethered',
+        // Content follows its document: inside a page the role does not cover
+        // nothing may change, and inside one it does the capabilities decide.
+        permitted: permittedActionsOn(data),
+        anchor,
+      }
+    }
+    const target = toTarget(item)
+    if (target === null) return
+    const selection = contextMenuItems(tree, item)
+      .map(toTarget)
+      .filter((rowTarget): rowTarget is NodeMenuTarget => rowTarget !== null)
+    setMenu({ target, selection })
   }
 
   return (
@@ -301,11 +323,13 @@ function OutlinerTree({
         onItemContextMenu={openMenu}
       />
       <NodeContextMenu
-        target={menuTarget}
+        target={menu?.target ?? null}
+        selection={menu?.selection}
         entityLabel={t('editing.entity.element', 'element')}
+        entityLabelPlural={t('editing.entity.elements', 'elements')}
         clipboardKind="content"
-        onClose={() => setMenuTarget(null)}
-        onDone={(action, target) => onNodeAction?.(action, target)}
+        onClose={() => setMenu(null)}
+        onDone={(action, targets) => onNodeAction?.(action, targets)}
         onPasted={(affectedAddresses) => onMoved?.(affectedAddresses)}
         onCreateNew={onCreateNew}
       />

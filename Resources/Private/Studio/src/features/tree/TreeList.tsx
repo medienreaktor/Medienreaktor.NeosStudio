@@ -126,6 +126,16 @@ export function TreeList<T>({
               onItemContextMenu &&
               ((e) => {
                 e.preventDefault()
+                // File-manager semantics: right-clicking a row outside the
+                // current selection makes it the selection (and the shift
+                // anchor), right-clicking inside it keeps the selection - so
+                // the menu always acts on the highlighted rows.
+                if (!item.isSelected()) {
+                  tree.setSelectedItems([item.getId()])
+                  tree.getDataRef<{
+                    selectUpToAnchorId?: string
+                  }>().current.selectUpToAnchorId = item.getId()
+                }
                 onItemContextMenu(item, e)
               })
             }

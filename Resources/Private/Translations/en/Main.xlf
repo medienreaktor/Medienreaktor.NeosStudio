@@ -536,8 +536,14 @@
       <trans-unit id="editing.deleteConfirm.description" xml:space="preserve">
         <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
       </trans-unit>
+      <trans-unit id="editing.deleteConfirm.descriptionMany" xml:space="preserve">
+        <source>The selected {0} and everything inside them will be removed. This is undone by discarding the changes from the workspace.</source>
+      </trans-unit>
       <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
         <source>Delete this {0}?</source>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.titleMany" xml:space="preserve">
+        <source>Delete {0} {1}?</source>
       </trans-unit>
       <trans-unit id="editing.deleteFailed" xml:space="preserve">
         <source>Deleting failed</source>
@@ -545,8 +551,14 @@
       <trans-unit id="editing.entity.document" xml:space="preserve">
         <source>document</source>
       </trans-unit>
+      <trans-unit id="editing.entity.documents" xml:space="preserve">
+        <source>documents</source>
+      </trans-unit>
       <trans-unit id="editing.entity.element" xml:space="preserve">
         <source>element</source>
+      </trans-unit>
+      <trans-unit id="editing.entity.elements" xml:space="preserve">
+        <source>elements</source>
       </trans-unit>
       <trans-unit id="editing.hide" xml:space="preserve">
         <source>Hide</source>

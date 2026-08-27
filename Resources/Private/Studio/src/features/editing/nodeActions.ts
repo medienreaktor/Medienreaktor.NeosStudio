@@ -30,36 +30,42 @@ export interface MoveByAddress {
   succeedingSiblingAddress: string | null
 }
 
-export async function hideNode(address: string): Promise<void> {
-  const node = decodeNodeAddress(address)
-  await executeCommands([
-    {
-      type: 'DisableNodeAggregate',
-      payload: {
-        workspaceName: node.workspaceName,
-        nodeAggregateId: node.aggregateId,
-        coveredDimensionSpacePoint: node.dimensionSpacePoint,
-        nodeVariantSelectionStrategy: 'allSpecializations',
-      },
-    },
-  ])
+export async function hideNodes(addresses: string[]): Promise<void> {
+  if (addresses.length === 0) return
+  await executeCommands(
+    addresses.map((address) => {
+      const node = decodeNodeAddress(address)
+      return {
+        type: 'DisableNodeAggregate',
+        payload: {
+          workspaceName: node.workspaceName,
+          nodeAggregateId: node.aggregateId,
+          coveredDimensionSpacePoint: node.dimensionSpacePoint,
+          nodeVariantSelectionStrategy: 'allSpecializations',
+        },
+      }
+    }),
+  )
   await invalidateAfterStructureChange()
 }
 
-/** Removes the "disabled" subtree tag set by hideNode. */
-export async function unhideNode(address: string): Promise<void> {
-  const node = decodeNodeAddress(address)
-  await executeCommands([
-    {
-      type: 'EnableNodeAggregate',
-      payload: {
-        workspaceName: node.workspaceName,
-        nodeAggregateId: node.aggregateId,
-        coveredDimensionSpacePoint: node.dimensionSpacePoint,
-        nodeVariantSelectionStrategy: 'allSpecializations',
-      },
-    },
-  ])
+/** Removes the "disabled" subtree tag set by hideNodes. */
+export async function unhideNodes(addresses: string[]): Promise<void> {
+  if (addresses.length === 0) return
+  await executeCommands(
+    addresses.map((address) => {
+      const node = decodeNodeAddress(address)
+      return {
+        type: 'EnableNodeAggregate',
+        payload: {
+          workspaceName: node.workspaceName,
+          nodeAggregateId: node.aggregateId,
+          coveredDimensionSpacePoint: node.dimensionSpacePoint,
+          nodeVariantSelectionStrategy: 'allSpecializations',
+        },
+      }
+    }),
+  )
   await invalidateAfterStructureChange()
 }
 
@@ -102,20 +108,23 @@ export async function changeNodeType(
  * the node from the workspace with its change still pending - unnameable in
  * the review list and impossible to publish or discard on its own.
  */
-export async function deleteNode(address: string): Promise<void> {
-  const node = decodeNodeAddress(address)
-  await executeCommands([
-    {
-      type: 'TagSubtree',
-      payload: {
-        workspaceName: node.workspaceName,
-        nodeAggregateId: node.aggregateId,
-        coveredDimensionSpacePoint: node.dimensionSpacePoint,
-        nodeVariantSelectionStrategy: 'allSpecializations',
-        tag: 'removed',
-      },
-    },
-  ])
+export async function deleteNodes(addresses: string[]): Promise<void> {
+  if (addresses.length === 0) return
+  await executeCommands(
+    addresses.map((address) => {
+      const node = decodeNodeAddress(address)
+      return {
+        type: 'TagSubtree',
+        payload: {
+          workspaceName: node.workspaceName,
+          nodeAggregateId: node.aggregateId,
+          coveredDimensionSpacePoint: node.dimensionSpacePoint,
+          nodeVariantSelectionStrategy: 'allSpecializations',
+          tag: 'removed',
+        },
+      }
+    }),
+  )
   await invalidateAfterStructureChange()
 }
 

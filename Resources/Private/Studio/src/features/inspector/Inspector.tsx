@@ -15,8 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
   changeNodeType,
-  hideNode,
-  unhideNode,
+  hideNodes,
+  unhideNodes,
 } from '@/features/editing/nodeActions'
 import {
   persistPropertyChange,
@@ -247,8 +247,8 @@ export function InspectorPanel({
     const persist =
       propertyName === HIDDEN_PROPERTY
         ? value === true
-          ? hideNode(node.address)
-          : unhideNode(node.address)
+          ? hideNodes([node.address])
+          : unhideNodes([node.address])
         : propertyName === NODE_TYPE_PROPERTY
           ? changeNodeType(node.address, String(value))
           : propertyType === 'reference' || propertyType === 'references'

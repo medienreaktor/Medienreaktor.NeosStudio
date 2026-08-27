@@ -742,7 +742,11 @@ export function PreviewPane({
             defaultMode: 'after',
           })
         }
-        onDone={(action, target) => {
+        onDone={(action, targets) => {
+          // The preview's element menu is always single-target (the guest
+          // selects one element at a time).
+          const target = targets[0]
+          if (target === undefined) return
           if (action === 'delete') {
             // The element disappears only after a reload; the inspection
             // moves to the enclosing collection - the deleted node has no

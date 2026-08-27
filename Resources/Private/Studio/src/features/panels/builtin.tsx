@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchNode, isDeleted, nodeLabel, type NodeDto } from '@/api/nodes'
 import { aggregateIdOf } from '@/api/nodeAddress'
-import { useStudio } from '@/app/StudioContext'
+import { useStudio, type StudioContextValue } from '@/app/StudioContext'
 import {
   documentAccessState,
   useNodeEditable,
@@ -82,19 +82,35 @@ function CreatePanel() {
  * and nodes without a rendered element on the page (documents - whose
  * hiding changes menus, or content of another document) fall back to the
  * full reload automatically.
+ *
+ * A multi-selection action reports all its targets in ONE nodesEdited batch:
+ * looping nodeEdited would leave only the last target refreshed, because the
+ * calls land in the same React batch and each replaces lastEdit. The batch
+ * path reloads the whole preview and does not touch the inspected node - the
+ * panels move/refresh the inspection themselves where needed.
  */
 function reportNodeAction(
-  nodeEdited: (
-    address: string,
-    options?: { reload?: 'page' | 'element' | 'none' },
-  ) => void,
+  studio: Pick<StudioContextValue, 'nodeEdited' | 'nodesEdited'>,
   action: NodeMenuAction,
-  target: NodeMenuTarget,
+  targets: NodeMenuTarget[],
 ): void {
+  if (targets.length === 1) {
+    const [target] = targets
+    if (action === 'delete') {
+      if (target.parentAddress) studio.nodeEdited(target.parentAddress)
+    } else {
+      studio.nodeEdited(target.address, { reload: 'element' })
+    }
+    return
+  }
   if (action === 'delete') {
-    if (target.parentAddress) nodeEdited(target.parentAddress)
+    const parents = new Set<string>()
+    for (const target of targets) {
+      if (target.parentAddress) parents.add(target.parentAddress)
+    }
+    studio.nodesEdited([...parents])
   } else {
-    nodeEdited(target.address, { reload: 'element' })
+    studio.nodesEdited(targets.map((target) => target.address))
   }
 }
 
@@ -104,6 +120,7 @@ function DocumentsPanel() {
     workspaceName,
     selectedDocument,
     selectDocument,
+    inspectNode,
     lastEdit,
     nodeEdited,
     nodesEdited,
@@ -188,18 +205,35 @@ function DocumentsPanel() {
                 defaultMode: 'inside',
               })
             }
-            onNodeAction={(action, target) => {
-              reportNodeAction(nodeEdited, action, target)
+            onNodeAction={(action, targets) => {
+              reportNodeAction({ nodeEdited, nodesEdited }, action, targets)
+              const selectedTarget = targets.find(
+                (target) => target.address === selectedDocument?.address,
+              )
               // The deleted document cannot stay selected - browse its parent.
               if (
                 action === 'delete' &&
-                target.parentAddress &&
-                selectedDocument?.address === target.address
+                selectedTarget !== undefined &&
+                selectedTarget.parentAddress
               ) {
-                fetchNode(target.parentAddress)
+                fetchNode(selectedTarget.parentAddress)
                   .then(selectDocument)
                   .catch(() => {
                     /* fine - the tree simply keeps the stale selection */
+                  })
+              }
+              // A batch hide/unhide skips the single-target path's inspected-
+              // node refetch - catch up here when the selected document (the
+              // inspected one) was among the targets.
+              if (
+                action !== 'delete' &&
+                targets.length > 1 &&
+                selectedTarget !== undefined
+              ) {
+                fetchNode(selectedTarget.address)
+                  .then(inspectNode)
+                  .catch(() => {
+                    /* fine - keep showing the previous snapshot */
                   })
               }
             }}
@@ -253,9 +287,29 @@ function OutlinePanel() {
             defaultMode: 'after',
           })
         }
-        onNodeAction={(action, target) =>
-          reportNodeAction(nodeEdited, action, target)
-        }
+        onNodeAction={(action, targets) => {
+          reportNodeAction({ nodeEdited, nodesEdited }, action, targets)
+          // The batch path skips the single-target path's inspected-node
+          // handling - catch up when the inspected element was among the
+          // targets: a deleted one moves the inspection to its parent, a
+          // hidden/unhidden one gets a fresh snapshot.
+          if (targets.length > 1 && inspectedNode) {
+            const inspected = targets.find(
+              (target) => target.address === inspectedNode.address,
+            )
+            const address =
+              action === 'delete'
+                ? inspected?.parentAddress
+                : inspected?.address
+            if (address) {
+              fetchNode(address)
+                .then(inspectNode)
+                .catch(() => {
+                  /* fine - keep showing the previous snapshot */
+                })
+            }
+          }
+        }}
       />
       <InsertNodeDialog
         request={insertRequest}
