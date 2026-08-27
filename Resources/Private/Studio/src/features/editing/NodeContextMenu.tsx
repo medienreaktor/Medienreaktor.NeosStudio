@@ -173,7 +173,10 @@ export function NodeContextMenu({
   )
 
   // Pasting a node into itself is never meaningful (a cut into itself is a
-  // cycle, a copy into itself is almost certainly a misclick).
+  // cycle, a copy into itself is almost certainly a misclick). Pasting a
+  // COPIED node after itself is, though - that is the copy-then-paste-here
+  // duplicate gesture - so only a cut entry (a no-op move) blocks the after
+  // position.
   const pasteOntoSelf =
     clipboardEntry !== null &&
     target !== null &&
@@ -185,7 +188,7 @@ export function NodeContextMenu({
     intoAllowed.includes(clipboardEntry.nodeType)
   const canPasteAfter =
     clipboardEntry !== null &&
-    !pasteOntoSelf &&
+    !(pasteOntoSelf && clipboardEntry.mode === 'cut') &&
     target?.parentAddress != null &&
     afterAllowed !== undefined &&
     afterAllowed.includes(clipboardEntry.nodeType)
