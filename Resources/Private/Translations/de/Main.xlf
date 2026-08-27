@@ -319,8 +319,8 @@
         <target xml:lang="de">Websites</target>
       </trans-unit>
       <trans-unit id="accessRoles.tabTree" xml:space="preserve">
-        <source>Page tree</source>
-        <target xml:lang="de">Seitenbaum</target>
+        <source>Documents</source>
+        <target xml:lang="de">Dokumente</target>
       </trans-unit>
       <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
         <source>Workspaces</source>
@@ -355,8 +355,8 @@
         <target xml:lang="de">Unterseiten einschließen</target>
       </trans-unit>
       <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
-        <source>Page tree</source>
-        <target xml:lang="de">Seitenbaum</target>
+        <source>Documents</source>
+        <target xml:lang="de">Dokumente</target>
       </trans-unit>
       <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
         <source>Loading pages…</source>

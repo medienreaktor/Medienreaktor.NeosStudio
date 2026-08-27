@@ -350,7 +350,7 @@ function SiteDocumentTree({
     <div className="h-64 min-h-0 overflow-y-auto rounded-md border bg-white p-1 dark:bg-neutral-950">
       <TreeList
         tree={tree}
-        label={t('accessRoles.treeLabel', 'Page tree')}
+        label={t('accessRoles.treeLabel', 'Documents')}
         loading={!rootLoaded}
         loadingText={t('accessRoles.treeLoading', 'Loading pages…')}
         emptyText={t('accessRoles.treeEmpty', 'This site has no pages yet.')}

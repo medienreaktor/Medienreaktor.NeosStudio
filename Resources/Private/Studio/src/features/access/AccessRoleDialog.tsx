@@ -161,7 +161,7 @@ export function AccessRoleDialog({
             </TabsTrigger>
             <TabsTrigger value="tree">
               <i className="fas fa-sitemap" aria-hidden />
-              {t('accessRoles.tabTree', 'Page tree')}
+              {t('accessRoles.tabTree', 'Documents')}
             </TabsTrigger>
             <TabsTrigger value="dimensions">
               <i className="fas fa-language" aria-hidden />

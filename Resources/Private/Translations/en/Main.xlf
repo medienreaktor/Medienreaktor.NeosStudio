@@ -240,7 +240,7 @@
         <source>Sites</source>
       </trans-unit>
       <trans-unit id="accessRoles.tabTree" xml:space="preserve">
-        <source>Page tree</source>
+        <source>Documents</source>
       </trans-unit>
       <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
         <source>Workspaces</source>
@@ -267,7 +267,7 @@
         <source>Include sub-pages</source>
       </trans-unit>
       <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
-        <source>Page tree</source>
+        <source>Documents</source>
       </trans-unit>
       <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
         <source>Loading pages…</source>
