@@ -65,11 +65,16 @@ function ClipboardRow({
   active: boolean
   nodeTypes: ReturnType<typeof useNodeTypes>['data']
 }) {
+  // A group entry (multi-selection capture) shows its first node's label and
+  // icon plus a "+N" marker; the full list sits in the row's tooltip.
+  const [firstNode] = entry.nodes
   return (
     <div
       className={cn(
         'group flex items-center gap-1 rounded-sm border border-transparent pr-1',
-        active ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800' : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
+        active
+          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
+          : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
       )}
     >
       <button
@@ -102,11 +107,27 @@ function ClipboardRow({
           />
         </span>
         <span className="shrink-0 text-neutral-950 dark:text-white">
-          <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={entry.nodeType} />
+          <NodeTypeIcon
+            nodeTypes={nodeTypes}
+            nodeTypeName={firstNode.nodeType}
+          />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block overflow-hidden text-sm text-ellipsis whitespace-nowrap">
-            {entry.label}
+          <span
+            className="block overflow-hidden text-sm text-ellipsis whitespace-nowrap"
+            title={
+              entry.nodes.length > 1
+                ? entry.nodes.map((node) => node.label).join(', ')
+                : undefined
+            }
+          >
+            {firstNode.label}
+            {entry.nodes.length > 1 && (
+              <span className="text-neutral-600 dark:text-neutral-400">
+                {' '}
+                +{entry.nodes.length - 1}
+              </span>
+            )}
           </span>
           <span className="block text-xs text-neutral-600 dark:text-neutral-400 capitalize">
             {entry.mode === 'cut'

@@ -102,12 +102,13 @@ export function DocumentTree({
   // Collaborators mark the document they are standing on ({} outside a
   // collaborative session - the default context renders nothing).
   const { peers } = usePresence()
-  // The active cut entry's row renders dimmed - the node is "in transit".
+  // The active cut entry's rows render dimmed - the nodes are "in transit".
   const clipboard = useClipboard()
-  const cutAddress =
-    clipboard.entries.find(
-      (entry) => entry.id === clipboard.activeId && entry.mode === 'cut',
-    )?.address ?? null
+  const cutAddresses = new Set(
+    clipboard.entries
+      .find((entry) => entry.id === clipboard.activeId && entry.mode === 'cut')
+      ?.nodes.map((node) => node.address),
+  )
 
   const dnd = buildTreeDnd<TreeItemData>({
     getNode: (data) => (data === ROOT_ID || data === null ? null : data),
@@ -253,7 +254,7 @@ export function DocumentTree({
             ),
             decorators,
           )
-          return data.address === cutAddress
+          return cutAddresses.has(data.address)
             ? { ...decor, dimmed: true }
             : decor
         }}

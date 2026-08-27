@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-import type { NodeDto } from '@/api/nodes'
 
 /**
  * The node clipboard: cut/copied nodes waiting to be pasted, held in plain
@@ -10,7 +9,8 @@ import type { NodeDto } from '@/api/nodes'
  * one a paste inserts. Cutting/copying activates the new entry; the Clipboard
  * panel re-activates older ones. Entries are kind-separated: a document can
  * only be pasted in the document tree, content only in the content outliner,
- * never mixed.
+ * never mixed. One cut/copy gesture is one entry: a multi-selection is
+ * captured as a group, and pasting inserts the whole group in order.
  */
 
 /** Which tree an entry belongs to - paste is only offered for the same kind. */
@@ -18,11 +18,8 @@ export type ClipboardKind = 'document' | 'content'
 
 export type ClipboardMode = 'copy' | 'cut'
 
-export interface ClipboardEntry {
-  /** Stable identity of the history entry (not of the node). */
-  id: string
-  mode: ClipboardMode
-  kind: ClipboardKind
+/** One captured node of a clipboard entry. */
+export interface ClipboardNode {
   /** Encoded address of the source node at cut/copy time. */
   address: string
   aggregateId: string
@@ -31,6 +28,19 @@ export interface ClipboardEntry {
   label: string
   /** The source's parent - its children list shrinks when a cut is pasted. */
   sourceParentAddress: string | null
+}
+
+export interface ClipboardEntry {
+  /** Stable identity of the history entry (not of its nodes). */
+  id: string
+  mode: ClipboardMode
+  kind: ClipboardKind
+  /**
+   * The captured nodes in document order - never empty. A single right-click
+   * capture holds one node, a multi-selection capture all selected ones;
+   * pasting inserts them all, keeping this order.
+   */
+  nodes: ClipboardNode[]
 }
 
 export interface ClipboardState {
@@ -66,30 +76,30 @@ export function activeClipboardEntry(): ClipboardEntry | null {
 }
 
 /**
- * Put a node on the clipboard and make it the active entry. An existing
- * entry for the same node is replaced (cutting a node you copied earlier
- * updates it rather than leaving both in the history).
+ * Put one cut/copy gesture's nodes on the clipboard as a single entry and
+ * make it the active one. An existing entry capturing the same nodes is
+ * replaced (cutting what you copied earlier updates it rather than leaving
+ * both in the history).
  */
 export function clipboardAdd(
   mode: ClipboardMode,
   kind: ClipboardKind,
-  node: NodeDto,
-  sourceParentAddress: string | null,
+  nodes: ClipboardNode[],
 ): void {
+  if (nodes.length === 0) return
   const entry: ClipboardEntry = {
     id: crypto.randomUUID(),
     mode,
     kind,
-    address: node.address,
-    aggregateId: node.aggregateId,
-    nodeType: node.nodeType,
-    label: node.label !== '' ? node.label : node.aggregateId,
-    sourceParentAddress,
+    nodes,
   }
-  const entries = [
-    entry,
-    ...state.entries.filter((other) => other.address !== node.address),
-  ].slice(0, MAX_ENTRIES)
+  const sameNodes = (other: ClipboardEntry) =>
+    other.nodes.length === nodes.length &&
+    other.nodes.every((node, index) => node.address === nodes[index].address)
+  const entries = [entry, ...state.entries.filter((o) => !sameNodes(o))].slice(
+    0,
+    MAX_ENTRIES,
+  )
   setState({ entries, activeId: entry.id })
 }
 

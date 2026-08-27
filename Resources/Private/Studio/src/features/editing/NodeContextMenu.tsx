@@ -75,12 +75,11 @@ export type NodeMenuAction = 'hide' | 'unhide' | 'delete'
  * being closed.
  *
  * With a multi-selection (`selection` has more than one target) the bulk
- * actions - hide, unhide, delete - apply to every selected node, each
- * skipping the targets it cannot act on (tethered, not permitted, or already
- * in the wanted state) and showing how many it will affect. The single-node
- * actions (create, cut/copy/paste) keep acting on the clicked target: the
- * clipboard pastes exactly one active entry, and an insertion point is one
- * position.
+ * actions - hide, unhide, delete, cut and copy - apply to every selected
+ * node, each skipping the targets it cannot act on (tethered, not permitted,
+ * or already in the wanted state) and showing how many it will affect. Cut
+ * and copy capture the selection as ONE clipboard entry, pasted as a group.
+ * Create stays single-node: an insertion point is one position.
  */
 export function NodeContextMenu({
   target,
@@ -151,6 +150,10 @@ export function NodeContextMenu({
   const deletable = targets.filter(
     (t) => !t.tethered && t.permitted?.delete !== false,
   )
+  const cuttable = targets.filter(
+    (t) => !t.tethered && t.permitted?.move !== false,
+  )
+  const copyable = targets.filter((t) => !t.tethered)
   // Language-neutral "how many this will affect" suffix, multi-select only.
   const count = (n: number) => (multi ? ` (${n})` : '')
 
@@ -173,25 +176,39 @@ export function NodeContextMenu({
   )
 
   // Pasting a node into itself is never meaningful (a cut into itself is a
-  // cycle, a copy into itself is almost certainly a misclick). Pasting a
-  // COPIED node after itself is, though - that is the copy-then-paste-here
-  // duplicate gesture - so only a cut entry (a no-op move) blocks the after
-  // position.
+  // cycle, a copy into itself is almost certainly a misclick) - for a group
+  // entry, into any of its members. Pasting a COPIED entry after itself is,
+  // though - that is the copy-then-paste-here duplicate gesture - so only a
+  // cut entry (a no-op move) blocks the after position. A group pastes as a
+  // whole, so every captured type must be allowed at the position.
+  const entryTypes =
+    clipboardEntry === null
+      ? []
+      : [...new Set(clipboardEntry.nodes.map((node) => node.nodeType))]
   const pasteOntoSelf =
     clipboardEntry !== null &&
     target !== null &&
-    clipboardEntry.aggregateId === aggregateIdOf(target.address)
+    clipboardEntry.nodes.some(
+      (node) => node.aggregateId === aggregateIdOf(target.address),
+    )
   const canPasteInto =
     clipboardEntry !== null &&
     !pasteOntoSelf &&
     intoAllowed !== undefined &&
-    intoAllowed.includes(clipboardEntry.nodeType)
+    entryTypes.every((nodeType) => intoAllowed.includes(nodeType))
   const canPasteAfter =
     clipboardEntry !== null &&
     !(pasteOntoSelf && clipboardEntry.mode === 'cut') &&
     target?.parentAddress != null &&
     afterAllowed !== undefined &&
-    afterAllowed.includes(clipboardEntry.nodeType)
+    entryTypes.every((nodeType) => afterAllowed.includes(nodeType))
+  // What the paste hints call the entry: the node's label, or the group size.
+  const clipboardLabel =
+    clipboardEntry === null
+      ? ''
+      : clipboardEntry.nodes.length === 1
+        ? clipboardEntry.nodes[0].label
+        : `${clipboardEntry.nodes.length} ${entityLabelPlural}`
 
   const runVisibilityAction = (
     menuTargets: NodeMenuTarget[],
@@ -219,14 +236,25 @@ export function NodeContextMenu({
       )
   }
 
-  // Cut/copy: snapshot the node (label, type) onto the clipboard. The fetch
-  // resolves from the tree's cache in practice.
-  const runCapture = (menuTarget: NodeMenuTarget, mode: ClipboardMode) => {
+  // Cut/copy: snapshot the nodes (label, type) onto the clipboard as ONE
+  // entry - a multi-selection is captured as a group and pasted as one. The
+  // fetches resolve from the tree's cache in practice.
+  const runCapture = (menuTargets: NodeMenuTarget[], mode: ClipboardMode) => {
     if (clipboardKind === undefined) return
     onClose()
-    fetchNode(menuTarget.address)
-      .then((node) =>
-        clipboardAdd(mode, clipboardKind, node, menuTarget.parentAddress),
+    Promise.all(menuTargets.map((menuTarget) => fetchNode(menuTarget.address)))
+      .then((nodes) =>
+        clipboardAdd(
+          mode,
+          clipboardKind,
+          nodes.map((node, index) => ({
+            address: node.address,
+            aggregateId: node.aggregateId,
+            nodeType: node.nodeType,
+            label: node.label !== '' ? node.label : node.aggregateId,
+            sourceParentAddress: menuTargets[index].parentAddress,
+          })),
+        ),
       )
       .catch((e: unknown) =>
         toast.error(e, {
@@ -319,18 +347,20 @@ export function NodeContextMenu({
             {clipboardKind !== undefined && (
               <>
                 <DropdownMenuItem
-                  disabled={target.tethered || target.permitted?.move === false}
-                  onClick={() => runCapture(target, 'cut')}
+                  disabled={cuttable.length === 0}
+                  onClick={() => runCapture(cuttable, 'cut')}
                 >
                   <i className="fas fa-fw fa-scissors" aria-hidden />
                   {t('editing.cut', 'Cut')}
+                  {count(cuttable.length)}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  disabled={target.tethered}
-                  onClick={() => runCapture(target, 'copy')}
+                  disabled={copyable.length === 0}
+                  onClick={() => runCapture(copyable, 'copy')}
                 >
                   <i className="fas fa-fw fa-copy" aria-hidden />
                   {t('editing.copy', 'Copy')}
+                  {count(copyable.length)}
                 </DropdownMenuItem>
                 {clipboardEntry && (
                   <>
@@ -341,7 +371,7 @@ export function NodeContextMenu({
                       title={t(
                         'editing.pasteIntoHint',
                         'Paste “{0}” inside, as the last child',
-                        [clipboardEntry.label],
+                        [clipboardLabel],
                       )}
                       onClick={() => runPaste(target, 'into')}
                     >
@@ -355,7 +385,7 @@ export function NodeContextMenu({
                       title={t(
                         'editing.pasteAfterHint',
                         'Paste “{0}” after this {1}',
-                        [clipboardEntry.label, entityLabel],
+                        [clipboardLabel, entityLabel],
                       )}
                       onClick={() => runPaste(target, 'after')}
                     >
