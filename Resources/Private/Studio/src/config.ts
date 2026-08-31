@@ -29,6 +29,12 @@ export interface StudioConfig {
    * never flashes the wrong theme. Dark is the Studio default.
    */
   uiMode: 'light' | 'dark' | 'system'
+  /**
+   * Whether a successful "Publish all" celebrates with a confetti burst;
+   * mirrors the Medienreaktor.NeosStudio.publishCelebration setting, which an
+   * operator can turn off installation-wide.
+   */
+  publishCelebration: boolean
   /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */
   xliffEndpoint: string
   /** Classic backend logout (POST, session-authenticated). */
@@ -66,6 +72,7 @@ const fallback: StudioConfig = {
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',
   uiMode: 'dark',
+  publishCelebration: true,
   xliffEndpoint: '/neos/xliff.json',
   logoutEndpoint: '/neos/logout',
   realtime: { url: null },

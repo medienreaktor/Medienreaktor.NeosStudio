@@ -18,6 +18,12 @@ Medienreaktor:
     # labels translated into their interface language. Set false to hide it.
     enableLegacyModules: true
 
+    # Celebrate a successful "Publish all" with a short confetti burst off the
+    # publish button. Set false to turn the animation off for the whole
+    # installation. Editors who ask their system for reduced motion never see
+    # it either way.
+    publishCelebration: true
+
     # The optional realtime sidecar: a Hocuspocus WebSocket server (see "The
     # realtime sidecar" in the README) that carries presence and the workspace
     # change feed with sub-second latency - and tails the feed ONCE per

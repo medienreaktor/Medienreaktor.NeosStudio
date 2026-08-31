@@ -78,6 +78,13 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(path: 'enableLegacyModules')]
     protected $enableLegacyModules;
 
+    /**
+     * Whether a successful "Publish all" celebrates with a confetti burst.
+     * Untyped: absent configuration injects null, which keeps the default on.
+     */
+    #[Flow\InjectConfiguration(path: 'publishCelebration')]
+    protected $publishCelebration;
+
     #[Flow\Inject]
     protected MenuHelper $menuHelper;
 
@@ -116,6 +123,10 @@ class StudioController extends ActionController
             // roundtrip. Schema-less preference array: coerce out-of-range
             // values to the dark default.
             'uiMode' => $this->uiMode(),
+            // Whether a successful "Publish all" celebrates with a confetti
+            // burst; the publishCelebration setting, off for the whole
+            // installation when an operator sets it to false.
+            'publishCelebration' => $this->publishCelebration !== false,
             'xliffEndpoint' => $origin . '/neos/xliff.json',
             // The classic backend logout (POST, session-authenticated): ends
             // the Flow session the shell and the silent OAuth flow ride on.
