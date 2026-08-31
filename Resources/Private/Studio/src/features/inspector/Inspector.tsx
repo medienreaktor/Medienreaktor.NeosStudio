@@ -367,7 +367,10 @@ export function InspectorPanel({
                 }
                 onValueChange={(value) => setSelectedTab(value as string)}
               >
-                <TabsList>
+                {/* Wrapping, not scrolling: the inspector panel is narrow and
+                    resizable, and a horizontal scroller parks tabs behind an
+                    edge with nothing on screen to hint that they are there. */}
+                <TabsList className="h-auto w-full flex-wrap overflow-x-visible">
                   {visibleTabs.map((tab) => {
                     // The classic UI's per-tab badge: how many of this tab's
                     // properties currently fail validation.
@@ -378,14 +381,32 @@ export function InspectorPanel({
                           item.kind === 'property' &&
                           validationErrors[item.property.name] !== undefined,
                       ).length
+                    // Icon alone, like the classic Neos inspector: labelling
+                    // five or six tabs does not fit a 320px panel. Every tab
+                    // is the same width that way, so the wrapped list keeps
+                    // its shape as the selection moves. A tab configured
+                    // without an icon has nothing else to go by and keeps its
+                    // label.
+                    const labelled = !tab.icon
                     return (
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
                         title={tab.label}
+                        // The triggers carry their own size now that the
+                        // wrapping list has no fixed height. h-9/min-w-9 is
+                        // the same footprint the icon button and the toggle
+                        // use for an icon-only control; min-w rather than a
+                        // square so a tab showing an error badge can grow.
+                        className="h-9 min-w-9 flex-none px-2"
                       >
                         {tab.icon && <FaIcon icon={tab.icon} />}
-                        {tab.label}
+                        {/* Hidden, never dropped: the title attribute is not
+                            an accessible name every screen reader announces,
+                            so the label stays in the tree either way. */}
+                        <span className={cn(!labelled && 'sr-only')}>
+                          {tab.label}
+                        </span>
                         {errorCount > 0 && (
                           <span
                             className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.65rem] font-semibold text-white"
