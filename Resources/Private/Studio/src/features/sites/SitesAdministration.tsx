@@ -62,7 +62,7 @@ export function SitesAdministration() {
   const deleting = sites.find((s) => s.nodeName === deletingNodeName) ?? null
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-3">
       <SettingsHeader
         title={t('sites.title', 'Sites')}
         subtitle={t('sites.subtitle', 'Websites served by this installation.')}
@@ -199,7 +199,9 @@ function SiteRow({
   return (
     <TableRow className="text-neutral-800 dark:text-neutral-200">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">{site.name}</span>
+        <span className="font-medium text-neutral-950 dark:text-white">
+          {site.name}
+        </span>
         <span className="ml-2 text-xs text-neutral-500">{site.nodeName}</span>
       </TableCell>
       <TableCell className="text-neutral-600 dark:text-neutral-400">

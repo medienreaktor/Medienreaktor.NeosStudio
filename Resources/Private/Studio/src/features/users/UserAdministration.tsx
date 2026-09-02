@@ -78,7 +78,7 @@ export function UserAdministration() {
   }, [data, search])
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-3">
       <SettingsHeader
         title={t('users.title', 'Users')}
         subtitle={t('users.subtitle', 'Backend user accounts.')}
@@ -245,13 +245,18 @@ function UserRow({
           <span className="text-neutral-500">—</span>
         ) : (
           user.accounts.map((account) => (
-            <div key={account.accountIdentifier} className="text-neutral-700 dark:text-neutral-300">
+            <div
+              key={account.accountIdentifier}
+              className="text-neutral-700 dark:text-neutral-300"
+            >
               {account.accountIdentifier}
             </div>
           ))
         )}
       </TableCell>
-      <TableCell>{user.email ?? <span className="text-neutral-500">—</span>}</TableCell>
+      <TableCell>
+        {user.email ?? <span className="text-neutral-500">—</span>}
+      </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {user.roles.length === 0 ? (

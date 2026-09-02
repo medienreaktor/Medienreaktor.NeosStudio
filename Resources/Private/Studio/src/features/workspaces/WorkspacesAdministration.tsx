@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { useUsers } from '@/api/users'
-import { deleteWorkspace, useWorkspaces, type Workspace } from '@/api/workspaces'
+import {
+  deleteWorkspace,
+  useWorkspaces,
+  type Workspace,
+} from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { Badge } from '@/components/ui/badge'
@@ -82,11 +86,14 @@ export function WorkspacesAdministration() {
 
   // Owner user ids -> readable names, from the user roster every editor may read.
   const userLabels = new Map(
-    (usersData?.users ?? []).map((user) => [user.id, user.fullName || user.label]),
+    (usersData?.users ?? []).map((user) => [
+      user.id,
+      user.fullName || user.label,
+    ]),
   )
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-3">
       <SettingsHeader
         title={t('workspacesAdmin.title', 'Workspaces')}
         subtitle={t(
@@ -124,10 +131,14 @@ export function WorkspacesAdministration() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>{t('workspacesAdmin.columnTitle', 'Title')}</TableHead>
+                <TableHead>
+                  {t('workspacesAdmin.columnTitle', 'Title')}
+                </TableHead>
                 <TableHead>{t('workspacesAdmin.columnBase', 'Base')}</TableHead>
                 <TableHead>{t('workspacesAdmin.columnType', 'Type')}</TableHead>
-                <TableHead>{t('workspacesAdmin.columnOwner', 'Owner')}</TableHead>
+                <TableHead>
+                  {t('workspacesAdmin.columnOwner', 'Owner')}
+                </TableHead>
                 <TableHead>
                   {t('workspacesAdmin.columnChanges', 'Changes')}
                 </TableHead>
@@ -214,9 +225,11 @@ export function WorkspacesAdministration() {
           }
           queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
           toast.success(
-            t('workspacesAdmin.deleted', 'The workspace "{0}" has been deleted.', [
-              workspace.title || workspace.name,
-            ]),
+            t(
+              'workspacesAdmin.deleted',
+              'The workspace "{0}" has been deleted.',
+              [workspace.title || workspace.name],
+            ),
           )
         }}
       />
@@ -259,9 +272,7 @@ function WorkspaceRow({
         )}
       </TableCell>
       <TableCell className="text-neutral-600 dark:text-neutral-400">
-        {workspace.baseWorkspace ?? (
-          <span className="text-neutral-500">—</span>
-        )}
+        {workspace.baseWorkspace ?? <span className="text-neutral-500">—</span>}
       </TableCell>
       <TableCell>
         <span className="inline-flex items-center gap-1.5">
@@ -294,7 +305,10 @@ function WorkspaceRow({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={t('workspacesAdmin.rowActions', 'Workspace actions')}
+                  aria-label={t(
+                    'workspacesAdmin.rowActions',
+                    'Workspace actions',
+                  )}
                 />
               }
             >

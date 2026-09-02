@@ -52,7 +52,7 @@ export function ProfileSettings() {
   }, [error])
 
   return (
-    <div className="max-w-xl p-6">
+    <div className="max-w-xl p-6 pt-3">
       <SettingsHeader
         title={t('profile.title', 'Profile')}
         subtitle={t('profile.subtitle', 'Your personal account settings.')}
@@ -108,7 +108,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
           <span>
             {native}
             {english && (
-              <span className="ml-2 text-neutral-600 dark:text-neutral-400">{english}</span>
+              <span className="ml-2 text-neutral-600 dark:text-neutral-400">
+                {english}
+              </span>
             )}
           </span>
         ),

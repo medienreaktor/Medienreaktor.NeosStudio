@@ -88,7 +88,7 @@ export function AccessRolesAdministration() {
   )
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-3">
       <SettingsHeader
         title={t('accessRoles.title', 'Access roles')}
         subtitle={t(
