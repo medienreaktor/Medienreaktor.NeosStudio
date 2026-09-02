@@ -857,8 +857,11 @@ function GroupTabBar({
                 : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white border-transparent',
               // A panel asking for attention gets a solid blue tab so it reads
               // as the place to look, whether or not it is the active tab.
+              // Both color-scheme variants are spelled out: tailwind-merge
+              // only drops the active tab's unprefixed bg/text, its dark:
+              // ones would otherwise still win in dark mode.
               attention.has(panel) &&
-                'bg-blue-500 text-white border-blue-500 hover:text-white',
+                'bg-blue-500 dark:bg-blue-500 text-white dark:text-white border-blue-500 hover:text-white dark:hover:text-white',
               drag?.panel === panel && 'opacity-50',
             )}
           >

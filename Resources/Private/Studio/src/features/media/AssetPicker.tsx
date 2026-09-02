@@ -99,7 +99,7 @@ export function AssetPickerProvider({
  *
  * - opening a session focuses the Media Library and remembers the main tab
  *   that was active, to restore on close;
- * - closing it (a pick or Cancel) restores that tab - unless the Media Library
+ * - closing it (a pick, Cancel or Escape) restores that tab - unless the Media Library
  *   already was it (e.g. torn out to float), where there is nothing to switch
  *   back to;
  * - if the user navigates away from the Media Library while a session is still
@@ -139,6 +139,27 @@ export function AssetPickerPanelBridge() {
     }
     wasActive.current = active
   }, [active, atLibrary, activate, activeMainPanel, cancel])
+
+  // Escape leaves picker mode: the keyboard twin of the banner's Cancel, and
+  // the way back to the visual editor without reaching for the mouse. Bubble
+  // phase on window, so everything that wanted the key has already spoken:
+  // Base UI popups (dialogs, menus, dropdowns) close on Escape and
+  // preventDefault() + stopPropagation() it, the inline inputs preventDefault()
+  // when Escape reverts a draft. Only an unclaimed Escape cancels the pick.
+  // (The MediaBrowser takes keyboard focus when it enters picker mode, so the
+  // key reaches the shell even when the pick started inside the preview
+  // iframe.)
+  useEffect(() => {
+    if (!active) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || event.repeat)
+        return
+      event.preventDefault()
+      cancel()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [active, cancel])
 
   return null
 }

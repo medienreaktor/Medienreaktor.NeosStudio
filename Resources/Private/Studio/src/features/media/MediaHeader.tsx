@@ -502,7 +502,12 @@ function InlineCreate({
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === 'Enter') void submit()
-        if (e.key === 'Escape') setOpen(false)
+        if (e.key === 'Escape') {
+          // Claim the key: Escape here closes the field only, it must not
+          // also cancel a running asset pick (see AssetPickerPanelBridge).
+          e.preventDefault()
+          setOpen(false)
+        }
       }}
       onBlur={() => (value.trim() ? void submit() : setOpen(false))}
       className="h-6 w-40 text-xs"

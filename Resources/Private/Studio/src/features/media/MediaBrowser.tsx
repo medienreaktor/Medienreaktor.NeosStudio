@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAssets, type MediaAsset } from '@/api/media'
 import { translate as t } from '@/lib/i18n'
@@ -48,8 +48,21 @@ export function MediaBrowser({
   // from manage mode would otherwise carry into the picker. A pick always opens
   // with nothing selected.
   const { setActive } = state
+  const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (mode === 'picker') setActive(null)
+    if (mode !== 'picker') return
+    setActive(null)
+    // Take keyboard focus, so the Escape that cancels the pick (see
+    // AssetPickerPanelBridge) works right away: the Select click that started
+    // the pick left focus on the inspector's button or inside the preview
+    // iframe, whose keystrokes the shell never sees. The panel switch that
+    // reveals this browser lands in a follow-up render, and a display:none
+    // element cannot take focus - hence the deferral past that render.
+    const timer = window.setTimeout(
+      () => rootRef.current?.focus({ preventScroll: true }),
+      0,
+    )
+    return () => window.clearTimeout(timer)
   }, [mode, setActive])
   // Manage mode only: the asset whose metadata dialog is open.
   const [detailsAsset, setDetailsAsset] = useState<MediaAsset | null>(null)
@@ -71,7 +84,12 @@ export function MediaBrowser({
   const activeKey = state.active ? assetKey(state.active) : null
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col">
+    <div
+      ref={rootRef}
+      // Focusable (by script only) so picker mode can claim the keyboard.
+      tabIndex={-1}
+      className="relative flex h-full min-h-0 flex-col outline-none"
+    >
       {mode === 'picker' && (
         <div className="flex shrink-0 items-center justify-between gap-2 bg-blue-500 px-3 py-2 text-xs">
           <span className="min-w-0 truncate text-white">
@@ -88,6 +106,10 @@ export function MediaBrowser({
           {onCancel && (
             <Button variant="ghost" size="xs" onClick={onCancel}>
               {t('media.cancel', 'Cancel')}
+              {/* Escape cancels too (see AssetPickerPanelBridge) - say so. */}
+              <kbd className="rounded border border-white/40 px-1 font-sans text-[10px] leading-4 text-white/90">
+                Esc
+              </kbd>
             </Button>
           )}
         </div>
