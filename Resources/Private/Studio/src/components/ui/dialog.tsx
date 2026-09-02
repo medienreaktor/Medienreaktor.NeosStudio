@@ -57,6 +57,22 @@ function DialogOverlay({
   )
 }
 
+/**
+ * How a dialog popup steps back while another dialog is open on top of it,
+ * the way shadcn's stacked dialogs do. Base UI flags the parent popup with
+ * data-nested-dialog-open (and skips the nested dialog's own backdrop), so the
+ * parent dims itself: it shrinks and nudges up a little, and an ::after veil
+ * in the backdrop colour covers it. The veil is always rendered at opacity 0
+ * so it fades in and out with the nested dialog instead of snapping.
+ *
+ * Shared with the settings modal in features/modals/ModalHost.tsx - the
+ * transition list belongs alongside it: Tailwind v4 animates scale and
+ * translate through their own properties, which a bare `transform` in the
+ * transition list would not cover.
+ */
+const stackedDialogClassName =
+  'transition-[opacity,transform,translate,scale] duration-200 after:pointer-events-none after:absolute after:inset-0 after:z-50 after:rounded-[inherit] after:bg-white/90 dark:after:bg-neutral-950/80 after:opacity-0 after:transition-opacity after:duration-200 data-nested-dialog-open:after:opacity-100'
+
 const dialogSizes = {
   /** Compact dialogs: confirmations, renames, short decision prompts */
   sm: 'max-w-md',
@@ -90,7 +106,9 @@ function DialogContent({
           // to the right of the dialog's box, visibly so for anything with a
           // background or border. Capping the track at 1fr keeps it inside
           // the padding box, so those children scroll or wrap instead.
-          'fixed top-1/2 left-1/2 z-200 grid w-full grid-cols-[minmax(0,1fr)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-6 shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
+          'fixed top-1/2 left-1/2 z-200 grid w-full grid-cols-[minmax(0,1fr)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-6 shadow-lg data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
+          stackedDialogClassName,
+          'data-nested-dialog-open:translate-y-[calc(-50%-0.5rem)] data-nested-dialog-open:scale-[0.97]',
           dialogSizes[size],
           className,
         )}
@@ -164,6 +182,7 @@ function DialogDescription({
 }
 
 export {
+  stackedDialogClassName,
   Dialog,
   DialogTrigger,
   DialogClose,

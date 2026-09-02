@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 
+import { stackedDialogClassName } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
@@ -84,7 +85,14 @@ function ModalHost({
         />
         <DialogPrimitive.Popup
           data-slot="modal-content"
-          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
+          className={cn(
+            'fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-lg data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0',
+            // Sections open their own dialogs (edit a role, a site, a user...)
+            // on top of this modal; while one is open the modal steps back
+            // behind a veil, see stackedDialogClassName.
+            stackedDialogClassName,
+            'data-nested-dialog-open:-translate-y-2 data-nested-dialog-open:scale-[0.98]',
+          )}
         >
           {open.kind === 'settings' && (
             <SettingsModal
