@@ -1442,10 +1442,6 @@
         <source>Reload preview</source>
         <target xml:lang="fr">Recharger l'aperçu</target>
       </trans-unit>
-      <trans-unit id="preview.selectDocument" xml:space="preserve">
-        <source>Select a document to preview it.</source>
-        <target xml:lang="fr">Sélectionnez un document pour l'afficher en aperçu.</target>
-      </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
         <target xml:lang="fr">Changer le mot de passe</target>
@@ -2325,10 +2321,6 @@
       <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
         <source>Loading the outline failed</source>
         <target xml:lang="fr">Le chargement de la structure a échoué</target>
-      </trans-unit>
-      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
-        <source>Select a document to outline its content.</source>
-        <target xml:lang="fr">Sélectionnez un document pour afficher la structure de son contenu.</target>
       </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>

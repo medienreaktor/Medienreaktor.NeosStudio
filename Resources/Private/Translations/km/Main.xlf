@@ -1442,10 +1442,6 @@
         <source>Reload preview</source>
         <target xml:lang="km">ផ្ទុកការមើលជាមុនឡើងវិញ</target>
       </trans-unit>
-      <trans-unit id="preview.selectDocument" xml:space="preserve">
-        <source>Select a document to preview it.</source>
-        <target xml:lang="km">ជ្រើសរើសឯកសារដើម្បីមើលវាជាមុន។</target>
-      </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
         <target xml:lang="km">ប្ដូរពាក្យសម្ងាត់</target>
@@ -2325,10 +2321,6 @@
       <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
         <source>Loading the outline failed</source>
         <target xml:lang="km">ការផ្ទុកគ្រោងបានបរាជ័យ</target>
-      </trans-unit>
-      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
-        <source>Select a document to outline its content.</source>
-        <target xml:lang="km">ជ្រើសរើសឯកសារដើម្បីបង្ហាញគ្រោងមាតិការបស់វា។</target>
       </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>

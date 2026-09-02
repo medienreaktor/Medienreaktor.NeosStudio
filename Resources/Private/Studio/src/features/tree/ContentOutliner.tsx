@@ -27,7 +27,6 @@ import {
   type NodeMenuAction,
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
-import { Placeholder } from '@/components/ui/placeholder'
 import { useNodeDecorators } from './decorators'
 import { contextMenuItems } from './menuSelection'
 import { nodeDecor } from './nodeDecor'
@@ -71,17 +70,9 @@ export function ContentOutliner({
   /** "Create new…" was picked in the context menu for this target. */
   onCreateNew?: (target: NodeMenuTarget) => void
 }) {
-  if (document === null) {
-    return (
-      <Placeholder
-        icon="fa-list-tree"
-        title={t(
-          'tree.outlinerEmptyDocument',
-          'Select a document to outline its content.',
-        )}
-      />
-    )
-  }
+  // No document is a transient state only (a document is selected
+  // automatically on boot and after site/dimension switches) - stay empty.
+  if (document === null) return null
   // Key by document: a new document is a new tree (fresh root, fresh
   // expansion state) - remounting is simpler and more predictable than
   // mutating rootItemId on a live tree instance.

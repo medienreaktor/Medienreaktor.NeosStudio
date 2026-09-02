@@ -1442,10 +1442,6 @@
         <source>Reload preview</source>
         <target xml:lang="fi">Lataa esikatselu uudelleen</target>
       </trans-unit>
-      <trans-unit id="preview.selectDocument" xml:space="preserve">
-        <source>Select a document to preview it.</source>
-        <target xml:lang="fi">Valitse dokumentti esikatsellaksesi sitä.</target>
-      </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
         <target xml:lang="fi">Vaihda salasana</target>
@@ -2325,10 +2321,6 @@
       <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
         <source>Loading the outline failed</source>
         <target xml:lang="fi">Jäsennyksen lataaminen epäonnistui</target>
-      </trans-unit>
-      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
-        <source>Select a document to outline its content.</source>
-        <target xml:lang="fi">Valitse dokumentti nähdäksesi sen sisällön jäsennyksen.</target>
       </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>

@@ -3,9 +3,9 @@ import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import { isDeleted, renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
-import { Placeholder } from '@/components/ui/placeholder'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
+import { reportPreviewLoaded } from '@/app/boot'
 import { useNodeEditable } from '@/features/access/useAccess'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
@@ -288,6 +288,8 @@ export function PreviewPane({
     const top = layers[layers.length - 1]
     if (!top?.ready) return
     activeFrameRef.current = framesRef.current.get(top.id) ?? null
+    // The shell's boot screen waits for the first painted page.
+    reportPreviewLoaded()
     // A page rendered without the guest (deleted, or outside the account's
     // access roles) leaves the bridge down: every guest-facing feature
     // (selection sync, drop targets, inline editing) would be posting into a
@@ -688,14 +690,10 @@ export function PreviewPane({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guestReady])
 
-  if (!document || !src) {
-    return (
-      <Placeholder
-        icon="fa-file-lines"
-        title={t('preview.selectDocument', 'Select a document to preview it.')}
-      />
-    )
-  }
+  // No document is a transient state only: one is selected automatically on
+  // boot and after every site or dimension switch, so there is nothing to
+  // tell the user - the pane simply stays empty for the moment.
+  if (!document || !src) return null
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

@@ -8,10 +8,26 @@
     <link href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/favicon-32x32.png" sizes="32x32" rel="icon" type="image/png" />
     <link href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/safari-pinned-tab.svg" rel="mask-icon" color="#00adee" />
     <title>Neos Studio</title>
-    <script type="module" crossorigin src="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-6vI509wJ.js"></script>
-    <link rel="stylesheet" crossorigin href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-DFU1aNHx.css">
+    <script type="module" crossorigin src="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-65MZnQRk.js"></script>
+    <link rel="stylesheet" crossorigin href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-6Uz2oT7F.css">
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Painted before the bundle runs; React replaces it with the identical
+         BootScreen (src/app/BootScreen.tsx) so the handover is invisible.
+         Inline styles on purpose: the Tailwind bundle is not available yet. -->
+    <style>
+      @keyframes neos-studio-boot-spin { to { transform: rotate(360deg); } }
+    </style>
+    <div id="root">
+      <div style="position:fixed;inset:0;display:grid;place-items:center">
+        <div id="neos-studio-boot-ring" style="width:4rem;height:4rem;border-radius:9999px;border:4px solid #00adee;border-top-color:transparent;animation:neos-studio-boot-spin 1s linear infinite"></div>
+      </div>
+    </div>
+    <script>
+      // Rotation phase from the page clock, like the React BootScreen does, so
+      // the ring does not jump back when React replaces this element.
+      document.getElementById('neos-studio-boot-ring').style.animationDelay =
+        -(performance.now() % 1000) + 'ms'
+    </script>
   </body>
 </html>

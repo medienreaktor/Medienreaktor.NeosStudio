@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useIsFetching } from '@tanstack/react-query'
 import {
   beginLogin,
   getTokens,
@@ -39,7 +40,8 @@ import { loadTranslations, translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
-import { LoadingState } from '@/components/ui/spinner'
+import { BootScreen } from '@/app/BootScreen'
+import { subscribePreviewLoaded } from '@/app/boot'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -107,6 +109,13 @@ const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
 
 // Remember the site and dimension the user was working in across reloads.
 const SELECTED_SITE_KEY = 'neos-studio.selected_site'
+
+// The boot screen never outstays its welcome: whatever fails to report (a
+// preview that never paints, a request that hangs) the shell is uncovered
+// after this long and the panels show their own error/loading states.
+const BOOT_TIMEOUT_MS = 15_000
+// Matches BootScreen's fade-out; the overlay unmounts after it.
+const BOOT_FADE_MS = 300
 const DIMENSION_SPACE_POINT_KEY = 'neos-studio.dimension_space_point'
 
 // Remember a collaborative editing context (a shared workspace edited
@@ -137,6 +146,30 @@ function storedDimensionSpacePoint(): DimensionSpacePoint | null {
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
+  // The boot screen covers the shell from the first render until the first
+  // preview page has painted and no request is in flight anymore (the trees
+  // and the inspector have their data by then) - so the user sees one spinner
+  // instead of a shell assembling itself panel by panel. `booted` latches:
+  // later site/dimension/workspace switches reload the preview uncovered.
+  const [previewLoaded, setPreviewLoaded] = useState(false)
+  const [booted, setBooted] = useState(false)
+  const [bootScreenMounted, setBootScreenMounted] = useState(true)
+  const inFlightQueries = useIsFetching()
+  useEffect(() => subscribePreviewLoaded(() => setPreviewLoaded(true)), [])
+  useEffect(() => {
+    if (booted || auth !== 'authenticated') return
+    if (previewLoaded && inFlightQueries === 0) setBooted(true)
+  }, [booted, auth, previewLoaded, inFlightQueries])
+  useEffect(() => {
+    if (booted || auth !== 'authenticated') return
+    const timer = setTimeout(() => setBooted(true), BOOT_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [booted, auth])
+  useEffect(() => {
+    if (!booted) return
+    const timer = setTimeout(() => setBootScreenMounted(false), BOOT_FADE_MS)
+    return () => clearTimeout(timer)
+  }, [booted])
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
   // The node shown in the inspector drawer - a document or a content node.
   // Also the node outlined in the preview and revealed in the outliner.
@@ -418,6 +451,12 @@ export function App() {
     sites.find((s) => s.nodeName === siteNodeName) ??
     sites.find((s) => s.nodeAddress !== null) ??
     null
+  // Nothing to preview (no online site the account may open): the boot
+  // screen would otherwise wait for a page that never comes.
+  const noSiteToOpen = sitesResponse !== undefined && activeSite === null
+  useEffect(() => {
+    if (noSiteToOpen) setBooted(true)
+  }, [noSiteToOpen])
 
   useEffect(() => {
     if (siteNodeName) localStorage.setItem(SELECTED_SITE_KEY, siteNodeName)
@@ -491,7 +530,9 @@ export function App() {
       fetchNode(siteAddress)
         .then(select)
         .catch(() => {
-          /* fine - the tree simply starts unselected */
+          // Fine - the tree simply starts unselected. Nothing will reach the
+          // preview, so the boot screen has nothing to wait for either.
+          setBooted(true)
         })
     }
     const storedId = localStorage.getItem(SELECTED_DOCUMENT_KEY)
@@ -505,11 +546,7 @@ export function App() {
   }, [siteAddress])
 
   if (auth === 'checking') {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <LoadingState label={t('app.loadingStudio', 'Loading Neos Studio…')} />
-      </div>
-    )
+    return <BootScreen />
   }
 
   if (auth === 'anonymous') {
@@ -691,6 +728,7 @@ export function App() {
           'select-none **:data-[slot=sidebar-container]:transition-none! **:data-[slot=sidebar-gap]:transition-none!',
       )}
     >
+      {bootScreenMounted && <BootScreen done={booted} />}
       <StudioProvider value={studio}>
         <PresenceProvider
           value={{
