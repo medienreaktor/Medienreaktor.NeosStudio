@@ -21,6 +21,15 @@ export function flashNode(aggregateId: string): void {
   for (const listener of listeners) listener()
 }
 
+/**
+ * The pending request without consuming it. The subscriber has to know *which* node was asked for
+ * before it can decide whether it is in a position to show it - the shell boots on the previously
+ * selected document, and posting there would burn the request on the wrong page.
+ */
+export function peekPendingFlash(): string | null {
+  return pending
+}
+
 /** The pending request, if any - consuming it, so a pulse never repeats on a later reload. */
 export function takePendingFlash(): string | null {
   const request = pending

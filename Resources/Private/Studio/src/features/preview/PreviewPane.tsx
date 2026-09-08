@@ -6,7 +6,11 @@ import { toast } from '@/components/ui/toast'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
 import { reportPreviewLoaded } from '@/app/boot'
-import { subscribeFlashRequest, takePendingFlash } from '@/app/flash'
+import {
+  peekPendingFlash,
+  subscribeFlashRequest,
+  takePendingFlash,
+} from '@/app/flash'
 import { useNodeEditable } from '@/features/access/useAccess'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
@@ -601,25 +605,31 @@ export function PreviewPane({
     frame.postMessage(message, window.location.origin)
   }, [guestReady, selectedAddress])
 
-  // A pending "pulse this element" request, drained once the guest can act on it. The request is
-  // raised while the document is still loading, so it waits here rather than being dropped; the
-  // subscription covers the other order, where the guest was ready first.
+  // A pending "pulse this element" request, held until the guest showing *that* element is ready.
+  //
+  // Waiting on guestReady alone is not enough, and quietly loses the pulse: the shell boots on the
+  // previously selected document, whose guest reports ready first. Draining there would post into
+  // the wrong page and consume the request before the linked document has even loaded. Matching the
+  // selection makes the drain wait for the right guest - the request comes from a deep link, which
+  // selects the node it names, so the two line up by the time it can be shown.
   useEffect(() => {
-    if (!guestReady) return
+    if (!guestReady || selectedAddress === null) return
     const drain = () => {
-      const aggregateId = takePendingFlash()
-      if (aggregateId === null) return
+      const pending = peekPendingFlash()
+      if (pending === null) return
+      if (pending !== decodeNodeAddress(selectedAddress).aggregateId) return
       const frame = activeFrameRef.current?.contentWindow
       if (!frame) return
+      takePendingFlash()
       const message: HostToGuestMessage = {
         type: 'neos-studio/flash-node',
-        aggregateId,
+        aggregateId: pending,
       }
       frame.postMessage(message, window.location.origin)
     }
     drain()
     return subscribeFlashRequest(drain)
-  }, [guestReady])
+  }, [guestReady, selectedAddress])
 
   // Out-of-band element update: re-render one node's element on the server
   // and swap it into the live page instead of reloading the iframe (the
