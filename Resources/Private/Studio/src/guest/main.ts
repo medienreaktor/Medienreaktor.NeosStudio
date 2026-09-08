@@ -58,6 +58,9 @@ const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
 
 const HOVER_CLASS = 'neos-studio-hover'
 const SELECTED_CLASS = 'neos-studio-selected'
+const FLASH_CLASS = 'neos-studio-flash'
+/** Long enough to catch the eye after the smooth scroll, short enough not to nag. */
+const FLASH_DURATION_MS = 1600
 const DROPPABLE_CLASS = 'neos-studio-droppable'
 const DROP_TARGET_CLASS = 'neos-studio-drop-target'
 const EMPTY_CLASS = 'neos-studio-empty'
@@ -103,6 +106,27 @@ function injectStyles(): void {
     [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} {
       outline: 2px solid rgba(0, 173, 238, 1.0);
       outline-offset: 5px;
+    }
+    /* Arriving from a deep link, the editor did not do the selecting and has
+       no reason to look at the outline. A short pulse says "this one" and then
+       leaves the selection outline to speak for itself. Backdrop rather than
+       outline: the selection already owns the outline, and two of them would
+       fight over the same pixels. */
+    [${WRAPPER_ATTRIBUTE}].${FLASH_CLASS} {
+      animation: neos-studio-flash ${FLASH_DURATION_MS}ms ease-out 1;
+    }
+    @keyframes neos-studio-flash {
+      0%, 100% { background-color: transparent; }
+      15%      { background-color: rgba(0, 173, 238, 0.28); }
+      70%      { background-color: rgba(0, 173, 238, 0.16); }
+    }
+    /* Editors who set prefers-reduced-motion still get the emphasis, just
+       without the pulsing. */
+    @media (prefers-reduced-motion: reduce) {
+      [${WRAPPER_ATTRIBUTE}].${FLASH_CLASS} {
+        animation: none;
+        background-color: rgba(0, 173, 238, 0.18);
+      }
     }
     /* Explicitly hidden elements stay editable but read as invisible-to-
        visitors; the opacity dims their whole subtree. */
@@ -404,6 +428,33 @@ function select(
     const contextPath = element.getAttribute(WRAPPER_ATTRIBUTE)
     if (contextPath) post({ type: 'neos-studio/node-selected', contextPath })
   }
+}
+
+/** The element currently pulsing, and the timer that ends it. */
+let flashedElement: HTMLElement | null = null
+let flashTimer: number | undefined
+
+/**
+ * Pulse an element once. Restarting on an already-pulsing element is deliberate: a second deep
+ * link to the same node should visibly answer, and re-adding the class after a reflow restarts the
+ * animation.
+ */
+function flash(element: HTMLElement | null): void {
+  if (flashTimer !== undefined) {
+    window.clearTimeout(flashTimer)
+    flashTimer = undefined
+  }
+  flashedElement?.classList.remove(FLASH_CLASS)
+  flashedElement = element?.isConnected ? element : null
+  if (flashedElement === null) return
+  // Force a reflow so the class re-add restarts the animation rather than continuing the old one.
+  void flashedElement.offsetWidth
+  flashedElement.classList.add(FLASH_CLASS)
+  flashTimer = window.setTimeout(() => {
+    flashedElement?.classList.remove(FLASH_CLASS)
+    flashedElement = null
+    flashTimer = undefined
+  }, FLASH_DURATION_MS)
 }
 
 /**
@@ -1605,6 +1656,9 @@ function onHostMessage(event: MessageEvent): void {
     // An element replaced out-of-band can leave stale index entries behind.
     const element = indexed?.isConnected ? indexed : null
     select(element, { notifyHost: false, reveal: true })
+  }
+  if (message?.type === 'neos-studio/flash-node') {
+    flash(elementsByAggregateId.get(message.aggregateId) ?? null)
   }
   if (message?.type === 'neos-studio/element-info-request') {
     const element = elementsByAggregateId.get(message.aggregateId)

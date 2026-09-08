@@ -185,6 +185,12 @@ export type HostToGuestMessage =
   /** Outline and reveal the element of this node; null clears the selection. */
   | { type: 'neos-studio/select-node'; aggregateId: string | null }
   /**
+   * Pulse this element briefly. Sent when the editor arrives from a deep link and did not do the
+   * selecting themselves, so the selection outline alone would be easy to miss. Ignored when the
+   * node is not rendered on this page.
+   */
+  | { type: 'neos-studio/flash-node'; aggregateId: string }
+  /**
    * The collaborators currently on this document and the elements they
    * focus. Replaces the previous set; an empty list clears all presence
    * decor (e.g. everyone left, or collaboration ended).

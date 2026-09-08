@@ -42,7 +42,8 @@ import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { BootScreen } from '@/app/BootScreen'
 import { subscribePreviewLoaded } from '@/app/boot'
-import { clearDeepLink, deepLinkTarget } from '@/app/deepLink'
+import { clearDeepLink, deepLinkReveal, deepLinkTarget } from '@/app/deepLink'
+import { flashNode } from '@/app/flash'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -549,15 +550,37 @@ export function App() {
     const deepLinkedId = deepLinkTarget?.aggregateId ?? null
     if (deepLinkedId) {
       clearDeepLink()
-      fetchNode(
-        deepLinkTarget?.dimensionSpacePoint
-          ? addressInDimension(
-              addressWithAggregateId(siteAddress, deepLinkedId),
-              deepLinkTarget.dimensionSpacePoint,
-            )
-          : addressWithAggregateId(siteAddress, deepLinkedId),
-      )
-        .then(select)
+      const documentAddress = deepLinkTarget?.dimensionSpacePoint
+        ? addressInDimension(
+            addressWithAggregateId(siteAddress, deepLinkedId),
+            deepLinkTarget.dimensionSpacePoint,
+          )
+        : addressWithAggregateId(siteAddress, deepLinkedId)
+      // Bound locally: the narrowing below has to survive into the nested callbacks.
+      const revealId = deepLinkReveal
+      fetchNode(documentAddress)
+        .then((document) => {
+          // The document has to be the selected one either way - the preview
+          // renders it, and the content node only exists inside it.
+          setSelectedDocument(document)
+          if (revealId === null) {
+            setInspectedNode(document)
+            return
+          }
+          // Selecting the content node is all it takes to reveal it: the
+          // preview pane mirrors the shell's selection into the guest, which
+          // scrolls it into view and outlines it. flashNode adds the brief
+          // pulse on top, so the editor sees *which* element was meant even
+          // when the outline alone is easy to miss.
+          fetchNode(addressWithAggregateId(documentAddress, revealId))
+            .then((contentNode) => {
+              setInspectedNode(contentNode)
+              flashNode(revealId)
+            })
+            // The node may have been deleted or moved since the link was made;
+            // landing on the page is still the useful half of the answer.
+            .catch(() => setInspectedNode(document))
+        })
         // The document may live in another site, or not exist in that
         // dimension at all - fall back rather than showing an empty shell.
         .catch(selectRoot)

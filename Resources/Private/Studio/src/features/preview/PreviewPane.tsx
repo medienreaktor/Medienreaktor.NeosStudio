@@ -6,6 +6,7 @@ import { toast } from '@/components/ui/toast'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
 import { reportPreviewLoaded } from '@/app/boot'
+import { subscribeFlashRequest, takePendingFlash } from '@/app/flash'
 import { useNodeEditable } from '@/features/access/useAccess'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
@@ -599,6 +600,26 @@ export function PreviewPane({
     }
     frame.postMessage(message, window.location.origin)
   }, [guestReady, selectedAddress])
+
+  // A pending "pulse this element" request, drained once the guest can act on it. The request is
+  // raised while the document is still loading, so it waits here rather than being dropped; the
+  // subscription covers the other order, where the guest was ready first.
+  useEffect(() => {
+    if (!guestReady) return
+    const drain = () => {
+      const aggregateId = takePendingFlash()
+      if (aggregateId === null) return
+      const frame = activeFrameRef.current?.contentWindow
+      if (!frame) return
+      const message: HostToGuestMessage = {
+        type: 'neos-studio/flash-node',
+        aggregateId,
+      }
+      frame.postMessage(message, window.location.origin)
+    }
+    drain()
+    return subscribeFlashRequest(drain)
+  }, [guestReady])
 
   // Out-of-band element update: re-render one node's element on the server
   // and swap it into the live page instead of reloading the iframe (the
