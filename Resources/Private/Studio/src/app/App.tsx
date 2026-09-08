@@ -42,6 +42,7 @@ import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { BootScreen } from '@/app/BootScreen'
 import { subscribePreviewLoaded } from '@/app/boot'
+import { clearDeepLink, deepLinkTarget } from '@/app/deepLink'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -300,9 +301,13 @@ export function App() {
   const dimensions = dimensionsResponse?.dimensions ?? []
   // null = let the backend pick its default dimension space point; the sites
   // response reports the point actually in effect, which the switcher shows.
-  // Starts from the point remembered across reloads, if any.
+  // Starts from the dimension a deep link asked for, else the point remembered
+  // across reloads. A deep-linked point the access roles forbid is dropped by
+  // the validation effect below, same as a stored one.
   const [dimensionSpacePoint, setDimensionSpacePoint] =
-    useState<DimensionSpacePoint | null>(storedDimensionSpacePoint)
+    useState<DimensionSpacePoint | null>(
+      () => deepLinkTarget?.dimensionSpacePoint ?? storedDimensionSpacePoint(),
+    )
 
   // Remember the dimension across reloads. A restored point that the current
   // dimension configuration no longer allows (config changed since it was
@@ -534,6 +539,29 @@ export function App() {
           // preview, so the boot screen has nothing to wait for either.
           setBooted(true)
         })
+    }
+    // A deep link wins over the remembered selection - it is an explicit
+    // request from outside the shell. Only its aggregate id and dimension are
+    // used: the site address supplies the content repository and, crucially,
+    // the workspace the editor is actually working in. A link built elsewhere
+    // names the live workspace, and dropping the editor into live would show
+    // them a document they cannot edit.
+    const deepLinkedId = deepLinkTarget?.aggregateId ?? null
+    if (deepLinkedId) {
+      clearDeepLink()
+      fetchNode(
+        deepLinkTarget?.dimensionSpacePoint
+          ? addressInDimension(
+              addressWithAggregateId(siteAddress, deepLinkedId),
+              deepLinkTarget.dimensionSpacePoint,
+            )
+          : addressWithAggregateId(siteAddress, deepLinkedId),
+      )
+        .then(select)
+        // The document may live in another site, or not exist in that
+        // dimension at all - fall back rather than showing an empty shell.
+        .catch(selectRoot)
+      return
     }
     const storedId = localStorage.getItem(SELECTED_DOCUMENT_KEY)
     if (!storedId) {
