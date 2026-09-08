@@ -59,8 +59,13 @@ const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
 const HOVER_CLASS = 'neos-studio-hover'
 const SELECTED_CLASS = 'neos-studio-selected'
 const FLASH_CLASS = 'neos-studio-flash'
-/** Long enough to catch the eye after the smooth scroll, short enough not to nag. */
-const FLASH_DURATION_MS = 1600
+/** Long enough for two blinks to register, short enough not to nag. */
+const FLASH_DURATION_MS = 1800
+/**
+ * Fallback for waiting out the selection's smooth scroll: browsers without `scrollend`, and the
+ * case where the element is already in view so nothing scrolls and no event ever arrives.
+ */
+const SCROLL_SETTLE_MS = 700
 const DROPPABLE_CLASS = 'neos-studio-droppable'
 const DROP_TARGET_CLASS = 'neos-studio-drop-target'
 const EMPTY_CLASS = 'neos-studio-empty'
@@ -108,17 +113,23 @@ function injectStyles(): void {
       outline-offset: 5px;
     }
     /* Arriving from a deep link, the editor did not do the selecting and has
-       no reason to look at the outline. A short pulse says "this one" and then
-       leaves the selection outline to speak for itself. Backdrop rather than
-       outline: the selection already owns the outline, and two of them would
-       fight over the same pixels. */
+       no reason to look at the outline. Two distinct blinks say "this one" and
+       then leave the selection outline to speak for itself. Backdrop rather
+       than outline: the selection already owns the outline, and two of them
+       would fight over the same pixels.
+
+       Two blinks, not a single fade: one gentle swell is easy to miss on a
+       page the editor is still taking in, and reads as a rendering artifact
+       rather than as a pointer. */
     [${WRAPPER_ATTRIBUTE}].${FLASH_CLASS} {
       animation: neos-studio-flash ${FLASH_DURATION_MS}ms ease-out 1;
     }
     @keyframes neos-studio-flash {
-      0%, 100% { background-color: transparent; }
-      15%      { background-color: rgba(0, 173, 238, 0.28); }
-      70%      { background-color: rgba(0, 173, 238, 0.16); }
+      0%   { background-color: rgba(0, 173, 238, 0); }
+      8%   { background-color: rgba(0, 173, 238, 0.45); }
+      32%  { background-color: rgba(0, 173, 238, 0.04); }
+      52%  { background-color: rgba(0, 173, 238, 0.40); }
+      100% { background-color: rgba(0, 173, 238, 0); }
     }
     /* Editors who set prefers-reduced-motion still get the emphasis, just
        without the pulsing. */
@@ -435,9 +446,17 @@ let flashedElement: HTMLElement | null = null
 let flashTimer: number | undefined
 
 /**
- * Pulse an element once. Restarting on an already-pulsing element is deliberate: a second deep
- * link to the same node should visibly answer, and re-adding the class after a reflow restarts the
- * animation.
+ * Pulse an element once, after the page has come to rest.
+ *
+ * Selecting the node starts a smooth scroll towards it, and the pulse arrives in the same breath.
+ * Playing it immediately wastes it: it runs while the page is still travelling and is over by the
+ * time the element is in front of the editor - which is exactly how it went unnoticed in practice.
+ * So wait for the scrolling to settle first. `scrollend` is the precise signal; the timeout covers
+ * browsers without it and the case where nothing scrolls at all (element already in view), where no
+ * event is ever fired.
+ *
+ * Restarting on an already-pulsing element is deliberate: a second deep link to the same node
+ * should visibly answer, and re-adding the class after a reflow restarts the animation.
  */
 function flash(element: HTMLElement | null): void {
   if (flashTimer !== undefined) {
@@ -447,14 +466,25 @@ function flash(element: HTMLElement | null): void {
   flashedElement?.classList.remove(FLASH_CLASS)
   flashedElement = element?.isConnected ? element : null
   if (flashedElement === null) return
-  // Force a reflow so the class re-add restarts the animation rather than continuing the old one.
-  void flashedElement.offsetWidth
-  flashedElement.classList.add(FLASH_CLASS)
-  flashTimer = window.setTimeout(() => {
-    flashedElement?.classList.remove(FLASH_CLASS)
-    flashedElement = null
-    flashTimer = undefined
-  }, FLASH_DURATION_MS)
+
+  const target = flashedElement
+  let started = false
+  const start = () => {
+    if (started || !target.isConnected) return
+    started = true
+    window.removeEventListener('scrollend', start)
+    // Force a reflow so the class re-add restarts the animation rather than continuing the old one.
+    void target.offsetWidth
+    target.classList.add(FLASH_CLASS)
+    flashTimer = window.setTimeout(() => {
+      target.classList.remove(FLASH_CLASS)
+      if (flashedElement === target) flashedElement = null
+      flashTimer = undefined
+    }, FLASH_DURATION_MS)
+  }
+
+  window.addEventListener('scrollend', start)
+  window.setTimeout(start, SCROLL_SETTLE_MS)
 }
 
 /**
