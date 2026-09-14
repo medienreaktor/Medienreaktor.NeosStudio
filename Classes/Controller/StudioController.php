@@ -11,6 +11,7 @@ use Neos\Flow\I18n\Locale;
 use Neos\Flow\I18n\Translator;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Controller\Backend\MenuHelper;
 use Neos\Neos\Service\UserService;
 
@@ -91,6 +92,9 @@ class StudioController extends ActionController
     #[Flow\Inject]
     protected Translator $translator;
 
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
+
     public function indexAction(): string
     {
         $uri = $this->request->getHttpRequest()->getUri();
@@ -131,6 +135,10 @@ class StudioController extends ActionController
             // The classic backend logout (POST, session-authenticated): ends
             // the Flow session the shell and the silent OAuth flow ride on.
             'logoutEndpoint' => $origin . '/neos/logout',
+            // The shell's own API is bearer-authenticated and CSRF-exempt, but
+            // a plugin calling a classic session-authenticated backend route
+            // needs this as `X-Flow-Csrftoken`, like the classic UI sends it.
+            'csrfToken' => $this->securityContext->getCsrfProtectionToken(),
             // Optional realtime sidecar; null keeps collaboration on HTTP
             // polling (no extra infrastructure required).
             'realtime' => [
