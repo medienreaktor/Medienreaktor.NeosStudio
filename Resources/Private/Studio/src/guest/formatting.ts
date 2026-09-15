@@ -14,7 +14,7 @@
  * wherever the two disagree, because it describes the markup the value is
  * rendered into, not what an editor would like to allow.
  */
-import { Editor, type Extensions } from '@tiptap/core'
+import { Editor, Extension, type Extensions } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Document } from '@tiptap/extension-document'
 import { Text } from '@tiptap/extension-text'
@@ -228,6 +228,29 @@ export function normalizeFormatting(
   return { ...resolved, styles: resolveStyles(f.styleDefinitions, resolved) }
 }
 
+/**
+ * Enter on a property with `autoparagraph: false` inserts a line break, as in
+ * the classic Neos UI. Its document holds a single block, so Enter has
+ * nothing to split into and would otherwise do nothing at all. Applies only
+ * in a top-level textblock (or the inline-only document): list items, table
+ * cells and code blocks keep their own Enter handling.
+ */
+const ENTER_INSERTS_LINE_BREAK = Extension.create({
+  name: 'enterInsertsLineBreak',
+  // Ahead of the core keymap's Enter (default priority 100).
+  priority: 101,
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        const { $from } = this.editor.state.selection
+        if ($from.depth > 1 || !$from.parent.isTextblock) return false
+        if ($from.parent.type.spec.code) return false
+        return this.editor.commands.setHardBreak()
+      },
+    }
+  },
+})
+
 /** The TipTap extension set (schema) for a resolved config. */
 export function extensionsFor(config: Formatting): Extensions {
   const marks: Extensions = []
@@ -236,6 +259,10 @@ export function extensionsFor(config: Formatting): Extensions {
   // The `class` attribute the property's style definitions need to survive a
   // round trip, plus a mark per inline element that had none (see styles.ts).
   const styles: Extensions = styleExtensions(config.styles)
+  // Key handling that depends on the config, identical in both schemas.
+  const keys: Extensions = config.autoparagraph
+    ? []
+    : [ENTER_INSERTS_LINE_BREAK]
 
   if (!config.block) {
     // Inline-only: a single line of text with marks, no block nodes, so the
@@ -252,6 +279,7 @@ export function extensionsFor(config: Formatting): Extensions {
       ...(config.link ? [Link.configure(LINK_CONFIGURATION)] : []),
       ...marks,
       ...styles,
+      ...keys,
     ]
   }
 
@@ -292,6 +320,7 @@ export function extensionsFor(config: Formatting): Extensions {
       : []),
     ...marks,
     ...styles,
+    ...keys,
   ]
 }
 
