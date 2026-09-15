@@ -81,8 +81,12 @@ export interface Formatting {
    */
   styles: ResolvedStyle[]
   /**
-   * The NodeType's `autoparagraph`: false stores a plain top-level paragraph
-   * as its bare inline content, as CKEditor does (see serialize.ts).
+   * Whether text is wrapped in paragraphs. False - the NodeType's
+   * `autoparagraph: false` (for inline editing also when unset), or a
+   * property rendered as a <span> or heading (see parseFormatting) - stores
+   * a plain top-level paragraph as its bare inline content (see
+   * serialize.ts) and makes Enter insert a line break, as the classic Neos
+   * UI does.
    */
   autoparagraph: boolean
   // Derived
@@ -150,12 +154,29 @@ export interface RawFormattingConfig {
   autoparagraph?: unknown
 }
 
+/**
+ * Property elements the classic Neos UI never autoparagraphs, whatever the
+ * NodeType's `autoparagraph` says (its DisabledAutoparagraphMode): text
+ * rendered into a <span> or a heading cannot hold paragraphs.
+ */
+const NO_AUTOPARAGRAPH_TAG = /^(SPAN|H[1-6])$/
+
 /** Read and normalize a property element's formatting config. */
 export function parseFormatting(element: HTMLElement): Formatting {
+  const inline = element.hasAttribute(INLINE_ATTRIBUTE)
+  const formatting = formattingFromAttribute(element, inline)
+  return inline || NO_AUTOPARAGRAPH_TAG.test(element.tagName)
+    ? { ...formatting, autoparagraph: false, multiline: false }
+    : formatting
+}
+
+function formattingFromAttribute(
+  element: HTMLElement,
+  inline: boolean,
+): Formatting {
   // An inline editable is inline whatever its formatting config says - and
   // notably also when it has none at all, where the permissive default would
   // otherwise hand a <span> property paragraphs, headings and lists.
-  const inline = element.hasAttribute(INLINE_ATTRIBUTE)
   const fallback = inline
     ? withoutBlocks(DEFAULT_FORMATTING)
     : DEFAULT_FORMATTING
@@ -167,7 +188,14 @@ export function parseFormatting(element: HTMLElement): Formatting {
   } catch {
     return fallback
   }
-  return normalizeFormatting(config, inline)
+  // The classic Neos UI merges a property's inline editorOptions over
+  // defaults that include `autoparagraph: false`, so an inline property that
+  // does not set it is not autoparagraphed. The markup carries an unset value
+  // as null (see StudioHelper.inlineFormatting).
+  return normalizeFormatting(
+    { ...config, autoparagraph: config.autoparagraph ?? false },
+    inline,
+  )
 }
 
 /**
@@ -229,11 +257,12 @@ export function normalizeFormatting(
 }
 
 /**
- * Enter on a property with `autoparagraph: false` inserts a line break, as in
- * the classic Neos UI. Its document holds a single block, so Enter has
- * nothing to split into and would otherwise do nothing at all. Applies only
- * in a top-level textblock (or the inline-only document): list items, table
- * cells and code blocks keep their own Enter handling.
+ * Enter on a property without autoparagraph (see Formatting.autoparagraph)
+ * inserts a line break, as in the classic Neos UI. Its document holds a
+ * single block or bare inline content, so Enter has nothing to split into
+ * and would otherwise do nothing at all. Applies only in a top-level
+ * textblock (or the inline-only document): list items, table cells and code
+ * blocks keep their own Enter handling.
  */
 const ENTER_INSERTS_LINE_BREAK = Extension.create({
   name: 'enterInsertsLineBreak',

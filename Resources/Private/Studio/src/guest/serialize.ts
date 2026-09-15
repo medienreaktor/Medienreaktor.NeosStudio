@@ -9,10 +9,10 @@
  * wrapped form would leak <p> tags into every existing list on first edit -
  * markup the site's CSS has never seen.
  *
- * The same holds for the document itself where the NodeType sets
- * `autoparagraph: false`: the schema still needs a block to hold the text,
- * but CKEditor stores that text bare (`Title`, not `<p>Title</p>`), and the
- * site renders it into markup of its own.
+ * The same holds for the document itself where a property is not
+ * autoparagraphed (see Formatting.autoparagraph): the schema still needs a
+ * block to hold the text, but CKEditor stores that text bare (`Title`, not
+ * `<p>Title</p>`), and the site renders it into markup of its own.
  *
  * So every read that leaves the editor (commit, live-typing stream, the
  * committed baseline) goes through here instead of getHTML(): the ProseMirror
