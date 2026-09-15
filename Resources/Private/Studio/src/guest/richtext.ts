@@ -219,7 +219,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
   let applyingRemote = false
 
   const commitIfChanged = () => {
-    const html = serializedHtml(editor)
+    const html = serializedHtml(editor, config)
     if (html === committedHtml) return
     committedHtml = html
     hooks.commit(element, html)
@@ -230,7 +230,11 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     COMMIT_MAX_WAIT_MS,
   )
   const emitLiveUpdate = throttle(() => {
-    hooks.liveUpdate?.(element, serializedHtml(editor), editor.state.selection.head)
+    hooks.liveUpdate?.(
+      element,
+      serializedHtml(editor, config),
+      editor.state.selection.head,
+    )
   }, LIVE_UPDATE_THROTTLE_MS)
 
   const editor = new Editor({
@@ -261,7 +265,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       },
     },
     onCreate: ({ editor }) => {
-      committedHtml = serializedHtml(editor)
+      committedHtml = serializedHtml(editor, config)
       refreshEmptyState(element, editor)
     },
     onFocus: ({ editor }) => {
@@ -317,7 +321,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       }
       // The stream shows what the peer will commit - adopt it as the
       // baseline so a later local edit diffs against current reality.
-      committedHtml = serializedHtml(editor)
+      committedHtml = serializedHtml(editor, config)
       refreshEmptyState(element, editor)
     },
     eject() {

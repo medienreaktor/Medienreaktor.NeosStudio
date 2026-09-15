@@ -91,17 +91,17 @@ export const RichTextEditor: PropertyEditorComponent = ({
         },
       },
       onCreate: ({ editor }) => {
-        committedHtml = serializedHtml(editor)
+        committedHtml = serializedHtml(editor, formatting)
       },
       onUpdate: ({ editor }) => {
-        callbacks.current.onChange?.(serializedHtml(editor))
+        callbacks.current.onChange?.(serializedHtml(editor, formatting))
         refresh()
       },
       onSelectionUpdate: refresh,
       onFocus: refresh,
       onBlur: ({ editor }) => {
         refresh()
-        const html = serializedHtml(editor)
+        const html = serializedHtml(editor, formatting)
         if (html === committedHtml) return
         committedHtml = html
         callbacks.current.onCommit(html)

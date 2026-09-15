@@ -80,6 +80,11 @@ export interface Formatting {
    * individual elements (see styles.ts).
    */
   styles: ResolvedStyle[]
+  /**
+   * The NodeType's `autoparagraph`: false stores a plain top-level paragraph
+   * as its bare inline content, as CKEditor does (see serialize.ts).
+   */
+  autoparagraph: boolean
   // Derived
   /** Whether the schema has block nodes (vs. a single inline-only line). */
   block: boolean
@@ -108,6 +113,7 @@ export const DEFAULT_FORMATTING: Formatting = {
   removeFormat: true,
   horizontalRule: true,
   styles: [],
+  autoparagraph: true,
   block: true,
   multiline: true,
 }
@@ -209,6 +215,7 @@ export function normalizeFormatting(
     horizontalRule: block,
     // Resolved below, once the enclosing markup has had its say.
     styles: [],
+    autoparagraph: config.autoparagraph !== false,
     block,
     // autoparagraph false (or a single-line title with p:false) stays one block.
     multiline: config.autoparagraph !== false && paragraph,
