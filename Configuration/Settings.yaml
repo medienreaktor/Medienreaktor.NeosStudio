@@ -10,7 +10,14 @@ Medienreaktor:
     #     javascript: 'resource://Vendor.Package/Public/Plugin/plugin.js'   # required, IIFE bundle
     #     stylesheet: 'resource://Vendor.Package/Public/Plugin/plugin.css'  # optional
     #     position: 100                                                     # optional load order
-    plugins: []
+    #
+    # Deliberately NOT declared with an empty default here. Flow merges package
+    # settings with Arrays::arrayMergeRecursiveOverrule, whose $emptyValuesOverride
+    # is true - an empty array declared in this package would replace, not extend,
+    # every entry contributed by a package that happens to be merged earlier. The
+    # load order depends on the installed package set, so such a default silently
+    # drops plugins in some installations and not in others. The controller reads
+    # the absent configuration as null and falls back to an empty list.
 
     # Show a menu next to the logo listing the classic ("legacy") Neos
     # backend modules. The list mirrors the old backend's module menu: built

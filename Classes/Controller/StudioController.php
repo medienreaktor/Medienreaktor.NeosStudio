@@ -59,10 +59,14 @@ class StudioController extends ActionController
      * extends the Studio contributes an entry here (see Settings.yaml for the
      * schema); the SPA build itself has no knowledge of them.
      *
-     * @var array<string, array{javascript?: string, stylesheet?: string, position?: int}>
+     * Untyped: absent configuration injects null. This package must not declare
+     * an empty default for the path either - see Settings.yaml for why an empty
+     * array would drop the entries of packages merged before this one.
+     *
+     * @var array<string, array{javascript?: string, stylesheet?: string, position?: int}>|null
      */
     #[Flow\InjectConfiguration(path: 'plugins')]
-    protected array $plugins = [];
+    protected $plugins;
 
     /**
      * WebSocket URL of the optional realtime sidecar (see "The realtime
@@ -374,7 +378,7 @@ class StudioController extends ActionController
      */
     private function pluginTags(): array
     {
-        $plugins = $this->plugins;
+        $plugins = $this->plugins ?? [];
         // Stable order: explicit `position` ascending, then package key.
         uasort($plugins, static function (array $a, array $b): int {
             return ((int)($a['position'] ?? 100)) <=> ((int)($b['position'] ?? 100));
