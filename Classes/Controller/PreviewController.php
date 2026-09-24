@@ -147,6 +147,8 @@ class PreviewController extends ActionController
         $html = $result instanceof ResponseInterface ? (string)$result->getBody() : (string)$result;
         if ($renderingMode->isEdit) {
             $html = $this->injectGuestScript($html);
+        } else {
+            $html = $this->rewriteDocumentLinks($html, $renderingMode);
         }
 
         if ($result instanceof ResponseInterface) {
@@ -204,5 +206,84 @@ class PreviewController extends ActionController
         return $bodyEnd === false
             ? $html . $scriptTag
             : substr_replace($html, $scriptTag, $bodyEnd, 0);
+    }
+
+    /**
+     * Points the document links of a rendered page back at this action.
+     *
+     * Outside the live workspace the core NodeUriBuilder resolves every document
+     * link to Neos' own preview action, and that action takes its rendering mode
+     * from the user's "editPreviewMode" preference - which defaults to an editing
+     * mode. Following a link out of the preview opened in a new tab therefore
+     * lands on edit-mode markup, where a site commonly renders its links as plain
+     * elements so that clicking selects instead of navigates: the preview stops
+     * being a preview after one click. Rewriting the hrefs keeps navigation here,
+     * in the mode the page was requested with.
+     *
+     * Edit mode is deliberately left alone - there the guest script recognizes
+     * those very links (it navigates the shell instead of the iframe).
+     */
+    private function rewriteDocumentLinks(string $html, RenderingMode $renderingMode): string
+    {
+        return (string)preg_replace_callback(
+            '/href=(["\'])(.*?)\1/i',
+            function (array $match) use ($renderingMode): string {
+                $rewritten = $this->rewritePreviewUri(
+                    html_entity_decode($match[2], ENT_QUOTES | ENT_HTML5),
+                    $renderingMode
+                );
+                return $rewritten === null
+                    ? $match[0]
+                    : 'href=' . $match[1] . htmlspecialchars($rewritten, ENT_QUOTES) . $match[1];
+            },
+            $html
+        );
+    }
+
+    /**
+     * This action's uri for a core preview link, or NULL for anything that is not
+     * one - external links, assets, in-page anchors, unparsable node addresses.
+     *
+     * Only the address encoding differs between the two: core passes it as raw
+     * JSON, this controller as base64url ({@see NodeAddressCodec}). Every other
+     * query parameter is carried over untouched, so a site's own filters survive
+     * the hop.
+     */
+    private function rewritePreviewUri(string $uri, RenderingMode $renderingMode): ?string
+    {
+        $parts = parse_url($uri);
+        if (!is_array($parts) || !isset($parts['path'], $parts['query'])) {
+            return null;
+        }
+        // The same test the guest script applies to decide a link is a document
+        // link; "/neos/studio/preview" does not end in it, so already rewritten
+        // links are left alone.
+        if (!str_ends_with($parts['path'], '/neos/preview')) {
+            return null;
+        }
+
+        parse_str($parts['query'], $query);
+        if (!isset($query['node']) || !is_string($query['node'])) {
+            return null;
+        }
+        try {
+            $nodeAddress = NodeAddress::fromJsonString($query['node']);
+        } catch (\Throwable) {
+            // A link we cannot read is left as it was - a broken address must not
+            // cost the whole page.
+            return null;
+        }
+
+        $query['node'] = NodeAddressCodec::encode($nodeAddress);
+        $query['mode'] = $renderingMode->name;
+
+        // Host kept when the original was absolute (the core uri builder forces
+        // absolute uris); path mirrors the route in Routes.yaml.
+        $host = isset($parts['scheme'], $parts['host'])
+            ? $parts['scheme'] . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '')
+            : '';
+
+        return $host . '/neos/studio/preview?' . http_build_query($query)
+            . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
     }
 }
