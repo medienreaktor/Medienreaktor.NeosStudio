@@ -5,7 +5,7 @@ import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { createTask, type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
-import { useWorkspaces } from '@/api/workspaces'
+import { useWorkspaces, type Workspace } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +28,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
+import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
 
 /**
  * Create a task branch: a shared workspace restricted to the involved
@@ -64,7 +66,11 @@ export function CreateTaskDialog({
 
   // Base candidates: live and shared workspaces (incl. other task branches -
   // stacking a task on a feature branch is legitimate).
-  const baseItems = (workspacesData?.workspaces ?? [])
+  const baseItems: {
+    value: string
+    label: string
+    workspace?: Workspace
+  }[] = (workspacesData?.workspaces ?? [])
     .filter(
       (workspace) =>
         workspace.classification === 'ROOT' ||
@@ -72,6 +78,7 @@ export function CreateTaskDialog({
     )
     .map((workspace) => ({
       value: workspace.name,
+      workspace,
       label:
         workspace.classification === 'ROOT'
           ? t('workspace.live', 'Live')
@@ -173,12 +180,17 @@ export function CreateTaskDialog({
                 items={baseItems}
               >
                 <SelectTrigger id="task-create-base" className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value: string | null) => {
+                      const item = baseItems.find((i) => i.value === value)
+                      return item ? <BaseOption {...item} /> : null
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {baseItems.map((item) => (
                     <SelectItem key={item.value} value={item.value}>
-                      {item.label}
+                      <BaseOption {...item} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -231,5 +243,35 @@ export function CreateTaskDialog({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * A base-workspace option: the shared workspace icon (globe live, users
+ * shared, a task's own icon and color) plus a task's status badge - the same
+ * look as the workspace switcher and the review dialog.
+ */
+function BaseOption({
+  label,
+  workspace,
+}: {
+  label: string
+  workspace?: Workspace
+}) {
+  return (
+    <span className="flex items-center gap-2">
+      {workspace ? (
+        <WorkspaceIcon workspace={workspace} />
+      ) : (
+        // Only the fallback item (list not loaded yet) lacks a workspace -
+        // and that one is live.
+        <i
+          className="fas fa-fw fa-earth-americas text-[0.7rem] text-blue-500"
+          aria-hidden
+        />
+      )}
+      {label}
+      {workspace && <WorkspaceDecorationBadges workspace={workspace} />}
+    </span>
   )
 }

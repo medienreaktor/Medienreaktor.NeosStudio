@@ -737,7 +737,7 @@ export function ReviewChangesDialog({
               onClick={() => run('publish')}
             >
               <i
-                className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
+                className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-check'}`}
                 aria-hidden
               />
               {t('workspace.review.publishSelected', 'Publish selected')}
