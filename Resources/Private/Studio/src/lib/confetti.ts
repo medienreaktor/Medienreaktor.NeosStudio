@@ -12,7 +12,14 @@ import { config } from '@/config'
  * the celebration off (the publishCelebration setting, mirrored into the boot
  * config) and for users who prefer reduced motion.
  */
-export function celebrateAround(anchor: HTMLElement | null) {
+export function celebrateAround(
+  anchor: HTMLElement | null,
+  /**
+   * Launch direction in degrees (90 = up, 180 = left). The default suits the
+   * top-right corner; an anchor lower on screen (a dialog footer) aims up.
+   */
+  angle = 190,
+) {
   if (!anchor || !config.publishCelebration) return
   const rect = anchor.getBoundingClientRect()
   const origin = {
@@ -23,7 +30,7 @@ export function celebrateAround(anchor: HTMLElement | null) {
   void confetti({
     origin,
     particleCount: 120,
-    angle: 190,
+    angle,
     spread: 70,
     startVelocity: 55,
     disableForReducedMotion: true,

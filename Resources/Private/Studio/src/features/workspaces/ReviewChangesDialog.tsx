@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
@@ -352,6 +353,9 @@ export function ReviewChangesDialog({
     )
   }
 
+  // Anchor for the confetti burst a successful publish celebrates with.
+  const publishButtonRef = useRef<HTMLButtonElement>(null)
+
   const run = (kind: 'publish' | 'discard') => {
     const ids = selected.map((d) => d.documentAggregateId)
     if (ids.length === 0 || !source) return
@@ -361,7 +365,14 @@ export function ReviewChangesDialog({
       {
         onSuccess: () => {
           setSelectedIds(new Set())
-          if (kind === 'publish') onPublished?.(sourceWorkspaceName)
+          if (kind === 'publish') {
+            // Up and to the left from the footer's right edge - measured
+            // before the dialog closes and the button unmounts.
+            celebrateAround(publishButtonRef.current, 120)
+            onPublished?.(sourceWorkspaceName)
+          }
+          // The review is done once its selection went out (or away).
+          onOpenChange(false)
         },
       },
     )
@@ -717,6 +728,7 @@ export function ReviewChangesDialog({
               {t('workspace.review.discardSelected', 'Discard selected')}
             </Button>
             <Button
+              ref={publishButtonRef}
               disabled={selectedCount === 0 || !canPublish || busy}
               title={canPublish ? undefined : publishDeniedHint}
               // Always green; the disabled state (nothing selected, no
@@ -795,8 +807,16 @@ export function ReviewChangesDialog({
         }
         busy={resolve.isPending}
         onCancel={() => setPendingConflict(null)}
-        onForce={() => resolve.mutate('force')}
-        onDiscardAll={() => resolve.mutate('discardAll')}
+        // A resolved conflict finishes the publish/discard - close the
+        // review with it, as a direct success does.
+        onForce={() =>
+          resolve.mutate('force', { onSuccess: () => onOpenChange(false) })
+        }
+        onDiscardAll={() =>
+          resolve.mutate('discardAll', {
+            onSuccess: () => onOpenChange(false),
+          })
+        }
         onNavigate={(address) => {
           setPendingConflict(null)
           goToDocument(address)

@@ -9,27 +9,39 @@ import { ShareLinkDialog } from './ShareLinkDialog'
  * document. Only rendered while a document is selected - a share link always
  * pins one concrete page (in the active workspace and dimension).
  */
-export function ShareButton({ document }: { document: NodeDto }) {
+export function ShareButton({
+  document,
+  className,
+}: {
+  document: NodeDto
+  /** E.g. the rounded-corner overrides of a split-button segment. */
+  className?: string
+}) {
+  const label = t(
+    'share.buttonHint',
+    'Share a preview link to this page with people without a login',
+  )
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <Button
         variant="secondary"
+        size="icon"
+        className={className}
         onClick={() => setOpen(true)}
-        title={t(
-          'share.buttonHint',
-          'Share a preview link to this page with people without a login',
-        )}
+        title={label}
+        aria-label={label}
       >
         <i className="fas fa-fw fa-share-nodes" aria-hidden />
-        <span className="hidden @[80rem]:inline">
-          {t('share.button', 'Share')}
-        </span>
       </Button>
 
       {open && (
-        <ShareLinkDialog document={document} open={open} onOpenChange={setOpen} />
+        <ShareLinkDialog
+          document={document}
+          open={open}
+          onOpenChange={setOpen}
+        />
       )}
     </>
   )

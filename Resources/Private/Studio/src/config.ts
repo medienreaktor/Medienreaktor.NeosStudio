@@ -30,9 +30,9 @@ export interface StudioConfig {
    */
   uiMode: 'light' | 'dark' | 'system'
   /**
-   * Whether a successful "Publish all" celebrates with a confetti burst;
-   * mirrors the Medienreaktor.NeosStudio.publishCelebration setting, which an
-   * operator can turn off installation-wide.
+   * Whether a successful publish (review dialog) celebrates with a confetti
+   * burst; mirrors the Medienreaktor.NeosStudio.publishCelebration setting,
+   * which an operator can turn off installation-wide.
    */
   publishCelebration: boolean
   /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */

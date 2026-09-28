@@ -88,7 +88,8 @@ class StudioController extends ActionController
     protected $enableLegacyModules;
 
     /**
-     * Whether a successful "Publish all" celebrates with a confetti burst.
+     * Whether a successful publish (review dialog) celebrates with a confetti
+     * burst.
      * Untyped: absent configuration injects null, which keeps the default on.
      */
     #[Flow\InjectConfiguration(path: 'publishCelebration')]
@@ -135,8 +136,8 @@ class StudioController extends ActionController
             // roundtrip. Schema-less preference array: coerce out-of-range
             // values to the dark default.
             'uiMode' => $this->uiMode(),
-            // Whether a successful "Publish all" celebrates with a confetti
-            // burst; the publishCelebration setting, off for the whole
+            // Whether a successful publish (review dialog) celebrates with a
+            // confetti burst; the publishCelebration setting, off for the whole
             // installation when an operator sets it to false.
             'publishCelebration' => $this->publishCelebration !== false,
             'xliffEndpoint' => $origin . '/neos/xliff.json',

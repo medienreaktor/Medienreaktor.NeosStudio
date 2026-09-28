@@ -30,21 +30,22 @@ export function SyncWorkspaceButton({
   return (
     <>
       <Button
-        variant="secondary"
+        size="icon"
+        // Only shown while the workspace is outdated - that deserves
+        // attention, so it is always orange.
+        className="bg-orange-500 text-white hover:bg-orange-500/90"
         disabled={rebase.isPending}
         onClick={() => rebase.mutate({ workspaceName })}
         title={t(
           'workspace.sync.hint',
           'Others published changes to the base workspace. Synchronize to pull them into this workspace.',
         )}
+        aria-label={t('workspace.sync.action', 'Synchronize')}
       >
         <i
           className={`fas fa-fw fa-rotate ${rebase.isPending ? 'fa-spin' : ''}`}
           aria-hidden
         />
-        <span className="hidden @[80rem]:inline">
-          {t('workspace.sync.action', 'Synchronize')}
-        </span>
       </Button>
 
       <ConflictResolutionDialog

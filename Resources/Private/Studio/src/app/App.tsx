@@ -949,6 +949,20 @@ export function App() {
                           }}
                         />
                       )}
+                      {/* Preview + Share as one split button; gap-px splits
+                          the segments with a hairline of header background. */}
+                      {selectedDocument && (
+                        <div className="flex gap-px">
+                          <PreviewButton
+                            document={selectedDocument}
+                            className="rounded-r-none"
+                          />
+                          <ShareButton
+                            document={selectedDocument}
+                            className="rounded-l-none"
+                          />
+                        </div>
+                      )}
 
                       <PreviewToolbar
                         document={selectedDocument}
@@ -997,12 +1011,6 @@ export function App() {
                             onSwitchEditingContext={switchEditingContext}
                           />
                         )}
-                      {selectedDocument && (
-                        <>
-                          <PreviewButton document={selectedDocument} />
-                          <ShareButton document={selectedDocument} />
-                        </>
-                      )}
                       {activeWorkspace && (
                         <>
                           <SyncWorkspaceButton

@@ -25,8 +25,8 @@ Medienreaktor:
     # labels translated into their interface language. Set false to hide it.
     enableLegacyModules: true
 
-    # Celebrate a successful "Publish all" with a short confetti burst off the
-    # publish button. Set false to turn the animation off for the whole
+    # Celebrate a successful publish with a short confetti burst off the review
+    # dialog's publish button. Set false to turn the animation off for the whole
     # installation. Editors who ask their system for reduced motion never see
     # it either way.
     publishCelebration: true

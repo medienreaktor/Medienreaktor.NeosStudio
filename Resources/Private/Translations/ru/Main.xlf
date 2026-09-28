@@ -1422,10 +1422,6 @@
         <source>Workspaces</source>
         <target xml:lang="ru">Рабочие области</target>
       </trans-unit>
-      <trans-unit id="preview.button" xml:space="preserve">
-        <source>Preview</source>
-        <target xml:lang="ru">Предпросмотр</target>
-      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="ru">Эта страница удалена. Она вернётся, если её восстановить, — или исчезнет окончательно после публикации удаления.</target>
@@ -1557,10 +1553,6 @@
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
         <target xml:lang="ru">Ваши активные ссылки</target>
-      </trans-unit>
-      <trans-unit id="share.button" xml:space="preserve">
-        <source>Share</source>
-        <target xml:lang="ru">Поделиться</target>
       </trans-unit>
       <trans-unit id="share.buttonHint" xml:space="preserve">
         <source>Share a preview link to this page with people without a login</source>

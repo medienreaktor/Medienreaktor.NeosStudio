@@ -1422,10 +1422,6 @@
         <source>Workspaces</source>
         <target xml:lang="zh-CN">工作区</target>
       </trans-unit>
-      <trans-unit id="preview.button" xml:space="preserve">
-        <source>Preview</source>
-        <target xml:lang="zh-CN">预览</target>
-      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="zh-CN">此页面已被删除。恢复后它会回来——一旦删除被发布，它将永久消失。</target>
@@ -1557,10 +1553,6 @@
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
         <target xml:lang="zh-CN">你的有效链接</target>
-      </trans-unit>
-      <trans-unit id="share.button" xml:space="preserve">
-        <source>Share</source>
-        <target xml:lang="zh-CN">分享</target>
       </trans-unit>
       <trans-unit id="share.buttonHint" xml:space="preserve">
         <source>Share a preview link to this page with people without a login</source>

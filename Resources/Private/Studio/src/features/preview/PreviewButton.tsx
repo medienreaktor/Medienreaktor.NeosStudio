@@ -20,21 +20,29 @@ const PREVIEW_WINDOW_NAME = 'neos-studio-preview'
  * Nothing is lost by dropping it: the preview is same-origin with the shell, so
  * there is no cross-origin referrer to withhold.
  */
-export function PreviewButton({ document }: { document: NodeDto }) {
+export function PreviewButton({
+  document,
+  className,
+}: {
+  document: NodeDto
+  /** E.g. the rounded-corner overrides of a split-button segment. */
+  className?: string
+}) {
+  const label = t('preview.openInNewTab', 'Open page in a new tab')
   return (
     <Button
       asChild
       variant="secondary"
-      title={t('preview.openInNewTab', 'Open page in a new tab')}
+      size="icon"
+      className={className}
+      title={label}
+      aria-label={label}
     >
       <a
         href={previewUrl(document.address, undefined, isDeleted(document))}
         target={PREVIEW_WINDOW_NAME}
       >
         <i className="fas fa-fw fa-arrow-up-right-from-square" aria-hidden />
-        <span className="hidden @[80rem]:inline">
-          {t('preview.button', 'Preview')}
-        </span>
       </a>
     </Button>
   )

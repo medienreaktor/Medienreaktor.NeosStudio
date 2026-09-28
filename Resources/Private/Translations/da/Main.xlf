@@ -1422,10 +1422,6 @@
         <source>Workspaces</source>
         <target xml:lang="da">Arbejdsrum</target>
       </trans-unit>
-      <trans-unit id="preview.button" xml:space="preserve">
-        <source>Preview</source>
-        <target xml:lang="da">Forhåndsvisning</target>
-      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="da">Denne side er slettet. Den kommer tilbage, hvis du gendanner den - eller forsvinder for altid, når sletningen publiceres.</target>
@@ -1557,10 +1553,6 @@
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
         <target xml:lang="da">Dine aktive links</target>
-      </trans-unit>
-      <trans-unit id="share.button" xml:space="preserve">
-        <source>Share</source>
-        <target xml:lang="da">Del</target>
       </trans-unit>
       <trans-unit id="share.buttonHint" xml:space="preserve">
         <source>Share a preview link to this page with people without a login</source>
