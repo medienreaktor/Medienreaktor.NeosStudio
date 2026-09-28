@@ -344,10 +344,13 @@ function injectStyles(): void {
     /* In-place image picker: hovering a rendered image (whose content element
        or ImageTag declares its image property) washes it blue and offers a
        "Select image" button. Sits above the image but below the richtext
-       toolbars and the element handle. */
+       toolbars and the element handle. Only the button takes the pointer:
+       content laid over the image (hero headings) stays hoverable,
+       clickable and editable through the wash. */
     #${IMAGE_OVERLAY_ID} {
       position: fixed;
       z-index: 2147483645;
+      pointer-events: none;
       display: none;
       align-items: center;
       justify-content: center;
@@ -367,6 +370,7 @@ function injectStyles(): void {
       border-radius: 4px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       cursor: pointer;
+      pointer-events: auto;
     }
   `
   document.head.appendChild(style)
@@ -679,15 +683,11 @@ function imageOverlay(): HTMLElement {
       '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' +
       '<path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L6 20"/></svg>Select image'
     overlay.appendChild(button)
-    // Only the button opens the picker. A click on the washed-blue background
-    // still selects the node behind it (so it shows in the inspector) - the
-    // overlay covers the image, so the click would otherwise be swallowed. The
-    // button's onImageSelect stops propagation, so this never runs for it.
+    // Only the button opens the picker. The rest of the overlay lets the
+    // pointer through: clicks on the washed-blue background reach the image
+    // (selecting its node), and hovering content laid over the image hides
+    // the overlay via the document mouseover handler.
     button.addEventListener('click', onImageSelect)
-    overlay.addEventListener('click', onImageOverlayClick)
-    // Leaving the overlay (which sits on top of the image) hides it; re-entering
-    // another image re-shows it via the document mouseover handler.
-    overlay.addEventListener('mouseleave', hideImageOverlay)
     document.body.appendChild(overlay)
   }
   return overlay
@@ -721,14 +721,6 @@ function scheduleImageOverlayUpdate(): void {
     if (hoveredImage.isConnected) showImageOverlay(hoveredImage)
     else hideImageOverlay()
   })
-}
-
-/** Background click over an image: select its content element, as if the image
- *  itself had been clicked (the overlay intercepts the native click). */
-function onImageOverlayClick(): void {
-  if (hoveredImage === null) return
-  const wrapper = hoveredImage.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
-  if (wrapper) select(wrapper, { notifyHost: true })
 }
 
 function onImageSelect(event: MouseEvent): void {
@@ -957,7 +949,8 @@ function onMouseOver(event: MouseEvent): void {
   // Over the "..." handle or its "+" companion (they sit inside their
   // element): keep the hover state, so they do not vanish under the pointer.
   if (target?.closest?.(`#${HANDLE_ID}, #${ADD_BUTTON_ID}`)) return
-  // Over the image overlay itself (it sits on top of the image): keep it shown.
+  // Over the image overlay's button (the only part taking the pointer): keep
+  // the overlay shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
   // Over the "Create variant" button (it floats over its element): keep it.
   if (target?.closest?.(`#${SHINE_BUTTON_ID}`)) return
@@ -1762,6 +1755,9 @@ function init(): void {
   // image through scrolling and layout changes.
   window.addEventListener('scroll', scheduleImageOverlayUpdate, true)
   window.addEventListener('resize', scheduleImageOverlayUpdate)
+  // The overlay lets the pointer through, so no mouseover follows when the
+  // pointer leaves the frame straight from an image - hide it then.
+  document.documentElement.addEventListener('mouseleave', hideImageOverlay)
   // ... as does the shine-through "Create variant" button.
   window.addEventListener('scroll', scheduleShineButtonUpdate, true)
   window.addEventListener('resize', scheduleShineButtonUpdate)
