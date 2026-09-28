@@ -32,21 +32,11 @@ import {
   decorationsFor,
   useWorkspaceDecorators,
 } from '@/features/workspaces/decorators'
+import {
+  PublishTargetBadge,
+  usePublishTarget,
+} from '@/features/workspaces/PublishTargetBadge'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
-
-/**
- * The faintest ramp shade of a tint (950 in dark mode, 50 in light - via the
- * color-scheme-driven light-dark() function), used as the trigger background:
- * theme variables like 'var(--color-blue-500)' map onto their ramp's edge
- * shade, arbitrary decoration colors approximate it by mixing into the
- * theme's near-black/near-white.
- */
-function darkestShade(tint: string): string {
-  const ramp = tint.match(/^var\(--color-([a-z]+)-\d{2,3}\)$/)
-  return ramp
-    ? `light-dark(var(--color-${ramp[1]}-50), var(--color-${ramp[1]}-950))`
-    : `color-mix(in srgb, ${tint} 20%, light-dark(var(--color-neutral-50), var(--color-neutral-950)))`
-}
 
 /**
  * Topbar dropdown for the editing context - a menu (not a select) so the
@@ -211,26 +201,18 @@ export function WorkspaceSwitcher({
     ])
   }
 
-  // Tint the whole trigger by the editing context: purple for a plain
-  // collaborative workspace (matching the multiplayer icon), a decorated
-  // workspace's own color (e.g. the task status color) when it brings one.
+  // A decorated workspace (e.g. a task) brings its own icon for the trigger.
   const activeDecoration = collaborative
     ? (decorationsFor(activeWorkspace, decorators)[0] ?? null)
     : null
-  const tint = collaborative
-    ? (activeDecoration?.color ??
-      'light-dark(var(--color-purple-600), var(--color-purple-400))')
-    : null
 
-  const currentLabel = collaborative
+  // The trigger names both ends of the editing context explicitly: the
+  // checked-out workspace (personal, collaborative or a task branch) and its
+  // base - where a publish from it goes (the PublishTargetBadge).
+  const sourceLabel = collaborative
     ? workspaceLabel(activeWorkspace)
-    : personalWorkspace.baseWorkspace
-      ? workspaceLabel(
-          targets.find(
-            (workspace) => workspace.name === personalWorkspace.baseWorkspace,
-          ) ?? personalWorkspace,
-        )
-      : t('workspace.selectPlaceholder', 'Select workspace…')
+    : t('workspace.myWorkspace', 'My workspace')
+  const { label: targetLabel } = usePublishTarget(activeWorkspace)
 
   const pick = (picked: string) => {
     if (picked === value) return
@@ -252,46 +234,31 @@ export function WorkspaceSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger
           disabled={switchBase.isPending}
-          title={
-            activeDecoration?.label ??
-            (collaborative
-              ? t(
-                  'workspace.collaborativeContext',
-                  'Editing together in a shared workspace',
-                )
-              : t('workspace.publishTarget', 'Workspace to publish to'))
-          }
-          style={
-            tint
-              ? {
-                  borderColor: tint,
-                  color: tint,
-                  backgroundColor: darkestShade(tint),
-                }
-              : undefined
-          }
+          title={t(
+            'workspace.contextTooltip',
+            'Editing in {0}, publishing to {1}',
+            [sourceLabel, targetLabel],
+          )}
           className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex items-center gap-2">
             <i
-              className={`fa fa-fw text-[0.7rem] ${
+              className={`fa fa-fw text-[0.7rem] text-neutral-600 dark:text-neutral-400 ${
                 switchBase.isPending
-                  ? 'fa-spinner fa-spin text-neutral-600 dark:text-neutral-400'
+                  ? 'fa-spinner fa-spin'
                   : activeDecoration
                     ? `fa-${activeDecoration.icon ?? 'code-branch'}`
                     : collaborative
                       ? 'fa-users'
-                      : 'fa-layer-group text-neutral-600 dark:text-neutral-400'
+                      : 'fa-user'
               }`}
-              style={
-                tint && !switchBase.isPending ? { color: tint } : undefined
-              }
               aria-hidden
             />
-            <span className="hidden @[56rem]:inline max-w-48 truncate">
-              {currentLabel}
+            <span className="hidden @[56rem]:inline max-w-40 truncate">
+              {sourceLabel}
             </span>
           </span>
+          <PublishTargetBadge workspace={activeWorkspace} />
           <i
             className="fas fa-chevron-down text-[1rem] text-neutral-950/50 dark:text-white/50"
             aria-hidden

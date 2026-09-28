@@ -3322,6 +3322,14 @@
         <source>My workspace, publishing to</source>
         <target xml:lang="de">Mein Arbeitsbereich, veröffentlicht nach</target>
       </trans-unit>
+      <trans-unit id="workspace.myWorkspace" xml:space="preserve">
+        <source>My workspace</source>
+        <target xml:lang="de">Mein Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="workspace.contextTooltip" xml:space="preserve">
+        <source>Editing in {0}, publishing to {1}</source>
+        <target xml:lang="de">Du bearbeitest {0} und veröffentlichst nach {1}</target>
+      </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>
         <target xml:lang="de">Diese Seite veröffentlichen</target>

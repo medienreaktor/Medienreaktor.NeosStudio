@@ -2870,6 +2870,14 @@
         <source>My workspace, publishing to</source>
         <target xml:lang="fr">Mon espace de travail, publiant vers</target>
       </trans-unit>
+      <trans-unit id="workspace.myWorkspace" xml:space="preserve">
+        <source>My workspace</source>
+        <target xml:lang="fr">Mon espace de travail</target>
+      </trans-unit>
+      <trans-unit id="workspace.contextTooltip" xml:space="preserve">
+        <source>Editing in {0}, publishing to {1}</source>
+        <target xml:lang="fr">Édition dans {0}, publication vers {1}</target>
+      </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>
         <target xml:lang="fr">Publier cette page</target>
