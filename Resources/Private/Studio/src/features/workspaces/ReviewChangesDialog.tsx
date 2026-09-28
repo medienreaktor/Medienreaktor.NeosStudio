@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useWorkspaceDocumentChanges,
   useWorkspaceDocumentDiff,
@@ -31,7 +31,7 @@ import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import { TONE_BG_CLASSES } from './historyLabels'
 import { NodeDiff } from './StepDiff'
-import { useWorkspacePublishing } from './useWorkspacePublishing'
+import { useCanPublish, useWorkspacePublishing } from './useWorkspacePublishing'
 
 /**
  * The change verbs a document row can carry, in display priority order. Their
@@ -168,6 +168,7 @@ export function ReviewChangesDialog({
   workspaces,
   activeWorkspace,
   initialSourceName,
+  preselectAll = false,
   open,
   onOpenChange,
   onNavigate,
@@ -183,6 +184,11 @@ export function ReviewChangesDialog({
    * re-pick any pair inside the dialog.
    */
   initialSourceName?: string
+  /**
+   * Open with every document of the initial source selected, so publishing
+   * everything is a single click (the topbar's Review and publish button).
+   */
+  preselectAll?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -208,15 +214,21 @@ export function ReviewChangesDialog({
   /** Documents whose change details (diffs) are unfolded. */
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
+  // Armed on open when preselecting; fired once the initial source's list has
+  // (re)loaded, so a fresh fetch rather than a stale cache decides what is
+  // selected. Re-picking a source inside the dialog does not re-arm it.
+  const pendingPreselect = useRef(false)
+
   // Every open starts fresh on the requested (or active) workspace - the
   // closed dialog does not carry a stale review over to the next one.
   useEffect(() => {
     if (open) {
+      pendingPreselect.current = preselectAll
       setSourceName(initialSourceName ?? activeWorkspace.name)
       setSelectedIds(new Set())
       setExpandedIds(new Set())
     }
-  }, [open, activeWorkspace.name, initialSourceName])
+  }, [open, activeWorkspace.name, initialSourceName, preselectAll])
 
   const source =
     sources.find((w) => w.name === sourceName) ??
@@ -252,6 +264,7 @@ export function ReviewChangesDialog({
 
   const pickSource = (name: string) => {
     if (name === source?.name) return
+    pendingPreselect.current = false
     setSourceName(name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
@@ -272,7 +285,7 @@ export function ReviewChangesDialog({
   const { site, navigateToNode } = useStudio()
   // Fetch only while open; the query refreshes on publish/discard via the
   // workspaces invalidation the shared hook performs.
-  const { data, isLoading } = useWorkspaceDocumentChanges(
+  const { data, isLoading, isFetching } = useWorkspaceDocumentChanges(
     source?.name ?? null,
     open,
   )
@@ -300,6 +313,12 @@ export function ReviewChangesDialog({
         )
       : all
   }, [data, siteId])
+
+  useEffect(() => {
+    if (!open || !pendingPreselect.current || isFetching || !data) return
+    pendingPreselect.current = false
+    setSelectedIds(new Set(documents.map((d) => d.documentAggregateId)))
+  }, [open, isFetching, data, documents])
 
   // A discard waiting for confirmation; the confirm dialog is open while true.
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -347,7 +366,7 @@ export function ReviewChangesDialog({
 
   const busy = operation.isPending
   const reviewingActive = source?.name === activeWorkspace.name
-  const canPublish = source?.permissions.publish ?? false
+  const canPublish = useCanPublish(source, workspaces)
   // Discarding rewrites the reviewed workspace - needs write access on it (a
   // given for the active workspace, not for e.g. a draft reviewed as VIEWER).
   const canDiscard = source?.permissions.write ?? false
@@ -402,7 +421,7 @@ export function ReviewChangesDialog({
         <DialogContent size="xl" className="flex max-h-[90vh] flex-col">
           <DialogHeader>
             <DialogTitle>
-              {t('workspace.reviewChanges', 'Review changes')}
+              {t('workspace.reviewAndPublish', 'Review and publish')}
             </DialogTitle>
             <DialogDescription>
               {t(

@@ -2866,6 +2866,10 @@
         <source>Workspace to publish to</source>
         <target xml:lang="km">លំហការងារដែលត្រូវដាក់ផ្សាយទៅ</target>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+        <target xml:lang="km">ពិនិត្យ និងផ្សព្វផ្សាយ</target>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
         <target xml:lang="km">លំហការងាររបស់ខ្ញុំ ដាក់ផ្សាយទៅ</target>
@@ -2985,10 +2989,6 @@
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
         <target xml:lang="km">ដាក់ផ្សាយទៅ</target>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="km">ពិនិត្យការផ្លាស់ប្ដូរ</target>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

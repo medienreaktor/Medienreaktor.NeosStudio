@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { allowsPublishToLive } from '@/api/accessRoles'
 import { useMutation } from '@tanstack/react-query'
 import {
   discardWorkspace,
@@ -6,13 +7,35 @@ import {
   publishWorkspace,
   rebaseWorkspace,
   type RebaseConflicts,
+  type Workspace,
   type WorkspaceOperationFilter,
 } from '@/api/workspaces'
 import { queryKeys } from '@/api/keys'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { useAccess } from '@/features/access/useAccess'
 import { translate as t } from '@/lib/i18n'
+
+/**
+ * Whether the account may publish `workspace` into its base. Two gates: the
+ * content repository's own (`permissions.publish` = write on the base - for
+ * live that is what the Neos.Neos:LivePublisher role grants) and the Studio
+ * access role's "may publish to live", which restricts ROOT bases only -
+ * publishing into a shared review workspace stays open to editors who may not
+ * go live themselves. Reviewing needs neither.
+ */
+export function useCanPublish(
+  workspace: Workspace | null,
+  workspaces: Workspace[],
+): boolean {
+  const access = useAccess()
+  if (!workspace?.permissions.publish) return false
+  const publishesToRoot =
+    workspaces.find((candidate) => candidate.name === workspace.baseWorkspace)
+      ?.classification === 'ROOT'
+  return !publishesToRoot || allowsPublishToLive(access)
+}
 
 /** A publish/discard, optionally scoped; no filter = the whole workspace. */
 export interface WorkspaceOperation {
@@ -21,8 +44,9 @@ export interface WorkspaceOperation {
 }
 
 /**
- * The publish/discard machinery shared by the Publish split button and the
- * Review changes dialog: the operation mutation, the conflict it may surface,
+ * The publish/discard machinery behind the Review changes dialog (opened from
+ * the topbar's Publish and review button, the Workspaces graph and the Tasks
+ * board): the operation mutation, the conflict it may surface,
  * and the follow-up resolution. Keeping it in one place means both entry points
  * invalidate the same caches and route conflicts to the same dialog - the
  * single source of truth for "what a publish does".

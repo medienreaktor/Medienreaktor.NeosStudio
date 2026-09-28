@@ -2489,6 +2489,9 @@
       <trans-unit id="workspace.publishTarget" xml:space="preserve">
         <source>Workspace to publish to</source>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
       </trans-unit>
@@ -2578,9 +2581,6 @@
       </trans-unit>
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

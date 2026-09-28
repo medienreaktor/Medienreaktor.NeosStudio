@@ -2866,6 +2866,10 @@
         <source>Workspace to publish to</source>
         <target xml:lang="ru">Рабочая область для публикации</target>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+        <target xml:lang="ru">Проверить и опубликовать</target>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
         <target xml:lang="ru">Моя рабочая область, публикация в</target>
@@ -2985,10 +2989,6 @@
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
         <target xml:lang="ru">Публикация в</target>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="ru">Обзор изменений</target>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

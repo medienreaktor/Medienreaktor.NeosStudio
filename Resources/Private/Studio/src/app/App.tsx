@@ -93,8 +93,7 @@ import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
 import { ShareButton } from '@/features/sharing/ShareButton'
-import { PublishButton } from '@/features/workspaces/PublishButton'
-import { ReviewButton } from '@/features/workspaces/ReviewButton'
+import { PublishReviewButton } from '@/features/workspaces/PublishReviewButton'
 import { SyncWorkspaceButton } from '@/features/workspaces/SyncWorkspaceButton'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
@@ -1009,12 +1008,11 @@ export function App() {
                           <SyncWorkspaceButton
                             workspaceName={activeWorkspace.name}
                           />
-                          <ReviewButton
+                          <PublishReviewButton
                             workspaces={workspaces}
                             activeWorkspace={activeWorkspace}
                             onNavigate={navigateToNodeInWorkspace}
                           />
-                          <PublishButton workspace={activeWorkspace} />
                         </>
                       )}
                     </div>

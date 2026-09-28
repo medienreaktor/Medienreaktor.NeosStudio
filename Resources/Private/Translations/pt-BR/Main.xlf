@@ -2866,6 +2866,10 @@
         <source>Workspace to publish to</source>
         <target xml:lang="pt-BR">Espaço de trabalho de destino da publicação</target>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+        <target xml:lang="pt-BR">Revisar e publicar</target>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
         <target xml:lang="pt-BR">Meu espaço de trabalho, publicando em</target>
@@ -2985,10 +2989,6 @@
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
         <target xml:lang="pt-BR">Publicando em</target>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="pt-BR">Revisar alterações</target>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

@@ -38,24 +38,15 @@ export function usePublishTarget(workspace: Workspace): {
 }
 
 /**
- * Pill colors by the target's classification: green for live (ROOT), orange
- * for a shared workspace, white with dark text otherwise. Fixed in both color
- * schemes - the pill sits on a neutral trigger either way.
+ * Pill colors by the target's classification: Neos primary blue for live
+ * (ROOT), Neos purple for every other target (shared workspaces, or a base not
+ * resolved yet). Fixed in both color schemes - the pill sits on a neutral
+ * trigger either way.
  */
-const TARGET_STYLES: Record<string, { pill: string; icon: string }> = {
-  ROOT: {
-    pill: 'bg-green-500 text-white dark:bg-green-500 dark:text-white',
-    icon: 'text-white',
-  },
-  SHARED: {
-    pill: 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white',
-    icon: 'text-white',
-  },
-}
-const DEFAULT_TARGET_STYLE = {
-  pill: 'bg-white text-neutral-950 dark:bg-white dark:text-neutral-950',
-  icon: 'text-neutral-600',
-}
+const LIVE_TARGET_STYLE =
+  'bg-blue-500 text-white dark:bg-blue-500 dark:text-white'
+const OTHER_TARGET_STYLE =
+  'bg-purple-500 text-white dark:bg-purple-500 dark:text-white'
 
 /**
  * "→ target" pill naming the publish target of a workspace. The label
@@ -64,15 +55,12 @@ const DEFAULT_TARGET_STYLE = {
 export function PublishTargetBadge({ workspace }: { workspace: Workspace }) {
   const { label, icon, classification } = usePublishTarget(workspace)
   const style =
-    (classification && TARGET_STYLES[classification]) || DEFAULT_TARGET_STYLE
+    classification === 'ROOT' ? LIVE_TARGET_STYLE : OTHER_TARGET_STYLE
   return (
-    <Badge variant="secondary" className={`gap-1.5 font-normal ${style.pill}`}>
+    <Badge variant="secondary" className={`gap-1.5 font-normal ${style}`}>
+      <i className="fas fa-arrow-right text-[0.6rem] text-white" aria-hidden />
       <i
-        className={`fas fa-arrow-right text-[0.6rem] ${style.icon}`}
-        aria-hidden
-      />
-      <i
-        className={`fas fa-fw ${icon} text-[0.65rem] ${style.icon}`}
+        className={`fas fa-fw ${icon} text-[0.65rem] text-white`}
         aria-hidden
       />
       <span className="hidden @[56rem]:inline max-w-40 truncate">{label}</span>
