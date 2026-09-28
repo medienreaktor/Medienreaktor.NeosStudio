@@ -2561,11 +2561,8 @@
       <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
         <source>Publish selected</source>
       </trans-unit>
-      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
-        <source>Publish selected ({0})</source>
-      </trans-unit>
       <trans-unit id="workspace.review.selectAll" xml:space="preserve">
-        <source>Select all ({0})</source>
+        <source>Select all</source>
       </trans-unit>
       <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
         <source>Select documents to publish or discard.</source>

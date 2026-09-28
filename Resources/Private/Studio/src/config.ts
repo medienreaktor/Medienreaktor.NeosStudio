@@ -37,6 +37,11 @@ export interface StudioConfig {
   publishCelebration: boolean
   /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */
   xliffEndpoint: string
+  /**
+   * Cache-busting version of the XLIFF bundle (the core's XliffService cache
+   * version, renewed on every translation cache flush). null = unversioned.
+   */
+  xliffVersion: string | null
   /** Classic backend logout (POST, session-authenticated). */
   logoutEndpoint: string
   /**
@@ -74,6 +79,7 @@ const fallback: StudioConfig = {
   uiMode: 'dark',
   publishCelebration: true,
   xliffEndpoint: '/neos/xliff.json',
+  xliffVersion: null,
   logoutEndpoint: '/neos/logout',
   realtime: { url: null },
   legacyModules: [],

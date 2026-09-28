@@ -2966,13 +2966,9 @@
         <source>Publish selected</source>
         <target xml:lang="fr">Publier la sélection</target>
       </trans-unit>
-      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
-        <source>Publish selected ({0})</source>
-        <target xml:lang="fr">Publier la sélection ({0})</target>
-      </trans-unit>
       <trans-unit id="workspace.review.selectAll" xml:space="preserve">
-        <source>Select all ({0})</source>
-        <target xml:lang="fr">Tout sélectionner ({0})</target>
+        <source>Select all</source>
+        <target xml:lang="fr">Tout sélectionner</target>
       </trans-unit>
       <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
         <source>Select documents to publish or discard.</source>

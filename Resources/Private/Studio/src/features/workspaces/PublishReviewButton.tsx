@@ -6,6 +6,7 @@ import {
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
+import { CountBadge } from '@/components/ui/count-badge'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 import { translate as t } from '@/lib/i18n'
 import { ReviewChangesDialog } from './ReviewChangesDialog'
@@ -106,14 +107,13 @@ export function PublishReviewButton({
           </span>
         </Button>
         {hasChanges && (
-          <span
-            className="absolute -top-2 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white tabular-nums"
+          <CountBadge
+            count={changeCount}
+            className="absolute -top-2 -right-1"
             aria-label={t('workspace.pendingBadge', '{0} pending changes', [
               changeCount,
             ])}
-          >
-            {changeCount}
-          </span>
+          />
         )}
       </div>
 

@@ -8,6 +8,7 @@ import {
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { CountBadge } from '@/components/ui/count-badge'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
@@ -529,14 +530,17 @@ export function ReviewChangesDialog({
                 indeterminate={selectedCount > 0 && !allSelected}
                 onCheckedChange={toggleAll}
               />
-              {selectedCount > 0
-                ? t('workspace.review.selectedOf', '{0} of {1} selected', [
-                    selectedCount,
-                    documents.length,
-                  ])
-                : t('workspace.review.selectAll', 'Select all ({0})', [
-                    documents.length,
-                  ])}
+              {selectedCount > 0 ? (
+                t('workspace.review.selectedOf', '{0} of {1} selected', [
+                  selectedCount,
+                  documents.length,
+                ])
+              ) : (
+                <>
+                  {t('workspace.review.selectAll', 'Select all')}
+                  <CountBadge variant="neutral" count={documents.length} />
+                </>
+              )}
             </label>
           )}
 
@@ -715,24 +719,19 @@ export function ReviewChangesDialog({
             <Button
               disabled={selectedCount === 0 || !canPublish || busy}
               title={canPublish ? undefined : publishDeniedHint}
-              className={
-                selectedCount > 0 && canPublish
-                  ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
-                  : undefined
-              }
+              // Always green; the disabled state (nothing selected, no
+              // permission) dims it instead of switching colors.
+              className="bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600"
               onClick={() => run('publish')}
             >
               <i
                 className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
                 aria-hidden
               />
-              {selectedCount > 0
-                ? t(
-                    'workspace.review.publishSelectedCount',
-                    'Publish selected ({0})',
-                    [selectedCount],
-                  )
-                : t('workspace.review.publishSelected', 'Publish selected')}
+              {t('workspace.review.publishSelected', 'Publish selected')}
+              {selectedCount > 0 && (
+                <CountBadge variant="neutral" count={selectedCount} />
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

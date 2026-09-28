@@ -14,6 +14,7 @@ use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Controller\Backend\MenuHelper;
 use Neos\Neos\Service\UserService;
+use Neos\Neos\Service\XliffService;
 
 /**
  * Serves the Neos Studio single-page application and lazily provisions its
@@ -36,6 +37,9 @@ class StudioController extends ActionController
 
     #[Flow\Inject]
     protected UserService $userService;
+
+    #[Flow\Inject]
+    protected XliffService $xliffService;
 
     /**
      * @var array<string, string>
@@ -136,6 +140,10 @@ class StudioController extends ActionController
             // installation when an operator sets it to false.
             'publishCelebration' => $this->publishCelebration !== false,
             'xliffEndpoint' => $origin . '/neos/xliff.json',
+            // The bundle is browser-cached for a week; the classic backend
+            // busts that with the XLIFF cache version (renewed on every
+            // translation cache flush) - so does the Studio.
+            'xliffVersion' => $this->xliffService->getCacheVersion(),
             // The classic backend logout (POST, session-authenticated): ends
             // the Flow session the shell and the silent OAuth flow ride on.
             'logoutEndpoint' => $origin . '/neos/logout',
