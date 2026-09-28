@@ -32,6 +32,8 @@ import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import { TONE_BG_CLASSES } from './historyLabels'
 import { NodeDiff } from './StepDiff'
 import { useCanPublish, useWorkspacePublishing } from './useWorkspacePublishing'
+import { WorkspaceDecorationBadges } from './WorkspaceDecorationBadges'
+import { WorkspaceIcon } from './WorkspaceIcon'
 
 /**
  * The change verbs a document row can carry, in display priority order. Their
@@ -443,12 +445,25 @@ export function ReviewChangesDialog({
                 items={sourceItems}
               >
                 <SelectTrigger size="sm" className="min-w-40">
-                  <SelectValue />
+                  <SelectValue>
+                    {(name: string | null) => {
+                      const w = workspaces.find((c) => c.name === name)
+                      return (
+                        <span className="flex items-center gap-2">
+                          <WorkspaceIcon workspace={w} />
+                          {workspaceLabel(w, name ?? '')}
+                          {w && <WorkspaceDecorationBadges workspace={w} />}
+                        </span>
+                      )
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {sourcesForTarget.map((w) => (
                     <SelectItem key={w.name} value={w.name}>
+                      <WorkspaceIcon workspace={w} />
                       {workspaceLabel(w, w.name)}
+                      <WorkspaceDecorationBadges workspace={w} />
                       {w.hasPublishableChanges && (
                         <span
                           className="size-1.5 rounded-full bg-amber-500"
@@ -478,14 +493,30 @@ export function ReviewChangesDialog({
                 items={targetItems}
               >
                 <SelectTrigger size="sm" className="min-w-40">
-                  <SelectValue />
+                  <SelectValue>
+                    {(name: string | null) => {
+                      const w = workspaces.find((c) => c.name === name)
+                      return (
+                        <span className="flex items-center gap-2">
+                          <WorkspaceIcon workspace={w} />
+                          {workspaceLabel(w, name ?? '')}
+                          {w && <WorkspaceDecorationBadges workspace={w} />}
+                        </span>
+                      )
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {targetItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  {targetItems.map((item) => {
+                    const w = workspaces.find((c) => c.name === item.value)
+                    return (
+                      <SelectItem key={item.value} value={item.value}>
+                        <WorkspaceIcon workspace={w} />
+                        {item.label}
+                        {w && <WorkspaceDecorationBadges workspace={w} />}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>

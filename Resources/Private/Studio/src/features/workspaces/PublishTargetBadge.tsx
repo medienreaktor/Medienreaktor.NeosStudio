@@ -1,6 +1,7 @@
 import { useWorkspaces, type Workspace } from '@/api/workspaces'
 import { Badge } from '@/components/ui/badge'
 import { translate as t } from '@/lib/i18n'
+import { workspaceIconName } from './WorkspaceIcon'
 
 /**
  * Where a publish from the given (checked-out) workspace goes: its base
@@ -27,12 +28,7 @@ export function usePublishTarget(workspace: Workspace): {
         : base.title || base.name
       : (workspace.baseWorkspace ??
         t('workspace.selectPlaceholder', 'Select workspace…')),
-    icon:
-      base?.classification === 'ROOT'
-        ? 'fa-earth-americas'
-        : base?.classification === 'SHARED'
-          ? 'fa-users'
-          : 'fa-code-branch',
+    icon: workspaceIconName(base ?? undefined),
     classification: base?.classification ?? null,
   }
 }

@@ -37,6 +37,7 @@ import {
   usePublishTarget,
 } from '@/features/workspaces/PublishTargetBadge'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
+import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
 
 /**
  * Topbar dropdown for the editing context - a menu (not a select) so the
@@ -201,11 +202,6 @@ export function WorkspaceSwitcher({
     ])
   }
 
-  // A decorated workspace (e.g. a task) brings its own icon for the trigger.
-  const activeDecoration = collaborative
-    ? (decorationsFor(activeWorkspace, decorators)[0] ?? null)
-    : null
-
   // The trigger names both ends of the editing context explicitly: the
   // checked-out workspace (personal, collaborative or a task branch) and its
   // base - where a publish from it goes (the PublishTargetBadge).
@@ -242,18 +238,16 @@ export function WorkspaceSwitcher({
           className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex items-center gap-2">
-            <i
-              className={`fa fa-fw text-[0.7rem] text-neutral-600 dark:text-neutral-400 ${
-                switchBase.isPending
-                  ? 'fa-spinner fa-spin'
-                  : activeDecoration
-                    ? `fa-${activeDecoration.icon ?? 'code-branch'}`
-                    : collaborative
-                      ? 'fa-users'
-                      : 'fa-user'
-              }`}
-              aria-hidden
-            />
+            {/* Only the icon carries the workspace's color (a task's status
+                color, purple for shared) - text and button stay neutral. */}
+            {switchBase.isPending ? (
+              <i
+                className="fa fa-fw fa-spinner fa-spin text-[0.7rem] text-neutral-600 dark:text-neutral-400"
+                aria-hidden
+              />
+            ) : (
+              <WorkspaceIcon workspace={activeWorkspace} />
+            )}
             <span className="hidden @[56rem]:inline max-w-40 truncate">
               {sourceLabel}
             </span>
