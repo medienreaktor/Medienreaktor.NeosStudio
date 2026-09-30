@@ -182,8 +182,15 @@ export interface PresenceHighlight {
 }
 
 export type HostToGuestMessage =
-  /** Outline and reveal the element of this node; null clears the selection. */
-  | { type: 'neos-studio/select-node'; aggregateId: string | null }
+  /**
+   * Outline the element of this node and, unless `reveal` is false, scroll it into view; null
+   * clears the selection.
+   */
+  | {
+      type: 'neos-studio/select-node'
+      aggregateId: string | null
+      reveal?: boolean
+    }
   /**
    * Pulse this element briefly. Sent when the editor arrives from a deep link and did not do the
    * selecting themselves, so the selection outline alone would be easy to miss. Ignored when the

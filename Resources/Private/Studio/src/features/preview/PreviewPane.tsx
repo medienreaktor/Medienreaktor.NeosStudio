@@ -595,12 +595,22 @@ export function PreviewPane({
     if (!guestReady) return
     const frame = activeFrameRef.current?.contentWindow
     if (!frame) return
+    const aggregateId =
+      selectedAddress === null
+        ? null
+        : decodeNodeAddress(selectedAddress).aggregateId
+    // Opening a page selects its document node, which sites wrap around the whole page body.
+    // Revealing that element centers the body, so every page switch (and every reload) would land
+    // somewhat below the top. The document is the page itself - there is nothing to reveal.
+    const documentAddress = documentAddressRef.current
+    const isDocument =
+      aggregateId !== null &&
+      documentAddress !== null &&
+      decodeNodeAddress(documentAddress).aggregateId === aggregateId
     const message: HostToGuestMessage = {
       type: 'neos-studio/select-node',
-      aggregateId:
-        selectedAddress === null
-          ? null
-          : decodeNodeAddress(selectedAddress).aggregateId,
+      aggregateId,
+      reveal: !isDocument,
     }
     frame.postMessage(message, window.location.origin)
   }, [guestReady, selectedAddress])

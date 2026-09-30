@@ -1678,7 +1678,7 @@ function onHostMessage(event: MessageEvent): void {
         : (elementsByAggregateId.get(message.aggregateId) ?? null)
     // An element replaced out-of-band can leave stale index entries behind.
     const element = indexed?.isConnected ? indexed : null
-    select(element, { notifyHost: false, reveal: true })
+    select(element, { notifyHost: false, reveal: message.reveal !== false })
   }
   if (message?.type === 'neos-studio/flash-node') {
     flash(elementsByAggregateId.get(message.aggregateId) ?? null)
