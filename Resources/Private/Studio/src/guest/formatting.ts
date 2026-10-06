@@ -30,6 +30,7 @@ import { Superscript } from '@tiptap/extension-superscript'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
 import { resolveStyles, styleExtensions, type ResolvedStyle } from './styles'
+import { ParagraphWithFiller } from './serialize'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
 const INLINE_ATTRIBUTE = 'data-__neos-studio-inline'
@@ -326,6 +327,8 @@ export function extensionsFor(config: Formatting): Extensions {
       // Disable StarterKit's document for single-line properties; a custom
       // single-block Document is added below. undefined keeps the default.
       document: config.multiline ? undefined : false,
+      // Replaced by ParagraphWithFiller below (CKEditor's blank-line filler).
+      paragraph: false,
       heading: config.headingLevels.length
         ? { levels: config.headingLevels as (1 | 2 | 3 | 4 | 5 | 6)[] }
         : false,
@@ -340,6 +343,7 @@ export function extensionsFor(config: Formatting): Extensions {
       orderedList: config.orderedList ? {} : false,
       link: config.link ? LINK_CONFIGURATION : false,
     }),
+    ParagraphWithFiller,
     ...(config.multiline ? [] : [Document.extend({ content: 'block' })]),
     ...(config.alignment
       ? [TextAlign.configure({ types: ['heading', 'paragraph'] })]

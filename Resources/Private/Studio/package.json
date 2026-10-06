@@ -29,6 +29,7 @@
     "@tiptap/extension-hard-break": "^3.27.4",
     "@tiptap/extension-italic": "^3.27.4",
     "@tiptap/extension-link": "^3.27.4",
+    "@tiptap/extension-paragraph": "^3.27.4",
     "@tiptap/extension-strike": "^3.27.4",
     "@tiptap/extension-subscript": "^3.27.4",
     "@tiptap/extension-superscript": "^3.27.4",
