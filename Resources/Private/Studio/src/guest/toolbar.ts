@@ -909,18 +909,25 @@ registerToolbarItem({
 
 // --- Style definitions (both toolbars) -------------------------------------
 
-/** The property's style definitions of one kind that apply at the selection. */
+/**
+ * The property's style definitions that apply at the selection. The block
+ * toolbar offers inline styles too: it is what shows for a collapsed caret,
+ * and sites define whole-block looks as inline styles (a <span> with heading
+ * classes) - without them there, such a style is only reachable by selecting
+ * the text first. Applied from there, an inline style covers the whole block.
+ */
 function stylesForKind(editor: Editor, kind: ToolbarKind) {
-  const wanted = kind === 'block' ? 'node' : 'mark'
   return editorFormatting(editor).styles.filter(
-    (style) => style.target.kind === wanted && isStyleAvailable(editor, style),
+    (style) =>
+      (kind === 'block' || style.target.kind === 'mark') &&
+      isStyleAvailable(editor, style),
   )
 }
 
-// The NodeType's styleDefinitions, as one picker per toolbar: block styles
-// among the block actions, inline styles next to the marks - the classic UI
-// groups both in a single CKEditor dropdown, but the split follows how the two
-// bars are already divided. Each entry previews itself in the site's own
+// The NodeType's styleDefinitions, as one picker per toolbar: block and inline
+// styles among the block actions, inline styles next to the marks - the
+// classic UI groups both in a single CKEditor dropdown, but the split follows
+// how the two bars are already divided. Each entry previews itself in the site's own
 // styling (see styles.ts). Registered last, so the pickers come at the end of
 // their bar; a property without applicable definitions shows no picker at all,
 // because an item whose menu is empty is not rendered.
