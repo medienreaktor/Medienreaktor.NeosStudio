@@ -246,8 +246,9 @@ export function normalizeFormatting(
     styles: [],
     autoparagraph: config.autoparagraph !== false,
     block,
-    // autoparagraph false (or a single-line title with p:false) stays one block.
-    multiline: config.autoparagraph !== false && paragraph,
+    // Like CKEditor, `p: false` only hides the paragraph button; Enter still
+    // adds paragraphs unless autoparagraph is off.
+    multiline: config.autoparagraph !== false,
   }
 
   // Style definitions are resolved last, against the *final* capability set:
