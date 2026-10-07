@@ -259,6 +259,17 @@ function injectStyles(): void {
       float: left;
       height: 0;
     }
+    /* On an inline editable the placeholder would sit in the line before the
+       editor, pushing the caret behind its text. Ordered after the (empty)
+       editor instead, the caret shows at the start of the line, and the
+       placeholder still sizes the host - so its outline and press target
+       stay as wide as the text. */
+    [${PLACEHOLDER_ATTRIBUTE}][${INLINE_ATTRIBUTE}].${EMPTY_CLASS} {
+      display: inline-flex;
+    }
+    [${PLACEHOLDER_ATTRIBUTE}][${INLINE_ATTRIBUTE}].${EMPTY_CLASS}::before {
+      order: 1;
+    }
     /* While a node type is dragged from the creation panel, collections that
        allow it light up; a minimum height keeps empty collections targetable.
        Specificity beats the collection "outline: none" rules above. */

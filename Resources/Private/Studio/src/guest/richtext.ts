@@ -300,8 +300,23 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     },
     onDestroy: () => {
       commit.cancel()
+      element.removeEventListener('mousedown', focusFromHost)
     },
   })
+  // A press on the property element itself, outside TipTap's editable, would
+  // otherwise land nowhere: the placeholder (::before) belongs to the host
+  // element, not to the editable, and an empty inline editable is only as
+  // wide as its trailing <br> - so empty inline properties (block = false)
+  // could be selected but never typed into. Hand such presses to the editor.
+  // preventDefault keeps the browser from moving focus/selection to the
+  // non-editable host; the click still fires, so element selection follows.
+  function focusFromHost(event: MouseEvent): void {
+    if (event.button !== 0 || event.target !== element) return
+    if (!editor.isEditable) return
+    event.preventDefault()
+    editor.commands.focus('start')
+  }
+  element.addEventListener('mousedown', focusFromHost)
   setEditorFormatting(editor, config)
   editorsByElement.set(element, {
     editor,
