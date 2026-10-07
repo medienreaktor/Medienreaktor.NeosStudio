@@ -8,8 +8,8 @@ const PREVIEW_WINDOW_NAME = 'neos-studio-preview'
 
 /**
  * Topbar button opening the selected document in a browser tab of its own. The
- * link always uses the plain "frontend" preview rendering - the page exactly as
- * visitors would see it, without the content-element metadata of the shell's
+ * link always uses the plain "frontend" preview rendering - the page including
+ * hidden content, without the content-element metadata of the shell's
  * "inPlace" iframe. The node address already pins the active workspace and
  * dimension, so the tab shows the state currently being edited.
  *

@@ -32,7 +32,7 @@ import { translate as t } from '@/lib/i18n'
 
 /**
  * Create and manage shareable preview links for the current document: anyone
- * holding the URL sees the page read-only, exactly as a visitor would - no
+ * holding the URL sees the page read-only, including hidden content - no
  * login. The URL is shown exactly once (the secret is stored hashed), so the
  * dialog pushes copying it right after creation; the list below manages
  * (revokes) all of the user's active links.

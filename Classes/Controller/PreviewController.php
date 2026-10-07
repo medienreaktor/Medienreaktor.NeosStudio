@@ -14,13 +14,10 @@ use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
-use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Domain\Model\RenderingMode;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Domain\Service\RenderingModeService;
 use Neos\Neos\Domain\SubtreeTagging\NeosSubtreeTag;
-use Neos\Neos\Domain\SubtreeTagging\NeosVisibilityConstraints;
-use Neos\Neos\Security\Authorization\ContentRepositoryAuthorizationService;
 use Neos\Neos\View\FusionView;
 use Psr\Http\Message\ResponseInterface;
 
@@ -32,7 +29,8 @@ use Psr\Http\Message\ResponseInterface;
  * workspace + dimension combination to preview is always explicit in the URL.
  *
  * The rendering mode is a request parameter instead of a user preference:
- * - "frontend" (default) renders the page exactly as visitors would see it
+ * - "frontend" (default) renders the page without editing markup, including
+ *   the disabled nodes the backend user may see
  * - any configured edit/preview mode (e.g. "inPlace") renders with the
  *   content-element metadata markup, which the Studio will need for
  *   click-to-select and in-place editing
@@ -60,12 +58,6 @@ class PreviewController extends ActionController
     #[Flow\Inject]
     protected RenderingModeService $renderingModeService;
 
-    #[Flow\Inject]
-    protected ContentRepositoryAuthorizationService $contentRepositoryAuthorizationService;
-
-    #[Flow\Inject]
-    protected SecurityContext $securityContext;
-
     public function showAction(string $node, string $mode = RenderingMode::FRONTEND, bool $includeDeleted = false): ResponseInterface|string
     {
         try {
@@ -81,29 +73,16 @@ class PreviewController extends ActionController
         }
 
         $contentRepository = $this->contentRepositoryRegistry->get($nodeAddress->contentRepositoryId);
-        if ($renderingMode->isEdit) {
-            // Security-aware subgraph: the CR applies the current user's
-            // visibility constraints, so this cannot leak inaccessible
-            // content. Backend users may see disabled nodes - wanted here, so
-            // hidden elements stay editable (rendered dimmed by the guest).
-            $subgraph = $contentRepository->getContentSubgraph(
-                $nodeAddress->workspaceName,
-                $nodeAddress->dimensionSpacePoint
-            );
-            $subgraph = $this->withDeletedNodes($contentRepository, $nodeAddress, $subgraph, $includeDeleted);
-        } else {
-            // Frontend rendering shows the page as visitors would see it:
-            // disabled nodes are excluded even though the backend user could
-            // see them (mirrors the core frontend NodeController).
-            // getContentGraph() still enforces workspace read access.
-            $visibilityConstraints = $this->contentRepositoryAuthorizationService
-                ->getVisibilityConstraints($contentRepository->id, $this->securityContext->getRoles())
-                ->merge(NeosVisibilityConstraints::excludeDisabled());
-            $subgraph = $contentRepository
-                ->getContentGraph($nodeAddress->workspaceName)
-                ->getSubgraph($nodeAddress->dimensionSpacePoint, $visibilityConstraints);
-            $subgraph = $this->withDeletedNodes($contentRepository, $nodeAddress, $subgraph, $includeDeleted);
-        }
+        // Security-aware subgraph: the CR applies the current user's
+        // visibility constraints, so this cannot leak inaccessible content.
+        // Backend users see disabled nodes in every mode, as in the classic
+        // UI's preview: hidden elements stay editable in place (rendered dimmed
+        // by the guest), and a hidden page can be previewed before it goes live.
+        $subgraph = $contentRepository->getContentSubgraph(
+            $nodeAddress->workspaceName,
+            $nodeAddress->dimensionSpacePoint
+        );
+        $subgraph = $this->withDeletedNodes($contentRepository, $nodeAddress, $subgraph, $includeDeleted);
 
         $nodeInstance = $subgraph->findNodeById($nodeAddress->aggregateId);
         if ($nodeInstance === null) {
