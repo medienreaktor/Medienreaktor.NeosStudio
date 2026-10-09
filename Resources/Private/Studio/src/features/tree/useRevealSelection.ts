@@ -5,7 +5,9 @@ import { DOCUMENT_NODE_TYPE, fetchAncestors } from '@/api/nodes'
 /**
  * Reveals a node selected outside the tree (e.g. the followed document after
  * a dimension switch): expands the document rootline down to it and marks it
- * selected once it appears. Item ids are node addresses, so the path comes
+ * selected once it appears, scrolled into view like the classic UI's trees
+ * (a deep node in a long outline would otherwise be selected off-screen).
+ * Item ids are node addresses, so the path comes
  * from the ancestors relation; expansion cascades level by level as the
  * async data loader brings the items in, the rerender re-running the effect.
  * A user click needs none of this - it selects directly - but passing the
@@ -66,6 +68,12 @@ export function useRevealSelection<T>(
       revealed.current = address
       tree.setSelectedItems([address])
       setPath(null)
+      target.scrollTo({ block: 'nearest' }).catch((e: unknown) => {
+        console.error('Scrolling the revealed tree item into view failed', {
+          address,
+          error: e,
+        })
+      })
     }
   }, [items, path, address, tree])
 }
