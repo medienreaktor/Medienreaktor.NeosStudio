@@ -490,6 +490,10 @@
         <source>References can be set after creation</source>
         <target xml:lang="km">សេចក្ដីយោងអាចកំណត់បានបន្ទាប់ពីការបង្កើត</target>
       </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="km">ទៅកាន់ទំព័រ</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="km">វាយយ៉ាងហោចណាស់ {0} តួអក្សរដើម្បីស្វែងរក</target>

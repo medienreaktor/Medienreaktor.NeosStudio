@@ -930,6 +930,10 @@
         <source>References can be set after creation</source>
         <target xml:lang="de">Referenzen können nach dem Erstellen gesetzt werden</target>
       </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="de">Zur Seite</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="de">Mindestens {0} Zeichen zum Suchen eingeben</target>

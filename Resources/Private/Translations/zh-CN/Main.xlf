@@ -490,6 +490,10 @@
         <source>References can be set after creation</source>
         <target xml:lang="zh-CN">创建后可设置引用</target>
       </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="zh-CN">转到页面</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="zh-CN">至少输入 {0} 个字符开始搜索</target>

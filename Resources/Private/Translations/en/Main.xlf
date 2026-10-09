@@ -698,6 +698,9 @@
       <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
         <source>References can be set after creation</source>
       </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
       </trans-unit>

@@ -3,8 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { dataSourceSelectOptions, useDataSource } from '@/api/dataSources'
 import { queryKeys } from '@/api/keys'
 import { addressWithAggregateId } from '@/api/nodeAddress'
-import { nodeLabel, searchNodes, useNodeReferences } from '@/api/nodes'
-import { useNodeTypes } from '@/api/nodeTypes'
+import {
+  DOCUMENT_NODE_TYPE,
+  nodeLabel,
+  searchNodes,
+  useNodeReferences,
+} from '@/api/nodes'
+import { isOfType, useNodeTypes } from '@/api/nodeTypes'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -418,6 +423,9 @@ function ReferencePicker({
  * display from a local cache until the refetch lands. Selection state is
  * server-derived until the first local edit, then owned here - the inspector
  * remounts the editor when the edited subject changes.
+ *
+ * A referenced document opens in the preview from its label (multi) or the
+ * go-to button (single), like the old UI's reference link.
  */
 function ReferenceEditorBase({
   subject,
@@ -427,6 +435,7 @@ function ReferenceEditorBase({
   multiple,
 }: PropertyEditorProps & { multiple: boolean }) {
   const { data: nodeTypes } = useNodeTypes()
+  const { navigateToNode } = useStudio()
   const { data: references } = useNodeReferences(nodeAddress ?? null)
   const serverTargets = useMemo(
     () =>
@@ -459,18 +468,33 @@ function ReferenceEditorBase({
 
   const displayFor = (
     id: string,
-  ): { label: string; iconClass: string | null } => {
+  ): {
+    label: string
+    iconClass: string | null
+    /** Set for a document target - the address to open in the preview. */
+    documentAddress: string | null
+  } => {
     const node = serverTargets.find((target) => target.aggregateId === id)
     if (node) {
       return {
         label: nodeLabel(node),
         iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
+        documentAddress:
+          nodeTypes && isOfType(nodeTypes, node.nodeType, DOCUMENT_NODE_TYPE)
+            ? node.address
+            : null,
       }
     }
     // A fresh pick, shown from the picked option until the refetch lands - or
-    // a target not visible in this subgraph, shown as its bare id.
-    return pickedById[id] ?? { label: id, iconClass: null }
+    // a target not visible in this subgraph, shown as its bare id. Neither has
+    // an address to open yet.
+    const picked = pickedById[id]
+    return picked
+      ? { ...picked, documentAddress: null }
+      : { label: id, iconClass: null, documentAddress: null }
   }
+
+  const goToPageLabel = translate('editor.reference.goToPage', 'Go to page')
 
   const pick = (option: ReferenceOption) => {
     setPickedById((cache) => ({ ...cache, [option.id]: option }))
@@ -541,6 +565,17 @@ function ReferenceEditorBase({
             }
           />
         </div>
+        {display?.documentAddress && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title={goToPageLabel}
+            aria-label={goToPageLabel}
+            onClick={() => navigateToNode(display.documentAddress!)}
+          >
+            <i className="fas fa-arrow-up-right-from-square" aria-hidden />
+          </Button>
+        )}
         {current !== null && (
           <Button
             variant="ghost"
@@ -613,11 +648,22 @@ function ReferenceEditorBase({
                 aria-hidden
               />
             )}
-            <span className="min-w-0 flex-1 truncate">{display.label}</span>
+            {display.documentAddress ? (
+              <button
+                type="button"
+                title={goToPageLabel}
+                onClick={() => navigateToNode(display.documentAddress!)}
+                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-blue-500/50"
+              >
+                {display.label}
+              </button>
+            ) : (
+              <span className="min-w-0 flex-1 truncate">{display.label}</span>
+            )}
             <Button
               variant="ghost"
               size="icon-sm"
-              title="Remove"
+              title={translate('editor.remove', 'Remove')}
               onClick={() => commit(selected.filter((other) => other !== id))}
             >
               <i className="fas fa-xmark" aria-hidden />

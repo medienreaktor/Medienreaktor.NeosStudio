@@ -490,6 +490,10 @@
         <source>References can be set after creation</source>
         <target xml:lang="da">Referencer kan angives efter oprettelsen</target>
       </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="da">Gå til side</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="da">Skriv mindst {0} tegn for at søge</target>
