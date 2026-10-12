@@ -1,7 +1,7 @@
 {
   "name": "@medienreaktor/neos-studio",
   "private": true,
-  "version": "1.17.13",
+  "version": "1.17.14",
   "type": "module",
   "engines": {
     "node": ">=22"
