@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { studioFetch } from './client'
 import { queryKeys } from './keys'
 
 /**
@@ -109,13 +109,15 @@ export interface EffectiveAccess {
 export interface MyAccessResponse {
   access: EffectiveAccess
   capabilities: AccessCapability[]
+  /** Whether the caller may administer the access roles themselves. */
+  canAdminister?: boolean
 }
 
 /** The role catalogue. Administrators only; callers gate on me.permissions.accessRoles. */
 export function useAccessRoles(enabled = true) {
   return useQuery({
     queryKey: queryKeys.accessRoles,
-    queryFn: () => apiFetch<AccessRolesResponse>('/access/roles'),
+    queryFn: () => studioFetch<AccessRolesResponse>('/access/roles'),
     enabled,
   })
 }
@@ -129,7 +131,7 @@ export function useAccessRoles(enabled = true) {
 export function useMyAccess(enabled = true) {
   return useQuery({
     queryKey: queryKeys.myAccess,
-    queryFn: () => apiFetch<MyAccessResponse>('/access/me'),
+    queryFn: () => studioFetch<MyAccessResponse>('/access/me'),
     staleTime: 5 * 60 * 1000,
     enabled,
   })
@@ -145,7 +147,7 @@ export interface AccessRoleInput {
 }
 
 export function createAccessRole(input: AccessRoleInput) {
-  return apiFetch<{ role: AccessRole }>('/access/roles', {
+  return studioFetch<{ role: AccessRole }>('/access/roles', {
     method: 'POST',
     body: input,
   })
@@ -153,21 +155,21 @@ export function createAccessRole(input: AccessRoleInput) {
 
 /** Partial update; "constraints" and "memberUserIds" each replace the whole set. */
 export function updateAccessRole(roleId: string, input: AccessRoleInput) {
-  return apiFetch<{ role: AccessRole }>(
+  return studioFetch<{ role: AccessRole }>(
     `/access/roles/${encodeURIComponent(roleId)}`,
     { method: 'PATCH', body: input },
   )
 }
 
 export function setAccessRoleMembers(roleId: string, userIds: string[]) {
-  return apiFetch<{ role: AccessRole }>(
+  return studioFetch<{ role: AccessRole }>(
     `/access/roles/${encodeURIComponent(roleId)}/members`,
     { method: 'PUT', body: { userIds } },
   )
 }
 
 export function deleteAccessRole(roleId: string) {
-  return apiFetch<{ success: boolean }>(
+  return studioFetch<{ success: boolean }>(
     `/access/roles/${encodeURIComponent(roleId)}`,
     { method: 'DELETE' },
   )

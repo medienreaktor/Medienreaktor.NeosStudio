@@ -28,7 +28,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
-import { apiFetch, ApiError } from '@/api/client'
+import { apiFetch, ApiError, studioFetch } from '@/api/client'
 import { useStudio } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
@@ -124,14 +124,16 @@ export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
 export { useStudio, useKeyboardShortcut }
 
 /**
- * Typed request against the Studio REST API, sharing the shell's OAuth
- * session (bearer token, single-flighted refresh). Paths are relative to the
- * API base ('/tasks' -> '<apiBase>/tasks'), so a plugin package's own
- * endpoints behind the same firewall are reachable exactly like the
- * built-in ones. Resolves with the parsed JSON body on 2xx and throws
- * {@link ApiError} otherwise.
+ * Typed requests sharing the shell's OAuth session (bearer token,
+ * single-flighted refresh). Resolve with the parsed JSON body on 2xx and
+ * throw {@link ApiError} otherwise.
+ *  - apiFetch: Neos.Api, paths relative to its base ('/me' -> '/api/me').
+ *  - studioFetch: the Studio's own endpoints, paths relative to
+ *    '/neos/studio/api' ('/tasks'). A plugin package's own endpoints below
+ *    that prefix sit behind the same bearer firewall and are reachable
+ *    exactly like the built-in ones.
  */
-export { apiFetch, ApiError }
+export { apiFetch, studioFetch, ApiError }
 
 /**
  * The shell's per-user avatar scheme (initials avatars colored by user id) -
@@ -238,6 +240,7 @@ export interface NeosStudioPluginApi {
   useKeyboardShortcut: typeof useKeyboardShortcut
   toast: typeof toast
   apiFetch: typeof apiFetch
+  studioFetch: typeof studioFetch
   ApiError: typeof ApiError
   presenceColor: typeof presenceColor
   presenceInitials: typeof presenceInitials
@@ -277,6 +280,7 @@ export function installPluginApiGlobals(): void {
     useKeyboardShortcut,
     toast,
     apiFetch,
+    studioFetch,
     ApiError,
     presenceColor,
     presenceInitials,

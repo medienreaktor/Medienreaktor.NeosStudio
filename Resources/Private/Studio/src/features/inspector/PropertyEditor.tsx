@@ -1,5 +1,4 @@
 import type { PropertyScope } from '@/api/nodeTypes'
-import type { SerializedPropertyValue } from '@/api/nodes'
 import {
   Popover,
   PopoverContent,
@@ -33,7 +32,8 @@ export function PropertyEditor({
   onLiveChange,
 }: {
   property: InspectorProperty
-  value: SerializedPropertyValue | undefined
+  /** The property's current value (undefined if the node has none). */
+  value: unknown
   /** Address of the node being edited, passed to editors that operate on the node itself (e.g. the node type switcher). */
   nodeAddress: string
   /** Validation errors for the property's current (live) value - rendered inline below the control. */
@@ -63,7 +63,7 @@ export function PropertyEditor({
         type: property.type,
         label: property.label,
       }}
-      value={value?.value}
+      value={value}
       options={property.editorOptions}
       nodeAddress={nodeAddress}
       invalid={errors !== undefined && errors.length > 0}
@@ -241,7 +241,7 @@ function ReadOnlyValue({
   value,
 }: {
   property: InspectorProperty
-  value: SerializedPropertyValue | undefined
+  value: unknown
 }) {
   return (
     <div
@@ -257,8 +257,7 @@ function ReadOnlyValue({
   )
 }
 
-function formatValue(value: SerializedPropertyValue | undefined): string {
-  const raw = value?.value
+function formatValue(raw: unknown): string {
   if (raw === null || raw === undefined || raw === '') return '–'
   if (typeof raw === 'string') return raw
   if (typeof raw === 'boolean')

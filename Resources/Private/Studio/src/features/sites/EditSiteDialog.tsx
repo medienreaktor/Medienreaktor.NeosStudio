@@ -43,9 +43,7 @@ import { translate as t } from '@/lib/i18n'
 
 /** The domain add/edit form state: creating, or editing one domain. */
 type DomainFormState =
-  | { mode: 'create' }
-  | { mode: 'edit'; domain: SiteDomain }
-  | null
+  { mode: 'create' } | { mode: 'edit'; domain: SiteDomain } | null
 
 function invalidateSites() {
   queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
@@ -96,9 +94,7 @@ export function EditSiteDialog({
     onSuccess: (response) => {
       invalidateSites()
       toast.success(
-        t('sites.saved', 'The site "{0}" has been saved.', [
-          response.site.name,
-        ]),
+        t('sites.saved', 'The site "{0}" has been saved.', [response.name]),
       )
     },
     onError: mutationErrorToast,
@@ -201,7 +197,6 @@ export function EditSiteDialog({
                     key={domain.id}
                     domain={domain}
                     onSetPrimary={() => setPrimary.mutate(domain.id)}
-                    onUnsetPrimary={() => setPrimary.mutate('')}
                     onToggleActive={() =>
                       domainMutation.mutate(() =>
                         updateDomain(site.nodeName, domain.id, {
@@ -221,9 +216,13 @@ export function EditSiteDialog({
 
               {domainForm !== null && (
                 <DomainForm
-                  key={domainForm.mode === 'edit' ? domainForm.domain.id : 'new'}
+                  key={
+                    domainForm.mode === 'edit' ? domainForm.domain.id : 'new'
+                  }
                   siteNodeName={site.nodeName}
-                  editing={domainForm.mode === 'edit' ? domainForm.domain : null}
+                  editing={
+                    domainForm.mode === 'edit' ? domainForm.domain : null
+                  }
                   onClose={() => setDomainForm(null)}
                 />
               )}
@@ -238,14 +237,12 @@ export function EditSiteDialog({
 function DomainRow({
   domain,
   onSetPrimary,
-  onUnsetPrimary,
   onToggleActive,
   onEdit,
   onDelete,
 }: {
   domain: SiteDomain
   onSetPrimary: () => void
-  onUnsetPrimary: () => void
   onToggleActive: () => void
   onEdit: () => void
   onDelete: () => void
@@ -255,7 +252,9 @@ function DomainRow({
       <span className="flex min-w-0 items-center gap-2">
         <span
           className={
-            domain.active ? 'truncate text-neutral-800 dark:text-neutral-200' : 'truncate text-neutral-500'
+            domain.active
+              ? 'truncate text-neutral-800 dark:text-neutral-200'
+              : 'truncate text-neutral-500'
           }
         >
           {domain.url}
@@ -264,7 +263,9 @@ function DomainRow({
           <Badge variant="secondary">{t('sites.primary', 'Primary')}</Badge>
         )}
         {!domain.active && (
-          <Badge variant="outline">{t('sites.inactiveDomain', 'Inactive')}</Badge>
+          <Badge variant="outline">
+            {t('sites.inactiveDomain', 'Inactive')}
+          </Badge>
         )}
       </span>
       <DropdownMenu>
@@ -280,12 +281,9 @@ function DomainRow({
           <i className="fas fa-ellipsis-vertical" aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {domain.isPrimary ? (
-            <DropdownMenuItem onClick={onUnsetPrimary}>
-              <i className="fas fa-star-half-stroke" aria-hidden />
-              {t('sites.unsetPrimary', 'Unset primary')}
-            </DropdownMenuItem>
-          ) : (
+          {/* Neos.Api can move the primary domain but not unset it. Only
+              an active domain can become primary. */}
+          {!domain.isPrimary && domain.active && (
             <DropdownMenuItem onClick={onSetPrimary}>
               <i className="fas fa-star" aria-hidden />
               {t('sites.setPrimary', 'Set as primary')}
@@ -337,10 +335,10 @@ function DomainForm({
 
   const mutation = useMutation({
     mutationFn: () => {
-      const schemeValue =
-        scheme === 'any' ? '' : (scheme as 'http' | 'https')
-      const portValue = port.trim() === '' ? 0 : Number(port)
+      const schemeValue = scheme === 'any' ? null : (scheme as 'http' | 'https')
+      const portValue = port.trim() === '' ? null : Number(port)
       if (editing !== null) {
+        // null clears the scheme / port.
         return updateDomain(siteNodeName, editing.id, {
           hostname: hostname.trim(),
           scheme: schemeValue,
@@ -349,8 +347,8 @@ function DomainForm({
       }
       return createDomain(siteNodeName, {
         hostname: hostname.trim(),
-        ...(schemeValue !== '' ? { scheme: schemeValue } : {}),
-        ...(portValue > 0 ? { port: portValue } : {}),
+        ...(schemeValue !== null ? { scheme: schemeValue } : {}),
+        ...(portValue !== null && portValue > 0 ? { port: portValue } : {}),
       })
     },
     onSuccess: () => {

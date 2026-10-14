@@ -4,7 +4,8 @@ import { useMutation } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { useMe } from '@/api/me'
-import { useUserRoles, useUsers } from '@/api/users'
+import { usePeople } from '@/api/people'
+import { useUserRoles } from '@/api/users'
 import {
   assignWorkspaceRole,
   unassignWorkspaceRole,
@@ -54,7 +55,7 @@ function roleLabel(role: string): string {
 /**
  * Manage who may access a workspace: the role assignments (user or group ->
  * viewer/collaborator/manager). Only offered for workspaces the account
- * manages; the server re-checks. Users are picked from the user listing
+ * manages; the server re-checks. Users are picked from the people directory
  * (readable by every editor); groups from the role catalog when the account
  * is an administrator, otherwise via a free-text role identifier.
  */
@@ -90,7 +91,12 @@ export function WorkspaceRolesDialog({
             'Removing the access failed.',
           ),
         ),
-        { title: t('workspacesAdmin.roleRemoveFailed', 'Could not remove access') },
+        {
+          title: t(
+            'workspacesAdmin.roleRemoveFailed',
+            'Could not remove access',
+          ),
+        },
       ),
   })
 
@@ -155,7 +161,10 @@ export function WorkspaceRolesDialog({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      aria-label={t('workspacesAdmin.removeAccess', 'Remove access')}
+                      aria-label={t(
+                        'workspacesAdmin.removeAccess',
+                        'Remove access',
+                      )}
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(assignment)}
                     >
@@ -188,25 +197,29 @@ function AddAssignmentForm({
 }) {
   const [subjectType, setSubjectType] = useState<'USER' | 'GROUP'>('USER')
   const [subject, setSubject] = useState('')
-  const [role, setRole] = useState<(typeof WORKSPACE_ROLES)[number]>('COLLABORATOR')
+  const [role, setRole] =
+    useState<(typeof WORKSPACE_ROLES)[number]>('COLLABORATOR')
 
   const isAdmin = useMe().data?.permissions.users ?? false
-  const { data: usersData } = useUsers()
+  const { data: people } = usePeople()
   // The role catalog is admin-only; non-admin managers type the identifier.
   const { data: rolesData } = useUserRoles(isAdmin)
 
   const assignedSubjects = new Set(
     existing.map((a) => `${a.subjectType}:${a.subject}`),
   )
-  const userItems = (usersData?.users ?? [])
-    .filter((user) => !assignedSubjects.has(`USER:${user.id}`))
-    .map((user) => ({ value: user.id, label: user.fullName || user.label }))
+  const userItems = (people ?? [])
+    .filter((person) => !assignedSubjects.has(`USER:${person.id}`))
+    .map((person) => ({ value: person.id, label: person.label }))
   const groupItems = (rolesData?.roles ?? [])
     .filter((group) => !assignedSubjects.has(`GROUP:${group.identifier}`))
     .map((group) => ({ value: group.identifier, label: group.label }))
   const subjectTypeItems = [
     { value: 'USER', label: t('workspacesAdmin.subjectUser', 'User') },
-    { value: 'GROUP', label: t('workspacesAdmin.subjectGroup', 'Group (role)') },
+    {
+      value: 'GROUP',
+      label: t('workspacesAdmin.subjectGroup', 'Group (role)'),
+    },
   ]
   const roleItems = WORKSPACE_ROLES.map((value) => ({
     value,
@@ -224,9 +237,17 @@ function AddAssignmentForm({
       toast.error(
         apiErrorDescription(
           error,
-          t('workspacesAdmin.roleAssignFailedDetail', 'Assigning the access failed.'),
+          t(
+            'workspacesAdmin.roleAssignFailedDetail',
+            'Assigning the access failed.',
+          ),
         ),
-        { title: t('workspacesAdmin.roleAssignFailed', 'Could not assign access') },
+        {
+          title: t(
+            'workspacesAdmin.roleAssignFailed',
+            'Could not assign access',
+          ),
+        },
       ),
   })
 

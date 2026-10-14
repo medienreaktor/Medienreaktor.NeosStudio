@@ -801,6 +801,7 @@ export function ReviewChangesDialog({
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}
+        workspaceName={source?.name ?? null}
         conflicts={pendingConflict?.conflicts.conflicts ?? []}
         partial={
           pendingConflict?.conflicts.code === 'partial_publish_conflicts'

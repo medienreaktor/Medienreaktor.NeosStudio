@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller;
 
-use Medienreaktor\NeosApi\Domain\Model\OAuthClient;
-use Medienreaktor\NeosApi\Domain\Repository\OAuthClientRepository;
+use Medienreaktor\NeosStudio\Controller\Api\AbstractStudioApiController;
+use Neos\Api\Security\PrivilegeScopes;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Locale;
 use Neos\Flow\I18n\Translator;
@@ -15,6 +15,9 @@ use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Controller\Backend\MenuHelper;
 use Neos\Neos\Service\UserService;
 use Neos\Neos\Service\XliffService;
+use Neos\OAuth\Domain\Model\OAuthClient;
+use Neos\OAuth\Domain\Repository\OAuthClientRepository;
+use Neos\OAuth\Domain\ScopeRegistry;
 
 /**
  * Serves the Neos Studio single-page application and lazily provisions its
@@ -22,8 +25,9 @@ use Neos\Neos\Service\XliffService;
  *
  * The shell requires a logged-in backend user (see Settings.yaml). Once
  * loaded, the SPA performs the authorization-code + PKCE flow against the
- * Medienreaktor.NeosApi endpoints; because its client is first-party, the
- * consent screen is skipped and the token is obtained silently.
+ * Neos.OAuth endpoints; because its client is first-party, the consent
+ * screen is skipped and the token is obtained silently. The token carries
+ * every Neos.Api scope plus the Studio's own studio.* scopes.
  */
 class StudioController extends ActionController
 {
@@ -41,11 +45,11 @@ class StudioController extends ActionController
     #[Flow\Inject]
     protected XliffService $xliffService;
 
-    /**
-     * @var array<string, string>
-     */
-    #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosApi', path: 'oauth.scopes')]
-    protected array $apiScopes = [];
+    #[Flow\Inject]
+    protected ScopeRegistry $scopeRegistry;
+
+    #[Flow\InjectConfiguration(path: 'contentRepository')]
+    protected string $contentRepositoryId;
 
     /**
      * Studio respects the same tree-depth preferences as the classic Neos
@@ -95,6 +99,14 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(path: 'publishCelebration')]
     protected $publishCelebration;
 
+    /**
+     * The classic backend's language picker options (locale identifier =>
+     * label) - the profile settings offer the same choice. Untyped: absent
+     * configuration injects null.
+     */
+    #[Flow\InjectConfiguration(package: 'Neos.Neos', path: 'userInterface.availableLanguages')]
+    protected $availableLanguages;
+
     #[Flow\Inject]
     protected MenuHelper $menuHelper;
 
@@ -112,12 +124,14 @@ class StudioController extends ActionController
 
         $this->ensureClient($redirectUri);
 
-        $scopes = implode(' ', array_keys($this->apiScopes));
+        $scopes = implode(' ', $this->scopes());
         $config = [
             'clientId' => self::CLIENT_IDENTIFIER,
             'authorizeEndpoint' => $origin . '/oauth/authorize',
             'tokenEndpoint' => $origin . '/oauth/token',
             'apiBase' => $origin . '/api',
+            'studioApiBase' => $origin . '/neos/studio/api',
+            'contentRepositoryId' => $this->contentRepositoryId,
             'previewBase' => $origin . '/neos/studio/preview',
             'redirectUri' => $redirectUri,
             'scopes' => $scopes,
@@ -131,6 +145,9 @@ class StudioController extends ActionController
             // Label translations: the SPA loads the core's XLIFF-as-JSON
             // bundle for the backend user's interface language at boot.
             'interfaceLanguage' => $this->userService->getInterfaceLanguage(),
+            // The interface languages the profile settings offer (Neos.Api's
+            // profile takes any of them but does not list them).
+            'availableLanguages' => $this->availableLanguages(),
             // The user's UI mode preference (same value /me/profile serves),
             // injected so the shell can theme itself before the first API
             // roundtrip. Schema-less preference array: coerce out-of-range
@@ -165,6 +182,21 @@ class StudioController extends ActionController
         ];
 
         return $this->renderSpa($config);
+    }
+
+    /**
+     * Neos.Neos.userInterface.availableLanguages as a list of options, in
+     * configuration order.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function availableLanguages(): array
+    {
+        $options = [];
+        foreach (is_array($this->availableLanguages) ? $this->availableLanguages : [] as $value => $label) {
+            $options[] = ['value' => (string)$value, 'label' => (string)$label];
+        }
+        return $options;
     }
 
     /**
@@ -296,46 +328,51 @@ class StudioController extends ActionController
         }
     }
 
+    /**
+     * The scopes the shell requests: all of Neos.Api's (what the account may
+     * actually do is still decided by its roles) and the Studio's own.
+     *
+     * @return list<string>
+     */
+    private function scopes(): array
+    {
+        return [
+            ...array_keys($this->scopeRegistry->provider(PrivilegeScopes::class)->scopes()),
+            AbstractStudioApiController::SCOPE_READ,
+            AbstractStudioApiController::SCOPE_WRITE,
+        ];
+    }
+
     private function ensureClient(string $redirectUri): void
     {
-        $client = $this->clientRepository->findOneByIdentifier(self::CLIENT_IDENTIFIER);
-        $scopes = array_keys($this->apiScopes);
-
-        if ($client === null) {
-            $client = new OAuthClient(
-                self::CLIENT_IDENTIFIER,
-                'Neos Studio',
-                null, // public client, PKCE only
-                [$redirectUri],
-                ['authorization_code', 'refresh_token'],
-                $scopes,
-                true // first-party: skip consent
-            );
-            $this->clientRepository->add($client);
-            $this->persistenceManager->persistAll();
-            return;
-        }
+        $client = $this->clientRepository->findOneByClientIdentifier(self::CLIENT_IDENTIFIER);
+        $scopes = $this->scopes();
 
         // Keep the redirect URI and the allowed scopes in sync: dev domains
-        // change, and newly configured scopes (e.g. neos.media) must propagate
-        // to the existing first-party client or the Studio can never request them.
-        $redirectUriChanged = !in_array($redirectUri, $client->getRedirectUris(), true);
-        $scopesChanged = array_values($client->getAllowedScopes()) !== array_values($scopes);
-        if ($redirectUriChanged || $scopesChanged) {
+        // change, and newly registered scopes must propagate to the existing
+        // first-party client or the Studio can never request them. The client
+        // is immutable, so a change replaces it.
+        if ($client !== null) {
+            $redirectUriChanged = !in_array($redirectUri, $client->getRedirectUris(), true);
+            $scopesChanged = $client->getScopes() !== $scopes;
+            if (!$redirectUriChanged && !$scopesChanged) {
+                return;
+            }
             $this->clientRepository->remove($client);
             $this->persistenceManager->persistAll();
-            $client = new OAuthClient(
-                self::CLIENT_IDENTIFIER,
-                'Neos Studio',
-                null,
-                [$redirectUri],
-                ['authorization_code', 'refresh_token'],
-                $scopes,
-                true
-            );
-            $this->clientRepository->add($client);
-            $this->persistenceManager->persistAll();
         }
+
+        $this->clientRepository->add(new OAuthClient(
+            self::CLIENT_IDENTIFIER,
+            'Neos Studio',
+            null, // public client, PKCE only
+            [$redirectUri],
+            ['authorization_code', 'refresh_token'],
+            $scopes,
+            true, // first-party: skip consent
+            null, // no account of its own: every token acts as the user who logged in
+        ));
+        $this->persistenceManager->persistAll();
     }
 
     /**

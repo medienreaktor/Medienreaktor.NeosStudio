@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils'
 import { removeAsset } from './AssetContextMenu'
 import { AssetThumb } from './AssetThumb'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { formatBytes, formatDate } from './format'
+import { assetTypeLabel, formatBytes, formatDate } from './format'
 import {
   collectionToNode,
   MediaTree,
@@ -62,10 +62,10 @@ export function AssetDetailsDialog({
   onDeleted,
 }: AssetDetailsDialogProps) {
   // Always read the canonical detail (fresh metadata, tags, collections).
-  const detail = useAsset(listAsset.assetSource, listAsset.identifier)
+  const detail = useAsset(listAsset.assetSourceId, listAsset.id)
   const asset = detail.data ?? listAsset
-  const editable = !asset.isReadOnly && asset.localAssetIdentifier !== null
-  const localId = asset.localAssetIdentifier
+  const editable = !asset.isReadOnly && asset.localAssetId !== null
+  const localId = asset.localAssetId
 
   // The parent mounts us only while an asset is selected, so drive `open` from
   // local state: flip it true on mount for the enter transition, and defer the
@@ -92,7 +92,9 @@ export function AssetDetailsDialog({
             </div>
 
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-              <Meta label={t('media.type', 'Type')}>{asset.assetType}</Meta>
+              <Meta label={t('media.type', 'Type')}>
+                {assetTypeLabel(asset.assetType)}
+              </Meta>
               <Meta label={t('media.format', 'Format')}>{asset.mediaType}</Meta>
               <Meta label={t('media.size', 'Size')}>
                 {formatBytes(asset.fileSize)}
@@ -140,8 +142,8 @@ export function AssetDetailsDialog({
             {localId && (
               <Field label={t('media.usage', 'Usage')}>
                 <UsageTable
-                  assetSource={asset.assetSource}
-                  identifier={asset.identifier}
+                  assetSourceId={asset.assetSourceId}
+                  assetId={asset.id}
                 />
               </Field>
             )}
@@ -151,7 +153,7 @@ export function AssetDetailsDialog({
         {editable && localId && (
           <DialogFooter>
             {/* Variants have no file of their own - the original carries it. */}
-            {!asset.originalAssetIdentifier && (
+            {!asset.originalAssetId && (
               <ReplaceButton asset={asset} localId={localId} />
             )}
             <DeleteButton localId={localId} onDeleted={onDeleted} />
@@ -232,20 +234,20 @@ function TagAssignment({
   assigned,
 }: {
   localId: string
-  assigned: { identifier: string; label: string }[]
+  assigned: { id: string; label: string }[]
 }) {
   const tags = useTags()
-  const assignedIds = new Set(assigned.map((t) => t.identifier))
+  const assignedIds = new Set(assigned.map((t) => t.id))
 
   return (
     <Field label={t('media.tags', 'Tags')}>
       <div className="flex flex-wrap gap-1">
         {assigned.map((tag) => (
           <Chip
-            key={tag.identifier}
+            key={tag.id}
             label={tag.label}
             onRemove={() =>
-              void setAssetTag(localId, tag.identifier, false).catch((e) =>
+              void setAssetTag(localId, tag.id, false).catch((e) =>
                 toast.error(e, {
                   title: t('media.tagRemoveFailed', 'Removing the tag failed'),
                 }),
@@ -287,30 +289,27 @@ function CollectionAssignment({
   assigned,
 }: {
   localId: string
-  assigned: { identifier: string; title: string }[]
+  assigned: { id: string; title: string }[]
 }) {
   const collections = useAssetCollections()
-  const assignedIds = new Set(assigned.map((c) => c.identifier))
+  const assignedIds = new Set(assigned.map((c) => c.id))
 
   return (
     <Field label={t('media.collections', 'Collections')}>
       <div className="flex flex-wrap gap-1">
         {assigned.map((collection) => (
           <Chip
-            key={collection.identifier}
+            key={collection.id}
             label={collection.title}
             onRemove={() =>
-              void setAssetCollection(
-                localId,
-                collection.identifier,
-                false,
-              ).catch((e) =>
-                toast.error(e, {
-                  title: t(
-                    'media.collectionRemoveFailed',
-                    'Removing from collection failed',
-                  ),
-                }),
+              void setAssetCollection(localId, collection.id, false).catch(
+                (e) =>
+                  toast.error(e, {
+                    title: t(
+                      'media.collectionRemoveFailed',
+                      'Removing from collection failed',
+                    ),
+                  }),
               )
             }
           />
@@ -357,7 +356,7 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
       onClick={async () => {
         setBusy(true)
         try {
-          await importProxyAsset(asset.assetSource, asset.identifier)
+          await importProxyAsset(asset.assetSourceId, asset.id)
           toast.success(t('media.assetImported', 'Asset imported to Neos.'))
         } catch (e) {
           toast.error(e, {

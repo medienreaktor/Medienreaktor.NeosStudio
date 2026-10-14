@@ -6,7 +6,7 @@ import { translate as t } from '@/lib/i18n'
 
 /**
  * The role picker of the user dialogs: one checkbox per assignable role from
- * /users/roles (admin-gated, like everything around it). Roles listed in
+ * /options/users (admin-gated, like everything around it). Roles listed in
  * lockedRoles render disabled - used to pin the own Administrator role, which
  * the server refuses to drop anyway (self-lockout guard).
  */

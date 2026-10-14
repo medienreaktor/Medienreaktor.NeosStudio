@@ -1,6 +1,6 @@
 import {
-  fetchWorkspaceEvents,
-  sendPresenceHeartbeat,
+  fetchWorkspaceFeedBaseline,
+  pollWorkspaceFeed,
 } from '@/api/collaboration'
 import type {
   CollaborationPosition,
@@ -8,78 +8,64 @@ import type {
   TransportCallbacks,
 } from './transport'
 
-/** Presence heartbeat cadence; the server keeps a beat alive for 30s. */
-const PRESENCE_INTERVAL_MS = 5_000
 /** Change-feed poll cadence - the perceived latency of remote edits. */
 const EVENTS_INTERVAL_MS = 2_000
 
 /**
- * The plain-HTTP transport: heartbeats presence and tails the workspace
- * change feed on intervals. Requires nothing but the API itself - the
- * default, and the automatic fallback while the realtime sidecar (see
- * websocketTransport) is unreachable.
+ * The plain-HTTP transport: tails the workspace's events in Neos.Api on an
+ * interval. Requires nothing but the API itself - the default, and the
+ * automatic fallback while the realtime sidecar (see websocketTransport) is
+ * unreachable.
+ *
+ * Presence is NOT available here: it lives in the sidecar only (an HTTP
+ * presence endpoint no longer exists). The transport reports an empty
+ * roster once, so a roster left over from a dropped socket does not linger.
  */
 export function startPollingTransport(
   workspaceName: string,
-  initialPosition: CollaborationPosition,
+  _initialPosition: CollaborationPosition,
   callbacks: TransportCallbacks,
 ): CollaborationTransport {
   let disposed = false
-  let position = initialPosition
 
-  // --- Presence ------------------------------------------------------------
-  // Deliberately WITHOUT the editingElement claim: edit locks are a Studio/
-  // sidecar concept, not an API one - the REST API carries plain presence
-  // only. No sidecar means no locks, and that is by design.
-  const beat = () => {
-    sendPresenceHeartbeat(workspaceName, {
-      documentAggregateId: position.documentAggregateId,
-      focusedAggregateId: position.focusedAggregateId,
-      dimensionSpacePoint: position.dimensionSpacePoint,
-    })
-      .then((response) => {
-        if (disposed) return
-        callbacks.onRoster(response.users, response.you)
-      })
-      .catch(() => {
-        /* a missed beat self-heals on the next interval */
-      })
-  }
-  beat()
-  let presenceTimer = setInterval(beat, PRESENCE_INTERVAL_MS)
+  callbacks.onRoster([], null)
 
   // --- Change feed -----------------------------------------------------------
   let inFlight = false
-  let cursor: { stream: string; since: number } | null = null
+  // null = no position yet: the next tick takes the baseline.
+  let cursor: { stream: string; after: number } | null = null
 
   const poll = async () => {
     if (inFlight) return
     inFlight = true
     try {
-      const response = await fetchWorkspaceEvents(workspaceName, cursor)
-      if (disposed) return
       if (cursor === null) {
-        // Baseline: adopt the current position, nothing to replay.
-        cursor = {
-          stream: response.contentStreamId,
-          since: response.sequenceNumber,
+        // Baseline: adopt the current position, nothing to replay. A stream
+        // without a visible event yet has no position - baseline again.
+        const baseline = await fetchWorkspaceFeedBaseline(workspaceName)
+        if (disposed) return
+        if (baseline.after !== null) {
+          cursor = { stream: baseline.stream, after: baseline.after }
         }
         return
       }
-      if (
-        response.reset ||
-        response.truncated ||
-        response.contentStreamId !== cursor.stream
-      ) {
-        cursor = {
-          stream: response.contentStreamId,
-          since: response.sequenceNumber,
-        }
+      const result = await pollWorkspaceFeed(workspaceName, cursor)
+      if (disposed) return
+      if (result.status === 'reset') {
+        // The workspace moved to a different content stream (publish/
+        // discard/rebase): its content changed wholesale. Re-baseline.
+        cursor = null
         callbacks.onWorkspaceChanged()
         return
       }
-      cursor.since = response.sequenceNumber
-      if (response.events.length > 0) callbacks.onEvents(response.events)
+      cursor = { stream: result.stream, after: result.after }
+      if (result.truncated) {
+        // More happened than one page describes - refresh wholesale and
+        // continue from the end of this page.
+        callbacks.onWorkspaceChanged()
+        return
+      }
+      if (result.events.length > 0) callbacks.onEvents(result.events)
     } catch {
       /* offline / a hiccup - the next poll retries with the same cursor */
     } finally {
@@ -91,24 +77,12 @@ export function startPollingTransport(
   const eventsTimer = setInterval(() => void poll(), EVENTS_INTERVAL_MS)
 
   return {
-    updatePosition(next) {
-      position = next
-      // Beat out-of-band so colleagues' indicators follow within one feed
-      // cycle instead of one interval; restart the timer so the next regular
-      // beat is a full period away.
-      clearInterval(presenceTimer)
-      beat()
-      presenceTimer = setInterval(beat, PRESENCE_INTERVAL_MS)
+    updatePosition() {
+      // No presence over HTTP - positions only travel through the sidecar.
     },
     stop() {
       disposed = true
-      clearInterval(presenceTimer)
       clearInterval(eventsTimer)
-      // Leaving the session (or the app): drop the own entry right away so
-      // colleagues do not see a ghost for the remaining TTL.
-      void sendPresenceHeartbeat(workspaceName, { leave: true }).catch(() => {
-        /* the entry expires on its own */
-      })
     },
   }
 }

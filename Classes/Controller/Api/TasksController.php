@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
-use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
-use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
+use Medienreaktor\NeosStudio\Service\WorkspaceSerializer;
 use Medienreaktor\NeosStudio\Domain\Model\TaskComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
@@ -19,13 +18,13 @@ use Neos\Neos\Domain\Model\WorkspaceTitle;
 use Neos\Neos\Domain\Service\UserService;
 
 /**
- * The task-workflow REST API, layered on the NeosApi conventions: same base
+ * The task-workflow REST API, layered on the Studio API conventions: same base
  * controller, same OAuth bearer firewall (request pattern in Settings.yaml),
  * same scope semantics (read/write/publish), plus per-workspace permission
  * checks - the roles a task workspace got at creation (creator: MANAGER,
  * reviewers: MANAGER, assignee: COLLABORATOR) directly drive who may do what.
  */
-class TasksController extends AbstractApiController
+class TasksController extends AbstractStudioApiController
 {
     #[Flow\Inject]
     protected TaskWorkspaceService $taskWorkspaceService;
@@ -41,7 +40,7 @@ class TasksController extends AbstractApiController
      */
     public function indexAction(): string
     {
-        $this->requireScope('neos.read');
+        $this->requireScope(self::SCOPE_READ);
         $commentCounts = $this->taskWorkspaceService->getCommentCounts($this->getContentRepositoryId());
         $tasks = [];
         foreach ($this->taskWorkspaceService->findAllTasks($this->getContentRepositoryId()) as $task) {
@@ -57,7 +56,7 @@ class TasksController extends AbstractApiController
     /**
      * POST /api/tasks
      *
-     * Note: like all unsafe NeosApi-style endpoints, the write actions skip
+     * Note: like all unsafe bearer-token endpoints, the write actions skip
      * Flow's CSRF check - authorization comes from the bearer token, not the
      * (same-origin) backend session cookie that would otherwise trigger it.
      */
@@ -68,7 +67,7 @@ class TasksController extends AbstractApiController
         string $baseWorkspace = 'live',
         ?string $assignee = null,
     ): string {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
 
         if (trim($title) === '') {
@@ -95,7 +94,7 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function assignAction(string $workspaceName, ?string $assignee = null): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -118,7 +117,7 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function submitAction(string $workspaceName, string $comment = ''): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -136,7 +135,7 @@ class TasksController extends AbstractApiController
      */
     public function commentsAction(string $workspaceName): string
     {
-        $this->requireScope('neos.read');
+        $this->requireScope(self::SCOPE_READ);
         $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -156,7 +155,7 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function addCommentAction(string $workspaceName, string $text = ''): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -180,7 +179,7 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function approveAction(string $workspaceName): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -201,7 +200,7 @@ class TasksController extends AbstractApiController
         string $title,
         string $description = '',
     ): string {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -226,7 +225,7 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function reopenAction(string $workspaceName, string $reason = ''): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);
@@ -244,7 +243,7 @@ class TasksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function deleteAction(string $workspaceName): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $this->requireUser();
         $name = $this->parseWorkspaceName($workspaceName);
         $this->requireTask($name);

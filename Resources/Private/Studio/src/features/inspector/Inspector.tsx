@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { dimensionSpacePointLabel, useDimensions } from '@/api/dimensions'
-import type { NodeDto, SerializedPropertyValue } from '@/api/nodes'
+import type { NodeDto } from '@/api/nodes'
 import {
   DOCUMENT_NODE_TYPE,
   isDeleted,
@@ -75,16 +75,9 @@ function referenceTargets(value: unknown): string[] {
  * node.properties; _hidden and _nodeType are pseudo-properties synthesized from
  * the node's tags and type, since they have no property value of their own.
  */
-function propertyValue(
-  node: NodeDto,
-  name: string,
-): SerializedPropertyValue | undefined {
-  if (name === HIDDEN_PROPERTY) {
-    return { value: node.tags.all.includes('disabled'), type: 'boolean' }
-  }
-  if (name === NODE_TYPE_PROPERTY) {
-    return { value: node.nodeType, type: 'string' }
-  }
+function propertyValue(node: NodeDto, name: string): unknown {
+  if (name === HIDDEN_PROPERTY) return node.tags.all.includes('disabled')
+  if (name === NODE_TYPE_PROPERTY) return node.nodeType
   return node.properties[name]
 }
 
@@ -206,7 +199,7 @@ export function InspectorPanel({
       }
       const value = hasLiveValue
         ? transientValues[property.name]
-        : propertyValue(node, property.name)?.value
+        : propertyValue(node, property.name)
       const propertyErrors = validateValue(value, property.validation)
       if (propertyErrors.length > 0) errors[property.name] = propertyErrors
     }

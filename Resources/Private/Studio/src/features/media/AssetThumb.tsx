@@ -4,10 +4,10 @@ import type { AssetType, MediaAsset } from '@/api/media'
 import { cn } from '@/lib/utils'
 
 const TYPE_ICON: Record<AssetType, string> = {
-  Image: 'fa-file',
-  Document: 'fa-file-lines',
-  Video: 'fa-film',
-  Audio: 'fa-music',
+  image: 'fa-file',
+  document: 'fa-file-lines',
+  video: 'fa-film',
+  audio: 'fa-music',
 }
 
 /**
@@ -28,7 +28,7 @@ export function AssetThumb({
     : (asset.thumbnailUri ?? asset.previewUri)
   // Keyed to the URI, not a boolean, so a replaced image fades in again.
   const [loadedUri, setLoadedUri] = useState<string | null>(null)
-  if (asset.assetType === 'Image' && uri) {
+  if (asset.assetType === 'image' && uri) {
     return (
       <img
         src={uri}
@@ -52,7 +52,12 @@ export function AssetThumb({
   const iconClass = TYPE_ICON[asset.assetType] ?? 'fa-file'
   return (
     <i
-      className={cn('fas', iconClass, 'text-[2.5rem] text-neutral-400 dark:text-neutral-600', className)}
+      className={cn(
+        'fas',
+        iconClass,
+        'text-[2.5rem] text-neutral-400 dark:text-neutral-600',
+        className,
+      )}
       aria-hidden
     />
   )

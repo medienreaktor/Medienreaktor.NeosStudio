@@ -23,9 +23,10 @@ export interface CollaborationPosition {
  */
 export interface TransportCallbacks {
   /**
-   * The full presence roster of the workspace. `you` is the own user id when
-   * the server stamped it (the polling heartbeat answers with it); null when
-   * the transport does not know (the bridge falls back to /me's id).
+   * The full presence roster of the workspace (the sidecar's; the polling
+   * transport has no presence and reports an empty roster). `you` is the own
+   * user id when the transport knows it; null makes the bridge fall back to
+   * /me's id.
    */
   onRoster: (users: PresenceUser[], you: string | null) => void
   /** A batch of new feed events, oldest first. */

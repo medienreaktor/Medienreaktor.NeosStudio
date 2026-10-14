@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { ApiError } from '@/api/client'
 import {
   changeBaseWorkspace,
   discardWorkspace,
   getRebaseConflicts,
+  isWorkspaceNotEmptyError,
   rebaseWorkspace,
   type RebaseConflicts,
 } from '@/api/workspaces'
@@ -92,11 +92,7 @@ export function useWorkspaceSync() {
       toast.success(t('workspace.baseChanged', 'Base workspace changed.'))
     },
     onError: (error) => {
-      const notEmpty =
-        error instanceof ApiError &&
-        error.status === 409 &&
-        (error.body as { error?: string } | null)?.error ===
-          'workspace_not_empty'
+      const notEmpty = isWorkspaceNotEmptyError(error)
       toast.error(
         notEmpty
           ? t(

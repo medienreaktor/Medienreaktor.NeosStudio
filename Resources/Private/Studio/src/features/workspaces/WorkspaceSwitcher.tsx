@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { ApiError, apiErrorDescription } from '@/api/client'
+import { apiErrorDescription } from '@/api/client'
 import { taskOf, transitionTask, type TaskStatus } from '@/api/tasks'
 import {
   changeBaseWorkspace,
+  isWorkspaceNotEmptyError,
   useWorkspaces,
   type Workspace,
 } from '@/api/workspaces'
@@ -144,10 +145,7 @@ export function WorkspaceSwitcher({
     onError: (error) => {
       // The CR refuses the rebase while the personal workspace still has
       // publishable changes — guide the user to clear them first.
-      const notEmpty =
-        error instanceof ApiError &&
-        (error.body as { error?: string } | null)?.error ===
-          'workspace_not_empty'
+      const notEmpty = isWorkspaceNotEmptyError(error)
       toast.error(
         notEmpty
           ? t(

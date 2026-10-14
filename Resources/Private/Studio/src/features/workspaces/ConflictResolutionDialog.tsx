@@ -1,4 +1,4 @@
-import type { RebaseConflict } from '@/api/workspaces'
+import { useConflictDetails, type RebaseConflict } from '@/api/workspaces'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -59,7 +59,8 @@ function reasonText(conflict: RebaseConflict): string {
  */
 export function ConflictResolutionDialog({
   open,
-  conflicts,
+  workspaceName,
+  conflicts: reportedConflicts,
   partial,
   busy,
   onCancel,
@@ -68,6 +69,11 @@ export function ConflictResolutionDialog({
   onNavigate,
 }: {
   open: boolean
+  /**
+   * The workspace the conflicts belong to - its nodes are looked up to name
+   * the conflicts (Neos.Api reports them by id only).
+   */
+  workspaceName: string | null
   conflicts: RebaseConflict[]
   /** True for partial_publish_conflicts, where forcing is not a valid remedy. */
   partial: boolean
@@ -77,6 +83,10 @@ export function ConflictResolutionDialog({
   onDiscardAll?: () => void
   onNavigate?: (documentAddress: string) => void
 }) {
+  const conflicts = useConflictDetails(
+    open ? workspaceName : null,
+    reportedConflicts,
+  )
   return (
     <Dialog open={open} onOpenChange={(next) => !next && !busy && onCancel()}>
       <DialogContent size="lg">

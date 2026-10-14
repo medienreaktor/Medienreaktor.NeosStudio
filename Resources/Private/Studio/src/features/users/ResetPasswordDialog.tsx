@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
-import { updateUser, type User } from '@/api/users'
+import { setUserPassword, type User } from '@/api/users'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -44,11 +44,11 @@ export function ResetPasswordDialog({
   const canSubmit = password !== '' && password === confirmPassword
 
   const mutation = useMutation({
-    mutationFn: () => updateUser(user!.id, { password }),
-    onSuccess: (response) => {
+    mutationFn: () => setUserPassword(user!.id, password),
+    onSuccess: () => {
       toast.success(
         t('users.passwordReset', 'The password of "{0}" has been reset.', [
-          response.user.label,
+          user?.label ?? '',
         ]),
       )
       onOpenChange(false)
@@ -57,7 +57,10 @@ export function ResetPasswordDialog({
       toast.error(
         apiErrorDescription(
           error,
-          t('users.passwordResetFailedDetail', 'Resetting the password failed.'),
+          t(
+            'users.passwordResetFailedDetail',
+            'Resetting the password failed.',
+          ),
         ),
         { title: t('users.passwordResetFailed', 'Could not reset password') },
       ),

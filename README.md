@@ -4,7 +4,7 @@
 
 **A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.** Built from scratch on a clean HTTP API — fully independent of `Neos.Neos.Ui`, free to make its own architectural choices. This is what content editing in Neos can feel like: instant, fluid, together with your team, and open for extension from day one.
 
-Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi) — a unified OAuth-secured REST API over the Event-Sourced Content Repository. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
+Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Neos.Api](https://github.com/danielkestler/Neos.Api) — the OAuth-secured HTTP API (OpenAPI-described, secured by Neos.OAuth) over the Event-Sourced Content Repository — plus a few Studio-specific endpoints of its own below `/neos/studio/api`. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
 
 > **Why a new UI?** The classic Neos UI is a great piece of engineering that has served editors well for years — and Studio owes a lot to the ideas it pioneered. But some of its 2016-era architectural constraints are hard to move past today: the plugin API ties extensions to React 16, and the internal wire protocol was never designed as a public contract. Neos Studio starts from a different premise: an API-first backend, a lean modern frontend, and extensibility through observable registries that _are_ the public contract. It grows alongside the classic UI, adopting editing surfaces one at a time.
 
@@ -39,9 +39,9 @@ Dynamic, editable **access roles**: name a set of restrictions and assign editor
 - **Four axes, one role**: which **sites**, which branches of the **document tree**, which **dimensions**, which **workspaces** (live included — "may edit the draft but not publish to live" is one unticked box) — plus the coarse capabilities (edit, create, delete, move) a role may exercise inside them.
 - **Pick branches from the tree**: the Documents tab browses the real document tree; select a page, then allow or deny it, with or without its sub-pages. Allow rules turn the tree into a whitelist, deny rules cut single pages back out — the rule nearest a page wins, so "the whole section except this one page" is two clicks.
 - **Permissive by default, at every turn**: a fresh role restricts nothing, an empty list means "all", and a user with **no role assigned is unrestricted** — installing this changes nothing until an administrator hands a role out. Administrators are exempt by design, so a role can never lock the last admin out.
-- **Additive, but never a mash-up**: assign someone two roles and they may do what either allows — evaluated *per role*, so one role must cover the whole operation. "May edit the draft" plus "may read live" never combines into writing on live. Never the intersection, never a surprise.
-- **Doomed gestures never start**: every surface asks *before* offering. A page outside the roles renders as a plain read-only preview with the inspector disarmed (and a notice naming who can widen the role); a withheld capability greys out exactly its actions — context menus, drag & drop, the creation palette and the New-page button, action by action; a dimension value the roles block shows a lock and a tooltip instead of posing as a configuration gap. And if a role change mid-session drops the workspace someone is standing in, a blocking dialog moves them to a permitted one instead of letting the saves fail one by one.
-- **Enforced, not just drawn**: the roles narrow the Studio's UI *and* the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. Node listings and document search are filtered **server-side** as well, so a hidden page never leaks through a search hit — while unrestricted accounts (which is nearly everyone) skip the filter entirely and pay nothing. It only ever *narrows* Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
+- **Additive, but never a mash-up**: assign someone two roles and they may do what either allows — evaluated _per role_, so one role must cover the whole operation. "May edit the draft" plus "may read live" never combines into writing on live. Never the intersection, never a surprise.
+- **Doomed gestures never start**: every surface asks _before_ offering. A page outside the roles renders as a plain read-only preview with the inspector disarmed (and a notice naming who can widen the role); a withheld capability greys out exactly its actions — context menus, drag & drop, the creation palette and the New-page button, action by action; a dimension value the roles block shows a lock and a tooltip instead of posing as a configuration gap. And if a role change mid-session drops the workspace someone is standing in, a blocking dialog moves them to a permitted one instead of letting the saves fail one by one.
+- **Enforced, not just drawn**: the roles narrow the Studio's UI _and_ the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. Node listings and document search are filtered **server-side** as well, so a hidden page never leaks through a search hit — while unrestricted accounts (which is nearly everyone) skip the filter entirely and pay nothing. It only ever _narrows_ Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
 - **The tree shows the role, not the site**: only the granted branches and the path down to them appear. The ancestors on that path render dimmed with a lock badge — signposts, not workspaces — and everything else is gone from the tree entirely. The path is resolved server-side per request, so moving a page never strands the branch below it.
 
 ### ⚡ Blazingly fast, everywhere
@@ -107,18 +107,21 @@ Third-party packages ship a small IIFE bundle that binds to the shell's public p
 
 ## The package family
 
-| Package                                                                                                             | What it is                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Medienreaktor.NeosApi](https://github.com/medienreaktor/Medienreaktor.NeosApi)                                     | The foundation: OAuth 2.1 (PKCE, refresh token rotation, client credentials, dynamic registration), a read API over the ContentGraph, a write API for CR commands with batching and idempotency, workspace publishing, media API, data sources. Feature-based endpoint policy per role, structural content authorization through the CR itself. Useful far beyond Studio — for integrations, importers and MCP servers. |
-| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API.                                                                                                                                                                                                                                                                                                                                                                                       |
-| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                                                                                                                                                                                     |
+| Package                                                                                                             | What it is                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Neos.Api](https://github.com/danielkestler/Neos.Api) + [Neos.OAuth](https://github.com/danielkestler/Neos.OAuth)   | The foundation: the HTTP API for Neos 9 (nodes, workspaces, media, users, sites, views, data sources), described with OpenAPI and secured with OAuth 2 (authorization code + PKCE, refresh token rotation, scopes narrowing the account's privileges). |
+| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API, plus its own endpoints (tasks, notifications, access roles, preview links, review and history read models, the realtime feed).                                                                                       |
+| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                    |
 
 ## Getting started
 
-Requires Neos `^9.1`, PHP `^8.2` and Node 22 (pinned via `.nvmrc`) for building the frontend.
+Requires Neos `^9.2`, PHP `^8.4` and Node 22 (pinned via `.nvmrc`) for building the frontend.
 
 ```sh
-composer require medienreaktor/neos-api medienreaktor/neos-studio
+composer require neos/api neos/oauth medienreaktor/neos-studio
+
+# create the Neos.OAuth tables
+./flow doctrine:migrate
 
 # build the SPA
 cd DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio
@@ -135,19 +138,19 @@ Open `/neos/studio` and log in with your Neos backend account. That's it — Stu
 
 ## The realtime sidecar (optional)
 
-Multiplayer needs no extra infrastructure — but it can use some. `Resources/Private/Realtime/` ships a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus) WebSocket server that upgrades Studio's collaboration transport from HTTP polling to push. Without it, everything keeps working: collaboration falls back to plain HTTP polling against the Neos API (2s change feed, 5s presence heartbeat). The fallback is also automatic at runtime — while the sidecar is unreachable, connected Studios poll; when it comes back, they stop.
+Multiplayer needs no extra infrastructure — but it can use some. `Resources/Private/Realtime/` ships a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus) WebSocket server that upgrades Studio's collaboration transport from HTTP polling to push. Without it, everything keeps working: collaboration falls back to plain HTTP polling of the workspace's events in Neos.Api (2s change feed; presence - who else is in the workspace - is only available through the sidecar). The fallback is also automatic at runtime — while the sidecar is unreachable, connected Studios poll; when it comes back, they stop.
 
 One WebSocket per editing session (document name `workspace:<name>`):
 
 - **Presence** — clients announce their position as stateless messages; the sidecar keeps a server-authoritative roster per workspace (identity comes from the validated token, never from the client) and broadcasts changes instantly. No heartbeats, no TTL ghosts: a closed tab leaves with its connection.
-- **Change feed** — the sidecar tails each active workspace's event feed once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/api/realtime/workspaces/{name}/events`) and fans new events out to every editor. That replaces one API poll _per editor_ per 2s with one poll _per workspace_, and remote edits reach colleagues in well under a second.
+- **Change feed** — the sidecar tails each active workspace's event feed once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/neos/studio/api/realtime/workspaces/{name}/events`) and fans new events out to every editor. That replaces one API poll _per editor_ per 2s with one poll _per workspace_, and remote edits reach colleagues in well under a second.
 - **Yjs seam** — the (currently unused) Yjs document behind each connection is where collaborative text editing attaches later, without a new connection concept.
 
 ### Authentication
 
 Two credentials, deliberately separate:
 
-- Every **client connection** authenticates with the editor's own OAuth bearer token. The sidecar validates it against the user-scoped API (a baseline read of `/api/workspaces/{name}/events` proves the token is alive AND the user may read that workspace) and resolves identity via `/api/me`.
+- Every **client connection** authenticates with the editor's own OAuth bearer token. The sidecar validates it against Neos.Api (a read of `/api/cr/{contentRepository}/workspaces/{name}` proves the token is alive AND the user may read that workspace - an unreadable one is a 404) and resolves identity via `/api/me`.
 - The sidecar's own **feed reads** authenticate with a shared secret (`X-Realtime-Secret`), configured on both sides: `Medienreaktor.NeosStudio.realtime.sharedSecret` (Neos) and `REALTIME_SHARED_SECRET` (sidecar). While the Neos-side secret is empty, the server-to-server endpoint answers 404 — an unconfigured installation exposes nothing.
 
 ### Running
@@ -158,13 +161,14 @@ npm install
 REALTIME_SHARED_SECRET=... NEOS_BASE_URL=https://your-site npm start
 ```
 
-| Variable                 | Default                 | Purpose                                                     |
-| ------------------------ | ----------------------- | ----------------------------------------------------------- |
-| `PORT`                   | `1234`                  | Listen port                                                 |
-| `NEOS_BASE_URL`          | `http://127.0.0.1:8080` | Base URL of the Neos installation                           |
-| `NEOS_HOST_HEADER`       | _(none)_                | Host header override for internal hostnames                 |
-| `REALTIME_SHARED_SECRET` | _(required)_            | Must equal `Medienreaktor.NeosStudio.realtime.sharedSecret` |
-| `FEED_INTERVAL_MS`       | `1000`                  | Feed tail cadence per active workspace                      |
+| Variable                  | Default                 | Purpose                                                     |
+| ------------------------- | ----------------------- | ----------------------------------------------------------- |
+| `PORT`                    | `1234`                  | Listen port                                                 |
+| `NEOS_BASE_URL`           | `http://127.0.0.1:8080` | Base URL of the Neos installation                           |
+| `NEOS_HOST_HEADER`        | _(none)_                | Host header override for internal hostnames                 |
+| `NEOS_CONTENT_REPOSITORY` | `default`               | Must equal `Medienreaktor.NeosStudio.contentRepository`     |
+| `REALTIME_SHARED_SECRET`  | _(required)_            | Must equal `Medienreaktor.NeosStudio.realtime.sharedSecret` |
+| `FEED_INTERVAL_MS`        | `1000`                  | Feed tail cadence per active workspace                      |
 
 Then point the Studio at it:
 

@@ -543,6 +543,7 @@ export function WorkspaceGraphPanel() {
           )}
           <ConflictResolutionDialog
             open={conflicts !== null}
+            workspaceName={conflicts?.workspaceName ?? null}
             conflicts={conflicts?.conflicts ?? []}
             partial={conflicts?.code === 'partial_publish_conflicts'}
             busy={busy}

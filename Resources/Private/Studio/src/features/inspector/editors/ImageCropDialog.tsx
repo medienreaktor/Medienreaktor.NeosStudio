@@ -168,7 +168,7 @@ export function ImageCropDialog({
     )
     // Re-run when a different image is loaded into the dialog.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, original?.identifier, dimsKnown])
+  }, [open, original?.id, dimsKnown])
 
   function selectRatio(value: string) {
     setSelected(value)
@@ -192,7 +192,7 @@ export function ImageCropDialog({
     }
     setBusy(true)
     try {
-      const originalId = original.localAssetIdentifier ?? original.identifier
+      const originalId = original.localAssetId ?? original.id
       const variant = await createImageVariant(originalId, pixels)
       onApply(variant)
       onOpenChange(false)

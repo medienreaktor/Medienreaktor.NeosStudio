@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from './client'
 import { queryKeys } from './keys'
+import { decodeNodeAddress } from './nodeAddress'
 
 /**
  * Neos data sources: server-side DataSourceInterface implementations that
- * populate select-box style editors, invoked through /api/data-sources/{id}.
- * The endpoint forwards every extra query parameter to the data source as its
- * $arguments array (the editorOptions.dataSourceAdditionalData contract) and
- * wraps the raw getData() return value in a {"data": ...} envelope.
+ * populate select-box style editors, invoked through Neos.Api's
+ * /datasources/{id}. The arguments[...] query parameters become the data
+ * source's $arguments (the editorOptions.dataSourceAdditionalData contract),
+ * the node parameters its $node; the raw getData() return value comes back in
+ * a {"data": ...} envelope.
  */
 
 /** Flatten a value into PHP-parseable query params (bracket notation for nesting). */
@@ -61,13 +63,22 @@ export function useDataSource({
     ),
     queryFn: async () => {
       const search = new URLSearchParams()
-      if (nodeAddress) search.set('node', nodeAddress)
       for (const [key, value] of Object.entries(additionalData ?? {})) {
-        appendParam(search, key, value)
+        appendParam(search, `arguments[${key}]`, value)
+      }
+      if (nodeAddress) {
+        const node = decodeNodeAddress(nodeAddress)
+        search.set('contentRepositoryId', node.contentRepositoryId)
+        search.set('nodeAggregateId', node.aggregateId)
+        search.set('workspaceName', node.workspaceName)
+        search.set(
+          'dimensionSpacePoint',
+          JSON.stringify(node.dimensionSpacePoint),
+        )
       }
       const query = search.toString()
       const response = await apiFetch<{ data: unknown }>(
-        `/data-sources/${encodeURIComponent(identifier ?? '')}${query ? `?${query}` : ''}`,
+        `/datasources/${encodeURIComponent(identifier ?? '')}${query ? `?${query}` : ''}`,
       )
       return response.data
     },

@@ -13,7 +13,12 @@ export interface StudioConfig {
   clientId: string
   authorizeEndpoint: string
   tokenEndpoint: string
+  /** Neos.Api (content, workspaces, media, users, sites). */
   apiBase: string
+  /** The Studio's own endpoints (tasks, notifications, access, review, history). */
+  studioApiBase: string
+  /** The content repository the Studio edits (Neos.Api: /cr/{id}/...). */
+  contentRepositoryId: string
   /** Endpoint of the Studio's own preview action (session-authenticated). */
   previewBase: string
   redirectUri: string
@@ -24,6 +29,11 @@ export interface StudioConfig {
   structureTree: { loadingDepth: number }
   /** The backend user's interface language preference (e.g. "en", "de"). */
   interfaceLanguage: string
+  /**
+   * The interface languages the profile settings offer, in configuration
+   * order (Neos.Neos.userInterface.availableLanguages).
+   */
+  availableLanguages: Array<{ value: string; label: string }>
   /**
    * The backend user's UI mode preference; applied before mount so the shell
    * never flashes the wrong theme. Dark is the Studio default.
@@ -70,12 +80,17 @@ const fallback: StudioConfig = {
   authorizeEndpoint: '/oauth/authorize',
   tokenEndpoint: '/oauth/token',
   apiBase: '/api',
+  studioApiBase: '/neos/studio/api',
+  contentRepositoryId: 'default',
   previewBase: '/neos/studio/preview',
   redirectUri: window.location.origin + '/neos/studio',
-  scopes: 'neos.read neos.write neos.publish neos.media',
+  // The real list (every Neos.Api scope plus studio.*) comes from the
+  // StudioController; this fallback only covers the shell's own endpoints.
+  scopes: 'studio.read studio.write',
   nodeTree: { loadingDepth: 4 },
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',
+  availableLanguages: [{ value: 'en', label: 'English' }],
   uiMode: 'dark',
   publishCelebration: true,
   xliffEndpoint: '/neos/xliff.json',

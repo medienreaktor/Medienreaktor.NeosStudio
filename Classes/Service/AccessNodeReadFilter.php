@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Service;
 
-use Medienreaktor\NeosApi\Service\NodeReadFilterInterface;
-use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\Api\Extension\NodeReadFilter;
+use Neos\Api\Security\ApiCaller;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Nodes;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 
 /**
@@ -23,23 +25,26 @@ use Neos\Flow\Annotations as Flow;
  * the Studio renders them dimmed and locked. Dropping them would strand the
  * granted branch below with no path to it.
  *
- * Registered through Medienreaktor.NeosApi.nodeReadFilters, so the API never
- * learns what an access role is - the same seam the workspace data enrichers
- * use.
+ * Registered through Neos.Api.nodeReadFilters, so the API never learns what
+ * an access role is. Neos.Api applies it to listNodes only (trees, search);
+ * single reads stay unfiltered, as before.
+ *
+ * The access is the current user's: on an API request the bearer token is the
+ * only authenticated token, so that is the caller's account.
  */
 #[Flow\Scope('singleton')]
-class AccessNodeReadFilter implements NodeReadFilterInterface
+class AccessNodeReadFilter implements NodeReadFilter
 {
     #[Flow\Inject]
     protected AccessControlService $accessControlService;
 
-    /**
-     * @param array<int, Node> $nodes
-     * @return array<int, Node>
-     */
-    public function filterReadableNodes(array $nodes, ContentSubgraphInterface $subgraph): array
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
+
+    public function filter(Nodes $nodes, ApiCaller $caller): Nodes
     {
-        if ($nodes === []) {
+        $first = $nodes->first();
+        if ($first === null) {
             return $nodes;
         }
         $access = $this->accessControlService->effectiveAccessForCurrentUser();
@@ -52,10 +57,11 @@ class AccessNodeReadFilter implements NodeReadFilterInterface
             return $nodes;
         }
 
+        // A listing is read from one subgraph, so every node shares it.
+        $subgraph = $this->contentRepositoryRegistry->subgraphForNode($first);
         $anchors = $this->accessControlService->pathAnchorsFor($access, $subgraph);
 
-        return array_values(array_filter(
-            $nodes,
+        return $nodes->filter(
             function (Node $node) use ($access, $subgraph, $anchors): bool {
                 // The node is passed along so the resolver does not have to
                 // look up what the caller already holds.
@@ -68,6 +74,6 @@ class AccessNodeReadFilter implements NodeReadFilterInterface
 
                 return $access->nodeVisibility($idPath, $siteNodeName, $anchors) !== 'hidden';
             }
-        ));
+        );
     }
 }

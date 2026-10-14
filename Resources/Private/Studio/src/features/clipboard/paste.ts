@@ -1,19 +1,17 @@
-import { executeCommands } from '@/api/commands'
+import { copyNode, runSequentially } from '@/api/commands'
 import { queryKeys } from '@/api/keys'
-import { addressWithAggregateId, decodeNodeAddress } from '@/api/nodeAddress'
 import { fetchChildren } from '@/api/nodes'
 import { queryClient } from '@/app/queryClient'
 import { moveNodesByAddress } from '@/features/editing/nodeActions'
 import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
 
 /**
- * Pasting the clipboard: a cut entry moves its nodes (MoveNodeAggregate, same
- * as tree drag-and-drop), a copied entry duplicates them recursively via the
- * synthetic CopyNodesRecursively command - same /commands envelope as every
- * other write; the backend dispatches it to the NodeDuplicationService since
- * Neos 9 has no CR copy command. A group entry (multi-selection capture) is
- * pasted in one batch: each node inserted before the same succeeding sibling,
- * in order, so the group keeps its relative order at the target.
+ * Pasting the clipboard: a cut entry moves its nodes (same as tree
+ * drag-and-drop), a copied entry duplicates them recursively (the server runs
+ * Neos' NodeDuplicationService - Neos 9 has no CR copy command). A group
+ * entry (multi-selection capture) is pasted node by node: each inserted
+ * before the same succeeding sibling, in order, so the group keeps its
+ * relative order at the target.
  */
 
 export interface PasteResult {
@@ -61,49 +59,31 @@ export async function pasteClipboardEntry(
 }
 
 /**
- * Recursively copy nodes via the synthetic CopyNodesRecursively command and
- * return the copies' addresses. Like createNode, each copy root's aggregate
- * id is generated client-side (pinned through nodeAggregateIdMapping), so
- * the addresses are known without a response field. All copies go before the
- * same succeeding sibling in one batch, so they land in source order.
+ * Recursively copy nodes, one after the other, and return the copies'
+ * addresses. All copies go before the same succeeding sibling, so they land
+ * in source order; each copy originates in the target parent's (viewed)
+ * dimension space point.
  */
 async function copyNodes(
   sourceAddresses: string[],
   targetParentAddress: string,
   targetSucceedingSiblingAddress: string | null,
 ): Promise<string[]> {
-  const targetParent = decodeNodeAddress(targetParentAddress)
-  const newAggregateIds = sourceAddresses.map(() => crypto.randomUUID())
-  await executeCommands(
-    sourceAddresses.map((sourceAddress, index) => {
-      const source = decodeNodeAddress(sourceAddress)
-      return {
-        type: 'CopyNodesRecursively',
-        payload: {
-          workspaceName: targetParent.workspaceName,
-          sourceDimensionSpacePoint: source.dimensionSpacePoint,
-          sourceNodeAggregateId: source.aggregateId,
-          // The copy materializes in the viewed (target) dimension.
-          targetDimensionSpacePoint: targetParent.dimensionSpacePoint,
-          targetParentNodeAggregateId: targetParent.aggregateId,
-          targetSucceedingSiblingNodeAggregateId:
-            targetSucceedingSiblingAddress !== null
-              ? decodeNodeAddress(targetSucceedingSiblingAddress).aggregateId
-              : null,
-          nodeAggregateIdMapping: {
-            [source.aggregateId]: newAggregateIds[index],
-          },
-        },
-      }
-    }),
-  )
-  // The target's children changed - drop all node reads (children lists are
-  // keyed under nodes) and refresh the pending-changes badges.
-  await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-  void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-  return newAggregateIds.map((id) =>
-    addressWithAggregateId(targetParentAddress, id),
-  )
+  try {
+    const copies = await runSequentially(sourceAddresses, (sourceAddress) =>
+      copyNode(
+        sourceAddress,
+        targetParentAddress,
+        targetSucceedingSiblingAddress,
+      ),
+    )
+    return copies.map((copy) => copy.address)
+  } finally {
+    // The target's children changed - drop all node reads (children lists
+    // are keyed under nodes) and refresh the pending-changes badges.
+    await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+  }
 }
 
 /**

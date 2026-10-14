@@ -38,7 +38,7 @@ import {
   subscribeRemoteLiveEdits,
 } from '@/features/collaboration/liveEdits'
 import { useAssetPicker } from '@/features/media/AssetPicker'
-import { imageReference, localIdentifierFor } from '@/api/assetValue'
+import { assetReference, localAssetIdFor } from '@/api/assetValue'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 import {
@@ -503,9 +503,9 @@ export function PreviewPane({
           requestPickRef.current({
             title: property,
             onPick: (asset) => {
-              localIdentifierFor(asset)
+              localAssetIdFor(asset)
                 .then((id) =>
-                  persistPropertyChange(address, property, imageReference(id)),
+                  persistPropertyChange(address, property, assetReference(id)),
                 )
                 .then(() => {
                   setReloadCount((count) => count + 1)

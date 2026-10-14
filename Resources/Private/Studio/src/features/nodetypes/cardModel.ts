@@ -4,7 +4,6 @@ import {
   type NodeTypeWithPropertiesMap,
 } from '@/api/nodeTypes'
 import { DOCUMENT_NODE_TYPE } from '@/api/nodes'
-import { translateLabel } from '@/lib/i18n'
 
 /**
  * Turns the raw node type listing (merged property/reference declarations
@@ -45,10 +44,9 @@ export function shortPropertyType(type: string | null): string {
   )
 }
 
-/** The translated ui.label, or the name's tail ("Vendor:Content.Text" → "Content.Text"). */
+/** The (server-translated) ui.label, or the name's tail ("Vendor:Content.Text" → "Content.Text"). */
 function displayLabel(nodeType: NodeTypeWithPropertiesDto): string {
-  const translated = nodeType.label ? translateLabel(nodeType.label) : null
-  if (translated) return translated
+  if (nodeType.label) return nodeType.label
   return nodeType.name.split(':').pop() || nodeType.name
 }
 

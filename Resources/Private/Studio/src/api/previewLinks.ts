@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { studioFetch } from './client'
 import { queryKeys } from './keys'
 
 /**
@@ -28,7 +28,7 @@ export interface CreatedPreviewLink extends PreviewLink {
 export function usePreviewLinks(enabled = true) {
   return useQuery({
     queryKey: queryKeys.previewLinks,
-    queryFn: () => apiFetch<{ links: PreviewLink[] }>('/preview-links'),
+    queryFn: () => studioFetch<{ links: PreviewLink[] }>('/preview-links'),
     enabled,
   })
 }
@@ -38,14 +38,14 @@ export function createPreviewLink(input: {
   label?: string
   ttlHours?: number
 }): Promise<{ link: CreatedPreviewLink }> {
-  return apiFetch<{ link: CreatedPreviewLink }>('/preview-links', {
+  return studioFetch<{ link: CreatedPreviewLink }>('/preview-links', {
     method: 'POST',
     body: input,
   })
 }
 
 export function deletePreviewLink(id: string): Promise<{ revoked: string }> {
-  return apiFetch<{ revoked: string }>(
+  return studioFetch<{ revoked: string }>(
     `/preview-links/${encodeURIComponent(id)}`,
     { method: 'DELETE' },
   )

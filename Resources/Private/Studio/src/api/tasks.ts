@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { studioFetch } from './client'
 import { queryKeys } from './keys'
 import type { Workspace } from './workspaces'
 
@@ -44,7 +44,7 @@ export function taskOf(workspace: Workspace): TaskExtension | null {
 export function useTasks(enabled = true) {
   return useQuery({
     queryKey: queryKeys.tasks,
-    queryFn: () => apiFetch<{ tasks: Task[] }>('/tasks'),
+    queryFn: () => studioFetch<{ tasks: Task[] }>('/tasks'),
     enabled,
     refetchInterval: 300_000,
   })
@@ -58,7 +58,7 @@ export interface CreateTaskInput {
 }
 
 export function createTask(input: CreateTaskInput): Promise<{ task: Task }> {
-  return apiFetch<{ task: Task }>('/tasks', { method: 'POST', body: input })
+  return studioFetch<{ task: Task }>('/tasks', { method: 'POST', body: input })
 }
 
 export interface UpdateTaskInput {
@@ -70,7 +70,7 @@ export function updateTask(
   workspaceName: string,
   input: UpdateTaskInput,
 ): Promise<{ task: Task }> {
-  return apiFetch<{ task: Task }>(
+  return studioFetch<{ task: Task }>(
     `/tasks/${encodeURIComponent(workspaceName)}`,
     { method: 'POST', body: input },
   )
@@ -90,7 +90,7 @@ export function transitionTask(
 ): Promise<{ task: Task }> {
   const action =
     target === 'IN_REVIEW' ? 'submit' : target === 'DONE' ? 'approve' : 'reopen'
-  return apiFetch<{ task: Task }>(
+  return studioFetch<{ task: Task }>(
     `/tasks/${encodeURIComponent(workspaceName)}/${action}`,
     { method: 'POST', body: comment ? { comment } : {} },
   )
@@ -111,7 +111,7 @@ export function useTaskComments(workspaceName: string | null) {
   return useQuery({
     queryKey: queryKeys.taskComments(workspaceName ?? ''),
     queryFn: () =>
-      apiFetch<{ comments: TaskComment[] }>(
+      studioFetch<{ comments: TaskComment[] }>(
         `/tasks/${encodeURIComponent(workspaceName ?? '')}/comments`,
       ),
     enabled: workspaceName !== null,
@@ -122,7 +122,7 @@ export function addTaskComment(
   workspaceName: string,
   text: string,
 ): Promise<{ comment: TaskComment }> {
-  return apiFetch<{ comment: TaskComment }>(
+  return studioFetch<{ comment: TaskComment }>(
     `/tasks/${encodeURIComponent(workspaceName)}/comments`,
     { method: 'POST', body: { text } },
   )
@@ -132,7 +132,7 @@ export function assignTask(
   workspaceName: string,
   assignee: string | null,
 ): Promise<{ task: Task }> {
-  return apiFetch<{ task: Task }>(
+  return studioFetch<{ task: Task }>(
     `/tasks/${encodeURIComponent(workspaceName)}/assign`,
     { method: 'POST', body: { assignee } },
   )
@@ -141,7 +141,7 @@ export function assignTask(
 export function deleteTask(
   workspaceName: string,
 ): Promise<{ deleted: string }> {
-  return apiFetch<{ deleted: string }>(
+  return studioFetch<{ deleted: string }>(
     `/tasks/${encodeURIComponent(workspaceName)}`,
     { method: 'DELETE' },
   )

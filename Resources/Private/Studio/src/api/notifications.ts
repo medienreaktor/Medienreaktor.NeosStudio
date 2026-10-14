@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { studioFetch } from './client'
 import { queryKeys } from './keys'
 
 /**
@@ -36,21 +36,21 @@ const POLL_INTERVAL_MS = 300_000
 export function useNotifications(enabled = true) {
   return useQuery({
     queryKey: queryKeys.notifications,
-    queryFn: () => apiFetch<NotificationsResponse>('/notifications'),
+    queryFn: () => studioFetch<NotificationsResponse>('/notifications'),
     enabled,
     refetchInterval: POLL_INTERVAL_MS,
   })
 }
 
 export function markNotificationsRead(ids: string[]) {
-  return apiFetch<{ unreadCount: number }>('/notifications/read', {
+  return studioFetch<{ unreadCount: number }>('/notifications/read', {
     method: 'POST',
     body: { ids },
   })
 }
 
 export function markAllNotificationsRead() {
-  return apiFetch<{ unreadCount: number }>('/notifications/read', {
+  return studioFetch<{ unreadCount: number }>('/notifications/read', {
     method: 'POST',
     body: { all: true },
   })
@@ -61,7 +61,7 @@ export function markAllNotificationsRead() {
  * have arrived after the list was last rendered.
  */
 export function clearReadNotifications() {
-  return apiFetch<{ removed: number; unreadCount: number }>('/notifications', {
+  return studioFetch<{ removed: number; unreadCount: number }>('/notifications', {
     method: 'DELETE',
   })
 }

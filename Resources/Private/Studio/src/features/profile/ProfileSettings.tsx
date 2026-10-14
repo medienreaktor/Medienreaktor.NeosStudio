@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/client'
+import { config } from '@/config'
 import { queryKeys } from '@/api/keys'
 import {
   changePassword,
@@ -79,7 +80,7 @@ export function ProfileSettings() {
 
       {data && (
         <>
-          <ProfileForm profile={data.profile} />
+          <ProfileForm profile={data} />
           <Separator className="my-8" />
           <PasswordForm />
         </>
@@ -99,29 +100,29 @@ function ProfileForm({ profile }: { profile: Profile }) {
 
   // Neos ships language labels as "Deutsch – German"; show the native name
   // prominently with the English name muted behind it.
-  const languageItems = Object.entries(profile.availableLanguages).map(
-    ([value, label]) => {
-      const [native, english] = label.split(' – ')
-      return {
-        value,
-        label: (
-          <span>
-            {native}
-            {english && (
-              <span className="ml-2 text-neutral-600 dark:text-neutral-400">
-                {english}
-              </span>
-            )}
-          </span>
-        ),
-      }
-    },
-  )
+  const languageItems = config.availableLanguages.map(({ value, label }) => {
+    const [native, english] = label.split(' – ')
+    return {
+      value,
+      label: (
+        <span>
+          {native}
+          {english && (
+            <span className="ml-2 text-neutral-600 dark:text-neutral-400">
+              {english}
+            </span>
+          )}
+        </span>
+      ),
+    }
+  })
 
   const changes: UpdateProfileInput = {}
   if (firstName !== profile.firstName) changes.firstName = firstName
   if (lastName !== profile.lastName) changes.lastName = lastName
-  if (email !== (profile.email ?? '')) changes.email = email
+  // An address can be changed but not removed - a cleared field is no change.
+  if (email.trim() !== '' && email !== (profile.email ?? ''))
+    changes.email = email
   if (language !== profile.interfaceLanguage)
     changes.interfaceLanguage = language
   if (uiMode !== savedUiMode)

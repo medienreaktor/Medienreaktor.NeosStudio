@@ -8,9 +8,9 @@ import type { Workspace } from '@/api/workspaces'
  * workspaces (switcher, administration, graph) shows the same marks.
  *
  * Decorators are pure data-driven functions over the workspace object: the
- * backend contributes package-specific data via the API's workspace
- * "extensions" object (see WorkspaceDataEnricherInterface in
- * Medienreaktor.NeosApi), and a decorator reads it back out. The shell never
+ * Studio contributes package-specific data via the workspace's "extensions"
+ * object (filled by the shell from the task list, see api/workspaces.ts),
+ * and a decorator reads it back out. The shell never
  * learns what a decoration means.
  *
  * Modelled on the other registries (see features/modals/registry.ts): a small

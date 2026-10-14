@@ -7,9 +7,7 @@ import { AssetThumb } from '@/features/media/AssetThumb'
 import type { PropertyEditorProps } from './registry'
 import {
   assetReference,
-  imageReference,
-  imageVariantReference,
-  localIdentifierFor,
+  localAssetIdFor,
   referenceIdentifier,
 } from '@/api/assetValue'
 import { parseCropConfig } from './cropOptions'
@@ -19,9 +17,9 @@ import { translate as t } from '@/lib/i18n'
 /**
  * The shared body of the Asset and Image editors: shows the currently
  * referenced asset (thumbnail/preview + label) and hands off to the Media
- * Library in picker mode to choose another. `kind` is the whole difference -
- * "image" commits an Image reference and shows a large preview; "asset" commits
- * a reference of the picked asset's concrete type and shows a compact row.
+ * Library in picker mode to choose another. `kind` only changes the look -
+ * "image" shows a large preview (and offers cropping), "asset" a compact row;
+ * both commit the picked asset's id.
  *
  * A stored value is only ever an identifier (see assetValue.ts), so the asset
  * to display is resolved from the API. A fresh pick is held locally too, so the
@@ -50,7 +48,8 @@ export function AssetFieldEditor({
   // editor's own pick is not "external": by the time the refetch lands, the
   // held identifier already matches, so the instant local preview survives.
   const valueIdentifier = referenceIdentifier(value)
-  const [seenValueIdentifier, setSeenValueIdentifier] = useState(valueIdentifier)
+  const [seenValueIdentifier, setSeenValueIdentifier] =
+    useState(valueIdentifier)
   if (valueIdentifier !== seenValueIdentifier) {
     setSeenValueIdentifier(valueIdentifier)
     if (valueIdentifier !== identifier) {
@@ -68,7 +67,7 @@ export function AssetFieldEditor({
   // Cropping edits the original image, not a variant, so re-cropping never
   // compounds. When the current value is already a variant, resolve its
   // original; otherwise the current asset is itself the original.
-  const originalIdentifier = asset?.originalAssetIdentifier ?? identifier
+  const originalIdentifier = asset?.originalAssetId ?? identifier
   const isVariant =
     originalIdentifier !== null && originalIdentifier !== identifier
   const originalQuery = useAsset('neos', originalIdentifier, isVariant)
@@ -77,25 +76,23 @@ export function AssetFieldEditor({
     kind === 'image' &&
     cropConfig.enabled &&
     asset !== null &&
-    asset.assetType === 'Image'
+    asset.assetType === 'image'
 
   const applyCrop = (variant: MediaAsset) => {
-    const id = variant.localAssetIdentifier ?? variant.identifier
+    const id = variant.localAssetId ?? variant.id
     setPicked(variant)
     setIdentifier(id)
-    onCommit(imageVariantReference(id))
+    onCommit(assetReference(id))
   }
 
   const select = () => {
     requestPick({
       title: subject.label,
       onPick: async (chosen) => {
-        const id = await localIdentifierFor(chosen)
+        const id = await localAssetIdFor(chosen)
         setPicked(chosen)
         setIdentifier(id)
-        onCommit(
-          kind === 'image' ? imageReference(id) : assetReference(chosen, id),
-        )
+        onCommit(assetReference(id))
       },
     })
   }

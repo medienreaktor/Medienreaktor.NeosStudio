@@ -38,6 +38,13 @@ privilegeTargets:
     'Medienreaktor.NeosStudio:RealtimeFeed':
       matcher: 'method(Medienreaktor\NeosStudio\Controller\RealtimeController->eventsAction())'
 
+    # The review, history and trash read models of a workspace (document
+    # changes, document diff, pending events + diff, trash, conflict details).
+    # Read-only; the controller additionally checks the account's read
+    # permission on the workspace, the studio.read scope narrows by token.
+    'Medienreaktor.NeosStudio:Api.WorkspaceHistory.Read':
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\Api\WorkspaceHistoryController->(documentChanges|documentDiff|pendingEvents|pendingEventsDiff|trash|conflictDetails)Action())'
+
     # --- Task workflow -------------------------------------------------------
     # Workspace-level authorization is NOT handled by these targets: the
     # controller checks the acting user's per-workspace permissions (creator
@@ -117,6 +124,9 @@ roles:
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.PreviewLinks'
         permission: GRANT
       -
+        privilegeTarget: 'Medienreaktor.NeosStudio:Api.WorkspaceHistory.Read'
+        permission: GRANT
+      -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Read'
         permission: GRANT
       -
@@ -124,6 +134,15 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Access.Own'
+        permission: GRANT
+      # Neos.Api grants these to Neos.Neos:Editor only, but the shell cannot
+      # boot without the node types and dimensions - a restricted editor who
+      # may open the Studio needs them as well.
+      -
+        privilegeTarget: 'Neos.Api:ContentRepositories.Read'
+        permission: GRANT
+      -
+        privilegeTarget: 'Neos.Api:NodeTypes.Read'
         permission: GRANT
 
   # Access roles decide where the editorial team may work - granting and

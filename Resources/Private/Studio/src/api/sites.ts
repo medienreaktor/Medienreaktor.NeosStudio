@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
-import { apiFetch } from './client'
+import { apiFetch, isNotFound, queryString, type Listing } from './client'
 import { queryKeys } from './keys'
+import { addressOf } from './nodeAddress'
 
 /** One configured domain of a site. */
 export interface SiteDomain {
@@ -17,6 +18,20 @@ export interface SiteDomain {
   url: string
 }
 
+/** Neos.Api's Site. */
+interface ApiSite {
+  nodeName: string
+  name: string
+  online: boolean
+  contentRepositoryId: string
+  siteResourcesPackageKey: string
+  domains: SiteDomain[]
+  primaryDomain: string | null
+  nodeAggregateId: string | null
+  /** JSON, e.g. {"language":"en"} */
+  defaultDimensionSpacePoint: string
+}
+
 export interface Site {
   name: string
   nodeName: string
@@ -28,39 +43,124 @@ export interface Site {
   primaryDomain: string | null
   /**
    * The site node's aggregate id - used to scope workspace publish/discard to
-   * this site. null if the site node does not exist in the current subgraph.
+   * this site. null if the site has no site node.
    */
   aggregateId: string | null
-  /** null if the site node does not exist in the current subgraph */
+  /**
+   * The site node in the listing's workspace and dimension space point; null
+   * if the site node does not exist there (a site created after the
+   * workspace was forked, until it is synchronized).
+   */
   nodeAddress: string | null
 }
 
 export interface SitesResponse {
   workspace: string
+  /** The point the addresses are in: the requested one, else the default. */
   dimensionSpacePoint: Record<string, string>
   sites: Site[]
 }
 
+function parsePoint(json: string): Record<string, string> {
+  try {
+    const point = JSON.parse(json) as unknown
+    return point !== null && typeof point === 'object'
+      ? (point as Record<string, string>)
+      : {}
+  } catch {
+    return {}
+  }
+}
+
 /**
- * Sites in the given workspace and dimension space point. The returned node
- * addresses encode both, so all node traversal that starts from them stays in
- * the same subgraph. With dimensions=null the backend picks its default (the
- * first root generalization) and reports it as dimensionSpacePoint.
+ * Whether the site node exists in the given subgraph. Neos.Api lists sites
+ * independent of workspaces; only reading the node tells. Anything but a 404
+ * counts as present - the node reads report their own errors.
+ */
+async function siteNodeExists(
+  site: ApiSite,
+  workspace: string,
+  dimensionSpacePoint: Record<string, string>,
+): Promise<boolean> {
+  if (site.nodeAggregateId === null) return false
+  try {
+    await apiFetch(
+      `/cr/${encodeURIComponent(site.contentRepositoryId)}/nodes/${encodeURIComponent(site.nodeAggregateId)}${queryString(
+        {
+          workspaceName: workspace,
+          dimensionSpacePoint: JSON.stringify(dimensionSpacePoint),
+        },
+      )}`,
+    )
+    return true
+  } catch (error) {
+    return !isNotFound(error)
+  }
+}
+
+function toSite(
+  site: ApiSite,
+  workspace: string,
+  dimensionSpacePoint: Record<string, string>,
+  exists = true,
+): Site {
+  return {
+    name: site.name,
+    nodeName: site.nodeName,
+    state: site.online ? 'online' : 'offline',
+    siteResourcesPackageKey: site.siteResourcesPackageKey,
+    domains: site.domains,
+    primaryDomain: site.primaryDomain,
+    aggregateId: site.nodeAggregateId,
+    nodeAddress:
+      site.nodeAggregateId !== null && exists
+        ? addressOf({
+            contentRepositoryId: site.contentRepositoryId,
+            workspaceName: workspace,
+            dimensionSpacePoint,
+            nodeAggregateId: site.nodeAggregateId,
+          })
+        : null,
+  }
+}
+
+/** A site as returned by a write - addressed in live, its own default point. */
+function writtenSite(site: ApiSite): Site {
+  return toSite(site, 'live', parsePoint(site.defaultDimensionSpacePoint))
+}
+
+/**
+ * Sites with their node addresses in the given workspace and dimension space
+ * point, so all node traversal that starts from them stays in the same
+ * subgraph. With dimensions=null the addresses use the default point of the
+ * sites (the first online site's), reported as dimensionSpacePoint.
  */
 function sitesQuery(
   workspace: string,
   dimensions: Record<string, string> | null,
 ) {
-  const dimensionsParam =
-    dimensions !== null
-      ? `&dimensions=${encodeURIComponent(JSON.stringify(dimensions))}`
-      : ''
   return {
     queryKey: queryKeys.sites(workspace, dimensions),
-    queryFn: () =>
-      apiFetch<SitesResponse>(
-        `/sites?workspace=${encodeURIComponent(workspace)}${dimensionsParam}`,
-      ),
+    queryFn: async (): Promise<SitesResponse> => {
+      const listing = await apiFetch<Listing<ApiSite>>('/sites')
+      const reference =
+        listing.data.find((site) => site.online) ?? listing.data[0]
+      const dimensionSpacePoint =
+        dimensions ??
+        (reference ? parsePoint(reference.defaultDimensionSpacePoint) : {})
+      const exists = await Promise.all(
+        listing.data.map((site) =>
+          siteNodeExists(site, workspace, dimensionSpacePoint),
+        ),
+      )
+      return {
+        workspace,
+        dimensionSpacePoint,
+        sites: listing.data.map((site, index) =>
+          toSite(site, workspace, dimensionSpacePoint, exists[index]),
+        ),
+      }
+    },
   }
 }
 
@@ -84,15 +184,15 @@ export function fetchSites(
 }
 
 /**
- * Everything below is the administration side (Api.Sites.Write, admins only);
- * callers gate on me.permissions.sites. Sites are addressed by their node
- * name, domains by their id from the listing. Every mutation returns the
- * fresh site; callers still invalidate queryKeys.sitesAll because the listing
- * is keyed per workspace/dimensions.
+ * Everything below is the administration side (sites.create/update/delete,
+ * administrators only); callers gate on me.permissions.sites. Sites are
+ * addressed by their node name, domains by their id from the listing.
+ * Callers invalidate queryKeys.sitesAll because the listing is keyed per
+ * workspace/dimensions.
  */
 
 export interface SiteOptionsResponse {
-  packages: { packageKey: string }[]
+  packages: string[]
   nodeTypes: { name: string; label: string }[]
 }
 
@@ -100,7 +200,7 @@ export interface SiteOptionsResponse {
 export function useSiteOptions(enabled = true) {
   return useQuery({
     queryKey: queryKeys.siteOptions,
-    queryFn: () => apiFetch<SiteOptionsResponse>('/sites/options'),
+    queryFn: () => apiFetch<SiteOptionsResponse>('/options/sites'),
     enabled,
   })
 }
@@ -117,7 +217,7 @@ export interface CreateSiteInput {
 export interface UpdateSiteInput {
   name?: string
   state?: 'online' | 'offline'
-  /** A domain id, or an empty string to fall back to the first active domain. */
+  /** An active domain of the site to become its primary domain. */
   primaryDomainId?: string
 }
 
@@ -128,53 +228,73 @@ export interface CreateDomainInput {
   active?: boolean
 }
 
-/** Partial update; scheme "" clears the scheme, port 0 clears the port. */
+/** Partial update; scheme null / port null clear them. */
 export interface UpdateDomainInput {
   hostname?: string
-  scheme?: 'http' | 'https' | ''
-  port?: number
+  scheme?: 'http' | 'https' | null
+  port?: number | null
   active?: boolean
 }
 
-export function createSite(input: CreateSiteInput) {
-  return apiFetch<{ site: Site }>('/sites', { method: 'POST', body: input })
+function sitePath(siteNodeName: string): string {
+  return `/sites/${encodeURIComponent(siteNodeName)}`
 }
 
-export function updateSite(siteNodeName: string, input: UpdateSiteInput) {
-  return apiFetch<{ site: Site }>(
-    `/sites/${encodeURIComponent(siteNodeName)}`,
-    { method: 'PATCH', body: input },
-  )
+export async function createSite(input: CreateSiteInput): Promise<Site> {
+  const { inactive, ...rest } = input
+  const site = await apiFetch<ApiSite>('/sites', {
+    method: 'POST',
+    body: { ...rest, ...(inactive ? { online: false } : {}) },
+  })
+  return writtenSite(site)
 }
 
-export function deleteSite(siteNodeName: string) {
-  return apiFetch<{ success: boolean }>(
-    `/sites/${encodeURIComponent(siteNodeName)}`,
-    { method: 'DELETE' },
-  )
+export async function updateSite(
+  siteNodeName: string,
+  input: UpdateSiteInput,
+): Promise<Site> {
+  const { state, ...rest } = input
+  const site = await apiFetch<ApiSite>(sitePath(siteNodeName), {
+    method: 'PATCH',
+    body: {
+      ...rest,
+      ...(state !== undefined ? { online: state === 'online' } : {}),
+    },
+  })
+  return writtenSite(site)
 }
 
-export function createDomain(siteNodeName: string, input: CreateDomainInput) {
-  return apiFetch<{ site: Site }>(
-    `/sites/${encodeURIComponent(siteNodeName)}/domains`,
-    { method: 'POST', body: input },
-  )
+export async function deleteSite(siteNodeName: string): Promise<void> {
+  await apiFetch<null>(sitePath(siteNodeName), { method: 'DELETE' })
+}
+
+export function createDomain(
+  siteNodeName: string,
+  input: CreateDomainInput,
+): Promise<SiteDomain> {
+  return apiFetch<SiteDomain>(`${sitePath(siteNodeName)}/domains`, {
+    method: 'POST',
+    body: input,
+  })
 }
 
 export function updateDomain(
   siteNodeName: string,
   domainId: string,
   input: UpdateDomainInput,
-) {
-  return apiFetch<{ site: Site }>(
-    `/sites/${encodeURIComponent(siteNodeName)}/domains/${encodeURIComponent(domainId)}`,
+): Promise<SiteDomain> {
+  return apiFetch<SiteDomain>(
+    `${sitePath(siteNodeName)}/domains/${encodeURIComponent(domainId)}`,
     { method: 'PATCH', body: input },
   )
 }
 
-export function deleteDomain(siteNodeName: string, domainId: string) {
-  return apiFetch<{ site: Site }>(
-    `/sites/${encodeURIComponent(siteNodeName)}/domains/${encodeURIComponent(domainId)}`,
+export async function deleteDomain(
+  siteNodeName: string,
+  domainId: string,
+): Promise<void> {
+  await apiFetch<null>(
+    `${sitePath(siteNodeName)}/domains/${encodeURIComponent(domainId)}`,
     { method: 'DELETE' },
   )
 }

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from './client'
 import { queryKeys } from './keys'
+import { contentRepositoryPath } from './nodeAddress'
 
 /** A concrete coordinate for every dimension, e.g. { language: "de" }. */
 export type DimensionSpacePoint = Record<string, string>
@@ -15,7 +16,7 @@ export interface DimensionValue {
 export interface ContentDimension {
   id: string
   label: string
-  /** Font Awesome icon name from the dimension configuration, e.g. "language" */
+  /** Font Awesome classes from the dimension's ui.icon, e.g. "fas fa-language" */
   icon: string | null
   /** Depth-first: specializations follow their generalization directly */
   values: DimensionValue[]
@@ -27,11 +28,50 @@ export interface DimensionsResponse {
   allowedDimensionSpacePoints: DimensionSpacePoint[]
 }
 
+/** The content repository as Neos.Api returns it (getContentRepository). */
+interface ApiContentRepository {
+  id: string
+  dimensions: {
+    id: string
+    label: string | null
+    icon?: string | null
+    values: {
+      value: string
+      label: string | null
+      generalization: string | null
+      specializationDepth?: number
+    }[]
+  }[]
+  /** All allowed points, each a JSON string. */
+  dimensionSpacePoints?: string[]
+}
+
+async function loadDimensions(): Promise<DimensionsResponse> {
+  const repository = await apiFetch<ApiContentRepository>(
+    contentRepositoryPath(),
+  )
+  return {
+    dimensions: repository.dimensions.map((dimension) => ({
+      id: dimension.id,
+      label: dimension.label ?? dimension.id,
+      icon: dimension.icon ?? null,
+      values: dimension.values.map((value) => ({
+        value: value.value,
+        label: value.label ?? value.value,
+        specializationDepth: value.specializationDepth ?? 0,
+      })),
+    })),
+    allowedDimensionSpacePoints: (repository.dimensionSpacePoints ?? []).map(
+      (point) => JSON.parse(point) as DimensionSpacePoint,
+    ),
+  }
+}
+
 /** Dimension configuration is static per deployment - cache it forever. */
 export function useDimensions(enabled = true) {
   return useQuery({
     queryKey: queryKeys.dimensions,
-    queryFn: () => apiFetch<DimensionsResponse>('/dimensions'),
+    queryFn: loadDimensions,
     staleTime: Infinity,
     enabled,
   })

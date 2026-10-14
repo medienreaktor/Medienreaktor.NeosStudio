@@ -9,8 +9,7 @@ import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorProps } from './registry'
 import {
   assetReference,
-  imageReference,
-  localIdentifierFor,
+  localAssetIdFor,
   referenceList,
   type AssetReference,
 } from '@/api/assetValue'
@@ -51,7 +50,7 @@ export function MultiAssetFieldEditor({
   // already hold the new list when the refetch lands, and a drag in progress
   // is never interrupted (its drop commits, and that commit round-trips).
   const listKey = (list: AssetReference[]) =>
-    list.map((ref) => ref.__identifier).join('|')
+    list.map((ref) => ref.id).join('|')
   const valueRefs = referenceList(value)
   const [seenValueKey, setSeenValueKey] = useState(() => listKey(valueRefs))
   if (listKey(valueRefs) !== seenValueKey) {
@@ -71,20 +70,16 @@ export function MultiAssetFieldEditor({
     requestPick({
       title: subject.label,
       onPick: async (chosen) => {
-        const id = await localIdentifierFor(chosen)
+        const id = await localAssetIdFor(chosen)
         // The same asset twice would just be a confusing duplicate row.
-        if (refs.some((ref) => ref.__identifier === id)) return
+        if (refs.some((ref) => ref.id === id)) return
         setPickedById((cache) => ({ ...cache, [id]: chosen }))
-        commit([
-          ...refs,
-          kind === 'image' ? imageReference(id) : assetReference(chosen, id),
-        ])
+        commit([...refs, assetReference(id)])
       },
     })
   }
 
-  const remove = (id: string) =>
-    commit(refs.filter((ref) => ref.__identifier !== id))
+  const remove = (id: string) => commit(refs.filter((ref) => ref.id !== id))
 
   // Reorder live as the pointer passes over another row - immediate feedback,
   // but the new order is only persisted on drop (handleDragEnd), so a drag does
@@ -109,14 +104,14 @@ export function MultiAssetFieldEditor({
     <div className="flex flex-col gap-1">
       {refs.map((ref, index) => (
         <AssetRow
-          key={ref.__identifier}
-          identifier={ref.__identifier}
-          picked={pickedById[ref.__identifier] ?? null}
+          key={ref.id}
+          identifier={ref.id}
+          picked={pickedById[ref.id] ?? null}
           dragging={dragIndex === index}
           onDragStart={() => setDragIndex(index)}
           onDragOver={() => handleDragOver(index)}
           onDragEnd={handleDragEnd}
-          onRemove={() => remove(ref.__identifier)}
+          onRemove={() => remove(ref.id)}
         />
       ))}
       <Button

@@ -23,7 +23,7 @@ export interface MediaTreeNode {
 
 export function tagToNode(tag: MediaTag): MediaTreeNode {
   return {
-    id: tag.identifier,
+    id: tag.id,
     label: tag.label,
     count: tag.assetCount,
     children: tag.children.map(tagToNode),
@@ -32,7 +32,7 @@ export function tagToNode(tag: MediaTag): MediaTreeNode {
 
 export function collectionToNode(collection: MediaCollection): MediaTreeNode {
   return {
-    id: collection.identifier,
+    id: collection.id,
     label: collection.title,
     count: collection.assetCount,
     children: [],

@@ -1,24 +1,28 @@
 {
-  "name": "medienreaktor/neos-studio",
-  "type": "neos-package",
-  "description": "Neos Studio - A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.",
-  "license": "GPL-3.0-or-later",
-  "require": {
-    "php": "^8.2",
-    "neos/neos": "^9.1",
-    "medienreaktor/neos-api": "^1.17.5"
-  },
-  "autoload": {
-    "psr-4": {
-      "Medienreaktor\\NeosStudio\\": "Classes/"
-    }
-  },
-  "extra": {
-    "neos": {
-      "package-key": "Medienreaktor.NeosStudio"
+    "name": "medienreaktor/neos-studio",
+    "type": "neos-package",
+    "description": "Neos Studio - A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "php": "^8.4",
+        "neos/neos": "^9.2",
+        "neos/api": "dev-main",
+        "neos/oauth": "dev-main"
     },
-    "branch-alias": {
-      "dev-main": "1.17.x-dev"
+    "autoload": {
+        "psr-4": {
+            "Medienreaktor\\NeosStudio\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Medienreaktor.NeosStudio"
+        },
+        "branch-alias": {
+            "dev-main": "1.17.x-dev"
+        }
+    },
+    "suggest": {
+        "neos/neos-ui": "Runs the node types' nodeCreationHandlers (e.g. Flowpack.NodeTemplates) for nodes created in the Studio, through Neos.Api"
     }
-  }
 }

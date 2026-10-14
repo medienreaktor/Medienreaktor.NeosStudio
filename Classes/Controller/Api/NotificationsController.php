@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
-use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosStudio\Domain\Model\Notification;
 use Medienreaktor\NeosStudio\Domain\Repository\NotificationRepository;
 use Neos\Flow\Annotations as Flow;
@@ -17,10 +16,10 @@ use Neos\Neos\Domain\Service\UserService;
  *
  * Strictly per-user: every action resolves the recipient from the
  * authenticated account, ids of other users' notifications are treated as
- * non-existent. Lives behind the same OAuth bearer firewall as the NeosApi
+ * non-existent. Lives behind the Neos.OAuth bearer firewall like the other Studio API
  * controllers (request pattern registered in Settings.yaml).
  */
-class NotificationsController extends AbstractApiController
+class NotificationsController extends AbstractStudioApiController
 {
     #[Flow\Inject]
     protected NotificationRepository $notificationRepository;
@@ -36,7 +35,7 @@ class NotificationsController extends AbstractApiController
      */
     public function indexAction(int $limit = 20, int $offset = 0, bool $unread = false): string
     {
-        $this->requireScope('neos.read');
+        $this->requireScope(self::SCOPE_READ);
         $userId = $this->requireUserId();
 
         $notifications = $this->notificationRepository->findByUser($userId->value, $unread, min($limit, 100), $offset);
@@ -54,14 +53,14 @@ class NotificationsController extends AbstractApiController
      * authorization comes from the bearer token, not the (same-origin)
      * backend session cookie that would otherwise trigger it.
      *
-     * The body is read directly (like the NeosApi batch endpoints) - a
+     * The body is read directly - a
      * mapped array action argument would trip over Flow's property mapping,
      * which refuses array elements without explicit per-index allowances.
      */
     #[Flow\SkipCsrfProtection]
     public function markReadAction(): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $userId = $this->requireUserId();
 
         $body = json_decode((string)$this->request->getHttpRequest()->getBody(), true);
@@ -102,7 +101,7 @@ class NotificationsController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function clearAction(): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $userId = $this->requireUserId();
 
         $removed = $this->notificationRepository->removeReadForUser($userId->value);

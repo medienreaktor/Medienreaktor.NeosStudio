@@ -3,18 +3,17 @@ import { apiFetch } from './client'
 import { queryKeys } from './keys'
 
 /**
- * The authenticated user's own profile - the self-service counterpart to the
- * admin-only /users listing. Every editor may read and edit it.
+ * The authenticated user's own profile (Neos.Api GET /me/profile) - the
+ * self-service counterpart to the admin-only user administration. Every
+ * editor may read and edit it. The language options are not part of it: they
+ * come with the shell's boot config (config.availableLanguages).
  */
 export interface Profile {
   firstName: string
   lastName: string
-  fullName: string
   email: string | null
   /** The user's interface language preference (e.g. "en", "de"). */
   interfaceLanguage: string
-  /** Locale identifier => label, the options for the language picker. */
-  availableLanguages: Record<string, string>
   /**
    * Free-form per-user preferences. The server stores keys verbatim and has
    * no schema - clients bring their own namespaced keys (Studio uses
@@ -23,13 +22,10 @@ export interface Profile {
   preferences: Record<string, unknown>
 }
 
-export interface ProfileResponse {
-  profile: Profile
-}
-
 export interface UpdateProfileInput {
   firstName?: string
   lastName?: string
+  /** An email address can be changed but not removed. */
   email?: string
   interfaceLanguage?: string
   /** Partial merge: only the given keys are written, null deletes a key. */
@@ -39,21 +35,25 @@ export interface UpdateProfileInput {
 export function useProfile(enabled = true) {
   return useQuery({
     queryKey: queryKeys.profile,
-    queryFn: () => apiFetch<ProfileResponse>('/me/profile'),
+    queryFn: () => apiFetch<Profile>('/me/profile'),
     enabled,
   })
 }
 
 /** Partial update - absent keys are left as-is on the server. */
-export function updateProfile(input: UpdateProfileInput) {
-  return apiFetch<ProfileResponse>('/me/profile', {
+export function updateProfile(input: UpdateProfileInput): Promise<Profile> {
+  return apiFetch<Profile>('/me/profile', {
     method: 'PATCH',
     body: input,
   })
 }
 
-export function changePassword(currentPassword: string, newPassword: string) {
-  return apiFetch<{ success: boolean }>('/me/password', {
+/** Resolves once the password is changed (204). */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  await apiFetch<null>('/me/password', {
     method: 'PUT',
     body: { currentPassword, newPassword },
   })

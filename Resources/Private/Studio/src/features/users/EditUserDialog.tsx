@@ -56,15 +56,16 @@ export function EditUserDialog({
   if (user !== null) {
     if (firstName !== (user.firstName ?? '')) changes.firstName = firstName
     if (lastName !== (user.lastName ?? '')) changes.lastName = lastName
-    if (email !== (user.email ?? '')) changes.email = email
+    // An address can be changed but not removed - a cleared field is no change.
+    if (email.trim() !== '' && email !== (user.email ?? ''))
+      changes.email = email.trim()
     const rolesChanged =
       roles.length !== user.roles.length ||
       roles.some((role) => !user.roles.includes(role))
     if (rolesChanged) changes.roles = roles
   }
   const isDirty = Object.keys(changes).length > 0
-  const canSubmit =
-    isDirty && firstName.trim() !== '' && lastName.trim() !== ''
+  const canSubmit = isDirty && firstName.trim() !== '' && lastName.trim() !== ''
 
   const mutation = useMutation({
     mutationFn: (input: UpdateUserInput) => updateUser(user!.id, input),
@@ -75,9 +76,7 @@ export function EditUserDialog({
         queryClient.invalidateQueries({ queryKey: queryKeys.me })
       }
       toast.success(
-        t('users.saved', 'The user "{0}" has been saved.', [
-          response.user.label,
-        ]),
+        t('users.saved', 'The user "{0}" has been saved.', [response.label]),
       )
       onOpenChange(false)
     },

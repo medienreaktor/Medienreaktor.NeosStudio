@@ -654,6 +654,10 @@
         <source>Creating…</source>
         <target xml:lang="de">Wird erstellt…</target>
       </trans-unit>
+      <trans-unit id="dimension.missingParentsCreated" xml:space="preserve">
+        <source> Parent documents missing there are created as well.</source>
+        <target xml:lang="de"> Fehlende übergeordnete Dokumente werden dort ebenfalls erstellt.</target>
+      </trans-unit>
       <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
         <source> {0} missing parent documents will be created as well.</source>
         <target xml:lang="de"> {0} fehlende übergeordnete Dokumente werden ebenfalls erstellt.</target>

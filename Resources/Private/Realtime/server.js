@@ -5,10 +5,11 @@
  * One connection per editing session, document name `workspace:<name>`:
  *
  * - Authentication: the client hands over its own OAuth bearer token; the
- *   sidecar validates it against the user-scoped Neos API (a baseline read of
- *   the workspace's change feed - 2xx proves both a live token and read
- *   permission on that very workspace) and resolves the user's identity via
- *   /api/me. No secret of its own ever reaches a client.
+ *   sidecar validates it against Neos.Api (a read of the workspace,
+ *   GET /api/cr/{cr}/workspaces/{name} - 2xx proves both a live token and read
+ *   permission on that very workspace, an unreadable one is a 404) and
+ *   resolves the user's identity via /api/me. No secret of its own ever
+ *   reaches a client.
  *
  * - Presence: clients announce their position ("on this document, focusing
  *   this node") as stateless messages; the sidecar keeps a per-workspace
@@ -29,6 +30,8 @@
  *   NEOS_BASE_URL          base URL of the Neos installation (default http://127.0.0.1:8080)
  *   NEOS_HOST_HEADER       Host header override, for reaching Neos through
  *                          an internal hostname (e.g. DDEV's `web`)
+ *   NEOS_CONTENT_REPOSITORY content repository id the Studio edits
+ *                          (Medienreaktor.NeosStudio.contentRepository, default "default")
  *   REALTIME_SHARED_SECRET must equal Medienreaktor.NeosStudio.realtime.sharedSecret
  *   FEED_INTERVAL_MS       feed tail cadence per workspace   (default 1000)
  */
@@ -41,6 +44,7 @@ const PORT = Number(process.env.PORT ?? 1234)
 const NEOS_BASE_URL = (process.env.NEOS_BASE_URL ?? 'http://127.0.0.1:8080').replace(/\/+$/, '')
 const NEOS_HOST_HEADER = process.env.NEOS_HOST_HEADER || null
 const SHARED_SECRET = process.env.REALTIME_SHARED_SECRET || ''
+const CONTENT_REPOSITORY = process.env.NEOS_CONTENT_REPOSITORY || 'default'
 const FEED_INTERVAL_MS = Math.max(250, Number(process.env.FEED_INTERVAL_MS ?? 1000))
 /** Consecutive feed failures before the workspace's connections are dropped
  * (clients then fall back to HTTP polling, which re-checks everything). */
@@ -175,7 +179,7 @@ const broadcast = (session, message) =>
 // --- Change feed tail --------------------------------------------------------
 
 const feedPath = (workspace, cursor) =>
-  `/api/realtime/workspaces/${encodeURIComponent(workspace)}/events` +
+  `/neos/studio/api/realtime/workspaces/${encodeURIComponent(workspace)}/events` +
   (cursor ? `?stream=${encodeURIComponent(cursor.stream)}&since=${cursor.since}` : '')
 
 const startFeed = (session) => {
@@ -247,12 +251,13 @@ const server = new Server({
     if (!token) throw new Error('missing token')
 
     // One request proves both: the bearer token is alive AND its user may
-    // read this very workspace (the events resource re-checks permissions).
-    const feedProbe = await neosFetch(
-      `/api/workspaces/${encodeURIComponent(workspace)}/events`,
+    // read this very workspace (Neos.Api answers 404 for a workspace the
+    // account may not read, as for an unknown one).
+    const workspaceProbe = await neosFetch(
+      `/api/cr/${encodeURIComponent(CONTENT_REPOSITORY)}/workspaces/${encodeURIComponent(workspace)}`,
       { authorization: `Bearer ${token}` },
     )
-    if (!feedProbe.ok) throw new Error(`workspace access denied (${feedProbe.status})`)
+    if (!workspaceProbe.ok) throw new Error(`workspace access denied (${workspaceProbe.status})`)
 
     const meResponse = await neosFetch('/api/me', { authorization: `Bearer ${token}` })
     if (!meResponse.ok) throw new Error(`identity lookup failed (${meResponse.status})`)

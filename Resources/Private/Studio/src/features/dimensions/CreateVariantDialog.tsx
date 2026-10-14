@@ -1,18 +1,9 @@
-import { useEffect, useState } from 'react'
-import { type Command, executeCommands } from '@/api/commands'
+import { useState } from 'react'
+import { createNodeVariant } from '@/api/commands'
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
-import {
-  dimensionSpacePointEquals,
-  dimensionSpacePointLabel,
-} from '@/api/dimensions'
-import {
-  DOCUMENT_NODE_TYPE,
-  fetchAncestors,
-  fetchChildren,
-  fetchNodeVariants,
-  type NodeDto,
-  nodeLabel,
-} from '@/api/nodes'
+import { dimensionSpacePointLabel } from '@/api/dimensions'
+import { addressInWorkspace } from '@/api/nodeAddress'
+import { type NodeDto, nodeLabel } from '@/api/nodes'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -25,56 +16,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-function variantCommand(
-  node: NodeDto,
-  workspaceName: string,
-  targetPoint: DimensionSpacePoint,
-): Command {
-  return {
-    type: 'CreateNodeVariant',
-    payload: {
-      workspaceName,
-      nodeAggregateId: node.aggregateId,
-      sourceOrigin: node.originDimensionSpacePoint,
-      targetOrigin: targetPoint,
-    },
-  }
-}
-
-/**
- * Commands recreating a document's content in the target dimension: variants
- * for every regular content node below it, in parent-before-child order (the
- * batch executes sequentially, so each parent exists before its children).
- * Tethered nodes (autocreated collections) are skipped - the content
- * repository varies them together with their parent - but their children are
- * regular nodes that do need commands, so recursion continues through them.
- */
-async function collectContentCommands(
-  document: NodeDto,
-  workspaceName: string,
-  targetPoint: DimensionSpacePoint,
-  commands: Command[],
-): Promise<void> {
-  const walk = async (address: string) => {
-    const children = await fetchChildren(address, `!${DOCUMENT_NODE_TYPE}`)
-    for (const child of children) {
-      if (child.classification === 'regular') {
-        commands.push(variantCommand(child, workspaceName, targetPoint))
-      }
-      await walk(child.address)
-    }
-  }
-  await walk(document.address)
-}
-
-type Phase = 'analyzing' | 'ready' | 'creating'
+type Phase = 'ready' | 'creating'
 
 /**
  * Modal shown when the user picks a dimension the selected document does not
  * exist in (mirrors the Neos UI node variant creation dialog): create the
- * variant empty or with the content copied from the current dimension.
- * Ancestor documents missing in the target dimension are created alongside,
- * top-down - a document cannot exist without its rootline.
+ * variant empty or with the content copied from the current dimension. The
+ * server creates ancestor documents missing in the target dimension along
+ * with it, top-down - a document cannot exist without its rootline - and,
+ * when copying, varies the content below the document.
  */
 export function CreateVariantDialog({
   document,
@@ -91,67 +41,16 @@ export function CreateVariantDialog({
   onCancel: () => void
   onCreated: (point: DimensionSpacePoint) => void
 }) {
-  const [phase, setPhase] = useState<Phase>('analyzing')
-  const [missingAncestors, setMissingAncestors] = useState<NodeDto[]>([])
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        // Ancestors come closest-first; keep only documents that do not exist
-        // in the target dimension and reverse to creation (top-down) order.
-        const ancestors = await fetchAncestors(
-          document.address,
-          DOCUMENT_NODE_TYPE,
-        )
-        const missing: NodeDto[] = []
-        for (const ancestor of ancestors) {
-          const variants = await fetchNodeVariants(ancestor.address)
-          if (
-            !variants.coveredDimensionSpacePoints.some((point) =>
-              dimensionSpacePointEquals(point, targetPoint),
-            )
-          ) {
-            missing.push(ancestor)
-          }
-        }
-        if (!cancelled) {
-          setMissingAncestors(missing.reverse())
-          setPhase('ready')
-        }
-      } catch (e) {
-        if (!cancelled) {
-          toast.error(e, {
-            title: t(
-              'dimension.checkParentsFailed',
-              'Checking parent documents failed',
-            ),
-          })
-          setPhase('ready')
-        }
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [document.address, targetPoint])
+  const [phase, setPhase] = useState<Phase>('ready')
 
   const create = async (copyContent: boolean) => {
     setPhase('creating')
     try {
-      const commands: Command[] = []
-      for (const doc of [...missingAncestors, document]) {
-        commands.push(variantCommand(doc, workspaceName, targetPoint))
-        if (copyContent) {
-          await collectContentCommands(
-            doc,
-            workspaceName,
-            targetPoint,
-            commands,
-          )
-        }
-      }
-      await executeCommands(commands)
+      await createNodeVariant(
+        addressInWorkspace(document.address, workspaceName),
+        targetPoint,
+        copyContent,
+      )
       toast.success(t('dimension.variantCreated', 'Document variant created.'))
       onCreated(targetPoint)
     } catch (e) {
@@ -182,22 +81,10 @@ export function CreateVariantDialog({
               nodeLabel(document),
               dimensionSpacePointLabel(targetPoint, dimensions),
             ])}
-            {phase === 'analyzing' &&
-              t(
-                'dimension.checkingParents',
-                ' Checking which parent documents are missing…',
-              )}
-            {missingAncestors.length > 0 &&
-              (missingAncestors.length === 1
-                ? t(
-                    'dimension.missingParentsOne',
-                    ' 1 missing parent document will be created as well.',
-                  )
-                : t(
-                    'dimension.missingParentsMany',
-                    ' {0} missing parent documents will be created as well.',
-                    [missingAncestors.length],
-                  ))}
+            {t(
+              'dimension.missingParentsCreated',
+              ' Parent documents missing there are created as well.',
+            )}
           </DialogDescription>
         </DialogHeader>
 

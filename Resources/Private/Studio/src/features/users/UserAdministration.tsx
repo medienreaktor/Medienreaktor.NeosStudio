@@ -69,7 +69,7 @@ export function UserAdministration() {
         user.fullName,
         user.label,
         user.email ?? '',
-        ...user.accounts.map((account) => account.accountIdentifier),
+        ...user.accounts.map((account) => account.identifier),
       ]
         .join(' ')
         .toLowerCase()
@@ -209,12 +209,12 @@ function UserRow({
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users })
       toast.success(
-        response.user.active
+        response.active
           ? t('users.activated', 'The user "{0}" has been activated.', [
-              response.user.label,
+              response.label,
             ])
           : t('users.deactivated', 'The user "{0}" has been deactivated.', [
-              response.user.label,
+              response.label,
             ]),
       )
     },
@@ -246,10 +246,10 @@ function UserRow({
         ) : (
           user.accounts.map((account) => (
             <div
-              key={account.accountIdentifier}
+              key={account.identifier}
               className="text-neutral-700 dark:text-neutral-300"
             >
-              {account.accountIdentifier}
+              {account.identifier}
             </div>
           ))
         )}

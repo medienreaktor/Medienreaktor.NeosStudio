@@ -40,8 +40,9 @@ const POLLING_FALLBACK_AFTER_MS = 3_000
  *   events are filtered out via initiatingUserId: the UI already refreshed
  *   when it issued the command.
  *
- * The transport is pluggable (see transport.ts): plain HTTP polling by
- * default; when a realtime sidecar is configured (config.realtime.url) a
+ * The transport is pluggable (see transport.ts): plain HTTP polling of
+ * Neos.Api's workspace events by default (change feed only - presence needs
+ * the sidecar); when a realtime sidecar is configured (config.realtime.url) a
  * Hocuspocus WebSocket carries both concerns with polling as automatic
  * fallback while the socket is down. Interpretation (self/dimension
  * filtering, content-vs-structure classification, roster dedup) lives here so
@@ -111,9 +112,8 @@ export function CollaborationBridge({
         .filter((user) => user.userId !== self)
         .map((user) => ({
           ...user,
-          // Only sidecar rosters carry edit-lock claims; the API's presence
-          // responses do not have the field at all (locks are not an API
-          // concept) - normalize so consumers can rely on null.
+          // Edit-lock claims are optional on the wire - normalize so
+          // consumers can rely on null.
           editingElement: user.editingElement ?? null,
           color: presenceColor(user.userId),
           initials: presenceInitials(user.name),
@@ -203,13 +203,18 @@ export function CollaborationBridge({
     const realtimeUrl = config.realtime?.url ?? null
     if (realtimeUrl) {
       transports.push(
-        startWebsocketTransport(realtimeUrl, workspaceName, positionRef.current, {
-          ...transportCallbacks,
-          onStatus: (connected) => {
-            if (connected) stopFallback()
-            else startFallback()
+        startWebsocketTransport(
+          realtimeUrl,
+          workspaceName,
+          positionRef.current,
+          {
+            ...transportCallbacks,
+            onStatus: (connected) => {
+              if (connected) stopFallback()
+              else startFallback()
+            },
           },
-        }),
+        ),
       )
       // The session starts unconnected: arm the fallback now, the socket's
       // first onConnect disarms it.

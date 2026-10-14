@@ -8,7 +8,7 @@ import {
   type Task,
   type TaskStatus,
 } from '@/api/tasks'
-import { useUsers } from '@/api/users'
+import { usePeople } from '@/api/people'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -70,13 +70,12 @@ export function TaskViewDialog({
   /** Switch over to the edit dialog for this task. */
   onEdit: (task: Task) => void
 }) {
-  const { data: usersData } = useUsers()
+  const { data: people } = usePeople()
 
   const canWrite = task?.workspace?.permissions.write ?? false
   const canManage = task?.workspace?.permissions.manage ?? false
   const assigneeLabel = task?.assignee
-    ? (usersData?.users.find((user) => user.id === task.assignee)?.label ??
-      null)
+    ? (people?.find((user) => user.id === task.assignee)?.label ?? null)
     : null
 
   return (

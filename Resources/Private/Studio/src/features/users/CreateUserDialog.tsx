@@ -77,7 +77,7 @@ export function CreateUserDialog({
       queryClient.invalidateQueries({ queryKey: queryKeys.users })
       toast.success(
         t('users.created', 'The user "{0}" has been created.', [
-          response.user.label,
+          response.label,
         ]),
       )
       onOpenChange(false)
@@ -111,7 +111,10 @@ export function CreateUserDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4">
-          <Field label={t('users.username', 'Username')} htmlFor="user-create-username">
+          <Field
+            label={t('users.username', 'Username')}
+            htmlFor="user-create-username"
+          >
             <Input
               id="user-create-username"
               value={username}

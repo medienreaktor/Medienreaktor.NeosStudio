@@ -36,6 +36,8 @@ export const queryKeys = {
     all: ['nodeTypes'] as const,
     /** The listing variant carrying every type's property/reference declarations. */
     withProperties: ['nodeTypes', 'with-properties'] as const,
+    /** The listing variant carrying allowed child node types and tethered child nodes. */
+    childConstraints: ['nodeTypes', 'child-constraints'] as const,
     schema: (name: string) => ['nodeTypes', 'schema', name] as const,
   },
   dimensions: ['dimensions'] as const,

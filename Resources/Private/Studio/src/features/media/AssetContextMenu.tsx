@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
-import { ApiError } from '@/api/client'
-import { deleteAsset, type MediaAsset } from '@/api/media'
+import { deleteAsset, isAssetInUse, type MediaAsset } from '@/api/media'
 import { translate as t } from '@/lib/i18n'
 import {
   DropdownMenu,
@@ -27,11 +26,8 @@ export async function removeAsset(localId: string): Promise<void> {
   try {
     await deleteAsset(localId)
   } catch (e) {
-    // Surface the server's in-use guard as a readable message in the dialog.
-    if (
-      e instanceof ApiError &&
-      (e.body as { error?: string } | null)?.error === 'asset_in_use'
-    ) {
+    // Surface the server's in-use guard (409) as a readable message.
+    if (isAssetInUse(e)) {
       throw new Error(
         t('media.assetInUse', 'This asset is in use and cannot be deleted.'),
       )
@@ -62,10 +58,10 @@ export function AssetContextMenu({
   const writable =
     target !== null &&
     !target.asset.isReadOnly &&
-    target.asset.localAssetIdentifier !== null
+    target.asset.localAssetId !== null
   // A cropped variant's file is derived from its original, so there is nothing
   // of its own to replace.
-  const replaceable = writable && !target.asset.originalAssetIdentifier
+  const replaceable = writable && !target.asset.originalAssetId
 
   return (
     <>
@@ -119,10 +115,10 @@ export function AssetContextMenu({
         </DropdownMenu>
       )}
 
-      {replacing?.localAssetIdentifier && (
+      {replacing?.localAssetId && (
         <ReplaceAssetDialog
           asset={replacing}
-          localId={replacing.localAssetIdentifier}
+          localId={replacing.localAssetId}
           onOpenChange={(open) => !open && setReplacing(null)}
         />
       )}
@@ -136,8 +132,8 @@ export function AssetContextMenu({
         )}
         onOpenChange={(open) => !open && setDeleting(null)}
         onConfirm={() =>
-          deleting?.localAssetIdentifier
-            ? removeAsset(deleting.localAssetIdentifier)
+          deleting?.localAssetId
+            ? removeAsset(deleting.localAssetId)
             : undefined
         }
       />

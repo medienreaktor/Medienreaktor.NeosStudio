@@ -177,12 +177,12 @@ function SiteRow({
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
       toast.success(
-        response.site.state === 'online'
+        response.state === 'online'
           ? t('sites.wentOnline', 'The site "{0}" is now online.', [
-              response.site.name,
+              response.name,
             ])
           : t('sites.wentOffline', 'The site "{0}" is now offline.', [
-              response.site.name,
+              response.name,
             ]),
       )
     },

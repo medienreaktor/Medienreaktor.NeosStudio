@@ -41,19 +41,17 @@ export interface ClientEvalContext {
 }
 
 /**
- * Builds the expression-facing node from a NodeDto, unwrapping the property
- * transport envelope and overlaying not-yet-committed editor input on top of
- * the persisted values.
+ * Builds the expression-facing node from a NodeDto, overlaying
+ * not-yet-committed editor input on top of the persisted values.
  */
 export function clientEvalNode(
   node: NodeDto,
   transientValues?: Record<string, unknown>,
 ): ClientEvalNode {
-  const properties: Record<string, unknown> = {}
-  for (const [name, value] of Object.entries(node.properties)) {
-    properties[name] = value?.value
+  const properties: Record<string, unknown> = {
+    ...node.properties,
+    ...transientValues,
   }
-  Object.assign(properties, transientValues)
   return {
     address: node.address,
     identifier: node.aggregateId,

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { LoadingState, Spinner } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import { AssetThumb } from './AssetThumb'
-import { formatBytes, formatDate } from './format'
+import { assetTypeLabel, formatBytes, formatDate } from './format'
 import { assetKey } from './useMediaBrowserState'
 import type { MediaViewMode } from './useMediaBrowserState'
 
@@ -220,7 +220,7 @@ function ListRow({
         </div>
       </td>
       <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
-        {asset.assetType}
+        {assetTypeLabel(asset.assetType)}
       </td>
       <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
         {formatBytes(asset.fileSize)}

@@ -1,3 +1,4 @@
+import { config } from '@/config'
 import type { DimensionSpacePoint } from './dimensions'
 
 /**
@@ -81,4 +82,58 @@ export function addressWithAggregateId(
 /** The aggregate id encoded in a node address. */
 export function aggregateIdOf(encoded: string): string {
   return decodeNodeAddress(encoded).aggregateId
+}
+
+/**
+ * Where Neos.Api serves a node: `/cr/{contentRepositoryId}/nodes/{id}` plus
+ * the subgraph as query parameters. Neos.Api addresses nodes by these parts
+ * instead of one opaque address; the shell keeps its addresses (cache keys,
+ * tree item ids, preview links) and translates at the API boundary.
+ */
+export interface NodeLocation {
+  /** `/cr/{contentRepositoryId}/nodes/{nodeAggregateId}` */
+  path: string
+  /** `/cr/{contentRepositoryId}/nodes` - for listings and creation */
+  collectionPath: string
+  workspaceName: string
+  /** The dimension space point as Neos.Api takes it: a JSON string. */
+  dimensionSpacePoint: string
+}
+
+export function nodeLocation(encoded: string): NodeLocation {
+  const address = decodeNodeAddress(encoded)
+  const collectionPath = `/cr/${encodeURIComponent(address.contentRepositoryId)}/nodes`
+  return {
+    path: `${collectionPath}/${encodeURIComponent(address.aggregateId)}`,
+    collectionPath,
+    workspaceName: address.workspaceName,
+    dimensionSpacePoint: JSON.stringify(address.dimensionSpacePoint),
+  }
+}
+
+/**
+ * The address of a node Neos.Api returned (its dimensionSpacePoint is a JSON
+ * string there). Field order matches addressFromContextPath, so the encoding
+ * is byte-identical to the addresses the guest markup yields.
+ */
+export function addressOf(node: {
+  contentRepositoryId: string
+  workspaceName: string
+  dimensionSpacePoint: string | DimensionSpacePoint
+  nodeAggregateId: string
+}): string {
+  return encodeNodeAddress({
+    contentRepositoryId: node.contentRepositoryId,
+    workspaceName: node.workspaceName,
+    dimensionSpacePoint:
+      typeof node.dimensionSpacePoint === 'string'
+        ? (JSON.parse(node.dimensionSpacePoint) as DimensionSpacePoint)
+        : node.dimensionSpacePoint,
+    aggregateId: node.nodeAggregateId,
+  })
+}
+
+/** `/cr/{contentRepositoryId}` of the content repository the Studio edits. */
+export function contentRepositoryPath(): string {
+  return `/cr/${encodeURIComponent(config.contentRepositoryId)}`
 }

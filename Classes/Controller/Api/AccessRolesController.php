@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
-use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosStudio\Domain\Model\AccessRole;
 use Medienreaktor\NeosStudio\Domain\Model\AccessRoleConstraints;
 use Medienreaktor\NeosStudio\Domain\Repository\AccessRoleRepository;
@@ -14,6 +13,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Security\Authorization\PrivilegeManagerInterface;
 use Neos\Flow\Utility\Algorithms;
 use Neos\Neos\Domain\Model\UserId;
 use Neos\Neos\Domain\Service\UserService;
@@ -34,7 +34,7 @@ use Neos\Neos\Domain\Service\UserService;
  * one in a role would produce a member who visibly has a role and invisibly
  * ignores it - confusing rather than dangerous, and refused outright.
  */
-class AccessRolesController extends AbstractApiController
+class AccessRolesController extends AbstractStudioApiController
 {
     #[Flow\Inject]
     protected AccessRoleRepository $accessRoleRepository;
@@ -45,12 +45,15 @@ class AccessRolesController extends AbstractApiController
     #[Flow\Inject]
     protected UserService $userService;
 
+    #[Flow\Inject]
+    protected PrivilegeManagerInterface $privilegeManager;
+
     /**
      * GET /api/access/roles - every role with its members.
      */
     public function indexAction(): string
     {
-        $this->requireScope('neos.read');
+        $this->requireScope(self::SCOPE_READ);
 
         $membersByRole = $this->accessRoleRepository->findAllMemberUserIds();
         $roles = array_map(
@@ -85,7 +88,7 @@ class AccessRolesController extends AbstractApiController
         ?array $memberUserIds = null,
         bool $active = true
     ): string {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
 
         $label = trim($label);
         if ($label === '') {
@@ -136,7 +139,7 @@ class AccessRolesController extends AbstractApiController
         ?array $memberUserIds = null,
         ?bool $active = null
     ): string {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
 
         $role = $this->requireRole($roleId);
 
@@ -175,7 +178,7 @@ class AccessRolesController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function setMembersAction(string $roleId, array $userIds): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
 
         $role = $this->requireRole($roleId);
         $members = $this->validateMembers($userIds);
@@ -191,7 +194,7 @@ class AccessRolesController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function deleteAction(string $roleId): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
 
         $role = $this->requireRole($roleId);
         $this->accessRoleRepository->remove($role->id);
@@ -206,7 +209,7 @@ class AccessRolesController extends AbstractApiController
      */
     public function meAction(): string
     {
-        $this->requireScope('neos.read');
+        $this->requireScope(self::SCOPE_READ);
 
         $access = $this->accessControlService->effectiveAccessForCurrentUser();
 
@@ -223,6 +226,9 @@ class AccessRolesController extends AbstractApiController
                 ),
             ],
             'capabilities' => AccessRoleConstraints::CAPABILITIES,
+            // Whether the caller may administer the roles themselves - gates
+            // the Roles section in the shell's settings modal.
+            'canAdminister' => $this->privilegeManager->isPrivilegeTargetGranted('Medienreaktor.NeosStudio:Api.AccessRoles.Write'),
         ]);
     }
 

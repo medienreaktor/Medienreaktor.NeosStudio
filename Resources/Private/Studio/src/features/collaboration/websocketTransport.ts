@@ -10,8 +10,9 @@ import type {
 
 /**
  * Messages the realtime sidecar (Resources/Private/Realtime/server.js) sends over the stateless
- * channel of the Hocuspocus connection. The shapes deliberately mirror the
- * polling endpoints' payloads so both transports feed the bridge identically.
+ * channel of the Hocuspocus connection. Feed events have the shape the polling
+ * transport classifies Neos.Api's events into, so both transports feed the
+ * bridge identically.
  */
 type ServerMessage =
   | { type: 'presence'; users: PresenceUser[] }

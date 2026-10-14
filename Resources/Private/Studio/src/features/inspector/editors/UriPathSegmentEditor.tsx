@@ -44,7 +44,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
 
   const sync = async () => {
     if (!nodeAddress) return
-    const title = self?.properties.title?.value
+    const title = self?.properties.title
     setIsSyncing(true)
     try {
       const slug = await generateUriPathSegment(

@@ -6,6 +6,7 @@ import {
   updateTag,
   useAssetCollections,
   useAssetSources,
+  tagFilterApplies,
   useTags,
   type AssetSource,
   type AssetType,
@@ -30,15 +31,22 @@ import { translate as t } from '@/lib/i18n'
 import { cn, floatingControl, toolbarFade } from '@/lib/utils'
 import { MediaItemActions, type MediaMenuTarget } from './MediaItemMenu'
 import { collectionToNode, MediaTree, tagToNode } from './MediaTree'
+import { assetTypeLabel } from './format'
 import type { MediaBrowserController } from './useMediaBrowserState'
 
-const TYPES: Array<AssetType | 'All'> = [
-  'All',
-  'Image',
-  'Document',
-  'Video',
-  'Audio',
+const TYPES: Array<AssetType | 'all'> = [
+  'all',
+  'image',
+  'document',
+  'video',
+  'audio',
 ]
+
+function typeLabel(type: AssetType | 'all'): string {
+  return type === 'all'
+    ? t('media.allTypes', 'All types')
+    : assetTypeLabel(type)
+}
 
 // `label` is the English source text; it is translated at render time via
 // `labelKey` (module-level constants evaluate before the translation bundle
@@ -114,9 +122,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
     setMenuTarget({ ...target, anchor: { x: event.clientX, y: event.clientY } })
   }
 
-  const activeSource = sources.data?.find(
-    (s) => s.identifier === filter.assetSource,
-  )
+  const activeSource = sources.data?.find((s) => s.id === filter.assetSource)
   const supportsCollections = activeSource?.supportsCollections ?? true
   const supportsTagging = activeSource?.supportsTagging ?? true
   const hasSources = (sources.data?.length ?? 0) > 1
@@ -126,17 +132,26 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
   const collectionLabel =
     filter.collection === null
       ? t('media.allCollections', 'All collections')
-      : (collections.data?.find((c) => c.identifier === filter.collection)
-          ?.title ?? t('media.collection', 'Collection'))
+      : (collections.data?.find((c) => c.id === filter.collection)?.title ??
+        t('media.collection', 'Collection'))
 
-  const tagLabel =
+  // Neos.Api cannot search within a tag: while a search runs, the tag filter
+  // is suspended (and shown as such) instead of silently narrowing nothing.
+  const tagsApply = tagFilterApplies(filter)
+  const tagFilterSet = filter.tagMode === 'none' || filter.tag !== null
+  const selectedTagLabel =
     filter.tagMode === 'none'
       ? t('media.untagged', 'Untagged')
       : filter.tag === null
         ? t('media.allTags', 'All tags')
-        : (flattenTags(tags.data ?? []).find(
-            (tag) => tag.identifier === filter.tag,
-          )?.label ?? t('media.tag', 'Tag'))
+        : (flattenTags(tags.data ?? []).find((tag) => tag.id === filter.tag)
+            ?.label ?? t('media.tag', 'Tag'))
+  const tagLabel =
+    tagFilterSet && !tagsApply
+      ? t('media.tagFilterSuspended', '{0} (not while searching)', [
+          selectedTagLabel,
+        ])
+      : selectedTagLabel
 
   return (
     // Same fixed overlay toolbar as the documents/create panels.
@@ -157,10 +172,10 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
 
       <Select
         value={filter.type}
-        onValueChange={(v) => state.setType(v as AssetType | 'All')}
+        onValueChange={(v) => state.setType(v as AssetType | 'all')}
         items={TYPES.map((type) => ({
           value: type,
-          label: type === 'All' ? t('media.allTypes', 'All types') : type,
+          label: typeLabel(type),
         }))}
       >
         <SelectTrigger className={cn('h-8 w-32', floatingControl)} size="sm">
@@ -169,7 +184,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         <SelectContent>
           {TYPES.map((type) => (
             <SelectItem key={type} value={type}>
-              {type === 'All' ? t('media.allTypes', 'All types') : type}
+              {typeLabel(type)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -186,10 +201,10 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             <ul className="min-w-48 space-y-0.5">
               {sources.data!.map((source) => (
                 <SourceButton
-                  key={source.identifier}
+                  key={source.id}
                   source={source}
-                  active={source.identifier === filter.assetSource}
-                  onSelect={() => state.setAssetSource(source.identifier)}
+                  active={source.id === filter.assetSource}
+                  onSelect={() => state.setAssetSource(source.id)}
                 />
               ))}
             </ul>
@@ -244,7 +259,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
           <FilterButton
             icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
             label={tagLabel}
-            active={filter.tagMode === 'none' || filter.tag !== null}
+            active={tagFilterSet && tagsApply}
             action={<AddTag />}
           >
             <div className="min-w-56">
@@ -279,8 +294,8 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                   openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
                 }
                 onReparent={(tagId, newParentId) =>
-                  // parent:null is "unchanged"; '' moves to root.
-                  void updateTag(tagId, { parent: newParentId ?? '' })
+                  // parentId null moves the tag to the root.
+                  void updateTag(tagId, { parentId: newParentId ?? null })
                 }
               />
             </div>

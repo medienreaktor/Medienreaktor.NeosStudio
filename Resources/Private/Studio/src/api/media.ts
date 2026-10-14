@@ -5,19 +5,25 @@ import {
 } from '@tanstack/react-query'
 
 import { queryClient } from '@/app/queryClient'
-import { apiFetch, apiUpload } from './client'
+import {
+  ApiError,
+  apiFetch,
+  apiUpload,
+  queryString,
+  type Listing,
+} from './client'
 import { queryKeys } from './keys'
-import type { NodeDto } from './nodes'
 
-export type AssetType = 'Image' | 'Document' | 'Video' | 'Audio'
+/** The asset types of Neos.Api (lowercase). */
+export type AssetType = 'image' | 'document' | 'video' | 'audio'
 
 export interface AssetTagRef {
-  identifier: string
+  id: string
   label: string
 }
 
 export interface AssetCollectionRef {
-  identifier: string
+  id: string
   title: string
 }
 
@@ -29,15 +35,11 @@ export interface CropRect {
   height: number
 }
 
-/**
- * An asset as returned by the API, across all asset sources. The editable
- * metadata block (title/caption/copyrightNotice, tags, collections) is only
- * present for local Neos assets; remote proxies expose `iptc` instead.
- */
-export interface MediaAsset {
-  assetSource: string
-  identifier: string
-  localAssetIdentifier: string | null
+/** Neos.Api's Asset. */
+interface ApiAsset {
+  assetSourceId: string
+  id: string
+  localAssetId: string | null
   label: string
   filename: string
   mediaType: string
@@ -48,30 +50,48 @@ export interface MediaAsset {
   height: number | null
   thumbnailUri: string | null
   previewUri: string | null
-  isImported: boolean
-  isRemote: boolean
   isReadOnly: boolean
-  // Local Neos assets only:
-  title?: string
-  caption?: string
-  copyrightNotice?: string
-  tags?: AssetTagRef[]
-  collections?: AssetCollectionRef[]
-  // Image variants (a cropped image) only: the original image this was cropped
-  // from, and the current crop rectangle in the original's pixel coordinates.
-  // Let the crop editor re-crop the original and prefill the last crop.
-  originalAssetIdentifier?: string | null
-  crop?: CropRect | null
-  // Remote proxies only:
-  iptc?: {
+  title: string | null
+  caption: string | null
+  copyrightNotice: string | null
+  tags: AssetTagRef[] | null
+  collections: AssetCollectionRef[] | null
+  originalAssetId: string | null
+  crop: CropRect | null
+  iptc: {
     title: string | null
     caption: string | null
     copyrightNotice: string | null
+  } | null
+}
+
+/**
+ * An asset across all asset sources (Neos.Api's Asset plus two derived
+ * flags). The editable metadata (title/caption/copyrightNotice, tags,
+ * collections) is only set for local Neos assets; remote proxies carry
+ * `iptc` instead.
+ */
+export interface MediaAsset extends ApiAsset {
+  /** From another asset source than the local Neos one (a DAM). */
+  isRemote: boolean
+  /** A remote asset that has been imported into Neos already. */
+  isImported: boolean
+}
+
+/** The id of the local Neos asset source - the only one taking uploads. */
+export const LOCAL_ASSET_SOURCE = 'neos'
+
+function toMediaAsset(asset: ApiAsset): MediaAsset {
+  const isRemote = asset.assetSourceId !== LOCAL_ASSET_SOURCE
+  return {
+    ...asset,
+    isRemote,
+    isImported: isRemote && asset.localAssetId !== null,
   }
 }
 
 export interface AssetSource {
-  identifier: string
+  id: string
   label: string
   description: string
   iconUri: string
@@ -82,36 +102,49 @@ export interface AssetSource {
 }
 
 export interface MediaCollection {
-  identifier: string
+  id: string
   title: string
   assetCount: number
+  tags: AssetTagRef[]
 }
 
 export interface MediaTag {
-  identifier: string
+  id: string
   label: string
-  parent: string | null
+  parentId: string | null
   assetCount: number
   children: MediaTag[]
 }
 
-export interface AssetUsage {
-  node: NodeDto
-  documentNode: NodeDto | null
+/** A node Neos.Api lists as a usage (the fields the Studio shows). */
+export interface AssetUsageNode {
+  contentRepositoryId: string
   workspaceName: string
-  dimension: Record<string, string>
+  /** JSON, e.g. {"language":"en"} */
+  dimensionSpacePoint: string
+  nodeAggregateId: string
+  label: string
+}
+
+export interface AssetUsage {
+  node: AssetUsageNode
+  documentNode: AssetUsageNode | null
 }
 
 export interface AssetUsageResponse {
-  usages: AssetUsage[]
-  inaccessibleCount: number
-  total: number
+  data: AssetUsage[]
+  meta: {
+    /** How many usages are listed. */
+    total: number
+    /** Usages besides, in nodes or workspaces the account may not read. */
+    inaccessible: number
+  }
 }
 
 /** The controls the browser toolbar/sidebar drive the list with. */
 export interface AssetListFilter {
   assetSource: string
-  type: AssetType | 'All'
+  type: AssetType | 'all'
   search: string
   collection: string | null
   tag: string | null
@@ -122,8 +155,8 @@ export interface AssetListFilter {
 }
 
 export const DEFAULT_ASSET_FILTER: AssetListFilter = {
-  assetSource: 'neos',
-  type: 'All',
+  assetSource: LOCAL_ASSET_SOURCE,
+  type: 'all',
   search: '',
   collection: null,
   tag: null,
@@ -132,26 +165,40 @@ export const DEFAULT_ASSET_FILTER: AssetListFilter = {
   sortDirection: 'desc',
 }
 
-interface AssetListResponse {
-  assets: MediaAsset[]
-  pagination: { total: number; limit: number; offset: number }
+/**
+ * Whether the tag filter applies to the list. Neos.Api cannot combine a
+ * search with a tag filter (or the untagged one), so a search lists across
+ * all tags - the browser shows the tag filter as suspended meanwhile.
+ */
+export function tagFilterApplies(filter: AssetListFilter): boolean {
+  return filter.search.trim() === ''
 }
 
 const PAGE_SIZE = 40
 
-function assetListQuery(filter: AssetListFilter, offset: number): string {
-  const params = new URLSearchParams()
-  params.set('assetSource', filter.assetSource)
-  params.set('limit', String(PAGE_SIZE))
-  params.set('offset', String(offset))
-  if (filter.type !== 'All') params.set('type', filter.type)
-  if (filter.search) params.set('search', filter.search)
-  if (filter.collection) params.set('collection', filter.collection)
-  if (filter.tagMode === 'none') params.set('tagMode', 'none')
-  else if (filter.tag) params.set('tag', filter.tag)
-  params.set('sortBy', filter.sortBy)
-  params.set('sortDirection', filter.sortDirection)
-  return params.toString()
+function assetListPath(filter: AssetListFilter, offset: number): string {
+  const search = filter.search.trim()
+  const field = filter.sortBy === 'name' ? 'name' : 'lastModified'
+  const tags = tagFilterApplies(filter)
+  return `/assets/${encodeURIComponent(filter.assetSource)}${queryString({
+    filterByAssetType: filter.type !== 'all' ? filter.type : undefined,
+    filterByCollection: filter.collection ?? undefined,
+    filterByTag:
+      tags && filter.tagMode === 'given'
+        ? (filter.tag ?? undefined)
+        : undefined,
+    filterByUntagged: tags && filter.tagMode === 'none' ? true : undefined,
+    search: search !== '' ? search : undefined,
+    sort: filter.sortDirection === 'desc' ? `-${field}` : field,
+    offset,
+    limit: PAGE_SIZE,
+  })}`
+}
+
+export interface AssetPage {
+  assets: MediaAsset[]
+  total: number
+  offset: number
 }
 
 /**
@@ -164,14 +211,20 @@ export function useAssets(filter: AssetListFilter, enabled = true) {
     queryKey: queryKeys.media.assets(
       filter as unknown as Record<string, unknown>,
     ),
-    queryFn: ({ pageParam }) =>
-      apiFetch<AssetListResponse>(
-        `/media/assets?${assetListQuery(filter, pageParam)}`,
-      ),
+    queryFn: async ({ pageParam }): Promise<AssetPage> => {
+      const listing = await apiFetch<Listing<ApiAsset>>(
+        assetListPath(filter, pageParam),
+      )
+      return {
+        assets: listing.data.map(toMediaAsset),
+        total: listing.meta.total,
+        offset: pageParam,
+      }
+    },
     initialPageParam: 0,
     getNextPageParam: (last) => {
-      const next = last.pagination.offset + last.pagination.limit
-      return next < last.pagination.total ? next : undefined
+      const next = last.offset + last.assets.length
+      return last.assets.length > 0 && next < last.total ? next : undefined
     },
     // Keep the previous results on screen while a new search/filter loads, so
     // the grid updates in place instead of flickering through an empty state.
@@ -180,33 +233,48 @@ export function useAssets(filter: AssetListFilter, enabled = true) {
   })
 }
 
+function assetPath(assetSourceId: string, assetId: string): string {
+  return `/assets/${encodeURIComponent(assetSourceId)}/${encodeURIComponent(assetId)}`
+}
+
+/** A local Neos asset's path. */
+function localAssetPath(assetId: string): string {
+  return assetPath(LOCAL_ASSET_SOURCE, assetId)
+}
+
+export function fetchAsset(
+  assetSourceId: string,
+  assetId: string,
+): Promise<MediaAsset> {
+  return apiFetch<ApiAsset>(assetPath(assetSourceId, assetId)).then(
+    toMediaAsset,
+  )
+}
+
 export function useAsset(
-  assetSource: string,
-  identifier: string | null,
+  assetSourceId: string,
+  assetId: string | null,
   enabled = true,
 ) {
   return useQuery({
-    queryKey: queryKeys.media.asset(assetSource, identifier ?? ''),
-    queryFn: () =>
-      apiFetch<{ asset: MediaAsset }>(
-        `/media/assets/${encodeURIComponent(assetSource)}/${encodeURIComponent(identifier!)}`,
-      ).then((r) => r.asset),
-    enabled: enabled && identifier !== null,
+    queryKey: queryKeys.media.asset(assetSourceId, assetId ?? ''),
+    queryFn: () => fetchAsset(assetSourceId, assetId!),
+    enabled: enabled && assetId !== null,
   })
 }
 
 export function useAssetUsage(
-  assetSource: string,
-  identifier: string | null,
+  assetSourceId: string,
+  assetId: string | null,
   enabled = true,
 ) {
   return useQuery({
-    queryKey: queryKeys.media.assetUsage(assetSource, identifier ?? ''),
+    queryKey: queryKeys.media.assetUsage(assetSourceId, assetId ?? ''),
     queryFn: () =>
       apiFetch<AssetUsageResponse>(
-        `/media/assets/${encodeURIComponent(assetSource)}/${encodeURIComponent(identifier!)}/usage`,
+        `${assetPath(assetSourceId, assetId!)}/usages`,
       ),
-    enabled: enabled && identifier !== null,
+    enabled: enabled && assetId !== null,
   })
 }
 
@@ -214,9 +282,7 @@ export function useAssetSources(enabled = true) {
   return useQuery({
     queryKey: queryKeys.media.sources,
     queryFn: () =>
-      apiFetch<{ assetSources: AssetSource[] }>('/media/asset-sources').then(
-        (r) => r.assetSources,
-      ),
+      apiFetch<Listing<AssetSource>>('/assets').then((r) => r.data),
     enabled,
   })
 }
@@ -225,18 +291,19 @@ export function useAssetCollections(enabled = true) {
   return useQuery({
     queryKey: queryKeys.media.collections,
     queryFn: () =>
-      apiFetch<{ collections: MediaCollection[] }>('/media/collections').then(
-        (r) => r.collections,
+      apiFetch<Listing<MediaCollection>>('/assetcollections').then(
+        (r) => r.data,
       ),
     enabled,
   })
 }
 
+/** The tag tree (top-level tags with their children). */
 export function useTags(enabled = true) {
   return useQuery({
     queryKey: queryKeys.media.tags,
     queryFn: () =>
-      apiFetch<{ tags: MediaTag[] }>('/media/tags').then((r) => r.tags),
+      apiFetch<Listing<MediaTag>>('/assettags').then((r) => r.data),
     enabled,
   })
 }
@@ -248,55 +315,82 @@ function invalidateMedia(): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: queryKeys.media.all })
 }
 
+/** Whether a failed delete was refused because the asset is in use. */
+export function isAssetInUse(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409
+}
+
 export interface UploadOptions {
   collection?: string | null
   tags?: string[]
   onProgress?: (fraction: number) => void
 }
 
+/**
+ * Upload a file into the local Neos source. A file Neos has already (same
+ * content) is not added again - Neos.Api answers with the existing asset and
+ * ignores the fields, so the requested collection and tags are added to it
+ * explicitly.
+ */
 export async function uploadAsset(
   file: File,
   options: UploadOptions = {},
 ): Promise<MediaAsset> {
   const form = new FormData()
-  form.append('asset[resource]', file)
-  if (options.collection) form.append('collection', options.collection)
-  for (const tag of options.tags ?? []) form.append('tags[]', tag)
+  form.append('file', file)
+  if (options.collection) form.append('collectionIds[]', options.collection)
+  for (const tag of options.tags ?? []) form.append('tagIds[]', tag)
 
-  const result = await apiUpload<{ asset: MediaAsset }>('/media/assets', form, {
+  let asset = await apiUpload<ApiAsset>(`/assets/${LOCAL_ASSET_SOURCE}`, form, {
     onProgress: options.onProgress,
   })
+  // A duplicate: apply the memberships the upload asked for (PUT is
+  // idempotent, so already-present ones are no-ops).
+  const missingCollection =
+    options.collection &&
+    !(asset.collections ?? []).some((c) => c.id === options.collection)
+  if (missingCollection) {
+    asset = await apiFetch<ApiAsset>(
+      `${localAssetPath(asset.id)}/collections/${encodeURIComponent(options.collection!)}`,
+      { method: 'PUT' },
+    )
+  }
+  for (const tag of options.tags ?? []) {
+    if ((asset.tags ?? []).some((t) => t.id === tag)) continue
+    asset = await apiFetch<ApiAsset>(
+      `${localAssetPath(asset.id)}/tags/${encodeURIComponent(tag)}`,
+      { method: 'PUT' },
+    )
+  }
   await invalidateMedia()
-  return result.asset
+  return toMediaAsset(asset)
 }
 
 export interface AssetMetadataPatch {
   title?: string
   caption?: string
   copyrightNotice?: string
-  tags?: string[]
-  collections?: string[]
+  /** Replaces the tags. */
+  tagIds?: string[]
+  /** Replaces the collections. */
+  collectionIds?: string[]
 }
 
 export async function updateAsset(
-  identifier: string,
+  assetId: string,
   patch: AssetMetadataPatch,
 ): Promise<MediaAsset> {
-  const result = await apiFetch<{ asset: MediaAsset }>(
-    `/media/assets/neos/${encodeURIComponent(identifier)}`,
-    {
-      method: 'PATCH',
-      body: patch,
-    },
-  )
+  const asset = await apiFetch<ApiAsset>(localAssetPath(assetId), {
+    method: 'PATCH',
+    body: patch,
+  })
   await invalidateMedia()
-  return result.asset
+  return toMediaAsset(asset)
 }
 
-export async function deleteAsset(identifier: string): Promise<void> {
-  await apiFetch(`/media/assets/neos/${encodeURIComponent(identifier)}`, {
-    method: 'DELETE',
-  })
+/** Deletes a local asset; an asset in use is refused (409, see isAssetInUse). */
+export async function deleteAsset(assetId: string): Promise<void> {
+  await apiFetch<null>(localAssetPath(assetId), { method: 'DELETE' })
   await invalidateMedia()
 }
 
@@ -315,143 +409,169 @@ export interface ReplaceResourceOptions {
  * different media type family (image -> pdf) and cropped image variants.
  */
 export async function replaceAssetResource(
-  identifier: string,
+  assetId: string,
   file: File,
   options: ReplaceResourceOptions = {},
 ): Promise<MediaAsset> {
   const form = new FormData()
-  form.append('resource', file)
-  if (options.keepOriginalFilename) form.append('keepOriginalFilename', '1')
-  const result = await apiUpload<{ asset: MediaAsset }>(
-    `/media/assets/neos/${encodeURIComponent(identifier)}/resource`,
+  form.append('file', file)
+  form.append(
+    'keepOriginalFilename',
+    options.keepOriginalFilename ? 'true' : 'false',
+  )
+  const asset = await apiUpload<ApiAsset>(
+    `${localAssetPath(assetId)}/file`,
     form,
-    { onProgress: options.onProgress },
+    {
+      method: 'PUT',
+      onProgress: options.onProgress,
+    },
   )
   await invalidateMedia()
-  return result.asset
+  return toMediaAsset(asset)
 }
 
 /**
  * Create a cropped variant of a local image and return it as an asset. Pass the
- * *original* image's identifier (not a variant's) and the crop in the
- * original's pixel coordinates; the server persists a new ImageVariant and
- * returns it. The caller stores a reference to the returned variant's
- * identifier as the image property value.
+ * *original* image's id (not a variant's) and the crop in the original's pixel
+ * coordinates; the server persists a new ImageVariant (or returns an equal one
+ * it has already) and returns it. The caller stores the returned variant's id
+ * as the image property value.
  */
 export async function createImageVariant(
-  originalIdentifier: string,
+  originalId: string,
   crop: CropRect,
 ): Promise<MediaAsset> {
-  const result = await apiFetch<{ asset: MediaAsset }>(
-    `/media/assets/neos/${encodeURIComponent(originalIdentifier)}/variants`,
+  const asset = await apiFetch<ApiAsset>(
+    `${localAssetPath(originalId)}/variants`,
     { method: 'POST', body: { crop } },
   )
   await invalidateMedia()
-  return result.asset
+  return toMediaAsset(asset)
 }
 
+/** Import a remote asset into Neos; resolves with the asset in Neos. */
 export async function importProxyAsset(
-  assetSource: string,
-  assetIdentifier: string,
+  assetSourceId: string,
+  assetId: string,
 ): Promise<MediaAsset> {
-  const result = await apiFetch<{ asset: MediaAsset }>('/media/assets/import', {
-    method: 'POST',
-    body: { assetSource, assetIdentifier },
-  })
+  const asset = await apiFetch<ApiAsset>(
+    `${assetPath(assetSourceId, assetId)}/import`,
+    { method: 'POST' },
+  )
   await invalidateMedia()
-  return result.asset
+  return toMediaAsset(asset)
 }
 
-export async function setAssetTag(
-  identifier: string,
-  tag: string,
+/**
+ * Add (PUT, idempotent) or remove (DELETE) a membership sub-resource. Removing
+ * one the asset does not have is a 404 - already the wanted state, so it
+ * resolves with the asset as it is.
+ */
+async function setMembership(
+  path: string,
+  assetId: string,
   assigned: boolean,
 ): Promise<MediaAsset> {
-  // Tag membership is a sub-resource: PUT adds (idempotent), DELETE removes.
-  const path = `/media/assets/neos/${encodeURIComponent(identifier)}/tags/${encodeURIComponent(tag)}`
-  const result = await apiFetch<{ asset: MediaAsset }>(path, {
-    method: assigned ? 'PUT' : 'DELETE',
-  })
+  let asset: ApiAsset
+  try {
+    asset = await apiFetch<ApiAsset>(path, {
+      method: assigned ? 'PUT' : 'DELETE',
+    })
+  } catch (error) {
+    if (assigned || !(error instanceof ApiError) || error.status !== 404)
+      throw error
+    asset = await apiFetch<ApiAsset>(localAssetPath(assetId))
+  }
   await invalidateMedia()
-  return result.asset
+  return toMediaAsset(asset)
 }
 
-export async function setAssetCollection(
-  identifier: string,
-  collection: string,
+export function setAssetTag(
+  assetId: string,
+  tagId: string,
   assigned: boolean,
 ): Promise<MediaAsset> {
-  // Collection membership is a sub-resource: PUT adds (idempotent), DELETE removes.
-  const path = `/media/assets/neos/${encodeURIComponent(identifier)}/collections/${encodeURIComponent(collection)}`
-  const result = await apiFetch<{ asset: MediaAsset }>(path, {
-    method: assigned ? 'PUT' : 'DELETE',
-  })
-  await invalidateMedia()
-  return result.asset
+  return setMembership(
+    `${localAssetPath(assetId)}/tags/${encodeURIComponent(tagId)}`,
+    assetId,
+    assigned,
+  )
+}
+
+export function setAssetCollection(
+  assetId: string,
+  collectionId: string,
+  assigned: boolean,
+): Promise<MediaAsset> {
+  return setMembership(
+    `${localAssetPath(assetId)}/collections/${encodeURIComponent(collectionId)}`,
+    assetId,
+    assigned,
+  )
 }
 
 export async function createCollection(
   title: string,
 ): Promise<MediaCollection> {
-  const result = await apiFetch<{ collection: MediaCollection }>(
-    '/media/collections',
-    {
-      method: 'POST',
-      body: { title },
-    },
-  )
+  const collection = await apiFetch<MediaCollection>('/assetcollections', {
+    method: 'POST',
+    body: { title },
+  })
   await invalidateMedia()
-  return result.collection
+  return collection
 }
 
 export async function updateCollection(
-  identifier: string,
+  collectionId: string,
   title: string,
 ): Promise<MediaCollection> {
-  const result = await apiFetch<{ collection: MediaCollection }>(
-    `/media/collections/${encodeURIComponent(identifier)}`,
+  const collection = await apiFetch<MediaCollection>(
+    `/assetcollections/${encodeURIComponent(collectionId)}`,
     { method: 'PATCH', body: { title } },
   )
   await invalidateMedia()
-  return result.collection
+  return collection
 }
 
-export async function deleteCollection(identifier: string): Promise<void> {
-  await apiFetch(`/media/collections/${encodeURIComponent(identifier)}`, {
-    method: 'DELETE',
-  })
+export async function deleteCollection(collectionId: string): Promise<void> {
+  await apiFetch<null>(
+    `/assetcollections/${encodeURIComponent(collectionId)}`,
+    { method: 'DELETE' },
+  )
   await invalidateMedia()
 }
 
 export async function createTag(
   label: string,
-  parent?: string | null,
+  parentId?: string | null,
 ): Promise<MediaTag> {
-  const result = await apiFetch<{ tag: MediaTag }>('/media/tags', {
+  const tag = await apiFetch<MediaTag>('/assettags', {
     method: 'POST',
-    body: { label, parent: parent ?? null },
+    body: { label, parentId: parentId ?? null },
   })
   await invalidateMedia()
-  return result.tag
+  return tag
 }
 
+/**
+ * Rename and/or move a tag. parentId null moves it to the root; a key left
+ * out stays as it is.
+ */
 export async function updateTag(
-  identifier: string,
-  patch: { label?: string; parent?: string | null },
+  tagId: string,
+  patch: { label?: string; parentId?: string | null },
 ): Promise<MediaTag> {
-  const result = await apiFetch<{ tag: MediaTag }>(
-    `/media/tags/${encodeURIComponent(identifier)}`,
-    {
-      method: 'PATCH',
-      body: patch,
-    },
+  const tag = await apiFetch<MediaTag>(
+    `/assettags/${encodeURIComponent(tagId)}`,
+    { method: 'PATCH', body: patch },
   )
   await invalidateMedia()
-  return result.tag
+  return tag
 }
 
-export async function deleteTag(identifier: string): Promise<void> {
-  await apiFetch(`/media/tags/${encodeURIComponent(identifier)}`, {
+export async function deleteTag(tagId: string): Promise<void> {
+  await apiFetch<null>(`/assettags/${encodeURIComponent(tagId)}`, {
     method: 'DELETE',
   })
   await invalidateMedia()

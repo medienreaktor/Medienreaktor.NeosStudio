@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Medienreaktor\NeosStudio\Controller;
 
 use GuzzleHttp\Psr7\Utils;
-use Medienreaktor\NeosApi\Service\NodeAddressCodec;
+use Medienreaktor\NeosStudio\Service\NodeAddressCodec;
 use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
@@ -23,8 +23,8 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * Renders a single document for the Studio preview iframe, independent of the
- * Neos.Neos.Ui preview action. The node address (base64url, as used by the
- * Medienreaktor.NeosApi endpoints) carries the complete identity: content
+ * Neos.Neos.Ui preview action. The node address (base64url, as the Studio
+ * shell builds it - see NodeAddressCodec) carries the complete identity: content
  * repository, workspace, dimension space point and aggregate id - so the
  * workspace + dimension combination to preview is always explicit in the URL.
  *

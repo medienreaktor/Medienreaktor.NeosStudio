@@ -4,13 +4,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 /** Where a given asset is referenced across the content repository. */
 export function UsageTable({
-  assetSource,
-  identifier,
+  assetSourceId,
+  assetId,
 }: {
-  assetSource: string
-  identifier: string
+  assetSourceId: string
+  assetId: string
 }) {
-  const usage = useAssetUsage(assetSource, identifier)
+  const usage = useAssetUsage(assetSourceId, assetId)
 
   if (usage.isLoading) {
     return <Skeleton className="h-16 w-full" />
@@ -22,7 +22,7 @@ export function UsageTable({
       </p>
     )
   }
-  if (usage.data.total === 0) {
+  if (usage.data.meta.total === 0 && usage.data.meta.inaccessible === 0) {
     return (
       <p className="text-xs text-neutral-500">
         {t('media.usageNone', 'Not used anywhere. Safe to delete.')}
@@ -32,7 +32,7 @@ export function UsageTable({
 
   return (
     <div className="space-y-1">
-      {usage.data.usages.map((entry, index) => (
+      {usage.data.data.map((entry, index) => (
         <div
           key={index}
           className="flex items-center gap-2 rounded bg-neutral-200/50 dark:bg-neutral-800/50 px-2 py-1.5 text-xs"
@@ -51,14 +51,14 @@ export function UsageTable({
               )}
           </div>
           <span className="shrink-0 text-neutral-500">
-            {entry.workspaceName}
+            {entry.node.workspaceName}
           </span>
         </div>
       ))}
-      {usage.data.inaccessibleCount > 0 && (
+      {usage.data.meta.inaccessible > 0 && (
         <p className="text-xs text-neutral-500">
           {t('media.usageInaccessible', '+ {0} usage(s) you cannot access', [
-            usage.data.inaccessibleCount,
+            usage.data.meta.inaccessible,
           ])}
         </p>
       )}

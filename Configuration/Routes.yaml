@@ -1,5 +1,6 @@
 #
-# Studio shell API (OAuth bearer secured, same firewall as Medienreaktor.NeosApi)
+# Studio shell API below neos/studio/api (OAuth bearer secured via Neos.OAuth:Bearer,
+# see Settings.yaml) - kept out of Neos.Api's /api namespace on purpose
 #
 
 # --- Access roles --------------------------------------------------------
@@ -7,7 +8,7 @@
 # while everything below is administration.
 -
   name: 'Studio API: own effective access'
-  uriPattern: 'api/access/me'
+  uriPattern: 'neos/studio/api/access/me'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\AccessRoles'
@@ -17,7 +18,7 @@
 
 -
   name: 'Studio API: access roles list'
-  uriPattern: 'api/access/roles'
+  uriPattern: 'neos/studio/api/access/roles'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\AccessRoles'
@@ -27,7 +28,7 @@
 
 -
   name: 'Studio API: create access role'
-  uriPattern: 'api/access/roles'
+  uriPattern: 'neos/studio/api/access/roles'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\AccessRoles'
@@ -38,7 +39,7 @@
 # Before the {roleId} routes below - a longer, more specific pattern must win.
 -
   name: 'Studio API: set access role members'
-  uriPattern: 'api/access/roles/{roleId}/members'
+  uriPattern: 'neos/studio/api/access/roles/{roleId}/members'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\AccessRoles'
@@ -48,7 +49,7 @@
 
 -
   name: 'Studio API: update access role'
-  uriPattern: 'api/access/roles/{roleId}'
+  uriPattern: 'neos/studio/api/access/roles/{roleId}'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\AccessRoles'
@@ -58,7 +59,7 @@
 
 -
   name: 'Studio API: delete access role'
-  uriPattern: 'api/access/roles/{roleId}'
+  uriPattern: 'neos/studio/api/access/roles/{roleId}'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\AccessRoles'
@@ -68,7 +69,7 @@
 
 -
   name: 'Studio API: tasks list'
-  uriPattern: 'api/tasks'
+  uriPattern: 'neos/studio/api/tasks'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -78,7 +79,7 @@
 
 -
   name: 'Studio API: create task'
-  uriPattern: 'api/tasks'
+  uriPattern: 'neos/studio/api/tasks'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -88,7 +89,7 @@
 
 -
   name: 'Studio API: assign task'
-  uriPattern: 'api/tasks/{workspaceName}/assign'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}/assign'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -98,7 +99,7 @@
 
 -
   name: 'Studio API: task comments'
-  uriPattern: 'api/tasks/{workspaceName}/comments'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}/comments'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -108,7 +109,7 @@
 
 -
   name: 'Studio API: add task comment'
-  uriPattern: 'api/tasks/{workspaceName}/comments'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}/comments'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -118,7 +119,7 @@
 
 -
   name: 'Studio API: submit task for review'
-  uriPattern: 'api/tasks/{workspaceName}/submit'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}/submit'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -128,7 +129,7 @@
 
 -
   name: 'Studio API: approve task (publish)'
-  uriPattern: 'api/tasks/{workspaceName}/approve'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}/approve'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -138,7 +139,7 @@
 
 -
   name: 'Studio API: update task'
-  uriPattern: 'api/tasks/{workspaceName}'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -148,7 +149,7 @@
 
 -
   name: 'Studio API: reopen task'
-  uriPattern: 'api/tasks/{workspaceName}/reopen'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}/reopen'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -158,7 +159,7 @@
 
 -
   name: 'Studio API: delete task'
-  uriPattern: 'api/tasks/{workspaceName}'
+  uriPattern: 'neos/studio/api/tasks/{workspaceName}'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
@@ -168,7 +169,7 @@
 
 -
   name: 'Studio API: notifications'
-  uriPattern: 'api/notifications'
+  uriPattern: 'neos/studio/api/notifications'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Notifications'
@@ -179,7 +180,7 @@
 
 -
   name: 'Studio API: mark notifications read'
-  uriPattern: 'api/notifications/read'
+  uriPattern: 'neos/studio/api/notifications/read'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Notifications'
@@ -189,7 +190,7 @@
 
 -
   name: 'Studio API: clear read notifications'
-  uriPattern: 'api/notifications'
+  uriPattern: 'neos/studio/api/notifications'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Notifications'
@@ -199,7 +200,7 @@
 
 -
   name: 'Studio API: preview links list'
-  uriPattern: 'api/preview-links'
+  uriPattern: 'neos/studio/api/preview-links'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\PreviewLinks'
@@ -209,7 +210,7 @@
 
 -
   name: 'Studio API: create preview link'
-  uriPattern: 'api/preview-links'
+  uriPattern: 'neos/studio/api/preview-links'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\PreviewLinks'
@@ -219,7 +220,7 @@
 
 -
   name: 'Studio API: revoke preview link'
-  uriPattern: 'api/preview-links/{linkId}'
+  uriPattern: 'neos/studio/api/preview-links/{linkId}'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\PreviewLinks'
@@ -227,12 +228,79 @@
     '@format': 'json'
   httpMethods: ['DELETE']
 
+# --- Workspace review, history and trash read models -------------------------
+# Writing (publish, discard, rebase, restore) is Neos.Api's. pending-events/diff
+# comes before pending-events - a longer, more specific pattern must win.
+-
+  name: 'Studio API: workspace document changes (review)'
+  uriPattern: 'neos/studio/api/workspaces/{workspaceName}/document-changes'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\WorkspaceHistory'
+    '@action': 'documentChanges'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: workspace document diff'
+  uriPattern: 'neos/studio/api/workspaces/{workspaceName}/document-diff'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\WorkspaceHistory'
+    '@action': 'documentDiff'
+    '@format': 'json'
+  httpMethods: ['GET']
+  appendExceedingArguments: true
+
+-
+  name: 'Studio API: workspace pending events diff'
+  uriPattern: 'neos/studio/api/workspaces/{workspaceName}/pending-events/diff'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\WorkspaceHistory'
+    '@action': 'pendingEventsDiff'
+    '@format': 'json'
+  httpMethods: ['GET']
+  appendExceedingArguments: true
+
+-
+  name: 'Studio API: workspace pending events (history)'
+  uriPattern: 'neos/studio/api/workspaces/{workspaceName}/pending-events'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\WorkspaceHistory'
+    '@action': 'pendingEvents'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: workspace trash'
+  uriPattern: 'neos/studio/api/workspaces/{workspaceName}/trash'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\WorkspaceHistory'
+    '@action': 'trash'
+    '@format': 'json'
+  httpMethods: ['GET']
+  appendExceedingArguments: true
+
+-
+  name: 'Studio API: workspace conflict details'
+  uriPattern: 'neos/studio/api/workspaces/{workspaceName}/conflict-details'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\WorkspaceHistory'
+    '@action': 'conflictDetails'
+    '@format': 'json'
+  httpMethods: ['GET']
+  appendExceedingArguments: true
+
 -
   # Server-to-server: the realtime sidecar (Resources/Private/Realtime/server.js) tails
   # workspace change feeds here, authenticated by the X-Realtime-Secret
   # header (see RealtimeController). Sessionless like the share endpoint.
   name: 'Studio: realtime sidecar event feed'
-  uriPattern: 'api/realtime/workspaces/{workspaceName}/events'
+  uriPattern: 'neos/studio/api/realtime/workspaces/{workspaceName}/events'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Realtime'

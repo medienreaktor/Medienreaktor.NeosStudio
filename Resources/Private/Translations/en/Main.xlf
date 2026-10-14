@@ -491,6 +491,9 @@
       <trans-unit id="dimension.creating" xml:space="preserve">
         <source>Creating…</source>
       </trans-unit>
+      <trans-unit id="dimension.missingParentsCreated" xml:space="preserve">
+        <source> Parent documents missing there are created as well.</source>
+      </trans-unit>
       <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
         <source> {0} missing parent documents will be created as well.</source>
       </trans-unit>

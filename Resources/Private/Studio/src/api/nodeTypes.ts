@@ -1,15 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { queryClient } from '@/app/queryClient'
+import { apiFetch, type Listing } from './client'
 import { queryKeys } from './keys'
+import { contentRepositoryPath } from './nodeAddress'
 
 export interface NodeTypeDto {
   name: string
   abstract: boolean
   /** Declared (not transitive) super types. */
   superTypes: string[]
-  /** Untranslated ui.label id, if configured. */
+  /**
+   * ui.label, already translated into the interface language by the server;
+   * null if none is configured.
+   */
   label: string | null
-  /** ui.icon as configured - a Font Awesome name by Neos convention. */
+  /** ui.icon as Font Awesome classes ("fas fa-file"), null if none. */
   icon: string | null
   /** ui.group - only node types with a group are user-creatable (Neos convention). */
   group: string | null
@@ -21,9 +26,65 @@ export type NodeTypeMap = Map<string, NodeTypeDto>
 
 /** A node type group (Neos.Neos.nodeTypes.groups): general, structure, ... */
 export interface NodeTypeGroup {
+  /** Translated label. */
   label?: string | null
   position?: string | number | null
   collapsed?: boolean
+}
+
+/** A node type as Neos.Api returns it (listNodeTypes / getNodeType). */
+interface ApiNodeType {
+  name: string
+  /** Translated; the name if the node type has no label. */
+  label: string
+  icon: string | null
+  isAbstract: boolean
+  isFinal: boolean
+  superTypes: string[]
+  group: string | null
+  position: string | number | null
+  properties:
+    { name: string; type: string | null; label: string | null }[] | null
+  references:
+    { name: string; label: string | null; maxItems: number | null }[] | null
+  configuration: Record<string, unknown> | null
+  allowedChildNodeTypes: string[] | null
+  tetheredChildNodes:
+    { name: string; nodeType: string; allowedChildNodeTypes: string[] }[] | null
+}
+
+interface ApiNodeTypeGroup {
+  name: string
+  label: string | null
+  position: string | number | null
+  collapsed: boolean
+}
+
+type ApiNodeTypeListing = Listing<
+  ApiNodeType,
+  { total: number; groups?: ApiNodeTypeGroup[] }
+>
+
+function nodeTypesPath(): string {
+  return `${contentRepositoryPath()}/nodetypes`
+}
+
+function toNodeTypeDto(nodeType: ApiNodeType): NodeTypeDto {
+  return {
+    name: nodeType.name,
+    abstract: nodeType.isAbstract,
+    superTypes: nodeType.superTypes,
+    // Neos.Api falls back to the name; the shell humanizes the name itself.
+    label:
+      nodeType.label !== '' && nodeType.label !== nodeType.name
+        ? nodeType.label
+        : null,
+    icon: nodeType.icon,
+    // ui.group with an unquoted numeric id may still arrive as a number -
+    // normalize so it matches the (always string) group names.
+    group: nodeType.group === null ? null : String(nodeType.group),
+    position: nodeType.position,
+  }
 }
 
 interface NodeTypesResponse {
@@ -31,30 +92,49 @@ interface NodeTypesResponse {
   groups: Record<string, NodeTypeGroup | null>
 }
 
+async function loadNodeTypes(): Promise<NodeTypesResponse> {
+  const listing = await apiFetch<ApiNodeTypeListing>(nodeTypesPath())
+  const groups: Record<string, NodeTypeGroup | null> = {}
+  for (const group of listing.meta.groups ?? []) {
+    groups[group.name] = {
+      label: group.label,
+      position: group.position,
+      collapsed: group.collapsed,
+    }
+  }
+  return { nodeTypes: listing.data.map(toNodeTypeDto), groups }
+}
+
+function toNodeTypeMap(data: NodeTypesResponse): NodeTypeMap {
+  return new Map(data.nodeTypes.map((nt) => [nt.name, nt]))
+}
+
 export function useNodeTypes(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.all,
-    queryFn: () => apiFetch<NodeTypesResponse>('/node-types'),
+    queryFn: loadNodeTypes,
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled,
-    // ui.group with an unquoted numeric id arrives as a number despite the
-    // DTO type - normalize so it matches the (always string) keys of the
-    // group definitions.
-    select: (data): NodeTypeMap =>
-      new Map(
-        data.nodeTypes.map((nt) => [
-          nt.name,
-          { ...nt, group: nt.group === null ? null : String(nt.group) },
-        ]),
-      ),
+    select: toNodeTypeMap,
   })
 }
 
-/** One merged property declaration as the ?includeProperties listing carries it. */
+/** Imperative variant of useNodeTypes for non-hook contexts, same cache entry. */
+export function fetchNodeTypeMap(): Promise<NodeTypeMap> {
+  return queryClient
+    .fetchQuery({
+      queryKey: queryKeys.nodeTypes.all,
+      queryFn: loadNodeTypes,
+      staleTime: Infinity,
+    })
+    .then(toNodeTypeMap)
+}
+
+/** One merged property declaration as the include=properties listing carries it. */
 export interface NodeTypePropertySummary {
   type: string | null
-  /** Untranslated ui.label id, if configured. */
+  /** Translated ui.label, if configured. */
   label: string | null
 }
 
@@ -71,11 +151,6 @@ export interface NodeTypeWithPropertiesDto extends NodeTypeDto {
 
 export type NodeTypeWithPropertiesMap = Map<string, NodeTypeWithPropertiesDto>
 
-interface NodeTypesWithPropertiesResponse {
-  nodeTypes: NodeTypeWithPropertiesDto[]
-  groups: Record<string, NodeTypeGroup | null>
-}
-
 /**
  * The full content model: every node type with its merged property and
  * reference declarations - what the Content Model graph renders. Separate
@@ -86,22 +161,30 @@ export function useNodeTypesWithProperties(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.withProperties,
     queryFn: () =>
-      apiFetch<NodeTypesWithPropertiesResponse>(
-        '/node-types?includeProperties=1',
+      apiFetch<ApiNodeTypeListing>(
+        `${nodeTypesPath()}?include=properties,references`,
       ),
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled,
-    select: (data): NodeTypeWithPropertiesMap =>
+    select: (listing): NodeTypeWithPropertiesMap =>
       new Map(
-        data.nodeTypes.map((nt) => [
+        listing.data.map((nt) => [
           nt.name,
           {
-            ...nt,
-            // Same unquoted-YAML-scalar normalization as useNodeTypes.
-            group: nt.group === null ? null : String(nt.group),
-            properties: nt.properties ?? {},
-            references: nt.references ?? {},
+            ...toNodeTypeDto(nt),
+            properties: Object.fromEntries(
+              (nt.properties ?? []).map((property) => [
+                property.name,
+                { type: property.type, label: property.label },
+              ]),
+            ),
+            references: Object.fromEntries(
+              (nt.references ?? []).map((reference) => [
+                reference.name,
+                { label: reference.label, maxItems: reference.maxItems },
+              ]),
+            ),
           },
         ]),
       ),
@@ -112,10 +195,52 @@ export function useNodeTypesWithProperties(enabled = true) {
 export function useNodeTypeGroups(enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.all,
-    queryFn: () => apiFetch<NodeTypesResponse>('/node-types'),
+    queryFn: loadNodeTypes,
     staleTime: Infinity,
     enabled,
-    select: (data) => data.groups ?? {},
+    select: (data) => data.groups,
+  })
+}
+
+/**
+ * What the content model allows below nodes of each node type: the
+ * (non-abstract) node types a regular node may have as children, and per
+ * tethered child node name the ones the tethered node may have.
+ */
+export interface ChildNodeConstraints {
+  allowed: string[]
+  tethered: Record<string, string[]>
+}
+
+/**
+ * The child node constraints of every node type. Cached for the session - the
+ * model changes on deployments only.
+ */
+export function fetchChildNodeConstraints(): Promise<
+  Map<string, ChildNodeConstraints>
+> {
+  return queryClient.fetchQuery({
+    queryKey: queryKeys.nodeTypes.childConstraints,
+    queryFn: async () => {
+      const listing = await apiFetch<ApiNodeTypeListing>(
+        `${nodeTypesPath()}?include=allowedChildNodeTypes,tetheredChildNodes`,
+      )
+      return new Map(
+        listing.data.map((nt): [string, ChildNodeConstraints] => [
+          nt.name,
+          {
+            allowed: nt.allowedChildNodeTypes ?? [],
+            tethered: Object.fromEntries(
+              (nt.tetheredChildNodes ?? []).map((child) => [
+                child.name,
+                child.allowedChildNodeTypes,
+              ]),
+            ),
+          },
+        ]),
+      )
+    },
+    staleTime: Infinity,
   })
 }
 
@@ -182,9 +307,8 @@ export interface PropertyConfig {
   ui?: {
     label?: string | null
     /**
-     * Integrator-written guidance for editors. The server has already done
-     * the heavy lifting: `message: i18n` arrives expanded to a full XLIFF id
-     * and `thumbnail` resolved from a resource:// URI to a public URL.
+     * Integrator-written guidance for editors. The message arrives
+     * translated into the interface language; `thumbnail` as configured.
      */
     help?: { message?: string | null; thumbnail?: string | null } | null
     reloadIfChanged?: boolean
@@ -245,10 +369,18 @@ export interface NodeTypeSchemaDto {
 export function useNodeTypeSchema(name: string | null, enabled = true) {
   return useQuery({
     queryKey: queryKeys.nodeTypes.schema(name ?? ''),
-    queryFn: () =>
-      apiFetch<NodeTypeSchemaDto>(
-        `/node-types/${encodeURIComponent(name ?? '')}`,
-      ),
+    queryFn: async (): Promise<NodeTypeSchemaDto> => {
+      const nodeType = await apiFetch<ApiNodeType>(
+        `${nodeTypesPath()}/${encodeURIComponent(name ?? '')}`,
+      )
+      return {
+        name: nodeType.name,
+        abstract: nodeType.isAbstract,
+        superTypes: nodeType.superTypes,
+        configuration: (nodeType.configuration ??
+          {}) as NodeTypeSchemaDto['configuration'],
+      }
+    },
     // The content model changes on deployments, not during a session.
     staleTime: Infinity,
     enabled: enabled && name !== null,
@@ -277,4 +409,29 @@ export function isOfType(
     queue.push(...nodeType.superTypes)
   }
   return false
+}
+
+/**
+ * Whether a node type matches a node type filter in Neos' NodeTypeCriteria
+ * syntax ("Neos.Neos:Document", "Neos.Neos:Content,Neos.Neos:ContentCollection",
+ * "!Neos.Neos:Document"): of one of the listed types (if any are listed) and
+ * of none of the excluded ones.
+ */
+export function matchesNodeTypeFilter(
+  map: NodeTypeMap,
+  name: string,
+  filter: string,
+): boolean {
+  const entries = filter
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '')
+  const allowed = entries.filter((entry) => !entry.startsWith('!'))
+  const excluded = entries
+    .filter((entry) => entry.startsWith('!'))
+    .map((entry) => entry.slice(1))
+  if (excluded.some((type) => isOfType(map, name, type))) return false
+  return (
+    allowed.length === 0 || allowed.some((type) => isOfType(map, name, type))
+  )
 }

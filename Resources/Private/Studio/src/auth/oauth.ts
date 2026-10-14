@@ -1,6 +1,6 @@
 import { config } from '@/config'
 
-// Authorization-code + PKCE flow against Medienreaktor.NeosApi.
+// Authorization-code + PKCE flow against Neos.OAuth.
 // The Studio client is first-party, so the consent screen is skipped and the
 // only interactive step is the Neos backend login (which the shell already
 // required to load).

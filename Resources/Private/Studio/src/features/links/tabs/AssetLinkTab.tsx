@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { DEFAULT_ASSET_FILTER, useAssets, type MediaAsset } from '@/api/media'
-import { localIdentifierFor } from '@/api/assetValue'
+import { localAssetIdFor } from '@/api/assetValue'
 import { toast } from '@/components/ui/toast'
 import { AssetList } from '@/features/media/AssetList'
 import { assetKey } from '@/features/media/useMediaBrowserState'
@@ -27,7 +27,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   const assets = query.data?.pages.flatMap((page) => page.assets) ?? []
 
   const pick = (asset: MediaAsset) => {
-    localIdentifierFor(asset)
+    localAssetIdFor(asset)
       .then((id) => onChange(assetUri(id)))
       .catch((e: unknown) =>
         toast.error(e, {
@@ -65,7 +65,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
         view="grid"
         activeKey={
           identifier !== null
-            ? assetKey({ assetSource: 'neos', identifier })
+            ? assetKey({ assetSourceId: 'neos', id: identifier })
             : null
         }
         onSelect={pick}

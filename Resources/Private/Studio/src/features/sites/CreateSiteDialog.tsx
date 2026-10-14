@@ -63,7 +63,7 @@ export function CreateSiteDialog({
   useEffect(() => {
     if (!options) return
     setPackageKey((current) =>
-      current === '' ? (options.packages[0]?.packageKey ?? '') : current,
+      current === '' ? (options.packages[0] ?? '') : current,
     )
     setNodeTypeName((current) =>
       current === '' ? (options.nodeTypes[0]?.name ?? '') : current,
@@ -85,9 +85,7 @@ export function CreateSiteDialog({
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
       toast.success(
-        t('sites.created', 'The site "{0}" has been created.', [
-          response.site.name,
-        ]),
+        t('sites.created', 'The site "{0}" has been created.', [response.name]),
       )
       // The site node was created in live; a workspace forked before that
       // does not contain it until it is synchronized (rebased).
@@ -115,8 +113,8 @@ export function CreateSiteDialog({
   }
 
   const packageItems = (options?.packages ?? []).map((pkg) => ({
-    value: pkg.packageKey,
-    label: pkg.packageKey,
+    value: pkg,
+    label: pkg,
   }))
   const nodeTypeItems = (options?.nodeTypes ?? []).map((nodeType) => ({
     value: nodeType.name,
@@ -237,10 +235,7 @@ export function CreateSiteDialog({
               >
                 {t('common.cancel', 'Cancel')}
               </Button>
-              <Button
-                type="submit"
-                disabled={!canSubmit || mutation.isPending}
-              >
+              <Button type="submit" disabled={!canSubmit || mutation.isPending}>
                 {mutation.isPending
                   ? t('sites.creating', 'Creating…')
                   : t('sites.create', 'Create site')}

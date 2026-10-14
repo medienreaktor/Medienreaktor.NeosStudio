@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
-use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
-use Medienreaktor\NeosApi\Service\NodeAddressCodec;
-use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
+use Medienreaktor\NeosStudio\Service\NodeAddressCodec;
+use Medienreaktor\NeosStudio\Service\WorkspaceSerializer;
 use Medienreaktor\NeosStudio\Domain\Model\PreviewLink;
 use Medienreaktor\NeosStudio\Service\PreviewLinkService;
 use Neos\Flow\Annotations as Flow;
@@ -21,7 +20,7 @@ use Neos\Neos\Domain\Service\UserService;
  * A link can never grant more than its creator could see: minting requires
  * read access on the target workspace, checked here at creation time.
  */
-class PreviewLinksController extends AbstractApiController
+class PreviewLinksController extends AbstractStudioApiController
 {
     #[Flow\Inject]
     protected PreviewLinkService $previewLinkService;
@@ -37,7 +36,7 @@ class PreviewLinksController extends AbstractApiController
      */
     public function indexAction(): string
     {
-        $this->requireScope('neos.read');
+        $this->requireScope(self::SCOPE_READ);
         $user = $this->requireUser();
 
         return $this->json([
@@ -58,7 +57,7 @@ class PreviewLinksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function createAction(): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
 
         $body = json_decode((string)$this->request->getHttpRequest()->getBody(), true);
@@ -102,7 +101,7 @@ class PreviewLinksController extends AbstractApiController
     #[Flow\SkipCsrfProtection]
     public function deleteAction(string $linkId): string
     {
-        $this->requireScope('neos.write');
+        $this->requireScope(self::SCOPE_WRITE);
         $user = $this->requireUser();
 
         if (!$this->previewLinkService->revokeLink($linkId, $user->getId())) {

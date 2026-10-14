@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Service;
 
-use Medienreaktor\NeosApi\Service\WorkspaceDataEnricherInterface;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
@@ -14,16 +13,16 @@ use Neos\Neos\Domain\Model\UserId;
 use Neos\Neos\Domain\Service\UserService;
 
 /**
- * Contributes the task metadata to the workspace JSON, under the key this
- * enricher is registered with in Settings.yaml
- * ("Medienreaktor.NeosStudio:task"). Workspace decorators and the Tasks
- * panel in Studio read it back out of `workspace.extensions`.
+ * The task metadata of a workspace, as the Studio's WorkspaceSerializer
+ * embeds it under workspace.extensions['Medienreaktor.NeosStudio:task'] (the
+ * workspaces the task endpoints return). Workspaces read from Neos.Api carry
+ * no extensions; the shell joins them with the task list by workspace name.
  *
- * The enricher runs for every serialized workspace, so the task list is
- * loaded once per content repository and request, not per workspace.
+ * Runs for every serialized workspace, so the task list is loaded once per
+ * content repository and request, not per workspace.
  */
 #[Flow\Scope('singleton')]
-final class TaskWorkspaceDataEnricher implements WorkspaceDataEnricherInterface
+final class TaskWorkspaceDataEnricher
 {
     #[Flow\Inject]
     protected TaskWorkspaceRepository $taskWorkspaceRepository;
@@ -41,6 +40,9 @@ final class TaskWorkspaceDataEnricher implements WorkspaceDataEnricherInterface
      */
     private array $userLabels = [];
 
+    /**
+     * @return array<string, mixed>|null null if the workspace is no task
+     */
     public function enrich(ContentRepositoryId $contentRepositoryId, Workspace $workspace): ?array
     {
         $this->tasksByContentRepository[$contentRepositoryId->value]

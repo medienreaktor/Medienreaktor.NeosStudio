@@ -7,8 +7,7 @@ import type { EditingElement, PresenceUser } from '@/api/collaboration'
  * peer - the roster is filtered before it lands here.
  */
 export interface PresencePeer extends PresenceUser {
-  /** Normalized by the bridge: null when the roster carries no claim (the
-   * API's presence responses never do - locks are a sidecar concept). */
+  /** Normalized by the bridge: null when the roster carries no claim. */
   editingElement: EditingElement | null
   color: string
   initials: string
@@ -18,7 +17,7 @@ export interface PresenceState {
   /** Editing in a shared workspace - presence indicators are live. */
   active: boolean
   peers: PresencePeer[]
-  /** The own Neos user id, once the first heartbeat answered. */
+  /** The own Neos user id, once the first roster arrived. */
   you: string | null
 }
 

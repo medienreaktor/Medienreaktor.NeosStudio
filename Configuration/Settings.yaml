@@ -1,5 +1,10 @@
 Medienreaktor:
   NeosStudio:
+    # The content repository the Studio edits. The content API is Neos.Api
+    # (all content repositories below /api/cr/{id}); this one is what the
+    # Studio's own endpoints (/neos/studio/api) and the shell work with.
+    contentRepository: "default"
+
     # Third-party plugin bundles loaded into the Studio shell. Each extending
     # package adds one entry keyed by its package key; the StudioController
     # injects the referenced assets into the served index.html. See
@@ -41,7 +46,7 @@ Medienreaktor:
       # WebSocket URL the Studio shell connects to (wss://... in production).
       websocketUrl: ""
       # The sidecar's server-to-server credential: it tails workspace change
-      # feeds via /api/realtime/... with this secret in the X-Realtime-Secret
+      # feeds via /neos/studio/api/realtime/... with this secret in the X-Realtime-Secret
       # header (REALTIME_SHARED_SECRET on the sidecar). Empty disables the
       # endpoint entirely - it answers 404. Generate a long random value,
       # e.g.: openssl rand -hex 32
@@ -85,27 +90,6 @@ Medienreaktor:
       # when a task is submitted for review. LivePublisher is the natural
       # default - whoever may publish to live may approve tasks.
       reviewerRole: "Neos.Neos:LivePublisher"
-
-  # Contribute the task metadata to the NeosApi workspace JSON: appears as
-  # workspace.extensions['Medienreaktor.NeosStudio:task'] and drives the task
-  # badges and the Tasks board in the shell.
-  NeosApi:
-    workspaceDataEnrichers:
-      "Medienreaktor.NeosStudio:task":
-        enricher: 'Medienreaktor\NeosStudio\Service\TaskWorkspaceDataEnricher'
-
-    # Narrow every node listing the API serves to what the caller's access
-    # roles leave reachable. Closes the one gap the client cannot: a document
-    # search returns hits from anywhere under the site, and the client has no
-    # ancestry for a scattered hit to judge it by.
-    nodeReadFilters:
-      "Medienreaktor.NeosStudio:accessRoles":
-        filter: 'Medienreaktor\NeosStudio\Service\AccessNodeReadFilter'
-
-    # Surfaces "may I administer access roles?" in /me.permissions, which is
-    # what gates the Roles section in the Studio's settings modal.
-    accountPermissions:
-      accessRoles: "Medienreaktor.NeosStudio:Api.AccessRoles.Write"
 
 Neos:
   # React to workspace lifecycle events (published -> task DONE +
@@ -184,7 +168,7 @@ Neos:
           # auto-approving) authorization flow using the same session.
           # The Controller\Api sub-namespace is deliberately excluded: those
           # endpoints are bearer-token only (see below), keeping them free of
-          # session/CSRF semantics - same setup as the NeosApi controllers.
+          # session/CSRF semantics.
           # ShareController is excluded too: the anonymous preview-link
           # endpoint is deliberately sessionless - its token is the sole
           # credential, no backend session must ever get involved. Same for
@@ -197,13 +181,37 @@ Neos:
                 patternOptions:
                   controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!Api\|ShareController|RealtimeController).*'
 
-          # Put the Studio's own API endpoints (notifications) behind the same
-          # OAuth 2.1 bearer firewall as the NeosApi: request patterns of the
-          # same type are OR-combined, so this extends the provider to this
-          # package's Controller\Api namespace.
-          "Medienreaktor.NeosApi:Bearer":
+          # Put the Studio's own API endpoints behind the same OAuth 2.1 bearer
+          # firewall as Neos.Api. Neos.Api adds a Uri pattern for /api/.*;
+          # request patterns of the same type are OR-combined, so this extends
+          # the provider to /neos/studio/api/.* (a pattern of another type
+          # would be AND-combined and disable Neos.Api's). The realtime
+          # sidecar's feed below that path sends no token and authenticates
+          # with its shared secret instead.
+          "Neos.OAuth:Bearer":
             requestPatterns:
-              "Medienreaktor.NeosStudio:ApiControllers":
-                pattern: "ControllerObjectName"
+              "Medienreaktor.NeosStudio:Api":
+                pattern: "Uri"
                 patternOptions:
-                  controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\Api\.*'
+                  uriPattern: "/neos/studio/api/.*"
+
+  Api:
+    # Narrow every node listing Neos.Api serves (trees, search) to what the
+    # caller's access roles leave reachable. Closes the one gap the client
+    # cannot: a document search returns hits from anywhere under the site,
+    # and the client has no ancestry for a scattered hit to judge it by.
+    nodeReadFilters:
+      "Medienreaktor.NeosStudio:accessRoles": 'Medienreaktor\NeosStudio\Service\AccessNodeReadFilter'
+
+  OAuth:
+    # The Studio's own endpoints (tasks, notifications, access roles, preview
+    # links, review and history) narrow by these scopes; Neos.Api's content
+    # endpoints by its own. The shell requests both.
+    scopes:
+      "studio.read": "Read your Neos Studio tasks, notifications, access, preview links and change history"
+      "studio.write": "Manage your Neos Studio tasks, notifications and preview links, and administer access roles"
+    scopeGroups:
+      "studio":
+        label: "Neos Studio"
+        icon: "resource://Medienreaktor.NeosStudio/Public/Icons/Scopes/rocket.svg"
+        position: 200

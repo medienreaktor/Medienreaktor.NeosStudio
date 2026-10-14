@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller;
 
-use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
-use Medienreaktor\NeosApi\Service\WorkspaceEventFeed;
-use Medienreaktor\NeosApi\Service\WorkspaceEventFeedFactory;
-use Medienreaktor\NeosApi\Service\WorkspaceHistoryService;
+use Medienreaktor\NeosStudio\Controller\Api\AbstractStudioApiController;
+use Medienreaktor\NeosStudio\Service\WorkspaceEventFeed;
+use Medienreaktor\NeosStudio\Service\WorkspaceEventFeedFactory;
+use Medienreaktor\NeosStudio\Service\WorkspaceHistoryService;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
 
@@ -18,12 +18,16 @@ use Neos\Flow\Annotations as Flow;
  * connected editor - replacing one poll per editor per 2s with one poll per
  * workspace.
  *
- * A Studio feature through and through, so it lives here and not in the
- * NeosApi package - it merely reuses the API's feed services (the same ones
- * behind the user-scoped events endpoint).
+ * It tails the content stream through the Studio's WorkspaceEventFeed and
+ * classifies events with WorkspaceHistoryService::parseFeedEvent() - the same
+ * classification the shell's polling transport applies client-side to
+ * Neos.Api's workspace events (api/collaboration.ts), so both transports
+ * deliver identical feed events.
  *
- * Deliberately NOT in the Controller\Api namespace (no bearer token, no
- * session - excluded from the backend session provider like ShareController).
+ * Deliberately NOT in the Controller\Api namespace (no session - excluded
+ * from the backend session provider like ShareController). It extends the
+ * Studio API base controller for its JSON plumbing only: no bearer token and
+ * no scope check apply here.
  * The credential is the shared secret (Medienreaktor.NeosStudio.realtime.sharedSecret)
  * in the X-Realtime-Secret header, validated in-action - the same pattern as
  * the anonymous preview-link endpoint. While no secret is configured the
@@ -34,11 +38,11 @@ use Neos\Flow\Annotations as Flow;
  * every editor's connection with the editor's own bearer token against the
  * user-scoped API before it forwards anything (see Resources/Private/Realtime/server.js).
  */
-class RealtimeController extends AbstractApiController
+class RealtimeController extends AbstractStudioApiController
 {
     /**
-     * Feed page size per request - mirrors the user-scoped events endpoint;
-     * a full page tells the sidecar its clients must refresh wholesale.
+     * Feed page size per request; a full page tells the sidecar its clients
+     * must refresh wholesale.
      */
     private const EVENT_FEED_LIMIT = 200;
 
@@ -52,9 +56,11 @@ class RealtimeController extends AbstractApiController
     protected $sharedSecret;
 
     /**
-     * The workspace change feed, shaped exactly like the user-scoped
-     * /api/workspaces/{name}/events resource (same baseline/reset/truncated
-     * semantics), so the sidecar relays payloads without translation.
+     * The workspace change feed: {workspace, contentStreamId, sequenceNumber,
+     * reset, truncated, events}. Without stream+since (the baseline), or when
+     * the workspace moved to a different content stream since (reset=true),
+     * no events are enumerated - only the current cursor is handed out. The
+     * sidecar relays the events to the shell without translation.
      */
     public function eventsAction(string $workspaceName): string
     {

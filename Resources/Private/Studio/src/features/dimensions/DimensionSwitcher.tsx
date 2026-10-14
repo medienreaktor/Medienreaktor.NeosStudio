@@ -1,5 +1,6 @@
 import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
 import { dimensionSpacePointEquals } from '@/api/dimensions'
+import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import {
   Select,
@@ -128,7 +129,7 @@ export function DimensionSwitcher({
               <div className="flex items-center gap-2">
                 {dimension.icon && (
                   <i
-                    className={`fa fa-${dimension.icon} fa-fw text-[0.7rem] text-neutral-600 dark:text-neutral-400`}
+                    className={`${faClassName(dimension.icon)} fa-fw text-[0.7rem] text-neutral-600 dark:text-neutral-400`}
                     aria-hidden
                   />
                 )}

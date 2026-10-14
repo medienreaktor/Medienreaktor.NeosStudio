@@ -11,9 +11,9 @@ export type MediaViewMode = 'grid' | 'list'
 
 /** A stable key for an asset across sources - used for selection sets. */
 export function assetKey(
-  asset: Pick<MediaAsset, 'assetSource' | 'identifier'>,
+  asset: Pick<MediaAsset, 'assetSourceId' | 'id'>,
 ): string {
-  return `${asset.assetSource}:${asset.identifier}`
+  return `${asset.assetSourceId}:${asset.id}`
 }
 
 /**
@@ -44,7 +44,7 @@ export function useMediaBrowserState(initialSource = 'neos') {
           tag: null,
           tagMode: 'given' as const,
         })),
-      setType: (type: AssetType | 'All') => patch({ type }),
+      setType: (type: AssetType | 'all') => patch({ type }),
       setSearch: (search: string) => patch({ search }),
       setSort: (
         sortBy: AssetListFilter['sortBy'],

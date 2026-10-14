@@ -79,7 +79,7 @@ export function MediaBrowser({
     () => query.data?.pages.flatMap((page) => page.assets) ?? [],
     [query.data],
   )
-  const total = query.data?.pages[0]?.pagination.total
+  const total = query.data?.pages[0]?.total
 
   const activeKey = state.active ? assetKey(state.active) : null
 

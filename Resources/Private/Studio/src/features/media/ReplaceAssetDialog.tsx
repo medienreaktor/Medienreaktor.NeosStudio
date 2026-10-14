@@ -29,9 +29,9 @@ import { formatBytes } from './format'
  * the classic Media Browser.
  */
 const acceptByAssetType: Partial<Record<MediaAsset['assetType'], Accept>> = {
-  Image: { 'image/*': [] },
-  Video: { 'video/*': [] },
-  Audio: { 'audio/*': [] },
+  image: { 'image/*': [] },
+  video: { 'video/*': [] },
+  audio: { 'audio/*': [] },
 }
 
 interface ReplaceAssetDialogProps {
@@ -67,8 +67,9 @@ export function ReplaceAssetDialog({
   const [progress, setProgress] = useState<number | null>(null)
   const busy = progress !== null
 
-  const usage = useAssetUsage(asset.assetSource, asset.identifier)
-  const usageTotal = usage.data?.total ?? 0
+  const usage = useAssetUsage(asset.assetSourceId, asset.id)
+  const usageTotal =
+    (usage.data?.meta.total ?? 0) + (usage.data?.meta.inaccessible ?? 0)
 
   const {
     getRootProps,

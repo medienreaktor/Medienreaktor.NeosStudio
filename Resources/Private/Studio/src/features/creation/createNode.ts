@@ -1,6 +1,5 @@
-import { executeCommands } from '@/api/commands'
+import { createNode as createNodeRequest } from '@/api/commands'
 import { queryKeys } from '@/api/keys'
-import { decodeNodeAddress, encodeNodeAddress } from '@/api/nodeAddress'
 import { queryClient } from '@/app/queryClient'
 
 export interface CreateNodeRequest {
@@ -12,10 +11,10 @@ export interface CreateNodeRequest {
 }
 
 /**
- * Creates a new node inside a parent via the commands API and returns the
- * new node's address. The origin dimension space point is the one being
- * viewed - the parent covers it (it is rendered/browsed), which is all
- * CreateNodeAggregateWithNode requires, so no variant dance is needed.
+ * Creates a new node inside a parent and returns the new node's address. The
+ * origin dimension space point is the one being viewed - the parent covers it
+ * (it is rendered/browsed), which is all node creation requires, so no
+ * variant dance is needed.
  */
 export async function createNode(
   request: CreateNodeRequest,
@@ -28,39 +27,18 @@ export async function createNode(
    */
   elements: Record<string, unknown> = {},
 ): Promise<string> {
-  const parent = decodeNodeAddress(request.parentAddress)
-  const nodeAggregateId = crypto.randomUUID()
-
-  const payload: Record<string, unknown> = {
-    workspaceName: parent.workspaceName,
-    nodeAggregateId,
+  const node = await createNodeRequest({
     nodeTypeName: request.nodeTypeName,
-    originDimensionSpacePoint: parent.dimensionSpacePoint,
-    parentNodeAggregateId: parent.aggregateId,
-  }
-  if (request.succeedingSiblingAddress !== null) {
-    payload.succeedingSiblingNodeAggregateId = decodeNodeAddress(
-      request.succeedingSiblingAddress,
-    ).aggregateId
-  }
-  if (Object.keys(initialPropertyValues).length > 0) {
-    payload.initialPropertyValues = initialPropertyValues
-  }
-  if (Object.keys(elements).length > 0) {
-    payload.elements = elements
-  }
-
-  await executeCommands([{ type: 'CreateNodeAggregateWithNode', payload }])
+    parentAddress: request.parentAddress,
+    succeedingSiblingAddress: request.succeedingSiblingAddress,
+    properties: initialPropertyValues,
+    elements,
+  })
 
   // The collection's children changed - drop all node reads (children lists
   // are keyed under nodes too) and refresh the pending-changes badges.
   await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
   void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
 
-  return encodeNodeAddress({
-    contentRepositoryId: parent.contentRepositoryId,
-    workspaceName: parent.workspaceName,
-    dimensionSpacePoint: parent.dimensionSpacePoint,
-    aggregateId: nodeAggregateId,
-  })
+  return node.address
 }

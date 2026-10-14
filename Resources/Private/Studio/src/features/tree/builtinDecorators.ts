@@ -45,7 +45,7 @@ export function registerBuiltinNodeDecorators(): void {
     id: 'Medienreaktor.NeosStudio:hiddenInMenu',
     order: 10,
     decorate: (node) =>
-      node.properties['hiddenInMenu']?.value === true
+      node.properties['hiddenInMenu'] === true
         ? {
             opacity: 0.5,
             title: t('tree.decor.hiddenInMenu', 'Hidden in menus'),

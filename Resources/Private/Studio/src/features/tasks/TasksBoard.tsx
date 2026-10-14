@@ -11,7 +11,7 @@ import {
   type Task,
   type TaskStatus,
 } from '@/api/tasks'
-import { useUsers } from '@/api/users'
+import { usePeople } from '@/api/people'
 import { useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
@@ -59,7 +59,7 @@ const COLUMNS: { status: TaskStatus; title: () => string }[] = [
 export function TasksBoard() {
   const studio = useStudio()
   const { data, isLoading, error } = useTasks()
-  const { data: usersData } = useUsers()
+  const { data: people } = usePeople()
   const { data: workspacesData } = useWorkspaces()
   const [dragged, setDragged] = useState<Task | null>(null)
   const [creating, setCreating] = useState(false)
@@ -99,9 +99,7 @@ export function TasksBoard() {
   }, [pendingFocus, data])
 
   const userLabel = (userId: string | null): string | null =>
-    userId
-      ? (usersData?.users.find((user) => user.id === userId)?.label ?? null)
-      : null
+    userId ? (people?.find((user) => user.id === userId)?.label ?? null) : null
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
