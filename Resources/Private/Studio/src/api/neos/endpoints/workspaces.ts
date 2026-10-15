@@ -287,13 +287,34 @@ export async function unassignWorkspaceRole(
 /**
  * A page of the events of the workspace's current content stream: after a
  * sequence number (a 409 if it is of an earlier content stream - the
- * workspace was published, discarded or rebased since), or sorted.
+ * workspace was published, discarded or rebased since), or sorted, with what
+ * each changed (include=diff) and its node and document (node, document).
  */
 export function listWorkspaceEvents(
   workspaceName: string,
-  params: { after?: number; sort?: string; limit?: number },
+  params: { after?: number; sort?: string; limit?: number; include?: string },
+  contentRepositoryId: string = activeContentRepositoryId(),
 ): Promise<PaginatedEventListing> {
   return apiFetch<PaginatedEventListing>(
-    `${workspacesPath(workspaceName)}/events${queryString(params)}`,
+    `${workspacesPath(workspaceName, contentRepositoryId)}/events${queryString(params)}`,
+  )
+}
+
+/**
+ * All changes of the workspace with the filters and include given (see
+ * Neos.Api's listWorkspaceChanges), every page.
+ */
+export function fetchWorkspaceChanges(
+  contentRepositoryId: string,
+  workspaceName: string,
+  params: {
+    filterByDocument?: string
+    filterByChangeType?: string
+    filterByNodeType?: string
+    include?: string
+  },
+): Promise<Change[]> {
+  return fetchAllPages<Change>(
+    `${workspacesPath(workspaceName, contentRepositoryId)}/changes${queryString(params)}`,
   )
 }

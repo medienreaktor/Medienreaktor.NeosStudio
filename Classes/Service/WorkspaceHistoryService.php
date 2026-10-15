@@ -4,32 +4,22 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Service;
 
-use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
-use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
-use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\EventStore\Model\EventEnvelope;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\Domain\Model\UserId;
-use Neos\Neos\Domain\Service\UserService;
 
 /**
- * Serializes and enriches workspace event-stream envelopes into the Studio's
- * change-feed / pending-history representation: the event's client-facing
- * fields, the affected node's label/type/icon, the initiating user's name,
- * and the containing document (id, label and a navigable address - what
- * "go to page" on a history entry follows).
+ * Classifies workspace event-stream envelopes into the Studio's change feed
+ * (the realtime sidecar's, see RealtimeController): the event's client-facing
+ * fields. The shell classifies Neos.Api's workspace events the same way
+ * (features/collaboration/eventFeed.ts); the pending history, its diffs, the
+ * review and the trash read Neos.Api's workspace changes and events.
  *
  * Payload fields are read from the raw event JSON - stable across event types
- * without importing every event class - and each envelope's payload is decoded
- * exactly once: the decoded form travels with the enriched item so the diff
- * layer never re-parses it.
+ * without importing every event class.
  */
 #[Flow\Scope('singleton')]
 class WorkspaceHistoryService
 {
-    #[Flow\Inject]
-    protected UserService $userService;
-
     /**
      * How feed clients should react to an event type: 'content' = a node's
      * rendered element / properties changed (re-render in place), 'structure'
@@ -124,80 +114,5 @@ class WorkspaceHistoryService
         ];
 
         return ['event' => $event, 'payload' => $payload];
-    }
-
-    /**
-     * Serialize and enrich feed events. The node is resolved in the
-     * workspace's own subgraph, falling back to the base for nodes removed in
-     * the workspace, in the dimension the event names (same fallback the
-     * changes resources use). Envelopes whose event type is not client-facing
-     * are dropped.
-     *
-     * @param list<EventEnvelope> $envelopes
-     * @return list<array{event: array<string, mixed>, payload: array<string, mixed>, envelope: EventEnvelope, node: ?Node, subgraph: ?ContentSubgraphInterface}>
-     */
-    public function enrichFeedEvents(array $envelopes, WorkspaceReadContext $context): array
-    {
-        $documentNodes = [];
-        $userLabels = [];
-        $items = [];
-        foreach ($envelopes as $envelope) {
-            $parsed = $this->parseFeedEvent($envelope);
-            if ($parsed === null) {
-                continue;
-            }
-            $serialized = $parsed['event'];
-
-            [$node, $subgraph] = $context->resolveNode(
-                $serialized['nodeAggregateId'],
-                $serialized['dimensionSpacePoints'][0] ?? null
-            );
-
-            // Cached per node: consecutive events usually hit the same few nodes.
-            $documentNode = null;
-            if ($node !== null && $subgraph !== null) {
-                $documentCacheKey = $node->aggregateId->value . '|' . $node->originDimensionSpacePoint->hash;
-                if (!array_key_exists($documentCacheKey, $documentNodes)) {
-                    try {
-                        $documentNodes[$documentCacheKey] = $subgraph->findClosestNode(
-                            $node->aggregateId,
-                            FindClosestNodeFilter::create(nodeTypes: 'Neos.Neos:Document')
-                        );
-                    } catch (\Throwable) {
-                        $documentNodes[$documentCacheKey] = null;
-                    }
-                }
-                $documentNode = $documentNodes[$documentCacheKey];
-            }
-
-            $userId = $serialized['initiatingUserId'];
-            if (is_string($userId) && !array_key_exists($userId, $userLabels)) {
-                try {
-                    $userLabels[$userId] = $this->userService->findUserById(UserId::fromString($userId))?->getLabel();
-                } catch (\InvalidArgumentException) {
-                    $userLabels[$userId] = null;
-                }
-            }
-
-            $items[] = [
-                'event' => $serialized + [
-                    'nodeLabel' => $node !== null ? $context->label($node) : null,
-                    'nodeType' => $node?->nodeTypeName->value,
-                    'icon' => $node !== null ? $context->icon($node->nodeTypeName) : null,
-                    'initiatingUserLabel' => is_string($userId) ? ($userLabels[$userId] ?? null) : null,
-                    'documentAggregateId' => $documentNode?->aggregateId->value,
-                    'documentLabel' => $documentNode !== null ? $context->label($documentNode) : null,
-                    'documentAddress' => $documentNode !== null
-                        ? NodeAddresses::toArray($documentNode)
-                        : null,
-                ],
-                'payload' => $parsed['payload'],
-                'envelope' => $envelope,
-                'node' => $node,
-                'subgraph' => $subgraph,
-            ];
-        }
-
-        return $items;
     }
 }

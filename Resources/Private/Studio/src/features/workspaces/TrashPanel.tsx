@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
 import { fetchNode } from '@/api/neos/endpoints/nodes'
 import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
-import { useWorkspaceTrash } from '@/api/studio/endpoints/workspaces'
-import type { WorkspaceTrashItem } from '@/api/studio/schema'
+import { useWorkspaceTrash, type WorkspaceTrashItem } from './historyData'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -38,10 +37,11 @@ export function TrashPanel() {
   const [pendingRestore, setPendingRestore] =
     useState<WorkspaceTrashItem | null>(null)
 
-  const canWrite =
-    workspaces?.find((workspace) => workspace.name === workspaceName)
-      ?.permissions.write ?? false
-  const outdated = data?.status === 'outdated'
+  const workspace = workspaces?.find(
+    (candidate) => candidate.name === workspaceName,
+  )
+  const canWrite = workspace?.permissions.write ?? false
+  const outdated = workspace?.status === 'outdated'
 
   // Scoped to the active site like the review dialog, including entries whose
   // site could not be resolved - never silently hide a deleted page.

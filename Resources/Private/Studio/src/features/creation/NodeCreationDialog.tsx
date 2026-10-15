@@ -122,11 +122,12 @@ function fallbackSlug(text: string): string {
  * NodeCreationDialog) and creates the node via Neos.Api. Types without a
  * creation dialog are created immediately, without any UI.
  *
- * Neos.Api runs no node creation handlers, so the Studio does what the
- * classic UI's promoted-elements handler did: element values named like a
- * property become its initial value, those named like a reference its
- * references. Other elements only fed handlers (Flowpack.NodeTemplates and
- * the like), which do not run - their values are not sent.
+ * The Studio does what the classic UI's promoted-elements handler did:
+ * element values named like a property become its initial value, those named
+ * like a reference its references. A node type with node creation handlers
+ * (options.nodeCreationHandlers: Flowpack.NodeTemplates and the like) gets
+ * all of the dialog's values as elements as well, which the Studio's
+ * createNodeFromCreationDialog runs its handlers with.
  */
 export function CreateNodeFlow({
   request,
@@ -213,6 +214,11 @@ export function CreateNodeFlow({
     const references = configuration?.references ?? {}
     const initialPropertyValues: Record<string, unknown> = {}
     const initialReferences: Record<string, string[]> = {}
+    const handlers = configuration?.options?.nodeCreationHandlers
+    const elementValues: Record<string, unknown> | null =
+      handlers && Object.values(handlers).some((handler) => handler !== null)
+        ? {}
+        : null
     for (const [name, value] of Object.entries(submittedValues)) {
       if (value === undefined || value === null || value === '') continue
       if (name in properties) {
@@ -220,6 +226,10 @@ export function CreateNodeFlow({
       } else if (name in references) {
         const targets = referenceTargets(value)
         if (targets.length > 0) initialReferences[name] = targets
+      }
+      if (elementValues !== null) {
+        elementValues[name] =
+          name in references ? referenceTargets(value) : value
       }
     }
     try {
@@ -243,7 +253,12 @@ export function CreateNodeFlow({
         ).catch(() => fallbackSlug(text))
       }
       onCreated(
-        await createNode(request, initialPropertyValues, initialReferences),
+        await createNode(
+          request,
+          initialPropertyValues,
+          initialReferences,
+          elementValues,
+        ),
       )
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)

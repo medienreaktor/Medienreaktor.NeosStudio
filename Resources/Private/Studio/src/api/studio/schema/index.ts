@@ -41,24 +41,8 @@ export type EffectiveAccessRole = Schemas['EffectiveAccessRole']
 export type MyAccess = Schemas['MyAccess']
 export type EffectiveAccess = MyAccess
 
-// Workspace review, history and trash
-export type WorkspaceStatus = Schemas['WorkspaceStatus']
-export type WorkspaceDocumentChanges = Schemas['DocumentChanges']
-export type WorkspaceDocumentChange =
-  WorkspaceDocumentChanges['documents'][number]
-export type WorkspaceDocumentDiff = Schemas['DocumentDiff']
-export type WorkspaceDocumentDiffNode = WorkspaceDocumentDiff['nodes'][number]
-export type WorkspacePendingEvents = Schemas['PendingEvents']
-export type WorkspacePendingEvent = WorkspacePendingEvents['events'][number]
-export type WorkspacePendingEventsDiff = Schemas['PendingEventsDiff']
-export type WorkspacePendingDiffEvent =
-  WorkspacePendingEventsDiff['events'][number]
-export type WorkspacePendingDiffChange =
-  WorkspacePendingDiffEvent['changes'][number]
-export type WorkspaceTrash = Schemas['Trash']
-export type WorkspaceTrashItem = WorkspaceTrash['items'][number]
-export type ConflictingNodes = Schemas['ConflictingNodes']
-export type ConflictNodeDetail = ConflictingNodes['nodes'][number]
+// Creating a node through its creation dialog
+export type CreationDialogNodeCreate = Schemas['CreationDialogNodeCreate']
 
 /**
  * A change of a workspace, as the collaboration feed hands it on: an event of

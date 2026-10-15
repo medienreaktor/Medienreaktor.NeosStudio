@@ -277,7 +277,7 @@ export interface paths {
     }
     /**
      * List nodes
-     * @description A page of the nodes in the workspace and dimension space point: with filterByHierarchy the nodes below a node (type childOf its direct child nodes, in their order unless sorted, type descendantOf all of them), with filterByReference the nodes that reference a node, a node once per reference. The two can't be combined, each is a query of its own. Without either, all nodes below the site node of the content repository's default site (Neos.Neos.defaultSiteNodeName if it is in the content repository, else its first online site by name). filterByNodeType, filterByProperty and search narrow them down. sort takes properties.<name> and timestamps.created, timestamps.lastModified, timestamps.originalCreated, timestamps.originalLastModified. offset and limit (25 by default, 100 at most) choose the page, meta.total and links tell about the others. include, hasChildrenOfNodeType and includeRemoved work as in getNode, for each node. Hidden nodes are visible as in getNode. Packages may narrow the nodes down further (NodeReadFilter, Neos.Api.nodeReadFilters): that happens to each page after it is read, so a page may have fewer nodes than limit, meta.total and links count the nodes before.
+     * @description A page of the nodes in the workspace and dimension space point: with filterByHierarchy the nodes below a node (type childOf its direct child nodes, in their order unless sorted, type descendantOf all of them), with filterByReference the nodes that reference a node, a node once per reference. The two can't be combined, each is a query of its own. Without either, all nodes below the site node of the content repository's default site (Neos.Neos.defaultSiteNodeName if it is in the content repository, else its first online site by name). filterByNodeType, filterByProperty and search narrow them down. sort takes properties.<name> and timestamps.created, timestamps.lastModified, timestamps.originalCreated, timestamps.originalLastModified. offset and limit (25 by default, 100 at most) choose the page, meta.total and links tell about the others. include, hasChildrenOfNodeType and includeRemoved work as in getNode, for each node. Hidden nodes are visible as in getNode.
      */
     get: operations['listNodes']
     put?: never
@@ -733,7 +733,7 @@ export interface paths {
     }
     /**
      * List the changes of a workspace
-     * @description What changed in the workspace compared to its base workspace and isn't published yet, one item per node variant (or per node aggregate for changes to all of its variants, like its name or node type), as Neos' pending changes projection keeps it, sorted by documentAggregateId (the changes of one document together, the ones without a document last), then by aggregate id and dimension space point. documentAggregateId and siteAggregateId are the closest document (the node itself if it is one) and the site of the node in the workspace, found also for hidden and deleted nodes (in the base workspace for a node removed for good), e.g. to group the changes by document as the Neos workspace module does. filterByDocument keeps the changes in a document (of the document itself and its content, not of its child documents), filterBySite the ones in a site, filterByChangeType the ones with one of the kinds of change: filterByChangeType=deleted is the workspace's trash, the nodes deleted in it and not published yet, which restoreNode brings back. The filters combine. include=diff adds what each change of the page does to its node compared to the base workspace (diff, null if not included). The workspace must be one the account may read, by its workspace roles or as the owner. Changes of a node the account may not read are left out. Changes of a node that no longer exists in the workspace are listed: it has no permissions left to check. offset and limit (25 by default, 100 at most) choose the page of the filtered changes, meta.total counts them, links tell about the other pages.
+     * @description What changed in the workspace compared to its base workspace and isn't published yet, one item per node variant (or per node aggregate for changes to all of its variants, like its name or node type), as Neos' pending changes projection keeps it, sorted by documentAggregateId (the changes of one document together, the ones without a document last), then by aggregate id and dimension space point. documentAggregateId and siteAggregateId are the closest document (the node itself if it is one) and the site of the node in the workspace, found also for hidden and deleted nodes (in the base workspace for a node removed for good), e.g. to group the changes by document as the Neos workspace module does. filterByDocument keeps the changes in a document (of the document itself and its content, not of its child documents), filterBySite the ones in a site, filterByChangeType the ones with one of the kinds of change: filterByChangeType=deleted is the workspace's trash, the nodes deleted in it and not published yet, which restoreNode brings back. filterByNodeType the changes of nodes of these node types, e.g. Neos.Neos:Document with filterByChangeType=deleted for the deleted pages. The filters combine. include=diff adds what each change of the page does to its node compared to the base workspace (diff, null if not included). include=node adds the changed node and include=document the node of documentAggregateId, as getNode returns them: in the change's origin dimension space point (one the aggregate covers for a change to the whole aggregate), deleted nodes included, else from the base workspace (removed for good in the workspace, its workspaceName tells), null if there is none the account may read. node.ancestors and document.ancestors add their ancestors as getNode's include=ancestors, e.g. for a breadcrumb. The workspace must be one the account may read, by its workspace roles or as the owner. Changes of a node the account may not read are left out. Changes of a node that no longer exists in the workspace are listed: it has no permissions left to check. offset and limit (25 by default, 100 at most) choose the page of the filtered changes, meta.total counts them, links tell about the other pages.
      */
     get: operations['listWorkspaceChanges']
     put?: never
@@ -753,7 +753,7 @@ export interface paths {
     }
     /**
      * List the events of a workspace
-     * @description The events of the workspace's current content stream: what was changed in it since it was created or last published, discarded or rebased, which each start a new content stream. Oldest first, sort=-sequenceNumber for newest first (sequenceNumber is the only field to sort by). The workspace must be one the account may read, by its workspace roles or as the owner. Events about a node the account may not read are left out. Events about a node that no longer exists in the workspace, e.g. its removal, are listed: it has no permissions left to check. In the events listed, the IDs of other nodes the account may not read (parent, siblings, reference targets, tethered children: every value of a payload key ending in nodeAggregateId or nodeAggregateIds) are null. after and limit (25 by default, 100 at most) choose the page: after is the sequenceNumber of the last event of the page before in the listing's order (so newer events oldest first, older ones newest first). Newest first, links.next continues after this page and is null on the last one. Oldest first, links.next is always there, after the last event of the page or, on an empty page, with the same after: a client polling for new events follows it. meta.contentStreamId is the content stream the events are from, meta.forkedFrom where it branched off its base workspace's (null for one that wasn't forked, e.g. live's). An after lower than the sequenceNumber of the current content stream's first event is from an earlier one: the workspace was published, discarded or rebased since, the events the client has are no longer the workspace's, and it is a 409, the client starts over without after.
+     * @description The events of the workspace's current content stream: what was changed in it since it was created or last published, discarded or rebased, which each start a new content stream. Oldest first, sort=-sequenceNumber for newest first (sequenceNumber is the only field to sort by). The workspace must be one the account may read, by its workspace roles or as the owner. Events about a node the account may not read are left out. Events about a node that no longer exists in the workspace, e.g. its removal, are listed: it has no permissions left to check. In the events listed, the IDs of other nodes the account may not read (parent, siblings, reference targets, tethered children: every value of a payload key ending in nodeAggregateId or nodeAggregateIds) are null. after and limit (25 by default, 100 at most) choose the page: after is the sequenceNumber of the last event of the page before in the listing's order (so newer events oldest first, older ones newest first). Newest first, links.next continues after this page and is null on the last one. Oldest first, links.next is always there, after the last event of the page or, on an empty page, with the same after: a client polling for new events follows it. meta.contentStreamId is the content stream the events are from, meta.forkedFrom where it branched off its base workspace's (null for one that wasn't forked, e.g. live's). include=diff adds what each event changed about its node compared to just before it (diff, null if not included): the value before is the one the latest earlier event of the content stream set (looking back 1000 events before the page at most), else the base workspace's. include=node adds the node of the payload's nodeAggregateId and include=document its closest document, as getNode returns them now (not as they were then): in the dimension space point the event is about (a new variant's origin, the node's origin, else the first it affects, else one the aggregate covers), deleted nodes included, else from the base workspace, null if there is none the account may read; node.ancestors and document.ancestors add their ancestors. An after lower than the sequenceNumber of the current content stream's first event is from an earlier one: the workspace was published, discarded or rebased since, the events the client has are no longer the workspace's, and it is a 409, the client starts over without after.
      */
     get: operations['listWorkspaceEvents']
     put?: never
@@ -1582,120 +1582,20 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/documentchanges': {
+  '/cr/{contentRepositoryId}/creationdialog': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /**
-     * List the changes of a workspace by document
-     * @description The changes of the workspace grouped by the document they are in, for a review: each document with its label, icon and breadcrumb, how it changed and how many of its nodes did. Publishing and discarding by document (documentAggregateIds of publishWorkspace and discardWorkspace in the Neos API) work on the same documents. Changes no document can be found for are left out, only publishing or discarding everything covers them.
-     */
-    get: operations['listWorkspaceDocumentChanges']
+    get?: never
     put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/documentdiff': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
     /**
-     * Get the diff of a document of a workspace
-     * @description What publishing the document (as listed by listWorkspaceDocumentChanges) would change in the base workspace: each of its changed nodes, each dimension variant once, with its properties, references, node type, name, parent and visibility before (base workspace) and after (workspace). A node edited back to what it was is left out. status variant is a dimension variant of a node the base workspace has.
+     * Create a node through its creation dialog
+     * @description Creates the node as createNode does, then runs the node type's node creation handlers (options.nodeCreationHandlers, e.g. Flowpack.NodeTemplates' templates) as the Neos UI's creation dialog does, with the dialog's values in elements, and applies what they add: the properties and references they set (the ones the request states win) and their commands, e.g. a template's child nodes. Only with neos/neos-ui installed, which the handlers belong to, else it is createNode and elements are ignored. Elements that don't fit their types are a 422 before anything is created; if a handler fails or one of the commands it adds can't be applied, it's a 422 and the node stays as far as it got. The response is the new node as getNode returns it without include.
      */
-    get: operations['getWorkspaceDocumentDiff']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/pendingevents': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List what happened in a workspace
-     * @description The events of the workspace's content stream, i.e. since it was last based on its base workspace (created, published, discarded or rebased), oldest first: the newest 100, truncated says if there were more. Each with its node, the closest document and who caused it, for display; the events of one editing step share user and initiatingTimestamp. forkedFrom says where the content stream branched off its base's.
-     */
-    get: operations['listWorkspacePendingEvents']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/pendingevents/diff': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get what events of a workspace changed
-     * @description The events from one sequence number to another (as listWorkspacePendingEvents lists them, e.g. one editing step), each with what it changed: the value before is the one of the latest event before it (looking back 500 events at most), else the base workspace's. A range wider than 200 or with to before from is a 400.
-     */
-    get: operations['getWorkspacePendingEventsDiff']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/trash': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List what was deleted in a workspace
-     * @description The nodes deleted in the workspace and not yet published, newest first, for display: restoreNode of the Neos API brings them back (with the deleted ancestors they are in), which needs an up_to_date workspace. filterByDocuments lists deleted documents only.
-     */
-    get: operations['listWorkspaceTrash']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/conflictingnodes': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Describe the nodes of a conflict
-     * @description The nodes a conflict of publishWorkspace or rebaseWorkspace of the Neos API names by ID, with their labels and closest documents, found in the workspace in any dimension space point (deleted ones included), else in the base workspace. A document only the base workspace has, or a deleted one, has no address. At most 200 IDs, more are a 400.
-     */
-    get: operations['listWorkspaceConflictingNodes']
-    put?: never
-    post?: never
+    post: operations['createNodeFromCreationDialog']
     delete?: never
     options?: never
     head?: never
@@ -2224,6 +2124,8 @@ export interface components {
       moved: boolean
       deleted: boolean
       diff: components['schemas']['ChangeDiff'] | null
+      node: components['schemas']['Node'] | null
+      document: components['schemas']['Node'] | null
     }
     /** ChangeDiff */
     ChangeDiff: {
@@ -2256,47 +2158,6 @@ export interface components {
       message: string
     }
     ConflictingChangeList: components['schemas']['ConflictingChange'][]
-    /**
-     * ConflictingNodes
-     * @description The nodes of a conflict with their labels and documents
-     */
-    ConflictingNodes: {
-      workspaceName: components['schemas']['WorkspaceName']
-      /** @description In the order asked for. Labels are null for a node that can't be found */
-      nodes: {
-        /**
-         * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-         * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-         */
-        nodeAggregateId: string
-        nodeLabel: string | null
-        documentAggregateId: string | null
-        documentLabel: string | null
-        documentAddress: {
-          /**
-           * @description The identifier of a content repository, its key in the Neos.ContentRepositoryRegistry.contentRepositories settings
-           * @example default
-           */
-          contentRepositoryId: string
-          /**
-           * @description The name of a workspace, live or e.g. a user's personal workspace
-           * @example live
-           * @example user-admin
-           */
-          workspaceName: string
-          /**
-           * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
-           * @example {"language":"de"}
-           */
-          dimensionSpacePoint: string
-          /**
-           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-           */
-          nodeAggregateId: string
-        } | null
-      }[]
-    }
     /** ContentDimension */
     ContentDimension: {
       id: string
@@ -2343,6 +2204,48 @@ export interface components {
       contentStreamId: components['schemas']['ContentStreamId']
       /** @description The version of the event in the content stream (an event's version), from 0 */
       version: number
+    }
+    /**
+     * CreationDialogNodeCreate
+     * @description A node to create below a parent, with the values of its creation dialog
+     */
+    CreationDialogNodeCreate: {
+      nodeType: components['schemas']['NodeTypeName']
+      parentNodeAggregateId: components['schemas']['NodeAggregateId']
+      succeedingSiblingNodeAggregateId?:
+        components['schemas']['NodeAggregateId'] | null
+      nodeAggregateId?: components['schemas']['NodeAggregateId'] | null
+      /**
+       * @description The properties to set, as for createNode. They win over what the node creation handlers set
+       * @example {
+       *       "title": "About us"
+       *     }
+       */
+      properties?: {
+        [key: string]: unknown
+      }
+      /**
+       * @description The references to set, as for createNode. They win over what the node creation handlers set
+       * @example {
+       *       "relatedPages": [
+       *         {
+       *           "nodeAggregateId": "a3474e1d-dd60-4a84-82b1-18d2f21891a3"
+       *         }
+       *       ]
+       *     }
+       */
+      references?: {
+        [key: string]: unknown
+      }
+      /**
+       * @description The values of the node type's creation dialog (ui.creationDialog.elements, with the properties and references it promotes) by element name, for its node creation handlers as the Neos UI's creation dialog sends them: a reference(s) element as a node aggregate id or a list of them, one named like a property as that property, dates as RFC 3339, assets as {"id": "…"}
+       * @example {
+       *       "title": "About us"
+       *     }
+       */
+      elements?: {
+        [key: string]: unknown
+      }
     }
     /**
      * CropRectangle
@@ -2417,115 +2320,6 @@ export interface components {
       workspace: components['schemas']['Workspace']
     }
     DocumentAggregateIdList: components['schemas']['NodeAggregateId'][]
-    /**
-     * DocumentChanges
-     * @description The changes of a workspace by the document they are in
-     */
-    DocumentChanges: {
-      workspaceName: components['schemas']['WorkspaceName']
-      baseWorkspaceName: components['schemas']['WorkspaceName'] | null
-      status: components['schemas']['WorkspaceStatus']
-      /** @description The documents with changes, in the order of their first change. publishWorkspace and discardWorkspace of the Neos API take their IDs */
-      documents: {
-        /**
-         * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-         * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-         */
-        documentAggregateId: string
-        documentAddress: {
-          /**
-           * @description The identifier of a content repository, its key in the Neos.ContentRepositoryRegistry.contentRepositories settings
-           * @example default
-           */
-          contentRepositoryId: string
-          /**
-           * @description The name of a workspace, live or e.g. a user's personal workspace
-           * @example live
-           * @example user-admin
-           */
-          workspaceName: string
-          /**
-           * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
-           * @example {"language":"de"}
-           */
-          dimensionSpacePoint: string
-          /**
-           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-           */
-          nodeAggregateId: string
-        } | null
-        siteAggregateId: string | null
-        siteLabel: string | null
-        label: string
-        nodeType: string
-        icon: string | null
-        /** @description The labels of the documents from the site down to this one */
-        breadcrumb: string[]
-        hidden: boolean
-        /** @description The document was created */
-        created: boolean
-        /** @description The document or content in it changed */
-        changed: boolean
-        /** @description The document was moved */
-        moved: boolean
-        /** @description The document was deleted */
-        deleted: boolean
-        /** @description How many nodes in it changed */
-        changeCount: number
-      }[]
-    }
-    /**
-     * DocumentDiff
-     * @description What publishing the document would change in the base workspace
-     */
-    DocumentDiff: {
-      workspaceName: components['schemas']['WorkspaceName']
-      baseWorkspaceName: components['schemas']['WorkspaceName'] | null
-      documentAggregateId: components['schemas']['NodeAggregateId']
-      /** @description The changed nodes of the document, each dimension variant once */
-      nodes: {
-        /**
-         * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-         * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-         */
-        nodeAggregateId: string
-        /** @description The dimension values of the variant */
-        dimensions: {
-          [key: string]: string
-        }
-        /**
-         * @description variant for a dimension variant of a node the base workspace has
-         * @enum {string}
-         */
-        status: 'created' | 'removed' | 'moved' | 'changed' | 'variant'
-        nodeLabel: string | null
-        nodeType: string | null
-        icon: string | null
-        /** @description Empty for a removed node */
-        changes: {
-          /**
-           * @description What changed: a property, a reference, the node type, name, parent, position among its siblings, a subtree tag or a dimension variant
-           * @enum {string}
-           */
-          kind:
-            | 'property'
-            | 'reference'
-            | 'nodeType'
-            | 'name'
-            | 'parent'
-            | 'position'
-            | 'tag'
-            | 'variant'
-          property: string | null
-          label: string | null
-          /** @description The value before: a property in its serialized form, {id, label} of a node (reference, parent), a node type or tag name, dimension values (variant) */
-          old: unknown
-          /** @description The value after, as old */
-          new: unknown
-        }[]
-      }[]
-    }
     /** Domain */
     Domain: {
       id: components['schemas']['DomainId']
@@ -2604,6 +2398,18 @@ export interface components {
       } | null
       causationId: string | null
       correlationId: string | null
+      diff: components['schemas']['EventDiff'] | null
+      node: components['schemas']['Node'] | null
+      document: components['schemas']['Node'] | null
+    }
+    /** EventDiff */
+    EventDiff: {
+      nodeType: components['schemas']['NodeTypeDiff'] | null
+      name: components['schemas']['NodeNameDiff'] | null
+      parentAggregateId: components['schemas']['NodeAggregateIdDiff'] | null
+      properties: components['schemas']['PropertyDiffList']
+      references: components['schemas']['ReferenceDiffList']
+      tags: components['schemas']['TagDiff'] | null
     }
     EventList: components['schemas']['Event'][]
     /**
@@ -3119,179 +2925,6 @@ export interface components {
       newPassword: components['schemas']['Password']
     }
     /**
-     * PendingEvents
-     * @description The events of the workspace's content stream, i.e. since it was last based on its base workspace
-     */
-    PendingEvents: {
-      workspaceName: components['schemas']['WorkspaceName']
-      baseWorkspaceName: components['schemas']['WorkspaceName'] | null
-      status: components['schemas']['WorkspaceStatus']
-      contentStreamId: components['schemas']['ContentStreamId']
-      forkedFrom: {
-        /**
-         * @description The id of a content stream, the events a workspace's content is made of. A workspace gets a new one when it is created, published, discarded or rebased
-         * @example 8b2a3c1e-5d4f-4e6a-9b7c-0d1e2f3a4b5c
-         */
-        contentStreamId: string
-        version: number
-      } | null
-      /** @description true if older events were left out: only the newest 100 are listed */
-      truncated: boolean
-      /** @description Oldest first */
-      events: {
-        /**
-         * @description The position of an event in the event store of its content repository, over all streams. It only grows, but has gaps: other streams' events are in between, and pruning removes events
-         * @example 1234
-         */
-        sequenceNumber: number
-        /** @description The position of the event in its content stream, from 0: comparable with forkedFrom.version */
-        version: number
-        /**
-         * @description The short name of the event class
-         * @example NodePropertiesWereSet
-         */
-        type: string
-        /**
-         * @description content: the rendered node changed, structure: the tree changed
-         * @enum {string}
-         */
-        kind: 'content' | 'structure'
-        nodeAggregateId: string | null
-        parentNodeAggregateId: string | null
-        /** @description The dimension space points it affects, empty for all */
-        dimensionSpacePoints: {
-          [key: string]: string
-        }[]
-        tag: string | null
-        initiatingUserId: string | null
-        initiatingUserLabel: string | null
-        /** @description As ISO 8601 */
-        recordedAt: string
-        nodeLabel: string | null
-        nodeType: string | null
-        icon: string | null
-        command: string | null
-        initiatingTimestamp: string | null
-        documentAggregateId: string | null
-        documentLabel: string | null
-        documentAddress: {
-          /**
-           * @description The identifier of a content repository, its key in the Neos.ContentRepositoryRegistry.contentRepositories settings
-           * @example default
-           */
-          contentRepositoryId: string
-          /**
-           * @description The name of a workspace, live or e.g. a user's personal workspace
-           * @example live
-           * @example user-admin
-           */
-          workspaceName: string
-          /**
-           * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
-           * @example {"language":"de"}
-           */
-          dimensionSpacePoint: string
-          /**
-           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-           */
-          nodeAggregateId: string
-        } | null
-      }[]
-    }
-    /**
-     * PendingEventsDiff
-     * @description What the events from one sequence number to another changed
-     */
-    PendingEventsDiff: {
-      workspaceName: components['schemas']['WorkspaceName']
-      contentStreamId: components['schemas']['ContentStreamId']
-      from: components['schemas']['SequenceNumber']
-      to: components['schemas']['SequenceNumber']
-      /** @description The events in the range, oldest first, each with what it changed */
-      events: {
-        /**
-         * @description The position of an event in the event store of its content repository, over all streams. It only grows, but has gaps: other streams' events are in between, and pruning removes events
-         * @example 1234
-         */
-        sequenceNumber: number
-        /** @description The position of the event in its content stream, from 0: comparable with forkedFrom.version */
-        version: number
-        /**
-         * @description The short name of the event class
-         * @example NodePropertiesWereSet
-         */
-        type: string
-        /**
-         * @description content: the rendered node changed, structure: the tree changed
-         * @enum {string}
-         */
-        kind: 'content' | 'structure'
-        nodeAggregateId: string | null
-        parentNodeAggregateId: string | null
-        /** @description The dimension space points it affects, empty for all */
-        dimensionSpacePoints: {
-          [key: string]: string
-        }[]
-        tag: string | null
-        initiatingUserId: string | null
-        initiatingUserLabel: string | null
-        /** @description As ISO 8601 */
-        recordedAt: string
-        nodeLabel: string | null
-        nodeType: string | null
-        icon: string | null
-        command: string | null
-        initiatingTimestamp: string | null
-        documentAggregateId: string | null
-        documentLabel: string | null
-        documentAddress: {
-          /**
-           * @description The identifier of a content repository, its key in the Neos.ContentRepositoryRegistry.contentRepositories settings
-           * @example default
-           */
-          contentRepositoryId: string
-          /**
-           * @description The name of a workspace, live or e.g. a user's personal workspace
-           * @example live
-           * @example user-admin
-           */
-          workspaceName: string
-          /**
-           * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
-           * @example {"language":"de"}
-           */
-          dimensionSpacePoint: string
-          /**
-           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-           */
-          nodeAggregateId: string
-        } | null
-        changes: {
-          /**
-           * @description What changed: a property, a reference, the node type, name, parent, position among its siblings, a subtree tag or a dimension variant
-           * @enum {string}
-           */
-          kind:
-            | 'property'
-            | 'reference'
-            | 'nodeType'
-            | 'name'
-            | 'parent'
-            | 'position'
-            | 'tag'
-            | 'variant'
-          property: string | null
-          label: string | null
-          /** @description The value before: a property in its serialized form, {id, label} of a node (reference, parent), a node type or tag name, dimension values (variant) */
-          old: unknown
-          /** @description The value after, as old */
-          new: unknown
-        }[]
-      }[]
-    }
-    /**
      * @description A first or last name
      * @example Edith
      */
@@ -3399,7 +3032,7 @@ export interface components {
     PropertyCriteria: string
     /**
      * PropertyDiff
-     * @description A property changed by a workspace, compared to its base workspace
+     * @description A property changed by a workspace compared to its base workspace (ChangeDiff), or by an event compared to before it (EventDiff)
      */
     PropertyDiff: {
       /**
@@ -3407,9 +3040,9 @@ export interface components {
        * @example title
        */
       name: string
-      /** @description The value in the base workspace, serialized as in the node's properties (a date as ISO 8601 string, assets as {"id": "…", "url": "…"}), null if it isn't set there or the node doesn't exist there */
+      /** @description The value before: in the base workspace (ChangeDiff) or before the event (EventDiff), serialized as in the node's properties (a date as ISO 8601 string, assets as {"id": "…", "url": "…"}), null if it wasn't set or the node didn't exist */
       old: unknown
-      /** @description The value in the workspace, serialized as old, null if it is unset */
+      /** @description The value after: in the workspace (ChangeDiff) or as the event set it (EventDiff), serialized as old, null if it is unset */
       new: unknown
     }
     PropertyDiffList: components['schemas']['PropertyDiff'][]
@@ -3425,7 +3058,7 @@ export interface components {
     RebaseStrategy: 'fail' | 'force'
     /**
      * ReferenceDiff
-     * @description A reference changed by a workspace, compared to its base workspace
+     * @description A reference changed by a workspace compared to its base workspace (ChangeDiff), or by an event compared to before it (EventDiff)
      */
     ReferenceDiff: {
       /**
@@ -3433,9 +3066,9 @@ export interface components {
        * @example relatedPages
        */
       name: string
-      /** @description The referenced nodes in the base workspace, in their order, empty if none or the node doesn't exist there */
+      /** @description The referenced nodes before: in the base workspace (ChangeDiff) or before the event (EventDiff), in their order, empty if none or the node didn't exist */
       old: string[]
-      /** @description The referenced nodes in the workspace, in their order, empty if none */
+      /** @description The referenced nodes after: in the workspace (ChangeDiff) or as the event set them (EventDiff), in their order, empty if none */
       new: string[]
     }
     ReferenceDiffList: components['schemas']['ReferenceDiff'][]
@@ -3544,12 +3177,12 @@ export interface components {
     SubtreeTag: string
     /**
      * TagDiff
-     * @description The tags a workspace set on or removed from a node itself (as Node's tags, not the inherited ones), compared to its base workspace
+     * @description The tags a workspace set on or removed from a node itself (as Node's tags, not the inherited ones) compared to its base workspace (ChangeDiff), or the tag an event set or removed (EventDiff)
      */
     TagDiff: {
-      /** @description The tags the node has in the workspace but not in the base workspace, sorted, e.g. disabled if it was hidden */
+      /** @description The tags the node has in the workspace but not in the base workspace, or the event set, sorted, e.g. disabled if it was hidden */
       added: string[]
-      /** @description The tags the node has in the base workspace but not in the workspace, sorted, e.g. disabled if it was shown again */
+      /** @description The tags the node has in the base workspace but not in the workspace, or the event removed, sorted, e.g. disabled if it was shown again */
       removed: string[]
     }
     /** Task */
@@ -3625,71 +3258,6 @@ export interface components {
     TaskUpdate: {
       title?: string | null
       description?: string | null
-    }
-    /**
-     * Trash
-     * @description What was deleted in the workspace and not yet published. Deleting only hides a node until the deletion is published, restoreNode of the Neos API brings it back; it needs an up_to_date workspace
-     */
-    Trash: {
-      workspaceName: components['schemas']['WorkspaceName']
-      status: components['schemas']['WorkspaceStatus']
-      /** @description The deleted nodes, newest first */
-      items: {
-        /**
-         * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-         * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-         */
-        nodeAggregateId: string
-        nodeAddress: {
-          /**
-           * @description The identifier of a content repository, its key in the Neos.ContentRepositoryRegistry.contentRepositories settings
-           * @example default
-           */
-          contentRepositoryId: string
-          /**
-           * @description The name of a workspace, live or e.g. a user's personal workspace
-           * @example live
-           * @example user-admin
-           */
-          workspaceName: string
-          /**
-           * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
-           * @example {"language":"de"}
-           */
-          dimensionSpacePoint: string
-          /**
-           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-           */
-          nodeAggregateId: string
-        } | null
-        /** @description Its label, else its node type */
-        label: string
-        nodeType: string
-        icon: string | null
-        isDocument: boolean
-        /** @description The labels from the site down to the node itself */
-        breadcrumb: string[]
-        siteAggregateId: string | null
-        siteLabel: string | null
-        /** @description The dimension space points it is deleted in */
-        dimensions: {
-          [key: string]: string
-        }[]
-        deletedAt: string | null
-        deletedBy: string | null
-        /** @description Deleted ancestors restoring brings back as well, it would stay hidden in them otherwise */
-        restoresAncestors: {
-          /**
-           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
-           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
-           */
-          nodeAggregateId: string
-          label: string | null
-        }[]
-      }[]
-      /** @description true if more was deleted than is listed */
-      truncated: boolean
     }
     /**
      * UriPathSegment
@@ -7257,7 +6825,9 @@ export interface operations {
         filterBySite?: components['schemas']['NodeAggregateId'] | null
         /** @description Only the changes with one of these kinds of change, comma-separated: created, changed, moved, deleted. deleted is the workspace's trash: the nodes deleted in it and not published yet */
         filterByChangeType?: components['schemas']['ChangeTypes'] | null
-        /** @description What to include beyond each change's own fields: diff, what the change does to its node compared to the base workspace */
+        /** @description Only the changes of nodes of these node types or ones inheriting from them, comma-separated, a ! in front excludes a type, as filterByNodeType of listNodes. Unknown node types are a 400 */
+        filterByNodeType?: components['schemas']['NodeTypeCriteria'] | null
+        /** @description What to include beyond each change's own fields, comma-separated: diff, what the change does to its node compared to the base workspace, node, the changed node, document, its document, node.ancestors and document.ancestors, their ancestors */
         include?: components['schemas']['IncludePaths'] | null
         /** @description How many items to skip, 0 if omitted */
         offset?: components['schemas']['Offset'] | null
@@ -7320,6 +6890,8 @@ export interface operations {
         limit?: components['schemas']['Limit'] | null
         /** @description sequenceNumber (oldest first, the default) or -sequenceNumber (newest first) */
         sort?: components['schemas']['Sort'] | null
+        /** @description What to include beyond each event's own fields, comma-separated: diff, what the event changed about its node, node, the node, document, its closest document, node.ancestors and document.ancestors, their ancestors */
+        include?: components['schemas']['IncludePaths'] | null
       }
       header?: never
       path: {
@@ -10412,183 +9984,37 @@ export interface operations {
       }
     }
   }
-  listWorkspaceDocumentChanges: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        contentRepositoryId: components['schemas']['ContentRepositoryId']
-        workspaceName: components['schemas']['WorkspaceName']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['DocumentChanges']
-        }
-      }
-      /** @description The request could not be understood */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The request was not authenticated */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The resource doesn't exist */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-    }
-  }
-  getWorkspaceDocumentDiff: {
+  createNodeFromCreationDialog: {
     parameters: {
       query: {
-        /** @description The document, as documentAggregateId of listWorkspaceDocumentChanges */
-        documentAggregateId: components['schemas']['NodeAggregateId']
+        /** @description The workspace to create the node in, as for createNode */
+        workspaceName: components['schemas']['WorkspaceName']
+        /** @description The dimension space point to create the node in, its origin, as JSON, as for createNode */
+        dimensionSpacePoint?:
+          components['schemas']['DimensionSpacePoint'] | null
       }
       header?: never
       path: {
         contentRepositoryId: components['schemas']['ContentRepositoryId']
-        workspaceName: components['schemas']['WorkspaceName']
       }
       cookie?: never
     }
-    requestBody?: never
+    /** @description The node and the values of its creation dialog */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreationDialogNodeCreate']
+      }
+    }
     responses: {
-      /** @description OK */
-      200: {
+      /** @description The node was created */
+      201: {
         headers: {
+          /** @description The URI of the new node in its workspace and dimension space point, relative to the request URI */
+          Location: string
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['DocumentDiff']
-        }
-      }
-      /** @description The request could not be understood */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The request was not authenticated */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The resource doesn't exist */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-    }
-  }
-  listWorkspacePendingEvents: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        contentRepositoryId: components['schemas']['ContentRepositoryId']
-        workspaceName: components['schemas']['WorkspaceName']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['PendingEvents']
-        }
-      }
-      /** @description The request could not be understood */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The request was not authenticated */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The resource doesn't exist */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-    }
-  }
-  getWorkspacePendingEventsDiff: {
-    parameters: {
-      query: {
-        /** @description The sequence number of the first event */
-        from: components['schemas']['SequenceNumber']
-        /** @description The sequence number of the last event */
-        to: components['schemas']['SequenceNumber']
-      }
-      header?: never
-      path: {
-        contentRepositoryId: components['schemas']['ContentRepositoryId']
-        workspaceName: components['schemas']['WorkspaceName']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['PendingEventsDiff']
+          'application/json': components['schemas']['Node']
         }
       }
       /** @description A parameter is malformed */
@@ -10609,52 +10035,8 @@ export interface operations {
           'application/problem+json': components['schemas']['ProblemDocument']
         }
       }
-      /** @description The resource doesn't exist */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-    }
-  }
-  listWorkspaceTrash: {
-    parameters: {
-      query?: {
-        /** @description true lists deleted documents only */
-        filterByDocuments?: boolean
-      }
-      header?: never
-      path: {
-        contentRepositoryId: components['schemas']['ContentRepositoryId']
-        workspaceName: components['schemas']['WorkspaceName']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['Trash']
-        }
-      }
-      /** @description The request could not be understood */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The request was not authenticated */
-      401: {
+      /** @description The caller may not do this */
+      403: {
         headers: {
           [name: string]: unknown
         }
@@ -10671,34 +10053,8 @@ export interface operations {
           'application/problem+json': components['schemas']['ProblemDocument']
         }
       }
-    }
-  }
-  listWorkspaceConflictingNodes: {
-    parameters: {
-      query: {
-        /** @description The IDs of the nodes, comma separated */
-        nodeAggregateIds: string
-      }
-      header?: never
-      path: {
-        contentRepositoryId: components['schemas']['ContentRepositoryId']
-        workspaceName: components['schemas']['WorkspaceName']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ConflictingNodes']
-        }
-      }
-      /** @description A parameter is malformed */
-      400: {
+      /** @description The request conflicts with the current state */
+      409: {
         headers: {
           [name: string]: unknown
         }
@@ -10706,17 +10062,8 @@ export interface operations {
           'application/problem+json': components['schemas']['ProblemDocument']
         }
       }
-      /** @description The request was not authenticated */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/problem+json': components['schemas']['ProblemDocument']
-        }
-      }
-      /** @description The resource doesn't exist */
-      404: {
+      /** @description The request is well-formed, but it can't be applied */
+      422: {
         headers: {
           [name: string]: unknown
         }

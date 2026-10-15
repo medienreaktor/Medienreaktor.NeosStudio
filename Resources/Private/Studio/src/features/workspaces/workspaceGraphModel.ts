@@ -1,5 +1,5 @@
 import type { Workspace } from '@/api/neos/schema'
-import type { WorkspacePendingEvents } from '@/api/studio/schema'
+import type { WorkspacePendingEvents } from './historyData'
 import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
 
 /**

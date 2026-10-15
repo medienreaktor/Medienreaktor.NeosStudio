@@ -189,8 +189,8 @@ Neos:
     FlowAdapter:
       apis:
         # The Studio API: what the Studio adds to Neos (tasks, notifications,
-        # preview links, access roles, the review, history and trash read
-        # models of a workspace), operations of the Neos API itself. Built and
+        # preview links, access roles, creating nodes through their creation
+        # dialog), operations of the Neos API itself. Built and
         # secured exactly like Neos.Api's: neos/openapi Api Classes, its
         # ApiAuthContextProvider (scopes = ApiPrivilege targets of Policy.yaml),
         # problem documents - one OpenAPI document, one docs page, and the
@@ -202,4 +202,4 @@ Neos:
             'Medienreaktor\NeosStudio\Endpoint\Notifications\Notifications': true
             'Medienreaktor\NeosStudio\Endpoint\PreviewLinks\PreviewLinks': true
             'Medienreaktor\NeosStudio\Endpoint\AccessRoles\AccessRoles': true
-            'Medienreaktor\NeosStudio\Endpoint\WorkspaceHistory\WorkspaceHistory': true
+            'Medienreaktor\NeosStudio\Endpoint\CreationDialog\CreationDialog': true

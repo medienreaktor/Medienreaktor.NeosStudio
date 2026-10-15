@@ -81,7 +81,7 @@ const fallback: StudioConfig = {
   // The real list (every scope of Neos.Api and the Studio API) comes from
   // the StudioController; this fallback only covers reading the Studio API.
   scopes:
-    'studio.access.read studio.notifications.read studio.tasks.read studio.previewlinks.read studio.workspacehistory.read',
+    'studio.access.read studio.notifications.read studio.tasks.read studio.previewlinks.read',
   nodeTree: { loadingDepth: 4 },
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',

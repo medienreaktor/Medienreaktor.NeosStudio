@@ -8,7 +8,6 @@ import {
 } from '@/api/neos/endpoints/nodeCommands'
 import { neosKeys } from '@/api/neos/keys'
 import { type NodeAddress, nodeAddressFromContextPath } from '@/api/neos/schema'
-import { studioKeys } from '@/api/studio/keys'
 import { queryClient } from '@/app/queryClient'
 
 /**
@@ -132,5 +131,4 @@ async function structureChange<T>(
 async function invalidateAfterStructureChange(): Promise<void> {
   await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
   void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
-  void queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
 }

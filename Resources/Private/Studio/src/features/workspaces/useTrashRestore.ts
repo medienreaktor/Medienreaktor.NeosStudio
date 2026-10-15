@@ -1,11 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
 import { fetchNode } from '@/api/neos/endpoints/nodes'
 import { neosKeys } from '@/api/neos/keys'
-import { restoreFromTrash } from '@/api/studio/endpoints/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { restoreFromTrash } from './historyData'
 import { translate as t } from '@/lib/i18n'
 
 /** What the caller knows about the node it restores - enough to report it. */

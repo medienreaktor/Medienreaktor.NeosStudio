@@ -123,6 +123,13 @@ export interface NodeTypeConfiguration {
    * constraints.maxItems = 1 and stripping the type).
    */
   references?: Record<string, PropertyConfig | null>
+  options?: {
+    /**
+     * The node creation handlers by key (e.g. Flowpack.NodeTemplates'), which
+     * the Studio's createNodeFromCreationDialog runs; null removes one.
+     */
+    nodeCreationHandlers?: Record<string, unknown> | null
+  } | null
 }
 
 /** The configuration of a node type read with it (getNodeType), {} without. */

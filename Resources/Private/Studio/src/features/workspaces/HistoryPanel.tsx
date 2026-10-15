@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { nodeAddressOf } from '@/api/neos/schema'
-import { useWorkspacesPendingEvents } from '@/api/studio/endpoints/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
+import { useWorkspacesPendingEvents } from './historyData'
 import { HistoryStepRow } from './HistoryStepRow'
 import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
 

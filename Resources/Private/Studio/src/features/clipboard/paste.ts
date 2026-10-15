@@ -6,7 +6,6 @@ import {
   nodeAddressOf,
   nodeAddressKey,
 } from '@/api/neos/schema'
-import { studioKeys } from '@/api/studio/keys'
 import { queryClient } from '@/app/queryClient'
 import { moveNodesByAddress } from '@/features/editing/nodeActions'
 import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
@@ -89,7 +88,6 @@ async function copyNodes(
     // are keyed under nodes) and refresh the pending-changes badges.
     await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
     void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
-    void queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
   }
 }
 

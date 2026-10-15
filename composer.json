@@ -9,6 +9,9 @@
         "neos/api": "dev-main",
         "neos/oauth": "dev-main"
     },
+    "suggest": {
+        "neos/neos-ui": "Runs the node types' nodeCreationHandlers (e.g. Flowpack.NodeTemplates) for nodes created through the Studio's creation dialog"
+    },
     "autoload": {
         "psr-4": {
             "Medienreaktor\\NeosStudio\\": "Classes/"

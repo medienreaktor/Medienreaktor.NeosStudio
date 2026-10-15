@@ -69,12 +69,6 @@ privilegeTargets:
       matcher: 'studio.tasks.approve'
       label: 'Approve tasks'
 
-    # The review, history and trash read models of a workspace the account
-    # may read.
-    'Medienreaktor.NeosStudio:Api.WorkspaceHistory.Read':
-      matcher: 'studio.workspacehistory.read'
-      label: 'Read the changes, history, trash and conflicts of workspaces'
-
     # The caller's OWN effective access: which sites, branches, dimensions and
     # workspaces their access roles leave open. Strictly self-describing, so
     # every editor gets it; the Studio needs it to shape its UI.
@@ -136,9 +130,6 @@ roles:
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.PreviewLinks.Delete'
-        permission: GRANT
-      -
-        privilegeTarget: 'Medienreaktor.NeosStudio:Api.WorkspaceHistory.Read'
         permission: GRANT
       -
         privilegeTarget: 'Medienreaktor.NeosStudio:Api.Tasks.Read'

@@ -5,7 +5,6 @@ import { apiErrorDescription } from '@/api/http/errors'
 import { changeBaseWorkspace } from '@/api/neos/endpoints/workspaces'
 import { neosKeys } from '@/api/neos/keys'
 import type { Workspace } from '@/api/neos/schema'
-import { studioKeys } from '@/api/studio/keys'
 import type { EffectiveAccess } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
@@ -83,7 +82,6 @@ export function WorkspaceLockoutDialog({
     onSuccess: () => {
       setError(null)
       queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
-      queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
       queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
     },
     onError: (mutationError) =>

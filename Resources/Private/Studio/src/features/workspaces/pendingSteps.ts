@@ -1,5 +1,5 @@
 import type { NodeAddress } from '@/api/neos/schema'
-import type { WorkspacePendingEvent } from '@/api/studio/schema'
+import type { WorkspacePendingEvent } from './historyData'
 
 /**
  * One editing step of a workspace's pending history: the events one command

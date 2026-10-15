@@ -22,7 +22,6 @@ final class StudioScopes
     public const string TASKS_READ = 'studio.tasks.read';
     public const string TASKS_UPDATE = 'studio.tasks.update';
     public const string TASKS_APPROVE = 'studio.tasks.approve';
-    public const string WORKSPACEHISTORY_READ = 'studio.workspacehistory.read';
     public const string ACCESS_READ = 'studio.access.read';
     public const string ACCESSROLES_READ = 'studio.accessroles.read';
     public const string ACCESSROLES_UPDATE = 'studio.accessroles.update';

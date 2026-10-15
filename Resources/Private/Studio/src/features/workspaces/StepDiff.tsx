@@ -1,9 +1,9 @@
-import { useWorkspacePendingEventsDiff } from '@/api/studio/endpoints/workspaces'
-import type {
-  WorkspaceDocumentDiffNode,
-  WorkspacePendingDiffChange,
-  WorkspacePendingDiffEvent,
-} from '@/api/studio/schema'
+import {
+  useWorkspacePendingEventsDiff,
+  type ValueChange as WorkspacePendingDiffChange,
+  type WorkspaceDocumentDiffNode,
+  type WorkspacePendingDiffEvent,
+} from './historyData'
 import { Spinner } from '@/components/ui/spinner'
 import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'

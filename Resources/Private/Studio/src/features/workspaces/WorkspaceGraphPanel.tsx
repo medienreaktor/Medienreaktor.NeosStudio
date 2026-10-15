@@ -1,7 +1,6 @@
 import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react'
 import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
 import type { Workspace } from '@/api/neos/schema'
-import { useWorkspacesPendingEvents } from '@/api/studio/endpoints/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import {
   GraphCanvas,
@@ -33,6 +32,7 @@ import {
   type WorkspaceBranch,
   type WorkspaceGraph,
 } from './workspaceGraphModel'
+import { useWorkspacesPendingEvents } from './historyData'
 
 /**
  * The Workspaces panel: every workspace as a git-style branch off the current

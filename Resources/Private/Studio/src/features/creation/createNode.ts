@@ -1,7 +1,7 @@
 import { createNode as createNodeRequest } from '@/api/neos/endpoints/nodeCommands'
 import { neosKeys } from '@/api/neos/keys'
 import type { Node, NodeAddress } from '@/api/neos/schema'
-import { studioKeys } from '@/api/studio/keys'
+import { createNodeFromCreationDialog } from '@/api/studio/endpoints/creationDialog'
 import { queryClient } from '@/app/queryClient'
 
 export interface CreateNodeRequest {
@@ -18,31 +18,48 @@ export interface CreateNodeRequest {
  * rendered/browsed), which is all node creation requires, so no variant
  * dance is needed.
  *
- * Neos.Api runs no node creation handlers: what the creation dialog asked
- * for arrives here already split into property values and references (see
- * CreateNodeFlow). Handler-driven extras of the classic UI
- * (Flowpack.NodeTemplates and the like) do not run.
+ * What the creation dialog asked for arrives here already split into property
+ * values and references (see CreateNodeFlow). With `elements` - the dialog's
+ * values, for a node type with node creation handlers - the node is created
+ * through the Studio's createNodeFromCreationDialog, which runs the handlers
+ * (Flowpack.NodeTemplates and the like) as the classic UI does; otherwise
+ * through Neos.Api's createNode.
  */
 export async function createNode(
   request: CreateNodeRequest,
   properties: Record<string, unknown> = {},
   /** Target node aggregate ids by reference name. */
   references: Record<string, string[]> = {},
+  elements: Record<string, unknown> | null = null,
 ): Promise<Node> {
-  const node = await createNodeRequest({
-    nodeType: request.nodeTypeName,
-    parent: request.parentAddress,
-    succeedingSiblingNodeAggregateId:
-      request.succeedingSiblingAddress?.nodeAggregateId ?? null,
-    properties,
-    references,
-  })
+  const succeedingSiblingNodeAggregateId =
+    request.succeedingSiblingAddress?.nodeAggregateId ?? null
+  const node =
+    elements !== null
+      ? await createNodeFromCreationDialog(request.parentAddress, {
+          nodeType: request.nodeTypeName,
+          succeedingSiblingNodeAggregateId,
+          properties,
+          references: Object.fromEntries(
+            Object.entries(references).map(([name, targets]) => [
+              name,
+              targets.map((nodeAggregateId) => ({ nodeAggregateId })),
+            ]),
+          ),
+          elements,
+        })
+      : await createNodeRequest({
+          nodeType: request.nodeTypeName,
+          parent: request.parentAddress,
+          succeedingSiblingNodeAggregateId,
+          properties,
+          references,
+        })
 
   // The collection's children changed - drop all node reads (children lists
   // are keyed under nodes too) and refresh the pending-changes badges.
   await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
   void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
-  void queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
 
   return node
 }

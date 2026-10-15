@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { NodeAddress, Workspace } from '@/api/neos/schema'
-import {
-  useWorkspaceDocumentChanges,
-  useWorkspaceDocumentDiff,
-} from '@/api/studio/endpoints/workspaces'
-import type { WorkspaceDocumentChange } from '@/api/studio/schema'
 import { apiErrorDescription } from '@/api/http/errors'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
@@ -32,6 +27,11 @@ import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
+import {
+  useWorkspaceDocumentChanges,
+  useWorkspaceDocumentDiff,
+  type WorkspaceDocumentChange,
+} from './historyData'
 import { TONE_BG_CLASSES } from './historyLabels'
 import { NodeDiff } from './StepDiff'
 import { useCanPublish, useWorkspacePublishing } from './useWorkspacePublishing'

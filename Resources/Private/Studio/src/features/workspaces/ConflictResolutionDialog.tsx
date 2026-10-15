@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { ConflictingChange, NodeAddress } from '@/api/neos/schema'
-import { useConflictDetails } from '@/api/studio/endpoints/workspaces'
 import { translate as t } from '@/lib/i18n'
+import { useConflictDetails } from './historyData'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -71,9 +71,16 @@ function useResolvedConflicts(
 ): ResolvedConflict[] {
   const { data: details } = useConflictDetails(
     workspaceName,
-    conflicts
-      .map((conflict) => conflict.nodeAggregateId)
-      .filter((id): id is string => id !== null),
+    conflicts.flatMap((conflict) =>
+      conflict.nodeAggregateId !== null
+        ? [
+            {
+              nodeAggregateId: conflict.nodeAggregateId,
+              documentAggregateId: conflict.documentAggregateId,
+            },
+          ]
+        : [],
+    ),
   )
   return useMemo(() => {
     const byId = new Map(

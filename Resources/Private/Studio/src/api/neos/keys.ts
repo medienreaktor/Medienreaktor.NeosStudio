@@ -59,6 +59,59 @@ export const neosKeys = {
       ['workspaces', contentRepositoryId, name, 'changes'] as const,
     roles: (contentRepositoryId: string, name: string) =>
       ['workspaces', contentRepositoryId, name, 'roles'] as const,
+    /** The changes grouped by document, for the review - under `changes`. */
+    review: (contentRepositoryId: string, name: string) =>
+      ['workspaces', contentRepositoryId, name, 'changes', 'review'] as const,
+    /** One document's changes with their diffs - under `changes`. */
+    documentDiff: (
+      contentRepositoryId: string,
+      name: string,
+      documentId: string,
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        name,
+        'changes',
+        'document',
+        documentId,
+      ] as const,
+    /** The deleted pages - under `changes`. */
+    trash: (contentRepositoryId: string, name: string) =>
+      ['workspaces', contentRepositoryId, name, 'changes', 'trash'] as const,
+    /** The labels of conflicting nodes - under `changes`. */
+    conflicts: (
+      contentRepositoryId: string,
+      name: string,
+      nodeAggregateIds: string[],
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        name,
+        'changes',
+        'conflicts',
+        nodeAggregateIds,
+      ] as const,
+    /** The newest events, for the pending history. */
+    history: (contentRepositoryId: string, name: string) =>
+      ['workspaces', contentRepositoryId, name, 'events'] as const,
+    /** A range of events with their diffs - under `history`. */
+    eventsDiff: (
+      contentRepositoryId: string,
+      name: string,
+      from: number,
+      to: number,
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        name,
+        'events',
+        'diff',
+        from,
+        to,
+      ] as const,
   },
   /** By content repository, after the prefix covering all of them. */
   nodeTypes: {
