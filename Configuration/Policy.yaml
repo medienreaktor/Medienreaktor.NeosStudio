@@ -144,6 +144,13 @@ roles:
       -
         privilegeTarget: 'Neos.Api:NodeTypes.Read'
         permission: GRANT
+      # Neos.Api grants reading users to user managers only; the Studio names
+      # users everywhere editors work together (task assignees, workspace
+      # owners and members), so every editor may list them. Changing users
+      # stays with user managers.
+      -
+        privilegeTarget: 'Neos.Api:Users.Read'
+        permission: GRANT
 
   # Access roles decide where the editorial team may work - granting and
   # revoking that is administration, like user management.

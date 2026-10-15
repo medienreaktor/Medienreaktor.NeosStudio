@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { assignTask, updateTask, type Task } from '@/api/tasks'
-import { usePeople } from '@/api/people'
+import { useUsers } from '@/api/users'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,7 +44,7 @@ export function TaskDetailDialog({
   task: Task | null
   onOpenChange: (open: boolean) => void
 }) {
-  const { data: people } = usePeople()
+  const users = useUsers().data?.users
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -62,7 +62,7 @@ export function TaskDetailDialog({
 
   const assigneeItems = [
     { value: UNASSIGNED, label: t('tasks.unassigned', '– unassigned –') },
-    ...(people ?? []).map((user) => ({
+    ...(users ?? []).map((user) => ({
       value: user.id,
       label: user.label,
     })),

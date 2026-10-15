@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { queryClient } from '@/app/queryClient'
 import { apiFetch, fetchAllPages } from './client'
 import { queryKeys } from './keys'
 import { useMe } from './me'
@@ -62,18 +63,23 @@ function toUser(user: ApiUser, currentUserId: string | null): User {
   }
 }
 
+/** Neos.Api's user list, all pages - the raw shape the users query caches. */
+function fetchApiUsers(): Promise<ApiUser[]> {
+  return fetchAllPages<ApiUser>('/users')
+}
+
 /**
- * The backend users, for user administration only: Neos.Api lists them to
- * user managers and administrators (users.read), everybody else gets a 403.
- * Anything that only needs names (assignee pickers, member labels) reads the
- * people directory instead.
+ * The backend users. Every editor may list them (the Studio's Policy.yaml
+ * grants Neos.Api's Users.Read to all editors): user administration needs the
+ * full records, everything else names users by them (task assignees,
+ * workspace owners and members). Changing users stays with user managers.
  */
 export function useUsers(enabled = true) {
   const { data: me } = useMe()
   const currentUserId = me?.user?.id ?? null
   return useQuery({
     queryKey: queryKeys.users,
-    queryFn: () => fetchAllPages<ApiUser>('/users'),
+    queryFn: fetchApiUsers,
     select: useCallback(
       (users: ApiUser[]): UsersResponse => ({
         users: users.map((user) => toUser(user, currentUserId)),
@@ -82,6 +88,19 @@ export function useUsers(enabled = true) {
     ),
     enabled,
   })
+}
+
+/**
+ * id -> label of all users, for non-hook contexts (e.g. labelling workspace
+ * role assignments). Shares the users query's cache entry.
+ */
+export async function fetchUserLabels(): Promise<Map<string, string>> {
+  const users = await queryClient.fetchQuery({
+    queryKey: queryKeys.users,
+    queryFn: fetchApiUsers,
+    staleTime: 5 * 60 * 1000,
+  })
+  return new Map(users.map((user) => [user.id, user.label]))
 }
 
 /** One assignable role from the policy framework (non-abstract). */

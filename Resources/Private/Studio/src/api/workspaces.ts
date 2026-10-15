@@ -12,7 +12,7 @@ import {
 } from './client'
 import { queryKeys } from './keys'
 import { contentRepositoryPath } from './nodeAddress'
-import { fetchPeopleCached } from './people'
+import { fetchUserLabels } from './users'
 import { TASK_EXTENSION_KEY, type Task } from './tasks'
 
 /**
@@ -1121,19 +1121,18 @@ function rolesPath(
 }
 
 /**
- * The role assignments, user subjects labelled from the people directory
- * (readable by every editor, unlike the user administration).
+ * The role assignments, user subjects labelled from the user list (readable
+ * by every editor in the Studio).
  */
 async function fetchWorkspaceRoles(
   workspaceName: string,
 ): Promise<{ assignments: WorkspaceRoleAssignment[] }> {
-  const [listing, people] = await Promise.all([
+  const [listing, labels] = await Promise.all([
     apiFetch<Listing<ApiWorkspaceRoleAssignment>>(
       `${workspacesPath(workspaceName)}/roles`,
     ),
-    fetchPeopleCached().catch(() => []),
+    fetchUserLabels().catch(() => new Map<string, string>()),
   ])
-  const labels = new Map(people.map((person) => [person.id, person.label]))
   return {
     assignments: listing.data.map((assignment) => ({
       subjectType: assignment.subject.type === 'user' ? 'USER' : 'GROUP',

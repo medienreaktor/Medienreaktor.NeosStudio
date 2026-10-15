@@ -4,8 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { useMe } from '@/api/me'
-import { usePeople } from '@/api/people'
-import { useUserRoles } from '@/api/users'
+import { useUserRoles, useUsers } from '@/api/users'
 import {
   assignWorkspaceRole,
   unassignWorkspaceRole,
@@ -55,7 +54,7 @@ function roleLabel(role: string): string {
 /**
  * Manage who may access a workspace: the role assignments (user or group ->
  * viewer/collaborator/manager). Only offered for workspaces the account
- * manages; the server re-checks. Users are picked from the people directory
+ * manages; the server re-checks. Users are picked from the user list
  * (readable by every editor); groups from the role catalog when the account
  * is an administrator, otherwise via a free-text role identifier.
  */
@@ -201,14 +200,14 @@ function AddAssignmentForm({
     useState<(typeof WORKSPACE_ROLES)[number]>('COLLABORATOR')
 
   const isAdmin = useMe().data?.permissions.users ?? false
-  const { data: people } = usePeople()
+  const users = useUsers().data?.users
   // The role catalog is admin-only; non-admin managers type the identifier.
   const { data: rolesData } = useUserRoles(isAdmin)
 
   const assignedSubjects = new Set(
     existing.map((a) => `${a.subjectType}:${a.subject}`),
   )
-  const userItems = (people ?? [])
+  const userItems = (users ?? [])
     .filter((person) => !assignedSubjects.has(`USER:${person.id}`))
     .map((person) => ({ value: person.id, label: person.label }))
   const groupItems = (rolesData?.roles ?? [])

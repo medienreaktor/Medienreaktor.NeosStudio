@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
-import { peopleLabels, usePeople } from '@/api/people'
+import { useUsers } from '@/api/users'
 import {
   deleteWorkspace,
   useWorkspaces,
@@ -63,7 +63,7 @@ function classificationLabel(classification: string): string {
  */
 export function WorkspacesAdministration() {
   const { data, isLoading, error } = useWorkspaces()
-  const { data: people } = usePeople()
+  const users = useUsers().data?.users
   const { workspaceName: activeWorkspaceName } = useStudio()
 
   const [creating, setCreating] = useState(false)
@@ -84,9 +84,9 @@ export function WorkspacesAdministration() {
   const roles = workspaces.find((w) => w.name === rolesName) ?? null
   const deleting = workspaces.find((w) => w.name === deletingName) ?? null
 
-  // Owner user ids -> readable names, from the people directory every
-  // editor may read.
-  const userLabels = peopleLabels(people)
+  // Owner user ids -> readable names, from the user list every editor may
+  // read.
+  const userLabels = new Map((users ?? []).map((user) => [user.id, user.label]))
 
   return (
     <div className="p-6 pt-3">

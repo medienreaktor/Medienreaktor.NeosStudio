@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { createTask, type Task } from '@/api/tasks'
-import { usePeople } from '@/api/people'
+import { useUsers } from '@/api/users'
 import { useWorkspaces, type Workspace } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
@@ -46,7 +46,7 @@ export function CreateTaskDialog({
   /** Called with the created task - e.g. the switcher checking it out. */
   onCreated?: (task: Task) => void
 }) {
-  const { data: people } = usePeople()
+  const users = useUsers().data?.users
   const { data: workspacesData } = useWorkspaces(open)
 
   const [title, setTitle] = useState('')
@@ -87,7 +87,7 @@ export function CreateTaskDialog({
   if (baseItems.length === 0) {
     baseItems.push({ value: 'live', label: t('workspace.live', 'Live') })
   }
-  const assigneeItems = (people ?? []).map((user) => ({
+  const assigneeItems = (users ?? []).map((user) => ({
     value: user.id,
     label: user.label,
   }))
