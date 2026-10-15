@@ -1,5 +1,6 @@
 import { isDeleted, type NodeDto } from '@/api/nodes'
 import { Button } from '@/components/ui/button'
+import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
 import { previewUrl } from './PreviewPane'
 
@@ -7,11 +8,14 @@ import { previewUrl } from './PreviewPane'
 const PREVIEW_WINDOW_NAME = 'neos-studio-preview'
 
 /**
- * Topbar button opening the selected document in a browser tab of its own. The
- * link always uses the plain "frontend" preview rendering - the page including
- * hidden content, without the content-element metadata of the shell's
- * "inPlace" iframe. The node address already pins the active workspace and
- * dimension, so the tab shows the state currently being edited.
+ * Topbar button opening the selected document in a browser tab of its own.
+ * In the live workspace the tab lands on the page's public url - the one to
+ * copy and hand on - via a server redirect, which falls back to the preview
+ * for a live page without one (hidden). Every other workspace uses the plain
+ * "frontend" preview rendering - the page including hidden content, without
+ * the content-element metadata of the shell's "inPlace" iframe. The node
+ * address already pins the active workspace and dimension, so the tab shows
+ * the state currently being edited.
  *
  * The target is a fixed window name rather than "_blank": previewing a second
  * document reuses and refreshes the tab that is already open, the way the
@@ -29,6 +33,11 @@ export function PreviewButton({
   className?: string
 }) {
   const label = t('preview.openInNewTab', 'Open page in a new tab')
+  const deleted = isDeleted(document)
+  const href =
+    document.workspace === 'live' && !deleted
+      ? `${config.previewBase}/live?${new URLSearchParams({ node: document.address })}`
+      : previewUrl(document.address, undefined, deleted)
   return (
     <Button
       asChild
@@ -38,10 +47,7 @@ export function PreviewButton({
       title={label}
       aria-label={label}
     >
-      <a
-        href={previewUrl(document.address, undefined, isDeleted(document))}
-        target={PREVIEW_WINDOW_NAME}
-      >
+      <a href={href} target={PREVIEW_WINDOW_NAME}>
         <i className="fas fa-fw fa-arrow-up-right-from-square" aria-hidden />
       </a>
     </Button>
