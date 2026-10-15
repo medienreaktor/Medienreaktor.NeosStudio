@@ -96,6 +96,24 @@ class AccessControlService
         return $this->effectiveAccessForUser($this->currentUserId());
     }
 
+    /**
+     * The effective access of an account given its roles (e.g. the roles of
+     * an access token's account, not Flow's security context) and its user.
+     *
+     * @param array<Role> $roles with their parent roles, as Flow resolves them
+     */
+    public function effectiveAccessFor(array $roles, ?UserId $userId): EffectiveAccess
+    {
+        $bypassRoles = $this->bypassRoles();
+        foreach ($roles as $role) {
+            if (in_array($role->getIdentifier(), $bypassRoles, true)) {
+                return EffectiveAccess::unrestricted('Account holds an access-control bypass role');
+            }
+        }
+
+        return $this->effectiveAccessForUser($userId);
+    }
+
     public function effectiveAccessForUser(?UserId $userId): EffectiveAccess
     {
         $cacheKey = $userId?->value ?? '';

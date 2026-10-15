@@ -188,7 +188,7 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
     if (workspaceName && text.trim() !== '' && !send.isPending) send.mutate()
   }
 
-  const comments = data?.comments ?? []
+  const comments = data ?? []
 
   return (
     <div>

@@ -5,19 +5,20 @@ import { restoreNode } from '../../neos/endpoints/nodeCommands'
 import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
 import type {
-  ConflictNodeDetail,
+  ConflictingNodes,
   WorkspaceDocumentChanges,
   WorkspaceDocumentDiff,
   WorkspacePendingEvents,
   WorkspacePendingEventsDiff,
-  WorkspaceTrashResponse,
+  WorkspaceTrash,
 } from '../schema'
 import { config } from '@/config'
 
 /**
  * The Studio's read models of a workspace, beyond what Neos.Api offers: the
  * review (changes grouped by document, net diffs), the pending history and
- * the trash bin (/neos/studio/api/workspaces/{name}/...).
+ * the trash bin (the Studio API's WorkspaceHistory,
+ * /neos/studio/api/workspaces/{workspaceName}/...).
  */
 
 function workspacePath(workspaceName: string, suffix: string): string {
@@ -33,7 +34,7 @@ export function useWorkspaceDocumentChanges(
     queryKey: studioKeys.workspaces.documentChanges(workspaceName ?? ''),
     queryFn: () =>
       studioFetch<WorkspaceDocumentChanges>(
-        workspacePath(workspaceName!, '/document-changes'),
+        workspacePath(workspaceName!, '/documentchanges'),
       ),
     enabled: workspaceName !== null && enabled,
   })
@@ -57,7 +58,7 @@ export function useWorkspaceDocumentDiff(
       studioFetch<WorkspaceDocumentDiff>(
         workspacePath(
           workspaceName!,
-          `/document-diff${queryString({ documentAggregateId })}`,
+          `/documentdiff${queryString({ documentAggregateId })}`,
         ),
       ),
     enabled: enabled && workspaceName !== null && documentAggregateId !== null,
@@ -78,10 +79,10 @@ export function useConflictDetails(
   return useQuery({
     queryKey: studioKeys.workspaces.conflictDetails(workspaceName ?? '', ids),
     queryFn: () =>
-      studioFetch<{ nodes: ConflictNodeDetail[] }>(
+      studioFetch<ConflictingNodes>(
         workspacePath(
           workspaceName!,
-          `/conflict-details${queryString({ nodeAggregateIds: ids.join(',') })}`,
+          `/conflictingnodes${queryString({ nodeAggregateIds: ids.join(',') })}`,
         ),
       ),
     enabled: workspaceName !== null && ids.length > 0,
@@ -109,7 +110,7 @@ export function useWorkspacePendingEventsDiff(
       studioFetch<WorkspacePendingEventsDiff>(
         workspacePath(
           workspaceName!,
-          `/pending-events/diff${queryString({ from, to })}`,
+          `/pendingevents/diff${queryString({ from, to })}`,
         ),
       ),
     enabled: workspaceName !== null && from !== null && to !== null,
@@ -134,7 +135,7 @@ export function useWorkspacesPendingEvents(
       queryKey: studioKeys.workspaces.pendingEvents(name),
       queryFn: () =>
         studioFetch<WorkspacePendingEvents>(
-          workspacePath(name, '/pending-events'),
+          workspacePath(name, '/pendingevents'),
         ),
       enabled,
       refetchInterval,
@@ -161,10 +162,10 @@ export function useWorkspaceTrash(workspaceName: string | null) {
   return useQuery({
     queryKey: studioKeys.workspaces.trash(workspaceName ?? ''),
     queryFn: () =>
-      studioFetch<WorkspaceTrashResponse>(
+      studioFetch<WorkspaceTrash>(
         workspacePath(
           workspaceName!,
-          `/trash${queryString({ documentsOnly: 1 })}`,
+          `/trash${queryString({ filterByDocuments: true })}`,
         ),
       ),
     enabled: workspaceName !== null,
@@ -183,9 +184,7 @@ export async function restoreFromTrash(
   nodeAggregateId: string,
 ): Promise<{ nodeAggregateId: string; label: string | null }[]> {
   const item = queryClient
-    .getQueryData<WorkspaceTrashResponse>(
-      studioKeys.workspaces.trash(workspaceName),
-    )
+    .getQueryData<WorkspaceTrash>(studioKeys.workspaces.trash(workspaceName))
     ?.items.find((candidate) => candidate.nodeAggregateId === nodeAggregateId)
   await restoreNode({
     contentRepositoryId: config.contentRepositoryId,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller;
 
-use Medienreaktor\NeosStudio\Controller\Api\AbstractStudioApiController;
 use Neos\Api\Security\PrivilegeScopes;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Locale;
@@ -27,7 +26,7 @@ use Neos\OAuth\Domain\ScopeRegistry;
  * loaded, the SPA performs the authorization-code + PKCE flow against the
  * Neos.OAuth endpoints; because its client is first-party, the consent
  * screen is skipped and the token is obtained silently. The token carries
- * every Neos.Api scope plus the Studio's own studio.* scopes.
+ * every scope of Neos.Api and the Studio API (studio.*).
  */
 class StudioController extends ActionController
 {
@@ -329,18 +328,15 @@ class StudioController extends ActionController
     }
 
     /**
-     * The scopes the shell requests: all of Neos.Api's (what the account may
-     * actually do is still decided by its roles) and the Studio's own.
+     * The scopes the shell requests: all ApiPrivilege targets, Neos.Api's and
+     * the Studio API's (studio.*) - what the account may actually do is still
+     * decided by its roles.
      *
      * @return list<string>
      */
     private function scopes(): array
     {
-        return [
-            ...array_keys($this->scopeRegistry->provider(PrivilegeScopes::class)->scopes()),
-            AbstractStudioApiController::SCOPE_READ,
-            AbstractStudioApiController::SCOPE_WRITE,
-        ];
+        return array_keys($this->scopeRegistry->provider(PrivilegeScopes::class)->scopes());
     }
 
     private function ensureClient(string $redirectUri): void

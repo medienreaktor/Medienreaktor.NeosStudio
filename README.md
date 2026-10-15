@@ -4,7 +4,7 @@
 
 **A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.** Built from scratch on a clean HTTP API — fully independent of `Neos.Neos.Ui`, free to make its own architectural choices. This is what content editing in Neos can feel like: instant, fluid, together with your team, and open for extension from day one.
 
-Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Neos.Api](https://github.com/danielkestler/Neos.Api) — the OAuth-secured HTTP API (OpenAPI-described, secured by Neos.OAuth) over the Event-Sourced Content Repository — plus a few Studio-specific endpoints of its own below `/neos/studio/api`. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
+Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Neos.Api](https://github.com/danielkestler/Neos.Api) — the OAuth-secured HTTP API (OpenAPI-described, secured by Neos.OAuth) over the Event-Sourced Content Repository — plus the Studio API of its own below `/neos/studio/api`, built and secured exactly like Neos.Api. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
 
 > **Why a new UI?** The classic Neos UI is a great piece of engineering that has served editors well for years — and Studio owes a lot to the ideas it pioneered. But some of its 2016-era architectural constraints are hard to move past today: the plugin API ties extensions to React 16, and the internal wire protocol was never designed as a public contract. Neos Studio starts from a different premise: an API-first backend, a lean modern frontend, and extensibility through observable registries that _are_ the public contract. It grows alongside the classic UI, adopting editing surfaces one at a time.
 
@@ -110,7 +110,7 @@ Third-party packages ship a small IIFE bundle that binds to the shell's public p
 | Package                                                                                                             | What it is                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [Neos.Api](https://github.com/danielkestler/Neos.Api) + [Neos.OAuth](https://github.com/danielkestler/Neos.OAuth)   | The foundation: the HTTP API for Neos 9 (nodes, workspaces, media, users, sites, views, data sources), described with OpenAPI and secured with OAuth 2 (authorization code + PKCE, refresh token rotation, scopes narrowing the account's privileges). |
-| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API, plus its own endpoints (tasks, notifications, access roles, preview links, review and history read models, the realtime feed).                                                                                       |
+| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API, plus the Studio API (tasks, notifications, access roles, preview links, review and history read models) and the realtime feed.                                                                                       |
 | [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                    |
 
 ## Getting started
@@ -204,6 +204,16 @@ src/
 ```
 
 Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) mapped onto the shadcn token contract with the official Neos palette; primitives are Base UI (`@base-ui/react`), not Radix.
+
+### The Studio API
+
+What the Studio adds to Neos is an API of its own below `/neos/studio/api`, built exactly like Neos.Api: [neos/openapi](https://github.com/neos/openapi) operations in `Classes/Endpoint/<Tag>/<Tag>.php` with schematic/jsonschema types (`Schema/`, `RequestBody/`, `Response/`), registered as `Neos.OpenApi.FlowAdapter.apis.studio` and secured by Neos.Api's `ApiAuthContextProvider`. So it gets everything Neos.Api gets:
+
+- an OpenAPI document at `/neos/studio/api/openapi.json`, from which the SPA's types are generated (`npm run api:studio-schema` → `src/api/studio/schema/openapi.ts`, never edited by hand; `npm run api:schema` does the same for Neos.Api);
+- OAuth scopes that are Neos privileges: each capability is a `Neos\Api\Security\ApiPrivilege` target in `Policy.yaml` whose matcher is the scope (`studio.tasks.read`, … in `Security\StudioScopes`). The account's roles decide what is possible, the token's scopes only narrow it down; both are checked before an operation runs, rules depending on a workspace by the operation (`Security\StudioCallers`);
+- RFC 9457 problem documents, the cache headers, and the tools of Neos.Mcp's MCP server (`Neos.Mcp.servers.neos.apis.studio`).
+
+Follow Neos.Api's conventions (its `CLAUDE.md`) for new operations. The realtime sidecar's feed is no operation of it: it authenticates with a shared secret, not a token (`RealtimeController`).
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 

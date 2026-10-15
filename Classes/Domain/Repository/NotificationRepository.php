@@ -39,6 +39,13 @@ class NotificationRepository extends Repository
             ->toArray();
     }
 
+    public function countByUser(string $userId): int
+    {
+        $query = $this->createQuery();
+
+        return $query->matching($query->equals('userId', $userId))->count();
+    }
+
     public function countUnreadByUser(string $userId): int
     {
         $query = $this->createQuery();

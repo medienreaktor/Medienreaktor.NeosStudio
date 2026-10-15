@@ -3,9 +3,10 @@ import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
 import type {
   AccessRole,
-  AccessRoleInput,
-  AccessRolesResponse,
-  MyAccessResponse,
+  AccessRoleCreate,
+  AccessRoleListing,
+  AccessRoleUpdate,
+  MyAccess,
 } from '../schema'
 
 /**
@@ -15,11 +16,11 @@ import type {
  * them is in features/access/rules.ts.
  */
 
-/** The role catalogue. Administrators only. */
+/** The role catalogue, with what applies to all roles in meta. Administrators only. */
 export function useAccessRoles(enabled = true) {
   return useQuery({
     queryKey: studioKeys.access.roles,
-    queryFn: () => studioFetch<AccessRolesResponse>('/access/roles'),
+    queryFn: () => studioFetch<AccessRoleListing>('/accessroles'),
     enabled,
   })
 }
@@ -27,7 +28,7 @@ export function useAccessRoles(enabled = true) {
 function myAccessQuery() {
   return {
     queryKey: studioKeys.access.mine,
-    queryFn: () => studioFetch<MyAccessResponse>('/access/me'),
+    queryFn: () => studioFetch<MyAccess>('/access/me'),
     // Roles change rarely; a stale answer only means the UI catches up one
     // navigation later.
     staleTime: 5 * 60 * 1000,
@@ -42,31 +43,30 @@ export function useMyAccess(enabled = true) {
   return useQuery({ ...myAccessQuery(), enabled })
 }
 
-export function createAccessRole(input: AccessRoleInput) {
-  return studioFetch<{ role: AccessRole }>('/access/roles', {
+export function createAccessRole(input: AccessRoleCreate) {
+  return studioFetch<AccessRole>('/accessroles', {
     method: 'POST',
     body: input,
   })
 }
 
 /** Partial update; "constraints" and "memberUserIds" each replace the whole set. */
-export function updateAccessRole(roleId: string, input: AccessRoleInput) {
-  return studioFetch<{ role: AccessRole }>(
-    `/access/roles/${encodeURIComponent(roleId)}`,
-    { method: 'PATCH', body: input },
-  )
+export function updateAccessRole(roleId: string, input: AccessRoleUpdate) {
+  return studioFetch<AccessRole>(`/accessroles/${encodeURIComponent(roleId)}`, {
+    method: 'PATCH',
+    body: input,
+  })
 }
 
 export function setAccessRoleMembers(roleId: string, userIds: string[]) {
-  return studioFetch<{ role: AccessRole }>(
-    `/access/roles/${encodeURIComponent(roleId)}/members`,
+  return studioFetch<AccessRole>(
+    `/accessroles/${encodeURIComponent(roleId)}/members`,
     { method: 'PUT', body: { userIds } },
   )
 }
 
 export function deleteAccessRole(roleId: string) {
-  return studioFetch<{ success: boolean }>(
-    `/access/roles/${encodeURIComponent(roleId)}`,
-    { method: 'DELETE' },
-  )
+  return studioFetch<null>(`/accessroles/${encodeURIComponent(roleId)}`, {
+    method: 'DELETE',
+  })
 }

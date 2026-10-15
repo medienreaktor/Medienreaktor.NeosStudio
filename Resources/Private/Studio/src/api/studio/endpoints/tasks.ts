@@ -1,26 +1,27 @@
 import { useQuery } from '@tanstack/react-query'
+import type { Listing } from '../../neos/client'
 import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
 import type {
-  CreateTaskInput,
   Task,
   TaskComment,
+  TaskCreate,
   TaskStatus,
-  UpdateTaskInput,
+  TaskUpdate,
 } from '../schema'
 
 /**
  * The task workflow: task branches are ordinary shared workspaces plus the
- * Studio's sidecar record (see TasksController / TaskWorkspaceService).
+ * Studio's record of who works on them (the Studio API's Tasks).
  */
 
 export function useTasks(enabled = true) {
   return useQuery({
     queryKey: studioKeys.tasks.all,
-    queryFn: () => studioFetch<{ tasks: Task[] }>('/tasks'),
+    queryFn: () => studioFetch<Listing<Task>>('/tasks'),
     enabled,
     refetchInterval: 300_000,
-    select: (response) => response.tasks,
+    select: (listing) => listing.data,
   })
 }
 
@@ -28,22 +29,22 @@ function taskPath(workspaceName: string, suffix = ''): string {
   return `/tasks/${encodeURIComponent(workspaceName)}${suffix}`
 }
 
-export function createTask(input: CreateTaskInput): Promise<{ task: Task }> {
-  return studioFetch<{ task: Task }>('/tasks', { method: 'POST', body: input })
+export function createTask(input: TaskCreate): Promise<Task> {
+  return studioFetch<Task>('/tasks', { method: 'POST', body: input })
 }
 
 export function updateTask(
   workspaceName: string,
-  input: UpdateTaskInput,
-): Promise<{ task: Task }> {
-  return studioFetch<{ task: Task }>(taskPath(workspaceName), {
-    method: 'POST',
+  input: TaskUpdate,
+): Promise<Task> {
+  return studioFetch<Task>(taskPath(workspaceName), {
+    method: 'PATCH',
     body: input,
   })
 }
 
 /**
- * The endpoint realizing a status transition - moving INTO a column drives
+ * The operation realizing a status transition - moving INTO a column drives
  * the workflow: to review = submit, back to open = reopen, to done = approve.
  * Approving does NOT publish - the board opens the Review Changes dialog
  * first and completes the task afterwards. Submitting takes an optional
@@ -53,13 +54,17 @@ export function transitionTask(
   workspaceName: string,
   target: TaskStatus,
   comment?: string,
-): Promise<{ task: Task }> {
-  const action =
-    target === 'IN_REVIEW' ? 'submit' : target === 'DONE' ? 'approve' : 'reopen'
-  return studioFetch<{ task: Task }>(taskPath(workspaceName, `/${action}`), {
-    method: 'POST',
-    body: comment ? { comment } : {},
-  })
+): Promise<Task> {
+  if (target === 'IN_REVIEW') {
+    return studioFetch<Task>(taskPath(workspaceName, '/submit'), {
+      method: 'POST',
+      body: comment ? { comment } : {},
+    })
+  }
+  return studioFetch<Task>(
+    taskPath(workspaceName, target === 'DONE' ? '/approve' : '/reopen'),
+    { method: 'POST' },
+  )
 }
 
 /** The task's comment thread, oldest first. Pass null while no task is open. */
@@ -67,37 +72,32 @@ export function useTaskComments(workspaceName: string | null) {
   return useQuery({
     queryKey: studioKeys.tasks.comments(workspaceName ?? ''),
     queryFn: () =>
-      studioFetch<{ comments: TaskComment[] }>(
-        taskPath(workspaceName!, '/comments'),
-      ),
+      studioFetch<Listing<TaskComment>>(taskPath(workspaceName!, '/comments')),
     enabled: workspaceName !== null,
+    select: (listing) => listing.data,
   })
 }
 
 export function addTaskComment(
   workspaceName: string,
   text: string,
-): Promise<{ comment: TaskComment }> {
-  return studioFetch<{ comment: TaskComment }>(
-    taskPath(workspaceName, '/comments'),
-    { method: 'POST', body: { text } },
-  )
+): Promise<TaskComment> {
+  return studioFetch<TaskComment>(taskPath(workspaceName, '/comments'), {
+    method: 'POST',
+    body: { text },
+  })
 }
 
 export function assignTask(
   workspaceName: string,
   assignee: string | null,
-): Promise<{ task: Task }> {
-  return studioFetch<{ task: Task }>(taskPath(workspaceName, '/assign'), {
-    method: 'POST',
+): Promise<Task> {
+  return studioFetch<Task>(taskPath(workspaceName, '/assignee'), {
+    method: 'PUT',
     body: { assignee },
   })
 }
 
-export function deleteTask(
-  workspaceName: string,
-): Promise<{ deleted: string }> {
-  return studioFetch<{ deleted: string }>(taskPath(workspaceName), {
-    method: 'DELETE',
-  })
+export function deleteTask(workspaceName: string): Promise<null> {
+  return studioFetch<null>(taskPath(workspaceName), { method: 'DELETE' })
 }

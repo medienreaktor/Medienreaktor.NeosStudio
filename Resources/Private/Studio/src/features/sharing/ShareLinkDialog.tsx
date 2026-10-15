@@ -76,7 +76,7 @@ export function ShareLinkDialog({
   const create = async () => {
     setCreating(true)
     try {
-      const { link } = await createPreviewLink(document, {
+      const link = await createPreviewLink(document, {
         label: label.trim() || documentLabel(document),
         ttlHours,
       })

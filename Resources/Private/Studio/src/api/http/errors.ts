@@ -1,7 +1,7 @@
 /**
- * Errors of both APIs the shell talks to (Neos.Api and the Studio's own
- * endpoints): a failed request rejects with an ApiError carrying the status
- * and the parsed body.
+ * Errors of both APIs the shell talks to (Neos.Api and the Studio API): a
+ * failed request rejects with an ApiError carrying the status and the parsed
+ * body, an RFC 9457 problem document from either.
  */
 
 export class ApiError extends Error {
@@ -15,7 +15,7 @@ export class ApiError extends Error {
 }
 
 /**
- * An RFC 9457 problem document, as Neos.Api answers every error. Operations
+ * An RFC 9457 problem document, as both APIs answer every error. Operations
  * add their own members (e.g. a workspace conflict's "conflicts").
  */
 export interface Problem {
@@ -48,23 +48,20 @@ export function isConflict(error: unknown): boolean {
 }
 
 /**
- * The server's human-readable explanation from an ApiError body, or the
- * fallback: a problem document's detail (Neos.Api), or the error_description
- * of the Studio's own endpoints. ApiError.message is only the generic status
- * line; toasts should show what the server actually complained about.
+ * The server's human-readable explanation from an ApiError body - the
+ * problem document's detail, else its title - or the fallback.
+ * ApiError.message is only the generic status line; toasts should show what
+ * the server actually complained about.
  */
 export function apiErrorDescription(error: unknown, fallback: string): string {
   if (error instanceof ApiError) {
     const body = error.body as {
       detail?: unknown
       title?: unknown
-      error_description?: unknown
     } | null
     if (body && typeof body === 'object') {
       if (typeof body.detail === 'string' && body.detail !== '')
         return body.detail
-      if (typeof body.error_description === 'string')
-        return body.error_description
       if (typeof body.title === 'string' && body.title !== '') return body.title
     }
   }

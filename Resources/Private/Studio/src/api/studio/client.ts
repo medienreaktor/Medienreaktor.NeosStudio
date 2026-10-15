@@ -2,7 +2,7 @@ import { config } from '@/config'
 import { type FetchInit, request } from '../http/request'
 
 /**
- * A request against the Studio's own endpoints below config.studioApiBase
+ * A request against the Studio API below config.studioApiBase
  * ('/neos/studio/api'): tasks, notifications, access roles, preview links,
  * workspace review, history and trash - what the Studio adds to Neos.
  */

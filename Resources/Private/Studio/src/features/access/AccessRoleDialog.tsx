@@ -105,10 +105,10 @@ export function AccessRoleDialog({
       toast.success(
         role === null
           ? t('accessRoles.created', 'The role "{0}" has been created.', [
-              response.role.label,
+              response.label,
             ])
           : t('accessRoles.saved', 'The role "{0}" has been saved.', [
-              response.role.label,
+              response.label,
             ]),
       )
       onOpenChange(false)
@@ -277,7 +277,7 @@ export function AccessRoleDialog({
           >
             <CapabilitiesTab
               capabilities={constraints.capabilities}
-              available={catalogue?.capabilities ?? []}
+              available={catalogue?.meta.capabilities ?? []}
               onChange={(capabilities) => patch({ capabilities })}
             />
           </TabsContent>
@@ -288,7 +288,7 @@ export function AccessRoleDialog({
           >
             <MembersTab
               selected={memberUserIds}
-              bypassRoles={catalogue?.bypassRoles ?? []}
+              bypassRoles={catalogue?.meta.bypassRoles ?? []}
               onChange={setMemberUserIds}
             />
           </TabsContent>
@@ -679,9 +679,9 @@ function CapabilitiesTab({
   available,
   onChange,
 }: {
-  capabilities: Partial<Record<AccessCapability, boolean>>
+  capabilities: Record<AccessCapability, boolean>
   available: AccessCapability[]
-  onChange: (capabilities: Partial<Record<AccessCapability, boolean>>) => void
+  onChange: (capabilities: Record<AccessCapability, boolean>) => void
 }) {
   // The server reports the capabilities it knows; fall back to the labelled
   // set so the tab is populated before the catalogue resolves.

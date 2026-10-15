@@ -67,7 +67,7 @@ export function AccessRolesAdministration() {
   }, [error])
 
   const roles = useMemo(() => {
-    const all = data?.roles ?? []
+    const all = data?.data ?? []
     const term = search.trim().toLowerCase()
     if (term === '') return all
     return all.filter((role) =>
@@ -80,7 +80,7 @@ export function AccessRolesAdministration() {
 
   // Resolved from the live listing, so a rename inside the dialog is reflected
   // in the row behind it without extra state.
-  const editing = data?.roles.find((role) => role.id === editingId) ?? null
+  const editing = data?.data.find((role) => role.id === editingId) ?? null
   const userLabels = new Map(
     (usersData ?? []).map((user) => [user.id, fullName(user) || user.label]),
   )
@@ -100,7 +100,7 @@ export function AccessRolesAdministration() {
         </Button>
       </SettingsHeader>
 
-      {data && !data.enforcedInContentRepository && (
+      {data && !data.meta.enforcedInContentRepository && (
         <div className="mb-4 flex items-start gap-2.5 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
           <i className="fas fa-triangle-exclamation mt-0.5" aria-hidden />
           <span>
@@ -248,14 +248,14 @@ function RoleRow({
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
       toast.success(
-        response.role.active
+        response.active
           ? t('accessRoles.activated', 'The role "{0}" is active again.', [
-              response.role.label,
+              response.label,
             ])
           : t(
               'accessRoles.deactivated',
               'The role "{0}" is paused — it no longer restricts its members.',
-              [response.role.label],
+              [response.label],
             ),
       )
     },

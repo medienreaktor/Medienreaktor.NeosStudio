@@ -1,1 +1,2 @@
 src/api/neos/schema/openapi.ts
+src/api/studio/schema/openapi.ts

@@ -35,10 +35,10 @@ export function useAccess(enabled = true): EffectiveAccess | undefined {
   const { data } = useMyAccess(enabled)
 
   useEffect(() => {
-    snapshot = data?.access
+    snapshot = data
   }, [data])
 
-  return data?.access
+  return data
 }
 
 /**

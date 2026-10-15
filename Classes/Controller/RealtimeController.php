@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller;
 
-use Medienreaktor\NeosStudio\Controller\Api\AbstractStudioApiController;
 use Medienreaktor\NeosStudio\Service\WorkspaceEventFeed;
 use Medienreaktor\NeosStudio\Service\WorkspaceEventFeedFactory;
 use Medienreaktor\NeosStudio\Service\WorkspaceHistoryService;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Mvc\Controller\ActionController;
 
 /**
  * The server-to-server surface of the realtime sidecar (the Hocuspocus
@@ -24,10 +26,9 @@ use Neos\Flow\Annotations as Flow;
  * Neos.Api's workspace events (api/collaboration.ts), so both transports
  * deliver identical feed events.
  *
- * Deliberately NOT in the Controller\Api namespace (no session - excluded
- * from the backend session provider like ShareController). It extends the
- * Studio API base controller for its JSON plumbing only: no bearer token and
- * no scope check apply here.
+ * Deliberately no operation of the Studio API (no bearer token, no scopes)
+ * and sessionless - excluded from the backend session provider like
+ * ShareController.
  * The credential is the shared secret (Medienreaktor.NeosStudio.realtime.sharedSecret)
  * in the X-Realtime-Secret header, validated in-action - the same pattern as
  * the anonymous preview-link endpoint. While no secret is configured the
@@ -38,7 +39,7 @@ use Neos\Flow\Annotations as Flow;
  * every editor's connection with the editor's own bearer token against the
  * user-scoped API before it forwards anything (see Resources/Private/Realtime/server.js).
  */
-class RealtimeController extends AbstractStudioApiController
+class RealtimeController extends ActionController
 {
     /**
      * Feed page size per request; a full page tells the sidecar its clients
@@ -46,8 +47,19 @@ class RealtimeController extends AbstractStudioApiController
      */
     private const EVENT_FEED_LIMIT = 200;
 
+    /**
+     * @var array<string>
+     */
+    protected $supportedMediaTypes = ['application/json'];
+
     #[Flow\Inject]
     protected WorkspaceHistoryService $workspaceHistoryService;
+
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
+
+    #[Flow\InjectConfiguration(path: 'contentRepository')]
+    protected string $contentRepositoryId;
 
     /**
      * Untyped: absent configuration injects null.
@@ -66,7 +78,8 @@ class RealtimeController extends AbstractStudioApiController
     {
         $this->requireSharedSecret();
 
-        $workspace = $this->getContentRepository()->findWorkspaceByName(WorkspaceName::fromString($workspaceName));
+        $contentRepositoryId = ContentRepositoryId::fromString($this->contentRepositoryId);
+        $workspace = $this->contentRepositoryRegistry->get($contentRepositoryId)->findWorkspaceByName(WorkspaceName::fromString($workspaceName));
         if ($workspace === null) {
             $this->throwJsonStatus(404, 'workspace_not_found', 'The workspace does not exist.');
         }
@@ -76,7 +89,7 @@ class RealtimeController extends AbstractStudioApiController
         $since = isset($query['since']) && is_numeric($query['since']) ? (int)$query['since'] : null;
 
         /** @var WorkspaceEventFeed $feed */
-        $feed = $this->contentRepositoryRegistry->buildService($this->getContentRepositoryId(), new WorkspaceEventFeedFactory());
+        $feed = $this->contentRepositoryRegistry->buildService($contentRepositoryId, new WorkspaceEventFeedFactory());
         $contentStreamId = $workspace->currentContentStreamId;
 
         if ($knownStream === null || $since === null || $knownStream !== $contentStreamId->value) {
@@ -126,5 +139,27 @@ class RealtimeController extends AbstractStudioApiController
         if (!hash_equals($secret, $provided)) {
             $this->throwJsonStatus(403, 'invalid_secret', 'The realtime shared secret does not match.');
         }
+    }
+
+    protected function initializeAction(): void
+    {
+        $this->response->setContentType('application/json');
+        $this->response->setHttpHeader('Cache-Control', 'private, no-store');
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function json(array $data): string
+    {
+        return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    }
+
+    private function throwJsonStatus(int $statusCode, string $error, string $description): never
+    {
+        $this->throwStatus($statusCode, null, json_encode([
+            'error' => $error,
+            'error_description' => $description,
+        ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
     }
 }

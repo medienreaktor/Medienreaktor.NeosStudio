@@ -1,34 +1,36 @@
 import { useQuery } from '@tanstack/react-query'
 import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
-import type { NotificationsResponse } from '../schema'
+import type { PaginatedNotificationListing } from '../schema'
 
 // Deliberately slow: own actions invalidate the cache directly, the poll only
 // picks up notifications produced elsewhere - background delivery, not live.
 const POLL_INTERVAL_MS = 300_000
 
 /**
- * The user's notifications, polled - there is no push channel. Polling only
- * runs while enabled (i.e. while authenticated).
+ * The newest page of the user's notifications, polled - there is no push
+ * channel. meta.unread counts all unread ones. Polling only runs while
+ * enabled (i.e. while authenticated).
  */
 export function useNotifications(enabled = true) {
   return useQuery({
     queryKey: studioKeys.notifications,
-    queryFn: () => studioFetch<NotificationsResponse>('/notifications'),
+    queryFn: () =>
+      studioFetch<PaginatedNotificationListing>('/notifications?limit=20'),
     enabled,
     refetchInterval: POLL_INTERVAL_MS,
   })
 }
 
 export function markNotificationsRead(ids: string[]) {
-  return studioFetch<{ unreadCount: number }>('/notifications/read', {
+  return studioFetch<null>('/notifications/read', {
     method: 'POST',
     body: { ids },
   })
 }
 
 export function markAllNotificationsRead() {
-  return studioFetch<{ unreadCount: number }>('/notifications/read', {
+  return studioFetch<null>('/notifications/read', {
     method: 'POST',
     body: { all: true },
   })
@@ -39,10 +41,5 @@ export function markAllNotificationsRead() {
  * have arrived after the list was last rendered.
  */
 export function clearReadNotifications() {
-  return studioFetch<{ removed: number; unreadCount: number }>(
-    '/notifications',
-    {
-      method: 'DELETE',
-    },
-  )
+  return studioFetch<null>('/notifications', { method: 'DELETE' })
 }

@@ -54,9 +54,10 @@ export function NotificationBell() {
 
   // The bell exists only while something is unread; the hook above keeps
   // polling regardless, so it reappears when a new notification arrives.
-  if (!data || data.unreadCount === 0) return null
+  if (!data || data.meta.unread === 0) return null
 
-  const { notifications, unreadCount } = data
+  const notifications = data.data
+  const unreadCount = data.meta.unread
 
   return (
     <DropdownMenu>

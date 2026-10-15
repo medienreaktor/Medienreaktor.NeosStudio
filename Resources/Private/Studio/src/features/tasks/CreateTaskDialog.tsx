@@ -102,7 +102,7 @@ export function CreateTaskDialog({
         ...(description.trim() !== ''
           ? { description: description.trim() }
           : {}),
-        baseWorkspace,
+        baseWorkspaceName: baseWorkspace,
         ...(assignee !== null ? { assignee } : {}),
       }),
     onSuccess: async (response) => {
@@ -115,11 +115,11 @@ export function CreateTaskDialog({
       ])
       toast.success(
         t('tasks.created', 'The task "{0}" has been created.', [
-          response.task.workspace?.title ?? title.trim(),
+          response.workspace?.title ?? title.trim(),
         ]),
       )
       onOpenChange(false)
-      onCreated?.(response.task)
+      onCreated?.(response)
     },
     onError: (error) =>
       toast.error(

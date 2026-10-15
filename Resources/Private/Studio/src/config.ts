@@ -84,9 +84,10 @@ const fallback: StudioConfig = {
   contentRepositoryId: 'default',
   previewBase: '/neos/studio/preview',
   redirectUri: window.location.origin + '/neos/studio',
-  // The real list (every Neos.Api scope plus studio.*) comes from the
-  // StudioController; this fallback only covers the shell's own endpoints.
-  scopes: 'studio.read studio.write',
+  // The real list (every scope of Neos.Api and the Studio API) comes from
+  // the StudioController; this fallback only covers reading the Studio API.
+  scopes:
+    'studio.access.read studio.notifications.read studio.tasks.read studio.previewlinks.read studio.workspacehistory.read',
   nodeTree: { loadingDepth: 4 },
   structureTree: { loadingDepth: 4 },
   interfaceLanguage: 'en',
