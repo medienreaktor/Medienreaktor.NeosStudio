@@ -1,4 +1,4 @@
-import type { TaskStatus } from '@/api/tasks'
+import type { TaskStatus } from '@/api/studio/schema'
 
 /**
  * The task status color, used wherever a status shows up (workspace badges,

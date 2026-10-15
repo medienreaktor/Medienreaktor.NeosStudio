@@ -79,7 +79,7 @@ export function BranchHistoryPanel({
         </div>
         {branch.truncated && (
           <div className="px-2 py-2 text-center text-[10px] text-neutral-400 dark:text-neutral-600">
-            {branch.workspace.baseWorkspace === null
+            {branch.workspace.baseWorkspaceName === null
               ? t(
                   'workspaceHistory.olderRoot',
                   'Older published history is not shown.',

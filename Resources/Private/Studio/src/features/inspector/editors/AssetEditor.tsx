@@ -1,7 +1,7 @@
 import type { PropertyEditorComponent } from './registry'
 import { AssetFieldEditor } from './AssetFieldEditor'
 import { MultiAssetFieldEditor } from './MultiAssetFieldEditor'
-import { isCollectionType } from '@/api/assetValue'
+import { isCollectionType } from '@/api/neos/endpoints/assets'
 
 export const ASSET_EDITOR = 'Neos.Neos/Inspector/Editors/AssetEditor'
 

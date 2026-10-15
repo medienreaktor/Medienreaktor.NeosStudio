@@ -16,8 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { aggregateIdOf } from '@/api/nodeAddress'
-import { fetchNode, useAllowedChildNodeTypes } from '@/api/nodes'
+import { fetchNode, useAllowedChildNodeTypes } from '@/api/neos/endpoints/nodes'
+import { type NodeAddress, nodeAddressOf } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import {
   activeClipboardEntry,
@@ -37,9 +37,9 @@ import { deleteNodes, hideNodes, unhideNodes } from './nodeActions'
  * the preview (from the "..." handle) and the trees (from a right-click).
  */
 export interface NodeMenuTarget {
-  address: string
+  address: NodeAddress
   /** Address of the parent node - focused and refreshed after a delete. */
-  parentAddress: string | null
+  parentAddress: NodeAddress | null
   /** Explicitly hidden (tag set on the node itself) - offers "Unhide". */
   hidden: boolean
   /** Tethered (autocreated) nodes can neither be hidden nor deleted. */
@@ -117,7 +117,7 @@ export function NodeContextMenu({
    * A paste succeeded: addresses whose children lists changed (the new
    * parent, and a cut entry's old parent), plus the pasted node's address.
    */
-  onPasted?: (affectedAddresses: string[], newAddress: string) => void
+  onPasted?: (affectedAddresses: NodeAddress[], newAddress: NodeAddress) => void
   /**
    * When set, the menu leads with a "Create new…" item that hands the target
    * to the caller (which opens the insertion dialog). Offered for tethered
@@ -189,7 +189,7 @@ export function NodeContextMenu({
     clipboardEntry !== null &&
     target !== null &&
     clipboardEntry.nodes.some(
-      (node) => node.aggregateId === aggregateIdOf(target.address),
+      (node) => node.address.nodeAggregateId === target.address.nodeAggregateId,
     )
   const canPasteInto =
     clipboardEntry !== null &&
@@ -248,10 +248,9 @@ export function NodeContextMenu({
           mode,
           clipboardKind,
           nodes.map((node, index) => ({
-            address: node.address,
-            aggregateId: node.aggregateId,
+            address: nodeAddressOf(node),
             nodeType: node.nodeType,
-            label: node.label !== '' ? node.label : node.aggregateId,
+            label: node.label !== '' ? node.label : node.nodeAggregateId,
             sourceParentAddress: menuTargets[index].parentAddress,
           })),
         ),
@@ -274,8 +273,8 @@ export function NodeContextMenu({
     if (entry === null || entry.kind !== clipboardKind) return
     onClose()
     const resolveInsertion = async (): Promise<{
-      parent: string
-      sibling: string | null
+      parent: NodeAddress
+      sibling: NodeAddress | null
     }> => {
       // Into: append as the last child, like a drop onto a folder.
       if (position === 'into')

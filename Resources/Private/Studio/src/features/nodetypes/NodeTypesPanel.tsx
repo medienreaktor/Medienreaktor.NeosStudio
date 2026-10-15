@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
-import { useNodeTypesWithProperties } from '@/api/nodeTypes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import {
   GraphCanvas,
   type GraphCanvasHandle,
@@ -313,7 +313,7 @@ export function NodeTypesPanel() {
     data: nodeTypes,
     isLoading,
     isError,
-  } = useNodeTypesWithProperties(visible)
+  } = useNodeTypes('properties,references', visible)
 
   const models = useMemo(
     () => (nodeTypes ? buildCardModels(nodeTypes) : []),

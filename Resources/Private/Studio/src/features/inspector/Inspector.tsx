@@ -1,14 +1,25 @@
 import { useMemo, useRef, useState } from 'react'
-import { dimensionSpacePointLabel, useDimensions } from '@/api/dimensions'
-import type { NodeDto } from '@/api/nodes'
+import {
+  dimensionSpacePointLabel,
+  useContentRepository,
+} from '@/api/neos/endpoints/contentRepositories'
 import {
   DOCUMENT_NODE_TYPE,
-  isDeleted,
-  isShineThrough,
-  nodeLabel,
   useNodeAncestors,
-} from '@/api/nodes'
-import { isOfType, useNodeTypes, useNodeTypeSchema } from '@/api/nodeTypes'
+} from '@/api/neos/endpoints/nodes'
+import {
+  isOfType,
+  useNodeType,
+  useNodeTypes,
+} from '@/api/neos/endpoints/nodeTypes'
+import {
+  isRemoved,
+  nodeAddressKey,
+  nodeAddressOf,
+  sameNodeAddress,
+  type Node,
+  type NodeAddress,
+} from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -22,7 +33,6 @@ import {
   persistPropertyChange,
   persistReferenceChange,
 } from '@/features/editing/persistProperty'
-import { aggregateIdOf } from '@/api/nodeAddress'
 import { useNodeEditable } from '@/features/access/useAccess'
 import { usePresence } from '@/features/collaboration/PresenceContext'
 import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
@@ -75,8 +85,12 @@ function referenceTargets(value: unknown): string[] {
  * node.properties; _hidden and _nodeType are pseudo-properties synthesized from
  * the node's tags and type, since they have no property value of their own.
  */
-function propertyValue(node: NodeDto, name: string): unknown {
-  if (name === HIDDEN_PROPERTY) return node.tags.all.includes('disabled')
+function propertyValue(node: Node, name: string): unknown {
+  if (name === HIDDEN_PROPERTY) {
+    return (
+      node.tags.includes('disabled') || node.inheritedTags.includes('disabled')
+    )
+  }
   if (name === NODE_TYPE_PROPERTY) return node.nodeType
   return node.properties[name]
 }
@@ -92,7 +106,7 @@ export function InspectorPanel({
   node,
   onNodeEdited,
 }: {
-  node: NodeDto | null
+  node: Node | null
   /**
    * A property edit for this address was persisted. reload reflects the
    * property's configuration: 'page' (ui.reloadPageIfChanged), 'element'
@@ -100,19 +114,19 @@ export function InspectorPanel({
    * element), or 'none' - the change does not affect the rendered page.
    */
   onNodeEdited?: (
-    address: string,
+    address: NodeAddress,
     options?: { reload?: 'page' | 'element' | 'none' },
   ) => void
 }) {
   const { data: nodeTypes } = useNodeTypes()
-  const { data: schema } = useNodeTypeSchema(node?.nodeType ?? null)
+  const { data: nodeType } = useNodeType(node?.nodeType ?? null)
   // Pages outside the account's access roles are shown, not edited - the
   // content repository would refuse the save anyway, and finding that out
   // after typing a paragraph is the worst possible moment to learn it.
   const editable = useNodeEditable(node)
   const tabs = useMemo(
-    () => (schema ? buildInspectorSchema(schema) : null),
-    [schema],
+    () => (nodeType ? buildInspectorSchema(nodeType) : null),
+    [nodeType],
   )
 
   // Live, not-yet-committed editor input, overlaid on node.properties for
@@ -121,17 +135,21 @@ export function InspectorPanel({
   // inspected node discards them; after a commit the refetched node carries
   // the same values, so stale shadowing cannot occur.
   const [transient, setTransient] = useState<{
-    address: string
+    address: NodeAddress
     values: Record<string, unknown>
   } | null>(null)
   const transientValues =
-    node && transient?.address === node.address ? transient.values : undefined
+    node && sameNodeAddress(transient?.address, node)
+      ? transient!.values
+      : undefined
   const reportLiveChange = (propertyName: string, value: unknown) => {
     if (!node) return
     setTransient((previous) => ({
-      address: node.address,
+      address: nodeAddressOf(node),
       values: {
-        ...(previous?.address === node.address ? previous.values : undefined),
+        ...(sameNodeAddress(previous?.address, node)
+          ? previous!.values
+          : undefined),
         [propertyName]: value,
       },
     }))
@@ -151,7 +169,7 @@ export function InspectorPanel({
   // parentNode - most configurations never do.
   const needsParentNode = useMemo(() => clientEvalUsesParentNode(tabs), [tabs])
   const { data: ancestors } = useNodeAncestors(
-    node?.address ?? null,
+    node ? nodeAddressOf(node) : null,
     needsParentNode,
   )
   const parentNode = ancestors?.[0] ?? null
@@ -240,17 +258,17 @@ export function InspectorPanel({
     const persist =
       propertyName === HIDDEN_PROPERTY
         ? value === true
-          ? hideNodes([node.address])
-          : unhideNodes([node.address])
+          ? hideNodes([nodeAddressOf(node)])
+          : unhideNodes([nodeAddressOf(node)])
         : propertyName === NODE_TYPE_PROPERTY
-          ? changeNodeType(node.address, String(value))
+          ? changeNodeType(nodeAddressOf(node), String(value))
           : propertyType === 'reference' || propertyType === 'references'
             ? persistReferenceChange(
-                node.address,
+                nodeAddressOf(node),
                 propertyName,
                 referenceTargets(value),
               )
-            : persistPropertyChange(node.address, propertyName, value)
+            : persistPropertyChange(nodeAddressOf(node), propertyName, value)
     // How the preview refreshes follows ui.reloadPageIfChanged ('page') /
     // ui.reloadIfChanged ('element': out-of-band re-render of just this
     // node's element) / neither ('none'). Two exceptions: a type change
@@ -281,7 +299,7 @@ export function InspectorPanel({
     const reload =
       configuredReload === 'element' && isDocument ? 'page' : configuredReload
     persist
-      .then(() => onNodeEdited?.(node.address, { reload }))
+      .then(() => onNodeEdited?.(nodeAddressOf(node), { reload }))
       .catch((e: unknown) =>
         toast.error(e, { title: t('inspector.savingFailed', 'Saving failed') }),
       )
@@ -303,13 +321,13 @@ export function InspectorPanel({
   // would persist changes onto something that is on its way out, and the
   // reference editors cannot even read their targets - deleted nodes are
   // invisible to every read that does not deliberately ask for them.
-  if (isDeleted(node)) {
+  if (isRemoved(node)) {
     return (
       <div className="text-sm">
         <div className="px-3 py-4">
           <h2 className="flex items-center gap-2 font-semibold">
             <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
-            {nodeLabel(node)}
+            {node.label || node.nodeAggregateId}
           </h2>
         </div>
         <Placeholder
@@ -328,7 +346,7 @@ export function InspectorPanel({
       <div className="py-4 px-3">
         <h2 className="flex items-center gap-2 font-semibold">
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
-          {nodeLabel(node)}
+          {node.label || node.nodeAggregateId}
         </h2>
         <ShineThroughNotice node={node} />
         <ElementLockNotice node={node} />
@@ -457,12 +475,12 @@ export function InspectorPanel({
  * dimension so the editor knows where the content actually lives; an edit
  * (or the preview's "Create variant" button) materializes it here.
  */
-function ShineThroughNotice({ node }: { node: NodeDto }) {
-  const { data: dimensionsResponse } = useDimensions()
-  if (!isShineThrough(node)) return null
+function ShineThroughNotice({ node }: { node: Node }) {
+  const { data: contentRepository } = useContentRepository()
+  if (!node.isShineThrough) return null
   const origin = dimensionSpacePointLabel(
     node.originDimensionSpacePoint,
-    dimensionsResponse?.dimensions ?? [],
+    contentRepository?.dimensions ?? [],
   )
   return (
     <div
@@ -513,12 +531,12 @@ function AccessLockNotice() {
   )
 }
 
-function ElementLockNotice({ node }: { node: NodeDto }) {
+function ElementLockNotice({ node }: { node: Node }) {
   const { peers } = usePresence()
   const holder = peers.find(
     (peer) =>
       peer.editingElement !== null &&
-      peer.editingElement.nodeAggregateId === aggregateIdOf(node.address),
+      peer.editingElement.nodeAggregateId === node.nodeAggregateId,
   )
   if (!holder) return null
   return (
@@ -549,7 +567,7 @@ function PropertyGroup({
   onLiveChange,
 }: {
   group: InspectorGroup
-  node: NodeDto
+  node: Node
   /** Property name -> errors for the property's current (live) value. */
   validationErrors: Record<string, string[]>
   onSave: (propertyName: string, value: unknown) => void
@@ -574,10 +592,10 @@ function PropertyGroup({
             <PropertyEditor
               // Reset drafts when the inspected node changes, keep them
               // across the refetch after a save.
-              key={`${node.address}:${item.property.name}`}
+              key={`${nodeAddressKey(node)}:${item.property.name}`}
               property={item.property}
               value={propertyValue(node, item.property.name)}
-              nodeAddress={node.address}
+              nodeAddress={node}
               errors={validationErrors[item.property.name]}
               onSave={onSave}
               onLiveChange={onLiveChange}

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
 use Medienreaktor\NeosStudio\Service\EventBeforeWindow;
-use Medienreaktor\NeosStudio\Service\NodeAddressCodec;
+use Medienreaktor\NeosStudio\Service\NodeAddresses;
 use Medienreaktor\NeosStudio\Service\NodeLabelRenderer;
 use Medienreaktor\NeosStudio\Service\WorkspaceDiffService;
 use Medienreaktor\NeosStudio\Service\WorkspaceEventFeed;
@@ -14,7 +14,6 @@ use Medienreaktor\NeosStudio\Service\WorkspaceHistoryService;
 use Medienreaktor\NeosStudio\Service\WorkspaceReadContext;
 use Medienreaktor\NeosStudio\Service\WorkspaceSerializer;
 use Medienreaktor\NeosStudio\Service\WorkspaceTrashService;
-use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\Workspace;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
@@ -131,7 +130,7 @@ class WorkspaceHistoryController extends AbstractStudioApiController
                     // other resource is concerned.
                     'documentAddress' => $documentSubgraph !== null
                         && !$context->isSoftRemoved($documentNode)
-                        ? NodeAddressCodec::encode(NodeAddress::fromNode($documentNode))
+                        ? NodeAddresses::toArray($documentNode)
                         : null,
                     'siteAggregateId' => $siteNode?->aggregateId->value,
                     'siteLabel' => $siteNode !== null ? $context->label($siteNode) : null,
@@ -170,8 +169,8 @@ class WorkspaceHistoryController extends AbstractStudioApiController
 
         return $this->json([
             'workspace' => $workspace->workspaceName->value,
-            'baseWorkspace' => $workspace->baseWorkspaceName?->value,
-            'status' => $workspace->status->value,
+            'baseWorkspaceName' => $workspace->baseWorkspaceName?->value,
+            'status' => strtolower($workspace->status->value),
             'documents' => array_values($documents),
         ]);
     }
@@ -263,7 +262,7 @@ class WorkspaceHistoryController extends AbstractStudioApiController
 
         return $this->json([
             'workspace' => $workspace->workspaceName->value,
-            'baseWorkspace' => $workspace->baseWorkspaceName?->value,
+            'baseWorkspaceName' => $workspace->baseWorkspaceName?->value,
             'documentAggregateId' => $documentAggregateId,
             'nodes' => $nodes,
         ]);
@@ -284,7 +283,7 @@ class WorkspaceHistoryController extends AbstractStudioApiController
 
         return $this->json([
             'workspace' => $workspace->workspaceName->value,
-            'status' => $workspace->status->value,
+            'status' => strtolower($workspace->status->value),
             'items' => $trash['items'],
             // true when more was deleted than this resource enriches at once.
             'truncated' => $trash['truncated'],
@@ -330,8 +329,8 @@ class WorkspaceHistoryController extends AbstractStudioApiController
 
         return $this->json([
             'workspace' => $workspace->workspaceName->value,
-            'baseWorkspace' => $workspace->baseWorkspaceName?->value,
-            'status' => $workspace->status->value,
+            'baseWorkspaceName' => $workspace->baseWorkspaceName?->value,
+            'status' => strtolower($workspace->status->value),
             'contentStreamId' => $workspace->currentContentStreamId->value,
             'forkedFrom' => $forkedFrom,
             'truncated' => count($envelopes) === self::PENDING_EVENTS_LIMIT,
@@ -451,7 +450,7 @@ class WorkspaceHistoryController extends AbstractStudioApiController
                 'documentLabel' => $documentNode !== null ? $this->labelRenderer->label($documentNode) : null,
                 // No address for a deleted page or one only the base has.
                 'documentAddress' => $documentNode !== null && $inWorkspace && !$context->isSoftRemoved($documentNode)
-                    ? NodeAddressCodec::encode(NodeAddress::fromNode($documentNode))
+                    ? NodeAddresses::toArray($documentNode)
                     : null,
             ];
         }

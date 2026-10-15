@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { deleteSite, updateSite, useSites, type Site } from '@/api/sites'
+import { apiErrorDescription } from '@/api/http/errors'
+import { neosKeys } from '@/api/neos/keys'
+import { deleteSite, updateSite, useSites } from '@/api/neos/endpoints/sites'
+import type { Site } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -37,13 +38,12 @@ import { EditSiteDialog } from './EditSiteDialog'
  * sites, edit name and domains, take sites on- and offline, delete.
  *
  * Administrators only - the host disables the subnav entry for non-admins
- * (me.permissions.sites) and every write endpoint 403s without the
- * Administrator role. The listing itself is the same /sites endpoint the site
- * switcher uses (fixed to the live workspace here); offline sites are
- * included and marked.
+ * (useAdministrationPermissions().sites) and every write endpoint 403s without
+ * the Administrator role. The listing itself is the same /sites endpoint the
+ * site switcher uses; offline sites are included and marked.
  */
 export function SitesAdministration() {
-  const { data, isLoading, error } = useSites('live', null)
+  const { data, isLoading, error } = useSites()
   const [creating, setCreating] = useState(false)
   // The edited/deleted site is tracked by node name and resolved from the
   // live query data, so domain mutations refresh the open dialog.
@@ -57,7 +57,7 @@ export function SitesAdministration() {
       })
   }, [error])
 
-  const sites = data?.sites ?? []
+  const sites = data ?? []
   const editing = sites.find((s) => s.nodeName === editingNodeName) ?? null
   const deleting = sites.find((s) => s.nodeName === deletingNodeName) ?? null
 
@@ -150,9 +150,9 @@ export function SitesAdministration() {
         onConfirm={async () => {
           const site = deleting!
           await deleteSite(site.nodeName)
-          queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
+          queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
           // Content is gone with the site - the trees must not show it.
-          queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+          queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
           toast.success(
             t('sites.deleted', 'The site "{0}" has been deleted.', [site.name]),
           )
@@ -172,12 +172,11 @@ function SiteRow({
   onDelete: () => void
 }) {
   const stateMutation = useMutation({
-    mutationFn: (state: 'online' | 'offline') =>
-      updateSite(site.nodeName, { state }),
+    mutationFn: (online: boolean) => updateSite(site.nodeName, { online }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
+      queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
       toast.success(
-        response.state === 'online'
+        response.online
           ? t('sites.wentOnline', 'The site "{0}" is now online.', [
               response.name,
             ])
@@ -225,7 +224,7 @@ function SiteRow({
         )}
       </TableCell>
       <TableCell>
-        {site.state === 'online' ? (
+        {site.online ? (
           <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
             <span className="size-1.5 rounded-full bg-green-500" />
             {t('sites.online', 'Online')}
@@ -257,17 +256,13 @@ function SiteRow({
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={stateMutation.isPending}
-              onClick={() =>
-                stateMutation.mutate(
-                  site.state === 'online' ? 'offline' : 'online',
-                )
-              }
+              onClick={() => stateMutation.mutate(!site.online)}
             >
               <i
-                className={`fas ${site.state === 'online' ? 'fa-eye-slash' : 'fa-eye'}`}
+                className={`fas ${site.online ? 'fa-eye-slash' : 'fa-eye'}`}
                 aria-hidden
               />
-              {site.state === 'online'
+              {site.online
                 ? t('sites.takeOffline', 'Take offline')
                 : t('sites.putOnline', 'Put online')}
             </DropdownMenuItem>

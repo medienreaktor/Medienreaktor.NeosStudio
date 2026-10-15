@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { EditingElement, PresenceUser } from '@/api/collaboration'
+import type { EditingElement, PresenceUser } from '@/api/studio/schema'
 
 /**
  * A colleague present in the same editing workspace, enriched with the

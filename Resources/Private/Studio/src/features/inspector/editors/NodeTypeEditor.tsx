@@ -4,12 +4,13 @@ import {
   fetchAllowedChildNodeTypes,
   fetchAncestors,
   useNode,
-} from '@/api/nodes'
+} from '@/api/neos/endpoints/nodes'
 import {
-  type NodeTypeDto,
+  configuredLabel,
   useNodeTypeGroups,
   useNodeTypes,
-} from '@/api/nodeTypes'
+} from '@/api/neos/endpoints/nodeTypes'
+import { nodeAddressOf, type NodeType } from '@/api/neos/schema'
 import {
   Select,
   SelectContent,
@@ -26,8 +27,11 @@ import type { PropertyEditorComponent } from './registry'
 
 export const NODE_TYPE_EDITOR = 'Neos.Neos/Inspector/Editors/NodeTypeEditor'
 
-const typeLabel = (nodeType: NodeTypeDto): string =>
-  humanizeLabel(nodeType.label, nodeType.name.split(':').pop() ?? nodeType.name)
+const typeLabel = (nodeType: NodeType): string =>
+  humanizeLabel(
+    configuredLabel(nodeType),
+    nodeType.name.split(':').pop() ?? nodeType.name,
+  )
 
 /**
  * Switches a node's type. The alternatives offered are the node types allowed
@@ -49,25 +53,33 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
   nodeAddress,
 }) => {
   const { data: nodeTypes } = useNodeTypes()
-  const { data: groupConfigs } = useNodeTypeGroups()
+  const { data: groupList } = useNodeTypeGroups()
+  const groupConfigs = useMemo(
+    () => new Map((groupList ?? []).map((group) => [group.name, group])),
+    [groupList],
+  )
   const currentType = typeof value === 'string' ? value : ''
 
   // Tethered (auto-created) and root nodes are structural - their type is fixed
   // even though _nodeType still appears on them. Read from cache (the inspector
   // already fetched this node).
-  const { data: self } = useNode(nodeAddress ?? '', nodeAddress !== undefined)
+  const { data: self } = useNode(nodeAddress ?? null)
   const switchable =
     !self ||
     (self.classification !== 'tethered' && self.classification !== 'root')
 
   const { data: allowedTypes } = useQuery({
-    queryKey: ['nodeTypeSwitcher', 'allowedForParentOf', nodeAddress],
+    queryKey: [
+      'nodeTypeSwitcher',
+      'allowedForParentOf',
+      nodeAddress ? nodeAddressOf(nodeAddress) : null,
+    ],
     enabled: nodeAddress !== undefined,
     // Constraints follow from the (immutable) node type model - stable for the session.
     staleTime: Infinity,
     queryFn: async () => {
       const [parent] = await fetchAncestors(nodeAddress!)
-      return parent ? fetchAllowedChildNodeTypes(parent.address) : []
+      return parent ? fetchAllowedChildNodeTypes(nodeAddressOf(parent)) : []
     },
   })
 
@@ -80,12 +92,12 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
     const candidates = [...names]
       .map((name) => nodeTypes.get(name))
       .filter(
-        (nodeType): nodeType is NodeTypeDto =>
+        (nodeType): nodeType is NodeType =>
           nodeType !== undefined &&
-          (!nodeType.abstract || nodeType.name === currentType),
+          (!nodeType.isAbstract || nodeType.name === currentType),
       )
 
-    const byGroup = new Map<string | null, NodeTypeDto[]>()
+    const byGroup = new Map<string | null, NodeType[]>()
     for (const nodeType of candidates) {
       const bucket = byGroup.get(nodeType.group) ?? []
       bucket.push(nodeType)
@@ -96,9 +108,9 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
     // then groups in configured position order, then groups a node type
     // references without a definition, alphabetically.
     const configuredOrder = sortByPosition(
-      Object.entries(groupConfigs ?? {}).map(([key, config]) => ({
-        key,
-        position: config?.position,
+      [...groupConfigs.values()].map((group) => ({
+        key: group.name,
+        position: group.position,
       })),
     )
     const unconfigured = [...byGroup.keys()]
@@ -115,7 +127,7 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
         label:
           name === null
             ? null
-            : humanizeLabel(groupConfigs?.[name]?.label, name),
+            : humanizeLabel(groupConfigs.get(name)?.label, name),
         options: sortByPosition(
           byGroup.get(name)!.map((nodeType) => ({
             key: nodeType.name,

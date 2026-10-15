@@ -1,4 +1,4 @@
-import type { Workspace } from '@/api/workspaces'
+import type { Workspace } from '@/api/neos/schema'
 import {
   decorationsFor,
   useWorkspaceDecorators,
@@ -6,16 +6,15 @@ import {
 
 /** FontAwesome icon per workspace classification (without the `fas` prefix). */
 const CLASSIFICATION_ICONS: Record<string, string> = {
-  ROOT: 'fa-earth-americas',
-  SHARED: 'fa-users',
-  PERSONAL: 'fa-user',
-  PRIVATE: 'fa-lock',
+  root: 'fa-earth-americas',
+  shared: 'fa-users',
+  personal: 'fa-user',
 }
 
 /** Colors matching the publish-target badge: blue live, purple shared. */
 const CLASSIFICATION_COLORS: Record<string, string> = {
-  ROOT: 'text-blue-500',
-  SHARED: 'text-purple-500',
+  root: 'text-blue-500',
+  shared: 'text-purple-500',
 }
 
 /** The classification's icon; a branch for anything unknown or unresolved. */

@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { asyncDataLoaderFeature, selectionFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
-import { addressWithAggregateId } from '@/api/nodeAddress'
 import {
   DOCUMENT_NODE_TYPE,
   fetchChildren,
   fetchNode,
-  nodeLabel,
-  type NodeDto,
-} from '@/api/nodes'
-import { useNodeTypes } from '@/api/nodeTypes'
+} from '@/api/neos/endpoints/nodes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import { siteNodeAddress } from '@/api/neos/endpoints/sites'
+import type { Node, NodeAddress } from '@/api/neos/schema'
 import { config } from '@/config'
 import { Input } from '@/components/ui/input'
 import { Placeholder } from '@/components/ui/placeholder'
@@ -26,7 +25,7 @@ import type { LinkTypeTabProps } from '../registry'
 /** Virtual root above the site node, as in the document tree panel. */
 const ROOT_ID = '__link_target_root__'
 
-type TreeItemData = NodeDto | typeof ROOT_ID
+type TreeItemData = Node | typeof ROOT_ID
 
 /**
  * "Link to a document": the site's document tree as a picker. Selecting a
@@ -36,10 +35,12 @@ type TreeItemData = NodeDto | typeof ROOT_ID
  *
  * A read-only sibling of the DocumentTree panel: same data loading, eager
  * expansion and row decor, but no context menus or drag-and-drop - picking is
- * the only interaction.
+ * the only interaction. Like the document tree it shows one subgraph - the
+ * active workspace in the selected document's dimension space point - so
+ * item ids are node aggregate ids.
  */
 export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
-  const { site } = useStudio()
+  const { site, workspaceName, selectedDocument } = useStudio()
   const { data: nodeTypes } = useNodeTypes()
   const decorators = useNodeDecorators()
   const parsed = href !== null ? parseDocumentUri(href) : null
@@ -49,10 +50,18 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
   // Flips once the site node's children resolve (see DocumentTree).
   const [rootLoaded, setRootLoaded] = useState(false)
 
-  const selectedAddress =
-    parsed !== null && site?.nodeAddress
-      ? addressWithAggregateId(site.nodeAddress, parsed.aggregateId)
+  const siteNode =
+    site && workspaceName !== null
+      ? siteNodeAddress(
+          site,
+          workspaceName,
+          selectedDocument?.dimensionSpacePoint,
+        )
       : null
+  const addressOf = (nodeAggregateId: string): NodeAddress | null =>
+    siteNode === null ? null : { ...siteNode, nodeAggregateId }
+
+  const selectedAddress = parsed !== null ? addressOf(parsed.aggregateId) : null
 
   const emit = (aggregateId: string | null, anchorText: string) => {
     onChange(
@@ -64,39 +73,42 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
     rootItemId: ROOT_ID,
     getItemName: (item) => {
       const data = item.getItemData()
-      return data === ROOT_ID || data === null ? '…' : nodeLabel(data)
+      return data === ROOT_ID || data === null
+        ? '…'
+        : data.label || data.nodeAggregateId
     },
     isItemFolder: (item) => {
       const data = item.getItemData()
       if (data === ROOT_ID || data === null) return true
-      return data.hasChildren
+      return data.hasChildren ?? false
     },
     onPrimaryAction: (item) => {
       const data = item.getItemData()
-      if (data !== ROOT_ID && data !== null) emit(data.aggregateId, anchor)
+      if (data !== ROOT_ID && data !== null) emit(data.nodeAggregateId, anchor)
     },
     dataLoader: {
       getItem: async (itemId): Promise<TreeItemData> => {
         if (itemId === ROOT_ID) return ROOT_ID
-        return await fetchNode(itemId, DOCUMENT_NODE_TYPE)
+        const address = addressOf(itemId)
+        if (address === null) throw new Error('No site node to pick from')
+        return await fetchNode(address, DOCUMENT_NODE_TYPE)
       },
       getChildrenWithData: async (itemId) => {
         try {
           if (itemId === ROOT_ID) {
-            if (!site?.nodeAddress) {
+            if (siteNode === null) {
               setRootLoaded(true)
               return []
             }
-            const siteNode = await fetchNode(
-              site.nodeAddress,
-              DOCUMENT_NODE_TYPE,
-            )
+            const node = await fetchNode(siteNode, DOCUMENT_NODE_TYPE)
             setRootLoaded(true)
-            return [{ id: siteNode.address, data: siteNode as TreeItemData }]
+            return [{ id: node.nodeAggregateId, data: node as TreeItemData }]
           }
-          const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
+          const address = addressOf(itemId)
+          if (address === null) return []
+          const children = await fetchChildren(address, DOCUMENT_NODE_TYPE)
           return children.map((node) => ({
-            id: node.address,
+            id: node.nodeAggregateId,
             data: node as TreeItemData,
           }))
         } catch {

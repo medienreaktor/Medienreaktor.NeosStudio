@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { createUser } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { neosKeys } from '@/api/neos/keys'
+import { createUser } from '@/api/neos/endpoints/users'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -74,7 +74,7 @@ export function CreateUserDialog({
         ...(email.trim() !== '' ? { email: email.trim() } : {}),
       }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users })
+      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       toast.success(
         t('users.created', 'The user "{0}" has been created.', [
           response.label,

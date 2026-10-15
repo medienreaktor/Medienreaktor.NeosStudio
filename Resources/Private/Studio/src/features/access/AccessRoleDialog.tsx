@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
+import { apiErrorDescription } from '@/api/http/errors'
+import { useContentRepository } from '@/api/neos/endpoints/contentRepositories'
+import { useSites } from '@/api/neos/endpoints/sites'
+import { userRoles, useUsers } from '@/api/neos/endpoints/users'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
 import {
   createAccessRole,
-  unrestrictedConstraints,
   updateAccessRole,
   useAccessRoles,
-  type AccessCapability,
-  type AccessRole,
-  type AccessRoleConstraints,
-  type NodeTreeRule,
-} from '@/api/accessRoles'
-import { apiErrorDescription } from '@/api/client'
-import { useDimensions } from '@/api/dimensions'
-import { queryKeys } from '@/api/keys'
-import { useSites } from '@/api/sites'
-import { useUsers } from '@/api/users'
-import { useWorkspaces } from '@/api/workspaces'
+} from '@/api/studio/endpoints/accessRoles'
+import { studioKeys } from '@/api/studio/keys'
+import type {
+  AccessCapability,
+  AccessRole,
+  AccessRoleConstraints,
+  NodeTreeRule,
+} from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,7 +37,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+import { fullName } from '@/features/users/user'
 import { NodeTreeRuleEditor } from './NodeTreeRuleEditor'
+import { unrestrictedConstraints } from './rules'
 
 /**
  * Create and edit one access role. Seven tabs along the axes a role can
@@ -98,7 +101,7 @@ export function AccessRoleDialog({
         : updateAccessRole(role.id, payload)
     },
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accessAll })
+      queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
       toast.success(
         role === null
           ? t('accessRoles.created', 'The role "{0}" has been created.', [
@@ -366,8 +369,8 @@ function SitesTab({
   selected: string[]
   onChange: (siteNodeNames: string[]) => void
 }) {
-  const { data } = useSites('live', null)
-  const sites = data?.sites ?? []
+  const { data } = useSites()
+  const sites = data ?? []
 
   return (
     <>
@@ -396,7 +399,7 @@ function SitesTab({
               <span className="ml-2 text-xs text-neutral-500">
                 {site.nodeName}
               </span>
-              {site.state === 'offline' && (
+              {!site.online && (
                 <Badge variant="secondary" className="ml-2">
                   {t('sites.offline', 'Offline')}
                 </Badge>
@@ -418,10 +421,10 @@ function TreeTab({
   rules: NodeTreeRule[]
   onChange: (rules: NodeTreeRule[]) => void
 }) {
-  const { data } = useSites('live', null)
+  const { data } = useSites()
   // Only sites the role can reach at all - browsing a site it is excluded
   // from would invite rules that can never fire.
-  const sites = (data?.sites ?? []).filter(
+  const sites = (data ?? []).filter(
     (site) =>
       allowedSiteNodeNames.length === 0 ||
       allowedSiteNodeNames.includes(site.nodeName),
@@ -437,7 +440,7 @@ function DimensionsTab({
   selected: Record<string, string[]>
   onChange: (dimensionValues: Record<string, string[]>) => void
 }) {
-  const { data } = useDimensions()
+  const { data } = useContentRepository()
   const dimensions = data?.dimensions ?? []
 
   const setValues = (dimensionId: string, values: string[]) => {
@@ -475,7 +478,7 @@ function DimensionsTab({
           return (
             <div key={dimension.id}>
               <div className="mb-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                {dimension.label}
+                {dimension.label ?? dimension.id}
                 {values.length === 0 && (
                   <span className="ml-2 text-xs font-normal text-neutral-500">
                     {t('accessRoles.dimensionAll', 'all values')}
@@ -499,7 +502,7 @@ function DimensionsTab({
                         paddingLeft: `${value.specializationDepth * 12}px`,
                       }}
                     >
-                      {value.label}
+                      {value.label ?? value.value}
                     </span>
                   </CheckboxRow>
                 ))}
@@ -523,10 +526,10 @@ function WorkspacesTab({
   // Live is listed too, not just the shared workspaces: ticking any of them
   // takes live off the list as well, so an administrator who wants "Entwurf
   // and live" has to be able to say so.
-  const selectable = (data?.workspaces ?? []).filter(
+  const selectable = (data ?? []).filter(
     (workspace) =>
-      workspace.classification === 'SHARED' ||
-      workspace.classification === 'ROOT',
+      workspace.classification === 'shared' ||
+      workspace.classification === 'root',
   )
 
   return (
@@ -567,7 +570,7 @@ function WorkspacesTab({
               <span className="ml-2 text-xs text-neutral-500">
                 {workspace.name}
               </span>
-              {workspace.classification === 'ROOT' && (
+              {workspace.classification === 'root' && (
                 <Badge variant="secondary" className="ml-2">
                   {t('accessRoles.workspaceLive', 'Live')}
                 </Badge>
@@ -746,11 +749,11 @@ function MembersTab({
   const [search, setSearch] = useState('')
 
   const users = useMemo(() => {
-    const all = data?.users ?? []
+    const all = data ?? []
     const term = search.trim().toLowerCase()
     if (term === '') return all
     return all.filter((user) =>
-      [user.fullName, user.label, user.email ?? '']
+      [fullName(user), user.label, user.email ?? '']
         .join(' ')
         .toLowerCase()
         .includes(term),
@@ -776,7 +779,7 @@ function MembersTab({
         {users.map((user) => {
           // Administrators (and whoever else bypasses access control) are
           // exempt by design - a membership would look like it does something.
-          const bypassed = user.roles.find((identifier) =>
+          const bypassed = userRoles(user).find((identifier) =>
             bypassRoles.includes(identifier),
           )
           return (
@@ -788,7 +791,7 @@ function MembersTab({
                 onChange(toggle(selected, user.id, checked))
               }
             >
-              {user.fullName || user.label}
+              {fullName(user) || user.label}
               {bypassed !== undefined && (
                 <Badge variant="outline" className="ml-2">
                   {t('accessRoles.memberExempt', 'Exempt: {0}', [bypassed])}

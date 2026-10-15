@@ -1,7 +1,7 @@
 import {
   fetchWorkspaceFeedBaseline,
   pollWorkspaceFeed,
-} from '@/api/collaboration'
+} from './eventFeed'
 import type {
   CollaborationPosition,
   CollaborationTransport,

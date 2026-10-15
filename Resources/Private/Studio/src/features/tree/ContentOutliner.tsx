@@ -6,17 +6,20 @@ import {
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { toast } from '@/components/ui/toast'
+import { isNotFound } from '@/api/http/errors'
 import {
   CONTENT_NODE_TYPES,
   fetchChildren,
   fetchNode,
-  isDeleted,
-  isExplicitlyHidden,
-  nodeLabel,
-  type NodeDto,
-} from '@/api/nodes'
-import { isNotFound } from '@/api/client'
-import { useNodeTypes } from '@/api/nodeTypes'
+} from '@/api/neos/endpoints/nodes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import {
+  isRemoved,
+  type Node,
+  type NodeAddress,
+  nodeAddressKey,
+  nodeAddressOf,
+} from '@/api/neos/schema'
 import { config } from '@/config'
 import { permittedActionsOn } from '@/features/access/permittedActions'
 import { translate as t } from '@/lib/i18n'
@@ -53,20 +56,20 @@ export function ContentOutliner({
   onMoved,
   onCreateNew,
 }: {
-  document: NodeDto | null
+  document: Node | null
   workspaceName: string | null
   /** Address selected outside the tree (e.g. clicked in the preview) - revealed and highlighted. */
-  selectedAddress?: string | null
+  selectedAddress?: NodeAddress | null
   /** Last inline edit from the preview - refreshes that item's label. */
   lastEdit?: NodeEdit | null
-  onSelect?: (node: NodeDto) => void
+  onSelect?: (node: Node) => void
   /**
    * A context-menu action (hide/unhide/delete) succeeded for these targets -
    * one entry normally, several when the menu acted on a multi-selection.
    */
   onNodeAction?: (action: NodeMenuAction, targets: NodeMenuTarget[]) => void
   /** A drag-and-drop move succeeded; addresses whose children changed. */
-  onMoved?: (affectedAddresses: string[]) => void
+  onMoved?: (affectedAddresses: NodeAddress[]) => void
   /** "Create new…" was picked in the context menu for this target. */
   onCreateNew?: (target: NodeMenuTarget) => void
 }) {
@@ -78,7 +81,7 @@ export function ContentOutliner({
   // mutating rootItemId on a live tree instance.
   return (
     <OutlinerTree
-      key={document.address}
+      key={nodeAddressKey(document)}
       document={document}
       workspaceName={workspaceName}
       selectedAddress={selectedAddress}
@@ -98,7 +101,7 @@ export function ContentOutliner({
  */
 const ROOT_ID = '__outliner_root__'
 
-type TreeItemData = NodeDto | typeof ROOT_ID | null
+type TreeItemData = Node | typeof ROOT_ID | null
 
 function OutlinerTree({
   document,
@@ -110,13 +113,13 @@ function OutlinerTree({
   onMoved,
   onCreateNew,
 }: {
-  document: NodeDto
+  document: Node
   workspaceName: string | null
-  selectedAddress: string | null
+  selectedAddress: NodeAddress | null
   lastEdit: NodeEdit | null
-  onSelect?: (node: NodeDto) => void
+  onSelect?: (node: Node) => void
   onNodeAction?: (action: NodeMenuAction, targets: NodeMenuTarget[]) => void
-  onMoved?: (affectedAddresses: string[]) => void
+  onMoved?: (affectedAddresses: NodeAddress[]) => void
   onCreateNew?: (target: NodeMenuTarget) => void
 }) {
   // The open context menu: the clicked target plus every selected target the
@@ -128,7 +131,12 @@ function OutlinerTree({
   // Outlining a DELETED page (selected from the trash): its content inherits
   // the "removed" tag, so every read here has to ask for deleted nodes or the
   // outline comes back empty.
-  const deleted = isDeleted(document)
+  const deleted = isRemoved(document)
+  // The outline is the document's subgraph - item ids are aggregate ids.
+  const addressOf = (nodeAggregateId: string): NodeAddress => ({
+    ...nodeAddressOf(document),
+    nodeAggregateId,
+  })
   // Flips once the document root has resolved, so the outliner shows a spinner
   // while loading rather than a misleading "no content" state.
   const [rootLoaded, setRootLoaded] = useState(false)
@@ -140,10 +148,10 @@ function OutlinerTree({
   const { peers } = usePresence()
   // The active cut entry's rows render dimmed - the nodes are "in transit".
   const clipboard = useClipboard()
-  const cutAddresses = new Set(
+  const cutKeys = new Set(
     clipboard.entries
       .find((entry) => entry.id === clipboard.activeId && entry.mode === 'cut')
-      ?.nodes.map((node) => node.address),
+      ?.nodes.map((node) => nodeAddressKey(node.address)),
   )
 
   const dnd = buildTreeDnd<TreeItemData>({
@@ -157,7 +165,7 @@ function OutlinerTree({
     getItemName: (item) => {
       const data = item.getItemData()
       if (data === ROOT_ID) return '…'
-      return data === null ? '…' : nodeLabel(data)
+      return data === null ? '…' : data.label || data.nodeAggregateId
     },
     // hasChildren of outliner items comes from content-filtered children
     // responses, so it means "has content children" here.
@@ -174,7 +182,7 @@ function OutlinerTree({
       getItem: async (itemId): Promise<TreeItemData> => {
         if (itemId === ROOT_ID) return ROOT_ID
         try {
-          return await fetchNode(itemId, CONTENT_NODE_TYPES, deleted)
+          return await fetchNode(addressOf(itemId), CONTENT_NODE_TYPES, deleted)
         } catch (e) {
           // Deleted node (gone after a publish/sync) - expected, not a failure;
           // the parent's children refresh drops the row.
@@ -195,14 +203,14 @@ function OutlinerTree({
           // row of the "has content children" flag it needs here.
           try {
             const contentDocument = await fetchNode(
-              document.address,
+              nodeAddressOf(document),
               CONTENT_NODE_TYPES,
               deleted,
             )
             setRootLoaded(true)
             return [
               {
-                id: contentDocument.address,
+                id: contentDocument.nodeAggregateId,
                 data: contentDocument as TreeItemData,
               },
             ]
@@ -217,12 +225,12 @@ function OutlinerTree({
         }
         try {
           const children = await fetchChildren(
-            itemId,
+            addressOf(itemId),
             CONTENT_NODE_TYPES,
             deleted,
           )
           return children.map((node) => ({
-            id: node.address,
+            id: node.nodeAggregateId,
             data: node as TreeItemData,
           }))
         } catch (e) {
@@ -267,12 +275,20 @@ function OutlinerTree({
       row: ItemInstance<TreeItemData>,
     ): NodeMenuTarget | null => {
       const data = row.getItemData()
-      if (!data || data === ROOT_ID || data.address === document.address)
+      if (
+        !data ||
+        data === ROOT_ID ||
+        data.nodeAggregateId === document.nodeAggregateId
+      )
         return null
+      const parentId = row.getParent()?.getId() ?? null
       return {
-        address: data.address,
-        parentAddress: row.getParent()?.getId() ?? null,
-        hidden: isExplicitlyHidden(data),
+        address: nodeAddressOf(data),
+        parentAddress:
+          parentId === null || parentId === ROOT_ID
+            ? null
+            : addressOf(parentId),
+        hidden: data.isHidden,
         tethered: data.classification === 'tethered',
         // Content follows its document: inside a page the role does not cover
         // nothing may change, and inside one it does the capabilities decide.
@@ -304,11 +320,11 @@ function OutlinerTree({
             nodeTypes,
             pendingChanges,
             peers.filter(
-              (peer) => peer.focusedAggregateId === data.aggregateId,
+              (peer) => peer.focusedAggregateId === data.nodeAggregateId,
             ),
             decorators,
           )
-          return cutAddresses.has(data.address)
+          return cutKeys.has(nodeAddressKey(data))
             ? { ...decor, dimmed: true }
             : decor
         }}

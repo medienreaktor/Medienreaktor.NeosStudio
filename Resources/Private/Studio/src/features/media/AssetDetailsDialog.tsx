@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 
 import {
-  importProxyAsset,
+  importAsset,
+  isImportedAsset,
+  isRemoteAsset,
   setAssetCollection,
   setAssetTag,
   updateAsset,
   useAsset,
   useAssetCollections,
-  useTags,
-  type MediaAsset,
-} from '@/api/media'
+  useAssetTags,
+} from '@/api/neos/endpoints/assets'
+import type { Asset } from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,7 +46,7 @@ import { UsageTable } from './UsageTable'
 
 interface AssetDetailsDialogProps {
   /** The asset selected in the list (list DTO; may lack the editable block for detail freshness). */
-  asset: MediaAsset
+  asset: Asset
   /** Called with `false` when the dialog should close. */
   onOpenChange: (open: boolean) => void
   /** Called after the asset is deleted (also closes the dialog). */
@@ -115,14 +117,14 @@ export function AssetDetailsDialog({
 
           {/* Right: editable metadata, tags, collections and usage. */}
           <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
-            {!asset.isImported && asset.isRemote && (
+            {!isImportedAsset(asset) && isRemoteAsset(asset) && (
               <RemoteImport asset={asset} />
             )}
 
             {editable && localId ? (
               <MetadataForm key={localId} asset={asset} localId={localId} />
             ) : (
-              !asset.isRemote && (
+              !isRemoteAsset(asset) && (
                 <p className="text-xs text-neutral-500">
                   {t('media.readOnly', 'This asset is read-only.')}
                 </p>
@@ -164,13 +166,7 @@ export function AssetDetailsDialog({
   )
 }
 
-function MetadataForm({
-  asset,
-  localId,
-}: {
-  asset: MediaAsset
-  localId: string
-}) {
+function MetadataForm({ asset, localId }: { asset: Asset; localId: string }) {
   const [title, setTitle] = useState(asset.title ?? '')
   const [caption, setCaption] = useState(asset.caption ?? '')
   const [copyright, setCopyright] = useState(asset.copyrightNotice ?? '')
@@ -236,7 +232,7 @@ function TagAssignment({
   localId: string
   assigned: { id: string; label: string }[]
 }) {
-  const tags = useTags()
+  const tags = useAssetTags()
   const assignedIds = new Set(assigned.map((t) => t.id))
 
   return (
@@ -346,7 +342,7 @@ function CollectionAssignment({
   )
 }
 
-function RemoteImport({ asset }: { asset: MediaAsset }) {
+function RemoteImport({ asset }: { asset: Asset }) {
   const [busy, setBusy] = useState(false)
   return (
     <Button
@@ -356,7 +352,7 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
       onClick={async () => {
         setBusy(true)
         try {
-          await importProxyAsset(asset.assetSourceId, asset.id)
+          await importAsset(asset.assetSourceId, asset.id)
           toast.success(t('media.assetImported', 'Asset imported to Neos.'))
         } catch (e) {
           toast.error(e, {
@@ -375,13 +371,7 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
   )
 }
 
-function ReplaceButton({
-  asset,
-  localId,
-}: {
-  asset: MediaAsset
-  localId: string
-}) {
+function ReplaceButton({ asset, localId }: { asset: Asset; localId: string }) {
   const [replacing, setReplacing] = useState(false)
 
   return (

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import type { NodeTypeMap } from '@/api/nodeTypes'
-import type { NodeDto } from '@/api/nodes'
+import type { NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
+import type { Node } from '@/api/neos/schema'
 import type { PresencePeer } from '@/features/collaboration/PresenceContext'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -51,7 +51,7 @@ const OVERLAY_POSITION = {
  * their color (before the dirty markers).
  */
 export function nodeDecor(
-  node: NodeDto,
+  node: Node,
   nodeTypes: NodeTypeMap | undefined,
   changed: PendingChanges | null,
   peersHere: PresencePeer[] = [],
@@ -60,9 +60,11 @@ export function nodeDecor(
   decorators: NodeDecoratorDefinition[] = nodeDecoratorRegistry.getAll(),
 ): TreeRowDecor {
   const decoration = mergeNodeDecorations(node, { nodeTypes }, decorators)
-  const isDirty = changed !== null && changed.ids.has(node.aggregateId)
+  const isDirty = changed !== null && changed.ids.has(node.nodeAggregateId)
   const containsDirty =
-    !isDirty && changed !== null && changed.documentIds.has(node.aggregateId)
+    !isDirty &&
+    changed !== null &&
+    changed.documentIds.has(node.nodeAggregateId)
 
   const markers: ReactNode[] = []
   for (const peer of peersHere) {

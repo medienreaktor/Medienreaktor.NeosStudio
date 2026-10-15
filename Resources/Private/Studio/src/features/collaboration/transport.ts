@@ -2,15 +2,15 @@ import type {
   EditingElement,
   PresenceUser,
   WorkspaceFeedEvent,
-} from '@/api/collaboration'
-import type { DimensionSpacePoint } from '@/api/dimensions'
+} from '@/api/studio/schema'
+import type { DimensionCoordinates } from '@/api/neos/schema'
 import type { LiveEdit } from './liveEdits'
 
 /** "Where am I": what a presence announcement carries. */
 export interface CollaborationPosition {
   documentAggregateId: string | null
   focusedAggregateId: string | null
-  dimensionSpacePoint: DimensionSpacePoint | null
+  dimensionSpacePoint: DimensionCoordinates | null
   /** The inline text being edited right now - peers lock it. */
   editingElement: EditingElement | null
 }

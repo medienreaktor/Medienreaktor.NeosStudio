@@ -1,13 +1,15 @@
 import { useEffect } from 'react'
 
+import { observedIdPath, useNodeAncestors } from '@/api/neos/endpoints/nodes'
 import {
-  nodeAccessState,
-  permits,
-  useMyAccess,
-  type AccessCapability,
-  type EffectiveAccess,
-} from '@/api/accessRoles'
-import { observedIdPath, useNodeAncestors, type NodeDto } from '@/api/nodes'
+  nodeAddressOf,
+  parseDimensionSpacePoint,
+  type Node,
+  type Workspace,
+} from '@/api/neos/schema'
+import { useMyAccess } from '@/api/studio/endpoints/accessRoles'
+import type { AccessCapability, EffectiveAccess } from '@/api/studio/schema'
+import { nodeAccessState, permits } from './rules'
 
 /**
  * The acting user's effective access, plus the module-level snapshot the
@@ -52,11 +54,11 @@ export function useActiveSiteForAccess(siteNodeName: string | null): void {
 
 /**
  * Tell the synchronous consumers how each workspace is classified. Access
- * roles treat live (ROOT) differently from shared and personal ones, and a
+ * roles treat live (root) differently from shared and personal ones, and a
  * node carries only its workspace's NAME.
  */
 export function useWorkspaceClassificationsForAccess(
-  workspaces: { name: string; classification: string }[],
+  workspaces: Pick<Workspace, 'name' | 'classification'>[],
 ): void {
   useEffect(() => {
     workspaceClassifications = new Map(
@@ -82,11 +84,15 @@ export function currentAccess(): EffectiveAccess | undefined {
  * server still refuses the write.
  */
 export function documentAccessState(
-  node: NodeDto,
+  node: Node,
   siteNodeName: string = activeSiteNodeName,
   access: EffectiveAccess | undefined = snapshot,
 ): 'allowed' | 'restricted' | 'hidden' {
-  return nodeAccessState(access, observedIdPath(node.aggregateId), siteNodeName)
+  return nodeAccessState(
+    access,
+    observedIdPath(node.nodeAggregateId),
+    siteNodeName,
+  )
 }
 
 /**
@@ -108,13 +114,13 @@ export function documentAccessState(
  * hands out an editor whose save the server would refuse.
  */
 export function useNodeEditable(
-  node: NodeDto | null,
+  node: Node | null,
   capability: AccessCapability = 'editNodes',
 ): boolean {
   const access = useAccess()
   const restricted = access !== undefined && !access.unrestricted
   const { data: ancestors, isPending } = useNodeAncestors(
-    restricted && node !== null ? node.address : null,
+    restricted && node !== null ? nodeAddressOf(node) : null,
   )
 
   if (node === null || !restricted) return true
@@ -125,12 +131,12 @@ export function useNodeEditable(
   return permits(access, {
     siteNodeName: activeSiteNodeName,
     idPath: [
-      node.aggregateId,
-      ...(ancestors ?? []).map((ancestor) => ancestor.aggregateId),
+      node.nodeAggregateId,
+      ...(ancestors ?? []).map((ancestor) => ancestor.nodeAggregateId),
     ],
-    dimensionCoordinates: node.dimensionSpacePoint,
-    workspaceName: node.workspace,
-    workspaceClassification: classificationOf(node.workspace),
+    dimensionCoordinates: parseDimensionSpacePoint(node.dimensionSpacePoint),
+    workspaceName: node.workspaceName,
+    workspaceClassification: classificationOf(node.workspaceName),
     capability,
   })
 }
@@ -142,20 +148,20 @@ export function useNodeEditable(
  * to the node.
  */
 export function nodePermits(
-  node: NodeDto,
+  node: Node,
   capability: AccessCapability,
   access: EffectiveAccess | undefined = snapshot,
 ): boolean {
   return permits(access, {
     siteNodeName: activeSiteNodeName,
-    idPath: observedIdPath(node.aggregateId),
-    dimensionCoordinates: node.dimensionSpacePoint,
-    workspaceName: node.workspace,
-    workspaceClassification: classificationOf(node.workspace),
+    idPath: observedIdPath(node.nodeAggregateId),
+    dimensionCoordinates: parseDimensionSpacePoint(node.dimensionSpacePoint),
+    workspaceName: node.workspaceName,
+    workspaceClassification: classificationOf(node.workspaceName),
     capability,
   })
 }
 
 function classificationOf(workspaceName: string): string {
-  return workspaceClassifications.get(workspaceName) ?? 'UNKNOWN'
+  return workspaceClassifications.get(workspaceName) ?? 'unknown'
 }

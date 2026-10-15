@@ -1,5 +1,5 @@
 import { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider'
-import type { PresenceUser, WorkspaceFeedEvent } from '@/api/collaboration'
+import type { PresenceUser, WorkspaceFeedEvent } from '@/api/studio/schema'
 import { getValidAccessToken } from '@/auth/oauth'
 import type { LiveEdit } from './liveEdits'
 import type {

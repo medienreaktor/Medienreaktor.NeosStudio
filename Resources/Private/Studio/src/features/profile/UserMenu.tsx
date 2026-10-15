@@ -1,4 +1,4 @@
-import { useMe } from '@/api/me'
+import { useMe } from '@/api/neos/endpoints/me'
 import { logoutEverywhere } from '@/auth/oauth'
 import {
   DropdownMenu,
@@ -31,9 +31,9 @@ export function UserMenu() {
   // with the rest of the header content once the session is established.
   if (!me) return null
 
-  const name = me.user?.label ?? me.account ?? '?'
+  const name = me.user?.label ?? me.account.identifier
   // Client-credential sessions have no user; color by account then.
-  const colorKey = me.user?.id ?? me.account ?? 'anonymous'
+  const colorKey = me.user?.id ?? me.account.identifier
 
   return (
     <DropdownMenu>
@@ -52,8 +52,8 @@ export function UserMenu() {
             <span className="block truncate font-medium text-neutral-950 dark:text-white">
               {name}
             </span>
-            {me.account && me.account !== name && (
-              <span className="block truncate">{me.account}</span>
+            {me.account.identifier !== name && (
+              <span className="block truncate">{me.account.identifier}</span>
             )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

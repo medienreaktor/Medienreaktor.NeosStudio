@@ -1,7 +1,7 @@
-import { taskOf } from '@/api/tasks'
 import { panelRegistry } from '@/features/panels/registry'
 import { workspaceDecoratorRegistry } from '@/features/workspaces/decorators'
 import { translate as t } from '@/lib/i18n'
+import { knownUserLabel, taskOfWorkspace } from './decorationData'
 import { taskStatusColor } from './status'
 import { TasksBoard } from './TasksBoard'
 
@@ -22,8 +22,11 @@ export function registerBuiltinTaskWorkflow(): void {
   workspaceDecoratorRegistry.register({
     id: 'tasks',
     decorate: (workspace) => {
-      const task = taskOf(workspace)
+      // The task list snapshot (decorationData.ts) - kept current by
+      // useTaskDecorationData(), which also re-emits the registry.
+      const task = taskOfWorkspace(workspace.name)
       if (!task) return null
+      const assigneeLabel = knownUserLabel(task.assignee)
 
       const status =
         task.status === 'IN_REVIEW'
@@ -34,8 +37,8 @@ export function registerBuiltinTaskWorkflow(): void {
       const label = [
         t('tasks.taskBranch', 'Task branch'),
         status,
-        task.assigneeLabel
-          ? t('tasks.assignedTo', 'Assigned to {0}', [task.assigneeLabel])
+        assigneeLabel
+          ? t('tasks.assignedTo', 'Assigned to {0}', [assigneeLabel])
           : null,
       ]
         .filter(Boolean)

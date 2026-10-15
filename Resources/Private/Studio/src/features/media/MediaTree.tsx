@@ -9,7 +9,7 @@ import {
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 
-import type { MediaCollection, MediaTag } from '@/api/media'
+import type { AssetCollection, AssetTag } from '@/api/neos/schema'
 import type { TreeRowDecor } from '@/features/tree/nodeDecor'
 import { TreeList } from '@/features/tree/TreeList'
 
@@ -21,7 +21,7 @@ export interface MediaTreeNode {
   children: MediaTreeNode[]
 }
 
-export function tagToNode(tag: MediaTag): MediaTreeNode {
+export function tagToNode(tag: AssetTag): MediaTreeNode {
   return {
     id: tag.id,
     label: tag.label,
@@ -30,7 +30,7 @@ export function tagToNode(tag: MediaTag): MediaTreeNode {
   }
 }
 
-export function collectionToNode(collection: MediaCollection): MediaTreeNode {
+export function collectionToNode(collection: AssetCollection): MediaTreeNode {
   return {
     id: collection.id,
     label: collection.title,

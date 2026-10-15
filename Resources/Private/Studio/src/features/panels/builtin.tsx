@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchNode, isDeleted, nodeLabel, type NodeDto } from '@/api/nodes'
-import { aggregateIdOf } from '@/api/nodeAddress'
+import { fetchNode } from '@/api/neos/endpoints/nodes'
+import {
+  isRemoved,
+  nodeAddressKey,
+  nodeAddressOf,
+  sameNodeAddress,
+  type Node,
+  type NodeAddress,
+} from '@/api/neos/schema'
 import { useStudio, type StudioContextValue } from '@/app/StudioContext'
 import {
   documentAccessState,
@@ -104,11 +111,12 @@ function reportNodeAction(
     return
   }
   if (action === 'delete') {
-    const parents = new Set<string>()
+    const parents = new Map<string, NodeAddress>()
     for (const target of targets) {
-      if (target.parentAddress) parents.add(target.parentAddress)
+      if (target.parentAddress)
+        parents.set(nodeAddressKey(target.parentAddress), target.parentAddress)
     }
-    studio.nodesEdited([...parents])
+    studio.nodesEdited([...parents.values()])
   } else {
     studio.nodesEdited(targets.map((target) => target.address))
   }
@@ -118,6 +126,7 @@ function DocumentsPanel() {
   const {
     site,
     workspaceName,
+    dimensionSpacePoint,
     selectedDocument,
     selectDocument,
     inspectNode,
@@ -135,7 +144,7 @@ function DocumentsPanel() {
     const timer = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300)
     return () => clearTimeout(timer)
   }, [searchTerm])
-  if (!site || !workspaceName) {
+  if (!site || !workspaceName || !dimensionSpacePoint) {
     return <LoadingState label={t('panel.loadingSites', 'Loading sites…')} />
   }
   // A term or an active node type filter switches from the tree to the flat
@@ -154,11 +163,13 @@ function DocumentsPanel() {
         onCreate={() =>
           selectedDocument &&
           setInsertRequest({
-            referenceAddress: selectedDocument.address,
+            referenceAddress: nodeAddressOf(selectedDocument),
             // The site node must not get siblings (that would be a new
             // site); any other document's parent resolves in the dialog.
             parentAddress:
-              selectedDocument.address === site.nodeAddress ? null : undefined,
+              selectedDocument.nodeAggregateId === site.nodeAggregateId
+                ? null
+                : undefined,
             defaultMode: 'inside',
           })
         }
@@ -170,9 +181,12 @@ function DocumentsPanel() {
           <DocumentSearchList
             site={site}
             workspaceName={workspaceName}
+            dimensionSpacePoint={dimensionSpacePoint}
             term={debouncedTerm}
             nodeTypeFilter={typeFilter}
-            selectedAddress={selectedDocument?.address ?? null}
+            selectedAddress={
+              selectedDocument ? nodeAddressOf(selectedDocument) : null
+            }
             onSelect={selectDocument}
           />
         )}
@@ -183,10 +197,17 @@ function DocumentsPanel() {
           className={cn('flex min-h-0 flex-1 flex-col', filtering && 'hidden')}
         >
           <DocumentTree
-            key={site.nodeAddress}
+            key={JSON.stringify([
+              site.nodeName,
+              workspaceName,
+              dimensionSpacePoint,
+            ])}
             site={site}
             workspaceName={workspaceName}
-            selectedAddress={selectedDocument?.address ?? null}
+            dimensionSpacePoint={dimensionSpacePoint}
+            selectedAddress={
+              selectedDocument ? nodeAddressOf(selectedDocument) : null
+            }
             lastEdit={lastEdit}
             onSelect={selectDocument}
             onMoved={nodesEdited}
@@ -207,8 +228,8 @@ function DocumentsPanel() {
             }
             onNodeAction={(action, targets) => {
               reportNodeAction({ nodeEdited, nodesEdited }, action, targets)
-              const selectedTarget = targets.find(
-                (target) => target.address === selectedDocument?.address,
+              const selectedTarget = targets.find((target) =>
+                sameNodeAddress(target.address, selectedDocument),
               )
               // The deleted document cannot stay selected - browse its parent.
               if (
@@ -276,7 +297,7 @@ function OutlinePanel() {
       <ContentOutliner
         document={selectedDocument}
         workspaceName={workspaceName}
-        selectedAddress={inspectedNode?.address ?? null}
+        selectedAddress={inspectedNode ? nodeAddressOf(inspectedNode) : null}
         lastEdit={lastEdit}
         onSelect={inspectNode}
         onMoved={nodesEdited}
@@ -294,8 +315,8 @@ function OutlinePanel() {
           // targets: a deleted one moves the inspection to its parent, a
           // hidden/unhidden one gets a fresh snapshot.
           if (targets.length > 1 && inspectedNode) {
-            const inspected = targets.find(
-              (target) => target.address === inspectedNode.address,
+            const inspected = targets.find((target) =>
+              sameNodeAddress(target.address, inspectedNode),
             )
             const address =
               action === 'delete'
@@ -347,7 +368,7 @@ function NodeInspectorPanel() {
  * which is otherwise indistinguishable from an ordinary one - the preview shows
  * it as it was. Says why nothing can be edited, and offers the way back.
  */
-function DeletedDocumentBanner({ document }: { document: NodeDto }) {
+function DeletedDocumentBanner({ document }: { document: Node }) {
   const { workspaceName } = useStudio()
   const restore = useTrashRestore(workspaceName)
   return (
@@ -367,8 +388,8 @@ function DeletedDocumentBanner({ document }: { document: NodeDto }) {
         disabled={restore.isPending}
         onClick={() =>
           restore.mutate({
-            nodeAggregateId: document.aggregateId,
-            label: nodeLabel(document),
+            nodeAggregateId: document.nodeAggregateId,
+            label: document.label || document.nodeAggregateId,
           })
         }
       >
@@ -399,9 +420,7 @@ function VisualEditorPanel() {
   // their focused elements in the person's color with an initials badge, and
   // locks the inline text a peer is editing (read-only + editing badge).
   const { peers } = usePresence()
-  const documentAggregateId = selectedDocument
-    ? aggregateIdOf(selectedDocument.address)
-    : null
+  const documentAggregateId = selectedDocument?.nodeAggregateId ?? null
   const presence = useMemo(
     () =>
       peers
@@ -426,12 +445,12 @@ function VisualEditorPanel() {
   )
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {selectedDocument !== null && isDeleted(selectedDocument) && (
+      {selectedDocument !== null && isRemoved(selectedDocument) && (
         <DeletedDocumentBanner document={selectedDocument} />
       )}
       <PreviewPane
         document={selectedDocument}
-        selectedAddress={inspectedNode?.address ?? null}
+        selectedAddress={inspectedNode ? nodeAddressOf(inspectedNode) : null}
         onSelectNode={inspectAddress}
         onNavigateToNode={navigateToNode}
         onNodeEdited={(address) =>

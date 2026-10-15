@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import type { AssetType, MediaAsset } from '@/api/media'
+import type { Asset, AssetType } from '@/api/neos/schema'
 import { cn } from '@/lib/utils'
 
 const TYPE_ICON: Record<AssetType, string> = {
@@ -19,7 +19,7 @@ export function AssetThumb({
   preview = false,
   className,
 }: {
-  asset: MediaAsset
+  asset: Asset
   preview?: boolean
   className?: string
 }) {

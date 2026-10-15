@@ -1,5 +1,5 @@
-import { isOfType, type NodeTypeMap } from '@/api/nodeTypes'
-import { DOCUMENT_NODE_TYPE } from '@/api/nodes'
+import { DOCUMENT_NODE_TYPE } from '@/api/neos/endpoints/nodes'
+import { isOfType, type NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
 import { cn } from '@/lib/utils'
 
 /**

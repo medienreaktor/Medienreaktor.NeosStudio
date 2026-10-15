@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { setUserPassword, type User } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { setUserPassword } from '@/api/neos/endpoints/users'
+import type { User } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

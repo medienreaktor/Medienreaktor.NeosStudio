@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { useUsers } from '@/api/users'
-import {
-  deleteWorkspace,
-  useWorkspaces,
-  type Workspace,
-} from '@/api/workspaces'
-import { queryClient } from '@/app/queryClient'
+import { apiErrorDescription } from '@/api/http/errors'
+import { useUsers } from '@/api/neos/endpoints/users'
+import { deleteWorkspace, useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import type { Workspace } from '@/api/neos/schema'
 import { useStudio } from '@/app/StudioContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,6 +28,7 @@ import {
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog'
 import { WorkspaceDecorationBadges } from './WorkspaceDecorationBadges'
 import { EditWorkspaceDialog } from './EditWorkspaceDialog'
@@ -40,11 +36,11 @@ import { WorkspaceRolesDialog } from './WorkspaceRolesDialog'
 
 function classificationLabel(classification: string): string {
   switch (classification) {
-    case 'ROOT':
+    case 'root':
       return t('workspacesAdmin.classificationRoot', 'Root')
-    case 'PERSONAL':
+    case 'personal':
       return t('workspacesAdmin.classificationPersonal', 'Personal')
-    case 'SHARED':
+    case 'shared':
       return t('workspacesAdmin.classificationShared', 'Shared')
     default:
       return classification
@@ -57,13 +53,13 @@ function classificationLabel(classification: string): string {
  * shared/private workspaces, edit title/description, manage access (role
  * assignments) and delete.
  *
- * Available to every editor (me.permissions.workspaces, the classic module's
+ * Available to every editor (useAdministrationPermissions().workspaces, the classic module's
  * privilege); rows only offer actions where the account has the manage
  * permission - the server re-checks everything per workspace.
  */
 export function WorkspacesAdministration() {
   const { data, isLoading, error } = useWorkspaces()
-  const users = useUsers().data?.users
+  const users = useUsers().data
   const { workspaceName: activeWorkspaceName } = useStudio()
 
   const [creating, setCreating] = useState(false)
@@ -79,7 +75,7 @@ export function WorkspacesAdministration() {
       })
   }, [error])
 
-  const workspaces = data?.workspaces ?? []
+  const workspaces = data ?? []
   const editing = workspaces.find((w) => w.name === editingName) ?? null
   const roles = workspaces.find((w) => w.name === rolesName) ?? null
   const deleting = workspaces.find((w) => w.name === deletingName) ?? null
@@ -151,8 +147,8 @@ export function WorkspacesAdministration() {
                   key={workspace.name}
                   workspace={workspace}
                   ownerLabel={
-                    workspace.owner !== null
-                      ? (userLabels.get(workspace.owner) ?? workspace.owner)
+                    workspace.ownerId !== null
+                      ? (userLabels.get(workspace.ownerId) ?? workspace.ownerId)
                       : null
                   }
                   isActive={workspace.name === activeWorkspaceName}
@@ -219,7 +215,7 @@ export function WorkspacesAdministration() {
               ),
             )
           }
-          queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+          void invalidateWorkspaceQueries()
           toast.success(
             t(
               'workspacesAdmin.deleted',
@@ -250,8 +246,8 @@ function WorkspaceRow({
 }) {
   const deletable =
     workspace.permissions.manage &&
-    workspace.classification !== 'ROOT' &&
-    workspace.classification !== 'PERSONAL' &&
+    workspace.classification !== 'root' &&
+    workspace.classification !== 'personal' &&
     !isActive
 
   return (
@@ -268,7 +264,9 @@ function WorkspaceRow({
         )}
       </TableCell>
       <TableCell className="text-neutral-600 dark:text-neutral-400">
-        {workspace.baseWorkspace ?? <span className="text-neutral-500">—</span>}
+        {workspace.baseWorkspaceName ?? (
+          <span className="text-neutral-500">—</span>
+        )}
       </TableCell>
       <TableCell>
         <span className="inline-flex items-center gap-1.5">

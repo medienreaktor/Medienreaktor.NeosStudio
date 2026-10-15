@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
+import { apiErrorDescription } from '@/api/http/errors'
+import { useUsers } from '@/api/neos/endpoints/users'
 import {
   deleteAccessRole,
   updateAccessRole,
   useAccessRoles,
-  type AccessRole,
-} from '@/api/accessRoles'
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { useUsers } from '@/api/users'
+} from '@/api/studio/endpoints/accessRoles'
+import { studioKeys } from '@/api/studio/keys'
+import type { AccessRole } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,6 +35,7 @@ import {
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
+import { fullName } from '@/features/users/user'
 import { AccessRoleDialog } from './AccessRoleDialog'
 import { constraintSummary } from './summary'
 
@@ -46,7 +47,7 @@ import { constraintSummary } from './summary'
  * assign people to it, without touching Policy.yaml or deploying anything.
  *
  * Administrators only: the host disables the subnav entry without
- * me.permissions.accessRoles and every endpoint 403s anyway. Administrators
+ * useAdministrationPermissions().accessRoles and every endpoint 403s anyway. Administrators
  * are also exempt from access control by design, which is why they can never
  * be members - the dialog refuses it and so does the server.
  */
@@ -81,10 +82,7 @@ export function AccessRolesAdministration() {
   // in the row behind it without extra state.
   const editing = data?.roles.find((role) => role.id === editingId) ?? null
   const userLabels = new Map(
-    (usersData?.users ?? []).map((user) => [
-      user.id,
-      user.fullName || user.label,
-    ]),
+    (usersData ?? []).map((user) => [user.id, fullName(user) || user.label]),
   )
 
   return (
@@ -222,7 +220,7 @@ export function AccessRolesAdministration() {
         onConfirm={async () => {
           const role = deleting!
           await deleteAccessRole(role.id)
-          queryClient.invalidateQueries({ queryKey: queryKeys.accessAll })
+          queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
           toast.success(
             t('accessRoles.deleted', 'The role "{0}" has been deleted.', [
               role.label,
@@ -248,7 +246,7 @@ function RoleRow({
   const activation = useMutation({
     mutationFn: (active: boolean) => updateAccessRole(role.id, { active }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accessAll })
+      queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
       toast.success(
         response.role.active
           ? t('accessRoles.activated', 'The role "{0}" is active again.', [

@@ -1,10 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { createWorkspace, type Workspace } from '@/api/workspaces'
-import { queryClient } from '@/app/queryClient'
+import { apiErrorDescription } from '@/api/http/errors'
+import { createWorkspace } from '@/api/neos/endpoints/workspaces'
+import type { Workspace, WorkspaceCreate } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,7 +24,11 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
+
+/** public: every editor may collaborate; private: only the creator. */
+type Visibility = NonNullable<WorkspaceCreate['visibility']>
 
 /**
  * Create a shared or private workspace. The base workspace is picked from the
@@ -46,26 +49,26 @@ export function CreateWorkspaceDialog({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [baseWorkspaceName, setBaseWorkspaceName] = useState('live')
-  const [visibility, setVisibility] = useState<'shared' | 'private'>('shared')
+  const [visibility, setVisibility] = useState<Visibility>('public')
 
   useEffect(() => {
     if (open) {
       setTitle('')
       setDescription('')
       setBaseWorkspaceName('live')
-      setVisibility('shared')
+      setVisibility('public')
     }
   }, [open])
 
   const baseItems = workspaces
-    .filter((workspace) => workspace.classification !== 'PERSONAL')
+    .filter((workspace) => workspace.classification !== 'personal')
     .map((workspace) => ({
       value: workspace.name,
       label: workspace.title || workspace.name,
     }))
   const visibilityItems = [
     {
-      value: 'shared',
+      value: 'public',
       label: t('workspacesAdmin.visibilityShared', 'Shared - all editors'),
     },
     {
@@ -77,16 +80,19 @@ export function CreateWorkspaceDialog({
   const mutation = useMutation({
     mutationFn: () =>
       createWorkspace({
+        classification: 'shared',
         title: title.trim(),
-        ...(description.trim() !== '' ? { description: description.trim() } : {}),
+        ...(description.trim() !== ''
+          ? { description: description.trim() }
+          : {}),
         baseWorkspaceName,
         visibility,
       }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+      void invalidateWorkspaceQueries()
       toast.success(
         t('workspacesAdmin.created', 'The workspace "{0}" has been created.', [
-          response.workspace.title,
+          response.title,
         ]),
       )
       onOpenChange(false)
@@ -100,7 +106,12 @@ export function CreateWorkspaceDialog({
             'Creating the workspace failed.',
           ),
         ),
-        { title: t('workspacesAdmin.createFailed', 'Could not create workspace') },
+        {
+          title: t(
+            'workspacesAdmin.createFailed',
+            'Could not create workspace',
+          ),
+        },
       ),
   })
 
@@ -178,9 +189,7 @@ export function CreateWorkspaceDialog({
             >
               <Select
                 value={visibility}
-                onValueChange={(value) =>
-                  setVisibility(value as 'shared' | 'private')
-                }
+                onValueChange={(value) => setVisibility(value as Visibility)}
                 items={visibilityItems}
               >
                 <SelectTrigger

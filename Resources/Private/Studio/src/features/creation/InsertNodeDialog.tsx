@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import {
   fetchChildren,
-  nodeLabel,
   useAllowedChildNodeTypes,
   useNode,
   useNodeAncestors,
-} from '@/api/nodes'
+} from '@/api/neos/endpoints/nodes'
+import {
+  type Node,
+  type NodeAddress,
+  nodeAddressKey,
+  nodeAddressOf,
+} from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { CollapsibleGroup } from '@/components/ui/collapsible-group'
@@ -38,8 +43,8 @@ export type InsertMode = 'before' | 'inside' | 'after'
  * undefined; the dialog resolves it via the ancestors relation.
  */
 export interface InsertRequest {
-  referenceAddress: string
-  parentAddress?: string | null
+  referenceAddress: NodeAddress
+  parentAddress?: NodeAddress | null
   defaultMode?: InsertMode
 }
 
@@ -90,15 +95,15 @@ export function InsertNodeDialog({
 }: {
   request: InsertRequest | null
   role: InsertRole
-  /** The node exists: its address, plus the creation request that made it. */
-  onCreated: (address: string, creation: CreateNodeRequest) => void
+  /** The node exists: the new node, plus the creation request that made it. */
+  onCreated: (node: Node, creation: CreateNodeRequest) => void
   /** The dialog was dismissed. */
   onClose: () => void
 }) {
   if (request === null) return null
   return (
     <OpenInsertNodeDialog
-      key={request.referenceAddress}
+      key={nodeAddressKey(request.referenceAddress)}
       request={request}
       role={role}
       onCreated={onCreated}
@@ -115,7 +120,7 @@ function OpenInsertNodeDialog({
 }: {
   request: InsertRequest
   role: InsertRole
-  onCreated: (address: string, creation: CreateNodeRequest) => void
+  onCreated: (node: Node, creation: CreateNodeRequest) => void
   onClose: () => void
 }) {
   const { superTypes } = ROLES[role]
@@ -143,12 +148,12 @@ function OpenInsertNodeDialog({
   const { data: ancestors } = useNodeAncestors(
     needsParentResolution ? request.referenceAddress : null,
   )
-  const parentAddress: string | null | undefined = !needsParentResolution
+  const parentAddress: NodeAddress | null | undefined = !needsParentResolution
     ? request.parentAddress
     : ancestors === undefined
       ? undefined // still resolving - sibling modes show as loading
       : ancestors[0] && ancestors[0].classification !== 'root'
-        ? ancestors[0].address
+        ? nodeAddressOf(ancestors[0])
         : null
 
   const { data: insideAllowed } = useAllowedChildNodeTypes(
@@ -205,7 +210,7 @@ function OpenInsertNodeDialog({
   const pick = async (nodeTypeName: string) => {
     if (resolving) return
     let parent = request.referenceAddress
-    let succeedingSibling: string | null = null
+    let succeedingSibling: NodeAddress | null = null
     if (activeMode !== 'inside') {
       if (!parentAddress) return
       parent = parentAddress
@@ -218,11 +223,13 @@ function OpenInsertNodeDialog({
         setResolving(true)
         try {
           const siblings = await fetchChildren(parent)
+          // One subgraph - the aggregate id tells the siblings apart.
           const index = siblings.findIndex(
-            (node) => node.address === request.referenceAddress,
+            (node) =>
+              node.nodeAggregateId === request.referenceAddress.nodeAggregateId,
           )
-          succeedingSibling =
-            index >= 0 ? (siblings[index + 1]?.address ?? null) : null
+          const next = index >= 0 ? siblings[index + 1] : undefined
+          succeedingSibling = next ? nodeAddressOf(next) : null
         } catch (e) {
           toast.error(e, {
             title: t('creation.creatingFailed', 'Creating failed'),
@@ -257,7 +264,7 @@ function OpenInsertNodeDialog({
             <DialogDescription>
               {reference
                 ? t('creation.relativeTo', 'Relative to “{0}”.', [
-                    nodeLabel(reference),
+                    reference.label || reference.nodeAggregateId,
                   ])
                 : ' '}
             </DialogDescription>
@@ -371,7 +378,7 @@ function OpenInsertNodeDialog({
         <CreateNodeFlow
           request={creation}
           nodeTypes={creatable?.nodeTypes}
-          onCreated={(address) => onCreated(address, creation)}
+          onCreated={(node) => onCreated(node, creation)}
           onCancel={(error) => {
             // Cancelling the creation form returns to the type selection; a
             // failure without a visible form surfaces here as well.

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { generateUriPathSegment, useNode } from '@/api/nodes'
+import { generateUriPathSegment, useNode } from '@/api/neos/endpoints/nodes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
@@ -36,7 +36,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
   // Read from cache (the inspector already fetched this node) to feed the
   // current title into slug generation - the classic UI's
   // ClientEval:node.properties.title.
-  const { data: self } = useNode(nodeAddress ?? '', nodeAddress !== undefined)
+  const { data: self } = useNode(nodeAddress ?? null)
 
   const commit = () => {
     if (draft !== initial) onCommit(draft)

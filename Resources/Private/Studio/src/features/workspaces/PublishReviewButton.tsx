@@ -2,8 +2,8 @@ import { useState } from 'react'
 import {
   countChangedNodes,
   useWorkspaceChanges,
-  type Workspace,
-} from '@/api/workspaces'
+} from '@/api/neos/endpoints/workspaces'
+import type { NodeAddress, Workspace } from '@/api/neos/schema'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { CountBadge } from '@/components/ui/count-badge'
@@ -33,13 +33,13 @@ export function PublishReviewButton({
   workspaces: Workspace[]
   activeWorkspace: Workspace
   /** See ReviewChangesDialog: show a document, switching the context first. */
-  onNavigate: (address: string, workspaceName: string) => void
+  onNavigate: (address: NodeAddress, workspaceName: string) => void
 }) {
   const [open, setOpen] = useState(false)
   // Same query the trees' dirty markers use, so the bubble always agrees.
   const { data: changesResponse } = useWorkspaceChanges(activeWorkspace.name)
   const { site } = useStudio()
-  const siteId = site?.aggregateId ?? null
+  const siteId = site?.nodeAggregateId ?? null
   const allChanges = changesResponse?.changes ?? []
   const changeCount = countChangedNodes(
     siteId
@@ -52,20 +52,20 @@ export function PublishReviewButton({
   const hasChanges = changeCount > 0
 
   const baseWorkspace = workspaces.find(
-    (w) => w.name === activeWorkspace.baseWorkspace,
+    (w) => w.name === activeWorkspace.baseWorkspaceName,
   )
   const targetLabel =
-    baseWorkspace?.classification === 'ROOT'
+    baseWorkspace?.classification === 'root'
       ? t('workspace.live', 'Live')
       : baseWorkspace?.title ||
-        activeWorkspace.baseWorkspace ||
+        activeWorkspace.baseWorkspaceName ||
         t('workspace.baseWorkspaceFallback', 'the base workspace')
 
   // Active (changes the account may publish): colored like the switcher's
   // target badge - primary blue into live, purple into anything else.
   const active = hasChanges && canPublish
   const activeClasses =
-    baseWorkspace?.classification === 'ROOT'
+    baseWorkspace?.classification === 'root'
       ? undefined
       : 'bg-purple-500 hover:bg-purple-500/90'
 

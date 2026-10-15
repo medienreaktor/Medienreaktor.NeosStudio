@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
-use Medienreaktor\NeosStudio\Service\NodeAddressCodec;
+use Medienreaktor\NeosStudio\Service\NodeAddresses;
 use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
@@ -101,12 +101,17 @@ abstract class AbstractStudioApiController extends ActionController
             ->getSubgraph($address->dimensionSpacePoint, $constraints);
     }
 
-    protected function decodeNodeAddress(string $encoded): NodeAddress
+    /**
+     * The node address in the four fields of a request body (see NodeAddresses).
+     *
+     * @param array<mixed> $fields
+     */
+    protected function nodeAddressFrom(array $fields): NodeAddress
     {
         try {
-            $address = NodeAddressCodec::decode($encoded);
-        } catch (\Throwable) {
-            $this->throwJsonStatus(400, 'invalid_node_address', 'The given node address could not be parsed.');
+            $address = NodeAddresses::fromArray($fields);
+        } catch (\Throwable $exception) {
+            $this->throwJsonStatus(400, 'invalid_node_address', 'The node address could not be parsed: ' . $exception->getMessage());
         }
         if ($address->contentRepositoryId->value !== $this->contentRepositoryId) {
             $this->throwJsonStatus(400, 'invalid_node_address', sprintf('The node address belongs to content repository "%s", the Studio serves "%s".', $address->contentRepositoryId->value, $this->contentRepositoryId));

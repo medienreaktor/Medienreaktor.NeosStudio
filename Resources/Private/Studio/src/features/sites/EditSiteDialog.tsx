@@ -1,16 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
+import { apiErrorDescription } from '@/api/http/errors'
+import { neosKeys } from '@/api/neos/keys'
 import {
   createDomain,
   deleteDomain,
   updateDomain,
   updateSite,
-  type Site,
-  type SiteDomain,
-} from '@/api/sites'
+} from '@/api/neos/endpoints/sites'
+import type { Domain, Site } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,10 +42,10 @@ import { translate as t } from '@/lib/i18n'
 
 /** The domain add/edit form state: creating, or editing one domain. */
 type DomainFormState =
-  { mode: 'create' } | { mode: 'edit'; domain: SiteDomain } | null
+  { mode: 'create' } | { mode: 'edit'; domain: Domain } | null
 
 function invalidateSites() {
-  queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
+  queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
 }
 
 function mutationErrorToast(error: unknown) {
@@ -241,7 +240,7 @@ function DomainRow({
   onEdit,
   onDelete,
 }: {
-  domain: SiteDomain
+  domain: Domain
   onSetPrimary: () => void
   onToggleActive: () => void
   onEdit: () => void
@@ -320,7 +319,7 @@ function DomainForm({
   onClose,
 }: {
   siteNodeName: string
-  editing: SiteDomain | null
+  editing: Domain | null
   onClose: () => void
 }) {
   const [hostname, setHostname] = useState(editing?.hostname ?? '')
@@ -352,7 +351,7 @@ function DomainForm({
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
+      queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
       onClose()
     },
     onError: (error) =>

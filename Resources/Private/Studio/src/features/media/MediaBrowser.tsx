@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useAssets, type MediaAsset } from '@/api/media'
+import { useAssets } from '@/api/neos/endpoints/assets'
+import type { Asset } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { AssetContextMenu, type AssetMenuTarget } from './AssetContextMenu'
@@ -19,7 +20,7 @@ export interface MediaBrowserProps {
    */
   mode?: 'manage' | 'picker'
   /** Called in picker mode when the user confirms an asset. */
-  onPick?: (asset: MediaAsset) => void
+  onPick?: (asset: Asset) => void
   /** Called in picker mode when the user abandons the pick (dismisses the banner). */
   onCancel?: () => void
   /** What the pick is for, shown in the picker banner (e.g. the target property label). */
@@ -65,21 +66,21 @@ export function MediaBrowser({
     return () => window.clearTimeout(timer)
   }, [mode, setActive])
   // Manage mode only: the asset whose metadata dialog is open.
-  const [detailsAsset, setDetailsAsset] = useState<MediaAsset | null>(null)
+  const [detailsAsset, setDetailsAsset] = useState<Asset | null>(null)
   // Manage mode only: the asset a right-click context menu is open for.
   const [menuTarget, setMenuTarget] = useState<AssetMenuTarget | null>(null)
 
-  const activate = (asset: MediaAsset) => {
+  const activate = (asset: Asset) => {
     if (mode === 'picker') onPick?.(asset)
     else setDetailsAsset(asset)
   }
 
   const query = useAssets(state.filter)
   const assets = useMemo(
-    () => query.data?.pages.flatMap((page) => page.assets) ?? [],
+    () => query.data?.pages.flatMap((page) => page.data) ?? [],
     [query.data],
   )
-  const total = query.data?.pages[0]?.total
+  const total = query.data?.pages[0]?.meta.total
 
   const activeKey = state.active ? assetKey(state.active) : null
 

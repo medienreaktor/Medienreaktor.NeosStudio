@@ -1,4 +1,4 @@
-import { isDeleted, type NodeDto } from '@/api/nodes'
+import { isRemoved, type Node } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { translate as t } from '@/lib/i18n'
 import { previewUrl } from './PreviewPane'
@@ -10,7 +10,7 @@ const PREVIEW_WINDOW_NAME = 'neos-studio-preview'
  * Topbar button opening the selected document in a browser tab of its own. The
  * link always uses the plain "frontend" preview rendering - the page including
  * hidden content, without the content-element metadata of the shell's
- * "inPlace" iframe. The node address already pins the active workspace and
+ * "inPlace" iframe. The node's address pins the active workspace and
  * dimension, so the tab shows the state currently being edited.
  *
  * The target is a fixed window name rather than "_blank": previewing a second
@@ -24,7 +24,7 @@ export function PreviewButton({
   document,
   className,
 }: {
-  document: NodeDto
+  document: Node
   /** E.g. the rounded-corner overrides of a split-button segment. */
   className?: string
 }) {
@@ -39,7 +39,7 @@ export function PreviewButton({
       aria-label={label}
     >
       <a
-        href={previewUrl(document.address, undefined, isDeleted(document))}
+        href={previewUrl(document, undefined, isRemoved(document))}
         target={PREVIEW_WINDOW_NAME}
       >
         <i className="fas fa-fw fa-arrow-up-right-from-square" aria-hidden />

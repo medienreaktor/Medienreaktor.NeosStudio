@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { NodeAddress, Workspace } from '@/api/neos/schema'
 import {
   useWorkspaceDocumentChanges,
   useWorkspaceDocumentDiff,
-  type Workspace,
-  type WorkspaceDocumentChange,
-} from '@/api/workspaces'
+} from '@/api/studio/endpoints/workspaces'
+import type { WorkspaceDocumentChange } from '@/api/studio/schema'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -144,7 +144,7 @@ function DocumentDiff({
 /** "Live" for the root workspace, the title (or name) otherwise. */
 function workspaceLabel(workspace: Workspace | undefined, name: string) {
   if (!workspace) return name
-  return workspace.classification === 'ROOT'
+  return workspace.classification === 'root'
     ? t('workspace.live', 'Live')
     : workspace.title || workspace.name
 }
@@ -199,7 +199,7 @@ export function ReviewChangesDialog({
    * Show a document in its workspace - switches the editing context first
    * when the reviewed workspace is not the active one.
    */
-  onNavigate: (address: string, workspaceName: string) => void
+  onNavigate: (address: NodeAddress, workspaceName: string) => void
   /**
    * Called after a publish succeeded, with the published source workspace -
    * e.g. the Tasks board completing a task once its changes went out.
@@ -209,7 +209,7 @@ export function ReviewChangesDialog({
   // Reviewable sources: everything with a base to publish to. The list only
   // contains readable workspaces, so no extra permission filter is needed.
   const sources = useMemo(
-    () => workspaces.filter((w) => w.baseWorkspace !== null),
+    () => workspaces.filter((w) => w.baseWorkspaceName !== null),
     [workspaces],
   )
 
@@ -239,13 +239,13 @@ export function ReviewChangesDialog({
     sources.find((w) => w.name === activeWorkspace.name) ??
     sources[0] ??
     null
-  const targetName = source?.baseWorkspace ?? null
+  const targetName = source?.baseWorkspaceName ?? null
 
   // The targets on offer: every workspace that some readable source publishes
   // to. A base the account cannot read is still a valid target (publishing
   // needs write on it only at publish time) - it renders by name.
   const targetNames = useMemo(() => {
-    const names = [...new Set(sources.map((w) => w.baseWorkspace!))]
+    const names = [...new Set(sources.map((w) => w.baseWorkspaceName!))]
     const label = (name: string) =>
       workspaceLabel(
         workspaces.find((w) => w.name === name),
@@ -255,14 +255,14 @@ export function ReviewChangesDialog({
     return names.sort((a, b) => {
       const wsA = workspaces.find((w) => w.name === a)
       const wsB = workspaces.find((w) => w.name === b)
-      if (wsA?.classification === 'ROOT') return -1
-      if (wsB?.classification === 'ROOT') return 1
+      if (wsA?.classification === 'root') return -1
+      if (wsB?.classification === 'root') return 1
       return label(a).localeCompare(label(b))
     })
   }, [sources, workspaces])
 
   const sourcesForTarget = useMemo(
-    () => sources.filter((w) => w.baseWorkspace === targetName),
+    () => sources.filter((w) => w.baseWorkspaceName === targetName),
     [sources, targetName],
   )
 
@@ -278,7 +278,7 @@ export function ReviewChangesDialog({
     if (name === targetName) return
     // Re-pick a source that publishes to the new target: the active workspace
     // if it matches, otherwise one that actually has something to review.
-    const candidates = sources.filter((w) => w.baseWorkspace === name)
+    const candidates = sources.filter((w) => w.baseWorkspaceName === name)
     const next =
       candidates.find((w) => w.name === activeWorkspace.name) ??
       candidates.find((w) => w.hasPublishableChanges) ??
@@ -308,7 +308,7 @@ export function ReviewChangesDialog({
   // Scope to the active site, mirroring the Publish button: the active site's
   // documents plus any whose site could not be resolved (never silently hide a
   // pending change).
-  const siteId = site?.aggregateId ?? null
+  const siteId = site?.nodeAggregateId ?? null
   const documents = useMemo(() => {
     const all = data?.documents ?? []
     return siteId
@@ -361,7 +361,7 @@ export function ReviewChangesDialog({
     if (ids.length === 0 || !source) return
     const sourceWorkspaceName = source.name
     operation.mutate(
-      { kind, filter: { documents: ids } },
+      { kind, scope: { documentAggregateIds: ids } },
       {
         onSuccess: () => {
           setSelectedIds(new Set())
@@ -382,7 +382,7 @@ export function ReviewChangesDialog({
   const reviewingActive = source?.name === activeWorkspace.name
   const canPublish = useCanPublish(source, workspaces)
   // Discarding rewrites the reviewed workspace - needs write access on it (a
-  // given for the active workspace, not for e.g. a draft reviewed as VIEWER).
+  // given for the active workspace, not for e.g. a draft reviewed as viewer).
   const canDiscard = source?.permissions.write ?? false
   // Navigating means showing the document in its workspace. Away from the
   // active context that is an editing-context switch, which only exists for
@@ -390,8 +390,8 @@ export function ReviewChangesDialog({
   const canNavigate =
     source !== null &&
     (reviewingActive ||
-      source.classification === 'PERSONAL' ||
-      (source.classification === 'SHARED' && source.permissions.write))
+      source.classification === 'personal' ||
+      (source.classification === 'shared' && source.permissions.write))
   const sourceLabel = workspaceLabel(source ?? undefined, source?.name ?? '')
   const targetLabel = targetName
     ? workspaceLabel(
@@ -422,7 +422,7 @@ export function ReviewChangesDialog({
     ),
   }))
 
-  const goToDocument = (address: string) => {
+  const goToDocument = (address: NodeAddress) => {
     if (!source) return
     onOpenChange(false)
     if (reviewingActive) navigateToNode(address)
@@ -803,9 +803,7 @@ export function ReviewChangesDialog({
         open={pendingConflict !== null}
         workspaceName={source?.name ?? null}
         conflicts={pendingConflict?.conflicts.conflicts ?? []}
-        partial={
-          pendingConflict?.conflicts.code === 'partial_publish_conflicts'
-        }
+        partial={pendingConflict?.conflicts.title === 'partial'}
         busy={resolve.isPending}
         onCancel={() => setPendingConflict(null)}
         // A resolved conflict finishes the publish/discard - close the

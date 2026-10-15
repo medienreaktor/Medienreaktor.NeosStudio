@@ -1,4 +1,4 @@
-import { DOCUMENT_NODE_TYPE } from '@/api/nodes'
+import { DOCUMENT_NODE_TYPE } from '@/api/neos/endpoints/nodes'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

@@ -1122,6 +1122,14 @@
         <source>This node is deleted. Restore it to edit its properties again.</source>
         <target xml:lang="de">Dieser Knoten ist gelöscht. Stelle ihn wieder her, um seine Eigenschaften zu bearbeiten.</target>
       </trans-unit>
+      <trans-unit id="inspector.propertyScope.nodeAggregate" xml:space="preserve">
+        <source>The value of this property is shared across all dimension variants.</source>
+        <target xml:lang="de">Der Wert dieser Eigenschaft wird von allen Dimensionsvarianten gemeinsam genutzt.</target>
+      </trans-unit>
+      <trans-unit id="inspector.propertyScope.specializations" xml:space="preserve">
+        <source>Changes to this property will affect all specialization variants.</source>
+        <target xml:lang="de">Änderungen an dieser Eigenschaft wirken sich auf alle Spezialisierungsvarianten aus.</target>
+      </trans-unit>
       <trans-unit id="inspector.savingFailed" xml:space="preserve">
         <source>Saving failed</source>
         <target xml:lang="de">Speichern fehlgeschlagen</target>

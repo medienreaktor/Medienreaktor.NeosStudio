@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { generateUriPathSegment } from '@/api/nodes'
+import { generateUriPathSegment } from '@/api/neos/endpoints/nodes'
+import {
+  configuredLabel,
+  isOfType,
+  type NodeTypeMap,
+  useNodeType,
+} from '@/api/neos/endpoints/nodeTypes'
 import {
   type CreationDialogElementConfig,
-  type NodeTypeMap,
-  isOfType,
-  useNodeTypeSchema,
-} from '@/api/nodeTypes'
+  type Node,
+  type NodeTypeConfiguration,
+  nodeTypeConfiguration,
+  type PropertyConfig,
+} from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -40,6 +47,60 @@ interface CreationElement {
 const DOCUMENT_SUPER_TYPE = 'Neos.Neos:Document'
 
 /**
+ * A property or reference asked for in the creation dialog
+ * (ui.showInCreationDialog) as the element of its name - what Neos UI's
+ * CreationDialogPostprocessor derives from the property's inspector
+ * configuration.
+ */
+function promotedElement(
+  config: PropertyConfig,
+  type: string,
+): CreationDialogElementConfig {
+  return {
+    type,
+    defaultValue: config.defaultValue,
+    position: config.ui?.inspector?.position,
+    ui: {
+      label: config.ui?.label,
+      editor: config.ui?.inspector?.editor,
+      editorOptions: config.ui?.inspector?.editorOptions,
+    },
+    validation: config.validation,
+  }
+}
+
+/**
+ * The node type's creation dialog elements by name: ui.creationDialog.elements
+ * plus every property and reference shown in the creation dialog that no
+ * configured element of its name replaces.
+ */
+function creationDialogElements(
+  configuration: NodeTypeConfiguration,
+): Record<string, CreationDialogElementConfig | null> {
+  const elements = { ...(configuration.ui?.creationDialog?.elements ?? {}) }
+  for (const [name, config] of Object.entries(configuration.properties ?? {})) {
+    if (!config?.ui?.showInCreationDialog || name in elements) continue
+    elements[name] = promotedElement(config, config.type ?? 'string')
+  }
+  for (const [name, config] of Object.entries(configuration.references ?? {})) {
+    if (!config?.ui?.showInCreationDialog || name in elements) continue
+    elements[name] = promotedElement(
+      config,
+      config.constraints?.maxItems === 1 ? 'reference' : 'references',
+    )
+  }
+  return elements
+}
+
+/** A reference element's value (one id, or a list of them) as target ids. */
+function referenceTargets(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((id): id is string => typeof id === 'string')
+  }
+  return typeof value === 'string' ? [value] : []
+}
+
+/**
  * Client-side fallback slug for when the server-side generator is
  * unreachable: strip diacritics (NFD + combining marks), rough
  * ASCII-fication - so the document still gets a URL.
@@ -55,16 +116,17 @@ function fallbackSlug(text: string): string {
 }
 
 /**
- * Runs one node creation: fetches the node type's schema, shows the
- * ui.creationDialog form when the type configures one (mirroring the classic
- * NodeCreationDialog) and creates the node via the commands API. Types
- * without a creation dialog are created immediately, without any UI.
+ * Runs one node creation: fetches the node type, shows its creation dialog
+ * when it has elements (ui.creationDialog.elements and the properties and
+ * references with ui.showInCreationDialog, mirroring the classic
+ * NodeCreationDialog) and creates the node via Neos.Api. Types without a
+ * creation dialog are created immediately, without any UI.
  *
- * Element values whose name matches a property become initial property
- * values (authoritative: the API lets explicit property values win); all
- * element values are additionally sent along as "elements", the input to the
- * node type's server-side node creation handlers (promoted elements,
- * Flowpack.NodeTemplates, ...), which the API runs like the classic UI does.
+ * Neos.Api runs no node creation handlers, so the Studio does what the
+ * classic UI's promoted-elements handler did: element values named like a
+ * property become its initial value, those named like a reference its
+ * references. Other elements only fed handlers (Flowpack.NodeTemplates and
+ * the like), which do not run - their values are not sent.
  */
 export function CreateNodeFlow({
   request,
@@ -74,13 +136,17 @@ export function CreateNodeFlow({
 }: {
   request: CreateNodeRequest
   nodeTypes: NodeTypeMap | undefined
-  /** The node exists; address of the new node. */
-  onCreated: (address: string) => void
+  /** The node exists; the new node. */
+  onCreated: (node: Node) => void
   /** The user cancelled, or creation failed after the dialog was skipped. */
   onCancel: (error?: string) => void
 }) {
-  const { data: schema, error: schemaError } = useNodeTypeSchema(
+  const { data: nodeType, error: schemaError } = useNodeType(
     request.nodeTypeName,
+  )
+  const configuration = useMemo(
+    () => (nodeType ? nodeTypeConfiguration(nodeType) : null),
+    [nodeType],
   )
   const [creating, setCreating] = useState(false)
   // An asset/image element hands off to the Media Library, which takes over the
@@ -92,8 +158,8 @@ export function CreateNodeFlow({
   const picking = pickerSession !== null
 
   const elements = useMemo(() => {
-    if (!schema) return null
-    const configured = schema.configuration.ui?.creationDialog?.elements ?? {}
+    if (!configuration) return null
+    const configured = creationDialogElements(configuration)
     const order = sortByPosition(
       Object.entries(configured).map(([key, config]) => ({
         key,
@@ -114,7 +180,7 @@ export function CreateNodeFlow({
         }
       })
       .filter((element): element is CreationElement => element !== null)
-  }, [schema])
+  }, [configuration])
 
   const [values, setValues] = useState<Record<string, unknown>>({})
   // Elements the user has edited: inline errors only show for these, so the
@@ -126,7 +192,7 @@ export function CreateNodeFlow({
   // apply anyway, but visible and editable before creating.
   useEffect(() => {
     if (elements === null) return
-    const properties = schema?.configuration.properties ?? {}
+    const properties = configuration?.properties ?? {}
     const defaults: Record<string, unknown> = {}
     for (const element of elements) {
       const defaultValue =
@@ -134,28 +200,34 @@ export function CreateNodeFlow({
       if (defaultValue !== undefined) defaults[element.name] = defaultValue
     }
     setValues(defaults)
-  }, [elements, schema])
+  }, [elements, configuration])
 
   const typeLabel = humanizeLabel(
-    nodeTypes?.get(request.nodeTypeName)?.label,
+    configuredLabel(nodeTypes?.get(request.nodeTypeName)),
     request.nodeTypeName.split(':').pop() ?? request.nodeTypeName,
   )
 
   const submit = async (submittedValues: Record<string, unknown>) => {
     setCreating(true)
-    const properties = schema?.configuration.properties ?? {}
+    const properties = configuration?.properties ?? {}
+    const references = configuration?.references ?? {}
     const initialPropertyValues: Record<string, unknown> = {}
-    const elementValues: Record<string, unknown> = {}
+    const initialReferences: Record<string, string[]> = {}
     for (const [name, value] of Object.entries(submittedValues)) {
       if (value === undefined || value === null || value === '') continue
-      elementValues[name] = value
-      if (name in properties) initialPropertyValues[name] = value
+      if (name in properties) {
+        initialPropertyValues[name] = value
+      } else if (name in references) {
+        const targets = referenceTargets(value)
+        if (targets.length > 0) initialReferences[name] = targets
+      }
     }
     try {
       // Documents need a URL from birth: derive uriPathSegment from the
       // entered title (or the type label) with the server's language-aware
       // slug generator - unless a creation-dialog element already set one.
-      // The classic UI does the same in its server-side creation handler.
+      // (Neos.Api would derive one from the title too; this also covers a
+      // document created without a title.)
       if (
         nodeTypes !== undefined &&
         isOfType(nodeTypes, request.nodeTypeName, DOCUMENT_SUPER_TYPE) &&
@@ -170,7 +242,9 @@ export function CreateNodeFlow({
           text,
         ).catch(() => fallbackSlug(text))
       }
-      onCreated(await createNode(request, initialPropertyValues, elementValues))
+      onCreated(
+        await createNode(request, initialPropertyValues, initialReferences),
+      )
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
       // With a dialog open the user can retry or cancel; without one the

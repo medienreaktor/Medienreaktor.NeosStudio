@@ -1,4 +1,4 @@
-import type { Workspace } from '@/api/workspaces'
+import type { Workspace } from '@/api/neos/schema'
 import {
   decorationsFor,
   useWorkspaceDecorators,

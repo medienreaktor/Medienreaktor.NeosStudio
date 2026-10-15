@@ -1,18 +1,19 @@
 import { useState } from 'react'
 
-import { useAsset, type MediaAsset } from '@/api/media'
+import {
+  assetReference,
+  localAssetIdFor,
+  referenceList,
+  useAsset,
+  type AssetReference,
+} from '@/api/neos/endpoints/assets'
+import type { Asset } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorProps } from './registry'
-import {
-  assetReference,
-  localAssetIdFor,
-  referenceList,
-  type AssetReference,
-} from '@/api/assetValue'
 
 /**
  * A collection asset/image property (`array<Neos\Media\Domain\Model\Asset>`).
@@ -40,7 +41,7 @@ export function MultiAssetFieldEditor({
   const { requestPick } = useAssetPicker()
   const [refs, setRefs] = useState<AssetReference[]>(() => referenceList(value))
   // Freshly picked assets, so a new row shows before its resolve lands.
-  const [pickedById, setPickedById] = useState<Record<string, MediaAsset>>({})
+  const [pickedById, setPickedById] = useState<Record<string, Asset>>({})
   // The row being dragged, tracked while a reorder is in progress.
   const [dragIndex, setDragIndex] = useState<number | null>(null)
 
@@ -145,7 +146,7 @@ function AssetRow({
   onRemove,
 }: {
   identifier: string
-  picked: MediaAsset | null
+  picked: Asset | null
   dragging: boolean
   onDragStart: () => void
   onDragOver: () => void

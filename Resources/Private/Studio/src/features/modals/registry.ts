@@ -96,7 +96,7 @@ export interface SettingsDialogDefinition extends RegistryDefinition {
   component: React.ComponentType
   /**
    * A hook deciding whether this section is reachable right now (e.g. a
-   * permission check reading useMe()). When it returns false the section still
+   * permission check reading useAdministrationPermissions()). When it returns false the section still
    * appears in the subnavigation but disabled and unclickable - the host keeps
    * it visible so users see the capability exists. Omit for always-enabled.
    *

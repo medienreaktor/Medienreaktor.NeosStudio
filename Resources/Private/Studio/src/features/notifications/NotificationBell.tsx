@@ -3,9 +3,9 @@ import {
   markAllNotificationsRead,
   markNotificationsRead,
   useNotifications,
-  type StudioNotification,
-} from '@/api/notifications'
-import { queryKeys } from '@/api/keys'
+} from '@/api/studio/endpoints/notifications'
+import { studioKeys } from '@/api/studio/keys'
+import type { StudioNotification } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import {
   DropdownMenu,
@@ -32,7 +32,7 @@ export function NotificationBell() {
   const { data } = useNotifications()
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications })
+    queryClient.invalidateQueries({ queryKey: studioKeys.notifications })
 
   const markRead = useMutation({
     mutationFn: (ids: string[]) => markNotificationsRead(ids),

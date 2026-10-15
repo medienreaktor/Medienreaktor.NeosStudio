@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
-import { uploadAsset } from '@/api/media'
+import { uploadAsset } from '@/api/neos/endpoints/assets'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'

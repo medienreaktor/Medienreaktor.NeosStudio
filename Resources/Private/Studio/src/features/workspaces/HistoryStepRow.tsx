@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { type WorkspacePendingStep } from '@/api/workspaces'
+import type { WorkspacePendingStep } from './pendingSteps'
 import { UserAvatar } from '@/features/collaboration/UserAvatar'
 import { cn } from '@/lib/utils'
 import {
@@ -86,7 +86,9 @@ export function HistoryStepRow({
             {subject !== null && (
               <>
                 {' '}
-                <span className="text-neutral-950 dark:text-white">{subject}</span>
+                <span className="text-neutral-950 dark:text-white">
+                  {subject}
+                </span>
               </>
             )}
           </div>

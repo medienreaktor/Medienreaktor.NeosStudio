@@ -1,9 +1,6 @@
-import {
-  groupPendingEvents,
-  type Workspace,
-  type WorkspacePendingEvents,
-  type WorkspacePendingStep,
-} from '@/api/workspaces'
+import type { Workspace } from '@/api/neos/schema'
+import type { WorkspacePendingEvents } from '@/api/studio/schema'
+import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
 
 /**
  * Layout for the Workspaces graph: workspaces as git-style branches. Live (a
@@ -16,7 +13,7 @@ import {
  * The branch point is the FORK point, not the base's head: a workspace's
  * stream records where (stream + version) it forked off its base, so base
  * events it already contains lie left of the branch point and events
- * published to the base afterwards lie right of it - an OUTDATED workspace
+ * published to the base afterwards lie right of it - an outdated workspace
  * visibly hangs behind the changes it has not pulled in yet. Roots (live)
  * only surface their published history from the earliest child fork onwards;
  * everything older collapses into the leading ellipsis.
@@ -46,7 +43,8 @@ const ROOT_MAX_DOTS = 25
  * stay neutral; the palette starts with the Neos brand hues, then falls back
  * to default Tailwind hues (which the Studio theme extends, not replaces).
  */
-const ROOT_COLOR = 'light-dark(var(--color-neutral-600), var(--color-neutral-400))'
+const ROOT_COLOR =
+  'light-dark(var(--color-neutral-600), var(--color-neutral-400))'
 const BRANCH_COLORS = [
   'var(--color-blue-500)',
   'var(--color-orange-500)',
@@ -93,12 +91,11 @@ export interface WorkspaceGraph {
   height: number
 }
 
-/** Shared drafts before private ones before personal workspaces, then title. */
+/** Shared drafts before personal workspaces, then title. */
 const CLASSIFICATION_ORDER: Record<string, number> = {
-  ROOT: 0,
-  SHARED: 1,
-  PRIVATE: 2,
-  PERSONAL: 3,
+  root: 0,
+  shared: 1,
+  personal: 2,
 }
 
 function branchSort(a: Workspace, b: Workspace): number {
@@ -122,12 +119,12 @@ export function buildWorkspaceGraph(
     // A base the account cannot read is a base we cannot draw - such a
     // workspace becomes its own root rather than vanishing.
     if (
-      workspace.baseWorkspace !== null &&
-      byName.has(workspace.baseWorkspace)
+      workspace.baseWorkspaceName !== null &&
+      byName.has(workspace.baseWorkspaceName)
     ) {
-      const siblings = children.get(workspace.baseWorkspace) ?? []
+      const siblings = children.get(workspace.baseWorkspaceName) ?? []
       siblings.push(workspace)
-      children.set(workspace.baseWorkspace, siblings)
+      children.set(workspace.baseWorkspaceName, siblings)
     } else {
       roots.push(workspace)
     }
@@ -274,7 +271,7 @@ export function baseChainOf(name: string, graph: WorkspaceGraph): Set<string> {
   let current: string | null = name
   while (current !== null && !chain.has(current)) {
     chain.add(current)
-    current = graph.byName.get(current)?.workspace.baseWorkspace ?? null
+    current = graph.byName.get(current)?.workspace.baseWorkspaceName ?? null
   }
   return chain
 }

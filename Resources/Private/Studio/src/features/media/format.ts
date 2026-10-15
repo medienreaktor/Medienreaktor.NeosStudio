@@ -1,4 +1,4 @@
-import type { AssetType } from '@/api/media'
+import type { AssetType } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 
 /** Human-readable file size, e.g. 1536 -> "1.5 KB". */

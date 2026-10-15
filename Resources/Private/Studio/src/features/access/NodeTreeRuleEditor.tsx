@@ -7,16 +7,20 @@ import {
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 
-import type { NodeTreeRule } from '@/api/accessRoles'
 import {
   DOCUMENT_NODE_TYPE,
   fetchChildren,
   fetchNode,
-  nodeLabel,
-  type NodeDto,
-} from '@/api/nodes'
-import { useNodeTypes } from '@/api/nodeTypes'
-import type { Site } from '@/api/sites'
+} from '@/api/neos/endpoints/nodes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import { siteNodeAddress } from '@/api/neos/endpoints/sites'
+import {
+  nodeAddressKey,
+  type Node,
+  type NodeAddress,
+  type Site,
+} from '@/api/neos/schema'
+import type { NodeTreeRule } from '@/api/studio/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -37,7 +41,10 @@ import { cn } from '@/lib/utils'
 /** Virtual root above the site node, as in the document tree panel. */
 const ROOT_ID = '__acl_tree_root__'
 
-type TreeItemData = NodeDto | typeof ROOT_ID
+type TreeItemData = Node | typeof ROOT_ID
+
+/** Rules are made in live, where the page tree is the published one. */
+const RULE_WORKSPACE = 'live'
 
 /**
  * The page-tree restriction editor: browse a site, pick a document, allow or
@@ -67,7 +74,7 @@ export function NodeTreeRuleEditor({
     sites[0]?.nodeName ?? null,
   )
   const [selection, setSelection] = useState<{
-    node: NodeDto
+    node: Node
     path: string
   } | null>(null)
   const [includeDescendants, setIncludeDescendants] = useState(true)
@@ -76,17 +83,18 @@ export function NodeTreeRuleEditor({
     sites.find((candidate) => candidate.nodeName === siteNodeName) ??
     sites[0] ??
     null
+  const siteNode = site ? siteNodeAddress(site, RULE_WORKSPACE) : null
 
   const setRule = (mode: 'ALLOW' | 'DENY') => {
     if (!selection || !site) return
     const next = rules.filter(
-      (rule) => rule.nodeAggregateId !== selection.node.aggregateId,
+      (rule) => rule.nodeAggregateId !== selection.node.nodeAggregateId,
     )
     next.push({
       mode,
       siteNodeName: site.nodeName,
-      nodeAggregateId: selection.node.aggregateId,
-      label: nodeLabel(selection.node),
+      nodeAggregateId: selection.node.nodeAggregateId,
+      label: selection.node.label || selection.node.nodeAggregateId,
       path: selection.path,
       includeDescendants,
     })
@@ -100,7 +108,7 @@ export function NodeTreeRuleEditor({
   const selectedRule =
     selection !== null
       ? (rules.find(
-          (rule) => rule.nodeAggregateId === selection.node.aggregateId,
+          (rule) => rule.nodeAggregateId === selection.node.nodeAggregateId,
         ) ?? null)
       : null
 
@@ -153,13 +161,13 @@ export function NodeTreeRuleEditor({
         </Select>
       )}
 
-      {site?.nodeAddress ? (
+      {siteNode ? (
         <SiteDocumentTree
           // Remounting on a site switch is the whole reset: the async loader
           // caches per tree instance, so reusing it would show the previous
           // site's rows until every branch refetched.
-          key={site.nodeAddress}
-          siteNodeAddress={site.nodeAddress}
+          key={nodeAddressKey(siteNode)}
+          siteNodeAddress={siteNode}
           rules={rules}
           onSelect={(node, path) => setSelection({ node, path })}
         />
@@ -227,7 +235,9 @@ export function NodeTreeRuleEditor({
           size="xs"
           variant="ghost"
           disabled={selectedRule === null}
-          onClick={() => selection && removeRule(selection.node.aggregateId)}
+          onClick={() =>
+            selection && removeRule(selection.node.nodeAggregateId)
+          }
         >
           {t('accessRoles.treeClear', 'Clear')}
         </Button>
@@ -283,9 +293,9 @@ function SiteDocumentTree({
   rules,
   onSelect,
 }: {
-  siteNodeAddress: string
+  siteNodeAddress: NodeAddress
   rules: NodeTreeRule[]
-  onSelect: (node: NodeDto, path: string) => void
+  onSelect: (node: Node, path: string) => void
 }) {
   const { data: nodeTypes } = useNodeTypes()
   // Flips once the site node's children resolve (see DocumentTree).
@@ -298,12 +308,14 @@ function SiteDocumentTree({
     rootItemId: ROOT_ID,
     getItemName: (item) => {
       const data = item.getItemData()
-      return data === ROOT_ID || data === null ? '…' : nodeLabel(data)
+      return data === ROOT_ID || data === null
+        ? '…'
+        : data.label || data.nodeAggregateId
     },
     isItemFolder: (item) => {
       const data = item.getItemData()
       if (data === ROOT_ID || data === null) return true
-      return data.hasChildren
+      return data.hasChildren ?? false
     },
     onPrimaryAction: (item) => {
       const data = item.getItemData()
@@ -313,7 +325,11 @@ function SiteDocumentTree({
     dataLoader: {
       getItem: async (itemId): Promise<TreeItemData> => {
         if (itemId === ROOT_ID) return ROOT_ID
-        return await fetchNode(itemId, DOCUMENT_NODE_TYPE)
+        // Item ids are aggregate ids: the tree is one subgraph.
+        return await fetchNode(
+          { ...siteNodeAddress, nodeAggregateId: itemId },
+          DOCUMENT_NODE_TYPE,
+        )
       },
       getChildrenWithData: async (itemId) => {
         try {
@@ -323,11 +339,16 @@ function SiteDocumentTree({
               DOCUMENT_NODE_TYPE,
             )
             setRootLoaded(true)
-            return [{ id: siteNode.address, data: siteNode as TreeItemData }]
+            return [
+              { id: siteNode.nodeAggregateId, data: siteNode as TreeItemData },
+            ]
           }
-          const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
+          const children = await fetchChildren(
+            { ...siteNodeAddress, nodeAggregateId: itemId },
+            DOCUMENT_NODE_TYPE,
+          )
           return children.map((node) => ({
-            id: node.address,
+            id: node.nodeAggregateId,
             data: node as TreeItemData,
           }))
         } catch {
@@ -357,7 +378,7 @@ function SiteDocumentTree({
         emptyIcon="fa-sitemap"
         decorate={(data) => {
           if (data === ROOT_ID || data === null) return null
-          const rule = ruleFor(data.aggregateId)
+          const rule = ruleFor(data.nodeAggregateId)
           return {
             icon: (
               <NodeTypeIcon

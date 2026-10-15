@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { NodeDto } from '@/api/nodes'
+import type { Node } from '@/api/neos/schema'
 
 /**
  * The inspector view registry: read-only widgets that node type configuration
@@ -13,7 +13,7 @@ import type { NodeDto } from '@/api/nodes'
 
 export interface InspectorViewProps {
   /** The node being inspected. */
-  node: NodeDto
+  node: Node
   /** Resolved, human-readable label of the view. */
   label: string
   /** The view's configuration - ui.inspector.views.*.viewOptions. */

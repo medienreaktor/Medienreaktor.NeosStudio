@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-import type { MediaAsset } from '@/api/media'
+import type { Asset } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { LoadingState, Spinner } from '@/components/ui/spinner'
@@ -11,14 +11,14 @@ import { assetKey } from './useMediaBrowserState'
 import type { MediaViewMode } from './useMediaBrowserState'
 
 interface AssetListProps {
-  assets: MediaAsset[]
+  assets: Asset[]
   view: MediaViewMode
   activeKey: string | null
-  onSelect: (asset: MediaAsset) => void
+  onSelect: (asset: Asset) => void
   /** Double-click / Enter: open details (manage) or pick (picker). */
-  onActivate: (asset: MediaAsset) => void
+  onActivate: (asset: Asset) => void
   /** Right-click: open the asset context menu (manage mode only). */
-  onContextMenu?: (asset: MediaAsset, anchor: { x: number; y: number }) => void
+  onContextMenu?: (asset: Asset, anchor: { x: number; y: number }) => void
   isLoading: boolean
   isFetchingNextPage: boolean
   hasNextPage: boolean
@@ -134,7 +134,7 @@ function GridCard({
   onActivate,
   onContextMenu,
 }: {
-  asset: MediaAsset
+  asset: Asset
   active: boolean
   onClick: () => void
   onActivate: () => void
@@ -183,7 +183,7 @@ function ListRow({
   onActivate,
   onContextMenu,
 }: {
-  asset: MediaAsset
+  asset: Asset
   active: boolean
   onClick: () => void
   onActivate: () => void

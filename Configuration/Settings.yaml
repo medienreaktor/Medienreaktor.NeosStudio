@@ -195,14 +195,6 @@ Neos:
                 patternOptions:
                   uriPattern: "/neos/studio/api/.*"
 
-  Api:
-    # Narrow every node listing Neos.Api serves (trees, search) to what the
-    # caller's access roles leave reachable. Closes the one gap the client
-    # cannot: a document search returns hits from anywhere under the site,
-    # and the client has no ancestry for a scattered hit to judge it by.
-    nodeReadFilters:
-      "Medienreaktor.NeosStudio:accessRoles": 'Medienreaktor\NeosStudio\Service\AccessNodeReadFilter'
-
   OAuth:
     # The Studio's own endpoints (tasks, notifications, access roles, preview
     # links, review and history) narrow by these scopes; Neos.Api's content

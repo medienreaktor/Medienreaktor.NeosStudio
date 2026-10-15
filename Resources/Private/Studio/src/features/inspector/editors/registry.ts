@@ -1,4 +1,5 @@
 import * as React from 'react'
+import type { NodeAddress } from '@/api/neos/schema'
 
 /**
  * The node property editor registry: every editor - built-in or third-party -
@@ -71,7 +72,7 @@ export interface PropertyEditorProps {
    * switcher, which resolves the parent's allowed child types - need it, and
    * degrade gracefully without it.
    */
-  nodeAddress?: string
+  nodeAddress?: NodeAddress
 }
 
 export type PropertyEditorComponent = React.ComponentType<PropertyEditorProps>

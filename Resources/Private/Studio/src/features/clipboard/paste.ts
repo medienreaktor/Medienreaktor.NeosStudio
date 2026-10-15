@@ -1,6 +1,12 @@
-import { copyNode, runSequentially } from '@/api/commands'
-import { queryKeys } from '@/api/keys'
-import { fetchChildren } from '@/api/nodes'
+import { copyNode, runSequentially } from '@/api/neos/endpoints/nodeCommands'
+import { fetchChildren } from '@/api/neos/endpoints/nodes'
+import { neosKeys } from '@/api/neos/keys'
+import {
+  type NodeAddress,
+  nodeAddressOf,
+  nodeAddressKey,
+} from '@/api/neos/schema'
+import { studioKeys } from '@/api/studio/keys'
 import { queryClient } from '@/app/queryClient'
 import { moveNodesByAddress } from '@/features/editing/nodeActions'
 import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
@@ -16,9 +22,9 @@ import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
 
 export interface PasteResult {
   /** Address of the first pasted node (the copy, or the moved node itself). */
-  newAddress: string
+  newAddress: NodeAddress
   /** Addresses whose children lists changed - refresh them. */
-  affectedAddresses: string[]
+  affectedAddresses: NodeAddress[]
 }
 
 /**
@@ -29,8 +35,8 @@ export interface PasteResult {
  */
 export async function pasteClipboardEntry(
   entry: ClipboardEntry,
-  parentAddress: string,
-  succeedingSiblingAddress: string | null,
+  parentAddress: NodeAddress,
+  succeedingSiblingAddress: NodeAddress | null,
 ): Promise<PasteResult> {
   if (entry.mode === 'cut') {
     await moveNodesByAddress(
@@ -43,10 +49,10 @@ export async function pasteClipboardEntry(
     clipboardRemove(entry.id)
     const sourceParents = entry.nodes
       .map((node) => node.sourceParentAddress)
-      .filter((address): address is string => address !== null)
+      .filter((address): address is NodeAddress => address !== null)
     return {
       newAddress: entry.nodes[0].address,
-      affectedAddresses: [...new Set([parentAddress, ...sourceParents])],
+      affectedAddresses: uniqueAddresses([parentAddress, ...sourceParents]),
     }
   }
 
@@ -65,25 +71,36 @@ export async function pasteClipboardEntry(
  * dimension space point.
  */
 async function copyNodes(
-  sourceAddresses: string[],
-  targetParentAddress: string,
-  targetSucceedingSiblingAddress: string | null,
-): Promise<string[]> {
+  sourceAddresses: NodeAddress[],
+  targetParentAddress: NodeAddress,
+  targetSucceedingSiblingAddress: NodeAddress | null,
+): Promise<NodeAddress[]> {
   try {
     const copies = await runSequentially(sourceAddresses, (sourceAddress) =>
       copyNode(
         sourceAddress,
         targetParentAddress,
-        targetSucceedingSiblingAddress,
+        targetSucceedingSiblingAddress?.nodeAggregateId ?? null,
       ),
     )
-    return copies.map((copy) => copy.address)
+    return copies.map(nodeAddressOf)
   } finally {
     // The target's children changed - drop all node reads (children lists
     // are keyed under nodes) and refresh the pending-changes badges.
-    await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+    void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+    void queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
   }
+}
+
+/** The addresses without duplicates, in order. */
+function uniqueAddresses(addresses: NodeAddress[]): NodeAddress[] {
+  const byKey = new Map<string, NodeAddress>()
+  for (const address of addresses) {
+    const key = nodeAddressKey(address)
+    if (!byKey.has(key)) byKey.set(key, address)
+  }
+  return [...byKey.values()]
 }
 
 /**
@@ -93,10 +110,14 @@ async function copyNodes(
  * insertion point - same resolution as the insert dialog's "after" mode.
  */
 export async function resolveSucceedingSibling(
-  referenceAddress: string,
-  parentAddress: string,
-): Promise<string | null> {
+  referenceAddress: NodeAddress,
+  parentAddress: NodeAddress,
+): Promise<NodeAddress | null> {
   const siblings = await fetchChildren(parentAddress)
-  const index = siblings.findIndex((node) => node.address === referenceAddress)
-  return index >= 0 ? (siblings[index + 1]?.address ?? null) : null
+  // The siblings are one subgraph - the aggregate id tells them apart.
+  const index = siblings.findIndex(
+    (node) => node.nodeAggregateId === referenceAddress.nodeAggregateId,
+  )
+  const next = index >= 0 ? siblings[index + 1] : undefined
+  return next ? nodeAddressOf(next) : null
 }

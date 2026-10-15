@@ -1,4 +1,4 @@
-import { isDeleted, isExplicitlyHidden } from '@/api/nodes'
+import { isRemoved } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import { nodeDecoratorRegistry } from './decorators'
 import { resolveNodeTypeIconClass } from './nodeTypeIcon'
@@ -28,8 +28,8 @@ export function registerBuiltinNodeDecorators(): void {
     id: 'Medienreaktor.NeosStudio:hidden',
     order: 10,
     decorate: (node) => {
-      if (!node.tags.all.includes('disabled')) return null
-      const explicit = isExplicitlyHidden(node)
+      if (!node.isHidden && !node.isHiddenByAncestor) return null
+      const explicit = node.isHidden
       const title = explicit
         ? t('tree.decor.hidden', 'Hidden')
         : t('tree.decor.hiddenInherited', 'Hidden (inherited)')
@@ -60,8 +60,8 @@ export function registerBuiltinNodeDecorators(): void {
     id: 'Medienreaktor.NeosStudio:deleted',
     order: 10,
     decorate: (node) => {
-      if (!isDeleted(node)) return null
-      const explicit = !node.tags.inherited.includes('removed')
+      if (!isRemoved(node)) return null
+      const explicit = !node.inheritedTags.includes('removed')
       const title = explicit
         ? t('tree.decor.deleted', 'Deleted')
         : t('tree.decor.deletedInherited', 'Deleted (inherited)')

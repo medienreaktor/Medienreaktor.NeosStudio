@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
-import { isDeleted, renderNodeElement, type NodeDto } from '@/api/nodes'
-import { useNodeTypes } from '@/api/nodeTypes'
+import { queryString } from '@/api/http/request'
+import { renderNodeElement } from '@/api/neos/endpoints/nodes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import {
+  isRemoved,
+  nodeAddressFromContextPath,
+  nodeAddressKey,
+  sameNodeAddress,
+  type Node,
+  type NodeAddress,
+} from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
@@ -38,7 +46,7 @@ import {
   subscribeRemoteLiveEdits,
 } from '@/features/collaboration/liveEdits'
 import { useAssetPicker } from '@/features/media/AssetPicker'
-import { assetReference, localAssetIdFor } from '@/api/assetValue'
+import { assetReference, localAssetIdFor } from '@/api/neos/endpoints/assets'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 import {
@@ -53,22 +61,27 @@ import type {
 } from './protocol'
 
 /**
- * URL of the Studio's own preview endpoint for a node. The address already
- * encodes the complete identity - workspace, dimension space point and
- * aggregate id - so the combination to preview is explicit in the URL.
- * The "inPlace" rendering mode requests the content-element metadata markup
- * the guest script needs for click-to-select and inline editing.
+ * URL of the Studio's own preview endpoint for a node. Its complete identity -
+ * content repository, workspace, dimension space point and aggregate id -
+ * travels as query parameters, named as in Neos.Api, so the combination to
+ * preview is explicit in the URL. The "inPlace" rendering mode requests the
+ * content-element metadata markup the guest script needs for click-to-select
+ * and inline editing.
  */
 export function previewUrl(
-  address: string,
+  address: NodeAddress,
   mode?: string,
   /** Render a DELETED page - it is invisible to the preview otherwise. */
   includeDeleted = false,
 ): string {
-  const params = new URLSearchParams({ node: address })
-  if (mode) params.set('mode', mode)
-  if (includeDeleted) params.set('includeDeleted', '1')
-  return `${config.previewBase}?${params}`
+  return `${config.previewBase}${queryString({
+    contentRepositoryId: address.contentRepositoryId,
+    workspaceName: address.workspaceName,
+    dimensionSpacePoint: address.dimensionSpacePoint,
+    nodeAggregateId: address.nodeAggregateId,
+    mode,
+    includeDeleted: includeDeleted ? '1' : undefined,
+  })}`
 }
 
 /**
@@ -79,7 +92,7 @@ export function PreviewToolbar({
   document,
   onReload,
 }: {
-  document: NodeDto | null
+  document: Node | null
   onReload: () => void
 }) {
   // Guarded instead of conditionally registered: without a document there is
@@ -134,15 +147,15 @@ export function PreviewPane({
   elementUpdate = null,
   presence = [],
 }: {
-  document: NodeDto | null
+  document: Node | null
   /** Address outlined in the preview - the node inspected in the shell. */
-  selectedAddress: string | null
+  selectedAddress: NodeAddress | null
   /** A content element was clicked in the preview. */
-  onSelectNode: (address: string) => void
+  onSelectNode: (address: NodeAddress) => void
   /** A link to another document was followed in the preview. */
-  onNavigateToNode?: (address: string) => void
+  onNavigateToNode?: (address: NodeAddress) => void
   /** An edit for these addresses was persisted (structural edits touch several). */
-  onNodeEdited?: (address: string | string[]) => void
+  onNodeEdited?: (address: NodeAddress | NodeAddress[]) => void
   /** Bump to reload the iframe after edits made outside of it (e.g. the inspector). */
   reloadToken?: number
   /**
@@ -153,7 +166,7 @@ export function PreviewPane({
    * elsewhere survive. Falls back to a full reload whenever an element
    * cannot be updated in place.
    */
-  elementUpdate?: { addresses: string[]; token: number } | null
+  elementUpdate?: { addresses: NodeAddress[]; token: number } | null
   /** Collaborators on this document, outlined at the elements they focus. */
   presence?: PresenceHighlight[]
 }) {
@@ -196,8 +209,8 @@ export function PreviewPane({
   // Latest-callback refs keep the message listener subscription stable.
   const onSelectNodeRef = useRef(onSelectNode)
   onSelectNodeRef.current = onSelectNode
-  const documentAddressRef = useRef(document?.address ?? null)
-  documentAddressRef.current = document?.address ?? null
+  const documentAddressRef = useRef<NodeAddress | null>(document)
+  documentAddressRef.current = document
   const onNavigateToNodeRef = useRef(onNavigateToNode)
   onNavigateToNodeRef.current = onNavigateToNode
   const onNodeEditedRef = useRef(onNodeEdited)
@@ -229,7 +242,7 @@ export function PreviewPane({
   // page as it was, without the editing guest - there is nothing to edit in
   // place on a page that is deleted, and click-to-select would hand out
   // addresses of nodes that no read outside this preview resolves.
-  const documentDeleted = document !== null && isDeleted(document)
+  const documentDeleted = document !== null && isRemoved(document)
   // A page outside the account's access roles renders the same way: without
   // the editing guest. Withholding "inPlace" is what actually disarms it -
   // the metadata markup the guest needs for inline editing, click-to-select
@@ -241,7 +254,7 @@ export function PreviewPane({
   const documentReadOnly = documentDeleted || !documentEditable
   const src = document
     ? previewUrl(
-        document.address,
+        document,
         documentReadOnly ? undefined : 'inPlace',
         documentDeleted,
       )
@@ -329,7 +342,7 @@ export function PreviewPane({
           break
         case 'neos-studio/node-selected':
           try {
-            onSelectNodeRef.current(addressFromContextPath(message.contextPath))
+            onSelectNodeRef.current(nodeAddressFromContextPath(message.contextPath))
           } catch {
             /* malformed contextpath - ignore the click */
           }
@@ -343,14 +356,14 @@ export function PreviewPane({
         case 'neos-studio/navigate-to-node':
           try {
             onNavigateToNodeRef.current?.(
-              addressFromContextPath(message.contextPath),
+              nodeAddressFromContextPath(message.contextPath),
             )
           } catch {
             /* malformed contextpath - ignore the navigation */
           }
           break
         case 'neos-studio/property-changed': {
-          const address = addressFromContextPath(message.contextPath)
+          const address = nodeAddressFromContextPath(message.contextPath)
           // Queued: typing commits arrive every 1.5-5s and must never
           // overlap in flight - newer values coalesce behind the running
           // save, latest wins.
@@ -378,9 +391,9 @@ export function PreviewPane({
           // The own live-typing stream: hand to the collaboration channel;
           // the realtime transport (if any) fans it out to peers.
           try {
-            const address = addressFromContextPath(message.contextPath)
+            const address = nodeAddressFromContextPath(message.contextPath)
             publishLocalLiveEdit({
-              nodeAggregateId: decodeNodeAddress(address).aggregateId,
+              nodeAggregateId: address.nodeAggregateId,
               property: message.property,
               value: message.value,
               cursor: message.cursor,
@@ -393,11 +406,11 @@ export function PreviewPane({
           try {
             setPendingCreation({
               nodeTypeName: message.nodeTypeName,
-              parentAddress: addressFromContextPath(message.parentContextPath),
+              parentAddress: nodeAddressFromContextPath(message.parentContextPath),
               succeedingSiblingAddress:
                 message.succeedingSiblingContextPath === null
                   ? null
-                  : addressFromContextPath(
+                  : nodeAddressFromContextPath(
                       message.succeedingSiblingContextPath,
                     ),
             })
@@ -410,9 +423,9 @@ export function PreviewPane({
           // (insert after) or an empty collection's add button (inside).
           try {
             setInsertRequest({
-              referenceAddress: addressFromContextPath(message.contextPath),
+              referenceAddress: nodeAddressFromContextPath(message.contextPath),
               parentAddress: message.parentContextPath
-                ? addressFromContextPath(message.parentContextPath)
+                ? nodeAddressFromContextPath(message.parentContextPath)
                 : null,
               defaultMode: message.defaultMode,
             })
@@ -424,13 +437,13 @@ export function PreviewPane({
           const frameRect = activeFrameRef.current?.getBoundingClientRect()
           if (!frameRect) break
           try {
-            const address = addressFromContextPath(message.contextPath)
+            const address = nodeAddressFromContextPath(message.contextPath)
             const parentAddress = message.parentContextPath
-              ? addressFromContextPath(message.parentContextPath)
+              ? nodeAddressFromContextPath(message.parentContextPath)
               : null
             // A second click on the same handle closes the menu (toggle).
             setElementMenu((previous) =>
-              previous?.address === address
+              sameNodeAddress(previous?.address, address)
                 ? null
                 : {
                     address,
@@ -461,9 +474,9 @@ export function PreviewPane({
           // The "Create variant" button over a shine-through element: run the
           // CreateNodeVariant an edit would trigger implicitly, then reload -
           // the element renders without the fallback pattern afterwards.
-          let address: string
+          let address: NodeAddress
           try {
-            address = addressFromContextPath(message.contextPath)
+            address = nodeAddressFromContextPath(message.contextPath)
           } catch {
             break
           }
@@ -490,9 +503,9 @@ export function PreviewPane({
           break
         }
         case 'neos-studio/image-select-request': {
-          let address: string
+          let address: NodeAddress
           try {
-            address = addressFromContextPath(message.contextPath)
+            address = nodeAddressFromContextPath(message.contextPath)
           } catch {
             break
           }
@@ -526,11 +539,11 @@ export function PreviewPane({
         }
         case 'neos-studio/move-node-request': {
           try {
-            const targetAddress = addressFromContextPath(
+            const targetAddress = nodeAddressFromContextPath(
               message.parentContextPath,
             )
             const sourceAddress = message.sourceParentContextPath
-              ? addressFromContextPath(message.sourceParentContextPath)
+              ? nodeAddressFromContextPath(message.sourceParentContextPath)
               : null
             moveNode(message)
               .then(() => {
@@ -539,7 +552,7 @@ export function PreviewPane({
                 // selection stays on the moved node.
                 setReloadCount((count) => count + 1)
                 const parents =
-                  sourceAddress && sourceAddress !== targetAddress
+                  sourceAddress && !sameNodeAddress(sourceAddress, targetAddress)
                     ? [targetAddress, sourceAddress]
                     : [targetAddress]
                 onNodeEditedRef.current?.(parents)
@@ -590,6 +603,9 @@ export function PreviewPane({
     )
   }
 
+  // The selection by value: callers may pass a new object for the same node.
+  const selectedKey = selectedAddress ? nodeAddressKey(selectedAddress) : null
+
   // Push the shell's selection into the guest (also right after it boots).
   useEffect(() => {
     if (!guestReady) return
@@ -598,7 +614,7 @@ export function PreviewPane({
     const aggregateId =
       selectedAddress === null
         ? null
-        : decodeNodeAddress(selectedAddress).aggregateId
+        : selectedAddress.nodeAggregateId
     // Opening a page selects its document node, which sites wrap around the whole page body.
     // Revealing that element centers the body, so every page switch (and every reload) would land
     // somewhat below the top. The document is the page itself - there is nothing to reveal.
@@ -606,14 +622,14 @@ export function PreviewPane({
     const isDocument =
       aggregateId !== null &&
       documentAddress !== null &&
-      decodeNodeAddress(documentAddress).aggregateId === aggregateId
+      documentAddress.nodeAggregateId === aggregateId
     const message: HostToGuestMessage = {
       type: 'neos-studio/select-node',
       aggregateId,
       reveal: !isDocument,
     }
     frame.postMessage(message, window.location.origin)
-  }, [guestReady, selectedAddress])
+  }, [guestReady, selectedKey])
 
   // A pending "pulse this element" request, held until the guest showing *that* element is ready.
   //
@@ -627,7 +643,7 @@ export function PreviewPane({
     const drain = () => {
       const pending = peekPendingFlash()
       if (pending === null) return
-      if (pending !== decodeNodeAddress(selectedAddress).aggregateId) return
+      if (pending !== selectedAddress.nodeAggregateId) return
       const frame = activeFrameRef.current?.contentWindow
       if (!frame) return
       takePendingFlash()
@@ -639,7 +655,7 @@ export function PreviewPane({
     }
     drain()
     return subscribeFlashRequest(drain)
-  }, [guestReady, selectedAddress])
+  }, [guestReady, selectedKey])
 
   // Out-of-band element update: re-render one node's element on the server
   // and swap it into the live page instead of reloading the iframe (the
@@ -647,13 +663,13 @@ export function PreviewPane({
   // Every failure along the way - guest not ready, node not rendered on this
   // page (e.g. a document), render error, swap failure, timeout - falls back
   // to a full reload: correctness first, the optimization is best-effort.
-  const updateElementOutOfBand = async (address: string): Promise<void> => {
+  const updateElementOutOfBand = async (address: NodeAddress): Promise<void> => {
     const fallback = () => setReloadCount((count) => count + 1)
     const frame = activeFrameRef.current?.contentWindow
     if (!frame || !guestReady) return fallback()
     let aggregateId: string
     try {
-      aggregateId = decodeNodeAddress(address).aggregateId
+      aggregateId = address.nodeAggregateId
     } catch {
       return fallback()
     }

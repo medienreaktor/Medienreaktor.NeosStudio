@@ -1,18 +1,20 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { useMe } from '@/api/me'
-import { useUserRoles, useUsers } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { useUserOptions, useUsers } from '@/api/neos/endpoints/users'
 import {
   assignWorkspaceRole,
   unassignWorkspaceRole,
   useWorkspaceRoles,
-  type Workspace,
-  type WorkspaceRoleAssignment,
-} from '@/api/workspaces'
-import { queryClient } from '@/app/queryClient'
+} from '@/api/neos/endpoints/workspaces'
+import type {
+  Workspace,
+  WorkspaceRole,
+  WorkspaceRoleAssignment,
+  WorkspaceRoleSubject,
+} from '@/api/neos/schema'
+import { useAdministrationPermissions } from '@/app/permissions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,17 +36,22 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
-const WORKSPACE_ROLES = ['VIEWER', 'COLLABORATOR', 'MANAGER'] as const
+const WORKSPACE_ROLES: readonly WorkspaceRole[] = [
+  'viewer',
+  'collaborator',
+  'manager',
+]
 
 function roleLabel(role: string): string {
   switch (role) {
-    case 'VIEWER':
+    case 'viewer':
       return t('workspacesAdmin.roleViewer', 'Viewer')
-    case 'COLLABORATOR':
+    case 'collaborator':
       return t('workspacesAdmin.roleCollaborator', 'Collaborator')
-    case 'MANAGER':
+    case 'manager':
       return t('workspacesAdmin.roleManager', 'Manager')
     default:
       return role
@@ -68,6 +75,13 @@ export function WorkspaceRolesDialog({
 }) {
   const workspaceName = workspace?.name ?? null
   const { data, isLoading, error } = useWorkspaceRoles(workspaceName)
+  // User subjects are named from the user list (readable by every editor in
+  // the Studio); group subjects by their role identifier.
+  const users = useUsers(workspace !== null).data
+  const subjectLabel = (subject: WorkspaceRoleSubject): string =>
+    subject.type === 'user'
+      ? (users?.find((user) => user.id === subject.id)?.label ?? subject.id)
+      : subject.id
 
   useEffect(() => {
     if (error)
@@ -78,9 +92,8 @@ export function WorkspaceRolesDialog({
 
   const remove = useMutation({
     mutationFn: (assignment: WorkspaceRoleAssignment) =>
-      unassignWorkspaceRole(workspaceName!, assignment),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all }),
+      unassignWorkspaceRole(workspaceName!, assignment.subject),
+    onSuccess: () => invalidateWorkspaceQueries(),
     onError: (mutationError) =>
       toast.error(
         apiErrorDescription(
@@ -129,7 +142,7 @@ export function WorkspaceRolesDialog({
 
         {data && (
           <>
-            {data.assignments.length === 0 ? (
+            {data.length === 0 ? (
               <Placeholder
                 icon="fa-user-lock"
                 title={t(
@@ -140,18 +153,18 @@ export function WorkspaceRolesDialog({
               />
             ) : (
               <ul className="space-y-1">
-                {data.assignments.map((assignment) => (
+                {data.map((assignment) => (
                   <li
-                    key={`${assignment.subjectType}:${assignment.subject}`}
+                    key={`${assignment.subject.type}:${assignment.subject.id}`}
                     className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm"
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <i
-                        className={`fas ${assignment.subjectType === 'USER' ? 'fa-user' : 'fa-users'} text-xs text-neutral-500`}
+                        className={`fas ${assignment.subject.type === 'user' ? 'fa-user' : 'fa-users'} text-xs text-neutral-500`}
                         aria-hidden
                       />
                       <span className="truncate text-neutral-800 dark:text-neutral-200">
-                        {assignment.label}
+                        {subjectLabel(assignment.subject)}
                       </span>
                       <Badge variant="secondary">
                         {roleLabel(assignment.role)}
@@ -177,7 +190,7 @@ export function WorkspaceRolesDialog({
             {workspaceName !== null && (
               <AddAssignmentForm
                 workspaceName={workspaceName}
-                existing={data.assignments}
+                existing={data}
               />
             )}
           </>
@@ -194,29 +207,29 @@ function AddAssignmentForm({
   workspaceName: string
   existing: WorkspaceRoleAssignment[]
 }) {
-  const [subjectType, setSubjectType] = useState<'USER' | 'GROUP'>('USER')
+  const [subjectType, setSubjectType] =
+    useState<WorkspaceRoleSubject['type']>('user')
   const [subject, setSubject] = useState('')
-  const [role, setRole] =
-    useState<(typeof WORKSPACE_ROLES)[number]>('COLLABORATOR')
+  const [role, setRole] = useState<WorkspaceRole>('collaborator')
 
-  const isAdmin = useMe().data?.permissions.users ?? false
-  const users = useUsers().data?.users
+  const isAdmin = useAdministrationPermissions().users
+  const users = useUsers().data
   // The role catalog is admin-only; non-admin managers type the identifier.
-  const { data: rolesData } = useUserRoles(isAdmin)
+  const { data: rolesData } = useUserOptions(isAdmin)
 
   const assignedSubjects = new Set(
-    existing.map((a) => `${a.subjectType}:${a.subject}`),
+    existing.map((a) => `${a.subject.type}:${a.subject.id}`),
   )
   const userItems = (users ?? [])
-    .filter((person) => !assignedSubjects.has(`USER:${person.id}`))
+    .filter((person) => !assignedSubjects.has(`user:${person.id}`))
     .map((person) => ({ value: person.id, label: person.label }))
   const groupItems = (rolesData?.roles ?? [])
-    .filter((group) => !assignedSubjects.has(`GROUP:${group.identifier}`))
+    .filter((group) => !assignedSubjects.has(`group:${group.identifier}`))
     .map((group) => ({ value: group.identifier, label: group.label }))
   const subjectTypeItems = [
-    { value: 'USER', label: t('workspacesAdmin.subjectUser', 'User') },
+    { value: 'user', label: t('workspacesAdmin.subjectUser', 'User') },
     {
-      value: 'GROUP',
+      value: 'group',
       label: t('workspacesAdmin.subjectGroup', 'Group (role)'),
     },
   ]
@@ -227,9 +240,13 @@ function AddAssignmentForm({
 
   const mutation = useMutation({
     mutationFn: () =>
-      assignWorkspaceRole(workspaceName, { subjectType, subject, role }),
+      assignWorkspaceRole(
+        workspaceName,
+        { type: subjectType, id: subject },
+        role,
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+      void invalidateWorkspaceQueries()
       setSubject('')
     },
     onError: (error) =>
@@ -255,8 +272,8 @@ function AddAssignmentForm({
     if (subject !== '' && !mutation.isPending) mutation.mutate()
   }
 
-  const subjectItems = subjectType === 'USER' ? userItems : groupItems
-  const useSubjectSelect = subjectType === 'USER' || isAdmin
+  const subjectItems = subjectType === 'user' ? userItems : groupItems
+  const useSubjectSelect = subjectType === 'user' || isAdmin
 
   return (
     <form
@@ -271,7 +288,7 @@ function AddAssignmentForm({
           <Select
             value={subjectType}
             onValueChange={(value) => {
-              setSubjectType(value as 'USER' | 'GROUP')
+              setSubjectType(value as WorkspaceRoleSubject['type'])
               setSubject('')
             }}
             items={subjectTypeItems}
@@ -291,7 +308,7 @@ function AddAssignmentForm({
 
         <Field
           label={
-            subjectType === 'USER'
+            subjectType === 'user'
               ? t('workspacesAdmin.subjectUser', 'User')
               : t('workspacesAdmin.subjectGroup', 'Group (role)')
           }
@@ -333,9 +350,7 @@ function AddAssignmentForm({
         >
           <Select
             value={role}
-            onValueChange={(value) =>
-              setRole(value as (typeof WORKSPACE_ROLES)[number])
-            }
+            onValueChange={(value) => setRole(value as WorkspaceRole)}
             items={roleItems}
           >
             <SelectTrigger id="workspace-role-role" className="w-full">

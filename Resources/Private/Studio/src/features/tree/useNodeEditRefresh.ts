@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import type { AsyncDataLoaderDataRef, TreeInstance } from '@headless-tree/core'
+import type { NodeAddress } from '@/api/neos/schema'
 
 /**
  * An edit that happened elsewhere (preview, inspector, context menu); token
@@ -7,7 +8,7 @@ import type { AsyncDataLoaderDataRef, TreeInstance } from '@headless-tree/core'
  * touch several, and ALL_NODES means the whole workspace content changed.
  */
 export interface NodeEdit {
-  addresses: string[]
+  addresses: (NodeAddress | typeof ALL_NODES)[]
   token: number
 }
 
@@ -55,6 +56,10 @@ export function useNodeEditRefresh<T>(
     const childrenIds =
       tree.getDataRef<AsyncDataLoaderDataRef>().current.childrenIds ?? {}
     for (const address of lastEdit.addresses) {
+      if (address === ALL_NODES) continue
+      // Item ids are aggregate ids: a tree shows one subgraph. An edit of
+      // the same node in another one refreshes the row needlessly, harmless.
+      const itemId = address.nodeAggregateId
       // A subtree-tag change (hiding/unhiding via the "hidden" property)
       // rewrites the inherited tags of the ENTIRE subtree, not just the node
       // and its direct children - so levels 2+ would otherwise keep their
@@ -70,8 +75,8 @@ export function useNodeEditRefresh<T>(
       // own invalidation would find its entry already gone and stop at level 1
       // - the "only the top two levels update" bug. Optimistic invalidation
       // keeps the entries, but the snapshot stays cheap insurance.
-      const parents = loadedParentsInSubtree(address, childrenIds)
-      const item = tree.getItemInstance(address)
+      const parents = loadedParentsInSubtree(itemId, childrenIds)
+      const item = tree.getItemInstance(itemId)
       // The node's own data (label, tags) - its parent isn't in `parents`, so
       // refresh it directly. getItemInstance also resolves the tree root, so
       // edits reported for the root still refresh its direct children below.

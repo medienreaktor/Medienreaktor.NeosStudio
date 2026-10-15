@@ -1,10 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
-import { queryKeys } from '@/api/keys'
-import { fetchNode } from '@/api/nodes'
-import { restoreFromTrash } from '@/api/workspaces'
+import { fetchNode } from '@/api/neos/endpoints/nodes'
+import { neosKeys } from '@/api/neos/keys'
+import { restoreFromTrash } from '@/api/studio/endpoints/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 /** What the caller knows about the node it restores - enough to report it. */
@@ -31,28 +32,28 @@ export function useTrashRestore(workspaceName: string | null) {
   return useMutation({
     mutationFn: (node: RestorableNode) =>
       restoreFromTrash(workspaceName!, node.nodeAggregateId),
-    onSuccess: (result, node) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    onSuccess: (restored, node) => {
+      void invalidateWorkspaceQueries()
+      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
       workspaceContentChanged()
       if (
         selectedDocument !== null &&
-        selectedDocument.aggregateId === node.nodeAggregateId
+        selectedDocument.nodeAggregateId === node.nodeAggregateId
       ) {
         // Re-read the open document: it is no longer deleted, which changes how
         // the whole shell treats it (rendering mode, editability, the banner).
-        fetchNode(selectedDocument.address)
+        fetchNode(selectedDocument)
           .then(selectDocument)
           .catch(() => {
             /* the workspace-wide refresh above already re-reads it */
           })
       }
-      const label = result.restored[0]?.label ?? node.label
+      const label = restored[0]?.label ?? node.label
       toast.success(
-        result.restored.length > 1
+        restored.length > 1
           ? t('trash.restoredWithAncestors', 'Restored {0} and {1} more.', [
               label,
-              String(result.restored.length - 1),
+              String(restored.length - 1),
             ])
           : t('trash.restored', 'Restored {0}.', [label]),
       )

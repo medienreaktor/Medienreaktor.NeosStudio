@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react'
 
-import { DEFAULT_ASSET_FILTER, useAssets, type MediaAsset } from '@/api/media'
-import { localAssetIdFor } from '@/api/assetValue'
+import {
+  DEFAULT_ASSET_FILTER,
+  localAssetIdFor,
+  useAssets,
+} from '@/api/neos/endpoints/assets'
+import type { Asset } from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { AssetList } from '@/features/media/AssetList'
 import { assetKey } from '@/features/media/useMediaBrowserState'
@@ -24,9 +28,9 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
   const [search, setSearch] = useState('')
   const filter = useMemo(() => ({ ...DEFAULT_ASSET_FILTER, search }), [search])
   const query = useAssets(filter)
-  const assets = query.data?.pages.flatMap((page) => page.assets) ?? []
+  const assets = query.data?.pages.flatMap((page) => page.data) ?? []
 
-  const pick = (asset: MediaAsset) => {
+  const pick = (asset: Asset) => {
     localAssetIdFor(asset)
       .then((id) => onChange(assetUri(id)))
       .catch((e: unknown) =>

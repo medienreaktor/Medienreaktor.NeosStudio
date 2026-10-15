@@ -1,4 +1,4 @@
-import { useMe } from '@/api/me'
+import { useAdministrationPermissions } from '@/app/permissions'
 import { AccessRolesAdministration } from '@/features/access/AccessRolesAdministration'
 import { ProfileSettings } from '@/features/profile/ProfileSettings'
 import { SitesAdministration } from '@/features/sites/SitesAdministration'
@@ -42,7 +42,7 @@ export function registerBuiltinModals(): void {
     order: 10,
     // User administration is administrators only (the /users endpoint 403s
     // otherwise); non-admins still see the entry, disabled.
-    useEnabled: () => useMe().data?.permissions.users ?? false,
+    useEnabled: () => useAdministrationPermissions().users,
     disabledReason: t('modal.adminsOnly', 'Administrators only'),
   })
   settingsDialogRegistry.register({
@@ -52,7 +52,7 @@ export function registerBuiltinModals(): void {
     component: AccessRolesAdministration,
     // Right after the users it restricts - the two are read together.
     order: 15,
-    useEnabled: () => useMe().data?.permissions.accessRoles ?? false,
+    useEnabled: () => useAdministrationPermissions().accessRoles,
     disabledReason: t('modal.adminsOnly', 'Administrators only'),
   })
   settingsDialogRegistry.register({
@@ -61,7 +61,7 @@ export function registerBuiltinModals(): void {
     icon: 'globe',
     component: SitesAdministration,
     order: 20,
-    useEnabled: () => useMe().data?.permissions.sites ?? false,
+    useEnabled: () => useAdministrationPermissions().sites,
     disabledReason: t('modal.adminsOnly', 'Administrators only'),
   })
   settingsDialogRegistry.register({
@@ -71,7 +71,7 @@ export function registerBuiltinModals(): void {
     component: WorkspacesAdministration,
     order: 30,
     // The classic Workspaces module privilege - editors normally have it.
-    useEnabled: () => useMe().data?.permissions.workspaces ?? false,
+    useEnabled: () => useAdministrationPermissions().workspaces,
     disabledReason: t('modal.noPermission', 'Not available for your account'),
   })
 }

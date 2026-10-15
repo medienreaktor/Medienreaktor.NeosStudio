@@ -670,6 +670,14 @@
         <source>This node is deleted. Restore it to edit its properties again.</source>
         <target xml:lang="fi">Tämä solmu on poistettu. Palauta se muokataksesi sen ominaisuuksia uudelleen.</target>
       </trans-unit>
+      <trans-unit id="inspector.propertyScope.nodeAggregate" xml:space="preserve">
+        <source>The value of this property is shared across all dimension variants.</source>
+        <target xml:lang="fi">Tämän ominaisuuden arvo on yhteinen kaikille dimensiovarianteille.</target>
+      </trans-unit>
+      <trans-unit id="inspector.propertyScope.specializations" xml:space="preserve">
+        <source>Changes to this property will affect all specialization variants.</source>
+        <target xml:lang="fi">Tämän ominaisuuden muutokset vaikuttavat kaikkiin erikoistusvariantteihin.</target>
+      </trans-unit>
       <trans-unit id="inspector.savingFailed" xml:space="preserve">
         <source>Saving failed</source>
         <target xml:lang="fi">Tallennus epäonnistui</target>

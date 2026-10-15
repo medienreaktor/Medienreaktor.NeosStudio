@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { allowsWorkspaceEditing, type EffectiveAccess } from '@/api/accessRoles'
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { changeBaseWorkspace, type Workspace } from '@/api/workspaces'
+import { apiErrorDescription } from '@/api/http/errors'
+import { changeBaseWorkspace } from '@/api/neos/endpoints/workspaces'
+import { neosKeys } from '@/api/neos/keys'
+import type { Workspace } from '@/api/neos/schema'
+import { studioKeys } from '@/api/studio/keys'
+import type { EffectiveAccess } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { translate as t } from '@/lib/i18n'
+import { allowsWorkspaceEditing } from './rules'
 
 /**
  * The blocking way out of a workspace an access role no longer covers.
@@ -67,9 +70,10 @@ export function WorkspaceLockoutDialog({
   const contextBlocked = activeWorkspace !== null && !permitted(activeWorkspace)
 
   const base =
-    personalWorkspace?.baseWorkspace != null
-      ? (workspaces.find((w) => w.name === personalWorkspace.baseWorkspace) ??
-        null)
+    personalWorkspace?.baseWorkspaceName != null
+      ? (workspaces.find(
+          (w) => w.name === personalWorkspace.baseWorkspaceName,
+        ) ?? null)
       : null
   const baseBlocked = !contextBlocked && base !== null && !permitted(base)
 
@@ -78,8 +82,9 @@ export function WorkspaceLockoutDialog({
       changeBaseWorkspace(personalWorkspace!.name, target),
     onSuccess: () => {
       setError(null)
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-      queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+      queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+      queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
+      queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
     },
     onError: (mutationError) =>
       setError(
@@ -100,7 +105,7 @@ export function WorkspaceLockoutDialog({
   // out; offering one that fails on click would just move the dead end.
   const targets = workspaces.filter(
     (workspace) =>
-      workspace.classification !== 'PERSONAL' &&
+      workspace.classification !== 'personal' &&
       workspace.permissions.write &&
       permitted(workspace),
   )
@@ -151,7 +156,7 @@ export function WorkspaceLockoutDialog({
                     // A shared workspace it may write to is a collaborative
                     // context; anything else means going back to personal.
                     onSwitchEditingContext(
-                      target.classification === 'SHARED' ? target.name : null,
+                      target.classification === 'shared' ? target.name : null,
                     )
                   } else {
                     rebase.mutate(target.name)

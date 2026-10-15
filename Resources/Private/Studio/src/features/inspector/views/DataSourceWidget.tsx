@@ -1,5 +1,5 @@
-import { useDataSource } from '@/api/dataSources'
-import type { NodeDto } from '@/api/nodes'
+import { useDataSource } from '@/api/neos/endpoints/dataSources'
+import type { Node } from '@/api/neos/schema'
 import { Skeleton } from '@/components/ui/skeleton'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { translate as t } from '@/lib/i18n'
@@ -18,7 +18,7 @@ export function DataSourceWidget({
   options,
   children,
 }: {
-  node: NodeDto
+  node: Node
   options: Record<string, unknown>
   children: (data: unknown) => React.ReactNode
 }) {
@@ -29,7 +29,7 @@ export function DataSourceWidget({
   const subtitle = plainEditorOption(options, 'subtitle')
   const { data, error, isLoading } = useDataSource({
     identifier,
-    nodeAddress: node.address,
+    node,
     additionalData:
       options.arguments !== null &&
       typeof options.arguments === 'object' &&
@@ -40,7 +40,11 @@ export function DataSourceWidget({
 
   return (
     <div className="space-y-2">
-      {subtitle && <p className="text-xs text-neutral-600 dark:text-neutral-400">{subtitle}</p>}
+      {subtitle && (
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+          {subtitle}
+        </p>
+      )}
       {identifier === null ? (
         <WidgetNotice
           message={

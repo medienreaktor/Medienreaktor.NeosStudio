@@ -1,4 +1,4 @@
-import type { NodeDto } from '@/api/nodes'
+import type { Node } from '@/api/neos/schema'
 import { documentAccessState, nodePermits } from './useAccess'
 
 /** What may be done to one node, per context-menu action. */
@@ -26,7 +26,7 @@ const ALL: PermittedActions = {
  * should read as a greyed-out Delete rather than as an error after the click.
  */
 export function permittedActionsOn(
-  node: NodeDto,
+  node: Node,
   siteNodeName?: string,
 ): PermittedActions {
   if (documentAccessState(node, siteNodeName) !== 'allowed') {

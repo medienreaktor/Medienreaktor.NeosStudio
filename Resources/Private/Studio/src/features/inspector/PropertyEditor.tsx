@@ -1,11 +1,11 @@
-import type { PropertyScope } from '@/api/nodeTypes'
+import type { NodeAddress, PropertyScope } from '@/api/neos/schema'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
-import { translate as t, translateLabel } from '@/lib/i18n'
+import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type {
   InspectorProperty,
@@ -35,7 +35,7 @@ export function PropertyEditor({
   /** The property's current value (undefined if the node has none). */
   value: unknown
   /** Address of the node being edited, passed to editors that operate on the node itself (e.g. the node type switcher). */
-  nodeAddress: string
+  nodeAddress: NodeAddress
   /** Validation errors for the property's current (live) value - rendered inline below the control. */
   errors?: string[]
   onSave: (propertyName: string, value: unknown) => void
@@ -208,22 +208,26 @@ function HelpHint({ help }: { help: InspectorPropertyHelp }) {
   )
 }
 
-/**
- * English fallbacks for the classic UI's propertyScope.* hints, used when the
- * XLIFF bundle does not carry them.
- */
-const SCOPE_HINTS: Record<Exclude<PropertyScope, 'node'>, string> = {
-  nodeAggregate:
-    'The value of this property is shared across all dimension variants.',
-  specializations:
-    'Changes to this property will affect all specialization variants.',
+/** The property-scope hints, by scope: the trans-unit id and its English source. */
+const SCOPE_HINTS: Record<
+  Exclude<PropertyScope, 'node'>,
+  { id: string; fallback: string }
+> = {
+  nodeAggregate: {
+    id: 'inspector.propertyScope.nodeAggregate',
+    fallback:
+      'The value of this property is shared across all dimension variants.',
+  },
+  specializations: {
+    id: 'inspector.propertyScope.specializations',
+    fallback:
+      'Changes to this property will affect all specialization variants.',
+  },
 }
 
 /** A small icon flagging that edits to this property span dimension variants. */
 function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
-  const hint =
-    translateLabel(`Neos.Neos.Ui:Main:propertyScope.${scope}`) ??
-    SCOPE_HINTS[scope]
+  const hint = t(SCOPE_HINTS[scope].id, SCOPE_HINTS[scope].fallback)
   return (
     <HintPopover
       icon="fa-right-left"

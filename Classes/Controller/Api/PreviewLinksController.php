@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller\Api;
 
-use Medienreaktor\NeosStudio\Service\NodeAddressCodec;
+use Medienreaktor\NeosStudio\Service\NodeAddresses;
 use Medienreaktor\NeosStudio\Service\WorkspaceSerializer;
 use Medienreaktor\NeosStudio\Domain\Model\PreviewLink;
 use Medienreaktor\NeosStudio\Service\PreviewLinkService;
@@ -48,7 +48,9 @@ class PreviewLinksController extends AbstractStudioApiController
     }
 
     /**
-     * POST /api/preview-links - body: {"node": "<address>", "label"?: "...", "ttlHours"?: 48}
+     * POST /api/preview-links - body: {"contentRepositoryId": "...",
+     * "workspaceName": "...", "dimensionSpacePoint": "{...}", "nodeAggregateId":
+     * "...", "label"?: "...", "ttlHours"?: 48}
      *
      * Responds with the link plus its "shareUrl" - the only time the URL is
      * available: the secret is stored hashed, re-reading it is impossible by
@@ -61,10 +63,10 @@ class PreviewLinksController extends AbstractStudioApiController
         $user = $this->requireUser();
 
         $body = json_decode((string)$this->request->getHttpRequest()->getBody(), true);
-        if (!is_array($body) || !is_string($body['node'] ?? null)) {
-            $this->throwJsonStatus(400, 'invalid_request', 'Request body must be a JSON object with a "node" address.');
+        if (!is_array($body)) {
+            $this->throwJsonStatus(400, 'invalid_request', 'Request body must be a JSON object with the node address.');
         }
-        $address = $this->decodeNodeAddress($body['node']);
+        $address = $this->nodeAddressFrom($body);
 
         if (!$this->workspaceSerializer->canRead($this->getContentRepositoryId(), $address->workspaceName)) {
             $this->throwJsonStatus(403, 'insufficient_workspace_permissions', sprintf('You lack read access on workspace "%s".', $address->workspaceName->value));
@@ -139,8 +141,7 @@ class PreviewLinksController extends AbstractStudioApiController
         return [
             'id' => $link->id,
             'label' => $link->label,
-            'node' => NodeAddressCodec::encode($link->nodeAddress()),
-            'workspaceName' => $link->workspaceName->value,
+            ...NodeAddresses::toArray($link->nodeAddress()),
             'createdAt' => $link->createdAt->format(\DateTimeInterface::ATOM),
             'expiresAt' => $link->expiresAt->format(\DateTimeInterface::ATOM),
         ];

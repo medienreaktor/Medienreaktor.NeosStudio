@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
-import { fetchNode } from '@/api/nodes'
-import {
-  useWorkspaces,
-  useWorkspaceTrash,
-  type WorkspaceTrashItem,
-} from '@/api/workspaces'
+import { fetchNode } from '@/api/neos/endpoints/nodes'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import { useWorkspaceTrash } from '@/api/studio/endpoints/workspaces'
+import type { WorkspaceTrashItem } from '@/api/studio/schema'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -41,13 +39,13 @@ export function TrashPanel() {
     useState<WorkspaceTrashItem | null>(null)
 
   const canWrite =
-    workspaces?.workspaces.find((workspace) => workspace.name === workspaceName)
+    workspaces?.find((workspace) => workspace.name === workspaceName)
       ?.permissions.write ?? false
-  const outdated = data?.status === 'OUTDATED'
+  const outdated = data?.status === 'outdated'
 
   // Scoped to the active site like the review dialog, including entries whose
   // site could not be resolved - never silently hide a deleted page.
-  const siteId = site?.aggregateId ?? null
+  const siteId = site?.nodeAggregateId ?? null
   const items = useMemo(() => {
     const all = data?.items ?? []
     return all.filter(
@@ -134,7 +132,7 @@ export function TrashPanel() {
         <TrashRow
           key={item.nodeAggregateId}
           item={item}
-          selected={selectedDocument?.aggregateId === item.nodeAggregateId}
+          selected={selectedDocument?.nodeAggregateId === item.nodeAggregateId}
           onSelect={() => select(item)}
           disabled={!canWrite || outdated || restore.isPending}
           restoring={
@@ -217,7 +215,9 @@ function TrashRow({
     <div
       className={cn(
         'group flex items-center gap-1 rounded-sm border border-transparent pr-1',
-        selected ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800' : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
+        selected
+          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
+          : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
       )}
     >
       <button

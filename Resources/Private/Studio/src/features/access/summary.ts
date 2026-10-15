@@ -1,4 +1,4 @@
-import type { AccessRoleConstraints } from '@/api/accessRoles'
+import type { AccessRoleConstraints } from '@/api/studio/schema'
 import { translate as t } from '@/lib/i18n'
 
 /** One badge in the role listing: what this role narrows, in a word. */

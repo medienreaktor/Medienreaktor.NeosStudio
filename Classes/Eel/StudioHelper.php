@@ -13,6 +13,7 @@ use Neos\Eel\ProtectedContextAwareInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Locale;
 use Neos\Flow\I18n\Translator;
+use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Service\UserService;
@@ -209,6 +210,25 @@ class StudioHelper implements ProtectedContextAwareInterface
         }
 
         return count($imageProperties) === 1 ? $imageProperties[0] : null;
+    }
+
+    /**
+     * Whether the request renders for the Studio: a full page served by the
+     * Studio's own PreviewController, or a single element rendered out-of-band
+     * through Neos.Api's views (below /api/views/), which the Studio swaps into
+     * the live page after an edit. Both need identical markup. Neos.Api builds
+     * its render request without a controller, so it is told by its path.
+     */
+    public function isStudioRender(?ActionRequest $request): bool
+    {
+        if ($request === null) {
+            return false;
+        }
+        if ($request->getControllerPackageKey() === 'Medienreaktor.NeosStudio') {
+            return true;
+        }
+        return $request->getControllerPackageKey() === ''
+            && str_starts_with($request->getHttpRequest()->getUri()->getPath(), '/api/views/');
     }
 
     /**

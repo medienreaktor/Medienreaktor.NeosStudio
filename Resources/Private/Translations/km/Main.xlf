@@ -670,6 +670,14 @@
         <source>This node is deleted. Restore it to edit its properties again.</source>
         <target xml:lang="km">ថ្នាំងនេះត្រូវបានលុប។ ស្ដារវាឡើងវិញ ដើម្បីកែសម្រួលលក្ខណសម្បត្តិរបស់វាម្ដងទៀត។</target>
       </trans-unit>
+      <trans-unit id="inspector.propertyScope.nodeAggregate" xml:space="preserve">
+        <source>The value of this property is shared across all dimension variants.</source>
+        <target xml:lang="km">តម្លៃនៃលក្ខណៈសម្បត្តិនេះត្រូវបានចែករំលែកនៅគ្រប់វ៉ារ្យ៉ង់វិមាត្រទាំងអស់។</target>
+      </trans-unit>
+      <trans-unit id="inspector.propertyScope.specializations" xml:space="preserve">
+        <source>Changes to this property will affect all specialization variants.</source>
+        <target xml:lang="km">ការផ្លាស់ប្តូរលក្ខណៈសម្បត្តិនេះនឹងប៉ះពាល់ដល់វ៉ារ្យ៉ង់ឯកទេសទាំងអស់។</target>
+      </trans-unit>
       <trans-unit id="inspector.savingFailed" xml:space="preserve">
         <source>Saving failed</source>
         <target xml:lang="km">ការរក្សាទុកបានបរាជ័យ</target>

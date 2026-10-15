@@ -670,6 +670,14 @@
         <source>This node is deleted. Restore it to edit its properties again.</source>
         <target xml:lang="es">Este nodo está eliminado. Restáurelo para volver a editar sus propiedades.</target>
       </trans-unit>
+      <trans-unit id="inspector.propertyScope.nodeAggregate" xml:space="preserve">
+        <source>The value of this property is shared across all dimension variants.</source>
+        <target xml:lang="es">El valor de esta propiedad se comparte entre todas las variantes de dimensión.</target>
+      </trans-unit>
+      <trans-unit id="inspector.propertyScope.specializations" xml:space="preserve">
+        <source>Changes to this property will affect all specialization variants.</source>
+        <target xml:lang="es">Los cambios en esta propiedad afectarán a todas las variantes de especialización.</target>
+      </trans-unit>
       <trans-unit id="inspector.savingFailed" xml:space="preserve">
         <source>Saving failed</source>
         <target xml:lang="es">Error al guardar</target>

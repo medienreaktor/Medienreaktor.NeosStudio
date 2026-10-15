@@ -9,7 +9,6 @@ use Neos\ContentRepository\Core\DimensionSpace\OriginDimensionSpacePointSet;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\Projection\ContentGraph\NodeAggregate;
-use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Domain\Model\UserId;
@@ -130,7 +129,7 @@ class WorkspaceTrashService
                 // exactly what a client showing this entry does when it wants
                 // to look at the page before restoring it.
                 'nodeAddress' => $node !== null
-                    ? NodeAddressCodec::encode(NodeAddress::fromNode($node))
+                    ? NodeAddresses::toArray($node)
                     : null,
                 'label' => $node !== null
                     ? $context->label($node)

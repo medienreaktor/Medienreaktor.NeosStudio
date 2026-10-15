@@ -1,4 +1,6 @@
-import { useConflictDetails, type RebaseConflict } from '@/api/workspaces'
+import { useMemo } from 'react'
+import type { ConflictingChange, NodeAddress } from '@/api/neos/schema'
+import { useConflictDetails } from '@/api/studio/endpoints/workspaces'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,9 +12,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+type ChangeKind = 'created' | 'changed' | 'moved' | 'deleted'
+
 /** Icon + past-tense verb per type of change, mirroring the change badges. */
 const TYPE_META: Record<
-  NonNullable<RebaseConflict['typeOfChange']>,
+  ChangeKind,
   { icon: string; verbKey: string; verb: string }
 > = {
   created: {
@@ -37,7 +41,62 @@ const TYPE_META: Record<
   },
 }
 
-function reasonText(conflict: RebaseConflict): string {
+/** Neos.Api's typeOfChange ("node_has_been_changed") as a change kind. */
+function changeKind(typeOfChange: string | null): ChangeKind | null {
+  const kind = (typeOfChange ?? '').replace(/^node_has_been_/, '')
+  return kind === 'created' ||
+    kind === 'changed' ||
+    kind === 'moved' ||
+    kind === 'deleted'
+    ? kind
+    : null
+}
+
+/** A conflicting change with the labels and document the Studio resolved for it. */
+interface ResolvedConflict extends ConflictingChange {
+  nodeLabel: string | null
+  documentLabel: string | null
+  documentAddress: NodeAddress | null
+}
+
+/**
+ * The conflicts with their labels and document addresses filled in - Neos.Api
+ * names conflicting nodes by id only; the Studio resolves them in the
+ * workspace (useConflictDetails). Until that answer arrives (or when it
+ * fails) the conflicts come back without them.
+ */
+function useResolvedConflicts(
+  workspaceName: string | null,
+  conflicts: ConflictingChange[],
+): ResolvedConflict[] {
+  const { data: details } = useConflictDetails(
+    workspaceName,
+    conflicts
+      .map((conflict) => conflict.nodeAggregateId)
+      .filter((id): id is string => id !== null),
+  )
+  return useMemo(() => {
+    const byId = new Map(
+      (details ?? []).map((detail) => [detail.nodeAggregateId, detail]),
+    )
+    return conflicts.map((conflict) => {
+      const detail =
+        conflict.nodeAggregateId !== null
+          ? byId.get(conflict.nodeAggregateId)
+          : undefined
+      return {
+        ...conflict,
+        documentAggregateId:
+          conflict.documentAggregateId ?? detail?.documentAggregateId ?? null,
+        nodeLabel: detail?.nodeLabel ?? null,
+        documentLabel: detail?.documentLabel ?? null,
+        documentAddress: detail?.documentAddress ?? null,
+      }
+    })
+  }, [conflicts, details])
+}
+
+function reasonText(conflict: ConflictingChange): string {
   if (conflict.reason === 'node_has_been_deleted') {
     return t(
       'workspace.conflict.nodeDeleted',
@@ -74,16 +133,17 @@ export function ConflictResolutionDialog({
    * the conflicts (Neos.Api reports them by id only).
    */
   workspaceName: string | null
-  conflicts: RebaseConflict[]
-  /** True for partial_publish_conflicts, where forcing is not a valid remedy. */
+  /** Neos.Api's conflicting changes (WorkspaceConflictProblem.conflicts). */
+  conflicts: ConflictingChange[]
+  /** True for a "partial" conflict problem, where forcing is not a valid remedy. */
   partial: boolean
   busy: boolean
   onCancel: () => void
   onForce?: () => void
   onDiscardAll?: () => void
-  onNavigate?: (documentAddress: string) => void
+  onNavigate?: (documentAddress: NodeAddress) => void
 }) {
-  const conflicts = useConflictDetails(
+  const conflicts = useResolvedConflicts(
     open ? workspaceName : null,
     reportedConflicts,
   )
@@ -113,9 +173,8 @@ export function ConflictResolutionDialog({
 
         <ul className="flex max-h-64 flex-col gap-px overflow-y-auto">
           {conflicts.map((conflict, index) => {
-            const meta = conflict.typeOfChange
-              ? TYPE_META[conflict.typeOfChange]
-              : undefined
+            const kind = changeKind(conflict.typeOfChange)
+            const meta = kind ? TYPE_META[kind] : undefined
             const title =
               conflict.nodeLabel ??
               conflict.documentLabel ??

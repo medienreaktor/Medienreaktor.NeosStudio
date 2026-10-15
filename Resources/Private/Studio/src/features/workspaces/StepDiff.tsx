@@ -1,10 +1,9 @@
-import {
-  useWorkspacePendingEventsDiff,
-  type WorkspaceDocumentDiffNode,
-  type WorkspacePendingDiffChange,
-  type WorkspacePendingDiffEvent,
-  type WorkspacePendingStep,
-} from '@/api/workspaces'
+import { useWorkspacePendingEventsDiff } from '@/api/studio/endpoints/workspaces'
+import type {
+  WorkspaceDocumentDiffNode,
+  WorkspacePendingDiffChange,
+  WorkspacePendingDiffEvent,
+} from '@/api/studio/schema'
 import { Spinner } from '@/components/ui/spinner'
 import { translate as t, translateLabel } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -16,6 +15,7 @@ import {
   TONE_TEXT_CLASSES,
   type ChangeTone,
 } from './historyLabels'
+import type { WorkspacePendingStep } from './pendingSteps'
 
 /**
  * The before/after diff of one editing step, lazily fetched from the

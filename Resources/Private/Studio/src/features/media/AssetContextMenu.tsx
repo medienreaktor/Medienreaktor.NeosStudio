@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { deleteAsset, isAssetInUse, type MediaAsset } from '@/api/media'
+import { deleteAsset, isAssetInUse } from '@/api/neos/endpoints/assets'
+import type { Asset } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import {
   DropdownMenu,
@@ -13,7 +14,7 @@ import { ReplaceAssetDialog } from './ReplaceAssetDialog'
 
 /** The asset a right-click context menu was opened for. */
 export interface AssetMenuTarget {
-  asset: MediaAsset
+  asset: Asset
   /** Viewport point the right-click happened at, to anchor the menu. */
   anchor: { x: number; y: number }
 }
@@ -50,10 +51,10 @@ export function AssetContextMenu({
   target: AssetMenuTarget | null
   onClose: () => void
   /** Opens the asset details dialog. */
-  onEdit: (asset: MediaAsset) => void
+  onEdit: (asset: Asset) => void
 }) {
-  const [deleting, setDeleting] = useState<MediaAsset | null>(null)
-  const [replacing, setReplacing] = useState<MediaAsset | null>(null)
+  const [deleting, setDeleting] = useState<Asset | null>(null)
+  const [replacing, setReplacing] = useState<Asset | null>(null)
 
   const writable =
     target !== null &&

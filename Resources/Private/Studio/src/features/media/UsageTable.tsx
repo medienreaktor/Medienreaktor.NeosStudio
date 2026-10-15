@@ -1,4 +1,4 @@
-import { useAssetUsage } from '@/api/media'
+import { useAssetUsages } from '@/api/neos/endpoints/assets'
 import { translate as t } from '@/lib/i18n'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -10,7 +10,7 @@ export function UsageTable({
   assetSourceId: string
   assetId: string
 }) {
-  const usage = useAssetUsage(assetSourceId, assetId)
+  const usage = useAssetUsages(assetSourceId, assetId)
 
   if (usage.isLoading) {
     return <Skeleton className="h-16 w-full" />

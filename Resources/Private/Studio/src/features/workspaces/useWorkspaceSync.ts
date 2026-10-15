@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { isConflict } from '@/api/http/errors'
 import {
   changeBaseWorkspace,
   discardWorkspace,
-  getRebaseConflicts,
-  isWorkspaceNotEmptyError,
   rebaseWorkspace,
-  type RebaseConflicts,
-} from '@/api/workspaces'
-import { queryKeys } from '@/api/keys'
+  workspaceConflicts,
+} from '@/api/neos/endpoints/workspaces'
+import { neosKeys } from '@/api/neos/keys'
+import type { WorkspaceConflictProblem } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
-/** A failed rebase's conflicts, remembering which workspace they belong to
- * (callers can sync any workspace, not just the active one). */
-export interface SyncConflicts extends RebaseConflicts {
+/** A failed rebase's conflict problem, remembering which workspace it
+ * belongs to (callers can sync any workspace, not just the active one). */
+export interface SyncConflicts extends WorkspaceConflictProblem {
   workspaceName: string
 }
 
@@ -42,9 +43,9 @@ export function useWorkspaceSync() {
     // The rebase/discard rewrote the workspace's content stream: the status
     // flag and its pending events are stale in any case; node reads and tree
     // items only matter for the workspace being edited.
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void invalidateWorkspaceQueries()
     if (workspaceName === activeWorkspaceName) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
       workspaceContentChanged()
     }
   }
@@ -64,7 +65,7 @@ export function useWorkspaceSync() {
     },
     onError: (error, { workspaceName }) => {
       // Conflicts aren't a failure - they route to the resolution dialog.
-      const conflict = getRebaseConflicts(error)
+      const conflict = workspaceConflicts(error)
       if (conflict) setConflicts({ ...conflict, workspaceName })
       else
         toast.error(error, {
@@ -92,7 +93,8 @@ export function useWorkspaceSync() {
       toast.success(t('workspace.baseChanged', 'Base workspace changed.'))
     },
     onError: (error) => {
-      const notEmpty = isWorkspaceNotEmptyError(error)
+      // Neos.Api answers the not-clean case - and only it - with a 409.
+      const notEmpty = isConflict(error)
       toast.error(
         notEmpty
           ? t(

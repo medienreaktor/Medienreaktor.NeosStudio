@@ -347,9 +347,12 @@ class TasksController extends AbstractStudioApiController
             'createdBy' => $task->createdByUserId?->value,
             'createdAt' => $task->createdAt->format(\DateTimeInterface::ATOM),
             'commentCount' => $commentCount ?? $this->taskWorkspaceService->countComments($this->getContentRepositoryId(), $task->workspaceName),
+            // Neos.Api's Workspace schema; publishing is the base's write permission.
             'workspace' => $workspace !== null
                 ? $this->workspaceSerializer->serialize($this->getContentRepositoryId(), $workspace)
                 : null,
+            'canPublish' => $workspace !== null
+                && $this->workspaceSerializer->canPublish($this->getContentRepositoryId(), $workspace),
         ];
     }
 }

@@ -3,11 +3,11 @@ import type {
   EditingElement,
   PresenceUser,
   WorkspaceFeedEvent,
-} from '@/api/collaboration'
+} from '@/api/studio/schema'
 import {
-  dimensionSpacePointEquals,
-  type DimensionSpacePoint,
-} from '@/api/dimensions'
+  parseDimensionSpacePoint,
+  sameDimensionSpacePoint,
+} from '@/api/neos/schema'
 import { config } from '@/config'
 import { publishRemoteLiveEdit, subscribeLocalLiveEdits } from './liveEdits'
 import { startPollingTransport } from './pollingTransport'
@@ -64,7 +64,8 @@ export function CollaborationBridge({
   ownUserId: string | null
   documentAggregateId: string | null
   focusedAggregateId: string | null
-  dimensionSpacePoint: DimensionSpacePoint | null
+  /** The viewed dimension space point (JSON, as in a NodeAddress). */
+  dimensionSpacePoint: string | null
   /** The inline text being edited right now - announced as the edit lock. */
   editingElement: EditingElement | null
   onPresence: (state: { peers: PresencePeer[]; you: string | null }) => void
@@ -84,18 +85,21 @@ export function CollaborationBridge({
     onRemoteContentChange,
     onRemoteWorkspaceChange,
   }
-  const positionRef = useRef({
+  // The position as the transports announce it: the sidecar's roster carries
+  // the dimension space point as coordinates.
+  const position = {
     documentAggregateId,
     focusedAggregateId,
-    dimensionSpacePoint,
-    editingElement,
-  })
-  positionRef.current = {
-    documentAggregateId,
-    focusedAggregateId,
-    dimensionSpacePoint,
+    dimensionSpacePoint:
+      dimensionSpacePoint === null
+        ? null
+        : parseDimensionSpacePoint(dimensionSpacePoint),
     editingElement,
   }
+  const positionRef = useRef(position)
+  positionRef.current = position
+  const dimensionSpacePointRef = useRef(dimensionSpacePoint)
+  dimensionSpacePointRef.current = dimensionSpacePoint
   const ownUserIdRef = useRef(ownUserId)
   ownUserIdRef.current = ownUserId
   // Serialized last roster - identical reports do not re-render the app.
@@ -125,13 +129,13 @@ export function CollaborationBridge({
     }
 
     const affectsCurrentDimension = (event: WorkspaceFeedEvent): boolean => {
-      const current = positionRef.current.dimensionSpacePoint
+      const current = dimensionSpacePointRef.current
       // No own dimension resolved yet, or the event names none: be generous
       // and refresh - a spurious refresh is cheap, a missed one is a lie.
       if (current === null || event.dimensionSpacePoints.length === 0)
         return true
       return event.dimensionSpacePoints.some((point) =>
-        dimensionSpacePointEquals(point, current),
+        sameDimensionSpacePoint(JSON.stringify(point), current),
       )
     }
 

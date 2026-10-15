@@ -1,11 +1,12 @@
-import type {
-  InspectorGroupConfig,
-  InspectorTabConfig,
-  InspectorViewConfig,
-  NodeTypeSchemaDto,
-  PropertyConfig,
-  PropertyScope,
-} from '@/api/nodeTypes'
+import {
+  nodeTypeConfiguration,
+  type InspectorGroupConfig,
+  type InspectorTabConfig,
+  type InspectorViewConfig,
+  type NodeType,
+  type PropertyConfig,
+  type PropertyScope,
+} from '@/api/neos/schema'
 import { translateLabel } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
 
@@ -209,21 +210,21 @@ const DATA_TYPE_EDITOR_OPTIONS: Record<string, Record<string, unknown>> = {
 }
 
 /**
- * Builds the inspector structure for one node type: tabs containing groups
+ * Builds the inspector structure for one node type (read with its
+ * configuration, see useNodeType): tabs containing groups
  * containing items (editable properties and read-only views, interleaved by
  * their configured position - the old UI's ordering), each level sorted by
  * position. Only properties/views assigned to a group appear (the Neos rule
  * for inspector visibility); groups without items and tabs without groups are
  * dropped.
  */
-export function buildInspectorSchema(
-  schema: NodeTypeSchemaDto,
-): InspectorTab[] {
-  const properties = schema.configuration.properties ?? {}
-  const references = schema.configuration.references ?? {}
-  const tabsConfig = schema.configuration.ui?.inspector?.tabs ?? {}
-  const groupsConfig = schema.configuration.ui?.inspector?.groups ?? {}
-  const viewsConfig = schema.configuration.ui?.inspector?.views ?? {}
+export function buildInspectorSchema(nodeType: NodeType): InspectorTab[] {
+  const configuration = nodeTypeConfiguration(nodeType)
+  const properties = configuration.properties ?? {}
+  const references = configuration.references ?? {}
+  const tabsConfig = configuration.ui?.inspector?.tabs ?? {}
+  const groupsConfig = configuration.ui?.inspector?.groups ?? {}
+  const viewsConfig = configuration.ui?.inspector?.views ?? {}
 
   const propertiesByGroup = new Map<
     string,

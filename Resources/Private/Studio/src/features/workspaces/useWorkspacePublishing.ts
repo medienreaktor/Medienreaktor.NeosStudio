@@ -1,27 +1,31 @@
 import { useState } from 'react'
-import { allowsPublishToLive } from '@/api/accessRoles'
 import { useMutation } from '@tanstack/react-query'
 import {
+  canPublish,
   discardWorkspace,
-  getRebaseConflicts,
   publishWorkspace,
   rebaseWorkspace,
-  type RebaseConflicts,
-  type Workspace,
-  type WorkspaceOperationFilter,
-} from '@/api/workspaces'
-import { queryKeys } from '@/api/keys'
+  workspaceConflicts,
+} from '@/api/neos/endpoints/workspaces'
+import { neosKeys } from '@/api/neos/keys'
+import type {
+  Workspace,
+  WorkspaceConflictProblem,
+  WorkspacePublish,
+} from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { allowsPublishToLive } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 /**
  * Whether the account may publish `workspace` into its base. Two gates: the
- * content repository's own (`permissions.publish` = write on the base - for
- * live that is what the Neos.Neos:LivePublisher role grants) and the Studio
- * access role's "may publish to live", which restricts ROOT bases only -
+ * content repository's own (canPublish = write on the base - for live that is
+ * what the Neos.Neos:LivePublisher role grants) and the Studio access role's
+ * "may publish to live", which restricts root bases only -
  * publishing into a shared review workspace stays open to editors who may not
  * go live themselves. Reviewing needs neither.
  */
@@ -30,17 +34,22 @@ export function useCanPublish(
   workspaces: Workspace[],
 ): boolean {
   const access = useAccess()
-  if (!workspace?.permissions.publish) return false
+  if (!workspace || !canPublish(workspace, workspaces)) return false
   const publishesToRoot =
-    workspaces.find((candidate) => candidate.name === workspace.baseWorkspace)
-      ?.classification === 'ROOT'
+    workspaces.find(
+      (candidate) => candidate.name === workspace.baseWorkspaceName,
+    )?.classification === 'root'
   return !publishesToRoot || allowsPublishToLive(access)
 }
 
-/** A publish/discard, optionally scoped; no filter = the whole workspace. */
+/**
+ * A publish/discard, optionally scoped to a site or documents (Neos.Api's
+ * WorkspacePublish, which a discard takes alike); no scope = the whole
+ * workspace.
+ */
 export interface WorkspaceOperation {
   kind: 'publish' | 'discard'
-  filter?: WorkspaceOperationFilter
+  scope?: WorkspacePublish
 }
 
 /**
@@ -60,27 +69,26 @@ export function useWorkspacePublishing(workspaceName: string) {
   // A publish that hit a conflict, plus the operation that triggered it (so the
   // resolution can retry it). The conflict dialog is open while set.
   const [pendingConflict, setPendingConflict] = useState<{
-    conflicts: RebaseConflicts
+    conflicts: WorkspaceConflictProblem
     op: WorkspaceOperation
   } | null>(null)
 
   const invalidateWorkspace = () => {
     // Covers the changes queries (badges, counts) and the workspace list's
     // hasPublishableChanges flag.
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void invalidateWorkspaceQueries()
     // Publishing rebases the workspace onto the new base (changes published by
     // others flow in) and discarding rewrites its content - cached node reads
     // are stale either way, and every loaded tree item needs a re-read
     // (per-item caches in the trees never expire on their own).
-    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
     workspaceContentChanged()
   }
 
   const operation = useMutation({
     mutationFn: async (op: WorkspaceOperation): Promise<void> => {
-      if (op.kind === 'publish')
-        await publishWorkspace(workspaceName, op.filter)
-      else await discardWorkspace(workspaceName, op.filter)
+      if (op.kind === 'publish') await publishWorkspace(workspaceName, op.scope)
+      else await discardWorkspace(workspaceName, op.scope)
     },
     onSuccess: (_data, op) => {
       invalidateWorkspace()
@@ -93,7 +101,7 @@ export function useWorkspacePublishing(workspaceName: string) {
     onError: (error, op) => {
       // A publish that collides with the base is not a plain failure - route it
       // to the resolution dialog. Everything else is a toast.
-      const conflicts = getRebaseConflicts(error)
+      const conflicts = workspaceConflicts(error)
       if (conflicts && op.kind === 'publish') {
         setPendingConflict({ conflicts, op })
         return
@@ -113,7 +121,7 @@ export function useWorkspacePublishing(workspaceName: string) {
   const resolve = useMutation({
     mutationFn: async (action: 'force' | 'discardAll'): Promise<void> => {
       if (action === 'discardAll') {
-        await discardWorkspace(workspaceName, pendingConflict?.op.filter)
+        await discardWorkspace(workspaceName, pendingConflict?.op.scope)
         return
       }
       await rebaseWorkspace(workspaceName, 'force')
@@ -121,9 +129,9 @@ export function useWorkspacePublishing(workspaceName: string) {
       // is left to publish (they were all conflicting), that is success, not an
       // error - only a fresh conflict is worth re-surfacing.
       try {
-        await publishWorkspace(workspaceName, pendingConflict?.op.filter)
+        await publishWorkspace(workspaceName, pendingConflict?.op.scope)
       } catch (error) {
-        if (getRebaseConflicts(error)) throw error
+        if (workspaceConflicts(error)) throw error
       }
     },
     onSuccess: (_data, action) => {
@@ -139,7 +147,7 @@ export function useWorkspacePublishing(workspaceName: string) {
       )
     },
     onError: (error) => {
-      const conflicts = getRebaseConflicts(error)
+      const conflicts = workspaceConflicts(error)
       if (conflicts && pendingConflict) {
         setPendingConflict({ conflicts, op: pendingConflict.op })
         return

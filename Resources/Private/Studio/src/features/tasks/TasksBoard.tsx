@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
+import { apiErrorDescription } from '@/api/http/errors'
+import { studioKeys } from '@/api/studio/keys'
+import { useUsers } from '@/api/neos/endpoints/users'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
 import {
-  allowedTargets,
   deleteTask,
   transitionTask,
   useTasks,
-  type Task,
-  type TaskStatus,
-} from '@/api/tasks'
-import { useUsers } from '@/api/users'
-import { useWorkspaces } from '@/api/workspaces'
+} from '@/api/studio/endpoints/tasks'
+import type { Task, TaskStatus } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { Badge } from '@/components/ui/badge'
@@ -33,12 +31,14 @@ import {
   presenceInitials,
 } from '@/features/collaboration/presenceColors'
 import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 import { taskStatusColor } from './status'
 import { CreateTaskDialog } from './CreateTaskDialog'
 import { consumeTaskFocus, usePendingTaskFocus } from './focus'
 import { TaskDetailDialog } from './TaskDetailDialog'
 import { TaskViewDialog } from './TaskViewDialog'
+import { allowedTargets } from './transitions'
 
 const COLUMNS: { status: TaskStatus; title: () => string }[] = [
   { status: 'OPEN', title: () => t('tasks.columnOpen', 'Open') },
@@ -59,7 +59,7 @@ const COLUMNS: { status: TaskStatus; title: () => string }[] = [
 export function TasksBoard() {
   const studio = useStudio()
   const { data, isLoading, error } = useTasks()
-  const users = useUsers().data?.users
+  const users = useUsers().data
   const { data: workspacesData } = useWorkspaces()
   const [dragged, setDragged] = useState<Task | null>(null)
   const [creating, setCreating] = useState(false)
@@ -68,7 +68,7 @@ export function TasksBoard() {
   const [deleting, setDeleting] = useState<Task | null>(null)
   const [reviewing, setReviewing] = useState<Task | null>(null)
 
-  const workspaces = workspacesData?.workspaces ?? []
+  const workspaces = workspacesData ?? []
   const activeWorkspace =
     workspaces.find((workspace) => workspace.name === studio.workspaceName) ??
     null
@@ -77,7 +77,7 @@ export function TasksBoard() {
   // the board's 30s poll. Content edits invalidate the workspaces query
   // immediately (persistProperty/nodeActions), so prefer its live object -
   // the pending-changes dot must not lag a poll interval behind.
-  const tasks = (data?.tasks ?? []).map((task) => ({
+  const tasks = (data ?? []).map((task) => ({
     ...task,
     workspace:
       workspaces.find((workspace) => workspace.name === task.workspaceName) ??
@@ -91,7 +91,7 @@ export function TasksBoard() {
   const pendingFocus = usePendingTaskFocus()
   useEffect(() => {
     if (pendingFocus === null || data === undefined) return
-    const task = data.tasks.find(
+    const task = data.find(
       (candidate) => candidate.workspaceName === pendingFocus,
     )
     if (task) setViewing(task)
@@ -102,8 +102,8 @@ export function TasksBoard() {
     userId ? (users?.find((user) => user.id === userId)?.label ?? null) : null
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all })
+    void invalidateWorkspaceQueries()
   }
 
   const move = useMutation({

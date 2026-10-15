@@ -6,7 +6,8 @@ import ReactCrop, {
 } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 
-import { createImageVariant, type CropRect, type MediaAsset } from '@/api/media'
+import { createImageVariant } from '@/api/neos/endpoints/assets'
+import type { Asset, CropRectangle } from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -55,12 +56,12 @@ interface ImageCropDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** The original image to crop - never a variant, so the crop is not compounded. */
-  original: MediaAsset | null
+  original: Asset | null
   /** The current crop (original pixels) to prefill when re-cropping. */
-  initialCrop?: CropRect | null
+  initialCrop?: CropRectangle | null
   config: CropConfig
   /** Called with the freshly created variant once the crop is applied. */
-  onApply: (variant: MediaAsset) => void
+  onApply: (variant: Asset) => void
 }
 
 /**
@@ -180,7 +181,7 @@ export function ImageCropDialog({
 
   async function apply() {
     if (!original || !crop || !dimsKnown) return
-    const pixels: CropRect = {
+    const pixels: CropRectangle = {
       x: Math.round((crop.x / 100) * width!),
       y: Math.round((crop.y / 100) * height!),
       width: Math.round((crop.width / 100) * width!),

@@ -1,6 +1,6 @@
 import * as React from 'react'
-import type { NodeDto } from '@/api/nodes'
-import type { NodeTypeMap } from '@/api/nodeTypes'
+import type { NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
+import type { Node } from '@/api/neos/schema'
 
 /**
  * The node-decorator registry: how tree rows (document tree, content
@@ -68,7 +68,7 @@ export interface NodeDecoratorDefinition {
    * (derive from the node object: tags, properties, nodeType).
    */
   decorate: (
-    node: NodeDto,
+    node: Node,
     context: NodeDecorationContext,
   ) => NodeDecoration | null
 }
@@ -135,7 +135,7 @@ export interface MergedNodeDecoration {
  * take the trees down with it.
  */
 export function mergeNodeDecorations(
-  node: NodeDto,
+  node: Node,
   context: NodeDecorationContext,
   decorators: NodeDecoratorDefinition[],
 ): MergedNodeDecoration {

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useWorkspaceChanges } from '@/api/workspaces'
+import { useWorkspaceChanges } from '@/api/neos/endpoints/workspaces'
 
 export interface PendingChanges {
   workspace: string

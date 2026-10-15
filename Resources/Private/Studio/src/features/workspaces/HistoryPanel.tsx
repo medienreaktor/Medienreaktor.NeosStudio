@@ -1,15 +1,12 @@
 import { useMemo, useState } from 'react'
-import { addressWithAggregateId } from '@/api/nodeAddress'
-import {
-  groupPendingEvents,
-  useWorkspacesPendingEvents,
-  type WorkspacePendingStep,
-} from '@/api/workspaces'
+import { nodeAddressOf } from '@/api/neos/schema'
+import { useWorkspacesPendingEvents } from '@/api/studio/endpoints/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
 import { HistoryStepRow } from './HistoryStepRow'
+import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
 
 /**
  * The History panel: the unpublished history of the page being edited, newest
@@ -36,7 +33,7 @@ import { HistoryStepRow } from './HistoryStepRow'
  */
 export function HistoryPanel() {
   const { workspaceName, selectedDocument, inspectAddress } = useStudio()
-  const documentId = selectedDocument?.aggregateId ?? null
+  const documentId = selectedDocument?.nodeAggregateId ?? null
   const { byWorkspace, isLoading } = useWorkspacesPendingEvents(
     workspaceName !== null ? [workspaceName] : [],
   )
@@ -65,9 +62,10 @@ export function HistoryPanel() {
       (event) => event.nodeAggregateId !== null,
     )?.nodeAggregateId
     if (aggregateId == null || selectedDocument === null) return
-    inspectAddress(
-      addressWithAggregateId(selectedDocument.address, aggregateId),
-    )
+    inspectAddress({
+      ...nodeAddressOf(selectedDocument),
+      nodeAggregateId: aggregateId,
+    })
   }
 
   if (workspaceName === null || selectedDocument === null || isLoading) {
@@ -91,7 +89,7 @@ export function HistoryPanel() {
           key={step.id}
           workspaceName={workspaceName}
           step={step}
-          documentId={selectedDocument.aggregateId}
+          documentId={selectedDocument.nodeAggregateId}
           expanded={expandedId === step.id}
           onToggle={() => {
             const next = expandedId === step.id ? null : step.id

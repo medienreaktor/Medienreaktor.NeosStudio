@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react'
 
-import type { MediaAsset } from '@/api/media'
+import type { Asset } from '@/api/neos/schema'
 import { usePanelSwitcher } from '@/features/panels/PanelSystem'
 
 /**
@@ -37,7 +37,7 @@ export interface AssetPickerRequest {
   /** The field the pick is for, shown in the picker banner (e.g. the property label). */
   title?: string
   /** Called with the chosen asset when the user picks one. */
-  onPick: (asset: MediaAsset) => void
+  onPick: (asset: Asset) => void
 }
 
 interface AssetPickerContextValue {
@@ -46,7 +46,7 @@ interface AssetPickerContextValue {
   /** Open the Media Library in picker mode for `request`. */
   requestPick: (request: AssetPickerRequest) => void
   /** Complete the live session with the chosen asset. */
-  resolve: (asset: MediaAsset) => void
+  resolve: (asset: Asset) => void
   /** Abandon the live session without a pick. */
   cancel: () => void
 }
@@ -77,7 +77,7 @@ export function AssetPickerProvider({
   // context each render, and the side-effecting onPick must run outside the
   // state updater (StrictMode invokes updaters twice, which would double-pick).
   const resolve = useCallback(
-    (asset: MediaAsset) => {
+    (asset: Asset) => {
       session?.onPick(asset)
       setSession(null)
     },

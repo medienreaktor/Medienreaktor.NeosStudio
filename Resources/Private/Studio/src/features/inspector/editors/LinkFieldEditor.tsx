@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
-import { useAsset } from '@/api/media'
-import { addressWithAggregateId } from '@/api/nodeAddress'
-import { useNode } from '@/api/nodes'
+import { useAsset } from '@/api/neos/endpoints/assets'
+import { useNode } from '@/api/neos/endpoints/nodes'
+import { siteNodeAddress } from '@/api/neos/endpoints/sites'
+import { nodeAddressOf } from '@/api/neos/schema'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
@@ -40,18 +41,30 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
   const stored = typeof value === 'string' && value !== '' ? value : null
   const [href, setHref] = useState(stored)
   const [open, setOpen] = useState(false)
-  const { site } = useStudio()
+  const { site, workspaceName, selectedDocument } = useStudio()
 
   // Resolve what the link points at, for display. Document links resolve the
   // aggregate id against the edited node's own subgraph (workspace +
-  // dimension); in the creation dialog - no node yet - the site's serves.
-  const baseAddress = nodeAddress ?? site?.nodeAddress ?? null
+  // dimension); in the creation dialog - no node yet - the active workspace
+  // and the selected document's dimension space point serve.
+  const baseAddress =
+    nodeAddress ??
+    (site && workspaceName !== null
+      ? siteNodeAddress(
+          site,
+          workspaceName,
+          selectedDocument?.dimensionSpacePoint,
+        )
+      : null)
   const documentLink = href !== null ? parseDocumentUri(href) : null
   const documentAddress =
     documentLink !== null && baseAddress !== null
-      ? addressWithAggregateId(baseAddress, documentLink.aggregateId)
+      ? {
+          ...nodeAddressOf(baseAddress),
+          nodeAggregateId: documentLink.aggregateId,
+        }
       : null
-  const documentQuery = useNode(documentAddress ?? '', documentAddress !== null)
+  const documentQuery = useNode(documentAddress)
   const assetIdentifier = href !== null ? parseAssetUri(href) : null
   const assetQuery = useAsset('neos', assetIdentifier)
 

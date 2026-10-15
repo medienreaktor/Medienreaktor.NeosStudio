@@ -6,35 +6,34 @@ import {
   handleRedirectCallback,
   logout,
 } from '@/auth/oauth'
-import { ApiError } from '@/api/client'
+import { ApiError } from '@/api/http/errors'
+import { useContentRepository } from '@/api/neos/endpoints/contentRepositories'
+import { useMe } from '@/api/neos/endpoints/me'
 import {
-  type DimensionSpacePoint,
-  dimensionSpacePointEquals,
-  useDimensions,
-} from '@/api/dimensions'
+  DOCUMENT_NODE_TYPE,
+  fetchNode,
+  useNodeVariants,
+} from '@/api/neos/endpoints/nodes'
+import { isOfType, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import { siteNodeAddress, useSites } from '@/api/neos/endpoints/sites'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import { neosKeys } from '@/api/neos/keys'
+import {
+  isRemoved,
+  nodeAddressOf,
+  parseDimensionSpacePoint,
+  sameDimensionSpacePoint,
+  type Node,
+  type NodeAddress,
+} from '@/api/neos/schema'
+import type { EditingElement } from '@/api/studio/schema'
 import {
   allowsDimensionSpacePoint,
   allowsSite,
   allowsWorkspaceEditing,
-} from '@/api/accessRoles'
-import { useMe } from '@/api/me'
-import { queryKeys } from '@/api/keys'
-import {
-  DOCUMENT_NODE_TYPE,
-  fetchNode,
-  isDeleted,
-  type NodeDto,
-  useNodeVariants,
-} from '@/api/nodes'
-import { isOfType, useNodeTypes } from '@/api/nodeTypes'
-import {
-  addressInDimension,
-  addressInWorkspace,
-  addressWithAggregateId,
-  aggregateIdOf,
-} from '@/api/nodeAddress'
-import { useSites } from '@/api/sites'
-import { useWorkspaces } from '@/api/workspaces'
+} from '@/features/access/rules'
+import { useTaskDecorationData } from '@/features/tasks/decorationData'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { queryClient } from '@/app/queryClient'
 import { loadTranslations, translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -57,7 +56,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { StudioProvider, type StudioContextValue } from '@/app/StudioContext'
-import type { EditingElement } from '@/api/collaboration'
 import { CollaborationBridge } from '@/features/collaboration/CollaborationBridge'
 import { PresenceAvatars } from '@/features/collaboration/PresenceAvatars'
 import {
@@ -123,10 +121,10 @@ const DIMENSION_SPACE_POINT_KEY = 'neos-studio.dimension_space_point'
 // directly) across reloads; absent = the personal workspace.
 const EDITING_WORKSPACE_KEY = 'neos-studio.editing_workspace'
 
-// The stored point, or null (= let the backend pick its default) if nothing
+// The stored point (JSON), or null (= the active site's default) if nothing
 // valid is stored. Structural check only - whether the point is still allowed
 // by the dimension configuration is verified once the dimensions load.
-function storedDimensionSpacePoint(): DimensionSpacePoint | null {
+function storedDimensionSpacePoint(): string | null {
   try {
     const stored = localStorage.getItem(DIMENSION_SPACE_POINT_KEY)
     if (!stored) return null
@@ -137,7 +135,7 @@ function storedDimensionSpacePoint(): DimensionSpacePoint | null {
       !Array.isArray(parsed) &&
       Object.values(parsed).every((value) => typeof value === 'string')
     ) {
-      return parsed as DimensionSpacePoint
+      return stored
     }
   } catch {
     /* fall through to the backend default */
@@ -171,10 +169,10 @@ export function App() {
     const timer = setTimeout(() => setBootScreenMounted(false), BOOT_FADE_MS)
     return () => clearTimeout(timer)
   }, [booted])
-  const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
+  const [selectedDocument, setSelectedDocument] = useState<Node | null>(null)
   // The node shown in the inspector drawer - a document or a content node.
   // Also the node outlined in the preview and revealed in the outliner.
-  const [inspectedNode, setInspectedNode] = useState<NodeDto | null>(null)
+  const [inspectedNode, setInspectedNode] = useState<Node | null>(null)
   // The last inline edit from the preview; refreshes the outliner label.
   const [lastEdit, setLastEdit] = useState<NodeEdit | null>(null)
   // Bumped after inspector edits so the preview shows them (inline edits
@@ -184,7 +182,7 @@ export function App() {
   // collaborators' content edits): refresh just those nodes' elements in the
   // preview (out-of-band render) instead of a full reload.
   const [previewElementUpdate, setPreviewElementUpdate] = useState<{
-    addresses: string[]
+    addresses: NodeAddress[]
     token: number
   } | null>(null)
 
@@ -198,6 +196,8 @@ export function App() {
   // narrows by them; unrestricted users (and administrators) see every check
   // answer "yes", so the shell behaves exactly as it did without the feature.
   const access = useAccess(auth === 'authenticated')
+  // The task data the workspace decorators badge task branches with.
+  useTaskDecorationData(auth === 'authenticated')
 
   // The editing context. Default (classic model): editing happens in the
   // personal workspace and the switcher only retargets where a publish goes
@@ -208,17 +208,17 @@ export function App() {
   // log). Switching the editing context is a pure client-side state change:
   // no CR command, no empty-workspace requirement, personal pending changes
   // survive untouched.
-  const workspaces = workspacesResponse?.workspaces ?? []
+  const workspaces = workspacesResponse ?? []
   const [editingWorkspaceName, setEditingWorkspaceName] = useState<
     string | null
   >(() => localStorage.getItem(EDITING_WORKSPACE_KEY))
   const personalWorkspace =
-    workspaces.find((w) => w.classification === 'PERSONAL') ?? null
+    workspaces.find((w) => w.classification === 'personal') ?? null
   const collaborativeWorkspace = editingWorkspaceName
     ? (workspaces.find(
         (w) =>
           w.name === editingWorkspaceName &&
-          w.classification === 'SHARED' &&
+          w.classification === 'shared' &&
           w.permissions.write &&
           allowsWorkspaceEditing(access, w.name, w.classification),
       ) ?? null)
@@ -229,7 +229,7 @@ export function App() {
   // produce an error.
   const baseTargets = workspaces.filter(
     (w) =>
-      (w.classification === 'ROOT' || w.classification === 'SHARED') &&
+      (w.classification === 'root' || w.classification === 'shared') &&
       allowsWorkspaceEditing(access, w.name, w.classification),
   )
 
@@ -237,10 +237,10 @@ export function App() {
   // deleted, write access revoked) falls back to the personal workspace.
   useEffect(() => {
     if (!workspacesResponse || editingWorkspaceName === null) return
-    const stillValid = workspacesResponse.workspaces.some(
+    const stillValid = workspacesResponse.some(
       (w) =>
         w.name === editingWorkspaceName &&
-        w.classification === 'SHARED' &&
+        w.classification === 'shared' &&
         w.permissions.write &&
         allowsWorkspaceEditing(access, w.name, w.classification),
     )
@@ -258,13 +258,13 @@ export function App() {
     if (!workspacesResponse || editingWorkspaceName !== null) return
     if (
       personalWorkspace === null ||
-      allowsWorkspaceEditing(access, personalWorkspace.name, 'PERSONAL')
+      allowsWorkspaceEditing(access, personalWorkspace.name, 'personal')
     ) {
       return
     }
-    const fallback = workspacesResponse.workspaces.find(
+    const fallback = workspacesResponse.find(
       (w) =>
-        w.classification === 'SHARED' &&
+        w.classification === 'shared' &&
         w.permissions.write &&
         allowsWorkspaceEditing(access, w.name, w.classification),
     )
@@ -286,40 +286,41 @@ export function App() {
   // are never claimed - they are the shared canvas of the multiplayer
   // session. Server-side arbitration grants each element to the earliest
   // claim; releasing (selecting elsewhere) auto-promotes the next claimant.
-  const { data: nodeTypeMap } = useNodeTypes(auth === 'authenticated')
+  const { data: nodeTypeMap } = useNodeTypes('', auth === 'authenticated')
   const editingElement = useMemo<EditingElement | null>(() => {
     if (!inspectedNode || !nodeTypeMap) return null
     if (isOfType(nodeTypeMap, inspectedNode.nodeType, DOCUMENT_NODE_TYPE))
       return null
     return {
-      nodeAggregateId: aggregateIdOf(inspectedNode.address),
+      nodeAggregateId: inspectedNode.nodeAggregateId,
       property: null,
     }
   }, [inspectedNode, nodeTypeMap])
 
-  const { data: dimensionsResponse } = useDimensions(auth === 'authenticated')
-  const dimensions = dimensionsResponse?.dimensions ?? []
-  // null = let the backend pick its default dimension space point; the sites
-  // response reports the point actually in effect, which the switcher shows.
+  const { data: contentRepository } = useContentRepository(
+    auth === 'authenticated',
+  )
+  const dimensions = contentRepository?.dimensions ?? []
+  // null = the active site's default dimension space point (see
+  // activeDimensionSpacePoint below), which the switcher then shows.
   // Starts from the dimension a deep link asked for, else the point remembered
   // across reloads. A deep-linked point the access roles forbid is dropped by
   // the validation effect below, same as a stored one.
-  const [dimensionSpacePoint, setDimensionSpacePoint] =
-    useState<DimensionSpacePoint | null>(
-      () => deepLinkTarget?.dimensionSpacePoint ?? storedDimensionSpacePoint(),
-    )
+  const [dimensionSpacePoint, setDimensionSpacePoint] = useState<string | null>(
+    () => deepLinkTarget?.dimensionSpacePoint ?? storedDimensionSpacePoint(),
+  )
 
   // Remember the dimension across reloads. A restored point that the current
   // dimension configuration no longer allows (config changed since it was
-  // stored) is dropped in favor of the backend default.
-  const allowedPoints = dimensionsResponse?.allowedDimensionSpacePoints
+  // stored) is dropped in favor of the site's default.
+  const allowedPoints = contentRepository?.dimensionSpacePoints
   // Dimensions an access role excludes never reach the switcher. Same
   // reasoning as the workspaces: the content repository would refuse the
   // write, so offering the switch only produces an error later.
   const allowedEditablePoints = useMemo(
     () =>
       (allowedPoints ?? []).filter((point) =>
-        allowsDimensionSpacePoint(access, point),
+        allowsDimensionSpacePoint(access, parseDimensionSpacePoint(point)),
       ),
     [allowedPoints, access],
   )
@@ -328,25 +329,21 @@ export function App() {
     if (
       allowedPoints &&
       !allowedEditablePoints.some((point) =>
-        dimensionSpacePointEquals(point, dimensionSpacePoint),
+        sameDimensionSpacePoint(point, dimensionSpacePoint),
       )
     ) {
       localStorage.removeItem(DIMENSION_SPACE_POINT_KEY)
       setDimensionSpacePoint(null)
       return
     }
-    localStorage.setItem(
-      DIMENSION_SPACE_POINT_KEY,
-      JSON.stringify(dimensionSpacePoint),
-    )
+    localStorage.setItem(DIMENSION_SPACE_POINT_KEY, dimensionSpacePoint)
   }, [dimensionSpacePoint, allowedPoints, allowedEditablePoints])
   // Set when the user picked a dimension the selected document does not exist
   // in - the create-variant dialog is open for this target point.
-  const [variantRequest, setVariantRequest] =
-    useState<DimensionSpacePoint | null>(null)
+  const [variantRequest, setVariantRequest] = useState<string | null>(null)
   // Where the selected document exists; drives the switcher's muted "+" items.
   const { data: documentVariants } = useNodeVariants(
-    selectedDocument?.address ?? null,
+    selectedDocument,
     auth === 'authenticated',
   )
 
@@ -356,7 +353,7 @@ export function App() {
   // happen in quick succession, so a slow earlier fetch cannot override the
   // latest one.
   const followDocumentRequest = useRef(0)
-  const followDocumentTo = (targetAddress: string) => {
+  const followDocumentTo = (targetAddress: NodeAddress) => {
     const request = ++followDocumentRequest.current
     fetchNode(targetAddress)
       .then((node) => {
@@ -368,10 +365,11 @@ export function App() {
         /* fine - the tree simply starts unselected */
       })
   }
-  const followDocumentInto = (
-    previousAddress: string,
-    point: DimensionSpacePoint,
-  ) => followDocumentTo(addressInDimension(previousAddress, point))
+  const followDocumentInto = (previousAddress: NodeAddress, point: string) =>
+    followDocumentTo({
+      ...nodeAddressOf(previousAddress),
+      dimensionSpacePoint: point,
+    })
 
   /**
    * Move the editing context to a shared workspace (name) or back to the
@@ -384,11 +382,14 @@ export function App() {
     setEditingWorkspaceName(name)
     if (name !== null) localStorage.setItem(EDITING_WORKSPACE_KEY, name)
     else localStorage.removeItem(EDITING_WORKSPACE_KEY)
-    const previousAddress = selectedDocument?.address ?? null
+    const previousAddress = selectedDocument
     setSelectedDocument(null)
     setInspectedNode(null)
     if (previousAddress)
-      followDocumentTo(addressInWorkspace(previousAddress, targetName))
+      followDocumentTo({
+        ...nodeAddressOf(previousAddress),
+        workspaceName: targetName,
+      })
   }
 
   /**
@@ -396,14 +397,13 @@ export function App() {
    * select it. Links can cross dimensions (e.g. a language menu) - follow the
    * switch so the trees browse the same dimension as the preview.
    */
-  const navigateToNode = (address: string) => {
+  const navigateToNode = (address: NodeAddress) => {
     fetchNode(address)
       .then((node) => {
-        const currentPoint =
-          dimensionSpacePoint ?? sitesResponse?.dimensionSpacePoint
+        const currentPoint = activeDimensionSpacePoint
         if (
           currentPoint &&
-          !dimensionSpacePointEquals(node.dimensionSpacePoint, currentPoint)
+          !sameDimensionSpacePoint(node.dimensionSpacePoint, currentPoint)
         ) {
           setDimensionSpacePoint(node.dimensionSpacePoint)
         }
@@ -421,7 +421,7 @@ export function App() {
    * workspace first - personal, or a writable shared one (collaborative) -
    * then navigate to the address, which is already bound to it.
    */
-  const navigateToNodeInWorkspace = (address: string, name: string) => {
+  const navigateToNodeInWorkspace = (address: NodeAddress, name: string) => {
     if (activeWorkspace && name !== activeWorkspace.name) {
       const editingName = name === personalWorkspace?.name ? null : name
       setEditingWorkspaceName(editingName)
@@ -434,18 +434,14 @@ export function App() {
     navigateToNode(address)
   }
 
-  const { data: sitesResponse } = useSites(
-    activeWorkspace?.name ?? null,
-    dimensionSpacePoint,
-    auth === 'authenticated',
-  )
+  const { data: allSites } = useSites(auth === 'authenticated')
 
   // The editing shell only deals in online sites; offline ones exist solely
   // for the sites administration (which fetches the full listing itself).
   // Sites outside the user's access roles drop out here, which is all it
   // takes: the switcher, the tree and the restored selection all read this.
-  const sites = (sitesResponse?.sites ?? []).filter(
-    (site) => site.state === 'online' && allowsSite(access, site.nodeName),
+  const sites = (allSites ?? []).filter(
+    (site) => site.online && allowsSite(access, site.nodeName),
   )
   // Starts from the site remembered across reloads; a stored name that no
   // longer matches simply falls back to the first site below.
@@ -454,11 +450,14 @@ export function App() {
   )
   const activeSite =
     sites.find((s) => s.nodeName === siteNodeName) ??
-    sites.find((s) => s.nodeAddress !== null) ??
+    sites.find((s) => s.nodeAggregateId !== null) ??
     null
+  // The dimension space point the shell browses and edits in.
+  const activeDimensionSpacePoint =
+    dimensionSpacePoint ?? activeSite?.defaultDimensionSpacePoint ?? null
   // Nothing to preview (no online site the account may open): the boot
   // screen would otherwise wait for a page that never comes.
-  const noSiteToOpen = sitesResponse !== undefined && activeSite === null
+  const noSiteToOpen = allSites !== undefined && activeSite === null
   useEffect(() => {
     if (noSiteToOpen) setBooted(true)
   }, [noSiteToOpen])
@@ -513,21 +512,28 @@ export function App() {
     if (!selectedDocument) return
     localStorage.setItem(
       SELECTED_DOCUMENT_KEY,
-      aggregateIdOf(selectedDocument.address),
+      selectedDocument.nodeAggregateId,
     )
   }, [selectedDocument])
 
-  // Restore the remembered document once the active site is known (its address
-  // carries the current workspace and dimension). A stored id that no longer
+  // Restore the remembered document once the active site is known (its site
+  // node's address carries the current workspace and dimension). A stored id that no longer
   // resolves, and the no-stored-id case, both fall back to the site's root
   // document node. Runs once per load - dimension and site switches drive their
   // own reselection and must not be overridden here.
   const didRestoreSelection = useRef(false)
-  const siteAddress = activeSite?.nodeAddress ?? null
+  const siteAddress =
+    activeSite && activeWorkspace && activeDimensionSpacePoint
+      ? siteNodeAddress(
+          activeSite,
+          activeWorkspace.name,
+          activeDimensionSpacePoint,
+        )
+      : null
   useEffect(() => {
     if (didRestoreSelection.current || !siteAddress) return
     didRestoreSelection.current = true
-    const select = (node: NodeDto) => {
+    const select = (node: Node) => {
       setSelectedDocument(node)
       setInspectedNode(node)
     }
@@ -546,15 +552,13 @@ export function App() {
     // the workspace the editor is actually working in. A link built elsewhere
     // names the live workspace, and dropping the editor into live would show
     // them a document they cannot edit.
-    const deepLinkedId = deepLinkTarget?.aggregateId ?? null
-    if (deepLinkedId) {
+    if (deepLinkTarget) {
       clearDeepLink()
-      const documentAddress = deepLinkTarget?.dimensionSpacePoint
-        ? addressInDimension(
-            addressWithAggregateId(siteAddress, deepLinkedId),
-            deepLinkTarget.dimensionSpacePoint,
-          )
-        : addressWithAggregateId(siteAddress, deepLinkedId)
+      const documentAddress: NodeAddress = {
+        ...siteAddress,
+        nodeAggregateId: deepLinkTarget.nodeAggregateId,
+        dimensionSpacePoint: deepLinkTarget.dimensionSpacePoint,
+      }
       // Bound locally: the narrowing below has to survive into the nested callbacks.
       const revealId = deepLinkReveal
       fetchNode(documentAddress)
@@ -571,7 +575,7 @@ export function App() {
           // scrolls it into view and outlines it. flashNode adds the brief
           // pulse on top, so the editor sees *which* element was meant even
           // when the outline alone is easy to miss.
-          fetchNode(addressWithAggregateId(documentAddress, revealId))
+          fetchNode({ ...documentAddress, nodeAggregateId: revealId })
             .then((contentNode) => {
               setInspectedNode(contentNode)
               flashNode(revealId)
@@ -590,10 +594,11 @@ export function App() {
       selectRoot()
       return
     }
-    fetchNode(addressWithAggregateId(siteAddress, storedId))
+    fetchNode({ ...siteAddress, nodeAggregateId: storedId })
       .then(select)
       .catch(selectRoot)
-  }, [siteAddress])
+    // Keyed by value: the address is a new object on every render.
+  }, [siteAddress?.nodeAggregateId, siteAddress?.workspaceName])
 
   if (auth === 'checking') {
     return <BootScreen />
@@ -630,11 +635,7 @@ export function App() {
     // because the node is deleted. It still drops when the read fails for real
     // - the node was published away and is gone.
     if (selectedDocument) {
-      fetchNode(
-        selectedDocument.address,
-        undefined,
-        isDeleted(selectedDocument),
-      )
+      fetchNode(selectedDocument, undefined, isRemoved(selectedDocument))
         .then(setSelectedDocument)
         .catch(() => {
           setSelectedDocument(null)
@@ -642,7 +643,7 @@ export function App() {
         })
     }
     if (inspectedNode) {
-      fetchNode(inspectedNode.address, undefined, isDeleted(inspectedNode))
+      fetchNode(inspectedNode, undefined, isRemoved(inspectedNode))
         .then(setInspectedNode)
         .catch(() => setInspectedNode(null))
     }
@@ -654,28 +655,25 @@ export function App() {
   // dropped first - the refreshes below would otherwise serve the 30s-stale
   // query cache.
   const remoteContentChanged = (aggregateIds: string[]) => {
-    const baseAddress =
-      selectedDocument?.address ?? activeSite?.nodeAddress ?? null
+    const baseAddress = selectedDocument ?? siteAddress
     if (!baseAddress) return
-    const addresses = aggregateIds.map((id) =>
-      addressWithAggregateId(baseAddress, id),
-    )
+    const addresses = aggregateIds.map((nodeAggregateId) => ({
+      ...nodeAddressOf(baseAddress),
+      nodeAggregateId,
+    }))
     for (const address of addresses) {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.nodes.node(address),
+        queryKey: neosKeys.nodes.node(address),
       })
     }
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void invalidateWorkspaceQueries()
     setLastEdit((prev) => ({ addresses, token: (prev?.token ?? 0) + 1 }))
     setPreviewElementUpdate((prev) => ({
       addresses,
       token: (prev?.token ?? 0) + 1,
     }))
-    if (
-      inspectedNode &&
-      aggregateIds.includes(aggregateIdOf(inspectedNode.address))
-    ) {
-      fetchNode(inspectedNode.address)
+    if (inspectedNode && aggregateIds.includes(inspectedNode.nodeAggregateId)) {
+      fetchNode(inspectedNode)
         .then(setInspectedNode)
         .catch(() => setInspectedNode(null))
     }
@@ -685,8 +683,8 @@ export function App() {
   // session): incremental updates cannot describe this - drop all caches and
   // refresh wholesale.
   const remoteWorkspaceChanged = () => {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+    void invalidateWorkspaceQueries()
     refreshWorkspaceContent()
   }
 
@@ -698,6 +696,7 @@ export function App() {
     site: activeSite,
     workspaceName: activeWorkspace?.name ?? null,
     personalWorkspaceName: personalWorkspace?.name ?? null,
+    dimensionSpacePoint: activeDimensionSpacePoint,
     selectedDocument,
     inspectedNode,
     lastEdit,
@@ -806,20 +805,10 @@ export function App() {
                     workspaceName={collaborativeWorkspace.name}
                     ownUserId={me?.user?.id ?? null}
                     documentAggregateId={
-                      selectedDocument
-                        ? aggregateIdOf(selectedDocument.address)
-                        : null
+                      selectedDocument?.nodeAggregateId ?? null
                     }
-                    focusedAggregateId={
-                      inspectedNode
-                        ? aggregateIdOf(inspectedNode.address)
-                        : null
-                    }
-                    dimensionSpacePoint={
-                      dimensionSpacePoint ??
-                      sitesResponse?.dimensionSpacePoint ??
-                      null
-                    }
+                    focusedAggregateId={inspectedNode?.nodeAggregateId ?? null}
+                    dimensionSpacePoint={activeDimensionSpacePoint}
                     editingElement={editingElement}
                     onPresence={setPresence}
                     onRemoteContentChange={remoteContentChanged}
@@ -902,45 +891,45 @@ export function App() {
                         <SidebarTrigger />
                         <ModalLauncher />
                       </div>
-                      {sites.length > 0 && (
-                        <SiteSwitcher
-                          sites={sites}
-                          value={activeSite?.nodeName ?? null}
-                          onChange={(nodeName) => {
-                            setSiteNodeName(nodeName)
-                            setSelectedDocument(null)
-                            setInspectedNode(null)
-                            // The stored document belongs to the previous site -
-                            // a reload should land on the new site's root, not
-                            // re-resolve a document from the old one.
-                            localStorage.removeItem(SELECTED_DOCUMENT_KEY)
-                          }}
-                        />
-                      )}
-                      {dimensions.length > 0 && sitesResponse && (
+                      {sites.length > 0 &&
+                        activeWorkspace &&
+                        activeDimensionSpacePoint && (
+                          <SiteSwitcher
+                            sites={sites}
+                            workspaceName={activeWorkspace.name}
+                            dimensionSpacePoint={activeDimensionSpacePoint}
+                            value={activeSite?.nodeName ?? null}
+                            onChange={(nodeName) => {
+                              setSiteNodeName(nodeName)
+                              setSelectedDocument(null)
+                              setInspectedNode(null)
+                              // The stored document belongs to the previous site -
+                              // a reload should land on the new site's root, not
+                              // re-resolve a document from the old one.
+                              localStorage.removeItem(SELECTED_DOCUMENT_KEY)
+                            }}
+                          />
+                        )}
+                      {dimensions.length > 0 && activeDimensionSpacePoint && (
                         <DimensionSwitcher
                           dimensions={dimensions}
                           // The configuration's full set, so values it
                           // rules out still read as "does not exist" - the
                           // access-restricted ones render locked instead.
                           allowedPoints={
-                            dimensionsResponse?.allowedDimensionSpacePoints ??
-                            []
+                            contentRepository?.dimensionSpacePoints ?? []
                           }
                           permittedPoints={allowedEditablePoints}
-                          value={
-                            dimensionSpacePoint ??
-                            sitesResponse.dimensionSpacePoint
-                          }
+                          value={activeDimensionSpacePoint}
                           documentCoverage={
                             selectedDocument
-                              ? documentVariants?.coveredDimensionSpacePoints
+                              ? documentVariants?.meta
+                                  .coveredDimensionSpacePoints
                               : undefined
                           }
                           onCreateVariant={setVariantRequest}
                           onChange={(point) => {
-                            const previousAddress =
-                              selectedDocument?.address ?? null
+                            const previousAddress = selectedDocument
                             setDimensionSpacePoint(point)
                             setSelectedDocument(null)
                             setInspectedNode(null)
@@ -975,7 +964,7 @@ export function App() {
                           // inspected-node / document snapshots are only swapped
                           // once fetchNode resolves - so nothing blanks mid-reload.
                           void queryClient.invalidateQueries({
-                            queryKey: queryKeys.nodes.all,
+                            queryKey: neosKeys.nodes.all,
                           })
                           setLastEdit((prev) => ({
                             addresses: [ALL_NODES],
@@ -983,14 +972,14 @@ export function App() {
                           }))
                           setPreviewReloadToken((token) => token + 1)
                           if (selectedDocument) {
-                            fetchNode(selectedDocument.address)
+                            fetchNode(selectedDocument)
                               .then(setSelectedDocument)
                               .catch(() => {
                                 /* keep showing the previous snapshot */
                               })
                           }
                           if (inspectedNode) {
-                            fetchNode(inspectedNode.address)
+                            fetchNode(inspectedNode)
                               .then(setInspectedNode)
                               .catch(() => {
                                 /* keep showing the previous snapshot */
@@ -1056,15 +1045,13 @@ export function App() {
                       onCancel={() => setVariantRequest(null)}
                       onCreated={(point) => {
                         setVariantRequest(null)
-                        const previousAddress = selectedDocument.address
+                        const previousAddress = selectedDocument
                         // The new variants exist now - drop every cached node read and
                         // the pending-changes badge state before anything refetches.
                         void queryClient.invalidateQueries({
-                          queryKey: queryKeys.nodes.all,
+                          queryKey: neosKeys.nodes.all,
                         })
-                        void queryClient.invalidateQueries({
-                          queryKey: queryKeys.workspaces.all,
-                        })
+                        void invalidateWorkspaceQueries()
                         setDimensionSpacePoint(point)
                         setSelectedDocument(null)
                         setInspectedNode(null)

@@ -1,4 +1,4 @@
-import { useWorkspaceChanges } from '@/api/workspaces'
+import { useWorkspaceChanges } from '@/api/neos/endpoints/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { translate as t } from '@/lib/i18n'
@@ -6,7 +6,7 @@ import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import { useWorkspaceSync } from './useWorkspaceSync'
 
 /**
- * Topbar button that appears when the workspace is OUTDATED - someone
+ * Topbar button that appears when the workspace is outdated - someone
  * published to the base workspace since the last rebase - and synchronizes
  * it (a workspace rebase: incoming changes flow in underneath the own
  * pending ones). When own changes conflict with the incoming ones the rebase
@@ -25,7 +25,7 @@ export function SyncWorkspaceButton({
   const { rebase, discardAll, conflicts, clearConflicts, busy } =
     useWorkspaceSync()
 
-  if (changesResponse?.status !== 'OUTDATED') return null
+  if (changesResponse?.workspace.status !== 'outdated') return null
 
   return (
     <>
@@ -52,7 +52,7 @@ export function SyncWorkspaceButton({
         open={conflicts !== null}
         workspaceName={conflicts?.workspaceName ?? null}
         conflicts={conflicts?.conflicts ?? []}
-        partial={conflicts?.code === 'partial_publish_conflicts'}
+        partial={conflicts?.title === 'partial'}
         busy={busy}
         onCancel={clearConflicts}
         onForce={() =>

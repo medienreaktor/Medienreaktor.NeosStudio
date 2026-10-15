@@ -1,16 +1,31 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { dataSourceSelectOptions, useDataSource } from '@/api/dataSources'
-import { queryKeys } from '@/api/keys'
-import { addressWithAggregateId } from '@/api/nodeAddress'
+import {
+  dataSourceSelectOptions,
+  useDataSource,
+} from '@/api/neos/endpoints/dataSources'
 import {
   DOCUMENT_NODE_TYPE,
-  nodeLabel,
+  nodeReferences,
   searchNodes,
   useNodeReferences,
-} from '@/api/nodes'
-import { isOfType, useNodeTypes } from '@/api/nodeTypes'
+} from '@/api/neos/endpoints/nodes'
+import {
+  isOfType,
+  useNodeTypes,
+  type NodeTypeMap,
+} from '@/api/neos/endpoints/nodeTypes'
+import { siteNodeAddress } from '@/api/neos/endpoints/sites'
+import { neosKeys } from '@/api/neos/keys'
+import {
+  nodeAddressOf,
+  type Node,
+  type NodeAddress,
+  type NodeReference,
+} from '@/api/neos/schema'
 import { useStudio } from '@/app/StudioContext'
+import { nodeAccessState } from '@/features/access/rules'
+import { useAccess } from '@/features/access/useAccess'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -45,6 +60,22 @@ interface ReferenceOption {
 }
 
 /**
+ * The labels of the documents from the site down to a search hit, the hit's
+ * own label last - computed from the ancestors it was read with.
+ */
+function searchHitBreadcrumb(
+  node: Node,
+  nodeTypes: NodeTypeMap | undefined,
+): string[] {
+  const documents = nodeTypes
+    ? (node.ancestors ?? []).filter((ancestor) =>
+        isOfType(nodeTypes, ancestor.nodeType, DOCUMENT_NODE_TYPE),
+      )
+    : []
+  return [...documents.map((ancestor) => ancestor.label).reverse(), node.label]
+}
+
+/**
  * The pickable options for a reference editor. Two sources, mirroring the
  * select box editor: a data source (editorOptions.dataSourceIdentifier) whose
  * option values are node aggregate ids - filtered client-side by the search
@@ -54,12 +85,13 @@ interface ReferenceOption {
  */
 function useReferenceOptions(
   options: Record<string, unknown>,
-  nodeAddress: string | undefined,
+  nodeAddress: NodeAddress | undefined,
   searchTerm: string,
   open: boolean,
 ): { options: ReferenceOption[]; loading: boolean; hint: string | null } {
   const { data: nodeTypes } = useNodeTypes()
-  const { site } = useStudio()
+  const { site, workspaceName, selectedDocument } = useStudio()
+  const access = useAccess()
 
   const dataSourceIdentifier =
     plainEditorOption(options, 'dataSourceIdentifier') ?? null
@@ -70,7 +102,7 @@ function useReferenceOptions(
       : undefined
   const dataSource = useDataSource({
     identifier: dataSourceIdentifier,
-    nodeAddress,
+    node: nodeAddress,
     additionalData,
     disableCaching: options.dataSourceDisableCaching === true,
   })
@@ -97,11 +129,18 @@ function useReferenceOptions(
       : 'Neos.Neos:Document'
   // Search the site the edited node lives in, within its subgraph (workspace +
   // dimensions); the creation dialog has no node yet and falls back to the
-  // active site's address.
-  const searchContext = site?.aggregateId
+  // active site's node in the active workspace and the selected document's
+  // dimension space point.
+  const searchContext: NodeAddress | null = site?.nodeAggregateId
     ? nodeAddress
-      ? addressWithAggregateId(nodeAddress, site.aggregateId)
-      : site.nodeAddress
+      ? { ...nodeAddressOf(nodeAddress), nodeAggregateId: site.nodeAggregateId }
+      : workspaceName !== null
+        ? siteNodeAddress(
+            site,
+            workspaceName,
+            selectedDocument?.dimensionSpacePoint,
+          )
+        : null
     : null
 
   const [debouncedTerm, setDebouncedTerm] = useState('')
@@ -116,11 +155,10 @@ function useReferenceOptions(
     searchContext !== null &&
     debouncedTerm.length >= threshold
   const search = useQuery({
-    queryKey: queryKeys.nodes.search(
-      searchContext ?? '',
-      nodeTypesFilter,
-      debouncedTerm,
-    ),
+    queryKey: neosKeys.nodes.descendants(searchContext, {
+      nodeTypes: nodeTypesFilter,
+      search: debouncedTerm,
+    }),
     queryFn: () => searchNodes(searchContext!, debouncedTerm, nodeTypesFilter),
     enabled: searchEnabled,
   })
@@ -152,14 +190,28 @@ function useReferenceOptions(
   }
 
   return {
-    options: (searchEnabled ? (search.data ?? []) : []).map(
-      (node): ReferenceOption => ({
-        id: node.aggregateId,
-        label: nodeLabel(node),
+    options: (searchEnabled ? (search.data ?? []) : [])
+      // The search does not apply the account's access roles - hits the
+      // roles hide are not offered (pages that are merely restricted are).
+      .filter(
+        (node) =>
+          nodeAccessState(
+            access,
+            [
+              node.nodeAggregateId,
+              ...(node.ancestors ?? []).map(
+                (ancestor) => ancestor.nodeAggregateId,
+              ),
+            ],
+            site?.nodeName ?? '',
+          ) !== 'hidden',
+      )
+      .map((node): ReferenceOption => ({
+        id: node.nodeAggregateId,
+        label: node.label || node.nodeAggregateId,
         iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
-        secondary: node.breadcrumb.join(' › '),
-      }),
-    ),
+        secondary: searchHitBreadcrumb(node, nodeTypes).join(' › '),
+      })),
     loading: searchEnabled && search.isPending,
     hint:
       searchTerm.trim().length < threshold
@@ -418,9 +470,12 @@ function ReferencePicker({
  * picker below to add more; the single variant is the picker itself plus a
  * clear button.
  *
- * The current value is resolved through the node's references relation
- * (reference "properties" are not in node.properties in Neos 9); fresh picks
- * display from a local cache until the refetch lands. Selection state is
+ * The current value is resolved through the node's references (reference
+ * "properties" are not in node.properties in Neos 9); fresh picks display
+ * from a local cache until the refetch lands. In the creation dialog (no
+ * nodeAddress - the node does not exist yet) there is no current value: the
+ * picks are committed for the dialog to create the node with
+ * (ui.showInCreationDialog references). Selection state is
  * server-derived until the first local edit, then owned here - the inspector
  * remounts the editor when the edited subject changes.
  *
@@ -436,13 +491,17 @@ function ReferenceEditorBase({
 }: PropertyEditorProps & { multiple: boolean }) {
   const { data: nodeTypes } = useNodeTypes()
   const { navigateToNode } = useStudio()
-  const { data: references } = useNodeReferences(nodeAddress ?? null)
+  const { data: referencing } = useNodeReferences(nodeAddress ?? null)
+  // Targets the account may not read come without their node - left out.
   const serverTargets = useMemo(
     () =>
-      (references ?? [])
-        .filter((reference) => reference.referenceName === subject.name)
-        .map((reference) => reference.node),
-    [references, subject.name],
+      referencing
+        ? (nodeReferences(referencing)[subject.name] ?? []).flatMap(
+            (reference: NodeReference) =>
+              reference.node ? [reference.node] : [],
+          )
+        : [],
+    [referencing, subject.name],
   )
 
   const [dirty, setDirty] = useState<string[] | null>(null)
@@ -453,7 +512,7 @@ function ReferenceEditorBase({
   const [searchTerm, setSearchTerm] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
 
-  const selected = dirty ?? serverTargets.map((node) => node.aggregateId)
+  const selected = dirty ?? serverTargets.map((node) => node.nodeAggregateId)
   const picker = useReferenceOptions(
     options,
     nodeAddress,
@@ -472,16 +531,16 @@ function ReferenceEditorBase({
     label: string
     iconClass: string | null
     /** Set for a document target - the address to open in the preview. */
-    documentAddress: string | null
+    documentAddress: NodeAddress | null
   } => {
-    const node = serverTargets.find((target) => target.aggregateId === id)
+    const node = serverTargets.find((target) => target.nodeAggregateId === id)
     if (node) {
       return {
-        label: nodeLabel(node),
+        label: node.label || node.nodeAggregateId,
         iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
         documentAddress:
           nodeTypes && isOfType(nodeTypes, node.nodeType, DOCUMENT_NODE_TYPE)
-            ? node.address
+            ? nodeAddressOf(node)
             : null,
       }
     }
@@ -499,19 +558,6 @@ function ReferenceEditorBase({
   const pick = (option: ReferenceOption) => {
     setPickedById((cache) => ({ ...cache, [option.id]: option }))
     commit(multiple ? [...selected, option.id] : [option.id])
-  }
-
-  if (nodeAddress === undefined) {
-    // The creation dialog: the node does not exist yet, and references cannot
-    // ride along in CreateNodeAggregateWithNode's property values.
-    return (
-      <div className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400">
-        {translate(
-          'editor.reference.afterCreation',
-          'References can be set after creation',
-        )}
-      </div>
-    )
   }
 
   const placeholder =

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { dataSourceSelectOptions, useDataSource } from '@/api/dataSources'
+import {
+  dataSourceSelectOptions,
+  useDataSource,
+} from '@/api/neos/endpoints/dataSources'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -115,7 +118,7 @@ function DataSourceSelectBox({
 
   const { data, error, isPending } = useDataSource({
     identifier,
-    nodeAddress,
+    node: nodeAddress,
     additionalData,
     disableCaching: options.dataSourceDisableCaching === true,
   })

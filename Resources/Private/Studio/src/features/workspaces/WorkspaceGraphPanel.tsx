@@ -1,9 +1,7 @@
 import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react'
-import {
-  useWorkspaces,
-  useWorkspacesPendingEvents,
-  type Workspace,
-} from '@/api/workspaces'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import type { Workspace } from '@/api/neos/schema'
+import { useWorkspacesPendingEvents } from '@/api/studio/endpoints/workspaces'
 import { useStudio } from '@/app/StudioContext'
 import {
   GraphCanvas,
@@ -49,14 +47,13 @@ const REFRESH_INTERVAL = 30_000
 const DOT_RADIUS = 6
 
 const CLASSIFICATION_ICONS: Record<string, string> = {
-  ROOT: 'fas fa-earth-americas text-neutral-950 dark:text-white',
-  SHARED: 'fas fa-users text-purple-500',
-  PRIVATE: 'fas fa-lock text-neutral-950/50 dark:text-white/50',
-  PERSONAL: 'fas fa-user text-neutral-950/50 dark:text-white/50',
+  root: 'fas fa-earth-americas text-neutral-950 dark:text-white',
+  shared: 'fas fa-users text-purple-500',
+  personal: 'fas fa-user text-neutral-950/50 dark:text-white/50',
 }
 
 function workspaceLabel(workspace: Workspace): string {
-  return workspace.classification === 'ROOT'
+  return workspace.classification === 'root'
     ? t('workspace.live', 'Live')
     : workspace.title || workspace.name
 }
@@ -248,7 +245,7 @@ const GraphSurface = memo(function GraphSurface({
                       ])}
                     </span>
                   )}
-                  {workspace.status === 'OUTDATED' && (
+                  {workspace.status === 'outdated' && (
                     <span
                       className="text-amber-500"
                       title={t(
@@ -325,7 +322,7 @@ export function WorkspaceGraphPanel() {
     isLoading: workspacesLoading,
     isError,
   } = useWorkspaces(shown, refetchInterval)
-  const workspaces = useMemo(() => data?.workspaces ?? [], [data?.workspaces])
+  const workspaces = useMemo(() => data ?? [], [data])
 
   // Pending histories for every workspace - branches for their commit dots
   // and fork points, roots (live) for the published stretch children branch
@@ -431,9 +428,9 @@ export function WorkspaceGraphPanel() {
                   const offerCheckout =
                     !isCurrent &&
                     (menuWorkspace.name === personalWorkspaceName ||
-                      menuWorkspace.classification === 'SHARED')
+                      menuWorkspace.classification === 'shared')
                   const checkoutDisabled =
-                    menuWorkspace.classification === 'SHARED' &&
+                    menuWorkspace.classification === 'shared' &&
                     !menuWorkspace.permissions.write
                   // Rebase THE CHECKED-OUT workspace onto the clicked one.
                   // Valid targets are what the workspace switcher offers as
@@ -443,9 +440,9 @@ export function WorkspaceGraphPanel() {
                   const offerRebase =
                     !isCurrent &&
                     activeWorkspace !== null &&
-                    (menuWorkspace.classification === 'ROOT' ||
-                      menuWorkspace.classification === 'SHARED')
-                  const offerReview = menuWorkspace.baseWorkspace !== null
+                    (menuWorkspace.classification === 'root' ||
+                      menuWorkspace.classification === 'shared')
+                  const offerReview = menuWorkspace.baseWorkspaceName !== null
                   return (
                     <>
                       {offerCheckout && (
@@ -475,7 +472,8 @@ export function WorkspaceGraphPanel() {
                         <DropdownMenuItem
                           disabled={busy}
                           title={
-                            menuWorkspace.name === activeWorkspace.baseWorkspace
+                            menuWorkspace.name ===
+                            activeWorkspace.baseWorkspaceName
                               ? t(
                                   'workspaceGraph.menu.rebaseSyncHint',
                                   'Rebase “{0}” onto its base again: newest changes from here flow in underneath your pending ones',
@@ -491,7 +489,7 @@ export function WorkspaceGraphPanel() {
                             setMenu(null)
                             if (
                               menuWorkspace.name ===
-                              activeWorkspace.baseWorkspace
+                              activeWorkspace.baseWorkspaceName
                             ) {
                               rebase.mutate({
                                 workspaceName: activeWorkspace.name,
@@ -545,7 +543,7 @@ export function WorkspaceGraphPanel() {
             open={conflicts !== null}
             workspaceName={conflicts?.workspaceName ?? null}
             conflicts={conflicts?.conflicts ?? []}
-            partial={conflicts?.code === 'partial_publish_conflicts'}
+            partial={conflicts?.title === 'partial'}
             busy={busy}
             onCancel={clearConflicts}
             onForce={() =>

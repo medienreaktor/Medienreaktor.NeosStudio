@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { createSite, useSiteOptions } from '@/api/sites'
+import { apiErrorDescription } from '@/api/http/errors'
+import { neosKeys } from '@/api/neos/keys'
+import { createSite, useSiteCreationOptions } from '@/api/neos/endpoints/sites'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -40,7 +40,8 @@ export function CreateSiteDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { data: options, isLoading: optionsLoading } = useSiteOptions(open)
+  const { data: options, isLoading: optionsLoading } =
+    useSiteCreationOptions(open)
 
   const [name, setName] = useState('')
   const [packageKey, setPackageKey] = useState('')
@@ -80,10 +81,10 @@ export function CreateSiteDialog({
         packageKey,
         nodeTypeName,
         ...(nodeName.trim() !== '' ? { nodeName: nodeName.trim() } : {}),
-        ...(startOffline ? { inactive: true } : {}),
+        ...(startOffline ? { online: false } : {}),
       }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
+      queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
       toast.success(
         t('sites.created', 'The site "{0}" has been created.', [response.name]),
       )

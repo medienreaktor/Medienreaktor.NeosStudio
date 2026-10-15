@@ -1,5 +1,8 @@
-import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
-import { dimensionSpacePointEquals } from '@/api/dimensions'
+import {
+  type ContentDimension,
+  parseDimensionSpacePoint,
+  sameDimensionSpacePoint,
+} from '@/api/neos/schema'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import {
@@ -15,33 +18,37 @@ import {
  * the current point with the coordinate replaced if that combination is
  * allowed, otherwise the allowed point with the new coordinate that agrees
  * with the current point on the most other coordinates (dimension combination
- * constraints can rule out the verbatim combination).
+ * constraints can rule out the verbatim combination). Points are JSON, as
+ * Neos.Api has them; the result is one of the allowed points.
  */
 function resolveSwitch(
-  current: DimensionSpacePoint,
+  current: string,
   dimensionId: string,
   value: string,
-  allowedPoints: DimensionSpacePoint[],
-): DimensionSpacePoint | null {
-  const verbatim = { ...current, [dimensionId]: value }
-  if (allowedPoints.some((point) => dimensionSpacePointEquals(point, verbatim)))
-    return verbatim
+  allowedPoints: string[],
+): string | null {
+  const coordinates = parseDimensionSpacePoint(current)
+  const verbatim = JSON.stringify({ ...coordinates, [dimensionId]: value })
+  const exact = allowedPoints.find((point) =>
+    sameDimensionSpacePoint(point, verbatim),
+  )
+  if (exact !== undefined) return exact
 
-  const overlap = (point: DimensionSpacePoint) =>
-    Object.keys(current).filter(
-      (key) => key !== dimensionId && point[key] === current[key],
+  const overlap = (point: Record<string, string>) =>
+    Object.keys(coordinates).filter(
+      (key) => key !== dimensionId && point[key] === coordinates[key],
     ).length
 
-  const candidates = allowedPoints.filter(
-    (point) => point[dimensionId] === value,
-  )
-  candidates.sort((a, b) => overlap(b) - overlap(a))
-  return candidates[0] ?? null
+  const candidates = allowedPoints
+    .map((point) => ({ point, coordinates: parseDimensionSpacePoint(point) }))
+    .filter((candidate) => candidate.coordinates[dimensionId] === value)
+  candidates.sort((a, b) => overlap(b.coordinates) - overlap(a.coordinates))
+  return candidates[0]?.point ?? null
 }
 
 /**
  * Topbar dropdowns (one per content dimension) selecting the dimension space
- * point all node views operate in - the choice is encoded into every node
+ * point all node views operate in - the choice is part of every node
  * address, so document tree, content outliner, inspector and preview follow
  * it automatically. Values that occur in no allowed dimension space point are
  * disabled; when a combination is not allowed, the other coordinates snap to
@@ -70,26 +77,26 @@ export function DimensionSwitcher({
   onCreateVariant,
 }: {
   dimensions: ContentDimension[]
-  /** Every dimension space point the content dimension configuration allows. */
-  allowedPoints: DimensionSpacePoint[]
+  /** Every dimension space point the content dimension configuration allows (JSON). */
+  allowedPoints: string[]
   /**
    * The subset of those the account's access roles permit. Switching only
    * ever targets one of these; the difference to allowedPoints is exactly
    * what renders locked. Defaults to allowedPoints (no access restrictions).
    */
-  permittedPoints?: DimensionSpacePoint[]
-  /** The dimension space point currently in effect */
-  value: DimensionSpacePoint
-  onChange: (point: DimensionSpacePoint) => void
+  permittedPoints?: string[]
+  /** The dimension space point currently in effect (JSON) */
+  value: string
+  onChange: (point: string) => void
   /** Dimension space points the selected document exists in; omit for no document context */
-  documentCoverage?: DimensionSpacePoint[]
-  onCreateVariant?: (point: DimensionSpacePoint) => void
+  documentCoverage?: string[]
+  onCreateVariant?: (point: string) => void
 }) {
-  const documentExistsAt = (point: DimensionSpacePoint) =>
+  const documentExistsAt = (point: string) =>
     documentCoverage === undefined ||
-    documentCoverage.some((covered) =>
-      dimensionSpacePointEquals(covered, point),
-    )
+    documentCoverage.some((covered) => sameDimensionSpacePoint(covered, point))
+  const coordinates = parseDimensionSpacePoint(value)
+  const allowedCoordinates = allowedPoints.map(parseDimensionSpacePoint)
 
   return (
     <>
@@ -97,17 +104,18 @@ export function DimensionSwitcher({
         // A value may be configured but unreachable (e.g. every combination
         // with it is constrained away) - offer only reachable ones enabled.
         const reachable = new Set(
-          allowedPoints.map((point) => point[dimension.id]),
+          allowedCoordinates.map((point) => point[dimension.id]),
         )
         const items = dimension.values.map((v) => ({
           value: v.value,
-          label: v.label,
+          label: v.label ?? v.value,
         }))
+        const dimensionLabel = dimension.label ?? dimension.id
 
         return (
           <Select
             key={dimension.id}
-            value={value[dimension.id] ?? undefined}
+            value={coordinates[dimension.id] ?? undefined}
             onValueChange={(v) => {
               const next = resolveSwitch(
                 value,
@@ -115,7 +123,7 @@ export function DimensionSwitcher({
                 v as string,
                 permittedPoints,
               )
-              if (!next || dimensionSpacePointEquals(next, value)) return
+              if (!next || sameDimensionSpacePoint(next, value)) return
               if (!documentExistsAt(next) && onCreateVariant) {
                 onCreateVariant(next)
               } else {
@@ -125,7 +133,7 @@ export function DimensionSwitcher({
             // Lets SelectValue render the label for the selected value.
             items={items}
           >
-            <SelectTrigger title={dimension.label}>
+            <SelectTrigger title={dimensionLabel}>
               <div className="flex items-center gap-2">
                 {dimension.icon && (
                   <i
@@ -135,7 +143,7 @@ export function DimensionSwitcher({
                 )}
                 <SelectValue
                   className="hidden @[80rem]:inline"
-                  placeholder={dimension.label}
+                  placeholder={dimensionLabel}
                 />
               </div>
             </SelectTrigger>
@@ -180,7 +188,7 @@ export function DimensionSwitcher({
                         paddingLeft: `${dimensionValue.specializationDepth * 0.75}rem`,
                       }}
                     >
-                      {dimensionValue.label}
+                      {dimensionValue.label ?? dimensionValue.value}
                       {locked && (
                         <i className="fas fa-lock text-[0.75rem]" aria-hidden />
                       )}

@@ -1,14 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import {
-  addTaskComment,
-  useTaskComments,
-  type Task,
-  type TaskStatus,
-} from '@/api/tasks'
-import { useUsers } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { useUsers } from '@/api/neos/endpoints/users'
+import { addTaskComment, useTaskComments } from '@/api/studio/endpoints/tasks'
+import { studioKeys } from '@/api/studio/keys'
+import type { Task, TaskStatus } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -70,7 +66,7 @@ export function TaskViewDialog({
   /** Switch over to the edit dialog for this task. */
   onEdit: (task: Task) => void
 }) {
-  const users = useUsers().data?.users
+  const users = useUsers().data
 
   const canWrite = task?.workspace?.permissions.write ?? false
   const canManage = task?.workspace?.permissions.manage ?? false
@@ -175,7 +171,7 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
       setText('')
       // The tasks prefix covers this thread's key AND the board's per-card
       // commentCount - the badge updates immediately, not on the next poll.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all })
     },
     onError: (error) =>
       toast.error(

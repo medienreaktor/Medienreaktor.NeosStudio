@@ -21,8 +21,5 @@
         "branch-alias": {
             "dev-main": "1.17.x-dev"
         }
-    },
-    "suggest": {
-        "neos/neos-ui": "Runs the node types' nodeCreationHandlers (e.g. Flowpack.NodeTemplates) for nodes created in the Studio, through Neos.Api"
     }
 }

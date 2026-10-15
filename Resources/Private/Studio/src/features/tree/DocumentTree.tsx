@@ -6,17 +6,21 @@ import {
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import { toast } from '@/components/ui/toast'
+import { isNotFound } from '@/api/http/errors'
 import {
   DOCUMENT_NODE_TYPE,
   fetchChildren,
   fetchNode,
-  isExplicitlyHidden,
-  nodeLabel,
-  type NodeDto,
-} from '@/api/nodes'
-import { isNotFound } from '@/api/client'
-import { useNodeTypes } from '@/api/nodeTypes'
-import type { Site } from '@/api/sites'
+} from '@/api/neos/endpoints/nodes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import { siteNodeAddress } from '@/api/neos/endpoints/sites'
+import {
+  type Node,
+  type NodeAddress,
+  nodeAddressKey,
+  nodeAddressOf,
+  type Site,
+} from '@/api/neos/schema'
 import { config } from '@/config'
 import { permittedActionsOn } from '@/features/access/permittedActions'
 import { translate as t } from '@/lib/i18n'
@@ -43,15 +47,17 @@ import { useRevealSelection } from './useRevealSelection'
  */
 const ROOT_ID = '__site_root__'
 
-type TreeItemData = NodeDto | typeof ROOT_ID
+type TreeItemData = Node | typeof ROOT_ID
 
 /**
- * Document tree of one site. Remount per site (key by the site's node
- * address) so a site switch starts with fresh expansion state.
+ * Document tree of one site in one workspace and dimension space point (a
+ * subgraph - item ids are node aggregate ids). Remount per site (key by the
+ * site's node address) so a site switch starts with fresh expansion state.
  */
 export function DocumentTree({
   site,
   workspaceName,
+  dimensionSpacePoint,
   selectedAddress = null,
   lastEdit = null,
   onSelect,
@@ -62,18 +68,20 @@ export function DocumentTree({
 }: {
   site: Site
   workspaceName: string
+  /** The dimension space point the tree shows (JSON). */
+  dimensionSpacePoint: string
   /** Address selected outside the tree (e.g. followed across a dimension switch) - revealed and highlighted. */
-  selectedAddress?: string | null
+  selectedAddress?: NodeAddress | null
   /** Last reported edit - refreshes those items (labels, children lists). */
   lastEdit?: NodeEdit | null
-  onSelect?: (node: NodeDto) => void
+  onSelect?: (node: Node) => void
   /**
    * A context-menu action (hide/unhide/delete) succeeded for these targets -
    * one entry normally, several when the menu acted on a multi-selection.
    */
   onNodeAction?: (action: NodeMenuAction, targets: NodeMenuTarget[]) => void
   /** A drag-and-drop move succeeded; addresses whose children changed. */
-  onMoved?: (affectedAddresses: string[]) => void
+  onMoved?: (affectedAddresses: NodeAddress[]) => void
   /** "Create new…" was picked in the context menu for this target. */
   onCreateNew?: (target: NodeMenuTarget) => void
   /**
@@ -85,8 +93,17 @@ export function DocumentTree({
    * asynchronously per branch, so a row can only be kept out at the moment
    * its parent's list resolves.
    */
-  filterDocuments?: (nodes: NodeDto[]) => NodeDto[]
+  filterDocuments?: (nodes: Node[]) => Node[]
 }) {
+  // The site node in the shown subgraph; every other item's address is the
+  // same subgraph with the item's aggregate id.
+  const siteNode = siteNodeAddress(site, workspaceName, dimensionSpacePoint)
+  const addressOf = (nodeAggregateId: string): NodeAddress => ({
+    contentRepositoryId: site.contentRepositoryId,
+    workspaceName,
+    dimensionSpacePoint,
+    nodeAggregateId,
+  })
   // The open context menu: the clicked target plus every selected target the
   // bulk actions apply to (just the clicked one outside multi-select).
   const [menu, setMenu] = useState<{
@@ -104,10 +121,10 @@ export function DocumentTree({
   const { peers } = usePresence()
   // The active cut entry's rows render dimmed - the nodes are "in transit".
   const clipboard = useClipboard()
-  const cutAddresses = new Set(
+  const cutKeys = new Set(
     clipboard.entries
       .find((entry) => entry.id === clipboard.activeId && entry.mode === 'cut')
-      ?.nodes.map((node) => node.address),
+      ?.nodes.map((node) => nodeAddressKey(node.address)),
   )
 
   const dnd = buildTreeDnd<TreeItemData>({
@@ -120,14 +137,16 @@ export function DocumentTree({
     rootItemId: ROOT_ID,
     getItemName: (item) => {
       const data = item.getItemData()
-      return data === ROOT_ID || data === null ? '…' : nodeLabel(data)
+      return data === ROOT_ID || data === null
+        ? '…'
+        : data.label || data.nodeAggregateId
     },
     // Every item's hasChildren is fetched document-filtered ("has document
     // children"), so content-only documents render as leaves.
     isItemFolder: (item) => {
       const data = item.getItemData()
       if (data === ROOT_ID || data === null) return true
-      return data.hasChildren
+      return data.hasChildren ?? false
     },
     onPrimaryAction: (item) => {
       const data = item.getItemData()
@@ -137,7 +156,7 @@ export function DocumentTree({
       getItem: async (itemId): Promise<TreeItemData> => {
         if (itemId === ROOT_ID) return ROOT_ID
         try {
-          return await fetchNode(itemId, DOCUMENT_NODE_TYPE)
+          return await fetchNode(addressOf(itemId), DOCUMENT_NODE_TYPE)
         } catch (e) {
           // A deleted node (gone after a publish/sync) is expected, not a
           // loading failure - stay quiet; the parent's children list refresh
@@ -154,20 +173,20 @@ export function DocumentTree({
       getChildrenWithData: async (itemId) => {
         try {
           if (itemId === ROOT_ID) {
-            if (site.nodeAddress === null) {
+            if (siteNode === null) {
               setRootLoaded(true)
               return []
             }
-            const siteNode = await fetchNode(
-              site.nodeAddress,
-              DOCUMENT_NODE_TYPE,
-            )
+            const node = await fetchNode(siteNode, DOCUMENT_NODE_TYPE)
             setRootLoaded(true)
-            return [{ id: siteNode.address, data: siteNode as TreeItemData }]
+            return [{ id: node.nodeAggregateId, data: node as TreeItemData }]
           }
-          const children = await fetchChildren(itemId, DOCUMENT_NODE_TYPE)
+          const children = await fetchChildren(
+            addressOf(itemId),
+            DOCUMENT_NODE_TYPE,
+          )
           return (filterDocuments?.(children) ?? children).map((node) => ({
-            id: node.address,
+            id: node.nodeAggregateId,
             data: node as TreeItemData,
           }))
         } catch (e) {
@@ -213,12 +232,15 @@ export function DocumentTree({
       if (data === ROOT_ID || data === null) return null
       const parentId = row.getParent()?.getId() ?? null
       return {
-        address: data.address,
-        parentAddress: parentId === ROOT_ID ? null : parentId,
-        hidden: isExplicitlyHidden(data),
+        address: nodeAddressOf(data),
+        parentAddress:
+          parentId === null || parentId === ROOT_ID
+            ? null
+            : addressOf(parentId),
+        hidden: data.isHidden,
         tethered:
           data.classification === 'tethered' ||
-          data.address === site.nodeAddress,
+          data.nodeAggregateId === site.nodeAggregateId,
         // Rows outside the role are reachable (they are the path to what is
         // inside it) but nothing on them may change; inside it, the role's
         // capabilities still decide action by action.
@@ -250,11 +272,11 @@ export function DocumentTree({
             nodeTypes,
             pendingChanges,
             peers.filter(
-              (peer) => peer.documentAggregateId === data.aggregateId,
+              (peer) => peer.documentAggregateId === data.nodeAggregateId,
             ),
             decorators,
           )
-          return cutAddresses.has(data.address)
+          return cutKeys.has(nodeAddressKey(data))
             ? { ...decor, dimmed: true }
             : decor
         }}

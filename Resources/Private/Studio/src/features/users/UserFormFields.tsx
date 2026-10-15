@@ -1,4 +1,4 @@
-import { useUserRoles } from '@/api/users'
+import { useUserOptions } from '@/api/neos/endpoints/users'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,7 +19,7 @@ export function RolesField({
   onChange: (roles: string[]) => void
   lockedRoles?: string[]
 }) {
-  const { data, isLoading } = useUserRoles()
+  const { data, isLoading } = useUserOptions()
 
   const toggle = (identifier: string, checked: boolean) => {
     onChange(

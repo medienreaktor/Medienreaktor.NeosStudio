@@ -1,14 +1,17 @@
 import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { apiErrorDescription } from '@/api/client'
-import { taskOf, transitionTask, type TaskStatus } from '@/api/tasks'
+import { apiErrorDescription } from '@/api/http/errors'
+import { isConflict } from '@/api/http/errors'
 import {
+  canPublish,
   changeBaseWorkspace,
-  isWorkspaceNotEmptyError,
   useWorkspaces,
-  type Workspace,
-} from '@/api/workspaces'
-import { queryKeys } from '@/api/keys'
+} from '@/api/neos/endpoints/workspaces'
+import { neosKeys } from '@/api/neos/keys'
+import type { Workspace } from '@/api/neos/schema'
+import { transitionTask, useTasks } from '@/api/studio/endpoints/tasks'
+import { studioKeys } from '@/api/studio/keys'
+import type { TaskStatus } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import {
@@ -38,6 +41,7 @@ import {
   usePublishTarget,
 } from '@/features/workspaces/PublishTargetBadge'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
 
 /**
@@ -72,7 +76,7 @@ export function WorkspaceSwitcher({
   personalWorkspace: Workspace
   /** The workspace being edited: personal, or a shared one (collaborative). */
   activeWorkspace: Workspace
-  /** Base workspaces on offer: live (ROOT) and shared ones. */
+  /** Base workspaces on offer: live (root) and shared ones. */
   targets: Workspace[]
   /** Move the editing context to a shared workspace, or null = personal. */
   onSwitchEditingContext: (workspaceName: string | null) => void
@@ -90,7 +94,9 @@ export function WorkspaceSwitcher({
   // entry): submit / reopen transition directly, completing routes through
   // the review dialog while changes are pending - the same semantics as the
   // Tasks board.
-  const activeTask = taskOf(activeWorkspace)
+  const { data: tasks } = useTasks()
+  const activeTask =
+    tasks?.find((task) => task.workspaceName === activeWorkspace.name) ?? null
   const taskTransition = useMutation({
     mutationFn: ({
       target,
@@ -118,8 +124,8 @@ export function WorkspaceSwitcher({
         { title: t('tasks.moveFailed', 'Could not move task') },
       ),
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all })
+      void invalidateWorkspaceQueries()
     },
   })
 
@@ -137,15 +143,15 @@ export function WorkspaceSwitcher({
       // The workspace list carries the baseWorkspace shown as the selected
       // value, and every cached node read is stale - unchanged nodes now
       // show the new base's content.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+      void invalidateWorkspaceQueries()
+      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
       workspaceContentChanged()
       toast.success(t('workspace.switched', 'Workspace switched.'))
     },
     onError: (error) => {
       // The CR refuses the rebase while the personal workspace still has
       // publishable changes — guide the user to clear them first.
-      const notEmpty = isWorkspaceNotEmptyError(error)
+      const notEmpty = isConflict(error)
       toast.error(
         notEmpty
           ? t(
@@ -161,7 +167,7 @@ export function WorkspaceSwitcher({
   })
 
   const workspaceLabel = (workspace: Workspace) =>
-    workspace.classification === 'ROOT'
+    workspace.classification === 'root'
       ? t('workspace.live', 'Live')
       : workspace.title || workspace.name
 
@@ -169,8 +175,8 @@ export function WorkspaceSwitcher({
   // "edit:x" moves the editing context into the shared workspace x.
   const value = collaborative
     ? `edit:${activeWorkspace.name}`
-    : personalWorkspace.baseWorkspace
-      ? `base:${personalWorkspace.baseWorkspace}`
+    : personalWorkspace.baseWorkspaceName
+      ? `base:${personalWorkspace.baseWorkspaceName}`
       : undefined
 
   // Decorators can claim a workspace for a dedicated group (e.g. a task
@@ -180,7 +186,7 @@ export function WorkspaceSwitcher({
   // claimed away - it is the selected value.
   const decorators = useWorkspaceDecorators()
   const groupOf = (workspace: Workspace): string | null =>
-    workspace.name === personalWorkspace.baseWorkspace
+    workspace.name === personalWorkspace.baseWorkspaceName
       ? null
       : (decorationsFor(workspace, decorators).find(
           (decoration) => decoration.switcherGroup,
@@ -188,7 +194,7 @@ export function WorkspaceSwitcher({
 
   const standardTargets = targets.filter((workspace) => !groupOf(workspace))
   const sharedTargets = standardTargets.filter(
-    (workspace) => workspace.classification === 'SHARED',
+    (workspace) => workspace.classification === 'shared',
   )
   const decoratorGroups = new Map<string, Workspace[]>()
   for (const workspace of targets) {
@@ -218,7 +224,7 @@ export function WorkspaceSwitcher({
     // A base target always means "edit in my workspace again" first; the
     // rebase only runs when the target differs from the current base.
     if (collaborative) onSwitchEditingContext(null)
-    if (baseWorkspace !== personalWorkspace.baseWorkspace) {
+    if (baseWorkspace !== personalWorkspace.baseWorkspaceName) {
       switchBase.mutate(baseWorkspace)
     }
   }
@@ -269,7 +275,7 @@ export function WorkspaceSwitcher({
               // the personal workspace.
               const rebaseBlocked =
                 personalWorkspace.hasPublishableChanges &&
-                workspace.name !== personalWorkspace.baseWorkspace
+                workspace.name !== personalWorkspace.baseWorkspaceName
               return (
                 <DropdownMenuCheckboxItem
                   key={`base:${workspace.name}`}
@@ -386,7 +392,10 @@ export function WorkspaceSwitcher({
                             )}
                           {activeTask.status !== 'DONE' &&
                             activeWorkspace.permissions.manage &&
-                            activeWorkspace.permissions.publish && (
+                            canPublish(
+                              activeWorkspace,
+                              workspacesData ?? [],
+                            ) && (
                               <DropdownMenuItem onClick={completeTask}>
                                 <i
                                   className="fas fa-check w-4 text-center"
@@ -467,7 +476,7 @@ export function WorkspaceSwitcher({
       />
       {reviewing && workspacesData && (
         <ReviewChangesDialog
-          workspaces={workspacesData.workspaces}
+          workspaces={workspacesData}
           activeWorkspace={activeWorkspace}
           initialSourceName={activeWorkspace.name}
           open={reviewing}

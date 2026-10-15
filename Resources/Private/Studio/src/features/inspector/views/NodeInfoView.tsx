@@ -1,9 +1,24 @@
+import { parseDimensionSpacePoint, type Node } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import type { InspectorViewComponent } from './registry'
 
 export const NODE_INFO_VIEW = 'Neos.Neos/Inspector/Views/NodeInfoView'
+
+/**
+ * The node's address as Neos core serializes it (NodeAddress::toJson, the
+ * classic UI's context path) - what integrators copy into CLI commands and
+ * debugging sessions.
+ */
+function serializedNodeAddress(node: Node): string {
+  return JSON.stringify({
+    contentRepositoryId: node.contentRepositoryId,
+    workspaceName: node.workspaceName,
+    dimensionSpacePoint: parseDimensionSpacePoint(node.dimensionSpacePoint),
+    aggregateId: node.nodeAggregateId,
+  })
+}
 
 /**
  * The classic UI's node metadata widget (Neos.Neos:Document ships it in the
@@ -36,10 +51,10 @@ export const NodeInfoView: InspectorViewComponent = ({ node }) => {
         {dateText(node.timestamps.lastModified)}
       </InfoRow>
       <InfoRow label={t('view.identifier', 'Identifier')}>
-        {node.aggregateId}
+        {node.nodeAggregateId}
       </InfoRow>
       <InfoRow label={t('view.nodeAddress', 'Node address')}>
-        {node.address}
+        {serializedNodeAddress(node)}
       </InfoRow>
       {node.name && (
         <InfoRow label={t('view.name', 'Name')}>{node.name}</InfoRow>

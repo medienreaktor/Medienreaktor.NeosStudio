@@ -328,8 +328,9 @@
     '@controller': 'Preview'
     '@action': 'show'
     '@format': 'html'
-  # node (base64url NodeAddress: workspace + dimension + aggregate id) and
-  # mode (rendering mode name) travel as query parameters.
+  # The node (contentRepositoryId, workspaceName, dimensionSpacePoint as
+  # JSON, nodeAggregateId) and mode (rendering mode name) travel as query
+  # parameters.
   appendExceedingArguments: true
   httpMethods: ['GET']
 

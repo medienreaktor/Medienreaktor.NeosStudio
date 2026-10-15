@@ -670,6 +670,14 @@
         <source>This node is deleted. Restore it to edit its properties again.</source>
         <target xml:lang="pl">Ten węzeł jest usunięty. Przywróć go, aby ponownie edytować jego właściwości.</target>
       </trans-unit>
+      <trans-unit id="inspector.propertyScope.nodeAggregate" xml:space="preserve">
+        <source>The value of this property is shared across all dimension variants.</source>
+        <target xml:lang="pl">Wartość tej właściwości jest wspólna dla wszystkich wariantów wymiarów.</target>
+      </trans-unit>
+      <trans-unit id="inspector.propertyScope.specializations" xml:space="preserve">
+        <source>Changes to this property will affect all specialization variants.</source>
+        <target xml:lang="pl">Zmiany tej właściwości wpłyną na wszystkie warianty specjalizacji.</target>
+      </trans-unit>
       <trans-unit id="inspector.savingFailed" xml:space="preserve">
         <source>Saving failed</source>
         <target xml:lang="pl">Zapisywanie nie powiodło się</target>

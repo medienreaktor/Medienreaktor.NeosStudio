@@ -3,9 +3,15 @@ import {
   dragAndDropFeature,
   type ItemInstance,
 } from '@headless-tree/core'
-import { queryKeys } from '@/api/keys'
+import { fetchAllowedChildNodeTypes } from '@/api/neos/endpoints/nodes'
+import { neosKeys } from '@/api/neos/keys'
+import {
+  type Node,
+  type NodeAddress,
+  nodeAddressKey,
+  nodeAddressOf,
+} from '@/api/neos/schema'
 import { nodePermits } from '@/features/access/useAccess'
-import { fetchAllowedChildNodeTypes, type NodeDto } from '@/api/nodes'
 import { queryClient } from '@/app/queryClient'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
@@ -30,17 +36,17 @@ export function buildTreeDnd<T>({
   getNode,
   onMoved,
 }: {
-  getNode: (data: T) => NodeDto | null
+  getNode: (data: T) => Node | null
   /** Addresses whose child lists changed (old + new parents) - refresh them. */
-  onMoved: (affectedAddresses: string[]) => void
+  onMoved: (affectedAddresses: NodeAddress[]) => void
 }) {
-  const nodeOf = (item: ItemInstance<T>): NodeDto | null =>
+  const nodeOf = (item: ItemInstance<T>): Node | null =>
     getNode(item.getItemData())
 
   /** The intended new parent of a drop - `target.item` in both drop modes. */
-  const allowedTypesOf = (address: string): string[] | undefined =>
+  const allowedTypesOf = (address: NodeAddress): string[] | undefined =>
     queryClient.getQueryData<string[]>(
-      queryKeys.nodes.allowedChildNodeTypes(address),
+      neosKeys.nodes.allowedChildNodeTypes(nodeAddressOf(address)),
     )
 
   return {
@@ -92,8 +98,8 @@ export function buildTreeDnd<T>({
         const tree = items[0]?.getTree()
         for (const item of tree?.getItems() ?? []) {
           const node = nodeOf(item)
-          if (node && allowedTypesOf(node.address) === undefined) {
-            void fetchAllowedChildNodeTypes(node.address)
+          if (node && allowedTypesOf(node) === undefined) {
+            void fetchAllowedChildNodeTypes(nodeAddressOf(node))
           }
         }
         return true
@@ -108,11 +114,11 @@ export function buildTreeDnd<T>({
         // outside the roles takes none, nor does one whose role withholds
         // creating.
         if (!nodePermits(parent, 'createNodes')) return false
-        const allowed = allowedTypesOf(parent.address)
+        const allowed = allowedTypesOf(parent)
         if (allowed === undefined) {
           // Not warmed yet (e.g. a just-loaded row): fetch and disallow for
           // now; the next dragover over a fresh position re-evaluates.
-          void fetchAllowedChildNodeTypes(parent.address)
+          void fetchAllowedChildNodeTypes(nodeAddressOf(parent))
           return false
         }
         return items.every((item) => {
@@ -132,37 +138,45 @@ export function buildTreeDnd<T>({
         // parent's children with the moved nodes removed (they are not their
         // own siblings). Absent index (dropped onto a folder) or past the end
         // appends.
-        let succeedingSiblingAddress: string | null = null
+        let succeedingSiblingAddress: NodeAddress | null = null
         if ('insertionIndex' in target) {
           const draggedIds = new Set(items.map((item) => item.getId()))
           const remaining = target.item
             .getChildren()
             .filter((child) => !draggedIds.has(child.getId()))
           const sibling = remaining[target.insertionIndex]
-          succeedingSiblingAddress = sibling
-            ? (nodeOf(sibling)?.address ?? null)
+          const siblingNode = sibling ? nodeOf(sibling) : null
+          succeedingSiblingAddress = siblingNode
+            ? nodeAddressOf(siblingNode)
             : null
         }
 
         const moves: MoveByAddress[] = []
-        const affected = new Set<string>([parent.address])
+        // By key, so a parent shared by several moved nodes counts once.
+        const affected = new Map<string, NodeAddress>([
+          [nodeAddressKey(parent), nodeAddressOf(parent)],
+        ])
         for (const item of items) {
           const node = nodeOf(item)
           if (node === null) continue
           moves.push({
-            nodeAddress: node.address,
-            newParentAddress: parent.address,
+            nodeAddress: nodeAddressOf(node),
+            newParentAddress: nodeAddressOf(parent),
             succeedingSiblingAddress,
           })
           const oldParent = item.getParent()
           const oldParentNode = oldParent ? nodeOf(oldParent) : null
-          if (oldParentNode) affected.add(oldParentNode.address)
+          if (oldParentNode)
+            affected.set(
+              nodeAddressKey(oldParentNode),
+              nodeAddressOf(oldParentNode),
+            )
         }
         if (moves.length === 0) return
 
         try {
           await moveNodesByAddress(moves)
-          onMoved([...affected])
+          onMoved([...affected.values()])
         } catch (e) {
           toast.error(e, { title: t('editing.moveFailed', 'Moving failed') })
         }

@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { deleteUser, updateUser, useUsers, type User } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { neosKeys } from '@/api/neos/keys'
+import {
+  deleteUser,
+  updateUser,
+  userRoles,
+  useUsers,
+} from '@/api/neos/endpoints/users'
+import type { User } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,6 +38,7 @@ import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { CreateUserDialog } from './CreateUserDialog'
 import { EditUserDialog } from './EditUserDialog'
 import { ResetPasswordDialog } from './ResetPasswordDialog'
+import { fullName, useIsCurrentUser } from './user'
 
 /**
  * User administration, rendered as a section of the shared Settings modal
@@ -40,7 +47,7 @@ import { ResetPasswordDialog } from './ResetPasswordDialog'
  * delete.
  *
  * The section is administrators only - the host disables its subnav entry for
- * non-admins (me.permissions.users), and every write endpoint 403s without
+ * non-admins (useAdministrationPermissions().users), and every write endpoint 403s without
  * the Administrator role anyway. Self-lockout operations (deactivate, delete,
  * dropping the own Administrator role) are disabled in the UI and refused by
  * the server.
@@ -61,12 +68,12 @@ export function UserAdministration() {
   }, [error])
 
   const users = useMemo(() => {
-    const all = data?.users ?? []
+    const all = data ?? []
     const term = search.trim().toLowerCase()
     if (term === '') return all
     return all.filter((user) =>
       [
-        user.fullName,
+        fullName(user),
         user.label,
         user.email ?? '',
         ...user.accounts.map((account) => account.identifier),
@@ -181,7 +188,7 @@ export function UserAdministration() {
         onConfirm={async () => {
           const user = deleting!
           await deleteUser(user.id)
-          queryClient.invalidateQueries({ queryKey: queryKeys.users })
+          queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
           toast.success(
             t('users.deleted', 'The user "{0}" has been deleted.', [
               user.label,
@@ -204,10 +211,12 @@ function UserRow({
   onResetPassword: () => void
   onDelete: () => void
 }) {
+  const isCurrentUser = useIsCurrentUser()(user)
+  const roles = userRoles(user)
   const activation = useMutation({
     mutationFn: (active: boolean) => updateUser(user.id, { active }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users })
+      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       toast.success(
         response.active
           ? t('users.activated', 'The user "{0}" has been activated.', [
@@ -232,9 +241,9 @@ function UserRow({
     <TableRow className="text-neutral-800 dark:text-neutral-200">
       <TableCell>
         <span className="font-medium text-neutral-950 dark:text-white">
-          {user.fullName || user.label}
+          {fullName(user) || user.label}
         </span>
-        {user.isCurrentUser && (
+        {isCurrentUser && (
           <Badge variant="outline" className="ml-2 align-middle">
             {t('users.you', 'You')}
           </Badge>
@@ -259,10 +268,10 @@ function UserRow({
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
-          {user.roles.length === 0 ? (
+          {roles.length === 0 ? (
             <span className="text-neutral-500">—</span>
           ) : (
-            user.roles.map((role) => (
+            roles.map((role) => (
               <Badge key={role} variant="secondary">
                 {shortRole(role)}
               </Badge>
@@ -306,9 +315,7 @@ function UserRow({
               {t('users.resetPassword', 'Reset password')}
             </DropdownMenuItem>
             <DropdownMenuItem
-              disabled={
-                (user.active && user.isCurrentUser) || activation.isPending
-              }
+              disabled={(user.active && isCurrentUser) || activation.isPending}
               onClick={() => activation.mutate(!user.active)}
             >
               <i
@@ -322,7 +329,7 @@ function UserRow({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              disabled={user.isCurrentUser}
+              disabled={isCurrentUser}
               onClick={onDelete}
             >
               <i className="fas fa-trash" aria-hidden />

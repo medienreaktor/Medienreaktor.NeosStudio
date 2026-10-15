@@ -1,4 +1,4 @@
-import { useNodeTypes } from '@/api/nodeTypes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import { Button } from '@/components/ui/button'
 import { Placeholder } from '@/components/ui/placeholder'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'

@@ -1,4 +1,4 @@
-import type { NodeDto } from '@/api/nodes'
+import type { Node, NodeAddress } from '@/api/neos/schema'
 import type { InspectorTab } from './inspectorSchema'
 
 /**
@@ -21,10 +21,11 @@ const CLIENT_EVAL_PREFIX = 'ClientEval:'
 /**
  * The node shape expressions evaluate against, mirroring what expressions
  * written for the classic UI rely on: plain (unwrapped) property values under
- * `properties`, the aggregate id under `identifier`.
+ * `properties`, the aggregate id under `identifier`. The node's address is
+ * there as its four fields (contentRepositoryId, workspaceName,
+ * dimensionSpacePoint as JSON, nodeAggregateId).
  */
-export interface ClientEvalNode {
-  address: string
+export interface ClientEvalNode extends NodeAddress {
   identifier: string
   aggregateId: string
   name: string | null
@@ -41,11 +42,11 @@ export interface ClientEvalContext {
 }
 
 /**
- * Builds the expression-facing node from a NodeDto, overlaying
+ * Builds the expression-facing node from a Node, overlaying
  * not-yet-committed editor input on top of the persisted values.
  */
 export function clientEvalNode(
-  node: NodeDto,
+  node: Node,
   transientValues?: Record<string, unknown>,
 ): ClientEvalNode {
   const properties: Record<string, unknown> = {
@@ -53,14 +54,17 @@ export function clientEvalNode(
     ...transientValues,
   }
   return {
-    address: node.address,
-    identifier: node.aggregateId,
-    aggregateId: node.aggregateId,
+    contentRepositoryId: node.contentRepositoryId,
+    workspaceName: node.workspaceName,
+    dimensionSpacePoint: node.dimensionSpacePoint,
+    nodeAggregateId: node.nodeAggregateId,
+    identifier: node.nodeAggregateId,
+    aggregateId: node.nodeAggregateId,
     name: node.name,
     label: node.label,
     nodeType: node.nodeType,
     properties,
-    tags: node.tags.all,
+    tags: [...node.tags, ...node.inheritedTags],
   }
 }
 

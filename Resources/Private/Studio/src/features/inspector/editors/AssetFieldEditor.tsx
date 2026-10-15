@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
 
-import { useAsset, type MediaAsset } from '@/api/media'
-import { Button } from '@/components/ui/button'
-import { useAssetPicker } from '@/features/media/AssetPicker'
-import { AssetThumb } from '@/features/media/AssetThumb'
-import type { PropertyEditorProps } from './registry'
 import {
   assetReference,
   localAssetIdFor,
   referenceIdentifier,
-} from '@/api/assetValue'
+  useAsset,
+} from '@/api/neos/endpoints/assets'
+import type { Asset } from '@/api/neos/schema'
+import { Button } from '@/components/ui/button'
+import { useAssetPicker } from '@/features/media/AssetPicker'
+import { AssetThumb } from '@/features/media/AssetThumb'
+import type { PropertyEditorProps } from './registry'
 import { parseCropConfig } from './cropOptions'
 import { ImageCropDialog } from './ImageCropDialog'
 import { translate as t } from '@/lib/i18n'
@@ -21,7 +22,7 @@ import { translate as t } from '@/lib/i18n'
  * "image" shows a large preview (and offers cropping), "asset" a compact row;
  * both commit the picked asset's id.
  *
- * A stored value is only ever an identifier (see assetValue.ts), so the asset
+ * A stored value is only ever an identifier (see referenceIdentifier in api/neos/endpoints/assets.ts), so the asset
  * to display is resolved from the API. A fresh pick is held locally too, so the
  * preview updates instantly, ahead of the resolve. State is seeded from
  * `value` and owned here between value changes - the inspector remounts the
@@ -39,7 +40,7 @@ export function AssetFieldEditor({
 }: PropertyEditorProps & { kind: 'image' | 'asset' }) {
   const { requestPick } = useAssetPicker()
   const [identifier, setIdentifier] = useState(() => referenceIdentifier(value))
-  const [picked, setPicked] = useState<MediaAsset | null>(null)
+  const [picked, setPicked] = useState<Asset | null>(null)
   const [cropOpen, setCropOpen] = useState(false)
 
   // Adopt external value changes: when the refetched node carries a different
@@ -78,7 +79,7 @@ export function AssetFieldEditor({
     asset !== null &&
     asset.assetType === 'image'
 
-  const applyCrop = (variant: MediaAsset) => {
+  const applyCrop = (variant: Asset) => {
     const id = variant.localAssetId ?? variant.id
     setPicked(variant)
     setIdentifier(id)

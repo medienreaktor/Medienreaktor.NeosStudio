@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { createNodeVariant } from '@/api/commands'
-import type { ContentDimension, DimensionSpacePoint } from '@/api/dimensions'
-import { dimensionSpacePointLabel } from '@/api/dimensions'
-import { addressInWorkspace } from '@/api/nodeAddress'
-import { type NodeDto, nodeLabel } from '@/api/nodes'
+import { dimensionSpacePointLabel } from '@/api/neos/endpoints/contentRepositories'
+import { createNodeVariant } from '@/api/neos/endpoints/nodeCommands'
+import {
+  type ContentDimension,
+  type Node,
+  nodeAddressOf,
+} from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -34,12 +36,13 @@ export function CreateVariantDialog({
   onCancel,
   onCreated,
 }: {
-  document: NodeDto
-  targetPoint: DimensionSpacePoint
+  document: Node
+  /** The dimension space point to create the variant in (JSON). */
+  targetPoint: string
   dimensions: ContentDimension[]
   workspaceName: string
   onCancel: () => void
-  onCreated: (point: DimensionSpacePoint) => void
+  onCreated: (point: string) => void
 }) {
   const [phase, setPhase] = useState<Phase>('ready')
 
@@ -47,7 +50,7 @@ export function CreateVariantDialog({
     setPhase('creating')
     try {
       await createNodeVariant(
-        addressInWorkspace(document.address, workspaceName),
+        { ...nodeAddressOf(document), workspaceName },
         targetPoint,
         copyContent,
       )
@@ -78,7 +81,7 @@ export function CreateVariantDialog({
           </DialogTitle>
           <DialogDescription>
             {t('dimension.notExistYet', '“{0}” does not exist in {1} yet.', [
-              nodeLabel(document),
+              document.label || document.nodeAggregateId,
               dimensionSpacePointLabel(targetPoint, dimensions),
             ])}
             {t(

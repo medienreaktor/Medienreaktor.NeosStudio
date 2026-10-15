@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { updateUser, type UpdateUserInput, type User } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { neosKeys } from '@/api/neos/keys'
+import { updateUser, userRoles } from '@/api/neos/endpoints/users'
+import type { User, UserUpdate } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,6 +20,7 @@ import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Field } from '@/components/ui/field'
 import { RolesField } from './UserFormFields'
+import { useIsCurrentUser } from './user'
 
 const ADMINISTRATOR_ROLE = 'Neos.Neos:Administrator'
 
@@ -41,6 +43,7 @@ export function EditUserDialog({
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [roles, setRoles] = useState<string[]>([])
+  const isCurrentUser = useIsCurrentUser()(user)
 
   // Re-seed the form whenever a (new) user is opened for editing.
   useEffect(() => {
@@ -48,32 +51,33 @@ export function EditUserDialog({
       setFirstName(user.firstName ?? '')
       setLastName(user.lastName ?? '')
       setEmail(user.email ?? '')
-      setRoles(user.roles)
+      setRoles(userRoles(user))
     }
   }, [user])
 
-  const changes: UpdateUserInput = {}
+  const changes: UserUpdate = {}
   if (user !== null) {
     if (firstName !== (user.firstName ?? '')) changes.firstName = firstName
     if (lastName !== (user.lastName ?? '')) changes.lastName = lastName
     // An address can be changed but not removed - a cleared field is no change.
     if (email.trim() !== '' && email !== (user.email ?? ''))
       changes.email = email.trim()
+    const currentRoles = userRoles(user)
     const rolesChanged =
-      roles.length !== user.roles.length ||
-      roles.some((role) => !user.roles.includes(role))
+      roles.length !== currentRoles.length ||
+      roles.some((role) => !currentRoles.includes(role))
     if (rolesChanged) changes.roles = roles
   }
   const isDirty = Object.keys(changes).length > 0
   const canSubmit = isDirty && firstName.trim() !== '' && lastName.trim() !== ''
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateUserInput) => updateUser(user!.id, input),
+    mutationFn: (input: UserUpdate) => updateUser(user!.id, input),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users })
+      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       // Editing yourself can change your own label and roles.
-      if (user?.isCurrentUser) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.me })
+      if (isCurrentUser) {
+        queryClient.invalidateQueries({ queryKey: neosKeys.me })
       }
       toast.success(
         t('users.saved', 'The user "{0}" has been saved.', [response.label]),
@@ -153,9 +157,9 @@ export function EditUserDialog({
           <RolesField
             value={roles}
             onChange={setRoles}
-            lockedRoles={user?.isCurrentUser ? [ADMINISTRATOR_ROLE] : []}
+            lockedRoles={isCurrentUser ? [ADMINISTRATOR_ROLE] : []}
           />
-          {user?.isCurrentUser && (
+          {isCurrentUser && (
             <p className="text-xs text-neutral-500">
               {t(
                 'users.ownAdminLocked',

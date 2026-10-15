@@ -1,6 +1,5 @@
 import * as React from 'react'
-import type { NodeDto } from '@/api/nodes'
-import type { Site } from '@/api/sites'
+import type { Node, NodeAddress, Site } from '@/api/neos/schema'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 
 /**
@@ -20,10 +19,15 @@ export type StudioContextValue = {
    * collaboratively.
    */
   personalWorkspaceName: string | null
+  /**
+   * The active dimension space point (JSON, as in a NodeAddress), or null
+   * while it is not resolved yet.
+   */
+  dimensionSpacePoint: string | null
   /** The document shown in the preview and selected in the document tree. */
-  selectedDocument: NodeDto | null
+  selectedDocument: Node | null
   /** The node under inspection - a document or a content node. */
-  inspectedNode: NodeDto | null
+  inspectedNode: Node | null
   /** The last inline edit from the preview; refreshes outliner labels. */
   lastEdit: NodeEdit | null
   /** Bumped to reload the preview iframe after edits made outside of it. */
@@ -31,28 +35,31 @@ export type StudioContextValue = {
   /**
    * The last edit that wants just its nodes' elements refreshed in the
    * preview (out-of-band render + DOM swap instead of an iframe reload).
-   * Usually one address; remote collaborators' edits can batch several. The
-   * token distinguishes successive updates of the same addresses.
+   * Usually one node; remote collaborators' edits can batch several. The
+   * token distinguishes successive updates of the same nodes.
    */
-  previewElementUpdate: { addresses: string[]; token: number } | null
+  previewElementUpdate: { addresses: NodeAddress[]; token: number } | null
   /** Select a document (also inspects it). */
-  selectDocument: (node: NodeDto) => void
+  selectDocument: (node: Node) => void
   /** Inspect a node without changing the selected document. */
-  inspectNode: (node: NodeDto) => void
+  inspectNode: (node: Node) => void
   /** Fetch and inspect the node at this address (e.g. a preview click). */
-  inspectAddress: (address: string) => void
+  inspectAddress: (address: NodeAddress) => void
   /**
    * Follow a link to another document (a preview navigation): show the target
    * document, switching the active dimension to match it when they differ.
    */
-  navigateToNode: (address: string) => void
+  navigateToNode: (address: NodeAddress) => void
   /**
    * Show a document that lives in another workspace: moves the editing
    * context to that workspace first (personal, or a writable shared one),
    * then navigates to the address - which is already bound to it. A no-op
    * context switch when the workspace is already active.
    */
-  navigateToNodeInWorkspace: (address: string, workspaceName: string) => void
+  navigateToNodeInWorkspace: (
+    address: NodeAddress,
+    workspaceName: string,
+  ) => void
   /**
    * Checkout a workspace: move the editing context into it - back to the
    * personal one, or into a writable shared one (collaborative editing).
@@ -65,7 +72,7 @@ export type StudioContextValue = {
    * the refetch/reload the inspector path needs (the iframe already rendered
    * the change live).
    */
-  reportInlineEdit: (addresses: string[]) => void
+  reportInlineEdit: (addresses: NodeAddress[]) => void
   /**
    * Report that a property edit for this address was persisted. reload
    * mirrors the property's configuration and defaults to 'page' (full iframe
@@ -74,7 +81,7 @@ export type StudioContextValue = {
    * not affect the rendered page. Trees and the inspector always refresh.
    */
   nodeEdited: (
-    address: string,
+    address: NodeAddress,
     options?: { reload?: 'page' | 'element' | 'none' },
   ) => void
   /**
@@ -83,7 +90,7 @@ export type StudioContextValue = {
    * preview reloads, without the single-address inspector refetch nodeEdited
    * does.
    */
-  nodesEdited: (addresses: string[]) => void
+  nodesEdited: (addresses: NodeAddress[]) => void
   /**
    * Report that the workspace's content changed wholesale (published -
    * which rebases the workspace - or discarded): every cached node read,

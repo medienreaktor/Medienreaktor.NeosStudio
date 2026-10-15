@@ -3,16 +3,13 @@ import { useCallback, useMemo, useState } from 'react'
 import {
   DEFAULT_ASSET_FILTER,
   type AssetListFilter,
-  type AssetType,
-  type MediaAsset,
-} from '@/api/media'
+} from '@/api/neos/endpoints/assets'
+import type { Asset, AssetType } from '@/api/neos/schema'
 
 export type MediaViewMode = 'grid' | 'list'
 
 /** A stable key for an asset across sources - used for selection sets. */
-export function assetKey(
-  asset: Pick<MediaAsset, 'assetSourceId' | 'id'>,
-): string {
+export function assetKey(asset: Pick<Asset, 'assetSourceId' | 'id'>): string {
   return `${asset.assetSourceId}:${asset.id}`
 }
 
@@ -27,7 +24,7 @@ export function useMediaBrowserState(initialSource = 'neos') {
     assetSource: initialSource,
   })
   const [view, setView] = useState<MediaViewMode>('grid')
-  const [active, setActive] = useState<MediaAsset | null>(null)
+  const [active, setActive] = useState<Asset | null>(null)
 
   const patch = useCallback((next: Partial<AssetListFilter>) => {
     setFilter((current) => ({ ...current, ...next }))

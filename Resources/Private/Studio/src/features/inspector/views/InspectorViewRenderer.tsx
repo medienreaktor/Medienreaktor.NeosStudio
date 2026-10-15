@@ -1,4 +1,4 @@
-import type { NodeDto } from '@/api/nodes'
+import type { Node } from '@/api/neos/schema'
 import type { InspectorView } from '@/features/inspector/inspectorSchema'
 import { Labeled } from '@/features/inspector/PropertyEditor'
 import { translate as t } from '@/lib/i18n'
@@ -16,7 +16,7 @@ export function InspectorViewRenderer({
   node,
 }: {
   view: InspectorView
-  node: NodeDto
+  node: Node
 }) {
   const definition = useInspectorView(view.view)
   if (!definition) {

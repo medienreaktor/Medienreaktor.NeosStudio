@@ -1,4 +1,5 @@
-import { useWorkspaces, type Workspace } from '@/api/workspaces'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import type { Workspace } from '@/api/neos/schema'
 import { Badge } from '@/components/ui/badge'
 import { translate as t } from '@/lib/i18n'
 import { workspaceIconName } from './WorkspaceIcon'
@@ -16,17 +17,17 @@ export function usePublishTarget(workspace: Workspace): {
   classification: string | null
 } {
   const { data } = useWorkspaces()
-  const base = workspace.baseWorkspace
-    ? (data?.workspaces.find(
-        (candidate) => candidate.name === workspace.baseWorkspace,
+  const base = workspace.baseWorkspaceName
+    ? (data?.find(
+        (candidate) => candidate.name === workspace.baseWorkspaceName,
       ) ?? null)
     : null
   return {
     label: base
-      ? base.classification === 'ROOT'
+      ? base.classification === 'root'
         ? t('workspace.live', 'Live')
         : base.title || base.name
-      : (workspace.baseWorkspace ??
+      : (workspace.baseWorkspaceName ??
         t('workspace.selectPlaceholder', 'Select workspace…')),
     icon: workspaceIconName(base ?? undefined),
     classification: base?.classification ?? null,
@@ -35,7 +36,7 @@ export function usePublishTarget(workspace: Workspace): {
 
 /**
  * Pill colors by the target's classification: Neos primary blue for live
- * (ROOT), Neos purple for every other target (shared workspaces, or a base not
+ * (root), Neos purple for every other target (shared workspaces, or a base not
  * resolved yet). Fixed in both color schemes - the pill sits on a neutral
  * trigger either way.
  */
@@ -51,7 +52,7 @@ const OTHER_TARGET_STYLE =
 export function PublishTargetBadge({ workspace }: { workspace: Workspace }) {
   const { label, icon, classification } = usePublishTarget(workspace)
   const style =
-    classification === 'ROOT' ? LIVE_TARGET_STYLE : OTHER_TARGET_STYLE
+    classification === 'root' ? LIVE_TARGET_STYLE : OTHER_TARGET_STYLE
   return (
     <Badge variant="secondary" className={`gap-1.5 font-normal ${style}`}>
       <i className="fas fa-arrow-right text-[0.6rem] text-white" aria-hidden />

@@ -1,16 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
+import { apiErrorDescription } from '@/api/http/errors'
 import { config } from '@/config'
-import { queryKeys } from '@/api/keys'
+import { neosKeys } from '@/api/neos/keys'
 import {
   changePassword,
   updateProfile,
   useProfile,
-  type Profile,
-  type UpdateProfileInput,
-} from '@/api/profile'
+} from '@/api/neos/endpoints/me'
+import type { Profile, ProfileUpdate } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -117,7 +116,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
     }
   })
 
-  const changes: UpdateProfileInput = {}
+  const changes: ProfileUpdate = {}
   if (firstName !== profile.firstName) changes.firstName = firstName
   if (lastName !== profile.lastName) changes.lastName = lastName
   // An address can be changed but not removed - a cleared field is no change.
@@ -130,11 +129,11 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const isDirty = Object.keys(changes).length > 0
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateProfileInput) => updateProfile(input),
+    mutationFn: (input: ProfileUpdate) => updateProfile(input),
     onSuccess: (_response, input) => {
       // me covers profile (nested key); users so an admin's own row updates.
-      queryClient.invalidateQueries({ queryKey: queryKeys.me })
-      queryClient.invalidateQueries({ queryKey: queryKeys.users })
+      queryClient.invalidateQueries({ queryKey: neosKeys.me })
+      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       toast.success(t('profile.saved', 'Your profile has been saved.'))
       // The theme switches live - no reload needed for the UI mode.
       if (input.preferences?.[UI_MODE_PREFERENCE] !== undefined) {

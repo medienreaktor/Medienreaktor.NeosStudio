@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 import {
+  configuredLabel,
   isOfType,
+  type NodeTypeMap,
   useNodeTypeGroups,
   useNodeTypes,
-  type NodeTypeDto,
-  type NodeTypeMap,
-} from '@/api/nodeTypes'
+} from '@/api/neos/endpoints/nodeTypes'
+import type { NodeType } from '@/api/neos/schema'
 import { humanizeLabel } from '@/features/inspector/inspectorSchema'
 import { sortByPosition } from '@/lib/positional'
 
@@ -40,12 +41,9 @@ export function useCreatableNodeTypes(
 
   return useMemo(() => {
     if (!nodeTypes || !groupConfigs) return null
-    const byGroup = new Map<
-      string,
-      { nodeType: NodeTypeDto; label: string }[]
-    >()
+    const byGroup = new Map<string, { nodeType: NodeType; label: string }[]>()
     for (const nodeType of nodeTypes.values()) {
-      if (nodeType.abstract || nodeType.group === null) continue
+      if (nodeType.isAbstract || nodeType.group === null) continue
       if (
         !superTypes.some((superType) =>
           isOfType(nodeTypes, nodeType.name, superType),
@@ -53,7 +51,7 @@ export function useCreatableNodeTypes(
       )
         continue
       const label = humanizeLabel(
-        nodeType.label,
+        configuredLabel(nodeType),
         nodeType.name.split(':').pop() ?? nodeType.name,
       )
       const entries = byGroup.get(nodeType.group) ?? []
@@ -63,10 +61,13 @@ export function useCreatableNodeTypes(
 
     // Groups in configured position order; unconfigured groups (a node type
     // referencing an unknown group) trail in name order.
+    const groupConfig = new Map(
+      groupConfigs.map((group) => [group.name, group]),
+    )
     const configuredOrder = sortByPosition(
-      Object.entries(groupConfigs).map(([key, config]) => ({
-        key,
-        position: config?.position,
+      groupConfigs.map((group) => ({
+        key: group.name,
+        position: group.position,
       })),
     )
     const unconfigured = [...byGroup.keys()]
@@ -77,8 +78,8 @@ export function useCreatableNodeTypes(
       .filter((name) => byGroup.has(name))
       .map((name) => ({
         name,
-        label: humanizeLabel(groupConfigs[name]?.label, name),
-        collapsed: groupConfigs[name]?.collapsed === true,
+        label: humanizeLabel(groupConfig.get(name)?.label, name),
+        collapsed: groupConfig.get(name)?.collapsed === true,
         nodeTypes: sortByPosition(
           byGroup.get(name)!.map(({ nodeType }) => ({
             key: nodeType.name,

@@ -28,7 +28,9 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
-import { apiFetch, ApiError, studioFetch } from '@/api/client'
+import { ApiError } from '@/api/http/errors'
+import { apiFetch } from '@/api/neos/client'
+import { studioFetch } from '@/api/studio/client'
 import { useStudio } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
@@ -220,8 +222,11 @@ export type {
   NodeDecorationOverlay,
   NodeDecoratorDefinition,
 } from '@/features/tree/decorators'
-export type { Workspace } from '@/api/workspaces'
-export type { NodeTypeDto, NodeTypeMap } from '@/api/nodeTypes'
+// Neos.Api's models, as the shell uses them (generated from its OpenAPI
+// document), and the Studio's own.
+export type * from '@/api/neos/schema'
+export type { NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
+export type { Task, TaskStatus } from '@/api/studio/schema'
 
 /** The shape published at `window.NeosStudio` for plugin bundles to consume. */
 export interface NeosStudioPluginApi {

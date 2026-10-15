@@ -7,7 +7,6 @@ namespace Medienreaktor\NeosStudio\Service;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\EventStore\Model\EventEnvelope;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Domain\Model\UserId;
@@ -189,7 +188,7 @@ class WorkspaceHistoryService
                     'documentAggregateId' => $documentNode?->aggregateId->value,
                     'documentLabel' => $documentNode !== null ? $context->label($documentNode) : null,
                     'documentAddress' => $documentNode !== null
-                        ? NodeAddressCodec::encode(NodeAddress::fromNode($documentNode))
+                        ? NodeAddresses::toArray($documentNode)
                         : null,
                 ],
                 'payload' => $parsed['payload'],

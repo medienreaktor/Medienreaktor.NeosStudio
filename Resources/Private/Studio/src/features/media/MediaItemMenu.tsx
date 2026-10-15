@@ -1,11 +1,11 @@
 import { useState } from 'react'
 
 import {
-  deleteCollection,
-  deleteTag,
-  updateCollection,
-  updateTag,
-} from '@/api/media'
+  deleteAssetCollection,
+  deleteAssetTag,
+  updateAssetCollection,
+  updateAssetTag,
+} from '@/api/neos/endpoints/assets'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -57,7 +57,9 @@ export function MediaItemActions({
   const [deleting, setDeleting] = useState<MediaMenuTarget | null>(null)
 
   const remove = (item: MediaMenuTarget) =>
-    item.kind === 'collection' ? deleteCollection(item.id) : deleteTag(item.id)
+    item.kind === 'collection'
+      ? deleteAssetCollection(item.id)
+      : deleteAssetTag(item.id)
 
   return (
     <>
@@ -157,8 +159,8 @@ function RenameDialog({
     setBusy(true)
     try {
       if (target.kind === 'collection')
-        await updateCollection(target.id, trimmed)
-      else await updateTag(target.id, { label: trimmed })
+        await updateAssetCollection(target.id, trimmed)
+      else await updateAssetTag(target.id, { label: trimmed })
       onClose()
     } finally {
       setBusy(false)

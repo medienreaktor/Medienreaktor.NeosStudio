@@ -1,11 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { createTask, type Task } from '@/api/tasks'
-import { useUsers } from '@/api/users'
-import { useWorkspaces, type Workspace } from '@/api/workspaces'
+import { apiErrorDescription } from '@/api/http/errors'
+import { studioKeys } from '@/api/studio/keys'
+import { useUsers } from '@/api/neos/endpoints/users'
+import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import type { Workspace } from '@/api/neos/schema'
+import { createTask } from '@/api/studio/endpoints/tasks'
+import type { Task } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,6 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
 import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
@@ -46,7 +49,7 @@ export function CreateTaskDialog({
   /** Called with the created task - e.g. the switcher checking it out. */
   onCreated?: (task: Task) => void
 }) {
-  const users = useUsers().data?.users
+  const users = useUsers().data
   const { data: workspacesData } = useWorkspaces(open)
 
   const [title, setTitle] = useState('')
@@ -70,17 +73,17 @@ export function CreateTaskDialog({
     value: string
     label: string
     workspace?: Workspace
-  }[] = (workspacesData?.workspaces ?? [])
+  }[] = (workspacesData ?? [])
     .filter(
       (workspace) =>
-        workspace.classification === 'ROOT' ||
-        workspace.classification === 'SHARED',
+        workspace.classification === 'root' ||
+        workspace.classification === 'shared',
     )
     .map((workspace) => ({
       value: workspace.name,
       workspace,
       label:
-        workspace.classification === 'ROOT'
+        workspace.classification === 'root'
           ? t('workspace.live', 'Live')
           : workspace.title || workspace.name,
     }))
@@ -107,8 +110,8 @@ export function CreateTaskDialog({
       // away (the switcher) needs it IN the cached workspace list first -
       // the app resets an editing context it cannot resolve there.
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.tasks }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all }),
+        queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all }),
+        invalidateWorkspaceQueries(),
       ])
       toast.success(
         t('tasks.created', 'The task "{0}" has been created.', [

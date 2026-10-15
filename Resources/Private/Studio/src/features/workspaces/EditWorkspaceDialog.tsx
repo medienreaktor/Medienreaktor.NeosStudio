@@ -1,14 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import {
-  updateWorkspace,
-  type UpdateWorkspaceInput,
-  type Workspace,
-} from '@/api/workspaces'
-import { queryClient } from '@/app/queryClient'
+import { apiErrorDescription } from '@/api/http/errors'
+import { updateWorkspace } from '@/api/neos/endpoints/workspaces'
+import type { Workspace, WorkspaceUpdate } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,6 +17,7 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 /**
@@ -46,7 +42,7 @@ export function EditWorkspaceDialog({
     }
   }, [workspace])
 
-  const changes: UpdateWorkspaceInput = {}
+  const changes: WorkspaceUpdate = {}
   if (workspace !== null) {
     if (title !== workspace.title) changes.title = title
     if (description !== workspace.description) changes.description = description
@@ -57,10 +53,10 @@ export function EditWorkspaceDialog({
   const mutation = useMutation({
     mutationFn: () => updateWorkspace(workspace!.name, changes),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+      void invalidateWorkspaceQueries()
       toast.success(
         t('workspacesAdmin.saved', 'The workspace "{0}" has been saved.', [
-          response.workspace.title,
+          response.title,
         ]),
       )
       onOpenChange(false)

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Medienreaktor\NeosStudio\Controller;
 
 use GuzzleHttp\Psr7\Utils;
-use Medienreaktor\NeosStudio\Service\NodeAddressCodec;
+use Medienreaktor\NeosStudio\Service\NodeAddresses;
 use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
@@ -23,10 +23,10 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * Renders a single document for the Studio preview iframe, independent of the
- * Neos.Neos.Ui preview action. The node address (base64url, as the Studio
- * shell builds it - see NodeAddressCodec) carries the complete identity: content
- * repository, workspace, dimension space point and aggregate id - so the
- * workspace + dimension combination to preview is always explicit in the URL.
+ * Neos.Neos.Ui preview action. The node's complete identity travels as query
+ * parameters, named as in Neos.Api: contentRepositoryId, workspaceName,
+ * dimensionSpacePoint (as JSON) and nodeAggregateId - so the workspace +
+ * dimension combination to preview is always explicit in the URL.
  *
  * The rendering mode is a request parameter instead of a user preference:
  * - "frontend" (default) renders the page without editing markup, including
@@ -58,7 +58,14 @@ class PreviewController extends ActionController
     #[Flow\Inject]
     protected RenderingModeService $renderingModeService;
 
-    public function showAction(string $node, string $mode = RenderingMode::FRONTEND, bool $includeDeleted = false): ResponseInterface|string
+    public function showAction(
+        string $contentRepositoryId,
+        string $workspaceName,
+        string $dimensionSpacePoint,
+        string $nodeAggregateId,
+        string $mode = RenderingMode::FRONTEND,
+        bool $includeDeleted = false
+    ): ResponseInterface|string
     {
         try {
             $renderingMode = $this->renderingModeService->findByName($mode);
@@ -67,7 +74,12 @@ class PreviewController extends ActionController
         }
 
         try {
-            $nodeAddress = NodeAddressCodec::decode($node);
+            $nodeAddress = NodeAddresses::fromArray([
+                'contentRepositoryId' => $contentRepositoryId,
+                'workspaceName' => $workspaceName,
+                'dimensionSpacePoint' => $dimensionSpacePoint,
+                'nodeAggregateId' => $nodeAggregateId,
+            ]);
         } catch (\Throwable) {
             $this->throwStatus(400, 'The node address could not be parsed.');
         }
@@ -223,10 +235,10 @@ class PreviewController extends ActionController
      * This action's uri for a core preview link, or NULL for anything that is not
      * one - external links, assets, in-page anchors, unparsable node addresses.
      *
-     * Only the address encoding differs between the two: core passes it as raw
-     * JSON, this controller as base64url ({@see NodeAddressCodec}). Every other
-     * query parameter is carried over untouched, so a site's own filters survive
-     * the hop.
+     * Only the address differs between the two: core passes it as one JSON
+     * "node" parameter, this controller takes its fields as parameters of their
+     * own (see NodeAddresses). Every other query parameter is carried over
+     * untouched, so a site's own filters survive the hop.
      */
     private function rewritePreviewUri(string $uri, RenderingMode $renderingMode): ?string
     {
@@ -253,7 +265,8 @@ class PreviewController extends ActionController
             return null;
         }
 
-        $query['node'] = NodeAddressCodec::encode($nodeAddress);
+        unset($query['node']);
+        $query = NodeAddresses::toArray($nodeAddress) + $query;
         $query['mode'] = $renderingMode->name;
 
         // Host kept when the original was absolute (the core uri builder forces

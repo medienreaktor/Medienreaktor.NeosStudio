@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { apiErrorDescription } from '@/api/client'
-import { nodeLabel, type NodeDto } from '@/api/nodes'
+import { apiErrorDescription } from '@/api/http/errors'
+import type { Node } from '@/api/neos/schema'
 import {
   createPreviewLink,
   deletePreviewLink,
   usePreviewLinks,
-  type PreviewLink,
-} from '@/api/previewLinks'
-import { queryKeys } from '@/api/keys'
+} from '@/api/studio/endpoints/previewLinks'
+import { studioKeys } from '@/api/studio/keys'
+import type { PreviewLink } from '@/api/studio/schema'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,6 +30,10 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 
+function documentLabel(document: Node): string {
+  return document.label || document.nodeAggregateId
+}
+
 /**
  * Create and manage shareable preview links for the current document: anyone
  * holding the URL sees the page read-only, including hidden content - no
@@ -42,7 +46,7 @@ export function ShareLinkDialog({
   open,
   onOpenChange,
 }: {
-  document: NodeDto
+  document: Node
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -52,13 +56,13 @@ export function ShareLinkDialog({
   const [creating, setCreating] = useState(false)
   const [createdUrl, setCreatedUrl] = useState<string | null>(null)
   const { data } = usePreviewLinks(open)
-  const links = data?.links ?? []
+  const links = data ?? []
 
   // Fresh form per document and per opening; a URL from a previous round
   // must never linger (it looks current but belongs to another page).
   useEffect(() => {
     if (open) {
-      setLabel(nodeLabel(document))
+      setLabel(documentLabel(document))
       setCreatedUrl(null)
     }
   }, [open, document])
@@ -72,13 +76,12 @@ export function ShareLinkDialog({
   const create = async () => {
     setCreating(true)
     try {
-      const { link } = await createPreviewLink({
-        node: document.address,
-        label: label.trim() || nodeLabel(document),
+      const { link } = await createPreviewLink(document, {
+        label: label.trim() || documentLabel(document),
         ttlHours,
       })
       setCreatedUrl(link.shareUrl)
-      queryClient.invalidateQueries({ queryKey: queryKeys.previewLinks })
+      queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
     } catch (e) {
       toast.error(
         apiErrorDescription(
@@ -110,7 +113,7 @@ export function ShareLinkDialog({
     try {
       await deletePreviewLink(link.id)
       toast.success(t('share.revoked', 'The preview link was revoked.'))
-      queryClient.invalidateQueries({ queryKey: queryKeys.previewLinks })
+      queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
     } catch (e) {
       toast.error(
         apiErrorDescription(

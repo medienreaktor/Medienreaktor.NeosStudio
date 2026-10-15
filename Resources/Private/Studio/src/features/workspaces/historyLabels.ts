@@ -1,4 +1,4 @@
-import type { WorkspacePendingStep } from '@/api/workspaces'
+import type { WorkspacePendingStep } from './pendingSteps'
 import { translate as t } from '@/lib/i18n'
 
 /**

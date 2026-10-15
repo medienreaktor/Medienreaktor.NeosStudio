@@ -1,17 +1,15 @@
 import { useRef, useState } from 'react'
 
 import {
-  createCollection,
-  createTag,
-  updateTag,
+  createAssetCollection,
+  createAssetTag,
+  updateAssetTag,
   useAssetCollections,
   useAssetSources,
   tagFilterApplies,
-  useTags,
-  type AssetSource,
-  type AssetType,
-  type MediaTag,
-} from '@/api/media'
+  useAssetTags,
+} from '@/api/neos/endpoints/assets'
+import type { AssetSource, AssetTag, AssetType } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchInput } from '@/components/ui/search-input'
@@ -88,9 +86,9 @@ const SORTS: Array<{
   },
 ]
 
-function flattenTags(tags: MediaTag[]): MediaTag[] {
-  const out: MediaTag[] = []
-  const walk = (list: MediaTag[]) => {
+function flattenTags(tags: AssetTag[]): AssetTag[] {
+  const out: AssetTag[] = []
+  const walk = (list: AssetTag[]) => {
     for (const tag of list) {
       out.push(tag)
       walk(tag.children)
@@ -109,7 +107,7 @@ function flattenTags(tags: MediaTag[]): MediaTag[] {
 export function MediaHeader({ state }: { state: MediaBrowserController }) {
   const sources = useAssetSources()
   const collections = useAssetCollections()
-  const tags = useTags()
+  const tags = useAssetTags()
   const { filter } = state
 
   // The collection/tag the right-click context menu is open for.
@@ -295,7 +293,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                 }
                 onReparent={(tagId, newParentId) =>
                   // parentId null moves the tag to the root.
-                  void updateTag(tagId, { parentId: newParentId ?? null })
+                  void updateAssetTag(tagId, { parentId: newParentId ?? null })
                 }
               />
             </div>
@@ -534,7 +532,7 @@ function AddCollection() {
   return (
     <InlineCreate
       placeholder={t('media.newCollection', 'New collection')}
-      onCreate={createCollection}
+      onCreate={createAssetCollection}
     />
   )
 }
@@ -543,7 +541,7 @@ function AddTag() {
   return (
     <InlineCreate
       placeholder={t('media.newTag', 'New tag')}
-      onCreate={(label) => createTag(label)}
+      onCreate={(label) => createAssetTag(label)}
     />
   )
 }

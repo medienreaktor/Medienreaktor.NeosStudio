@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
-import { apiErrorDescription } from '@/api/client'
-import { queryKeys } from '@/api/keys'
-import { assignTask, updateTask, type Task } from '@/api/tasks'
-import { useUsers } from '@/api/users'
+import { apiErrorDescription } from '@/api/http/errors'
+import { useUsers } from '@/api/neos/endpoints/users'
+import { assignTask, updateTask } from '@/api/studio/endpoints/tasks'
+import { studioKeys } from '@/api/studio/keys'
+import type { Task } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 const UNASSIGNED = '__unassigned__'
@@ -44,7 +46,7 @@ export function TaskDetailDialog({
   task: Task | null
   onOpenChange: (open: boolean) => void
 }) {
-  const users = useUsers().data?.users
+  const users = useUsers().data
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -81,8 +83,8 @@ export function TaskDetailDialog({
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all })
+      void invalidateWorkspaceQueries()
       toast.success(t('tasks.updated', 'The task has been updated.'))
       onOpenChange(false)
     },

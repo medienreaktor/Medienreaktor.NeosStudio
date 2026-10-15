@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { NodeDto } from '@/api/nodes'
+import type { Node } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { translate as t } from '@/lib/i18n'
 import { ShareLinkDialog } from './ShareLinkDialog'
@@ -13,7 +13,7 @@ export function ShareButton({
   document,
   className,
 }: {
-  document: NodeDto
+  document: Node
   /** E.g. the rounded-corner overrides of a split-button segment. */
   className?: string
 }) {

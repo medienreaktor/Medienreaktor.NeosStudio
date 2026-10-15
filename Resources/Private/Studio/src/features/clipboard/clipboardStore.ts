@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { type NodeAddress, sameNodeAddress } from '@/api/neos/schema'
 
 /**
  * The node clipboard: cut/copied nodes waiting to be pasted, held in plain
@@ -20,14 +21,13 @@ export type ClipboardMode = 'copy' | 'cut'
 
 /** One captured node of a clipboard entry. */
 export interface ClipboardNode {
-  /** Encoded address of the source node at cut/copy time. */
-  address: string
-  aggregateId: string
+  /** Address of the source node at cut/copy time. */
+  address: NodeAddress
   nodeType: string
   /** Display snapshot from cut/copy time - not refreshed. */
   label: string
   /** The source's parent - its children list shrinks when a cut is pasted. */
-  sourceParentAddress: string | null
+  sourceParentAddress: NodeAddress | null
 }
 
 export interface ClipboardEntry {
@@ -95,7 +95,9 @@ export function clipboardAdd(
   }
   const sameNodes = (other: ClipboardEntry) =>
     other.nodes.length === nodes.length &&
-    other.nodes.every((node, index) => node.address === nodes[index].address)
+    other.nodes.every((node, index) =>
+      sameNodeAddress(node.address, nodes[index].address),
+    )
   const entries = [entry, ...state.entries.filter((o) => !sameNodes(o))].slice(
     0,
     MAX_ENTRIES,

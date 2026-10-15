@@ -5,9 +5,10 @@ import {
   runSequentially,
   tagNode,
   untagNode,
-} from '@/api/commands'
-import { queryKeys } from '@/api/keys'
-import { addressFromContextPath } from '@/api/nodeAddress'
+} from '@/api/neos/endpoints/nodeCommands'
+import { neosKeys } from '@/api/neos/keys'
+import { type NodeAddress, nodeAddressFromContextPath } from '@/api/neos/schema'
+import { studioKeys } from '@/api/studio/keys'
 import { queryClient } from '@/app/queryClient'
 
 /**
@@ -27,22 +28,22 @@ export interface MoveNodeRequest {
   succeedingSiblingContextPath: string | null
 }
 
-/** One move for {@link moveNodesByAddress}, in encoded NodeAddress terms. */
+/** One move for {@link moveNodesByAddress}. */
 export interface MoveByAddress {
-  /** Encoded address of the node being moved. */
-  nodeAddress: string
-  /** Encoded address of the new parent. */
-  newParentAddress: string
-  /** Encoded address of the sibling to insert before; null appends. */
-  succeedingSiblingAddress: string | null
+  /** The node being moved. */
+  nodeAddress: NodeAddress
+  /** The new parent. */
+  newParentAddress: NodeAddress
+  /** The sibling to insert before; null appends. */
+  succeedingSiblingAddress: NodeAddress | null
 }
 
-export async function hideNodes(addresses: string[]): Promise<void> {
+export async function hideNodes(addresses: NodeAddress[]): Promise<void> {
   await structureChange(addresses, (address) => tagNode(address, 'disabled'))
 }
 
 /** Removes the "disabled" subtree tag set by hideNodes. */
-export async function unhideNodes(addresses: string[]): Promise<void> {
+export async function unhideNodes(addresses: NodeAddress[]): Promise<void> {
   await structureChange(addresses, (address) => untagNode(address, 'disabled'))
 }
 
@@ -53,7 +54,7 @@ export async function unhideNodes(addresses: string[]): Promise<void> {
  * fails the change.
  */
 export async function changeNodeType(
-  address: string,
+  address: NodeAddress,
   newNodeTypeName: string,
 ): Promise<void> {
   await structureChange([address], (a) =>
@@ -71,27 +72,26 @@ export async function changeNodeType(
  * repository turns the soft removal into a hard one in live once the
  * deletion is published and no other workspace still needs the node.
  */
-export async function deleteNodes(addresses: string[]): Promise<void> {
+export async function deleteNodes(addresses: NodeAddress[]): Promise<void> {
   await structureChange(addresses, deleteNode)
 }
 
 export async function moveNode(request: MoveNodeRequest): Promise<void> {
   await moveNodesByAddress([
     {
-      nodeAddress: addressFromContextPath(request.nodeContextPath),
-      newParentAddress: addressFromContextPath(request.parentContextPath),
+      nodeAddress: nodeAddressFromContextPath(request.nodeContextPath),
+      newParentAddress: nodeAddressFromContextPath(request.parentContextPath),
       succeedingSiblingAddress:
         request.succeedingSiblingContextPath !== null
-          ? addressFromContextPath(request.succeedingSiblingContextPath)
+          ? nodeAddressFromContextPath(request.succeedingSiblingContextPath)
           : null,
     },
   ])
 }
 
 /**
- * Moves one or more nodes in order, addressing them by their encoded
- * NodeAddress (what the trees carry as item ids) rather than the guest's JSON
- * context paths. Each node is placed before the same succeeding sibling, so a
+ * Moves one or more nodes in order, addressing them by NodeAddress (what the
+ * trees carry) rather than the guest's JSON context paths. Each node is placed before the same succeeding sibling, so a
  * multi-selection keeps its relative order at the target ([A, B] before S
  * becomes ...A, B, S).
  */
@@ -101,7 +101,11 @@ export async function moveNodesByAddress(
   await structureChange(
     moves,
     ({ nodeAddress, newParentAddress, succeedingSiblingAddress }) =>
-      moveNodeRequest(nodeAddress, newParentAddress, succeedingSiblingAddress),
+      moveNodeRequest(
+        nodeAddress,
+        newParentAddress.nodeAggregateId,
+        succeedingSiblingAddress?.nodeAggregateId ?? null,
+      ),
   )
 }
 
@@ -126,6 +130,7 @@ async function structureChange<T>(
  * nodes) and refresh the pending-changes badges.
  */
 async function invalidateAfterStructureChange(): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
-  void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+  await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+  void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+  void queryClient.invalidateQueries({ queryKey: studioKeys.workspaces.all })
 }
