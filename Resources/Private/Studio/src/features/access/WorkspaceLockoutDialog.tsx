@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { changeBaseWorkspace } from '@/api/neos/endpoints/workspaces'
 import { neosKeys } from '@/api/neos/keys'
 import type { Workspace } from '@/api/neos/schema'
@@ -57,6 +58,7 @@ export function WorkspaceLockoutDialog({
   onSwitchEditingContext: (workspaceName: string | null) => void
 }) {
   const [error, setError] = useState<string | null>(null)
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   const permitted = (workspace: Workspace) =>
     allowsWorkspaceEditing(access, workspace.name, workspace.classification)
@@ -78,11 +80,15 @@ export function WorkspaceLockoutDialog({
 
   const rebase = useMutation({
     mutationFn: (target: string) =>
-      changeBaseWorkspace(personalWorkspace!.name, target),
+      changeBaseWorkspace(
+        contentRepositoryId!,
+        personalWorkspace!.name,
+        target,
+      ),
     onSuccess: () => {
       setError(null)
-      queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
-      queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
     },
     onError: (mutationError) =>
       setError(

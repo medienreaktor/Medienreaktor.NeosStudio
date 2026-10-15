@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from '../client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { api, unwrap } from '../client'
 import { neosKeys } from '../keys'
-import type { DataSourceData, NodeAddress } from '../schema'
+import type { NodeAddress } from '../schema'
 
 /**
  * Neos data sources (Neos.Api's DataSources tag): server-side
@@ -10,26 +10,6 @@ import type { DataSourceData, NodeAddress } from '../schema'
  * $arguments (the editorOptions.dataSourceAdditionalData contract), the node
  * parameters its $node; the raw getData() value comes back as `data`.
  */
-
-/** Flatten a value into PHP-parseable query params (bracket notation for nesting). */
-function appendParam(
-  search: URLSearchParams,
-  key: string,
-  value: unknown,
-): void {
-  if (value === null || value === undefined) return
-  if (Array.isArray(value)) {
-    value.forEach((item, index) =>
-      appendParam(search, `${key}[${index}]`, item),
-    )
-  } else if (typeof value === 'object') {
-    for (const [childKey, childValue] of Object.entries(value)) {
-      appendParam(search, `${key}[${childKey}]`, childValue)
-    }
-  } else {
-    search.append(key, String(value))
-  }
-}
 
 export interface UseDataSourceParams {
   /** The data source identifier (editorOptions.dataSourceIdentifier). Disabled while null. */
@@ -66,24 +46,34 @@ export function useDataSource({
         : null,
       additionalData ?? null,
     ),
-    queryFn: async () => {
-      const search = new URLSearchParams()
-      for (const [key, value] of Object.entries(additionalData ?? {})) {
-        appendParam(search, `arguments[${key}]`, value)
-      }
-      if (node) {
-        search.set('contentRepositoryId', node.contentRepositoryId)
-        search.set('nodeAggregateId', node.nodeAggregateId)
-        search.set('workspaceName', node.workspaceName)
-        search.set('dimensionSpacePoint', node.dimensionSpacePoint)
-      }
-      const query = search.toString()
-      const response = await apiFetch<DataSourceData>(
-        `/datasources/${encodeURIComponent(identifier ?? '')}${query ? `?${query}` : ''}`,
-      )
-      return response.data
-    },
-    enabled: identifier !== null && identifier !== '',
+    queryFn:
+      identifier !== null && identifier !== ''
+        ? async ({ signal }) => {
+            const response = await unwrap(
+              api.GET('/datasources/{dataSourceId}', {
+                params: {
+                  path: { dataSourceId: identifier },
+                  query: {
+                    // Nested in bracket notation at any depth by the
+                    // client's query serializer - the PHP side reads them
+                    // back as the $arguments array.
+                    arguments: additionalData ?? undefined,
+                    ...(node
+                      ? {
+                          contentRepositoryId: node.contentRepositoryId,
+                          nodeAggregateId: node.nodeAggregateId,
+                          workspaceName: node.workspaceName,
+                          dimensionSpacePoint: node.dimensionSpacePoint,
+                        }
+                      : {}),
+                  },
+                },
+                signal,
+              }),
+            )
+            return response.data
+          }
+        : skipToken,
     staleTime: disableCaching ? 0 : Infinity,
     refetchOnMount: disableCaching ? 'always' : false,
   })
@@ -113,13 +103,17 @@ export function dataSourceSelectOptions(data: unknown): DataSourceOption[] {
   const options: DataSourceOption[] = []
   const push = (value: unknown, entry: Record<string, unknown>) => {
     if (value === null || value === undefined) return
+    // Object values (e.g. {id, type}) keyed by their JSON - String() would
+    // give them all the same "[object Object]".
+    const key =
+      typeof value === 'object' ? JSON.stringify(value) : String(value)
     options.push({
-      key: String(value),
+      key,
       value,
       label:
         typeof entry.label === 'string' && entry.label !== ''
           ? entry.label
-          : String(value),
+          : key,
       group: typeof entry.group === 'string' ? entry.group : undefined,
       icon: typeof entry.icon === 'string' ? entry.icon : undefined,
       disabled: entry.disabled === true,

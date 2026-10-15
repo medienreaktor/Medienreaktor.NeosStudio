@@ -16,16 +16,10 @@
  * (the fresh guest has none); a stray answer is ignored.
  */
 import type { Editor } from '@tiptap/core'
-import type {
-  GuestToHostMessage,
-  LinkAttributes,
-} from '../features/preview/protocol'
+import type { LinkAttributes } from '../features/preview/protocol'
+import { post } from './bridge'
 
 let pending: { editor: Editor; from: number; to: number } | null = null
-
-function post(message: GuestToHostMessage): void {
-  window.parent.postMessage(message, window.location.origin)
-}
 
 /** The selection's current link attributes, or null when it is not linked. */
 function currentAttributes(editor: Editor): LinkAttributes | null {

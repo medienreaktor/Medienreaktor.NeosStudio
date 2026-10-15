@@ -1,7 +1,5 @@
-import { queryString } from '../../http/request'
-import { contentRepositoryPath } from '../../neos/client'
+import { api, unwrap } from '../../neos/client'
 import type { Node, NodeAddress } from '../../neos/schema'
-import { studioFetch } from '../client'
 import type { CreationDialogNodeCreate } from '../schema'
 
 /**
@@ -14,19 +12,19 @@ export function createNodeFromCreationDialog(
   parent: NodeAddress,
   node: Omit<CreationDialogNodeCreate, 'parentNodeAggregateId'>,
 ): Promise<Node> {
-  return studioFetch<Node>(
-    `${contentRepositoryPath(parent.contentRepositoryId)}/creationdialog${queryString(
-      {
-        workspaceName: parent.workspaceName,
-        dimensionSpacePoint: parent.dimensionSpacePoint,
+  return unwrap(
+    api.POST('/cr/{contentRepositoryId}/creationdialog', {
+      params: {
+        path: { contentRepositoryId: parent.contentRepositoryId },
+        query: {
+          workspaceName: parent.workspaceName,
+          dimensionSpacePoint: parent.dimensionSpacePoint,
+        },
       },
-    )}`,
-    {
-      method: 'POST',
       body: {
         ...node,
         parentNodeAggregateId: parent.nodeAggregateId,
       } satisfies CreationDialogNodeCreate,
-    },
+    }),
   )
 }

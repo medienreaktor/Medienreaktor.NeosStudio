@@ -5,14 +5,46 @@ import { config } from '@/config'
 // only interactive step is the Neos backend login (which the shell already
 // required to load).
 
-const TOKEN_KEY = 'neos-studio.tokens'
 const VERIFIER_KEY = 'neos-studio.pkce_verifier'
 const STATE_KEY = 'neos-studio.oauth_state'
+/** Where earlier versions kept the tokens - removed on load, see below. */
+const LEGACY_TOKEN_KEY = 'neos-studio.tokens'
 
 export interface Tokens {
   access_token: string
   refresh_token?: string
   expires_at: number
+}
+
+/**
+ * The tokens live in this module's closure only - never in sessionStorage or
+ * any other storage.
+ *
+ * Why: the preview iframe renders the customer site same-origin, so every
+ * script of that site (and of any other same-origin page) could read a token
+ * kept in Web Storage and take it elsewhere - a bearer token works from
+ * anywhere until it expires, and a refresh token keeps working beyond that.
+ * In memory they are gone with the document, and a reload simply authorizes
+ * again: the shell's silent auto-login (App's AUTO_LOGIN_KEY flow) redirects
+ * through the authorization endpoint, which completes without interaction
+ * because the backend session is still there; a deep link survives that
+ * round trip in sessionStorage (app/deepLink.ts), as do the PKCE verifier and
+ * state, which are worthless without the authorization code.
+ *
+ * The trust model that remains: a same-origin frame can still reach
+ * `window.parent` - call the plugin API's apiFetch (window.NeosStudio), or
+ * patch the shell's fetch to observe the Authorization header. Keeping tokens
+ * out of storage stops passive theft and persistence, not a script that
+ * actively drives the shell; the preview's site scripts are trusted as far as
+ * the Neos backend session they run next to is. Isolating them for real would
+ * take a sandboxed (opaque-origin) or cross-origin preview.
+ */
+let tokens: Tokens | null = null
+
+try {
+  sessionStorage.removeItem(LEGACY_TOKEN_KEY)
+} catch {
+  /* storage unavailable - nothing to clean up */
 }
 
 function base64UrlEncode(bytes: ArrayBuffer): string {
@@ -37,34 +69,86 @@ async function sha256Challenge(verifier: string): Promise<string> {
 }
 
 export function getTokens(): Tokens | null {
-  const raw = sessionStorage.getItem(TOKEN_KEY)
-  if (!raw) return null
+  return tokens
+}
+
+// The lifetime assumed for an access token whose response omits expires_in
+// (RFC 6749 makes it only RECOMMENDED). Deliberately short: refreshing early
+// costs one round-trip, assuming too long only defers the refresh to the
+// first 401.
+const DEFAULT_LIFETIME_S = 300
+
+/**
+ * A token endpoint response as far as the shell reads it; anything else
+ * (an HTML error page, a proxy's JSON) is not one.
+ */
+interface TokenResponse {
+  access_token: string
+  refresh_token?: string
+  expires_in?: number
+}
+
+function isTokenResponse(data: unknown): data is TokenResponse {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    typeof (data as { access_token?: unknown }).access_token === 'string'
+  )
+}
+
+/** The parsed JSON body of a token endpoint response, null if it is none. */
+async function tokenResponseOf(
+  response: Response,
+): Promise<TokenResponse | null> {
   try {
-    return JSON.parse(raw) as Tokens
+    const data: unknown = await response.json()
+    return isTokenResponse(data) ? data : null
   } catch {
     return null
   }
 }
 
-function storeTokens(data: {
-  access_token: string
-  refresh_token?: string
-  expires_in: number
-}): Tokens {
-  const tokens: Tokens = {
+function storeTokens(data: TokenResponse): Tokens {
+  const lifetime =
+    typeof data.expires_in === 'number' && Number.isFinite(data.expires_in)
+      ? data.expires_in
+      : DEFAULT_LIFETIME_S
+  tokens = {
     access_token: data.access_token,
     // The refresh grant rotates refresh tokens (league revokes the old one and
     // returns a new one); fall back to the existing one only if a response ever
     // omits it, so we never lose the ability to refresh.
-    refresh_token: data.refresh_token ?? getTokens()?.refresh_token,
-    expires_at: Date.now() + data.expires_in * 1000,
+    refresh_token: data.refresh_token ?? tokens?.refresh_token,
+    expires_at: Date.now() + lifetime * 1000,
   }
-  sessionStorage.setItem(TOKEN_KEY, JSON.stringify(tokens))
   return tokens
 }
 
 export function logout(): void {
-  sessionStorage.removeItem(TOKEN_KEY)
+  tokens = null
+}
+
+const sessionEndedListeners = new Set<() => void>()
+
+/**
+ * Subscribes to the end of the session: the tokens are gone because they can
+ * no longer be refreshed (the refresh token was rejected - spent, revoked,
+ * expired - or there never was one). Not called for transient failures
+ * (network, 5xx, 429), which keep the tokens, nor for an explicit logout().
+ *
+ * The App reacts by authorizing again (beginLogin), which completes silently
+ * while the backend session lasts. Returns the unsubscribe function.
+ */
+export function onSessionEnded(listener: () => void): () => void {
+  sessionEndedListeners.add(listener)
+  return () => {
+    sessionEndedListeners.delete(listener)
+  }
+}
+
+function endSession(): void {
+  logout()
+  sessionEndedListeners.forEach((listener) => listener())
 }
 
 /**
@@ -97,15 +181,19 @@ const CLOCK_SKEW_MS = 30_000
 // one token-endpoint round-trip, and they all await its result.
 let refreshInFlight: Promise<Tokens | null> | null = null
 
-function isExpired(tokens: Tokens): boolean {
-  return Date.now() >= tokens.expires_at - CLOCK_SKEW_MS
+function isExpired(stored: Tokens): boolean {
+  return Date.now() >= stored.expires_at - CLOCK_SKEW_MS
 }
 
 /**
- * Exchange the stored refresh token for a fresh access token. A 4xx means the
- * refresh token is spent/revoked (the session is over) - clear it. A network
- * error is transient and leaves the stored tokens untouched. Single-flighted
- * through {@link ensureRefreshed}.
+ * Exchange the stored refresh token for a fresh access token. Neos.OAuth
+ * (league's RefreshTokenGrant) revokes the old access AND refresh token on
+ * every refresh, so each call ends the previous pair - callers go through
+ * {@link ensureRefreshed}, which single-flights it.
+ *
+ * A 400/401 (invalid_grant: the refresh token is spent, revoked or expired)
+ * ends the session. Anything else - a network error, a 5xx, a 429 - is
+ * transient: the stored tokens stay, and the next request tries again.
  */
 async function refreshTokens(refreshToken: string): Promise<Tokens | null> {
   const body = new URLSearchParams({
@@ -125,26 +213,27 @@ async function refreshTokens(refreshToken: string): Promise<Tokens | null> {
   } catch {
     return null
   }
-  if (!response.ok) {
-    logout()
+  if (response.status === 400 || response.status === 401) {
+    endSession()
     return null
   }
-  return storeTokens(await response.json())
+  if (!response.ok) return null
+  const data = await tokenResponseOf(response)
+  return data ? storeTokens(data) : null
 }
 
 function ensureRefreshed(
   refreshToken: string | undefined,
 ): Promise<Tokens | null> {
+  if (refreshInFlight) return refreshInFlight
   if (!refreshToken) {
     // Nothing to refresh with - the session cannot continue.
-    logout()
+    endSession()
     return Promise.resolve(null)
   }
-  if (!refreshInFlight) {
-    refreshInFlight = refreshTokens(refreshToken).finally(() => {
-      refreshInFlight = null
-    })
-  }
+  refreshInFlight = refreshTokens(refreshToken).finally(() => {
+    refreshInFlight = null
+  })
   return refreshInFlight
 }
 
@@ -155,20 +244,30 @@ function ensureRefreshed(
  * 401 and the shell turns into a re-login.
  */
 export async function getValidAccessToken(): Promise<string | null> {
-  const tokens = getTokens()
+  if (refreshInFlight) return (await refreshInFlight)?.access_token ?? null
   if (!tokens) return null
   if (!isExpired(tokens)) return tokens.access_token
   return (await ensureRefreshed(tokens.refresh_token))?.access_token ?? null
 }
 
 /**
- * Force a refresh regardless of local expiry - used when the server rejected a
- * token the client still believed was valid (revoked server-side, e.g. after a
- * dev database reset). Returns the new access token or null.
+ * The access token to retry with after the server rejected `rejectedAccessToken`
+ * (401) although the client believed it valid - revoked server-side (e.g.
+ * after a dev database reset), or clock skew. Returns null when there is none.
+ *
+ * Only a rejection of the token currently stored refreshes: since every
+ * refresh revokes the previous pair, rotating again for each late 401 of a
+ * request that was sent with an older token would revoke the token just
+ * issued, and the requests in between would cascade into 401s. Such a late
+ * request gets the current token instead; a refresh already under way is
+ * awaited.
  */
-export async function forceRefreshAccessToken(): Promise<string | null> {
-  const tokens = getTokens()
-  if (!tokens?.refresh_token) return null
+export async function forceRefreshAccessToken(
+  rejectedAccessToken: string,
+): Promise<string | null> {
+  if (refreshInFlight) return (await refreshInFlight)?.access_token ?? null
+  if (!tokens) return null
+  if (tokens.access_token !== rejectedAccessToken) return tokens.access_token
   return (await ensureRefreshed(tokens.refresh_token))?.access_token ?? null
 }
 
@@ -190,18 +289,29 @@ export async function beginLogin(): Promise<void> {
   window.location.assign(`${config.authorizeEndpoint}?${params.toString()}`)
 }
 
+// The callback of this document load, handled once: React's StrictMode runs
+// the boot effect twice, and exchanging the code twice would fail the second
+// time (an authorization code is single-use) - or, worse, race the first.
+let callbackHandling: Promise<boolean> | null = null
+
 /**
  * If the current URL is an OAuth callback (?code=&state=), exchange the code
- * for tokens and clean the URL. Returns true if a callback was handled.
+ * for tokens and clean the URL. Resolves true if a callback was handled.
+ * Every call of a document load shares the first one's outcome.
  */
-export async function handleRedirectCallback(): Promise<boolean> {
+export function handleRedirectCallback(): Promise<boolean> {
+  callbackHandling ??= exchangeCallbackCode()
+  return callbackHandling
+}
+
+async function exchangeCallbackCode(): Promise<boolean> {
   const url = new URL(window.location.href)
   const code = url.searchParams.get('code')
   const state = url.searchParams.get('state')
   const error = url.searchParams.get('error')
 
   if (error) {
-    cleanUrl()
+    finishCallback()
     throw new Error(
       `Authorization failed: ${error} ${url.searchParams.get('error_description') ?? ''}`,
     )
@@ -211,7 +321,7 @@ export async function handleRedirectCallback(): Promise<boolean> {
   const expectedState = sessionStorage.getItem(STATE_KEY)
   const verifier = sessionStorage.getItem(VERIFIER_KEY)
   if (!verifier || state !== expectedState) {
-    cleanUrl()
+    finishCallback()
     throw new Error('OAuth state mismatch - possible CSRF, aborting.')
   }
 
@@ -222,22 +332,39 @@ export async function handleRedirectCallback(): Promise<boolean> {
     code,
     code_verifier: verifier,
   })
-  const response = await fetch(config.tokenEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  })
+  let response: Response
+  try {
+    response = await fetch(config.tokenEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    })
+  } catch {
+    finishCallback()
+    throw new Error('Token exchange failed: the server is unreachable')
+  }
   if (!response.ok) {
-    cleanUrl()
+    finishCallback()
     throw new Error(
-      `Token exchange failed (${response.status}): ${await response.text()}`,
+      `Token exchange failed (${response.status}): ${await response.text().catch(() => '')}`,
     )
   }
-  storeTokens(await response.json())
+  const data = await tokenResponseOf(response)
+  finishCallback()
+  if (!data) throw new Error('Token exchange failed: no token in the response')
+  storeTokens(data)
+  return true
+}
+
+/**
+ * Done with the callback, successfully or not: the verifier and state are
+ * single-use, and the code must not stay in the URL (a reload would replay
+ * it).
+ */
+function finishCallback(): void {
   sessionStorage.removeItem(VERIFIER_KEY)
   sessionStorage.removeItem(STATE_KEY)
   cleanUrl()
-  return true
 }
 
 function cleanUrl(): void {

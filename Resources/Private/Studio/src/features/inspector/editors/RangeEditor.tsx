@@ -118,7 +118,9 @@ export const RangeEditor: PropertyEditorComponent = ({
           title={t('editor.range.currentValue', 'Current value')}
         />
         {opts.unit && (
-          <span className="text-xs pr-2 text-neutral-600 dark:text-neutral-400">{opts.unit}</span>
+          <span className="text-xs pr-2 text-neutral-600 dark:text-neutral-400">
+            {opts.unit}
+          </span>
         )}
       </span>
       <div className="min-w-0 flex-1 pr-2">

@@ -108,7 +108,7 @@ function ModalHost({
   )
 }
 
-/** Header row shared by both modal kinds: title, optional extras, close button. */
+/** The modal's header row: title, optional extras, close button. */
 function ModalHeader({
   title,
   children,
@@ -167,7 +167,7 @@ function SettingsModal({
             <React.Fragment key={section.id}>
               {/* Separate adjacent sections of different groups, e.g. the
                   personal Profile section from the administration ones. */}
-              {index > 0 && sections[index - 1].group !== section.group && (
+              {index > 0 && sections[index - 1]?.group !== section.group && (
                 <Separator className="my-2" />
               )}
               <SettingsNavItem

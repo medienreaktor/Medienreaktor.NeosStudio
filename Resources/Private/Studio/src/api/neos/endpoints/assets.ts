@@ -1,24 +1,25 @@
 import {
   keepPreviousData,
+  skipToken,
   useInfiniteQuery,
   useQuery,
 } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
 import { ApiError, isConflict } from '../../http/errors'
-import { queryString } from '../../http/request'
-import { apiFetch, apiUpload, type Listing } from '../client'
+import { api, apiUpload, unwrap } from '../client'
 import { neosKeys } from '../keys'
 import type {
   Asset,
   AssetCollection,
-  AssetSource,
+  AssetCollectionCreate,
+  AssetCollectionUpdate,
   AssetTag,
+  AssetTagCreate,
   AssetTagUpdate,
   AssetType,
   AssetUpdate,
-  AssetUsageListing,
+  AssetVariantCreate,
   CropRectangle,
-  PaginatedAssetListing,
 } from '../schema'
 
 /**
@@ -27,7 +28,7 @@ import type {
  */
 
 /** The id of the local Neos asset source - the only one taking uploads. */
-export const LOCAL_ASSET_SOURCE = 'neos'
+const LOCAL_ASSET_SOURCE = 'neos'
 
 /** From another asset source than the local Neos one (a DAM). */
 export function isRemoteAsset(asset: Asset): boolean {
@@ -74,11 +75,12 @@ export function tagFilterApplies(filter: AssetListFilter): boolean {
 
 const PAGE_SIZE = 40
 
-function assetListPath(filter: AssetListFilter, offset: number): string {
+/** The listAssets query of a page of the filtered list. */
+function assetListQuery(filter: AssetListFilter, offset: number) {
   const search = filter.search.trim()
   const field = filter.sortBy === 'name' ? 'name' : 'lastModified'
   const tags = tagFilterApplies(filter)
-  return `/assets/${encodeURIComponent(filter.assetSource)}${queryString({
+  return {
     filterByAssetType: filter.type !== 'all' ? filter.type : undefined,
     filterByCollection: filter.collection ?? undefined,
     filterByTag:
@@ -90,7 +92,7 @@ function assetListPath(filter: AssetListFilter, offset: number): string {
     sort: filter.sortDirection === 'desc' ? `-${field}` : field,
     offset,
     limit: PAGE_SIZE,
-  })}`
+  }
 }
 
 /**
@@ -104,8 +106,18 @@ export function useAssets(filter: AssetListFilter, enabled = true) {
     queryKey: neosKeys.assets.list(
       filter as unknown as Record<string, unknown>,
     ),
-    queryFn: ({ pageParam }) =>
-      apiFetch<PaginatedAssetListing>(assetListPath(filter, pageParam)),
+    queryFn: enabled
+      ? ({ pageParam, signal }) =>
+          unwrap(
+            api.GET('/assets/{assetSourceId}', {
+              params: {
+                path: { assetSourceId: filter.assetSource },
+                query: assetListQuery(filter, pageParam),
+              },
+              signal,
+            }),
+          )
+      : skipToken,
     initialPageParam: 0,
     getNextPageParam: (last, _pages, offset) => {
       const next = offset + last.data.length
@@ -114,24 +126,24 @@ export function useAssets(filter: AssetListFilter, enabled = true) {
     // Keep the previous results on screen while a new search/filter loads, so
     // the grid updates in place instead of flickering through an empty state.
     placeholderData: keepPreviousData,
-    enabled,
   })
 }
 
-function assetPath(assetSourceId: string, assetId: string): string {
-  return `/assets/${encodeURIComponent(assetSourceId)}/${encodeURIComponent(assetId)}`
+const ASSET = '/assets/{assetSourceId}/{assetId}'
+
+/** The path parameters of a local Neos asset. */
+function localAsset(assetId: string) {
+  return { assetSourceId: LOCAL_ASSET_SOURCE, assetId }
 }
 
-/** A local Neos asset's path. */
-function localAssetPath(assetId: string): string {
-  return assetPath(LOCAL_ASSET_SOURCE, assetId)
-}
-
-export function fetchAsset(
+function fetchAsset(
   assetSourceId: string,
   assetId: string,
+  signal?: AbortSignal,
 ): Promise<Asset> {
-  return apiFetch<Asset>(assetPath(assetSourceId, assetId))
+  return unwrap(
+    api.GET(ASSET, { params: { path: { assetSourceId, assetId } }, signal }),
+  )
 }
 
 export function useAsset(
@@ -141,8 +153,10 @@ export function useAsset(
 ) {
   return useQuery({
     queryKey: neosKeys.assets.asset(assetSourceId, assetId ?? ''),
-    queryFn: () => fetchAsset(assetSourceId, assetId!),
-    enabled: enabled && assetId !== null,
+    queryFn:
+      enabled && assetId !== null
+        ? ({ signal }) => fetchAsset(assetSourceId, assetId, signal)
+        : skipToken,
   })
 }
 
@@ -154,28 +168,36 @@ export function useAssetUsages(
 ) {
   return useQuery({
     queryKey: neosKeys.assets.usages(assetSourceId, assetId ?? ''),
-    queryFn: () =>
-      apiFetch<AssetUsageListing>(
-        `${assetPath(assetSourceId, assetId!)}/usages`,
-      ),
-    enabled: enabled && assetId !== null,
+    queryFn:
+      enabled && assetId !== null
+        ? ({ signal }) =>
+            unwrap(
+              api.GET(`${ASSET}/usages`, {
+                params: { path: { assetSourceId, assetId } },
+                signal,
+              }),
+            )
+        : skipToken,
   })
 }
 
 export function useAssetSources(enabled = true) {
   return useQuery({
     queryKey: neosKeys.assets.sources,
-    queryFn: async () => (await apiFetch<Listing<AssetSource>>('/assets')).data,
-    enabled,
+    queryFn: enabled
+      ? async ({ signal }) =>
+          (await unwrap(api.GET('/assets', { signal }))).data
+      : skipToken,
   })
 }
 
 export function useAssetCollections(enabled = true) {
   return useQuery({
     queryKey: neosKeys.assets.collections,
-    queryFn: async () =>
-      (await apiFetch<Listing<AssetCollection>>('/assetcollections')).data,
-    enabled,
+    queryFn: enabled
+      ? async ({ signal }) =>
+          (await unwrap(api.GET('/assetcollections', { signal }))).data
+      : skipToken,
   })
 }
 
@@ -183,15 +205,49 @@ export function useAssetCollections(enabled = true) {
 export function useAssetTags(enabled = true) {
   return useQuery({
     queryKey: neosKeys.assets.tags,
-    queryFn: async () => (await apiFetch<Listing<AssetTag>>('/assettags')).data,
-    enabled,
+    queryFn: enabled
+      ? async ({ signal }) =>
+          (await unwrap(api.GET('/assettags', { signal }))).data
+      : skipToken,
   })
 }
 
 // --- Writes (await-then-invalidate; no optimistic updates) ---
+//
+// Each write puts the asset it answers with into its detail query and
+// invalidates only the reads it can have changed: the asset lists (which
+// list it, filtered and sorted by what it changed) together with the tag
+// and collection counts, or - for a tag or collection renamed or deleted -
+// the asset details too, whose references carry their labels.
 
-/** Drop every cached media read. Called after any write. */
-function invalidateAssets(): Promise<void> {
+/** The asset as a write answered with it, into its detail query. */
+function cacheAsset(asset: Asset): void {
+  queryClient.setQueryData(
+    neosKeys.assets.asset(asset.assetSourceId, asset.id),
+    asset,
+  )
+}
+
+/**
+ * Refetch the asset lists (every filter, every page) and the tag and
+ * collection listings, whose asset counts follow them. What every write
+ * adding, removing or changing an asset invalidates - and what a batch of
+ * uploads with `invalidate: false` calls once, after the last one.
+ */
+export async function invalidateAssetLists(): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: neosKeys.assets.lists }),
+    queryClient.invalidateQueries({ queryKey: neosKeys.assets.tags }),
+    queryClient.invalidateQueries({ queryKey: neosKeys.assets.collections }),
+  ])
+}
+
+/**
+ * Refetch every asset read: the lists and counts, and all asset details -
+ * after a tag or collection was renamed or deleted, which the assets'
+ * references show.
+ */
+function invalidateAllAssetReads(): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: neosKeys.assets.all })
 }
 
@@ -202,6 +258,13 @@ export interface UploadOptions {
   collection?: string | null
   tags?: string[]
   onProgress?: (fraction: number) => void
+  signal?: AbortSignal
+  /**
+   * Invalidate the asset lists when done (true by default). A batch of
+   * uploads passes false and calls invalidateAssetLists() once after the
+   * last one, instead of refetching every list per file.
+   */
+  invalidate?: boolean
 }
 
 /**
@@ -219,9 +282,13 @@ export async function uploadAsset(
   if (options.collection) form.append('collectionIds[]', options.collection)
   for (const tag of options.tags ?? []) form.append('tagIds[]', tag)
 
-  let asset = await apiUpload<Asset>(`/assets/${LOCAL_ASSET_SOURCE}`, form, {
-    onProgress: options.onProgress,
-  })
+  let asset = await apiUpload(
+    'post',
+    '/assets/{assetSourceId}',
+    { assetSourceId: LOCAL_ASSET_SOURCE },
+    form,
+    { onProgress: options.onProgress, signal: options.signal },
+  )
   // A duplicate: apply the memberships the upload asked for (PUT is
   // idempotent, so already-present ones are no-ops).
   const collection = options.collection
@@ -229,19 +296,24 @@ export async function uploadAsset(
     collection &&
     !(asset.collections ?? []).some((candidate) => candidate.id === collection)
   ) {
-    asset = await apiFetch<Asset>(
-      `${localAssetPath(asset.id)}/collections/${encodeURIComponent(collection)}`,
-      { method: 'PUT' },
+    asset = await unwrap(
+      api.PUT(`${ASSET}/collections/{assetCollectionId}`, {
+        params: {
+          path: { ...localAsset(asset.id), assetCollectionId: collection },
+        },
+      }),
     )
   }
   for (const tag of options.tags ?? []) {
     if ((asset.tags ?? []).some((candidate) => candidate.id === tag)) continue
-    asset = await apiFetch<Asset>(
-      `${localAssetPath(asset.id)}/tags/${encodeURIComponent(tag)}`,
-      { method: 'PUT' },
+    asset = await unwrap(
+      api.PUT(`${ASSET}/tags/{assetTagId}`, {
+        params: { path: { ...localAsset(asset.id), assetTagId: tag } },
+      }),
     )
   }
-  await invalidateAssets()
+  cacheAsset(asset)
+  if (options.invalidate !== false) await invalidateAssetLists()
   return asset
 }
 
@@ -249,18 +321,22 @@ export async function updateAsset(
   assetId: string,
   update: AssetUpdate,
 ): Promise<Asset> {
-  const asset = await apiFetch<Asset>(localAssetPath(assetId), {
-    method: 'PATCH',
-    body: update,
-  })
-  await invalidateAssets()
+  const asset = await unwrap(
+    api.PATCH(ASSET, { params: { path: localAsset(assetId) }, body: update }),
+  )
+  cacheAsset(asset)
+  await invalidateAssetLists()
   return asset
 }
 
 /** Deletes a local asset; an asset in use is refused (409, see isAssetInUse). */
 export async function deleteAsset(assetId: string): Promise<void> {
-  await apiFetch(localAssetPath(assetId), { method: 'DELETE' })
-  await invalidateAssets()
+  await unwrap(api.DELETE(ASSET, { params: { path: localAsset(assetId) } }))
+  // The detail and its usages are gone with it.
+  queryClient.removeQueries({
+    queryKey: neosKeys.assets.asset(LOCAL_ASSET_SOURCE, assetId),
+  })
+  await invalidateAssetLists()
 }
 
 export interface ReplaceResourceOptions {
@@ -270,6 +346,7 @@ export interface ReplaceResourceOptions {
    */
   keepOriginalFilename?: boolean
   onProgress?: (fraction: number) => void
+  signal?: AbortSignal
 }
 
 /**
@@ -288,15 +365,16 @@ export async function replaceAssetResource(
     'keepOriginalFilename',
     options.keepOriginalFilename ? 'true' : 'false',
   )
-  const asset = await apiUpload<Asset>(
-    `${localAssetPath(assetId)}/file`,
+  const asset = await apiUpload(
+    'put',
+    '/assets/{assetSourceId}/{assetId}/file',
+    localAsset(assetId),
     form,
-    {
-      method: 'PUT',
-      onProgress: options.onProgress,
-    },
+    { onProgress: options.onProgress, signal: options.signal },
   )
-  await invalidateAssets()
+  cacheAsset(asset)
+  // The lists show its thumbnail, filename and size.
+  await invalidateAssetLists()
   return asset
 }
 
@@ -304,20 +382,20 @@ export async function replaceAssetResource(
  * Create a cropped variant of a local image. Pass the *original* image's id
  * (not a variant's) and the crop in the original's pixel coordinates; the
  * server persists a new ImageVariant (or returns an equal one it has already).
- * The caller stores the variant's id as the image property value.
+ * The caller stores the variant's id as the image property value. Variants
+ * are not listed, so no list changes.
  */
 export async function createImageVariant(
   originalId: string,
   crop: CropRectangle,
 ): Promise<Asset> {
-  const asset = await apiFetch<Asset>(
-    `${localAssetPath(originalId)}/variants`,
-    {
-      method: 'POST',
-      body: { crop },
-    },
+  const asset = await unwrap(
+    api.POST(`${ASSET}/variants`, {
+      params: { path: localAsset(originalId) },
+      body: { crop } satisfies AssetVariantCreate,
+    }),
   )
-  await invalidateAssets()
+  cacheAsset(asset)
   return asset
 }
 
@@ -326,35 +404,43 @@ export async function importAsset(
   assetSourceId: string,
   assetId: string,
 ): Promise<Asset> {
-  const asset = await apiFetch<Asset>(
-    `${assetPath(assetSourceId, assetId)}/import`,
-    { method: 'POST' },
+  const asset = await unwrap(
+    api.POST(`${ASSET}/import`, {
+      params: { path: { assetSourceId, assetId } },
+    }),
   )
-  await invalidateAssets()
+  cacheAsset(asset)
+  // The remote asset now has a local one (its localAssetId), and the local
+  // lists have a new asset.
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: neosKeys.assets.asset(assetSourceId, assetId),
+    }),
+    invalidateAssetLists(),
+  ])
   return asset
 }
 
 /**
- * Add (PUT, idempotent) or remove (DELETE) a membership sub-resource. Removing
- * one the asset does not have is a 404 - already the wanted state, so it
- * resolves with the asset as it is.
+ * Add (PUT, idempotent) or remove (DELETE) a membership. Removing one the
+ * asset does not have is a 404 - already the wanted state, so it resolves
+ * with the asset as it is.
  */
 async function setMembership(
-  path: string,
+  write: (method: 'PUT' | 'DELETE') => Promise<Asset>,
   assetId: string,
   assigned: boolean,
 ): Promise<Asset> {
   let asset: Asset
   try {
-    asset = await apiFetch<Asset>(path, {
-      method: assigned ? 'PUT' : 'DELETE',
-    })
+    asset = await write(assigned ? 'PUT' : 'DELETE')
   } catch (error) {
     if (assigned || !(error instanceof ApiError) || error.status !== 404)
       throw error
-    asset = await apiFetch<Asset>(localAssetPath(assetId))
+    asset = await fetchAsset(LOCAL_ASSET_SOURCE, assetId)
   }
-  await invalidateAssets()
+  cacheAsset(asset)
+  await invalidateAssetLists()
   return asset
 }
 
@@ -363,8 +449,16 @@ export function setAssetTag(
   tagId: string,
   assigned: boolean,
 ): Promise<Asset> {
+  const params = {
+    path: { ...localAsset(assetId), assetTagId: tagId },
+  }
   return setMembership(
-    `${localAssetPath(assetId)}/tags/${encodeURIComponent(tagId)}`,
+    (method) =>
+      unwrap(
+        method === 'PUT'
+          ? api.PUT(`${ASSET}/tags/{assetTagId}`, { params })
+          : api.DELETE(`${ASSET}/tags/{assetTagId}`, { params }),
+      ),
     assetId,
     assigned,
   )
@@ -375,75 +469,104 @@ export function setAssetCollection(
   collectionId: string,
   assigned: boolean,
 ): Promise<Asset> {
+  const params = {
+    path: { ...localAsset(assetId), assetCollectionId: collectionId },
+  }
   return setMembership(
-    `${localAssetPath(assetId)}/collections/${encodeURIComponent(collectionId)}`,
+    (method) =>
+      unwrap(
+        method === 'PUT'
+          ? api.PUT(`${ASSET}/collections/{assetCollectionId}`, { params })
+          : api.DELETE(`${ASSET}/collections/{assetCollectionId}`, {
+              params,
+            }),
+      ),
     assetId,
     assigned,
   )
 }
 
+/** A new collection: only the collection listing changes. */
 export async function createAssetCollection(
   title: string,
 ): Promise<AssetCollection> {
-  const collection = await apiFetch<AssetCollection>('/assetcollections', {
-    method: 'POST',
-    body: { title },
+  const collection = await unwrap(
+    api.POST('/assetcollections', {
+      body: { title } satisfies AssetCollectionCreate,
+    }),
+  )
+  await queryClient.invalidateQueries({
+    queryKey: neosKeys.assets.collections,
   })
-  await invalidateAssets()
   return collection
 }
 
+/** Renames a collection - which the assets' references show as well. */
 export async function updateAssetCollection(
   collectionId: string,
   title: string,
 ): Promise<AssetCollection> {
-  const collection = await apiFetch<AssetCollection>(
-    `/assetcollections/${encodeURIComponent(collectionId)}`,
-    { method: 'PATCH', body: { title } },
+  const collection = await unwrap(
+    api.PATCH('/assetcollections/{assetCollectionId}', {
+      params: { path: { assetCollectionId: collectionId } },
+      body: { title } satisfies AssetCollectionUpdate,
+    }),
   )
-  await invalidateAssets()
+  await invalidateAllAssetReads()
   return collection
 }
 
 export async function deleteAssetCollection(
   collectionId: string,
 ): Promise<void> {
-  await apiFetch(`/assetcollections/${encodeURIComponent(collectionId)}`, {
-    method: 'DELETE',
-  })
-  await invalidateAssets()
+  await unwrap(
+    api.DELETE('/assetcollections/{assetCollectionId}', {
+      params: { path: { assetCollectionId: collectionId } },
+    }),
+  )
+  await invalidateAllAssetReads()
 }
 
+/** A new tag: only the tag tree changes. */
 export async function createAssetTag(
   label: string,
   parentId?: string | null,
 ): Promise<AssetTag> {
-  const tag = await apiFetch<AssetTag>('/assettags', {
-    method: 'POST',
-    body: { label, parentId: parentId ?? null },
-  })
-  await invalidateAssets()
+  const tag = await unwrap(
+    api.POST('/assettags', {
+      body: { label, parentId: parentId ?? null } satisfies AssetTagCreate,
+    }),
+  )
+  await queryClient.invalidateQueries({ queryKey: neosKeys.assets.tags })
   return tag
 }
 
-/** Rename and/or move a tag. parentId null moves it to the root. */
+/**
+ * Rename and/or move a tag. parentId null moves it to the root. A rename
+ * shows in the assets' references as well.
+ */
 export async function updateAssetTag(
   tagId: string,
   update: AssetTagUpdate,
 ): Promise<AssetTag> {
-  const tag = await apiFetch<AssetTag>(
-    `/assettags/${encodeURIComponent(tagId)}`,
-    { method: 'PATCH', body: update },
+  const tag = await unwrap(
+    api.PATCH('/assettags/{assetTagId}', {
+      params: { path: { assetTagId: tagId } },
+      body: update,
+    }),
   )
-  await invalidateAssets()
+  if (update.label !== undefined) await invalidateAllAssetReads()
+  else await queryClient.invalidateQueries({ queryKey: neosKeys.assets.tags })
   return tag
 }
 
 export async function deleteAssetTag(tagId: string): Promise<void> {
-  await apiFetch(`/assettags/${encodeURIComponent(tagId)}`, {
-    method: 'DELETE',
-  })
-  await invalidateAssets()
+  await unwrap(
+    api.DELETE('/assettags/{assetTagId}', {
+      params: { path: { assetTagId: tagId } },
+    }),
+  )
+  await invalidateAllAssetReads()
 }
 
 /**
@@ -467,13 +590,16 @@ export function isCollectionType(type: string): boolean {
 
 /**
  * The asset id read off a property value: Neos.Api's `{id, url}`, tolerating
- * a bare id and the legacy serialized object reference (`__identifier`).
+ * a bare id and the content repository's serialized object reference
+ * (`{__flow_object_type, __identifier}`) - which Neos.Api passes through
+ * as stored when it cannot resolve a value to assets, e.g. a list one of
+ * whose assets is gone.
  */
 export function referenceIdentifier(value: unknown): string | null {
   if (typeof value === 'string') return value === '' ? null : value
   if (value && typeof value === 'object') {
     const record = value as Record<string, unknown>
-    const id = record.id ?? record.__identifier ?? record.__identity
+    const id = record.id ?? record.__identifier
     if (typeof id === 'string' && id !== '') return id
   }
   return null

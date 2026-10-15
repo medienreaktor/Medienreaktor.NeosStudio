@@ -8,8 +8,8 @@
     <link href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/favicon-32x32.png" sizes="32x32" rel="icon" type="image/png" />
     <link href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/safari-pinned-tab.svg" rel="mask-icon" color="#00adee" />
     <title>Neos Studio</title>
-    <script type="module" crossorigin src="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-eNZUR392.js"></script>
-    <link rel="stylesheet" crossorigin href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-BNKy4jCp.css">
+    <script type="module" crossorigin src="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-CAioHSAg.js"></script>
+    <link rel="stylesheet" crossorigin href="/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/assets/index-CLv2e2Oz.css">
   </head>
   <body>
     <!-- Painted before the bundle runs; React replaces it with the identical
@@ -23,11 +23,7 @@
         <div id="neos-studio-boot-ring" style="width:4rem;height:4rem;border-radius:9999px;border:4px solid #00adee;border-top-color:transparent;animation:neos-studio-boot-spin 1s linear infinite"></div>
       </div>
     </div>
-    <script>
-      // Rotation phase from the page clock, like the React BootScreen does, so
-      // the ring does not jump back when React replaces this element.
-      document.getElementById('neos-studio-boot-ring').style.animationDelay =
-        -(performance.now() % 1000) + 'ms'
-    </script>
+    <!-- Rotation phase from the page clock (see src/bootRing.ts); a module
+         file rather than an inline script, for CSP. -->
   </body>
 </html>

@@ -10,7 +10,7 @@ import { translate as t } from '@/lib/i18n'
  * `arguments` option (ClientEval inside them is already evaluated by the
  * inspector), renders the loading/error states, and hands the result to the
  * view body. The classic UI's `dataSourceUri` option bypasses the data source
- * registry with a free-form URL - the Studio API has no such passthrough, so
+ * registry with a free-form URL - Neos.Api has no such passthrough, so
  * it is called out as unsupported instead of failing silently.
  */
 export function DataSourceWidget({

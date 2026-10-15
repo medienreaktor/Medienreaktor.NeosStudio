@@ -1,4 +1,5 @@
 import type * as React from 'react'
+import { ObservableRegistry } from '@/lib/registry'
 import type { PanelRect } from './geometry'
 import type { DockRegion } from './panelLayout'
 
@@ -26,47 +27,30 @@ export type PanelPlacement =
 export type PanelDefinition = {
   /** Unique id, persisted in layouts. Third-party panels should namespace ('vendor.package:panel'). */
   id: string
-  /** Tab label. */
-  title: string
+  /**
+   * Tab label - or a function returning it, resolved whenever the label is
+   * rendered (read it through {@link panelTitle}), so a translated label
+   * follows the bundle instead of freezing at registration time.
+   */
+  title: string | (() => string)
   /** Panel body. Receives no props - read app state via context (e.g. useStudio()). */
   component: React.ComponentType
   /** Where the panel appears when absent from the stored layout. */
   defaultPlacement: PanelPlacement
 }
 
-export class PanelRegistry {
-  private definitions = new Map<string, PanelDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: PanelDefinition[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: PanelDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
-  }
-
-  get(id: string): PanelDefinition | undefined {
-    return this.definitions.get(id)
-  }
-
-  /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): PanelDefinition[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()]
-    this.listeners.forEach((listener) => listener())
-  }
+/** A panel's current tab label. */
+export function panelTitle(definition: Pick<PanelDefinition, 'title'>): string {
+  return typeof definition.title === 'function'
+    ? definition.title()
+    : definition.title
 }
+
+/**
+ * Panels in registration order. The observable store itself (register-
+ * replaces-by-id, stable getAll() snapshot, bound subscribe) lives in
+ * {@link ObservableRegistry}.
+ */
+export class PanelRegistry extends ObservableRegistry<PanelDefinition> {}
 
 export const panelRegistry = new PanelRegistry()

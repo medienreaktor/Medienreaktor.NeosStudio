@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { translate as t } from '@/lib/i18n'
-import type { LinkValue } from './linkValue'
+import { isAllowedHref, type LinkValue } from './linkValue'
 import { useLinkTypes, type LinkTypeDefinition } from './registry'
 
 /**
@@ -77,9 +77,11 @@ export function LinkEditorDialog({
   const [title, setTitle] = useState(value?.title ?? '')
 
   const href = drafts[activeId] ?? null
+  // Never a link of a refused scheme, even one the edited link came with.
+  const applicable = href !== null && href !== '' && isAllowedHref(href)
 
   const apply = () => {
-    if (href === null || href === '') return
+    if (!applicable) return
     onApply({
       href,
       target: targetBlank ? '_blank' : null,
@@ -202,7 +204,7 @@ export function LinkEditorDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('link.cancel', 'Cancel')}
           </Button>
-          <Button disabled={href === null || href === ''} onClick={apply}>
+          <Button disabled={!applicable} onClick={apply}>
             {t('link.apply', 'Apply')}
           </Button>
         </DialogFooter>

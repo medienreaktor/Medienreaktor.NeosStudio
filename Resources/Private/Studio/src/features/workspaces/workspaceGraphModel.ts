@@ -25,13 +25,13 @@ import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
 
 export const WS_CARD_WIDTH = 240
 export const WS_CARD_HEIGHT = 64
-export const LANE_HEIGHT = 100
+const LANE_HEIGHT = 100
 /** Distance between two commit dots on a branch line. */
 export const DOT_SPACING = 36
 /** Horizontal room the branch-off curve gets before the first commit. */
 export const BRANCH_BEND = 90
 /** Gap between the last commit dot and the head card. */
-export const LINE_END_GAP = 28
+const LINE_END_GAP = 28
 /** Minimum branch line length, so an empty branch is still visibly a branch. */
 const MIN_LINE_LENGTH = 60
 /** Most dots a root (live) line shows - published history is long, only the
@@ -56,7 +56,7 @@ const BRANCH_COLORS = [
   'var(--color-teal-500)',
 ]
 
-export interface CommitDot {
+interface CommitDot {
   /** Dot center on the branch line. */
   x: number
   /** One editing step - possibly several events of one command. */
@@ -208,7 +208,8 @@ export function buildWorkspaceGraph(
       lane,
       color: isRoot
         ? ROOT_COLOR
-        : BRANCH_COLORS[colorCursor++ % BRANCH_COLORS.length],
+        : // The modulo keeps the index within the (non-empty) palette.
+          BRANCH_COLORS[colorCursor++ % BRANCH_COLORS.length]!,
       branchFrom,
       startX,
       y,
@@ -231,12 +232,10 @@ export function buildWorkspaceGraph(
       if (forkVersion === null) return headX
       if (forkVersion === -1) return dots.length > 0 ? startX : headX
       const nextIndex = dots.findIndex((dot) => dot.step.version > forkVersion)
-      if (nextIndex === -1) return headX
-      const left =
-        nextIndex === 0
-          ? startX + slotOffset * DOT_SPACING
-          : dots[nextIndex - 1].x
-      return (left + dots[nextIndex].x) / 2
+      const next = dots[nextIndex]
+      if (next === undefined) return headX // -1: nothing newer than the fork
+      const left = dots[nextIndex - 1]?.x ?? startX + slotOffset * DOT_SPACING
+      return (left + next.x) / 2
     }
 
     // Later branch points get the nearer lanes: the lower a child sits, the

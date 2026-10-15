@@ -70,9 +70,22 @@ export type TabDrop = {
 
 const DEFAULT_FLOAT_SIZE = { width: 340, height: 440 }
 
+/**
+ * A fresh group id. crypto.randomUUID only exists in secure contexts - a
+ * Studio served over plain http on an intranet host has no crypto.randomUUID,
+ * so fall back to getRandomValues (available everywhere) there.
+ */
+function newGroupId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join(
+    '',
+  )
+}
+
 function newGroup(panel: PanelId): PanelGroup {
   return {
-    id: crypto.randomUUID(),
+    id: newGroupId(),
     panels: [panel],
     active: panel,
     collapsed: false,
@@ -107,14 +120,14 @@ function coalesceTabRegions(
   let changed = false
   const result = { ...docks }
   for (const region of TAB_REGIONS) {
-    const groups = docks[region]
-    if (groups.length <= 1) continue
+    const [first, ...rest] = docks[region]
+    if (!first || rest.length === 0) continue
     changed = true
     result[region] = [
       {
-        id: groups[0].id,
-        panels: groups.flatMap((g) => g.panels),
-        active: groups[0].active,
+        id: first.id,
+        panels: [first, ...rest].flatMap((g) => g.panels),
+        active: first.active,
         collapsed: false,
       },
     ]
@@ -166,19 +179,18 @@ export function normalizeLayout(
       (p): p is PanelId =>
         typeof p === 'string' && known.has(p) && !seenPanels.has(p),
     )
-    if (panels.length === 0) return null
+    const [firstPanel] = panels
+    if (firstPanel === undefined) return null
     panels.forEach((p) => seenPanels.add(p))
     const id =
-      typeof g?.id === 'string' && !usedIds.has(g.id)
-        ? g.id
-        : crypto.randomUUID()
+      typeof g?.id === 'string' && !usedIds.has(g.id) ? g.id : newGroupId()
     usedIds.add(id)
     return {
       id,
       panels,
       active: panels.includes(g?.active as PanelId)
         ? (g!.active as PanelId)
-        : panels[0],
+        : firstPanel,
       collapsed: g?.collapsed === true,
     }
   }
@@ -344,7 +356,8 @@ export function bringToFront(
   const index = layout.floating.findIndex((g) => g.id === groupId)
   if (index < 0 || index === layout.floating.length - 1) return layout
   const floating = [...layout.floating]
-  const [group] = floating.splice(index, 1)
+  // index was found above, so the splice removes exactly that group.
+  const [group] = floating.splice(index, 1) as [FloatingGroup]
   floating.push(group)
   return { ...layout, floating }
 }

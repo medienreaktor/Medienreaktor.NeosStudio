@@ -1,8 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
-import { queryClient } from '@/app/queryClient'
-import { apiFetch, fetchAllPages } from '../client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { api, fetchAllPages, unwrap } from '../client'
 import { neosKeys } from '../keys'
-import type { User, UserCreate, UserOptions, UserUpdate } from '../schema'
+import type { User, UserCreate, UserPasswordSet, UserUpdate } from '../schema'
 
 /**
  * The backend users (Neos.Api's Users tag). Neos.Api lists them to user
@@ -10,20 +9,16 @@ import type { User, UserCreate, UserOptions, UserUpdate } from '../schema'
  * the shell names users everywhere editors work together.
  */
 
-function usersQuery() {
-  return {
-    queryKey: neosKeys.users.all,
-    queryFn: () => fetchAllPages<User>('/users'),
-  }
-}
-
 export function useUsers(enabled = true) {
-  return useQuery({ ...usersQuery(), enabled })
-}
-
-/** Imperative variant of useUsers, for non-hook contexts. */
-export function fetchUsers(): Promise<User[]> {
-  return queryClient.fetchQuery({ ...usersQuery(), staleTime: 5 * 60 * 1000 })
+  return useQuery({
+    queryKey: neosKeys.users.all,
+    queryFn: enabled
+      ? ({ signal }): Promise<User[]> =>
+          fetchAllPages((page) =>
+            unwrap(api.GET('/users', { params: { query: page }, signal })),
+          )
+      : skipToken,
+  })
 }
 
 /** The roles of all of the user's accounts. */
@@ -35,17 +30,14 @@ export function userRoles(user: User): string[] {
 export function useUserOptions(enabled = true) {
   return useQuery({
     queryKey: neosKeys.users.options,
-    queryFn: () => apiFetch<UserOptions>('/options/users'),
-    enabled,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/options/users', { signal }))
+      : skipToken,
   })
 }
 
-function userPath(userId: string): string {
-  return `/users/${encodeURIComponent(userId)}`
-}
-
 export function createUser(input: UserCreate): Promise<User> {
-  return apiFetch<User>('/users', { method: 'POST', body: input })
+  return unwrap(api.POST('/users', { body: input }))
 }
 
 /**
@@ -54,7 +46,12 @@ export function createUser(input: UserCreate): Promise<User> {
  * accounts.
  */
 export function updateUser(userId: string, input: UserUpdate): Promise<User> {
-  return apiFetch<User>(userPath(userId), { method: 'PATCH', body: input })
+  return unwrap(
+    api.PATCH('/users/{userId}', {
+      params: { path: { userId } },
+      body: input,
+    }),
+  )
 }
 
 /** Administrative password reset - no current password required. */
@@ -62,12 +59,14 @@ export async function setUserPassword(
   userId: string,
   newPassword: string,
 ): Promise<void> {
-  await apiFetch(`${userPath(userId)}/password`, {
-    method: 'PUT',
-    body: { newPassword },
-  })
+  await unwrap(
+    api.PUT('/users/{userId}/password', {
+      params: { path: { userId } },
+      body: { newPassword } satisfies UserPasswordSet,
+    }),
+  )
 }
 
 export async function deleteUser(userId: string): Promise<void> {
-  await apiFetch(userPath(userId), { method: 'DELETE' })
+  await unwrap(api.DELETE('/users/{userId}', { params: { path: { userId } } }))
 }

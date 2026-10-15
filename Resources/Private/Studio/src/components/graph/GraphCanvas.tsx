@@ -1,11 +1,14 @@
 import {
-  forwardRef,
+  type Ref,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 import { translate as t } from '@/lib/i18n'
 
 /**
@@ -28,6 +31,10 @@ import { translate as t } from '@/lib/i18n'
  *   (panels mount hidden behind inactive tabs - a hidden tab's wrapper has
  *   zero width) AND the content has extents. `onVisible` fires at the same
  *   visibility edge, so callers can defer fetching until the panel is shown.
+ * - The view transform lives in a ref and is written to the surface's style
+ *   once per animation frame - panning never re-renders the (possibly large)
+ *   graph. Only the zoom readout is React state, updated when the scale
+ *   actually changes.
  */
 
 export interface GraphCanvasHandle {
@@ -44,6 +51,11 @@ interface ViewTransform {
   x: number
   y: number
   scale: number
+}
+
+/** The surface's CSS transform for a view. */
+function cssTransform({ x, y, scale }: ViewTransform): string {
+  return `translate(${x}px, ${y}px) scale(${scale})`
 }
 
 export interface GraphCanvasProps {
@@ -63,248 +75,288 @@ export interface GraphCanvasProps {
   /** Untransformed overlays (search, legends) rendered above the canvas. */
   overlay?: React.ReactNode
   children: React.ReactNode
+  /** The imperative handle (fit, center, zoom) - a plain prop in React 19. */
+  ref?: Ref<GraphCanvasHandle>
 }
 
-export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
-  function GraphCanvas(
-    {
-      contentWidth,
-      contentHeight,
-      minScale = 0.08,
-      maxScale = 2,
-      onPick,
-      onVisibilityChange,
-      overlay,
-      children,
+export function GraphCanvas({
+  contentWidth,
+  contentHeight,
+  minScale = 0.08,
+  maxScale = 2,
+  onPick,
+  onVisibilityChange,
+  overlay,
+  children,
+  ref,
+}: GraphCanvasProps) {
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const surfaceRef = useRef<HTMLDivElement>(null)
+  // The current transform - the source of truth, applied to the surface
+  // imperatively (see the contract above).
+  const viewRef = useRef<ViewTransform>({ x: 40, y: 40, scale: 1 })
+  // The zoom readout only; the transform itself never goes through state.
+  const [displayScale, setDisplayScale] = useState(1)
+  const [visible, setVisible] = useState(false)
+  const frameRef = useRef<number | null>(null)
+
+  const clampScale = (scale: number): number =>
+    Math.min(maxScale, Math.max(minScale, scale))
+
+  const applyTransform = () => {
+    frameRef.current = null
+    if (surfaceRef.current)
+      surfaceRef.current.style.transform = cssTransform(viewRef.current)
+  }
+
+  // The initial transform, before the first paint. React never owns the
+  // surface's transform (it is not in its style prop), so later renders -
+  // e.g. for the zoom readout - leave the imperatively applied one alone.
+  useLayoutEffect(() => {
+    if (surfaceRef.current)
+      surfaceRef.current.style.transform = cssTransform(viewRef.current)
+  }, [])
+
+  /** Move the view; the surface follows on the next animation frame. */
+  const setView = (
+    next: ViewTransform | ((current: ViewTransform) => ViewTransform),
+  ) => {
+    viewRef.current = typeof next === 'function' ? next(viewRef.current) : next
+    if (frameRef.current === null)
+      frameRef.current = requestAnimationFrame(applyTransform)
+    setDisplayScale(viewRef.current.scale)
+  }
+
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
     },
-    ref,
-  ) {
-    const viewportRef = useRef<HTMLDivElement>(null)
-    const [view, setView] = useState<ViewTransform>({ x: 40, y: 40, scale: 1 })
-    const [visible, setVisible] = useState(false)
+    [],
+  )
 
-    const clampScale = (scale: number): number =>
-      Math.min(maxScale, Math.max(minScale, scale))
+  // Visibility via size: the hidden tab's wrapper has zero width.
+  const onVisibilityChangeRef = useLatestRef(onVisibilityChange)
+  useEffect(() => {
+    const element = viewportRef.current
+    if (!element) return
+    let last: boolean | null = null
+    const observer = new ResizeObserver(() => {
+      const now = element.clientWidth > 0
+      if (now === last) return
+      last = now
+      if (now) setVisible(true)
+      onVisibilityChangeRef.current?.(now)
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [onVisibilityChangeRef]) // a stable ref: runs once
 
-    // Visibility via size: the hidden tab's wrapper has zero width.
-    const onVisibilityChangeRef = useRef(onVisibilityChange)
-    onVisibilityChangeRef.current = onVisibilityChange
-    useEffect(() => {
-      const element = viewportRef.current
-      if (!element) return
-      let last: boolean | null = null
-      const observer = new ResizeObserver(() => {
-        const now = element.clientWidth > 0
-        if (now === last) return
-        last = now
-        if (now) setVisible(true)
-        onVisibilityChangeRef.current?.(now)
-      })
-      observer.observe(element)
-      return () => observer.disconnect()
-    }, [])
+  const fitToView = () => {
+    const element = viewportRef.current
+    if (!element || contentWidth === 0 || element.clientWidth === 0) return
+    const padding = 40
+    const scale = clampScale(
+      Math.min(
+        (element.clientWidth - padding * 2) / contentWidth,
+        (element.clientHeight - padding * 2) / contentHeight,
+        1,
+      ),
+    )
+    setView({
+      scale,
+      x: (element.clientWidth - contentWidth * scale) / 2,
+      y: (element.clientHeight - contentHeight * scale) / 2,
+    })
+  }
 
-    const fitToView = () => {
-      const element = viewportRef.current
-      if (!element || contentWidth === 0 || element.clientWidth === 0) return
-      const padding = 40
-      const scale = clampScale(
-        Math.min(
-          (element.clientWidth - padding * 2) / contentWidth,
-          (element.clientHeight - padding * 2) / contentHeight,
-          1,
-        ),
-      )
-      setView({
+  // Fit once, as soon as both the content and a real viewport size exist.
+  const fitted = useRef(false)
+  const fitOnce = useEffectEvent(() => {
+    if (fitted.current || !visible || contentWidth === 0) return
+    fitted.current = true
+    fitToView()
+  })
+  useEffect(() => {
+    fitOnce()
+  }, [visible, contentWidth, contentHeight])
+
+  // Wheel zoom towards the cursor, attached natively (see contract above).
+  // An effect event, so the listener stays attached while it still sees the
+  // latest scale limits.
+  const onWheel = useEffectEvent((event: WheelEvent) => {
+    const element = viewportRef.current
+    if (!element) return
+    event.preventDefault()
+    const rect = element.getBoundingClientRect()
+    const cursorX = event.clientX - rect.left
+    const cursorY = event.clientY - rect.top
+    setView((current) => {
+      const factor = Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0015))
+      const scale = clampScale(current.scale * factor)
+      const ratio = scale / current.scale
+      return {
         scale,
-        x: (element.clientWidth - contentWidth * scale) / 2,
-        y: (element.clientHeight - contentHeight * scale) / 2,
-      })
-    }
-
-    // Fit once, as soon as both the content and a real viewport size exist.
-    const fitted = useRef(false)
-    useEffect(() => {
-      if (fitted.current || !visible || contentWidth === 0) return
-      fitted.current = true
-      fitToView()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [visible, contentWidth, contentHeight])
-
-    // Wheel zoom towards the cursor, attached natively (see contract above).
-    useEffect(() => {
-      const element = viewportRef.current
-      if (!element) return
-      const onWheel = (event: WheelEvent) => {
-        event.preventDefault()
-        const rect = element.getBoundingClientRect()
-        const cursorX = event.clientX - rect.left
-        const cursorY = event.clientY - rect.top
-        setView((current) => {
-          const factor = Math.exp(
-            -event.deltaY * (event.ctrlKey ? 0.01 : 0.0015),
-          )
-          const scale = clampScale(current.scale * factor)
-          const ratio = scale / current.scale
-          return {
-            scale,
-            x: cursorX - (cursorX - current.x) * ratio,
-            y: cursorY - (cursorY - current.y) * ratio,
-          }
-        })
+        x: cursorX - (cursorX - current.x) * ratio,
+        y: cursorY - (cursorY - current.y) * ratio,
       }
-      element.addEventListener('wheel', onWheel, { passive: false })
-      return () => element.removeEventListener('wheel', onWheel)
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [minScale, maxScale])
+    })
+  })
+  useEffect(() => {
+    const element = viewportRef.current
+    if (!element) return
+    const listener = (event: WheelEvent) => onWheel(event)
+    element.addEventListener('wheel', listener, { passive: false })
+    return () => element.removeEventListener('wheel', listener)
+  }, [])
 
-    const zoomBy = (factor: number) => {
-      const element = viewportRef.current
-      if (!element) return
-      const centerX = element.clientWidth / 2
-      const centerY = element.clientHeight / 2
-      setView((current) => {
-        const scale = clampScale(current.scale * factor)
-        const ratio = scale / current.scale
-        return {
-          scale,
-          x: centerX - (centerX - current.x) * ratio,
-          y: centerY - (centerY - current.y) * ratio,
-        }
-      })
-    }
-
-    const centerOnRect = (
-      rect: { x: number; y: number; width: number; height: number },
-      centerMinScale = 0.5,
-    ) => {
-      const element = viewportRef.current
-      if (!element) return
-      setView((current) => {
-        // Zoom in at least far enough that the centered rect is readable.
-        const scale = clampScale(Math.max(current.scale, centerMinScale))
-        return {
-          scale,
-          x: element.clientWidth / 2 - (rect.x + rect.width / 2) * scale,
-          y: element.clientHeight / 2 - (rect.y + rect.height / 2) * scale,
-        }
-      })
-    }
-
-    useImperativeHandle(ref, () => ({ fitToView, centerOnRect, zoomBy }))
-
-    const dragRef = useRef<{
-      pointerId: number
-      startX: number
-      startY: number
-      originX: number
-      originY: number
-      moved: boolean
-      pressedId: string | null
-    } | null>(null)
-
-    const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0) return
-      const target = event.target as HTMLElement
-      // Buttons and summary rows (collapsible toggles) must neither pan nor
-      // change the pick.
-      if (target.closest('button, input, a, summary')) return
-      dragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        originX: view.x,
-        originY: view.y,
-        moved: false,
-        pressedId:
-          target.closest('[data-graph-id]')?.getAttribute('data-graph-id') ??
-          null,
+  const zoomBy = (factor: number) => {
+    const element = viewportRef.current
+    if (!element) return
+    const centerX = element.clientWidth / 2
+    const centerY = element.clientHeight / 2
+    setView((current) => {
+      const scale = clampScale(current.scale * factor)
+      const ratio = scale / current.scale
+      return {
+        scale,
+        x: centerX - (centerX - current.x) * ratio,
+        y: centerY - (centerY - current.y) * ratio,
       }
-      event.currentTarget.setPointerCapture(event.pointerId)
-    }
+    })
+  }
 
-    const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current
-      if (!drag || drag.pointerId !== event.pointerId) return
-      const deltaX = event.clientX - drag.startX
-      const deltaY = event.clientY - drag.startY
-      if (Math.abs(deltaX) + Math.abs(deltaY) > 3) drag.moved = true
-      if (drag.moved) {
-        setView((current) => ({
-          ...current,
-          x: drag.originX + deltaX,
-          y: drag.originY + deltaY,
-        }))
+  const centerOnRect = (
+    rect: { x: number; y: number; width: number; height: number },
+    centerMinScale = 0.5,
+  ) => {
+    const element = viewportRef.current
+    if (!element) return
+    setView((current) => {
+      // Zoom in at least far enough that the centered rect is readable.
+      const scale = clampScale(Math.max(current.scale, centerMinScale))
+      return {
+        scale,
+        x: element.clientWidth / 2 - (rect.x + rect.width / 2) * scale,
+        y: element.clientHeight / 2 - (rect.y + rect.height / 2) * scale,
       }
-    }
+    })
+  }
 
-    const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current
-      if (!drag || drag.pointerId !== event.pointerId) return
-      dragRef.current = null
-      if (!drag.moved) onPick?.(drag.pressedId)
-    }
+  useImperativeHandle(ref, () => ({ fitToView, centerOnRect, zoomBy }))
 
-    return (
-      <div className="relative h-full min-h-0 overflow-hidden">
-        {overlay}
-        <div className="pointer-events-none absolute top-0 right-0 z-10 p-3">
-          <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-1 backdrop-blur-xs">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => zoomBy(1 / 1.25)}
-              title={t('graph.zoomOut', 'Zoom out')}
-            >
-              <i className="fas fa-minus" aria-hidden />
-            </Button>
-            <span className="w-10 text-center text-[10px] text-neutral-600 dark:text-neutral-400 tabular-nums">
-              {Math.round(view.scale * 100)}%
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => zoomBy(1.25)}
-              title={t('graph.zoomIn', 'Zoom in')}
-            >
-              <i className="fas fa-plus" aria-hidden />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={fitToView}
-              title={t('graph.fit', 'Fit to view')}
-            >
-              <i className="fas fa-expand" aria-hidden />
-            </Button>
-          </div>
-        </div>
-        <div
-          ref={viewportRef}
-          className="h-full w-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            dragRef.current = null
-          }}
-        >
-          <div
-            className="absolute top-0 left-0"
-            style={{
-              transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
-              transformOrigin: '0 0',
-            }}
+  const dragRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+    originX: number
+    originY: number
+    moved: boolean
+    pressedId: string | null
+  } | null>(null)
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    const target = event.target as HTMLElement
+    // Buttons and summary rows (collapsible toggles) must neither pan nor
+    // change the pick.
+    if (target.closest('button, input, a, summary')) return
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: viewRef.current.x,
+      originY: viewRef.current.y,
+      moved: false,
+      pressedId:
+        target.closest('[data-graph-id]')?.getAttribute('data-graph-id') ??
+        null,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    const deltaX = event.clientX - drag.startX
+    const deltaY = event.clientY - drag.startY
+    if (Math.abs(deltaX) + Math.abs(deltaY) > 3) drag.moved = true
+    if (drag.moved) {
+      setView((current) => ({
+        ...current,
+        x: drag.originX + deltaX,
+        y: drag.originY + deltaY,
+      }))
+    }
+  }
+
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    dragRef.current = null
+    if (!drag.moved) onPick?.(drag.pressedId)
+  }
+
+  return (
+    <div className="relative h-full min-h-0 overflow-hidden">
+      {overlay}
+      <div className="pointer-events-none absolute top-0 right-0 z-10 p-3">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-1 backdrop-blur-xs">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => zoomBy(1 / 1.25)}
+            title={t('graph.zoomOut', 'Zoom out')}
           >
-            {children}
-          </div>
+            <i className="fas fa-minus" aria-hidden />
+          </Button>
+          <span className="w-10 text-center text-[10px] text-neutral-600 dark:text-neutral-400 tabular-nums">
+            {Math.round(displayScale * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => zoomBy(1.25)}
+            title={t('graph.zoomIn', 'Zoom in')}
+          >
+            <i className="fas fa-plus" aria-hidden />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={fitToView}
+            title={t('graph.fit', 'Fit to view')}
+          >
+            <i className="fas fa-expand" aria-hidden />
+          </Button>
         </div>
       </div>
-    )
-  },
-)
+      <div
+        ref={viewportRef}
+        // The dot grid follows the color scheme: dark dots on the light
+        // canvas, light ones on the dark canvas.
+        className="h-full w-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing [--graph-dot:rgba(0,0,0,0.12)] dark:[--graph-dot:rgba(255,255,255,0.07)]"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, var(--graph-dot) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => {
+          dragRef.current = null
+        }}
+      >
+        <div
+          ref={surfaceRef}
+          className="absolute top-0 left-0"
+          // No transform here: it is applied imperatively (applyTransform and
+          // the mount effect above), never through a render.
+          style={{ transformOrigin: '0 0' }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}

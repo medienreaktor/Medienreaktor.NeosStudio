@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useId, useMemo, useState, type ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -52,9 +52,16 @@ import { unrestrictedConstraints } from './rules'
  * states they never intended to exist - the more so while the roles are
  * enforced live against people currently editing.
  *
- * The dialog is deliberately permissive-by-default at every turn: a fresh
- * role restricts nothing, and each tab says so in the same words - "all X" is
- * the state where nothing is ticked.
+ * Roles restrict WRITING only. The server answers reads for everyone - a
+ * member outside a site still sees it, they just cannot change it - and the
+ * dialog's wording says so throughout.
+ *
+ * The dialog is permissive-by-default: a fresh role restricts nothing. The
+ * stored model is "empty means unrestricted" (an empty site list is every
+ * site), which the dialog does NOT expose as "nothing ticked": each list axis
+ * has an explicit "All / Only the selected" choice, so unticking the last
+ * site of a restricted role cannot silently widen it to every site - an empty
+ * selection is incomplete and blocks saving instead.
  */
 export function AccessRoleDialog({
   open,
@@ -66,34 +73,91 @@ export function AccessRoleDialog({
   role: AccessRole | null
   onOpenChange: (open: boolean) => void
 }) {
-  const { data: catalogue } = useAccessRoles(open)
-  const [label, setLabel] = useState('')
-  const [description, setDescription] = useState('')
-  const [constraints, setConstraints] = useState<AccessRoleConstraints>(
-    unrestrictedConstraints,
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Wider than the xl preset: seven tabs do not fit its width in every
+          language (German "Berechtigungen" alone overflows it), and the tab
+          strip would scroll by a few dozen pixels - which reads as a
+          cut-off tab, not as something scrollable. The page-tree picker
+          inside earns the extra room anyway. */}
+      <DialogContent size="xl" className="max-w-5xl">
+        {/* The popup unmounts while closed, so every opening mounts a fresh
+            form seeded from the role - and a refetch of the role while it
+            is open (another tab saved it) does not wipe the draft. */}
+        <AccessRoleForm
+          key={role?.id ?? 'new'}
+          role={role}
+          onOpenChange={onOpenChange}
+        />
+      </DialogContent>
+    </Dialog>
   )
-  const [memberUserIds, setMemberUserIds] = useState<string[]>([])
-  const [tab, setTab] = useState('general')
+}
 
-  // A fresh draft every time the dialog opens, seeded from the edited role.
-  useEffect(() => {
-    if (!open) return
-    setLabel(role?.label ?? '')
-    setDescription(role?.description ?? '')
-    setConstraints(role?.constraints ?? unrestrictedConstraints())
-    setMemberUserIds(role?.memberUserIds ?? [])
-    setTab('general')
-  }, [open, role])
+function AccessRoleForm({
+  role,
+  onOpenChange,
+}: {
+  role: AccessRole | null
+  onOpenChange: (open: boolean) => void
+}) {
+  const { data: catalogue } = useAccessRoles()
+  const [label, setLabel] = useState(() => role?.label ?? '')
+  const [description, setDescription] = useState(() => role?.description ?? '')
+  const [constraints, setConstraints] = useState<AccessRoleConstraints>(
+    () => role?.constraints ?? unrestrictedConstraints(),
+  )
+  // Which list axes are narrowed to a selection. Kept apart from the lists,
+  // so switching an axis to "All" and back restores the ticks, and so an
+  // empty selection stays a visible, incomplete restriction.
+  const [restrictSites, setRestrictSites] = useState(
+    () => constraints.siteNodeNames.length > 0,
+  )
+  const [restrictWorkspaces, setRestrictWorkspaces] = useState(
+    () => constraints.workspaceNames.length > 0,
+  )
+  const [restrictedDimensions, setRestrictedDimensions] = useState(() =>
+    Object.entries(constraints.dimensionValues)
+      .filter(([, values]) => values.length > 0)
+      .map(([dimensionId]) => dimensionId),
+  )
+  const [memberUserIds, setMemberUserIds] = useState<string[]>(
+    () => role?.memberUserIds ?? [],
+  )
+  const [tab, setTab] = useState('general')
 
   const patch = (partial: Partial<AccessRoleConstraints>) =>
     setConstraints((previous) => ({ ...previous, ...partial }))
+
+  // What the server stores: an axis on "All" is the empty list.
+  const effectiveConstraints: AccessRoleConstraints = {
+    ...constraints,
+    siteNodeNames: restrictSites ? constraints.siteNodeNames : [],
+    workspaceNames: restrictWorkspaces ? constraints.workspaceNames : [],
+    dimensionValues: Object.fromEntries(
+      restrictedDimensions.map((dimensionId) => [
+        dimensionId,
+        constraints.dimensionValues[dimensionId] ?? [],
+      ]),
+    ),
+  }
+  const sitesIncomplete =
+    restrictSites && constraints.siteNodeNames.length === 0
+  const workspacesIncomplete =
+    restrictWorkspaces && constraints.workspaceNames.length === 0
+  const dimensionsIncomplete = restrictedDimensions.some(
+    (dimensionId) =>
+      (constraints.dimensionValues[dimensionId] ?? []).length === 0,
+  )
+  const incomplete =
+    sitesIncomplete || workspacesIncomplete || dimensionsIncomplete
 
   const mutation = useMutation({
     mutationFn: () => {
       const payload = {
         label: label.trim(),
         description: description.trim(),
-        constraints,
+        constraints: effectiveConstraints,
         memberUserIds,
       }
       return role === null
@@ -101,7 +165,7 @@ export function AccessRoleDialog({
         : updateAccessRole(role.id, payload)
     },
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
       toast.success(
         role === null
           ? t('accessRoles.created', 'The role "{0}" has been created.', [
@@ -123,214 +187,314 @@ export function AccessRoleDialog({
       ),
   })
 
-  const canSubmit = label.trim() !== ''
+  const canSubmit = label.trim() !== '' && !incomplete
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Wider than the xl preset: seven tabs do not fit its width in every
-          language (German "Berechtigungen" alone overflows it), and the tab
-          strip would scroll by a few dozen pixels - which reads as a
-          cut-off tab, not as something scrollable. The page-tree picker
-          inside earns the extra room anyway. */}
-      <DialogContent size="xl" className="max-w-5xl">
-        <DialogHeader>
-          <DialogTitle>
-            {role === null
-              ? t('accessRoles.newRole', 'New role')
-              : t('accessRoles.editRole', 'Edit role')}
-            {role !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
-                {role.label}
-              </span>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {t(
-              'accessRoles.dialogHint',
-              'Everything left untouched stays open. Members keep their Neos roles — this only narrows where those roles apply.',
-            )}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {role === null
+            ? t('accessRoles.newRole', 'New role')
+            : t('accessRoles.editRole', 'Edit role')}
+          {role !== null && (
+            <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              {role.label}
+            </span>
+          )}
+        </DialogTitle>
+        <DialogDescription>
+          {t(
+            'accessRoles.dialogHintWriting',
+            'A role restricts what its members may change, not what they may see: content stays readable everywhere. Members keep their Neos roles — this only narrows where they may write. Everything left on "All" stays open.',
+          )}
+        </DialogDescription>
+      </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(next) => setTab(String(next))}>
-          <TabsList>
-            <TabsTrigger value="general">
-              <i className="fas fa-circle-info" aria-hidden />
-              {t('accessRoles.tabGeneral', 'General')}
-            </TabsTrigger>
-            <TabsTrigger value="sites">
-              <i className="fas fa-globe" aria-hidden />
-              {t('accessRoles.tabSites', 'Sites')}
-            </TabsTrigger>
-            <TabsTrigger value="tree">
-              <i className="fas fa-sitemap" aria-hidden />
-              {t('accessRoles.tabTree', 'Documents')}
-            </TabsTrigger>
-            <TabsTrigger value="dimensions">
-              <i className="fas fa-language" aria-hidden />
-              {t('accessRoles.tabDimensions', 'Dimensions')}
-            </TabsTrigger>
-            <TabsTrigger value="workspaces">
-              <i className="fas fa-layer-group" aria-hidden />
-              {t('accessRoles.tabWorkspaces', 'Workspaces')}
-            </TabsTrigger>
-            <TabsTrigger value="capabilities">
-              <i className="fas fa-key" aria-hidden />
-              {t('accessRoles.tabCapabilities', 'Permissions')}
-            </TabsTrigger>
-            <TabsTrigger value="members">
-              <i className="fas fa-users" aria-hidden />
-              {t('accessRoles.tabMembers', 'Members')}
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={tab} onValueChange={(next) => setTab(String(next))}>
+        <TabsList>
+          <TabsTrigger value="general">
+            <i className="fas fa-circle-info" aria-hidden />
+            {t('accessRoles.tabGeneral', 'General')}
+          </TabsTrigger>
+          <TabsTrigger value="sites">
+            <i className="fas fa-globe" aria-hidden />
+            {t('accessRoles.tabSites', 'Sites')}
+            {sitesIncomplete && <IncompleteMark />}
+          </TabsTrigger>
+          <TabsTrigger value="tree">
+            <i className="fas fa-sitemap" aria-hidden />
+            {t('accessRoles.tabTree', 'Documents')}
+          </TabsTrigger>
+          <TabsTrigger value="dimensions">
+            <i className="fas fa-language" aria-hidden />
+            {t('accessRoles.tabDimensions', 'Dimensions')}
+            {dimensionsIncomplete && <IncompleteMark />}
+          </TabsTrigger>
+          <TabsTrigger value="workspaces">
+            <i className="fas fa-layer-group" aria-hidden />
+            {t('accessRoles.tabWorkspaces', 'Workspaces')}
+            {workspacesIncomplete && <IncompleteMark />}
+          </TabsTrigger>
+          <TabsTrigger value="capabilities">
+            <i className="fas fa-key" aria-hidden />
+            {t('accessRoles.tabCapabilities', 'Permissions')}
+          </TabsTrigger>
+          <TabsTrigger value="members">
+            <i className="fas fa-users" aria-hidden />
+            {t('accessRoles.tabMembers', 'Members')}
+          </TabsTrigger>
+        </TabsList>
 
-          {/* flex-none: the base flex-1 has basis 0%, which an auto-height
+        {/* flex-none: the base flex-1 has basis 0%, which an auto-height
               flex column resolves as "content" - the panel would grow with an
               expanded page tree and push the dialog past the viewport. */}
-          <TabsContent
-            value="general"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <div className="space-y-4">
-              <Field
-                label={t('accessRoles.label', 'Name')}
-                htmlFor="access-role-label"
-              >
-                <Input
-                  id="access-role-label"
-                  value={label}
-                  onChange={(event) => setLabel(event.target.value)}
-                  placeholder={t(
-                    'accessRoles.labelPlaceholder',
-                    'e.g. Editors North',
-                  )}
-                  autoComplete="off"
-                  required
-                />
-              </Field>
-              <Field
-                label={t('accessRoles.description', 'Description')}
-                htmlFor="access-role-description"
-              >
-                <Textarea
-                  id="access-role-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  rows={3}
-                  placeholder={t(
-                    'accessRoles.descriptionPlaceholder',
-                    'What this role is for — the next administrator will thank you.',
-                  )}
-                />
-              </Field>
-              {role !== null && (
-                <p className="text-xs text-neutral-500">
-                  {t('accessRoles.identifierHint', 'Identifier: {0}', [
-                    role.identifier,
-                  ])}
-                </p>
-              )}
-            </div>
-          </TabsContent>
+        <TabsContent
+          value="general"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <div className="space-y-4">
+            <Field
+              label={t('accessRoles.label', 'Name')}
+              htmlFor="access-role-label"
+            >
+              <Input
+                id="access-role-label"
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+                placeholder={t(
+                  'accessRoles.labelPlaceholder',
+                  'e.g. Editors North',
+                )}
+                autoComplete="off"
+                required
+              />
+            </Field>
+            <Field
+              label={t('accessRoles.description', 'Description')}
+              htmlFor="access-role-description"
+            >
+              <Textarea
+                id="access-role-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={3}
+                placeholder={t(
+                  'accessRoles.descriptionPlaceholder',
+                  'What this role is for — the next administrator will thank you.',
+                )}
+              />
+            </Field>
+            {role !== null && (
+              <p className="text-xs text-neutral-500">
+                {t('accessRoles.identifierHint', 'Identifier: {0}', [
+                  role.identifier,
+                ])}
+              </p>
+            )}
+          </div>
+        </TabsContent>
 
-          <TabsContent
-            value="sites"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <SitesTab
-              selected={constraints.siteNodeNames}
-              onChange={(siteNodeNames) => patch({ siteNodeNames })}
-            />
-          </TabsContent>
+        <TabsContent
+          value="sites"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <SitesTab
+            restricted={restrictSites}
+            onRestrictedChange={setRestrictSites}
+            selected={constraints.siteNodeNames}
+            onChange={(siteNodeNames) => patch({ siteNodeNames })}
+          />
+        </TabsContent>
 
-          <TabsContent
-            value="tree"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <TreeTab
-              allowedSiteNodeNames={constraints.siteNodeNames}
-              rules={constraints.nodeTreeRules}
-              onChange={(nodeTreeRules) => patch({ nodeTreeRules })}
-            />
-          </TabsContent>
+        <TabsContent
+          value="tree"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <TreeTab
+            allowedSiteNodeNames={effectiveConstraints.siteNodeNames}
+            rules={constraints.nodeTreeRules}
+            onChange={(nodeTreeRules) => patch({ nodeTreeRules })}
+          />
+        </TabsContent>
 
-          <TabsContent
-            value="dimensions"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <DimensionsTab
-              selected={constraints.dimensionValues}
-              onChange={(dimensionValues) => patch({ dimensionValues })}
-            />
-          </TabsContent>
+        <TabsContent
+          value="dimensions"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <DimensionsTab
+            restricted={restrictedDimensions}
+            onRestrictedChange={setRestrictedDimensions}
+            selected={constraints.dimensionValues}
+            onChange={(dimensionValues) => patch({ dimensionValues })}
+          />
+        </TabsContent>
 
-          <TabsContent
-            value="workspaces"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <WorkspacesTab constraints={constraints} onChange={patch} />
-          </TabsContent>
+        <TabsContent
+          value="workspaces"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <WorkspacesTab
+            constraints={constraints}
+            restricted={restrictWorkspaces}
+            onRestrictedChange={setRestrictWorkspaces}
+            onChange={patch}
+          />
+        </TabsContent>
 
-          <TabsContent
-            value="capabilities"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <CapabilitiesTab
-              capabilities={constraints.capabilities}
-              available={catalogue?.meta.capabilities ?? []}
-              onChange={(capabilities) => patch({ capabilities })}
-            />
-          </TabsContent>
+        <TabsContent
+          value="capabilities"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <CapabilitiesTab
+            capabilities={constraints.capabilities}
+            available={catalogue?.meta.capabilities ?? []}
+            onChange={(capabilities) => patch({ capabilities })}
+          />
+        </TabsContent>
 
-          <TabsContent
-            value="members"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
-          >
-            <MembersTab
-              selected={memberUserIds}
-              bypassRoles={catalogue?.meta.bypassRoles ?? []}
-              onChange={setMemberUserIds}
-            />
-          </TabsContent>
-        </Tabs>
+        <TabsContent
+          value="members"
+          className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+        >
+          <MembersTab
+            selected={memberUserIds}
+            bypassRoles={catalogue?.meta.bypassRoles ?? []}
+            onChange={setMemberUserIds}
+          />
+        </TabsContent>
+      </Tabs>
 
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => onOpenChange(false)}
-            disabled={mutation.isPending}
-          >
-            {t('common.cancel', 'Cancel')}
-          </Button>
-          <Button
-            type="button"
-            disabled={!canSubmit || mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            {mutation.isPending
-              ? t('accessRoles.saving', 'Saving…')
-              : role === null
-                ? t('accessRoles.create', 'Create role')
-                : t('accessRoles.save', 'Save role')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <DialogFooter>
+        {incomplete && (
+          <p className="mr-auto self-center text-sm text-amber-700 dark:text-amber-400">
+            <i className="fas fa-circle-exclamation mr-1.5" aria-hidden />
+            {t(
+              'accessRoles.incomplete',
+              'A restriction has nothing selected. Select something, or switch it back to "All".',
+            )}
+          </p>
+        )}
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onOpenChange(false)}
+          disabled={mutation.isPending}
+        >
+          {t('common.cancel', 'Cancel')}
+        </Button>
+        <Button
+          type="button"
+          disabled={!canSubmit || mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
+          {mutation.isPending
+            ? t('accessRoles.saving', 'Saving…')
+            : role === null
+              ? t('accessRoles.create', 'Create role')
+              : t('accessRoles.save', 'Save role')}
+        </Button>
+      </DialogFooter>
+    </>
   )
 }
 
 /**
- * The shared shape of every restriction tab: one sentence saying what "leave
- * everything unticked" means, then the list. Stating the default in the tab
- * itself is what keeps the empty-means-everything convention from reading as
- * a bug.
+ * The sentence that opens a restriction tab: what the axis narrows, and that
+ * it narrows writing only.
  */
 function TabIntro({ children }: { children: ReactNode }) {
   return (
     <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
       {children}
     </p>
+  )
+}
+
+/**
+ * The explicit "All / Only the selected" choice of a list axis. "All" is what
+ * the server stores as the empty list; spelling it out is what keeps an empty
+ * selection from silently meaning "everything".
+ */
+function ScopeChoice({
+  legend,
+  restricted,
+  onChange,
+  allLabel,
+  selectedLabel,
+}: {
+  legend: ReactNode
+  restricted: boolean
+  onChange: (restricted: boolean) => void
+  allLabel: string
+  selectedLabel: string
+}) {
+  const name = useId()
+  return (
+    <fieldset className="mb-2">
+      <legend className="mb-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+        {legend}
+      </legend>
+      <div className="flex flex-wrap gap-x-5 gap-y-1">
+        {[false, true].map((value) => (
+          <label
+            key={String(value)}
+            className="flex cursor-pointer items-center gap-2 rounded-sm px-1 py-1 text-sm text-neutral-800 dark:text-neutral-200"
+          >
+            <input
+              type="radio"
+              name={name}
+              className="size-4 accent-blue-500"
+              checked={restricted === value}
+              onChange={() => onChange(value)}
+            />
+            {value ? selectedLabel : allLabel}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+/** Marks a tab whose restriction has nothing selected. */
+function IncompleteMark() {
+  return (
+    <i
+      className="fas fa-circle-exclamation text-amber-500"
+      title={t(
+        'accessRoles.incomplete',
+        'A restriction has nothing selected. Select something, or switch it back to "All".',
+      )}
+      aria-hidden
+    />
+  )
+}
+
+function IncompleteNote({ children }: { children: ReactNode }) {
+  return (
+    <p className="mt-2 px-1 text-sm text-amber-700 dark:text-amber-400">
+      <i className="fas fa-circle-exclamation mr-1.5" aria-hidden />
+      {children}
+    </p>
+  )
+}
+
+/**
+ * Marks a selected entry that no longer exists - a deleted site or
+ * workspace, a dimension value the content repository dropped. It still
+ * counts on the server, so it is listed; unticking removes it.
+ */
+function MissingBadge() {
+  return (
+    <Badge
+      variant="outline"
+      className="ml-2"
+      title={t(
+        'accessRoles.missingHint',
+        'This no longer exists. Untick it to remove it from the role.',
+      )}
+    >
+      {t('accessRoles.missing', '(missing)')}
+    </Badge>
   )
 }
 
@@ -363,51 +527,93 @@ function toggle(list: string[], value: string, checked: boolean): string[] {
 }
 
 function SitesTab({
+  restricted,
+  onRestrictedChange,
   selected,
   onChange,
 }: {
+  restricted: boolean
+  onRestrictedChange: (restricted: boolean) => void
   selected: string[]
   onChange: (siteNodeNames: string[]) => void
 }) {
   const { data } = useSites()
   const sites = data ?? []
+  // Only once the sites are known - before that, everything would look gone.
+  const missing =
+    data === undefined
+      ? []
+      : selected.filter(
+          (nodeName) => !sites.some((site) => site.nodeName === nodeName),
+        )
 
   return (
     <>
-      <TabIntro>
-        {t(
-          'accessRoles.sitesHint',
-          'Tick the sites this role may work on. Nothing ticked means every site — including sites added later.',
+      <ScopeChoice
+        legend={t(
+          'accessRoles.sitesHintWriting',
+          'The sites members may make changes on. All other sites stay readable.',
         )}
-      </TabIntro>
-      {sites.length === 0 ? (
-        <Placeholder
-          icon="fa-globe"
-          title={t('sites.none', 'No sites found.')}
-        />
-      ) : (
-        <div className="space-y-0.5">
-          {sites.map((site) => (
-            <CheckboxRow
-              key={site.nodeName}
-              checked={selected.includes(site.nodeName)}
-              onCheckedChange={(checked) =>
-                onChange(toggle(selected, site.nodeName, checked))
-              }
-            >
-              {site.name}
-              <span className="ml-2 text-xs text-neutral-500">
-                {site.nodeName}
-              </span>
-              {!site.online && (
-                <Badge variant="secondary" className="ml-2">
-                  {t('sites.offline', 'Offline')}
-                </Badge>
-              )}
-            </CheckboxRow>
-          ))}
-        </div>
-      )}
+        restricted={restricted}
+        onChange={onRestrictedChange}
+        allLabel={t(
+          'accessRoles.sitesScopeAll',
+          'All sites — including sites added later',
+        )}
+        selectedLabel={t(
+          'accessRoles.sitesScopeSelected',
+          'Only the selected sites',
+        )}
+      />
+      {restricted &&
+        (sites.length === 0 && missing.length === 0 ? (
+          <Placeholder
+            icon="fa-globe"
+            title={t('sites.none', 'No sites found.')}
+          />
+        ) : (
+          <div className="space-y-0.5 pl-6">
+            {sites.map((site) => (
+              <CheckboxRow
+                key={site.nodeName}
+                checked={selected.includes(site.nodeName)}
+                onCheckedChange={(checked) =>
+                  onChange(toggle(selected, site.nodeName, checked))
+                }
+              >
+                {site.name}
+                <span className="ml-2 text-xs text-neutral-500">
+                  {site.nodeName}
+                </span>
+                {!site.online && (
+                  <Badge variant="secondary" className="ml-2">
+                    {t('sites.offline', 'Offline')}
+                  </Badge>
+                )}
+              </CheckboxRow>
+            ))}
+            {missing.map((nodeName) => (
+              <CheckboxRow
+                key={nodeName}
+                checked
+                onCheckedChange={() =>
+                  onChange(toggle(selected, nodeName, false))
+                }
+              >
+                {nodeName}
+                <MissingBadge />
+              </CheckboxRow>
+            ))}
+            {selected.length === 0 && (
+              <IncompleteNote>
+                {t(
+                  'accessRoles.sitesEmpty',
+                  'Select at least one site, or allow all sites.',
+                )}
+              </IncompleteNote>
+            )}
+          </div>
+        ))}
     </>
   )
 }
@@ -434,23 +640,47 @@ function TreeTab({
 }
 
 function DimensionsTab({
+  restricted,
+  onRestrictedChange,
   selected,
   onChange,
 }: {
+  /** The ids of the dimensions narrowed to a selection. */
+  restricted: string[]
+  onRestrictedChange: (restricted: string[]) => void
   selected: Record<string, string[]>
   onChange: (dimensionValues: Record<string, string[]>) => void
 }) {
   const { data } = useContentRepository()
-  const dimensions = data?.dimensions ?? []
+  const known = (data?.dimensions ?? []).map((dimension) => ({
+    id: dimension.id,
+    label: dimension.label ?? dimension.id,
+    values: dimension.values.map((value) => ({
+      value: value.value,
+      label: value.label ?? value.value,
+      depth: value.specializationDepth,
+    })),
+    missing: false,
+  }))
+  // Restricted dimensions the content repository no longer has: still
+  // stored, so still listed - with their values all marked missing.
+  const orphaned =
+    data === undefined
+      ? []
+      : restricted
+          .filter((id) => !known.some((dimension) => dimension.id === id))
+          .map((id) => ({ id, label: id, values: [], missing: true }))
+  const dimensions = [...known, ...orphaned]
 
-  const setValues = (dimensionId: string, values: string[]) => {
-    const next = { ...selected }
-    // An empty list is the same as no restriction; keeping the key would make
-    // the role look narrower than it is (and the server drops it anyway).
-    if (values.length === 0) delete next[dimensionId]
-    else next[dimensionId] = values
-    onChange(next)
-  }
+  const setValues = (dimensionId: string, values: string[]) =>
+    onChange({ ...selected, [dimensionId]: values })
+
+  const setRestricted = (dimensionId: string, narrowed: boolean) =>
+    onRestrictedChange(
+      narrowed
+        ? [...restricted, dimensionId]
+        : restricted.filter((id) => id !== dimensionId),
+    )
 
   if (dimensions.length === 0) {
     return (
@@ -468,45 +698,78 @@ function DimensionsTab({
     <>
       <TabIntro>
         {t(
-          'accessRoles.dimensionsHint',
-          'Tick the dimension values this role may edit. A dimension with nothing ticked stays fully open.',
+          'accessRoles.dimensionsHintWriting',
+          'The dimension values members may make changes in. Content in all other values stays readable.',
         )}
       </TabIntro>
       <div className="space-y-4">
         {dimensions.map((dimension) => {
           const values = selected[dimension.id] ?? []
+          const isRestricted = restricted.includes(dimension.id)
+          const missing =
+            data === undefined
+              ? []
+              : values.filter(
+                  (value) =>
+                    !dimension.values.some((known) => known.value === value),
+                )
           return (
             <div key={dimension.id}>
-              <div className="mb-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                {dimension.label ?? dimension.id}
-                {values.length === 0 && (
-                  <span className="ml-2 text-xs font-normal text-neutral-500">
-                    {t('accessRoles.dimensionAll', 'all values')}
+              <ScopeChoice
+                legend={
+                  <span className="font-medium text-neutral-800 dark:text-neutral-200">
+                    {dimension.label}
+                    {dimension.missing && <MissingBadge />}
                   </span>
+                }
+                restricted={isRestricted}
+                onChange={(narrowed) => setRestricted(dimension.id, narrowed)}
+                allLabel={t('accessRoles.dimensionScopeAll', 'All values')}
+                selectedLabel={t(
+                  'accessRoles.dimensionScopeSelected',
+                  'Only the selected values',
                 )}
-              </div>
-              <div className="space-y-0.5">
-                {dimension.values.map((value) => (
-                  <CheckboxRow
-                    key={value.value}
-                    checked={values.includes(value.value)}
-                    onCheckedChange={(checked) =>
-                      setValues(
-                        dimension.id,
-                        toggle(values, value.value, checked),
-                      )
-                    }
-                  >
-                    <span
-                      style={{
-                        paddingLeft: `${value.specializationDepth * 12}px`,
-                      }}
+              />
+              {isRestricted && (
+                <div className="space-y-0.5 pl-6">
+                  {dimension.values.map((value) => (
+                    <CheckboxRow
+                      key={value.value}
+                      checked={values.includes(value.value)}
+                      onCheckedChange={(checked) =>
+                        setValues(
+                          dimension.id,
+                          toggle(values, value.value, checked),
+                        )
+                      }
                     >
-                      {value.label ?? value.value}
-                    </span>
-                  </CheckboxRow>
-                ))}
-              </div>
+                      <span style={{ paddingLeft: `${value.depth * 12}px` }}>
+                        {value.label}
+                      </span>
+                    </CheckboxRow>
+                  ))}
+                  {missing.map((value) => (
+                    <CheckboxRow
+                      key={value}
+                      checked
+                      onCheckedChange={() =>
+                        setValues(dimension.id, toggle(values, value, false))
+                      }
+                    >
+                      {value}
+                      <MissingBadge />
+                    </CheckboxRow>
+                  ))}
+                  {values.length === 0 && (
+                    <IncompleteNote>
+                      {t(
+                        'accessRoles.dimensionEmpty',
+                        'Select at least one value, or allow all values.',
+                      )}
+                    </IncompleteNote>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}
@@ -517,68 +780,106 @@ function DimensionsTab({
 
 function WorkspacesTab({
   constraints,
+  restricted,
+  onRestrictedChange,
   onChange,
 }: {
   constraints: AccessRoleConstraints
+  restricted: boolean
+  onRestrictedChange: (restricted: boolean) => void
   onChange: (partial: Partial<AccessRoleConstraints>) => void
 }) {
   const { data } = useWorkspaces()
-  // Live is listed too, not just the shared workspaces: ticking any of them
-  // takes live off the list as well, so an administrator who wants "Entwurf
-  // and live" has to be able to say so.
+  // Live is listed too, not just the shared workspaces: a selection takes
+  // live off the list as well, so an administrator who wants "Entwurf and
+  // live" has to be able to say so.
   const selectable = (data ?? []).filter(
     (workspace) =>
       workspace.classification === 'shared' ||
       workspace.classification === 'root',
   )
+  const selected = constraints.workspaceNames
+  const missing =
+    data === undefined
+      ? []
+      : selected.filter(
+          (name) => !selectable.some((workspace) => workspace.name === name),
+        )
 
   return (
     <>
-      <TabIntro>
-        {t(
-          'accessRoles.workspacesHint',
-          'Which workspaces this role may work in — edit in, publish into, join collaboratively. Nothing ticked means all of them, including live. Tick any and everything else is out, live included. Live stays readable either way; the website is rendered from it.',
+      <ScopeChoice
+        legend={t(
+          'accessRoles.workspacesHintWriting',
+          'Which workspaces members may work in — edit in, publish into, join collaboratively. With a selection, every other workspace is out, live included. All workspaces stay readable; the website is rendered from live.',
         )}
-      </TabIntro>
+        restricted={restricted}
+        onChange={onRestrictedChange}
+        allLabel={t(
+          'accessRoles.workspacesScopeAll',
+          'All workspaces, including live',
+        )}
+        selectedLabel={t(
+          'accessRoles.workspacesScopeSelected',
+          'Only the selected workspaces',
+        )}
+      />
 
-      {selectable.length === 0 ? (
-        <Placeholder
-          icon="fa-layer-group"
-          title={t(
-            'accessRoles.workspacesNone',
-            'There are no shared workspaces yet.',
-          )}
-          className="py-6"
-        />
-      ) : (
-        <div className="space-y-0.5">
-          {selectable.map((workspace) => (
-            <CheckboxRow
-              key={workspace.name}
-              checked={constraints.workspaceNames.includes(workspace.name)}
-              onCheckedChange={(checked) =>
-                onChange({
-                  workspaceNames: toggle(
-                    constraints.workspaceNames,
-                    workspace.name,
-                    checked,
-                  ),
-                })
-              }
-            >
-              {workspace.title || workspace.name}
-              <span className="ml-2 text-xs text-neutral-500">
-                {workspace.name}
-              </span>
-              {workspace.classification === 'root' && (
-                <Badge variant="secondary" className="ml-2">
-                  {t('accessRoles.workspaceLive', 'Live')}
-                </Badge>
-              )}
-            </CheckboxRow>
-          ))}
-        </div>
-      )}
+      {restricted &&
+        (selectable.length === 0 && missing.length === 0 ? (
+          <Placeholder
+            icon="fa-layer-group"
+            title={t(
+              'accessRoles.workspacesNone',
+              'There are no shared workspaces yet.',
+            )}
+            className="py-6"
+          />
+        ) : (
+          <div className="space-y-0.5 pl-6">
+            {selectable.map((workspace) => (
+              <CheckboxRow
+                key={workspace.name}
+                checked={selected.includes(workspace.name)}
+                onCheckedChange={(checked) =>
+                  onChange({
+                    workspaceNames: toggle(selected, workspace.name, checked),
+                  })
+                }
+              >
+                {workspace.title || workspace.name}
+                <span className="ml-2 text-xs text-neutral-500">
+                  {workspace.name}
+                </span>
+                {workspace.classification === 'root' && (
+                  <Badge variant="secondary" className="ml-2">
+                    {t('accessRoles.workspaceLive', 'Live')}
+                  </Badge>
+                )}
+              </CheckboxRow>
+            ))}
+            {missing.map((name) => (
+              <CheckboxRow
+                key={name}
+                checked
+                onCheckedChange={() =>
+                  onChange({ workspaceNames: toggle(selected, name, false) })
+                }
+              >
+                {name}
+                <MissingBadge />
+              </CheckboxRow>
+            ))}
+            {selected.length === 0 && (
+              <IncompleteNote>
+                {t(
+                  'accessRoles.workspacesEmpty',
+                  'Select at least one workspace, or allow all workspaces.',
+                )}
+              </IncompleteNote>
+            )}
+          </div>
+        ))}
 
       <div className="mt-5 space-y-0.5 border-t pt-4">
         <CheckboxRow
@@ -772,6 +1073,7 @@ function MembersTab({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('users.search', 'Search users…')}
+        aria-label={t('users.search', 'Search users…')}
         className="mb-3 max-w-xs"
         autoComplete="off"
       />

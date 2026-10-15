@@ -1,7 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from '../client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { api, unwrap } from '../client'
 import { neosKeys } from '../keys'
-import type { CurrentAccount, Profile, ProfileUpdate } from '../schema'
+import type {
+  CurrentAccount,
+  PasswordChange,
+  Profile,
+  ProfileUpdate,
+} from '../schema'
 
 /**
  * The current account (Neos.Api's Me tag): its user, roles, the token's
@@ -10,8 +15,9 @@ import type { CurrentAccount, Profile, ProfileUpdate } from '../schema'
 export function useMe(enabled = true) {
   return useQuery({
     queryKey: neosKeys.me,
-    queryFn: () => apiFetch<CurrentAccount>('/me'),
-    enabled,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/me', { signal }))
+      : skipToken,
   })
 }
 
@@ -32,22 +38,24 @@ export function hasPrivilege(
 export function useProfile(enabled = true) {
   return useQuery({
     queryKey: neosKeys.profile,
-    queryFn: () => apiFetch<Profile>('/me/profile'),
-    enabled,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/me/profile', { signal }))
+      : skipToken,
   })
 }
 
 /** Partial update; preferences merge, a null preference is deleted. */
 export function updateProfile(input: ProfileUpdate): Promise<Profile> {
-  return apiFetch<Profile>('/me/profile', { method: 'PATCH', body: input })
+  return unwrap(api.PATCH('/me/profile', { body: input }))
 }
 
 export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<void> {
-  await apiFetch('/me/password', {
-    method: 'PUT',
-    body: { currentPassword, newPassword },
-  })
+  await unwrap(
+    api.PUT('/me/password', {
+      body: { currentPassword, newPassword } satisfies PasswordChange,
+    }),
+  )
 }

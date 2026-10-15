@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useUsers } from '@/api/neos/endpoints/users'
 import { addTaskComment, useTaskComments } from '@/api/studio/endpoints/tasks'
 import { studioKeys } from '@/api/studio/keys'
@@ -163,10 +164,12 @@ export function TaskViewDialog({
  */
 function TaskComments({ workspaceName }: { workspaceName: string | null }) {
   const { data } = useTaskComments(workspaceName)
+  const contentRepositoryId = useActiveContentRepositoryId()
   const [text, setText] = useState('')
 
   const send = useMutation({
-    mutationFn: () => addTaskComment(workspaceName ?? '', text.trim()),
+    mutationFn: () =>
+      addTaskComment(contentRepositoryId!, workspaceName ?? '', text.trim()),
     onSuccess: () => {
       setText('')
       // The tasks prefix covers this thread's key AND the board's per-card

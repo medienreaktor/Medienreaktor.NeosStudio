@@ -1,6 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { queryClient } from '@/app/queryClient'
-import { apiFetch, type Listing } from '../client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { api, unwrap } from '../client'
 import { neosKeys } from '../keys'
 import type {
   Domain,
@@ -9,7 +8,6 @@ import type {
   NodeAddress,
   Site,
   SiteCreate,
-  SiteCreationOptions,
   SiteUpdate,
 } from '../schema'
 
@@ -19,23 +17,13 @@ import type {
  * administration (sites.create/update/delete).
  */
 
-async function listSites(): Promise<Site[]> {
-  return (await apiFetch<Listing<Site>>('/sites')).data
-}
-
 export function useSites(enabled = true) {
   return useQuery({
     queryKey: neosKeys.sites.all,
-    queryFn: listSites,
-    enabled,
-  })
-}
-
-/** Imperative variant of useSites. */
-export function fetchSites(): Promise<Site[]> {
-  return queryClient.fetchQuery({
-    queryKey: neosKeys.sites.all,
-    queryFn: listSites,
+    queryFn: enabled
+      ? async ({ signal }): Promise<Site[]> =>
+          (await unwrap(api.GET('/sites', { signal }))).data
+      : skipToken,
   })
 }
 
@@ -62,45 +50,46 @@ export function siteNodeAddress(
 export function useSiteCreationOptions(enabled = true) {
   return useQuery({
     queryKey: neosKeys.sites.options,
-    queryFn: () => apiFetch<SiteCreationOptions>('/options/sites'),
-    enabled,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/options/sites', { signal }))
+      : skipToken,
   })
 }
 
-function sitePath(siteNodeName: string): string {
-  return `/sites/${encodeURIComponent(siteNodeName)}`
-}
-
-function domainPath(siteNodeName: string, domainId: string): string {
-  return `${sitePath(siteNodeName)}/domains/${encodeURIComponent(domainId)}`
-}
-
 export function createSite(input: SiteCreate): Promise<Site> {
-  return apiFetch<Site>('/sites', { method: 'POST', body: input })
+  return unwrap(api.POST('/sites', { body: input }))
 }
 
 export function updateSite(
   siteNodeName: string,
   input: SiteUpdate,
 ): Promise<Site> {
-  return apiFetch<Site>(sitePath(siteNodeName), {
-    method: 'PATCH',
-    body: input,
-  })
+  return unwrap(
+    api.PATCH('/sites/{siteNodeName}', {
+      params: { path: { siteNodeName } },
+      body: input,
+    }),
+  )
 }
 
 export async function deleteSite(siteNodeName: string): Promise<void> {
-  await apiFetch(sitePath(siteNodeName), { method: 'DELETE' })
+  await unwrap(
+    api.DELETE('/sites/{siteNodeName}', {
+      params: { path: { siteNodeName } },
+    }),
+  )
 }
 
 export function createDomain(
   siteNodeName: string,
   input: DomainCreate,
 ): Promise<Domain> {
-  return apiFetch<Domain>(`${sitePath(siteNodeName)}/domains`, {
-    method: 'POST',
-    body: input,
-  })
+  return unwrap(
+    api.POST('/sites/{siteNodeName}/domains', {
+      params: { path: { siteNodeName } },
+      body: input,
+    }),
+  )
 }
 
 /** Partial update; scheme null / port null clear them. */
@@ -109,15 +98,21 @@ export function updateDomain(
   domainId: string,
   input: DomainUpdate,
 ): Promise<Domain> {
-  return apiFetch<Domain>(domainPath(siteNodeName, domainId), {
-    method: 'PATCH',
-    body: input,
-  })
+  return unwrap(
+    api.PATCH('/sites/{siteNodeName}/domains/{domainId}', {
+      params: { path: { siteNodeName, domainId } },
+      body: input,
+    }),
+  )
 }
 
 export async function deleteDomain(
   siteNodeName: string,
   domainId: string,
 ): Promise<void> {
-  await apiFetch(domainPath(siteNodeName, domainId), { method: 'DELETE' })
+  await unwrap(
+    api.DELETE('/sites/{siteNodeName}/domains/{domainId}', {
+      params: { path: { siteNodeName, domainId } },
+    }),
+  )
 }

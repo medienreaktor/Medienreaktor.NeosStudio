@@ -1,3 +1,5 @@
+import { ObservableRegistry } from '@/lib/registry'
+
 /**
  * The keyboard-shortcut registry: every shortcut - built-in or third-party -
  * registers here, and one window-level dispatcher (see ShortcutHost) routes
@@ -19,6 +21,12 @@
  * convention. Letters/digits only: symbol keys move between layouts (a
  * German '/' is Shift+7) and shifted symbols collide with system shortcuts
  * (⌘⇧/ is macOS Help-menu search).
+ *
+ * Accessor shortcuts match the physical key (KeyboardEvent.code: 'KeyP',
+ * 'Digit1'), not the character it produces: with Shift held, event.key of a
+ * digit is its symbol ('!' for 1 on a US layout, '§' for 3 on a German one),
+ * and on non-Latin layouts a letter key reports its Cyrillic or Greek
+ * character - neither of which would ever match 'p' or '1'.
  *
  * Some accessor keys never reach the page and are rejected at registration
  * (see RESERVED_ACCESSOR_KEYS). Others shadow browser shortcuts the page IS
@@ -43,8 +51,11 @@
  * Shift held, dispatch retries the match without it, so 'mod+/' fires for
  * Ctrl+Shift+7 on a German layout just like for Ctrl+/ on a US one.
  *
- * Scope: shortcuts fire on the Studio shell's own window. Keystrokes inside
- * the preview iframe stay with the guest frame (inline editing owns them).
+ * Scope: shortcuts fire on the Studio shell's own window and - forwarded by
+ * the preview (see {@link captureShortcuts}) - inside the same-origin preview
+ * frames, so they keep working while the caret sits in an inline editor.
+ * The editable-target guard applies there as well: raw combos stay with the
+ * text being typed.
  */
 
 export interface KeyboardShortcutDefinition {
@@ -128,7 +139,8 @@ export function normalizeCombo(combo: string): string | null {
     .split('+')
     .map((token) => token.trim())
   // '+' itself as the key ('mod++') survives as an empty final token.
-  const key = tokens[tokens.length - 1] === '' ? '+' : tokens[tokens.length - 1]
+  const last = tokens[tokens.length - 1]
+  const key = last === '' ? '+' : last
   if (!key || MODIFIERS.has(key)) return null
   const mods = { alt: false, ctrl: false, meta: false, shift: false }
   for (const token of tokens.slice(0, -1)) {
@@ -148,22 +160,45 @@ export function normalizeCombo(combo: string): string | null {
   )
 }
 
-/** The canonical combo a keydown event represents (its key in event.key form). */
-export function comboFromEvent(event: KeyboardEvent): string {
+function modifiersOf(event: KeyboardEvent): string {
   return (
     (event.altKey ? 'alt+' : '') +
     (event.ctrlKey ? 'ctrl+' : '') +
     (event.metaKey ? 'meta+' : '') +
-    (event.shiftKey ? 'shift+' : '') +
-    event.key.toLowerCase()
+    (event.shiftKey ? 'shift+' : '')
   )
 }
 
-/** True when typing belongs to the focused element, not to shortcuts. */
+/** The canonical combo a keydown event represents (its key in event.key form). */
+export function comboFromEvent(event: KeyboardEvent): string {
+  return modifiersOf(event) + event.key.toLowerCase()
+}
+
+/**
+ * The canonical combo of the physical key a keydown event came from - its
+ * key in lower-cased event.code form ('keyp', 'digit1'). What accessor
+ * shortcuts match against.
+ */
+export function codeComboFromEvent(event: KeyboardEvent): string {
+  return modifiersOf(event) + event.code.toLowerCase()
+}
+
+/** The event.code of an accessor key: 'p' → 'keyp', '1' → 'digit1'. */
+function accessorCode(key: string): string {
+  return /^[0-9]$/.test(key) ? `digit${key}` : `key${key}`
+}
+
+/**
+ * True when typing belongs to the focused element, not to shortcuts. Checked
+ * by shape rather than instanceof: events forwarded from the preview frames
+ * carry targets from another realm, whose HTMLElement is not the shell's.
+ */
 export function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  if (target.isContentEditable) return true
-  const tag = target.tagName
+  const element = target as HTMLElement | null
+  if (element === null || (element as Partial<Node>).nodeType !== 1)
+    return false
+  if (element.isContentEditable) return true
+  const tag = element.tagName
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
 }
 
@@ -187,7 +222,9 @@ export function formatCombo(combo: string): string[] {
   const canonical = normalizeCombo(combo)
   if (!canonical) return [combo]
   const tokens = canonical.split('+')
-  const key = tokens[tokens.length - 1] === '' ? '+' : tokens[tokens.length - 1]
+  // split() always yields at least one token, so the fallback never applies.
+  const last = tokens[tokens.length - 1] ?? ''
+  const key = last === '' ? '+' : last
   const parts: string[] = []
   for (const mod of tokens.slice(0, -1)) {
     if (mod === 'ctrl') parts.push(isMacPlatform ? '⌃' : 'Ctrl')
@@ -199,42 +236,33 @@ export function formatCombo(combo: string): string[] {
     DISPLAY_KEYS[key] ??
       (key.length === 1
         ? key.toUpperCase()
-        : key[0].toUpperCase() + key.slice(1)),
+        : key.charAt(0).toUpperCase() + key.slice(1)),
   )
   return parts
 }
 
-export class KeyboardShortcutRegistry {
-  private definitions = new Map<string, ResolvedKeyboardShortcut>()
-  private listeners = new Set<() => void>()
-  private snapshot: ResolvedKeyboardShortcut[] = []
-  /** canonical combo → definitions listening on it, in registration order. */
+/**
+ * The observable store (stable getAll() snapshot in registration order, bound
+ * subscribe, idempotent unregister) comes from {@link ObservableRegistry};
+ * this adds definition resolution on register, the combo/code dispatch
+ * indexes rebuilt on every change, and dispatch itself.
+ */
+export class KeyboardShortcutRegistry extends ObservableRegistry<ResolvedKeyboardShortcut> {
+  /** canonical combo → raw-combo definitions on it, in registration order. */
   private byCombo = new Map<string, ResolvedKeyboardShortcut[]>()
+  /** canonical code combo → accessor (`key`) definitions on it. */
+  private byCode = new Map<string, ResolvedKeyboardShortcut[]>()
 
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: KeyboardShortcutDefinition): void {
+  /**
+   * Registering an already-known id replaces it, so HMR and plugin reloads
+   * stay idempotent. Takes the unresolved definition (`key` or `combo`);
+   * definitions that must not bind are dropped with a console warning (see
+   * resolveDefinition).
+   */
+  override register(definition: KeyboardShortcutDefinition): void {
     const resolved = resolveDefinition(definition)
     if (!resolved) return
-    this.definitions.set(resolved.id, resolved)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
-  }
-
-  get(id: string): ResolvedKeyboardShortcut | undefined {
-    return this.definitions.get(id)
-  }
-
-  /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): ResolvedKeyboardShortcut[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
+    super.register(resolved)
   }
 
   /**
@@ -245,6 +273,9 @@ export class KeyboardShortcutRegistry {
    */
   dispatch(event: KeyboardEvent): boolean {
     if (event.repeat) return false
+    // Accessor shortcuts by physical key first (see the class docs).
+    if (this.dispatchTo(this.byCode.get(codeComboFromEvent(event)), event))
+      return true
     const combo = comboFromEvent(event)
     if (this.dispatchTo(this.byCombo.get(combo), event)) return true
     // On layouts where a symbol lives on a shifted key (German '/' is
@@ -268,7 +299,8 @@ export class KeyboardShortcutRegistry {
     if (!matches) return false
     const editable = isEditableTarget(event.target)
     for (let i = matches.length - 1; i >= 0; i--) {
-      const definition = matches[i]
+      // i runs within [0, length): the index is always in bounds.
+      const definition = matches[i]!
       if (editable && !definition.allowInInput) continue
       if (definition.when && !definition.when()) continue
       if (definition.handler(event) === false) continue
@@ -278,10 +310,25 @@ export class KeyboardShortcutRegistry {
     return false
   }
 
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()]
+  /** Rebuild the dispatch indexes from the fresh snapshot, before subscribers hear of it. */
+  protected override onSnapshot(
+    snapshot: readonly ResolvedKeyboardShortcut[],
+  ): void {
     this.byCombo = new Map()
-    for (const definition of this.snapshot) {
+    this.byCode = new Map()
+    for (const definition of snapshot) {
+      if (definition.key !== undefined) {
+        // Validated at registration: a single letter or digit.
+        const canonical = normalizeCombo(
+          `mod+shift+${accessorCode(definition.key.toLowerCase())}`,
+        )
+        if (canonical) {
+          const list = this.byCode.get(canonical)
+          if (list) list.push(definition)
+          else this.byCode.set(canonical, [definition])
+        }
+        continue
+      }
       const combos = Array.isArray(definition.combo)
         ? definition.combo
         : [definition.combo]
@@ -298,7 +345,6 @@ export class KeyboardShortcutRegistry {
         else this.byCombo.set(canonical, [definition])
       }
     }
-    this.listeners.forEach((listener) => listener())
   }
 }
 
@@ -337,3 +383,18 @@ function resolveDefinition(
 }
 
 export const keyboardShortcutRegistry = new KeyboardShortcutRegistry()
+
+/**
+ * Route keydowns of another window to the registry - the shell's own window
+ * (ShortcutHost) and each same-origin preview frame, so shell shortcuts work
+ * while focus sits inside the page being edited. Capture phase, so shortcuts
+ * still work while focus sits inside widgets that stop keydown propagation;
+ * the editable-target guard in dispatch keeps typing safe regardless.
+ * Returns the uninstaller.
+ */
+export function captureShortcuts(target: Window): () => void {
+  const onKeyDown = (event: KeyboardEvent) =>
+    keyboardShortcutRegistry.dispatch(event)
+  target.addEventListener('keydown', onKeyDown, true)
+  return () => target.removeEventListener('keydown', onKeyDown, true)
+}

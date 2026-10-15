@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useInsertionEffect, useRef, useState } from 'react'
 import {
   asyncDataLoaderFeature,
   selectionFeature,
@@ -260,6 +260,7 @@ export function NodeTreeRuleEditor({
                   )}
                   aria-hidden
                 />
+                <span className="sr-only">{ruleModeLabel(rule.mode)}</span>
                 <span className="truncate text-neutral-800 dark:text-neutral-200">
                   {rule.path || rule.label || rule.nodeAggregateId}
                 </span>
@@ -360,7 +361,11 @@ function SiteDocumentTree({
     },
     features: [asyncDataLoaderFeature, selectionFeature],
   })
-  treeRef.current = tree
+  // Kept current outside render (render must stay pure); the onSelect handler
+  // above only reads it when a row is clicked.
+  useInsertionEffect(() => {
+    treeRef.current = tree
+  })
 
   useAutoExpand(tree, 1)
 
@@ -387,26 +392,29 @@ function SiteDocumentTree({
               />
             ),
             markers: rule && (
-              <i
-                className={cn(
-                  'fas text-[0.7rem]',
-                  rule.mode === 'ALLOW'
-                    ? 'fa-check text-green-600 dark:text-green-500'
-                    : 'fa-ban text-red-600 dark:text-red-500',
-                )}
-                title={
-                  rule.includeDescendants
-                    ? t(
-                        'accessRoles.treeRuleBranch',
-                        'Rule applies to this page and everything below',
-                      )
-                    : t(
-                        'accessRoles.treeRulePage',
-                        'Rule applies to this page only',
-                      )
-                }
-                aria-hidden
-              />
+              <>
+                <i
+                  className={cn(
+                    'fas text-[0.7rem]',
+                    rule.mode === 'ALLOW'
+                      ? 'fa-check text-green-600 dark:text-green-500'
+                      : 'fa-ban text-red-600 dark:text-red-500',
+                  )}
+                  title={
+                    rule.includeDescendants
+                      ? t(
+                          'accessRoles.treeRuleBranch',
+                          'Rule applies to this page and everything below',
+                        )
+                      : t(
+                          'accessRoles.treeRulePage',
+                          'Rule applies to this page only',
+                        )
+                  }
+                  aria-hidden
+                />
+                <span className="sr-only">{ruleModeLabel(rule.mode)}</span>
+              </>
             ),
           }
         }}
@@ -432,15 +440,23 @@ function pathOfItem(
   )
   if (index === -1) return item.getItemName()
 
-  const labels = [items[index].getItemName()]
-  let level = items[index].getItemMeta().level
-  for (let i = index - 1; i >= 0 && level > 0; i--) {
-    const candidateLevel = items[i].getItemMeta().level
+  const labels = [item.getItemName()]
+  let level = item.getItemMeta().level
+  for (const candidate of items.slice(0, index).reverse()) {
+    if (level <= 0) break
+    const candidateLevel = candidate.getItemMeta().level
     if (candidateLevel < level) {
-      labels.unshift(items[i].getItemName())
+      labels.unshift(candidate.getItemName())
       level = candidateLevel
     }
   }
 
   return labels.join(' / ')
+}
+
+/** The rule's verdict in words, for screen readers - the icons are hidden. */
+function ruleModeLabel(mode: 'ALLOW' | 'DENY'): string {
+  return mode === 'ALLOW'
+    ? t('accessRoles.treeAllowed', 'Allowed')
+    : t('accessRoles.treeDenied', 'Denied')
 }

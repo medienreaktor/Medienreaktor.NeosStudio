@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   dataSourceSelectOptions,
@@ -23,16 +23,23 @@ import {
   type NodeAddress,
   type NodeReference,
 } from '@/api/neos/schema'
-import { useStudio } from '@/app/StudioContext'
+import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { nodeAccessState } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  Combobox,
+  ComboboxCollection,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxGroupLabel,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxStatus,
+  ComboboxTrigger,
+} from '@/components/ui/combobox'
 import { toast } from '@/components/ui/toast'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { translate } from '@/lib/i18n'
@@ -40,6 +47,7 @@ import {
   faClassName,
   resolveNodeTypeIconClass,
 } from '@/features/tree/nodeTypeIcon'
+import { moveItem } from '@/lib/arrays'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
@@ -230,17 +238,21 @@ function useReferenceOptions(
   }
 }
 
+/** Options grouped as the list renders them: ungrouped first (value ''), then one per group value, in first-seen order. */
+interface ReferenceOptionGroup {
+  value: string
+  items: ReferenceOption[]
+}
+
 /**
- * The dropdown shared by both editors: a select-like trigger opening a popover
- * with the search input at the top ("search inside the field") and the
- * grouped option list below - ungrouped options first, then one labeled group
- * per distinct group value in first-seen order.
- *
- * Keyboard: focus stays in the search input (combobox pattern) while
- * ArrowUp/ArrowDown move a highlight through the flat option order -
- * skipping disabled entries, wrapping at the ends - Home/End jump, Enter
- * picks the highlighted option, Escape closes (the popover's own handling).
- * The highlight follows the mouse too, so both inputs share one state.
+ * The dropdown shared by both editors - Base UI's combobox: a select-like
+ * trigger opening a popup with the search input at the top ("search inside
+ * the field") and the grouped option list below - ungrouped options first,
+ * then one labeled group per distinct group value in first-seen order. The
+ * combobox does the keyboard handling (arrows move the highlight, skipping
+ * disabled options; Enter picks; Escape closes); the options arrive filtered
+ * (server-side search, or the data source filtered by the caller), so it
+ * filters nothing itself.
  */
 function ReferencePicker({
   triggerContent,
@@ -265,199 +277,109 @@ function ReferencePicker({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const close = () => onOpenChange(false)
-  const listboxId = useId()
-  const listRef = useRef<HTMLDivElement>(null)
-
-  const ungrouped = options.filter((option) => option.group === undefined)
-  const groups = new Map<string, ReferenceOption[]>()
+  const groups: ReferenceOptionGroup[] = []
   for (const option of options) {
-    if (option.group === undefined) continue
-    const group = groups.get(option.group) ?? []
-    group.push(option)
-    groups.set(option.group, group)
-  }
-  // The flat navigation order = the render order (ungrouped, then groups).
-  const flatOptions = [...ungrouped, ...[...groups.values()].flat()]
-  const flatIndexById = new Map(
-    flatOptions.map((option, index) => [option.id, index]),
-  )
-  const firstEnabled = flatOptions.findIndex((option) => !option.disabled)
-
-  const [highlighted, setHighlighted] = useState(0)
-  // A changed result set (new search term, options loaded) restarts the
-  // highlight at the top-most pickable option.
-  useEffect(() => {
-    setHighlighted(firstEnabled === -1 ? 0 : firstEnabled)
-  }, [searchTerm, loading, options.length, firstEnabled])
-
-  const highlight = (index: number) => {
-    setHighlighted(index)
-    listRef.current
-      ?.querySelector(`[data-option-index="${index}"]`)
-      ?.scrollIntoView({ block: 'nearest' })
-  }
-  const moveHighlight = (delta: number) => {
-    if (flatOptions.length === 0 || firstEnabled === -1) return
-    let next = highlighted
-    for (let step = 0; step < flatOptions.length; step++) {
-      next = (next + delta + flatOptions.length) % flatOptions.length
-      if (!flatOptions[next].disabled) break
+    const value = option.group ?? ''
+    let group = groups.find((candidate) => candidate.value === value)
+    if (!group) {
+      group = { value, items: [] }
+      // Ungrouped options lead.
+      if (value === '') groups.unshift(group)
+      else groups.push(group)
     }
-    highlight(next)
-  }
-  const pickHighlighted = () => {
-    const option = flatOptions[highlighted]
-    if (option && !option.disabled) {
-      onPick(option)
-      close()
-    }
-  }
-
-  const renderOption = (option: ReferenceOption) => {
-    const index = flatIndexById.get(option.id)!
-    return (
-      <button
-        key={option.id}
-        id={`${listboxId}-option-${index}`}
-        data-option-index={index}
-        role="option"
-        aria-selected={index === highlighted}
-        type="button"
-        tabIndex={-1}
-        disabled={option.disabled}
-        onClick={() => {
-          onPick(option)
-          close()
-        }}
-        onMouseMove={() => {
-          if (index !== highlighted) setHighlighted(index)
-        }}
-        className={cn(
-          'flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50',
-          index === highlighted && 'bg-neutral-200 dark:bg-neutral-800',
-        )}
-      >
-        {option.iconClass && (
-          <i
-            className={cn(
-              option.iconClass,
-              'fa-fw mt-0.5 text-[0.75rem] text-neutral-600 dark:text-neutral-400',
-            )}
-            aria-hidden
-          />
-        )}
-        <span className="min-w-0">
-          <span className="block truncate">{option.label}</span>
-          {option.secondary && (
-            <span className="block truncate text-xs text-neutral-600 dark:text-neutral-400">
-              {option.secondary}
-            </span>
-          )}
-        </span>
-      </button>
-    )
+    group.items.push(option)
   }
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger
-        disabled={disabled}
-        className="flex h-9 w-full items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {triggerContent}
-      </PopoverTrigger>
-      <PopoverContent className="w-(--anchor-width) p-1">
+    <Combobox<ReferenceOption>
+      items={groups}
+      filter={null}
+      // Picking only ever adds - the editor shows the selection itself.
+      value={null}
+      onValueChange={(option) => {
+        if (option) onPick(option)
+        onOpenChange(false)
+      }}
+      inputValue={searchTerm}
+      onInputValueChange={(term, details) => {
+        // A pick fills the input with the label - not a search.
+        if (details.reason !== 'item-press') onSearchTermChange(term)
+      }}
+      open={open}
+      onOpenChange={(next) => onOpenChange(next)}
+      itemToStringLabel={(option) => option.label}
+      isItemEqualToValue={(option, other) => option.id === other.id}
+      autoHighlight
+      disabled={disabled}
+    >
+      <ComboboxTrigger>{triggerContent}</ComboboxTrigger>
+      <ComboboxContent>
         <div className="relative">
           <i
             className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 text-[1rem] -translate-y-1/2 text-neutral-600 dark:text-neutral-400"
             aria-hidden
           />
-          {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-          <Input
-            autoFocus
-            role="combobox"
-            aria-expanded
-            aria-controls={listboxId}
-            aria-activedescendant={
-              flatOptions[highlighted]
-                ? `${listboxId}-option-${highlighted}`
-                : undefined
-            }
-            value={searchTerm}
-            onChange={(event) => onSearchTermChange(event.target.value)}
-            onKeyDown={(event) => {
-              switch (event.key) {
-                case 'ArrowDown':
-                  event.preventDefault()
-                  moveHighlight(1)
-                  break
-                case 'ArrowUp':
-                  event.preventDefault()
-                  moveHighlight(-1)
-                  break
-                case 'Home':
-                  if (firstEnabled !== -1) {
-                    event.preventDefault()
-                    highlight(firstEnabled)
-                  }
-                  break
-                case 'End':
-                  if (firstEnabled !== -1) {
-                    event.preventDefault()
-                    highlight(
-                      flatOptions.length -
-                        1 -
-                        [...flatOptions]
-                          .reverse()
-                          .findIndex((option) => !option.disabled),
-                    )
-                  }
-                  break
-                case 'Enter':
-                  event.preventDefault()
-                  pickHighlighted()
-                  break
-              }
-            }}
+          <ComboboxInput
             placeholder={translate('editor.searchPlaceholder', 'Search…')}
             className="h-8 pl-8"
           />
         </div>
-        <div
-          ref={listRef}
-          id={listboxId}
-          role="listbox"
-          className="mt-1 max-h-64 overflow-y-auto"
-        >
+        <ComboboxStatus>
           {loading ? (
-            <div className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-600 dark:text-neutral-400">
+            <>
               <i
                 className="fas fa-spinner fa-spin text-[0.875rem]"
                 aria-hidden
-              />{' '}
+              />
               {translate('editor.searching', 'Searching…')}
-            </div>
-          ) : options.length === 0 ? (
-            <p className="px-2 py-2 text-xs text-neutral-600 dark:text-neutral-400">
-              {hint ?? translate('editor.noMatches', 'No matches')}
-            </p>
-          ) : (
-            <>
-              {ungrouped.map(renderOption)}
-              {[...groups.entries()].map(([group, groupOptions]) => (
-                <div key={group}>
-                  <p className="px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400">
-                    {group}
-                  </p>
-                  {groupOptions.map(renderOption)}
-                </div>
-              ))}
             </>
+          ) : options.length === 0 && hint !== null ? (
+            hint
+          ) : null}
+        </ComboboxStatus>
+        <ComboboxEmpty>
+          {!loading && hint === null
+            ? translate('editor.noMatches', 'No matches')
+            : null}
+        </ComboboxEmpty>
+        <ComboboxList className="mt-1">
+          {(group: ReferenceOptionGroup) => (
+            <ComboboxGroup key={group.value} items={group.items}>
+              {group.value !== '' && (
+                <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
+              )}
+              <ComboboxCollection>
+                {(option: ReferenceOption) => (
+                  <ComboboxItem
+                    key={option.id}
+                    value={option}
+                    disabled={option.disabled}
+                  >
+                    {option.iconClass && (
+                      <i
+                        className={cn(
+                          option.iconClass,
+                          'fa-fw mt-0.5 text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                        )}
+                        aria-hidden
+                      />
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate">{option.label}</span>
+                      {option.secondary && (
+                        <span className="block truncate text-xs text-neutral-600 dark:text-neutral-400">
+                          {option.secondary}
+                        </span>
+                      )}
+                    </span>
+                  </ComboboxItem>
+                )}
+              </ComboboxCollection>
+            </ComboboxGroup>
           )}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   )
 }
 
@@ -490,7 +412,7 @@ function ReferenceEditorBase({
   multiple,
 }: PropertyEditorProps & { multiple: boolean }) {
   const { data: nodeTypes } = useNodeTypes()
-  const { navigateToNode } = useStudio()
+  const { navigateToNode } = useStudioActions()
   const { data: referencing } = useNodeReferences(nodeAddress ?? null)
   // Targets the account may not read come without their node - left out.
   const serverTargets = useMemo(
@@ -509,6 +431,8 @@ function ReferenceEditorBase({
     {},
   )
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  // The order when the drag started - a drop that ends there saves nothing.
+  const [dragStartOrder, setDragStartOrder] = useState<string[] | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
 
@@ -640,17 +564,15 @@ function ReferenceEditorBase({
   // so a drag does not fire a save per hovered row.
   const handleDragOver = (index: number) => {
     if (dragIndex === null || dragIndex === index) return
-    setDirty((current) => {
-      const ids = [...(current ?? selected)]
-      const [moved] = ids.splice(dragIndex, 1)
-      ids.splice(index, 0, moved)
-      return ids
-    })
+    setDirty((current) => moveItem(current ?? selected, dragIndex, index))
     setDragIndex(index)
   }
   const handleDragEnd = () => {
     setDragIndex(null)
-    onCommit(dirty ?? selected)
+    const startOrder = dragStartOrder
+    setDragStartOrder(null)
+    if (startOrder && startOrder.join('|') === selected.join('|')) return
+    onCommit(selected)
   }
 
   const draggable = selected.length > 1
@@ -668,6 +590,7 @@ function ReferenceEditorBase({
               event.dataTransfer.effectAllowed = 'move'
               event.dataTransfer.setData('text/plain', id)
               setDragIndex(index)
+              setDragStartOrder(selected)
             }}
             onDragOver={(event) => {
               event.preventDefault()

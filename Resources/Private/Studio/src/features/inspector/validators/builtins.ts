@@ -287,25 +287,65 @@ export const Uuid: ValidatorFunction = (value, options) => {
   )
 }
 
-/** Options: regularExpression - a PHP-style pattern with delimiters, e.g. "/^[a-z0-9\-]+$/i". */
+/** Bracket-style PHP delimiters: the opening one and its closing partner. */
+const BRACKET_DELIMITERS: Record<string, string> = {
+  '(': ')',
+  '[': ']',
+  '{': '}',
+  '<': '>',
+}
+
+/**
+ * A PHP (PCRE) pattern as a JavaScript RegExp: any delimiter PHP accepts
+ * (/, #, ~, !, ..., or a bracket pair), with its modifiers - the ones
+ * JavaScript knows (i, m, s, u) apply, the others (x, U, D, ...) are dropped.
+ * A pattern without delimiters is taken as it is. Null if it does not parse.
+ */
+function phpPattern(raw: string): RegExp | null {
+  const pattern = raw.trim()
+  const open = pattern[0]
+  let body = pattern
+  let modifiers = ''
+  if (open !== undefined && !/[\p{L}\p{N}\\\s]/u.test(open)) {
+    const close = BRACKET_DELIMITERS[open] ?? open
+    const end = pattern.lastIndexOf(close)
+    // No closing delimiter followed by modifiers only: no delimiters at all.
+    if (end > 0 && /^[a-zA-Z]*$/.test(pattern.slice(end + 1))) {
+      body = pattern.slice(1, end)
+      modifiers = pattern.slice(end + 1)
+      // An escaped delimiter is a literal one; JavaScript's unicode mode
+      // refuses escapes of characters that mean nothing in a pattern.
+      if (!'^$\\.*+?()[]{}|/-'.includes(close)) {
+        body = body.split(`\\${close}`).join(close)
+      }
+    }
+  }
+  const flags = [...new Set(modifiers)]
+    .filter((flag) => 'imsu'.includes(flag))
+    .join('')
+  try {
+    return new RegExp(body, flags)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Options: regularExpression - a PHP-style pattern with delimiters and
+ * modifiers, e.g. "/^[a-z0-9\-]+$/i" or "#^https?://#".
+ */
 export const RegularExpression: ValidatorFunction = (value, options) => {
   const raw = options.regularExpression
   if (typeof raw !== 'string' || raw === '')
     return 'The validator option "regularExpression" was not given.'
-  const match = raw.match(/^\/?(.*?)(?:\/([gimsuy]*))?$/)
-  if (!match) return `The pattern ${raw} could not be parsed.`
-  let expression: RegExp
-  try {
-    expression = new RegExp(match[1], match[2])
-  } catch {
-    return `The pattern ${raw} could not be parsed.`
-  }
+  const expression = phpPattern(raw)
+  if (!expression) return `The pattern ${raw} could not be parsed.`
   if (isEmpty(value) || expression.test(String(value))) return null
   return message(
     options,
     'regularExpressionValidator.patternDoesNotMatch',
     'The value does not match the pattern {pattern}.',
-    { pattern: expression.toString() },
+    { pattern: raw },
   )
 }
 

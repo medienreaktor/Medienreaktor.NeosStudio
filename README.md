@@ -16,8 +16,8 @@ Edit **together in the same workspace, live**. Every shared workspace offers a _
 
 - **See who's there**: avatar initials next to the switcher, markers on the document a colleague is on (document tree) and the element they're focusing (content outliner _and_ live preview, outlined in their color with a nametag).
 - **See what they do, as it happens**: colleagues' edits stream in within ~2 seconds — or in well under a second with the realtime sidecar (below). Changed elements re-render **in place** in the preview (out-of-band rendering — your scroll position and your own inline edits survive); structural changes refresh the trees.
-- **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker required. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through pure PHP endpoints. If it runs Neos 9, it runs multiplayer.
-- **Scales up when you do**: an **optional realtime sidecar** — a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus)-based WebSocket server — upgrades the transport to instant push: presence without heartbeats, one change-feed tail per workspace instead of one poll per editor, sub-second latency. Studio falls back to plain polling automatically whenever the sidecar is unreachable, and back again when it returns. See [the realtime sidecar](#the-realtime-sidecar-optional).
+- **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker required. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through Neos.Api's workspace events. If it runs Neos 9, it runs multiplayer.
+- **Scales up when you do**: an **optional realtime sidecar** — a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus)-based WebSocket server — upgrades the transport to instant push: presence without heartbeats, a push the moment a workspace changes instead of every editor polling, sub-second latency. Studio falls back to plain polling automatically whenever the sidecar is unreachable, and back again when it returns. See [the realtime sidecar](#the-realtime-sidecar-optional).
 - **Emergent, not a mode**: sessions are ordinary Neos `SHARED` workspaces (create them in the Workspaces module, manage access with the usual roles). Two people in the same workspace — that _is_ the multiplayer. Publishing the session to live works exactly like publishing any workspace.
 
 ### 🗂️ Task workflow — feature branches for content
@@ -101,7 +101,15 @@ Extensibility isn't bolted on; it's the architecture. Studio's building blocks a
 | Node decorators      | Per-node visuals on every tree row: replace the type icon, layer badge overlays onto it, tint or dim the whole row (this is how hidden nodes dim and deleted nodes get their red badge) |
 | Keyboard shortcuts   | App-wide shortcuts alongside the built-in ones                                                                                                                                          |
 
-Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state, and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
+Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state and actions (`useStudioActions()` for just the stable actions), and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
+
+The types ship with the package as one bundled declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (resolved to `window.NeosStudio` at runtime); `react` stays external too, so install `@types/react`:
+
+```jsonc
+"paths": {
+  "@medienreaktor/neos-studio": ["../../Packages/Plugins/Medienreaktor.NeosStudio/Resources/Public/Studio/types/index.d.ts"]
+}
+```
 
 **Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel, a custom inspector editor (a color picker) and a node decorator from a completely separate package.
 
@@ -110,7 +118,7 @@ Third-party packages ship a small IIFE bundle that binds to the shell's public p
 | Package                                                                                                             | What it is                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [Neos.Api](https://github.com/danielkestler/Neos.Api) + [Neos.OAuth](https://github.com/danielkestler/Neos.OAuth)   | The foundation: the HTTP API for Neos 9 (nodes, workspaces, media, users, sites, views, data sources), described with OpenAPI and secured with OAuth 2 (authorization code + PKCE, refresh token rotation, scopes narrowing the account's privileges). |
-| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API, plus the Studio API (tasks, notifications, access roles, preview links, review and history read models) and the realtime feed.                                                                                       |
+| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API, plus the Studio's operations of the Neos API (tasks, notifications, access roles, preview links, the creation dialog) and the realtime sidecar's change signal.                                                                                       |
 | [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                    |
 
 ## Getting started
@@ -127,7 +135,7 @@ composer require neos/api neos/oauth medienreaktor/neos-studio
 cd DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio
 nvm use
 npm install
-npm run build      # outputs to Resources/Public/Studio/ (committed to the repo)
+npm run build      # outputs to Resources/Public/Studio/ (committed to the repo), plugin types to its types/
 
 # publish and flush on the Neos side
 ./flow resource:publish
@@ -143,7 +151,7 @@ Multiplayer needs no extra infrastructure — but it can use some. `Resources/Pr
 One WebSocket per editing session (document name `workspace:<contentRepositoryId>:<workspaceName>`):
 
 - **Presence** — clients announce their position as stateless messages; the sidecar keeps a server-authoritative roster per workspace (identity comes from the validated token, never from the client) and broadcasts changes instantly. No heartbeats, no TTL ghosts: a closed tab leaves with its connection.
-- **Change feed** — the sidecar tails each active workspace's event feed once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/events`) and fans new events out to every editor. That replaces one API poll _per editor_ per 2s with one poll _per workspace_, and remote edits reach colleagues in well under a second.
+- **Change signal** — the sidecar watches the head of each active workspace's content stream once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/head`) and tells every editor in the workspace when it moved (`{type: 'changed', contentStreamId, sequenceNumber}`). No event contents pass through the sidecar: each Studio then reads the new events from Neos.Api's workspace events with its own token, so the API's per-node read permissions apply. Remote edits reach colleagues in well under a second, without every editor polling every 2s.
 - **Yjs seam** — the (currently unused) Yjs document behind each connection is where collaborative text editing attaches later, without a new connection concept.
 
 ### Authentication
@@ -151,7 +159,7 @@ One WebSocket per editing session (document name `workspace:<contentRepositoryId
 Two credentials, deliberately separate:
 
 - Every **client connection** authenticates with the editor's own OAuth bearer token. The sidecar validates it against Neos.Api (a read of `/api/cr/{contentRepository}/workspaces/{name}` proves the token is alive AND the user may read that workspace - an unreadable one is a 404) and resolves identity via `/api/me`.
-- The sidecar's own **feed reads** authenticate with a shared secret (`X-Realtime-Secret`), configured on both sides: `Medienreaktor.NeosStudio.realtime.sharedSecret` (Neos) and `REALTIME_SHARED_SECRET` (sidecar). While the Neos-side secret is empty, the server-to-server endpoint answers 404 — an unconfigured installation exposes nothing.
+- The sidecar's own **head reads** authenticate with a shared secret (`X-Realtime-Secret`), configured on both sides: `Medienreaktor.NeosStudio.realtime.sharedSecret` (Neos) and `REALTIME_SHARED_SECRET` (sidecar). While the Neos-side secret is empty, the server-to-server endpoint answers 404 — an unconfigured installation exposes nothing.
 
 ### Running
 
@@ -213,7 +221,7 @@ What the Studio adds to Neos (tasks, notifications, preview links, access roles,
 - OAuth scopes that are Neos privileges: each capability is a `Neos\Api\Security\ApiPrivilege` target in `Policy.yaml` whose matcher is the scope (`studio.tasks.read`, … in `Security\StudioScopes`). The account's roles decide what is possible, the token's scopes only narrow it down; both are checked before an operation runs, rules depending on a workspace by the operation (`Security\StudioCallers`);
 - problem documents, the cache headers, and the tools of Neos.Mcp's MCP server.
 
-Follow Neos.Api's conventions (its `CLAUDE.md`) for new operations. The realtime sidecar's feed is no operation: it authenticates with a shared secret, not a token (`RealtimeController`).
+Follow Neos.Api's conventions (its `CLAUDE.md`) for new operations. The realtime sidecar's head endpoint is no operation: it authenticates with a shared secret, not a token (`RealtimeController`).
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 

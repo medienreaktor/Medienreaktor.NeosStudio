@@ -21,14 +21,15 @@ export function presenceColor(userId: string): string {
   for (let i = 0; i < userId.length; i++) {
     hash = (hash * 31 + userId.charCodeAt(i)) | 0
   }
-  return PRESENCE_PALETTE[Math.abs(hash) % PRESENCE_PALETTE.length]
+  // The modulo keeps the index within the (non-empty) palette.
+  return PRESENCE_PALETTE[Math.abs(hash) % PRESENCE_PALETTE.length]!
 }
 
 /** "Jane Doe" -> "JD"; single names give one letter, empty names "?". */
 export function presenceInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
   if (words.length === 0) return '?'
-  const first = words[0][0] ?? ''
-  const last = words.length > 1 ? (words[words.length - 1][0] ?? '') : ''
+  const first = words[0]?.[0] ?? ''
+  const last = words.length > 1 ? (words[words.length - 1]?.[0] ?? '') : ''
   return (first + last).toUpperCase() || '?'
 }

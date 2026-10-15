@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent } from './registry'
 
 export const BOOLEAN_EDITOR = 'Neos.Neos/Inspector/Editors/BooleanEditor'
@@ -11,13 +12,15 @@ export const BOOLEAN_EDITOR = 'Neos.Neos/Inspector/Editors/BooleanEditor'
  * toggle, but the checkbox also adopts an external value change: the inspector
  * edits the same subject in place (the mount key is the node address, unchanged
  * when a tag flips), so hiding a node from a context menu must still tick the
- * "Hidden" box without a remount.
+ * "Hidden" box without a remount. editorOptions.disabled shows it read-only.
  */
 export const BooleanEditor: PropertyEditorComponent = ({
   subject,
   value,
+  options,
   onCommit,
 }) => {
+  const disabled = options.disabled === true
   const external = value === true
   const [checked, setChecked] = useState(external)
   const [lastExternal, setLastExternal] = useState(external)
@@ -26,9 +29,15 @@ export const BooleanEditor: PropertyEditorComponent = ({
     setChecked(external)
   }
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-sm">
+    <label
+      className={cn(
+        'flex items-center gap-2 text-sm',
+        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+      )}
+    >
       <Checkbox
         checked={checked}
+        disabled={disabled}
         onCheckedChange={(next) => {
           setChecked(next)
           onCommit(next)

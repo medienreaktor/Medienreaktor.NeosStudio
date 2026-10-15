@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { generateUriPathSegment } from '@/api/neos/endpoints/nodes'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import {
   configuredLabel,
-  isOfType,
   type NodeTypeMap,
   useNodeType,
 } from '@/api/neos/endpoints/nodeTypes'
@@ -26,10 +24,11 @@ import {
 import { Input } from '@/components/ui/input'
 import {
   defaultEditorForType,
+  editorOptionsFor,
   humanizeLabel,
 } from '@/features/inspector/inspectorSchema'
 import { useAssetPicker } from '@/features/media/AssetPicker'
-import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors'
+import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors/TextFieldEditor'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { validateValue } from '@/features/inspector/validators'
 import { ValidationErrors } from '@/features/inspector/validators/ValidationErrors'
@@ -43,8 +42,6 @@ interface CreationElement {
   required: boolean
   config: CreationDialogElementConfig
 }
-
-const DOCUMENT_SUPER_TYPE = 'Neos.Neos:Document'
 
 /**
  * A property or reference asked for in the creation dialog
@@ -101,21 +98,6 @@ function referenceTargets(value: unknown): string[] {
 }
 
 /**
- * Client-side fallback slug for when the server-side generator is
- * unreachable: strip diacritics (NFD + combining marks), rough
- * ASCII-fication - so the document still gets a URL.
- */
-function fallbackSlug(text: string): string {
-  const stripped = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-  return (
-    stripped
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'document'
-  )
-}
-
-/**
  * Runs one node creation: fetches the node type, shows its creation dialog
  * when it has elements (ui.creationDialog.elements and the properties and
  * references with ui.showInCreationDialog, mirroring the classic
@@ -127,7 +109,9 @@ function fallbackSlug(text: string): string {
  * like a reference its references. A node type with node creation handlers
  * (options.nodeCreationHandlers: Flowpack.NodeTemplates and the like) gets
  * all of the dialog's values as elements as well, which the Studio's
- * createNodeFromCreationDialog runs its handlers with.
+ * createNodeFromCreationDialog runs its handlers with. A document's
+ * uriPathSegment, unless an element sets it, is derived by the server (from
+ * the title, else unique from the node type), as in the Neos backend.
  */
 export function CreateNodeFlow({
   request,
@@ -183,25 +167,26 @@ export function CreateNodeFlow({
       .filter((element): element is CreationElement => element !== null)
   }, [configuration])
 
-  const [values, setValues] = useState<Record<string, unknown>>({})
+  // The defaults, known with the elements (the editors only render then): the
+  // element's own defaultValue, or the mapped property's - what the CR would
+  // apply anyway, but visible and editable before creating.
+  const defaults = useMemo(() => {
+    const result: Record<string, unknown> = {}
+    const properties = configuration?.properties ?? {}
+    for (const element of elements ?? []) {
+      const defaultValue =
+        element.config.defaultValue ?? properties[element.name]?.defaultValue
+      if (defaultValue !== undefined) result[element.name] = defaultValue
+    }
+    return result
+  }, [elements, configuration])
+  // The user's input over the defaults - what Create submits.
+  const [edits, setEdits] = useState<Record<string, unknown>>({})
+  const values = { ...defaults, ...edits }
   // Elements the user has edited: inline errors only show for these, so the
   // dialog does not open with every required field already flagged red - the
   // disabled Create button and the * markers cover the untouched state.
   const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
-  // Seed defaults once the schema arrives (elements is null until then): the
-  // element's own defaultValue, or the mapped property's - what the CR would
-  // apply anyway, but visible and editable before creating.
-  useEffect(() => {
-    if (elements === null) return
-    const properties = configuration?.properties ?? {}
-    const defaults: Record<string, unknown> = {}
-    for (const element of elements) {
-      const defaultValue =
-        element.config.defaultValue ?? properties[element.name]?.defaultValue
-      if (defaultValue !== undefined) defaults[element.name] = defaultValue
-    }
-    setValues(defaults)
-  }, [elements, configuration])
 
   const typeLabel = humanizeLabel(
     configuredLabel(nodeTypes?.get(request.nodeTypeName)),
@@ -233,25 +218,6 @@ export function CreateNodeFlow({
       }
     }
     try {
-      // Documents need a URL from birth: derive uriPathSegment from the
-      // entered title (or the type label) with the server's language-aware
-      // slug generator - unless a creation-dialog element already set one.
-      // (Neos.Api would derive one from the title too; this also covers a
-      // document created without a title.)
-      if (
-        nodeTypes !== undefined &&
-        isOfType(nodeTypes, request.nodeTypeName, DOCUMENT_SUPER_TYPE) &&
-        'uriPathSegment' in properties &&
-        initialPropertyValues.uriPathSegment === undefined
-      ) {
-        const title = initialPropertyValues.title
-        const text =
-          typeof title === 'string' && title !== '' ? title : typeLabel
-        initialPropertyValues.uriPathSegment = await generateUriPathSegment(
-          request.parentAddress,
-          text,
-        ).catch(() => fallbackSlug(text))
-      }
       onCreated(
         await createNode(
           request,
@@ -275,22 +241,26 @@ export function CreateNodeFlow({
     }
   }
 
-  // No creation dialog configured - create right away (exactly once).
+  // No creation dialog configured - create right away (exactly once). An
+  // effect event: it runs the current submit, but only elements trigger it.
   const autoSubmitted = useRef(false)
+  const submitWithoutDialog = useEffectEvent(() => {
+    autoSubmitted.current = true
+    void submit({})
+  })
   useEffect(() => {
     if (elements === null || elements.length > 0 || autoSubmitted.current)
       return
-    autoSubmitted.current = true
-    void submit({})
+    submitWithoutDialog()
   }, [elements])
 
+  // A schema that fails to load ends the flow - reported once per error, to
+  // the onCancel of the moment.
+  const cancelWithError = useEffectEvent((error: unknown) =>
+    onCancel(error instanceof Error ? error.message : String(error)),
+  )
   useEffect(() => {
-    if (schemaError)
-      onCancel(
-        schemaError instanceof Error
-          ? schemaError.message
-          : String(schemaError),
-      )
+    if (schemaError) cancelWithError(schemaError)
   }, [schemaError])
 
   if (elements === null || elements.length === 0) return null
@@ -345,7 +315,7 @@ export function CreateNodeFlow({
                   : undefined
               }
               onChange={(value) => {
-                setValues((previous) => ({
+                setEdits((previous) => ({
                   ...previous,
                   [element.name]: value,
                 }))
@@ -406,6 +376,13 @@ function ElementEditor({
   const type = element.config.type ?? 'string'
   const editorId =
     element.config.ui?.editor ?? defaultEditorForType(type) ?? TEXT_FIELD_EDITOR
+  // Stable: editors derive state from their options (the rich text editor
+  // even recreates itself for new ones).
+  const configuredOptions = element.config.ui?.editorOptions
+  const options = useMemo(
+    () => editorOptionsFor(type, editorId, configuredOptions),
+    [type, editorId, configuredOptions],
+  )
   const definition = usePropertyEditor(editorId)
   const Editor = definition?.component
   const invalid = errors !== undefined && errors.length > 0
@@ -414,7 +391,7 @@ function ElementEditor({
     <Editor
       subject={{ name: element.name, type, label: element.label }}
       value={value}
-      options={element.config.ui?.editorOptions ?? {}}
+      options={options}
       autoFocus={autoFocus}
       invalid={invalid}
       // The dialog keeps a live draft it submits on Create, so it tracks both

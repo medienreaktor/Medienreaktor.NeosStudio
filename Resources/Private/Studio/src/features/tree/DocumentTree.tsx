@@ -1,53 +1,20 @@
-import { useState } from 'react'
-import {
-  asyncDataLoaderFeature,
-  selectionFeature,
-  type ItemInstance,
-} from '@headless-tree/core'
-import { useTree } from '@headless-tree/react'
-import { toast } from '@/components/ui/toast'
-import { isNotFound } from '@/api/http/errors'
 import {
   DOCUMENT_NODE_TYPE,
   fetchChildren,
   fetchNode,
 } from '@/api/neos/endpoints/nodes'
-import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import { siteNodeAddress } from '@/api/neos/endpoints/sites'
-import {
-  type Node,
-  type NodeAddress,
-  nodeAddressKey,
-  nodeAddressOf,
-  type Site,
-} from '@/api/neos/schema'
+import type { Node, NodeAddress, Site } from '@/api/neos/schema'
 import { config } from '@/config'
 import { permittedActionsOn } from '@/features/access/permittedActions'
 import { translate as t } from '@/lib/i18n'
-import { useClipboard } from '@/features/clipboard/clipboardStore'
-import { usePresence } from '@/features/collaboration/PresenceContext'
-import {
-  NodeContextMenu,
-  type NodeMenuAction,
-  type NodeMenuTarget,
+import type {
+  NodeMenuAction,
+  NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
-import { useNodeDecorators } from './decorators'
-import { contextMenuItems } from './menuSelection'
-import { nodeDecor } from './nodeDecor'
-import { buildTreeDnd } from './treeDnd'
 import { TreeList } from './TreeList'
-import { useAutoExpand } from './useAutoExpand'
-import { type NodeEdit, useNodeEditRefresh } from './useNodeEditRefresh'
-import { usePendingChanges } from './usePendingChanges'
-import { useRevealSelection } from './useRevealSelection'
-
-/**
- * Virtual root above the site node. Never rendered; its single child is the
- * active site's node, so the site appears as the tree's visible root.
- */
-const ROOT_ID = '__site_root__'
-
-type TreeItemData = Node | typeof ROOT_ID
+import type { NodeEdit } from './useNodeEditRefresh'
+import { NodeTreeContextMenu, useNodeTree } from './useNodeTree'
 
 /**
  * Document tree of one site in one workspace and dimension space point (a
@@ -98,200 +65,71 @@ export function DocumentTree({
   // The site node in the shown subgraph; every other item's address is the
   // same subgraph with the item's aggregate id.
   const siteNode = siteNodeAddress(site, workspaceName, dimensionSpacePoint)
-  const addressOf = (nodeAggregateId: string): NodeAddress => ({
-    contentRepositoryId: site.contentRepositoryId,
-    workspaceName,
-    dimensionSpacePoint,
-    nodeAggregateId,
-  })
-  // The open context menu: the clicked target plus every selected target the
-  // bulk actions apply to (just the clicked one outside multi-select).
-  const [menu, setMenu] = useState<{
-    target: NodeMenuTarget
-    selection: NodeMenuTarget[]
-  } | null>(null)
-  // Flips once the site node's children have resolved, so the tree can show a
-  // spinner while the root loads and a real empty state only afterwards.
-  const [rootLoaded, setRootLoaded] = useState(false)
-  const { data: nodeTypes } = useNodeTypes()
-  const decorators = useNodeDecorators()
-  const pendingChanges = usePendingChanges(workspaceName)
-  // Collaborators mark the document they are standing on ({} outside a
-  // collaborative session - the default context renders nothing).
-  const { peers } = usePresence()
-  // The active cut entry's rows render dimmed - the nodes are "in transit".
-  const clipboard = useClipboard()
-  const cutKeys = new Set(
-    clipboard.entries
-      .find((entry) => entry.id === clipboard.activeId && entry.mode === 'cut')
-      ?.nodes.map((node) => nodeAddressKey(node.address)),
-  )
-
-  const dnd = buildTreeDnd<TreeItemData>({
-    getNode: (data) => (data === ROOT_ID || data === null ? null : data),
-    onMoved: (addresses) => onMoved?.(addresses),
-  })
-
-  const tree = useTree<TreeItemData>({
-    ...dnd.config,
-    rootItemId: ROOT_ID,
-    getItemName: (item) => {
-      const data = item.getItemData()
-      return data === ROOT_ID || data === null
-        ? '…'
-        : data.label || data.nodeAggregateId
+  const nodeTree = useNodeTree({
+    addressOf: (nodeAggregateId) => ({
+      contentRepositoryId: site.contentRepositoryId,
+      workspaceName,
+      dimensionSpacePoint,
+      nodeAggregateId,
+    }),
+    fetchItem: (address) => fetchNode(address, DOCUMENT_NODE_TYPE),
+    fetchRoot: () =>
+      siteNode === null
+        ? Promise.resolve(null)
+        : fetchNode(siteNode, DOCUMENT_NODE_TYPE),
+    fetchChildren: async (address) => {
+      const children = await fetchChildren(address, DOCUMENT_NODE_TYPE)
+      return filterDocuments?.(children) ?? children
     },
+    loadErrorTitle: t('tree.treeLoadFailed', 'Loading the tree failed'),
+    loadErrorToastId: 'tree-load',
     // Every item's hasChildren is fetched document-filtered ("has document
     // children"), so content-only documents render as leaves.
-    isItemFolder: (item) => {
-      const data = item.getItemData()
-      if (data === ROOT_ID || data === null) return true
-      return data.hasChildren ?? false
-    },
-    onPrimaryAction: (item) => {
-      const data = item.getItemData()
-      if (data !== ROOT_ID && data !== null && onSelect) onSelect(data)
-    },
-    dataLoader: {
-      getItem: async (itemId): Promise<TreeItemData> => {
-        if (itemId === ROOT_ID) return ROOT_ID
-        try {
-          return await fetchNode(addressOf(itemId), DOCUMENT_NODE_TYPE)
-        } catch (e) {
-          // A deleted node (gone after a publish/sync) is expected, not a
-          // loading failure - stay quiet; the parent's children list refresh
-          // drops the row.
-          if (!isNotFound(e)) {
-            toast.error(e, {
-              title: t('tree.treeLoadFailed', 'Loading the tree failed'),
-              id: 'tree-load',
-            })
-          }
-          throw e
-        }
-      },
-      getChildrenWithData: async (itemId) => {
-        try {
-          if (itemId === ROOT_ID) {
-            if (siteNode === null) {
-              setRootLoaded(true)
-              return []
-            }
-            const node = await fetchNode(siteNode, DOCUMENT_NODE_TYPE)
-            setRootLoaded(true)
-            return [{ id: node.nodeAggregateId, data: node as TreeItemData }]
-          }
-          const children = await fetchChildren(
-            addressOf(itemId),
-            DOCUMENT_NODE_TYPE,
-          )
-          return (filterDocuments?.(children) ?? children).map((node) => ({
-            id: node.nodeAggregateId,
-            data: node as TreeItemData,
-          }))
-        } catch (e) {
-          // The node was deleted out from under us (e.g. published) - no
-          // children to show, and no error worth reporting.
-          if (!isNotFound(e)) {
-            toast.error(e, {
-              title: t('tree.treeLoadFailed', 'Loading the tree failed'),
-              id: 'tree-load',
-            })
-          }
-          // Whatever failed, stop showing the loading spinner.
-          setRootLoaded(true)
-          return []
-        }
-      },
-    },
-    features: [asyncDataLoaderFeature, selectionFeature, dnd.feature],
+    folderWhileLoading: false,
+    // The visible root is the site node (level 0), so the site itself plus
+    // loadingDepth further document levels load eagerly.
+    loadingDepth: config.nodeTree.loadingDepth,
+    selectedAddress,
+    lastEdit,
+    workspaceName,
+    // Collaborators mark the document they are standing on.
+    peersOn: (node, peers) =>
+      peers.filter((peer) => peer.documentAggregateId === node.nodeAggregateId),
+    // The site node is the tree's anchor - hiding or deleting the site you
+    // are standing in is not offered, same as for tethered documents.
+    toMenuTarget: (node) => ({
+      tethered:
+        node.classification === 'tethered' ||
+        node.nodeAggregateId === site.nodeAggregateId,
+      // Rows outside the role are reachable (they are the path to what is
+      // inside it) but nothing on them may change; inside it, the role's
+      // capabilities still decide action by action.
+      permitted: permittedActionsOn(node, site.nodeName),
+    }),
+    onSelect,
+    onMoved,
   })
-
-  // The visible root is the site node (level 0), so the site itself plus
-  // loadingDepth further document levels load eagerly.
-  useAutoExpand(tree, config.nodeTree.loadingDepth)
-  useRevealSelection(tree, selectedAddress)
-
-  // After an edit, re-fetch the reported items so labels stay in sync and
-  // structural changes (a deleted document) appear.
-  useNodeEditRefresh(tree, lastEdit, ROOT_ID)
-
-  // Right-click on a row: the shared hide/unhide/delete menu at the pointer,
-  // acting on the whole multi-selection when the clicked row is part of one.
-  // The site node is the tree's anchor - hiding or deleting the site you are
-  // standing in is not offered, same as for tethered documents.
-  const openMenu = (
-    item: ItemInstance<TreeItemData>,
-    event: React.MouseEvent,
-  ) => {
-    const anchor = { x: event.clientX, y: event.clientY, width: 0, height: 0 }
-    const toTarget = (
-      row: ItemInstance<TreeItemData>,
-    ): NodeMenuTarget | null => {
-      const data = row.getItemData()
-      if (data === ROOT_ID || data === null) return null
-      const parentId = row.getParent()?.getId() ?? null
-      return {
-        address: nodeAddressOf(data),
-        parentAddress:
-          parentId === null || parentId === ROOT_ID
-            ? null
-            : addressOf(parentId),
-        hidden: data.isHidden,
-        tethered:
-          data.classification === 'tethered' ||
-          data.nodeAggregateId === site.nodeAggregateId,
-        // Rows outside the role are reachable (they are the path to what is
-        // inside it) but nothing on them may change; inside it, the role's
-        // capabilities still decide action by action.
-        permitted: permittedActionsOn(data, site.nodeName),
-        anchor,
-      }
-    }
-    const target = toTarget(item)
-    if (target === null) return
-    const selection = contextMenuItems(tree, item)
-      .map(toTarget)
-      .filter((rowTarget): rowTarget is NodeMenuTarget => rowTarget !== null)
-    setMenu({ target, selection })
-  }
 
   return (
     <>
       <TreeList
-        tree={tree}
+        tree={nodeTree.tree}
         label={t('tree.documentTreeLabel', 'Document tree')}
-        loading={!rootLoaded}
+        loading={!nodeTree.rootLoaded}
         loadingText={t('tree.loadingDocuments', 'Loading documents…')}
         emptyText={t('tree.emptyDocuments', 'This site has no documents yet.')}
         emptyIcon="fa-sitemap"
-        decorate={(data) => {
-          if (data === ROOT_ID || data === null) return null
-          const decor = nodeDecor(
-            data,
-            nodeTypes,
-            pendingChanges,
-            peers.filter(
-              (peer) => peer.documentAggregateId === data.nodeAggregateId,
-            ),
-            decorators,
-          )
-          return cutKeys.has(nodeAddressKey(data))
-            ? { ...decor, dimmed: true }
-            : decor
-        }}
-        onItemContextMenu={openMenu}
+        decorate={nodeTree.decorate}
+        onItemContextMenu={nodeTree.openMenu}
         selectOnContextMenu
       />
-      <NodeContextMenu
-        target={menu?.target ?? null}
-        selection={menu?.selection}
+      <NodeTreeContextMenu
+        nodeTree={nodeTree}
         entityLabel={t('editing.entity.document', 'document')}
         entityLabelPlural={t('editing.entity.documents', 'documents')}
         clipboardKind="document"
-        onClose={() => setMenu(null)}
-        onDone={(action, targets) => onNodeAction?.(action, targets)}
-        onPasted={(affectedAddresses) => onMoved?.(affectedAddresses)}
+        onNodeAction={onNodeAction}
+        onMoved={onMoved}
         onCreateNew={onCreateNew}
       />
     </>

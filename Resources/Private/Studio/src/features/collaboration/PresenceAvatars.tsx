@@ -32,23 +32,22 @@ export function PresenceAvatars() {
     >
       {shown.map((peer) => (
         <Tooltip key={peer.userId}>
-          <TooltipTrigger asChild>
-            <span
-              className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 text-[0.65rem] font-semibold text-white select-none"
-              style={{ backgroundColor: peer.color }}
-            >
-              {peer.initials}
-            </span>
+          {/* A button (Base UI's default trigger) so the name is reachable
+              by keyboard and announced - a bare span takes no focus. */}
+          <TooltipTrigger
+            aria-label={peer.name}
+            className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 text-[0.65rem] font-semibold text-white select-none outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            style={{ backgroundColor: peer.color }}
+          >
+            <span aria-hidden>{peer.initials}</span>
           </TooltipTrigger>
           <TooltipContent>{peer.name}</TooltipContent>
         </Tooltip>
       ))}
       {overflow > 0 && (
         <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 bg-neutral-300 dark:bg-neutral-700 text-[0.65rem] font-semibold text-neutral-950 dark:text-white select-none">
-              +{overflow}
-            </span>
+          <TooltipTrigger className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 bg-neutral-300 dark:bg-neutral-700 text-[0.65rem] font-semibold text-neutral-950 dark:text-white select-none outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            +{overflow}
           </TooltipTrigger>
           <TooltipContent>
             {peers

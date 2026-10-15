@@ -16,7 +16,9 @@ export const URI_PATH_SEGMENT_EDITOR =
  * so the result matches what the old UI produced. Like the plain text editor it
  * holds a local draft and commits on blur/Enter (Escape reverts); syncing also
  * writes the generated value straight into the draft so the field reflects it
- * before the save round-trips.
+ * before the save round-trips. As there, the draft follows the incoming value
+ * while there is no unsaved edit, and only a draft that differs from the value
+ * the edit started from commits.
  *
  * The sync button needs an existing node to read the title from and to resolve
  * the language dimension, so it only appears in the inspector (where a
@@ -31,6 +33,12 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
 }) => {
   const initial = value === null || value === undefined ? '' : String(value)
   const [draft, setDraft] = useState(initial)
+  // The value the current draft started from.
+  const [base, setBase] = useState(initial)
+  if (initial !== base && (draft === base || draft === initial)) {
+    setBase(initial)
+    setDraft(initial)
+  }
   const [isSyncing, setIsSyncing] = useState(false)
 
   // Read from cache (the inspector already fetched this node) to feed the
@@ -39,7 +47,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
   const { data: self } = useNode(nodeAddress ?? null)
 
   const commit = () => {
-    if (draft !== initial) onCommit(draft)
+    if (draft !== base) onCommit(draft)
   }
 
   const sync = async () => {
@@ -77,6 +85,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
         onKeyDown={(event) => {
           if (event.key === 'Escape') {
             event.preventDefault()
+            setBase(initial)
             setDraft(initial)
             event.currentTarget.blur()
           }

@@ -12,6 +12,7 @@ import { useTree } from '@headless-tree/react'
 import type { AssetCollection, AssetTag } from '@/api/neos/schema'
 import type { TreeRowDecor } from '@/features/tree/nodeDecor'
 import { TreeList } from '@/features/tree/TreeList'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 
 /** A node in a media tree (a tag with children, or a flat collection). */
 export interface MediaTreeNode {
@@ -97,8 +98,7 @@ export function MediaTree({
 
   // The sync loader reads through a ref so its closures always see the latest
   // data without re-creating the tree instance.
-  const dataRef = useRef({ index, rootIds })
-  dataRef.current = { index, rootIds }
+  const dataRef = useLatestRef({ index, rootIds })
 
   const nodeOf = (item: ItemInstance<Data>): MediaTreeNode | null => {
     const data = item.getItemData()
@@ -177,12 +177,12 @@ export function MediaTree({
   })
 
   // Re-read the structure whenever the data changes (create/rename/reparent/
-  // delete), preserving expansion state.
+  // delete), preserving expansion state. (tree is the instance useTree keeps
+  // for the component's lifetime - listing it never re-runs these effects.)
   const signature = useMemo(() => JSON.stringify(roots), [roots])
   useEffect(() => {
     tree.rebuildTree()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature])
+  }, [tree, signature])
 
   // Expand everything once on first load so nesting is visible; later rebuilds
   // keep whatever the user has toggled.
@@ -190,17 +190,15 @@ export function MediaTree({
   useEffect(() => {
     if (!expandedOnce.current && rootIds.length > 0) {
       expandedOnce.current = true
-      tree.expandAll()
+      void tree.expandAll()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rootIds.length])
+  }, [tree, rootIds.length])
 
   // Keep the tree's own selection in sync with the active filter so the
   // highlight matches, even when the filter is changed elsewhere.
   useEffect(() => {
     tree.setSelectedItems(selectedId ? [selectedId] : [])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId])
+  }, [tree, selectedId])
 
   const decorate = (data: Data): TreeRowDecor | null => {
     if (data === ROOT_ID) return null

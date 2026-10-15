@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  DOCUMENT_NODE_TYPE,
   fetchChildren,
   useAllowedChildNodeTypes,
   useNode,
@@ -50,20 +51,15 @@ export interface InsertRequest {
 
 export type InsertRole = 'document' | 'content'
 
-const ROLES: Record<
-  InsertRole,
-  { superTypes: string[]; noun: string; icon: string }
-> = {
+const ROLES: Record<InsertRole, { superTypes: string[]; icon: string }> = {
   document: {
-    superTypes: ['Neos.Neos:Document'],
-    noun: 'document',
+    superTypes: [DOCUMENT_NODE_TYPE],
     icon: 'fa-file',
   },
   content: {
     // Collections are not Content subtypes but can be user-creatable
     // (e.g. column containers); constraints still decide per position.
     superTypes: ['Neos.Neos:Content', 'Neos.Neos:ContentCollection'],
-    noun: 'element',
     icon: 'fa-cube',
   },
 }

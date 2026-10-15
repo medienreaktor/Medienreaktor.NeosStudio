@@ -1,49 +1,36 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useIsFetching } from '@tanstack/react-query'
-import {
-  beginLogin,
-  getTokens,
-  handleRedirectCallback,
-  logout,
-} from '@/auth/oauth'
-import { ApiError } from '@/api/http/errors'
-import { setActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
-import { useContentRepository } from '@/api/neos/endpoints/contentRepositories'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useMe } from '@/api/neos/endpoints/me'
-import {
-  DOCUMENT_NODE_TYPE,
-  fetchNode,
-  useNodeVariants,
-} from '@/api/neos/endpoints/nodes'
+import { DOCUMENT_NODE_TYPE } from '@/api/neos/endpoints/nodes'
 import { isOfType, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
-import { siteNodeAddress, useSites } from '@/api/neos/endpoints/sites'
-import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
+import { siteNodeAddress } from '@/api/neos/endpoints/sites'
 import { neosKeys } from '@/api/neos/keys'
 import {
-  isRemoved,
   nodeAddressOf,
-  parseDimensionSpacePoint,
   sameDimensionSpacePoint,
-  type Node,
   type NodeAddress,
 } from '@/api/neos/schema'
-import type { EditingElement } from '@/api/studio/schema'
-import {
-  allowsDimensionSpacePoint,
-  allowsSite,
-  allowsWorkspaceEditing,
-} from '@/features/access/rules'
+import type { EditingElement } from '@/features/collaboration/types'
 import { useTaskDecorationData } from '@/features/tasks/decorationData'
-import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import {
+  invalidateAfterContentEdit,
+  invalidateWorkspaceQueries,
+} from '@/features/workspaces/invalidate'
 import { queryClient } from '@/app/queryClient'
-import { loadTranslations, translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { toast } from '@/components/ui/toast'
-import { Button } from '@/components/ui/button'
-import { BootScreen } from '@/app/BootScreen'
-import { subscribePreviewLoaded } from '@/app/boot'
-import { clearDeepLink, deepLinkReveal, deepLinkTarget } from '@/app/deepLink'
-import { flashNode } from '@/app/flash'
+import { AuthGate } from '@/app/AuthGate'
+import { BootOverlay } from '@/app/BootOverlay'
+import { reportNothingToPreview } from '@/app/boot'
+import { NeosLogo } from '@/app/NeosLogo'
+import { ShellHeader } from '@/app/ShellHeader'
+import {
+  StudioProvider,
+  type StudioActions,
+  type StudioState,
+} from '@/app/StudioContext'
+import { useEditingContext } from '@/app/useEditingContext'
+import { useEditSignals } from '@/app/useEditSignals'
+import { useSelection } from '@/app/useSelection'
+import { useStableCallbacks } from '@/app/useStableCallbacks'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -54,28 +41,19 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from '@/components/ui/sidebar'
-import { StudioProvider, type StudioContextValue } from '@/app/StudioContext'
 import { CollaborationBridge } from '@/features/collaboration/CollaborationBridge'
-import { PresenceAvatars } from '@/features/collaboration/PresenceAvatars'
 import {
   PresenceProvider,
   type PresencePeer,
+  type PresenceState,
 } from '@/features/collaboration/PresenceContext'
-import {
-  useAccess,
-  useActiveSiteForAccess,
-  useWorkspaceClassificationsForAccess,
-} from '@/features/access/useAccess'
+import { useAccess } from '@/features/access/useAccess'
 import { WorkspaceLockoutDialog } from '@/features/access/WorkspaceLockoutDialog'
-import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
-import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import {
   AssetPickerPanelBridge,
   AssetPickerProvider,
 } from '@/features/media/AssetPicker'
-import { ModalLauncher } from '@/features/modals/ModalLauncher'
 import { ModalProvider } from '@/features/modals/ModalHost'
 import { LegacyModulesMenu } from '@/features/navigation/LegacyModulesMenu'
 import {
@@ -83,203 +61,76 @@ import {
   PanelsProvider,
   SecondaryDock,
 } from '@/features/panels/PanelSystem'
-import { PreviewButton } from '@/features/preview/PreviewButton'
-import { PreviewToolbar } from '@/features/preview/PreviewPane'
 import { ShortcutHost } from '@/features/shortcuts/ShortcutHost'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { UserMenu } from '@/features/profile/UserMenu'
-import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
-import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
-import { ShareButton } from '@/features/sharing/ShareButton'
-import { PublishReviewButton } from '@/features/workspaces/PublishReviewButton'
-import { SyncWorkspaceButton } from '@/features/workspaces/SyncWorkspaceButton'
-import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
-
-type AuthState = 'checking' | 'authenticated' | 'anonymous'
-
-// Guards against a redirect loop if the silent auto-login ever fails:
-// set before redirecting, cleared once tokens arrive.
-const AUTO_LOGIN_KEY = 'neos-studio.auto_login_attempted'
-
-// Remembers the selected document across reloads. Only the aggregate id is
-// stored - the full address is bound to a workspace and dimension, so on reload
-// the id is re-resolved against the current site's subgraph instead.
-const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
-
-// Remember the site and dimension the user was working in across reloads.
-const SELECTED_SITE_KEY = 'neos-studio.selected_site'
-
-// The boot screen never outstays its welcome: whatever fails to report (a
-// preview that never paints, a request that hangs) the shell is uncovered
-// after this long and the panels show their own error/loading states.
-const BOOT_TIMEOUT_MS = 15_000
-// Matches BootScreen's fade-out; the overlay unmounts after it.
-const BOOT_FADE_MS = 300
-const DIMENSION_SPACE_POINT_KEY = 'neos-studio.dimension_space_point'
-
-// Remember a collaborative editing context (a shared workspace edited
-// directly) across reloads; absent = the personal workspace.
-const EDITING_WORKSPACE_KEY = 'neos-studio.editing_workspace'
-
-// The stored point (JSON), or null (= the active site's default) if nothing
-// valid is stored. Structural check only - whether the point is still allowed
-// by the dimension configuration is verified once the dimensions load.
-function storedDimensionSpacePoint(): string | null {
-  try {
-    const stored = localStorage.getItem(DIMENSION_SPACE_POINT_KEY)
-    if (!stored) return null
-    const parsed: unknown = JSON.parse(stored)
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed) &&
-      Object.values(parsed).every((value) => typeof value === 'string')
-    ) {
-      return stored
-    }
-  } catch {
-    /* fall through to the backend default */
-  }
-  return null
-}
 
 export function App() {
-  const [auth, setAuth] = useState<AuthState>('checking')
-  // The boot screen covers the shell from the first render until the first
-  // preview page has painted and no request is in flight anymore (the trees
-  // and the inspector have their data by then) - so the user sees one spinner
-  // instead of a shell assembling itself panel by panel. `booted` latches:
-  // later site/dimension/workspace switches reload the preview uncovered.
-  const [previewLoaded, setPreviewLoaded] = useState(false)
-  const [booted, setBooted] = useState(false)
-  const [bootScreenMounted, setBootScreenMounted] = useState(true)
-  const inFlightQueries = useIsFetching()
-  useEffect(() => subscribePreviewLoaded(() => setPreviewLoaded(true)), [])
-  useEffect(() => {
-    if (booted || auth !== 'authenticated') return
-    if (previewLoaded && inFlightQueries === 0) setBooted(true)
-  }, [booted, auth, previewLoaded, inFlightQueries])
-  useEffect(() => {
-    if (booted || auth !== 'authenticated') return
-    const timer = setTimeout(() => setBooted(true), BOOT_TIMEOUT_MS)
-    return () => clearTimeout(timer)
-  }, [booted, auth])
-  useEffect(() => {
-    if (!booted) return
-    const timer = setTimeout(() => setBootScreenMounted(false), BOOT_FADE_MS)
-    return () => clearTimeout(timer)
-  }, [booted])
-  const [selectedDocument, setSelectedDocument] = useState<Node | null>(null)
-  // The node shown in the inspector drawer - a document or a content node.
-  // Also the node outlined in the preview and revealed in the outliner.
-  const [inspectedNode, setInspectedNode] = useState<Node | null>(null)
-  // The last inline edit from the preview; refreshes the outliner label.
-  const [lastEdit, setLastEdit] = useState<NodeEdit | null>(null)
-  // Bumped after inspector edits so the preview shows them (inline edits
-  // already render live inside the iframe and need no reload).
-  const [previewReloadToken, setPreviewReloadToken] = useState(0)
-  // Inspector edits of ui.reloadIfChanged properties (and remote
-  // collaborators' content edits): refresh just those nodes' elements in the
-  // preview (out-of-band render) instead of a full reload.
-  const [previewElementUpdate, setPreviewElementUpdate] = useState<{
-    addresses: NodeAddress[]
-    token: number
-  } | null>(null)
-
-  // The me-query doubles as the token check (a 401 drives the logout below);
-  // the user id additionally tells the collaboration feed which events are
-  // the own ones.
-  const { data: me, error: meError } = useMe(auth === 'authenticated')
-  const { sidebarWidth, isResizing, resizeHandleProps } = useResizableSidebar()
-  const { data: workspacesResponse } = useWorkspaces(auth === 'authenticated')
-  // The dynamic access roles assigned to this user, if any. Everything below
-  // narrows by them; unrestricted users (and administrators) see every check
-  // answer "yes", so the shell behaves exactly as it did without the feature.
-  const access = useAccess(auth === 'authenticated')
-  // The task data the workspace decorators badge task branches with.
-  useTaskDecorationData(auth === 'authenticated')
-
-  // The editing context. Default (classic model): editing happens in the
-  // personal workspace and the switcher only retargets where a publish goes
-  // (rebases the personal workspace onto a different base). Collaborative
-  // model: the switcher can instead point the editing context AT a shared
-  // workspace - every command then runs directly against it, which is what
-  // makes multiplayer editing work (all participants write into one event
-  // log). Switching the editing context is a pure client-side state change:
-  // no CR command, no empty-workspace requirement, personal pending changes
-  // survive untouched.
-  const workspaces = workspacesResponse ?? []
-  const [editingWorkspaceName, setEditingWorkspaceName] = useState<
-    string | null
-  >(() => localStorage.getItem(EDITING_WORKSPACE_KEY))
-  const personalWorkspace =
-    workspaces.find((w) => w.classification === 'personal') ?? null
-  const collaborativeWorkspace = editingWorkspaceName
-    ? (workspaces.find(
-        (w) =>
-          w.name === editingWorkspaceName &&
-          w.classification === 'shared' &&
-          w.permissions.write &&
-          allowsWorkspaceEditing(access, w.name, w.classification),
-      ) ?? null)
-    : null
-  const activeWorkspace = collaborativeWorkspace ?? personalWorkspace
-  // Workspaces an access role excludes never reach the switcher - the content
-  // repository refuses to read them anyway, so offering them would only ever
-  // produce an error.
-  const baseTargets = workspaces.filter(
-    (w) =>
-      (w.classification === 'root' || w.classification === 'shared') &&
-      allowsWorkspaceEditing(access, w.name, w.classification),
+  return (
+    <AuthGate>
+      <Shell />
+    </AuthGate>
   )
+}
 
-  // A remembered collaborative context that no longer resolves (workspace
-  // deleted, write access revoked) falls back to the personal workspace.
-  useEffect(() => {
-    if (!workspacesResponse || editingWorkspaceName === null) return
-    const stillValid = workspacesResponse.some(
-      (w) =>
-        w.name === editingWorkspaceName &&
-        w.classification === 'shared' &&
-        w.permissions.write &&
-        allowsWorkspaceEditing(access, w.name, w.classification),
-    )
-    if (!stillValid) {
-      setEditingWorkspaceName(null)
-      localStorage.removeItem(EDITING_WORKSPACE_KEY)
-    }
-  }, [workspacesResponse, editingWorkspaceName, access])
+/**
+ * The authenticated shell: the editing context (site, workspace, dimension),
+ * the selection, and the signals edits send to the trees and the preview -
+ * handed to the panels through the studio context - around the sidebar, the
+ * header and the panel docks.
+ */
+function Shell() {
+  // The user id tells the collaboration feed which events are the own ones.
+  const { data: me } = useMe()
+  const { sidebarWidth, isResizing, resizeHandleProps } = useResizableSidebar()
+  // The task data the workspace decorators badge task branches with.
+  useTaskDecorationData()
+  const access = useAccess()
 
-  // A role can withhold the personal workspace, which is the shell's default
-  // editing context - such a user has to work directly in a shared workspace.
-  // Move them into the first one they may write to, rather than leaving them
-  // pointed at a workspace every read of which is refused.
+  const editing = useEditingContext()
+  const {
+    site,
+    personalWorkspace,
+    collaborativeWorkspace,
+    activeWorkspace,
+    dimensionSpacePoint,
+  } = editing
   useEffect(() => {
-    if (!workspacesResponse || editingWorkspaceName !== null) return
-    if (
-      personalWorkspace === null ||
-      allowsWorkspaceEditing(access, personalWorkspace.name, 'personal')
-    ) {
-      return
-    }
-    const fallback = workspacesResponse.find(
-      (w) =>
-        w.classification === 'shared' &&
-        w.permissions.write &&
-        allowsWorkspaceEditing(access, w.name, w.classification),
-    )
-    if (fallback) {
-      setEditingWorkspaceName(fallback.name)
-      localStorage.setItem(EDITING_WORKSPACE_KEY, fallback.name)
-    }
-  }, [workspacesResponse, editingWorkspaceName, personalWorkspace, access])
+    if (editing.noSiteToOpen) reportNothingToPreview()
+  }, [editing.noSiteToOpen])
+
+  // The site node in the editing context: where the selection is restored
+  // (once the context has resolved), and what remote changes resolve against
+  // while no document is selected.
+  const siteAddress =
+    site && activeWorkspace && dimensionSpacePoint
+      ? siteNodeAddress(site, activeWorkspace.name, dimensionSpacePoint)
+      : null
+  const selection = useSelection(siteAddress)
+  const selectedDocument = selection.document
+  const inspectedNode = selection.inspected
+  const signals = useEditSignals()
+
+  // The dimension as of the latest commit, for reads that resolve later.
+  const currentDimension = useRef(dimensionSpacePoint)
+  useLayoutEffect(() => {
+    currentDimension.current = dimensionSpacePoint
+  }, [dimensionSpacePoint])
 
   // Who else is in the collaborative session (fed by the bridge below).
   const [presence, setPresence] = useState<{
     peers: PresencePeer[]
     you: string | null
   }>({ peers: [], you: null })
+  const presenceState = useMemo<PresenceState>(
+    () => ({
+      active: collaborativeWorkspace !== null,
+      peers: collaborativeWorkspace !== null ? presence.peers : [],
+      you: presence.you,
+    }),
+    [collaborativeWorkspace, presence],
+  )
 
   // The content element the user has SELECTED - their edit-lock claim.
   // Selection is the claim unit (no need to be typing): it survives window
@@ -287,7 +138,7 @@ export function App() {
   // are never claimed - they are the shared canvas of the multiplayer
   // session. Server-side arbitration grants each element to the earliest
   // claim; releasing (selecting elsewhere) auto-promotes the next claimant.
-  const { data: nodeTypeMap } = useNodeTypes('', auth === 'authenticated')
+  const { data: nodeTypeMap } = useNodeTypes('')
   const editingElement = useMemo<EditingElement | null>(() => {
     if (!inspectedNode || !nodeTypeMap) return null
     if (isOfType(nodeTypeMap, inspectedNode.nodeType, DOCUMENT_NODE_TYPE))
@@ -298,80 +149,6 @@ export function App() {
     }
   }, [inspectedNode, nodeTypeMap])
 
-  const { data: contentRepository } = useContentRepository(
-    auth === 'authenticated',
-  )
-  const dimensions = contentRepository?.dimensions ?? []
-  // null = the active site's default dimension space point (see
-  // activeDimensionSpacePoint below), which the switcher then shows.
-  // Starts from the dimension a deep link asked for, else the point remembered
-  // across reloads. A deep-linked point the access roles forbid is dropped by
-  // the validation effect below, same as a stored one.
-  const [dimensionSpacePoint, setDimensionSpacePoint] = useState<string | null>(
-    () => deepLinkTarget?.dimensionSpacePoint ?? storedDimensionSpacePoint(),
-  )
-
-  // Remember the dimension across reloads. A restored point that the current
-  // dimension configuration no longer allows (config changed since it was
-  // stored) is dropped in favor of the site's default.
-  const allowedPoints = contentRepository?.dimensionSpacePoints
-  // Dimensions an access role excludes never reach the switcher. Same
-  // reasoning as the workspaces: the content repository would refuse the
-  // write, so offering the switch only produces an error later.
-  const allowedEditablePoints = useMemo(
-    () =>
-      (allowedPoints ?? []).filter((point) =>
-        allowsDimensionSpacePoint(access, parseDimensionSpacePoint(point)),
-      ),
-    [allowedPoints, access],
-  )
-  useEffect(() => {
-    if (!dimensionSpacePoint) return
-    if (
-      allowedPoints &&
-      !allowedEditablePoints.some((point) =>
-        sameDimensionSpacePoint(point, dimensionSpacePoint),
-      )
-    ) {
-      localStorage.removeItem(DIMENSION_SPACE_POINT_KEY)
-      setDimensionSpacePoint(null)
-      return
-    }
-    localStorage.setItem(DIMENSION_SPACE_POINT_KEY, dimensionSpacePoint)
-  }, [dimensionSpacePoint, allowedPoints, allowedEditablePoints])
-  // Set when the user picked a dimension the selected document does not exist
-  // in - the create-variant dialog is open for this target point.
-  const [variantRequest, setVariantRequest] = useState<string | null>(null)
-  // Where the selected document exists; drives the switcher's muted "+" items.
-  const { data: documentVariants } = useNodeVariants(
-    selectedDocument,
-    auth === 'authenticated',
-  )
-
-  // Keep the user on the same document across a dimension or editing-context
-  // switch: fetch the node at its address in the target subgraph and reselect
-  // it once it resolves. The counter drops stale responses when switches
-  // happen in quick succession, so a slow earlier fetch cannot override the
-  // latest one.
-  const followDocumentRequest = useRef(0)
-  const followDocumentTo = (targetAddress: NodeAddress) => {
-    const request = ++followDocumentRequest.current
-    fetchNode(targetAddress)
-      .then((node) => {
-        if (followDocumentRequest.current !== request) return
-        setSelectedDocument(node)
-        setInspectedNode(node)
-      })
-      .catch(() => {
-        /* fine - the tree simply starts unselected */
-      })
-  }
-  const followDocumentInto = (previousAddress: NodeAddress, point: string) =>
-    followDocumentTo({
-      ...nodeAddressOf(previousAddress),
-      dimensionSpacePoint: point,
-    })
-
   /**
    * Move the editing context to a shared workspace (name) or back to the
    * personal one (null). Client-side only; the selected document follows
@@ -380,41 +157,32 @@ export function App() {
   const switchEditingContext = (name: string | null) => {
     const targetName = name ?? personalWorkspace?.name ?? null
     if (targetName === null || targetName === activeWorkspace?.name) return
-    setEditingWorkspaceName(name)
-    if (name !== null) localStorage.setItem(EDITING_WORKSPACE_KEY, name)
-    else localStorage.removeItem(EDITING_WORKSPACE_KEY)
-    const previousAddress = selectedDocument
-    setSelectedDocument(null)
-    setInspectedNode(null)
-    if (previousAddress)
-      followDocumentTo({
-        ...nodeAddressOf(previousAddress),
-        workspaceName: targetName,
-      })
+    editing.setEditingWorkspace(name)
+    selection.follow({ workspaceName: targetName })
+  }
+
+  /** Switch the dimension; the selected document follows into it. */
+  const changeDimension = (point: string) => {
+    editing.setDimensionSpacePoint(point)
+    selection.follow({ dimensionSpacePoint: point })
   }
 
   /**
    * A followed link or review row: show the target document; trees reveal and
    * select it. Links can cross dimensions (e.g. a language menu) - follow the
-   * switch so the trees browse the same dimension as the preview.
+   * switch so the trees browse the same dimension as the preview. Compared
+   * when the document has resolved, against the dimension as it is then.
    */
-  const navigateToNode = (address: NodeAddress) => {
-    fetchNode(address)
-      .then((node) => {
-        const currentPoint = activeDimensionSpacePoint
-        if (
-          currentPoint &&
-          !sameDimensionSpacePoint(node.dimensionSpacePoint, currentPoint)
-        ) {
-          setDimensionSpacePoint(node.dimensionSpacePoint)
-        }
-        setSelectedDocument(node)
-        setInspectedNode(node)
-      })
-      .catch(() => {
-        /* fine - e.g. the linked document is not visible in this workspace */
-      })
-  }
+  const navigateToNode = (address: NodeAddress) =>
+    selection.navigateTo(address, (node) => {
+      const currentPoint = currentDimension.current
+      if (
+        currentPoint &&
+        !sameDimensionSpacePoint(node.dimensionSpacePoint, currentPoint)
+      ) {
+        editing.setDimensionSpacePoint(node.dimensionSpacePoint)
+      }
+    })
 
   /**
    * Show a document that lives in another workspace (the review dialog's
@@ -424,352 +192,182 @@ export function App() {
    */
   const navigateToNodeInWorkspace = (address: NodeAddress, name: string) => {
     if (activeWorkspace && name !== activeWorkspace.name) {
-      const editingName = name === personalWorkspace?.name ? null : name
-      setEditingWorkspaceName(editingName)
-      if (editingName !== null)
-        localStorage.setItem(EDITING_WORKSPACE_KEY, editingName)
-      else localStorage.removeItem(EDITING_WORKSPACE_KEY)
-      setSelectedDocument(null)
-      setInspectedNode(null)
+      editing.setEditingWorkspace(
+        name === personalWorkspace?.name ? null : name,
+      )
+      selection.clear()
     }
     navigateToNode(address)
   }
 
-  const { data: allSites } = useSites(auth === 'authenticated')
-
-  // The editing shell only deals in online sites; offline ones exist solely
-  // for the sites administration (which fetches the full listing itself).
-  // Sites outside the user's access roles drop out here, which is all it
-  // takes: the switcher, the tree and the restored selection all read this.
-  const sites = (allSites ?? []).filter(
-    (site) => site.online && allowsSite(access, site.nodeName),
-  )
-  // Starts from the site remembered across reloads; a stored name that no
-  // longer matches simply falls back to the first site below.
-  const [siteNodeName, setSiteNodeName] = useState<string | null>(() =>
-    localStorage.getItem(SELECTED_SITE_KEY),
-  )
-  const activeSite =
-    sites.find((s) => s.nodeName === siteNodeName) ??
-    sites.find((s) => s.nodeAggregateId !== null) ??
-    null
-  // The dimension space point the shell browses and edits in.
-  const activeDimensionSpacePoint =
-    dimensionSpacePoint ?? activeSite?.defaultDimensionSpacePoint ?? null
-  // Nothing to preview (no online site the account may open): the boot
-  // screen would otherwise wait for a page that never comes.
-  const noSiteToOpen = allSites !== undefined && activeSite === null
-  useEffect(() => {
-    if (noSiteToOpen) setBooted(true)
-  }, [noSiteToOpen])
-
-  useEffect(() => {
-    if (siteNodeName) localStorage.setItem(SELECTED_SITE_KEY, siteNodeName)
-  }, [siteNodeName])
-
-  // Site restrictions are per site, and the synchronous consumers (the tree
-  // row decorator) only ever see a bare node - tell them which site is open.
-  useActiveSiteForAccess(activeSite?.nodeName ?? null)
-  // Workspaces, node types, dimensions and tasks are those of the selected
-  // site's content repository - its reads wait for it.
-  const activeContentRepositoryId = activeSite?.contentRepositoryId ?? null
-  useEffect(() => {
-    setActiveContentRepositoryId(activeContentRepositoryId)
-  }, [activeContentRepositoryId])
-  // Same reason: a node names its workspace, not how that workspace is
-  // classified - and live is treated differently from shared and personal.
-  useWorkspaceClassificationsForAccess(workspaces)
-
-  useEffect(() => {
-    ;(async () => {
-      // Label translations must be in place before anything renders labels;
-      // browser-cached for a week, so this rarely costs a request.
-      await loadTranslations()
-      let callbackFailed = false
-      try {
-        await handleRedirectCallback()
-      } catch (e) {
-        callbackFailed = true
-        toast.error(e, { title: t('app.loginFailed', 'Login failed') })
-      }
-      if (getTokens()) {
-        sessionStorage.removeItem(AUTO_LOGIN_KEY)
-        setAuth('authenticated')
-      } else if (!callbackFailed && !sessionStorage.getItem(AUTO_LOGIN_KEY)) {
-        // The Studio client is first-party and the shell already required a
-        // backend login, so the authorization redirect completes silently.
-        sessionStorage.setItem(AUTO_LOGIN_KEY, '1')
-        void beginLogin()
-      } else {
-        setAuth('anonymous')
-      }
-    })()
-  }, [])
-
-  useEffect(() => {
-    if (meError instanceof ApiError && meError.status === 401) {
-      logout()
-      setAuth('anonymous')
-    }
-  }, [meError])
-
-  // Remember the selected document so a reload lands on it again. Persist just
-  // the aggregate id; the address itself is workspace/dimension-bound.
-  useEffect(() => {
-    if (!selectedDocument) return
-    localStorage.setItem(
-      SELECTED_DOCUMENT_KEY,
-      selectedDocument.nodeAggregateId,
-    )
-  }, [selectedDocument])
-
-  // Restore the remembered document once the active site is known (its site
-  // node's address carries the current workspace and dimension). A stored id that no longer
-  // resolves, and the no-stored-id case, both fall back to the site's root
-  // document node. Runs once per load - dimension and site switches drive their
-  // own reselection and must not be overridden here.
-  const didRestoreSelection = useRef(false)
-  const siteAddress =
-    activeSite && activeWorkspace && activeDimensionSpacePoint
-      ? siteNodeAddress(
-          activeSite,
-          activeWorkspace.name,
-          activeDimensionSpacePoint,
-        )
-      : null
-  useEffect(() => {
-    if (didRestoreSelection.current || !siteAddress) return
-    didRestoreSelection.current = true
-    const select = (node: Node) => {
-      setSelectedDocument(node)
-      setInspectedNode(node)
-    }
-    const selectRoot = () => {
-      fetchNode(siteAddress)
-        .then(select)
-        .catch(() => {
-          // Fine - the tree simply starts unselected. Nothing will reach the
-          // preview, so the boot screen has nothing to wait for either.
-          setBooted(true)
-        })
-    }
-    // A deep link wins over the remembered selection - it is an explicit
-    // request from outside the shell. Only its aggregate id and dimension are
-    // used: the site address supplies the content repository and, crucially,
-    // the workspace the editor is actually working in. A link built elsewhere
-    // names the live workspace, and dropping the editor into live would show
-    // them a document they cannot edit.
-    if (deepLinkTarget) {
-      clearDeepLink()
-      const documentAddress: NodeAddress = {
-        ...siteAddress,
-        nodeAggregateId: deepLinkTarget.nodeAggregateId,
-        dimensionSpacePoint: deepLinkTarget.dimensionSpacePoint,
-      }
-      // Bound locally: the narrowing below has to survive into the nested callbacks.
-      const revealId = deepLinkReveal
-      fetchNode(documentAddress)
-        .then((document) => {
-          // The document has to be the selected one either way - the preview
-          // renders it, and the content node only exists inside it.
-          setSelectedDocument(document)
-          if (revealId === null) {
-            setInspectedNode(document)
-            return
-          }
-          // Selecting the content node is all it takes to reveal it: the
-          // preview pane mirrors the shell's selection into the guest, which
-          // scrolls it into view and outlines it. flashNode adds the brief
-          // pulse on top, so the editor sees *which* element was meant even
-          // when the outline alone is easy to miss.
-          fetchNode({ ...documentAddress, nodeAggregateId: revealId })
-            .then((contentNode) => {
-              setInspectedNode(contentNode)
-              flashNode(revealId)
-            })
-            // The node may have been deleted or moved since the link was made;
-            // landing on the page is still the useful half of the answer.
-            .catch(() => setInspectedNode(document))
-        })
-        // The document may live in another site, or not exist in that
-        // dimension at all - fall back rather than showing an empty shell.
-        .catch(selectRoot)
-      return
-    }
-    const storedId = localStorage.getItem(SELECTED_DOCUMENT_KEY)
-    if (!storedId) {
-      selectRoot()
-      return
-    }
-    fetchNode({ ...siteAddress, nodeAggregateId: storedId })
-      .then(select)
-      .catch(selectRoot)
-    // Keyed by value: the address is a new object on every render.
-  }, [siteAddress?.nodeAggregateId, siteAddress?.workspaceName])
-
-  if (auth === 'checking') {
-    return <BootScreen />
-  }
-
-  if (auth === 'anonymous') {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <div className="rounded-lg border bg-neutral-50 dark:bg-neutral-900 px-12 py-10 text-center">
-          <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
-          <p className="mb-6 text-neutral-600 dark:text-neutral-400">
-            {t('app.tagline', 'Editing environment for Neos')}
-          </p>
-          <Button onClick={() => beginLogin()}>
-            {t('app.connectToApi', 'Connect to the API')}
-          </Button>
-        </div>
-      </div>
-    )
+  // Drop the cached node reads of one workspace (of the active site's content
+  // repository) - a change confined to it leaves every other one's valid.
+  const invalidateWorkspaceNodes = (name: string | undefined) => {
+    if (!site || name === undefined) return
+    void queryClient.invalidateQueries({
+      queryKey: neosKeys.nodes.workspace(site.contentRepositoryId, name),
+    })
   }
 
   // The workspace's content changed wholesale (published/discarded/rebased,
-  // locally or by a collaborator): refresh every cached node read, all tree
-  // items, the preview, and the app-state snapshots. A snapshot that no
-  // longer resolves (the node was removed) is deselected gracefully.
+  // locally or by a collaborator): refresh all tree items and the preview.
+  // The callers drop the cached node reads, which re-reads the selection too -
+  // a selected node that no longer resolves (published away) reads as none.
   const refreshWorkspaceContent = () => {
-    setLastEdit((prev) => ({
-      addresses: [ALL_NODES],
-      token: (prev?.token ?? 0) + 1,
-    }))
-    setPreviewReloadToken((token) => token + 1)
-    // A DELETED node (opened from the trash) has to be re-read with the same
-    // opt-in it was selected with, or the refresh would drop the selection just
-    // because the node is deleted. It still drops when the read fails for real
-    // - the node was published away and is gone.
-    if (selectedDocument) {
-      fetchNode(selectedDocument, undefined, isRemoved(selectedDocument))
-        .then(setSelectedDocument)
-        .catch(() => {
-          setSelectedDocument(null)
-          setInspectedNode(null)
-        })
-    }
-    if (inspectedNode) {
-      fetchNode(inspectedNode, undefined, isRemoved(inspectedNode))
-        .then(setInspectedNode)
-        .catch(() => setInspectedNode(null))
-    }
-  }
-
-  // A collaborator's content edits (property/reference changes): swap the
-  // affected elements in the preview out-of-band, refresh their tree rows and
-  // the inspector snapshot if it shows one of them. The cached reads must be
-  // dropped first - the refreshes below would otherwise serve the 30s-stale
-  // query cache.
-  const remoteContentChanged = (aggregateIds: string[]) => {
-    const baseAddress = selectedDocument ?? siteAddress
-    if (!baseAddress) return
-    const addresses = aggregateIds.map((nodeAggregateId) => ({
-      ...nodeAddressOf(baseAddress),
-      nodeAggregateId,
-    }))
-    for (const address of addresses) {
-      void queryClient.invalidateQueries({
-        queryKey: neosKeys.nodes.node(address),
-      })
-    }
-    void invalidateWorkspaceQueries()
-    setLastEdit((prev) => ({ addresses, token: (prev?.token ?? 0) + 1 }))
-    setPreviewElementUpdate((prev) => ({
-      addresses,
-      token: (prev?.token ?? 0) + 1,
-    }))
-    if (inspectedNode && aggregateIds.includes(inspectedNode.nodeAggregateId)) {
-      fetchNode(inspectedNode)
-        .then(setInspectedNode)
-        .catch(() => setInspectedNode(null))
-    }
-  }
-
-  // A collaborator changed the structure (or published/discarded/rebased the
-  // session): incremental updates cannot describe this - drop all caches and
-  // refresh wholesale.
-  const remoteWorkspaceChanged = () => {
-    void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
-    void invalidateWorkspaceQueries()
-    refreshWorkspaceContent()
+    signals.reportEdit([ALL_NODES])
+    signals.reloadPreview()
   }
 
   // The app state and actions panels read via useStudio(). Panels register
   // themselves in the panel registry (see features/panels/builtin.tsx); their
   // placement (sidebar dock, floating, tab grouping) is the panel system's
-  // business.
-  const studio: StudioContextValue = {
-    site: activeSite,
-    workspaceName: activeWorkspace?.name ?? null,
-    personalWorkspaceName: personalWorkspace?.name ?? null,
-    dimensionSpacePoint: activeDimensionSpacePoint,
-    selectedDocument,
-    inspectedNode,
-    lastEdit,
-    previewReloadToken,
-    previewElementUpdate,
-    selectDocument: (node) => {
-      setSelectedDocument(node)
-      setInspectedNode(node)
-    },
-    inspectNode: setInspectedNode,
-    inspectAddress: (address) => {
-      // A click in the preview: inspect the node and reveal it in the outliner
-      // (via inspectedNode). Fine to fail - e.g. the node vanished meanwhile.
-      fetchNode(address)
-        .then(setInspectedNode)
-        .catch(() => {})
-    },
+  // business. The actions keep their identity, the state changes only with
+  // what it holds - the panels re-render when there is something new to show.
+  const actions = useStableCallbacks<StudioActions>({
+    selectDocument: selection.selectDocument,
+    inspectNode: selection.inspectNode,
+    // A click in the preview: inspect the node and reveal it in the outliner
+    // (via inspectedNode). Fine to fail - e.g. the node vanished meanwhile.
+    inspectAddress: selection.inspectAddress,
     navigateToNode,
     navigateToNodeInWorkspace,
     checkoutWorkspace: (name) =>
       switchEditingContext(name === personalWorkspace?.name ? null : name),
-    reportInlineEdit: (addresses) => {
-      setLastEdit((prev) => ({
-        addresses,
-        token: (prev?.token ?? 0) + 1,
-      }))
-    },
+    reportInlineEdit: (addresses) => signals.reportEdit(addresses),
     nodeEdited: (address, options) => {
-      setLastEdit((prev) => ({
-        addresses: [address],
-        token: (prev?.token ?? 0) + 1,
-      }))
+      signals.reportEdit([address])
       // How the preview refreshes follows the property's configuration:
       // 'page' (ui.reloadPageIfChanged, and the default for anything not an
       // inspector property save) reloads the iframe, 'element'
       // (ui.reloadIfChanged) re-renders just the node's element out-of-band,
       // 'none' (neither flag) leaves the preview alone.
       const reload = options?.reload ?? 'page'
-      if (reload === 'page') {
-        setPreviewReloadToken((token) => token + 1)
-      } else if (reload === 'element') {
-        setPreviewElementUpdate((prev) => ({
-          addresses: [address],
-          token: (prev?.token ?? 0) + 1,
-        }))
-      }
-      // The inspected-node snapshot is stale now - the save already
-      // invalidated the cache, so this refetches fresh values.
-      fetchNode(address)
-        .then(setInspectedNode)
-        .catch(() => {
-          /* fine - keep showing the previous snapshot */
-        })
+      if (reload === 'page') signals.reloadPreview()
+      else if (reload === 'element') signals.updatePreviewElements([address])
+      // The node's reads are stale now, the inspected node's among them. A
+      // save usually invalidated them already - a refetch it started is not
+      // restarted.
+      void queryClient.invalidateQueries(
+        { queryKey: neosKeys.nodes.node(address) },
+        { cancelRefetch: false },
+      )
+      void invalidateAfterContentEdit(
+        address.contentRepositoryId,
+        address.workspaceName,
+      )
     },
     nodesEdited: (addresses) => {
       if (addresses.length === 0) return
-      setLastEdit((prev) => ({
-        addresses,
-        token: (prev?.token ?? 0) + 1,
-      }))
+      signals.reportEdit(addresses)
       // A move relocates rendered content - reload the preview so the element
       // appears in its new place.
-      setPreviewReloadToken((token) => token + 1)
+      signals.reloadPreview()
     },
     workspaceContentChanged: refreshWorkspaceContent,
-  }
+  })
+
+  // The shell's own handlers, stable for the same reason: the bridge and the
+  // header take them as props.
+  const handlers = useStableCallbacks({
+    switchEditingContext,
+    changeDimension,
+    selectSite: (nodeName: string) => {
+      const next = editing.sites.find((s) => s.nodeName === nodeName)
+      if (!next) return
+      editing.selectSite(next)
+      // The stored document belongs to the previous site - a reload should
+      // land on the new site's root, not re-resolve a document from the old
+      // one.
+      selection.clear({ forget: true })
+    },
+    variantCreated: (point: string) => {
+      // The new variants exist now - drop the workspace's cached node reads
+      // and its pending changes before anything refetches.
+      if (site && activeWorkspace) {
+        invalidateWorkspaceNodes(activeWorkspace.name)
+        void invalidateAfterContentEdit(
+          site.contentRepositoryId,
+          activeWorkspace.name,
+        )
+      }
+      // Follow the document into its new dimension so outliner and inspector
+      // show the just-created variant right away.
+      changeDimension(point)
+    },
+    reload: () => {
+      // Reload the preview, both trees and the inspector together. Nothing
+      // blanks meanwhile: the cached node reads are invalidated, not dropped,
+      // so the selection keeps showing its node until the fresh one arrives,
+      // and the trees invalidate optimistically (ALL_NODES keeps existing
+      // rows until the refetch resolves).
+      invalidateWorkspaceNodes(activeWorkspace?.name)
+      signals.reportEdit([ALL_NODES])
+      signals.reloadPreview()
+    },
+    // A collaborator's content edits (property/reference changes): swap the
+    // affected elements in the preview out-of-band - the preview skips the
+    // ones this page does not render - and refresh their tree rows (the trees
+    // drop those nodes' cached reads). Of the shell's own reads only the
+    // selected and the inspected node can be among them; those are refetched
+    // here, whether or not a tree is open.
+    remoteContentChanged: (aggregateIds: string[]) => {
+      const baseAddress = selection.documentAddress ?? siteAddress
+      if (!baseAddress) return
+      const addresses = aggregateIds.map((nodeAggregateId) => ({
+        ...nodeAddressOf(baseAddress),
+        nodeAggregateId,
+      }))
+      for (const node of [selectedDocument, inspectedNode]) {
+        if (node && aggregateIds.includes(node.nodeAggregateId)) {
+          void queryClient.invalidateQueries({
+            queryKey: neosKeys.nodes.node(nodeAddressOf(node)),
+          })
+        }
+      }
+      void invalidateAfterContentEdit(
+        baseAddress.contentRepositoryId,
+        baseAddress.workspaceName,
+      )
+      signals.reportEdit(addresses)
+      signals.updatePreviewElements(addresses, true)
+    },
+    // A collaborator changed the structure (or published/discarded/rebased the
+    // session): incremental updates cannot describe this - drop the shared
+    // workspace's node reads and refresh wholesale.
+    remoteWorkspaceChanged: () => {
+      invalidateWorkspaceNodes(collaborativeWorkspace?.name)
+      void invalidateWorkspaceQueries()
+      refreshWorkspaceContent()
+    },
+  })
+
+  const { lastEdit, previewReloadToken, previewElementUpdate } = signals
+  const workspaceName = activeWorkspace?.name ?? null
+  const personalWorkspaceName = personalWorkspace?.name ?? null
+  const studioState = useMemo<StudioState>(
+    () => ({
+      site,
+      workspaceName,
+      personalWorkspaceName,
+      dimensionSpacePoint,
+      selectedDocument,
+      inspectedNode,
+      lastEdit,
+      previewReloadToken,
+      previewElementUpdate,
+    }),
+    [
+      site,
+      workspaceName,
+      personalWorkspaceName,
+      dimensionSpacePoint,
+      selectedDocument,
+      inspectedNode,
+      lastEdit,
+      previewReloadToken,
+      previewElementUpdate,
+    ],
+  )
 
   return (
     <SidebarProvider
@@ -784,15 +382,9 @@ export function App() {
           'select-none **:data-[slot=sidebar-container]:transition-none! **:data-[slot=sidebar-gap]:transition-none!',
       )}
     >
-      {bootScreenMounted && <BootScreen done={booted} />}
-      <StudioProvider value={studio}>
-        <PresenceProvider
-          value={{
-            active: collaborativeWorkspace !== null,
-            peers: collaborativeWorkspace !== null ? presence.peers : [],
-            you: presence.you,
-          }}
-        >
+      <BootOverlay />
+      <StudioProvider state={studioState} actions={actions}>
+        <PresenceProvider value={presenceState}>
           <ModalProvider>
             {/* AssetPickerProvider wraps PanelsProvider so editors inside floating
               panels (the Inspector is portalled out by the panel system) can
@@ -812,14 +404,14 @@ export function App() {
                     workspaceName={collaborativeWorkspace.name}
                     ownUserId={me?.user?.id ?? null}
                     documentAggregateId={
-                      selectedDocument?.nodeAggregateId ?? null
+                      selection.documentAddress?.nodeAggregateId ?? null
                     }
                     focusedAggregateId={inspectedNode?.nodeAggregateId ?? null}
-                    dimensionSpacePoint={activeDimensionSpacePoint}
+                    dimensionSpacePoint={dimensionSpacePoint}
                     editingElement={editingElement}
                     onPresence={setPresence}
-                    onRemoteContentChange={remoteContentChanged}
-                    onRemoteWorkspaceChange={remoteWorkspaceChanged}
+                    onRemoteContentChange={handlers.remoteContentChanged}
+                    onRemoteWorkspaceChange={handlers.remoteWorkspaceChanged}
                   />
                 )}
                 <Sidebar>
@@ -832,49 +424,7 @@ export function App() {
                         {/* The classic backend modules - hidden when
                           enableLegacyModules is disabled (see Settings.yaml). */}
                         <LegacyModulesMenu />
-                        <svg
-                          viewBox="0 0 254 98"
-                          className="-mt-1 h-8 w-auto shrink-0"
-                          role="img"
-                          aria-label="Neos"
-                        >
-                          <path
-                            d="M16 33.7913L55 88.5959L41.3896 97.7942L16 61.5334V97.7913H0V33.7913H16Z"
-                            fill="#009FE3"
-                          />
-                          <path
-                            d="M108.85 89.2039C101.776 89.2039 95.944 85.5319 94 80.5099L98.482 78.188C100.21 82.13 104.044 84.6139 108.85 84.6139C113.17 84.6139 116.572 82.67 117.814 79.8619V76.2439C117.058 74.4619 115.492 73.1119 113.062 72.3019C109.39 71.0599 106.852 71.4919 102.694 70.0879C98.752 68.7379 96.052 66.3079 94.918 63.3919V57.2359C96.808 52.6999 102.208 49.4059 108.688 49.4059C115.438 49.4059 121.054 52.8619 123.052 57.9919L118.57 60.2599C116.95 56.4259 113.278 54.0499 108.688 54.0499C104.638 54.0499 101.29 55.8859 100.048 58.7479V61.8799C100.804 63.6619 102.316 64.9039 104.746 65.7139C108.364 66.9019 110.956 66.5239 115.114 67.9279C119.056 69.278 121.81 71.7619 122.944 74.7319V81.374C121.108 85.856 115.546 89.2039 108.85 89.2039Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                          <path
-                            d="M140.967 88.7719C135.945 88.7719 132.867 86.8279 131.139 83.4259V64.1479H125.307V60.2059H128.871C130.059 60.2059 130.815 59.7739 131.139 58.9639V51.2959H135.891V60.2059H144.045V64.1479H135.891V81.32C136.701 83.156 138.267 84.3439 141.669 84.3439H144.207V88.394C143.397 88.61 142.101 88.7719 140.967 88.7719Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                          <path
-                            d="M168.625 60.2059H173.377V88.394H168.841V85.3159C166.843 87.6919 163.927 89.2039 160.039 89.2039C154.369 89.2039 150.049 85.8019 148.645 81.7519V60.2059H153.397V80.4019C154.423 82.8319 157.015 84.722 161.065 84.722C164.899 84.722 167.923 82.5619 168.625 80.1859V60.2059Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                          <path
-                            d="M202.113 48.9739H206.865V88.394H202.329V84.992C200.115 87.584 196.767 89.2039 192.609 89.2039C186.237 89.2039 181.107 85.2079 179.541 79.9699V68.5759C181.107 63.3379 186.237 59.3419 192.609 59.3419C196.605 59.3419 199.899 60.9079 202.113 63.3379V48.9739ZM202.113 79.9699V68.6299C200.655 65.8759 197.361 63.8239 193.311 63.8239C188.721 63.8239 185.157 66.6319 184.293 69.8719V78.674C185.157 81.968 188.721 84.776 193.311 84.776C197.361 84.776 200.655 82.6699 202.113 79.9699Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                          <path
-                            d="M216.661 54.8599C215.203 54.8599 213.907 54.1579 213.367 53.1319V50.3239C213.907 49.2979 215.203 48.5959 216.661 48.5959C218.119 48.5959 219.415 49.2979 219.955 50.3239V53.1319C219.415 54.1579 218.119 54.8599 216.661 54.8599ZM214.285 88.394V60.2059H219.037V88.394H214.285Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                          <path
-                            d="M239.277 89.2579C232.473 89.2579 226.965 85.2079 225.291 79.9699V68.5759C226.965 63.3379 232.473 59.3419 239.277 59.3419C246.027 59.3419 251.535 63.3379 253.209 68.5759V79.9699C251.535 85.2079 246.027 89.2579 239.277 89.2579ZM239.277 84.776C243.813 84.776 247.539 81.968 248.457 78.674V69.8719C247.539 66.6319 243.813 63.8239 239.277 63.8239C234.687 63.8239 230.961 66.6319 230.043 69.8719V78.674C230.961 81.968 234.687 84.776 239.277 84.776Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                          <path
-                            d="M97.5 17.5959L22 3.59595L68.5 67.5959V35.0959L97.5 17.5959Z"
-                            className="fill-neutral-50 dark:fill-[#141414]"
-                          />
-                          <path
-                            d="M106.999 16.2666L70.6943 36.4883L70.5557 76.7373L16 0L106.999 16.2666ZM65.6094 61.1514L65.7051 33.5439L92.3164 18.7207L27.1641 7.07422L65.6094 61.1514Z"
-                            className="fill-neutral-950 dark:fill-white"
-                          />
-                        </svg>
+                        <NeosLogo />
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -890,137 +440,16 @@ export function App() {
                 </Sidebar>
 
                 <SidebarInset>
-                  {/* Fixed height so the bar does not jump as the switchers and
-                    workspace buttons resolve and render after load. */}
-                  <header className="@container flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <SidebarTrigger />
-                        <ModalLauncher />
-                      </div>
-                      {sites.length > 0 &&
-                        activeWorkspace &&
-                        activeDimensionSpacePoint && (
-                          <SiteSwitcher
-                            sites={sites}
-                            workspaceName={activeWorkspace.name}
-                            dimensionSpacePoint={activeDimensionSpacePoint}
-                            value={activeSite?.nodeName ?? null}
-                            onChange={(nodeName) => {
-                              setSiteNodeName(nodeName)
-                              setSelectedDocument(null)
-                              setInspectedNode(null)
-                              // The stored document belongs to the previous site -
-                              // a reload should land on the new site's root, not
-                              // re-resolve a document from the old one.
-                              localStorage.removeItem(SELECTED_DOCUMENT_KEY)
-                            }}
-                          />
-                        )}
-                      {dimensions.length > 0 && activeDimensionSpacePoint && (
-                        <DimensionSwitcher
-                          dimensions={dimensions}
-                          // The configuration's full set, so values it
-                          // rules out still read as "does not exist" - the
-                          // access-restricted ones render locked instead.
-                          allowedPoints={
-                            contentRepository?.dimensionSpacePoints ?? []
-                          }
-                          permittedPoints={allowedEditablePoints}
-                          value={activeDimensionSpacePoint}
-                          documentCoverage={
-                            selectedDocument
-                              ? documentVariants?.meta
-                                  .coveredDimensionSpacePoints
-                              : undefined
-                          }
-                          onCreateVariant={setVariantRequest}
-                          onChange={(point) => {
-                            const previousAddress = selectedDocument
-                            setDimensionSpacePoint(point)
-                            setSelectedDocument(null)
-                            setInspectedNode(null)
-                            if (previousAddress)
-                              followDocumentInto(previousAddress, point)
-                          }}
-                        />
-                      )}
-                      {/* Preview + Share as one split button; gap-px splits
-                          the segments with a hairline of header background. */}
-                      {selectedDocument && (
-                        <div className="flex gap-px">
-                          <PreviewButton
-                            document={selectedDocument}
-                            className="rounded-r-none"
-                          />
-                          <ShareButton
-                            document={selectedDocument}
-                            className="rounded-l-none"
-                          />
-                        </div>
-                      )}
-
-                      <PreviewToolbar
-                        document={selectedDocument}
-                        onReload={() => {
-                          // Reload the preview, both trees and the inspector
-                          // together. Everything serves stale content while the
-                          // fresh data is in flight: drop the cached node reads,
-                          // then the trees invalidate optimistically (ALL_NODES
-                          // keeps existing rows until refetch resolves) and the
-                          // inspected-node / document snapshots are only swapped
-                          // once fetchNode resolves - so nothing blanks mid-reload.
-                          void queryClient.invalidateQueries({
-                            queryKey: neosKeys.nodes.all,
-                          })
-                          setLastEdit((prev) => ({
-                            addresses: [ALL_NODES],
-                            token: (prev?.token ?? 0) + 1,
-                          }))
-                          setPreviewReloadToken((token) => token + 1)
-                          if (selectedDocument) {
-                            fetchNode(selectedDocument)
-                              .then(setSelectedDocument)
-                              .catch(() => {
-                                /* keep showing the previous snapshot */
-                              })
-                          }
-                          if (inspectedNode) {
-                            fetchNode(inspectedNode)
-                              .then(setInspectedNode)
-                              .catch(() => {
-                                /* keep showing the previous snapshot */
-                              })
-                          }
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <PresenceAvatars />
-                      {personalWorkspace &&
-                        activeWorkspace &&
-                        baseTargets.length > 0 && (
-                          <WorkspaceSwitcher
-                            personalWorkspace={personalWorkspace}
-                            activeWorkspace={activeWorkspace}
-                            targets={baseTargets}
-                            onSwitchEditingContext={switchEditingContext}
-                          />
-                        )}
-                      {activeWorkspace && (
-                        <>
-                          <SyncWorkspaceButton
-                            workspaceName={activeWorkspace.name}
-                          />
-                          <PublishReviewButton
-                            workspaces={workspaces}
-                            activeWorkspace={activeWorkspace}
-                            onNavigate={navigateToNodeInWorkspace}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </header>
+                  <ShellHeader
+                    editing={editing}
+                    document={selectedDocument}
+                    onSelectSite={handlers.selectSite}
+                    onChangeDimension={handlers.changeDimension}
+                    onVariantCreated={handlers.variantCreated}
+                    onReload={handlers.reload}
+                    onSwitchEditingContext={handlers.switchEditingContext}
+                    onNavigate={actions.navigateToNodeInWorkspace}
+                  />
 
                   {/* The main area and the optional right-hand sidebar. The Visual
                   Editor (preview) and Media Library live here as panels; the
@@ -1037,37 +466,11 @@ export function App() {
                     failed saves. */}
                   <WorkspaceLockoutDialog
                     access={access}
-                    workspaces={workspaces}
+                    workspaces={editing.workspaces}
                     personalWorkspace={personalWorkspace}
                     activeWorkspace={activeWorkspace}
-                    onSwitchEditingContext={switchEditingContext}
+                    onSwitchEditingContext={handlers.switchEditingContext}
                   />
-
-                  {variantRequest && selectedDocument && activeWorkspace && (
-                    <CreateVariantDialog
-                      document={selectedDocument}
-                      targetPoint={variantRequest}
-                      dimensions={dimensions}
-                      workspaceName={activeWorkspace.name}
-                      onCancel={() => setVariantRequest(null)}
-                      onCreated={(point) => {
-                        setVariantRequest(null)
-                        const previousAddress = selectedDocument
-                        // The new variants exist now - drop every cached node read and
-                        // the pending-changes badge state before anything refetches.
-                        void queryClient.invalidateQueries({
-                          queryKey: neosKeys.nodes.all,
-                        })
-                        void invalidateWorkspaceQueries()
-                        setDimensionSpacePoint(point)
-                        setSelectedDocument(null)
-                        setInspectedNode(null)
-                        // Follow the document into its new dimension so outliner and
-                        // inspector show the just-created variant right away.
-                        followDocumentInto(previousAddress, point)
-                      }}
-                    />
-                  )}
                 </SidebarInset>
               </PanelsProvider>
             </AssetPickerProvider>

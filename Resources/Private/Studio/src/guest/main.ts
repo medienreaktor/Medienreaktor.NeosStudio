@@ -30,17 +30,20 @@ import type {
   HostToGuestMessage,
   PresenceHighlight,
 } from '../features/preview/protocol'
+import { post } from './bridge'
+import { applyLabel, label, labelCatalogue, setTranslations } from './labels'
 import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
 import {
   applyRemotePropertyContent,
   ejectFromProperty,
+  flushPendingCommits,
   mountRichTextEditors,
   remoteCaretRect,
   setPropertyLocked,
   unmountRichTextEditors,
   type RichTextHooks,
 } from './richtext'
-import { TOOLBAR_CLASS } from './toolbar'
+import { relabelToolbars, TOOLBAR_CLASS } from './toolbar'
 
 const WRAPPER_ATTRIBUTE = 'data-__neos-node-contextpath'
 const FUSION_PATH_ATTRIBUTE = 'data-__neos-fusion-path'
@@ -86,10 +89,6 @@ const LOCKED_CLASS = 'neos-studio-locked'
 /** The Neos brand purple (purple-500 of the shell palette), for the
  *  shine-through indicators - the guest styles are literal CSS, no Tailwind. */
 const PURPLE = '113, 97, 192'
-
-function post(message: GuestToHostMessage): void {
-  window.parent.postMessage(message, window.location.origin)
-}
 
 /** Wrapped content elements by aggregate id, for host-pushed selection. */
 const elementsByAggregateId = new Map<string, HTMLElement>()
@@ -451,14 +450,16 @@ function select(
   if (options.reveal)
     element.scrollIntoView({ block: 'center', behavior: 'smooth' })
   if (options.notifyHost) {
-    const contextPath = element.getAttribute(WRAPPER_ATTRIBUTE)
-    if (contextPath) post({ type: 'neos-studio/node-selected', contextPath })
+    const nodeAddress = element.getAttribute(WRAPPER_ATTRIBUTE)
+    if (nodeAddress) post({ type: 'neos-studio/node-selected', nodeAddress })
   }
 }
 
 /** The element currently pulsing, and the timer that ends it. */
 let flashedElement: HTMLElement | null = null
 let flashTimer: number | undefined
+/** Withdraws a previous flash() still waiting for the page to settle. */
+let cancelPendingFlashStart: (() => void) | null = null
 
 /**
  * Pulse an element once, after the page has come to rest.
@@ -474,6 +475,10 @@ let flashTimer: number | undefined
  * should visibly answer, and re-adding the class after a reflow restarts the animation.
  */
 function flash(element: HTMLElement | null): void {
+  // A previous call still waiting for the scroll to settle must not start
+  // late - it would pulse the old element, or clobber this call's timer.
+  cancelPendingFlashStart?.()
+  cancelPendingFlashStart = null
   if (flashTimer !== undefined) {
     window.clearTimeout(flashTimer)
     flashTimer = undefined
@@ -484,10 +489,15 @@ function flash(element: HTMLElement | null): void {
 
   const target = flashedElement
   let started = false
-  const start = () => {
-    if (started || !target.isConnected) return
+  const withdraw = () => {
     started = true
     window.removeEventListener('scrollend', start)
+    window.clearTimeout(settleTimer)
+  }
+  const start = () => {
+    if (started || !target.isConnected) return
+    withdraw()
+    cancelPendingFlashStart = null
     // Force a reflow so the class re-add restarts the animation rather than continuing the old one.
     void target.offsetWidth
     target.classList.add(FLASH_CLASS)
@@ -499,7 +509,10 @@ function flash(element: HTMLElement | null): void {
   }
 
   window.addEventListener('scrollend', start)
-  window.setTimeout(start, SCROLL_SETTLE_MS)
+  // Declared last: withdraw() only runs from the listener or this timer, i.e.
+  // after the assignment.
+  const settleTimer = window.setTimeout(start, SCROLL_SETTLE_MS)
+  cancelPendingFlashStart = withdraw
 }
 
 /**
@@ -516,7 +529,7 @@ function elementHandle(): HTMLElement {
     handle = document.createElement('div')
     handle.id = HANDLE_ID
     handle.setAttribute('role', 'button')
-    handle.setAttribute('aria-label', 'Element options')
+    applyLabel(handle, 'element.options', ['aria-label'])
     handle.draggable = true
     handle.innerHTML =
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
@@ -544,8 +557,7 @@ function elementAddButton(): HTMLElement {
     button = document.createElement('div')
     button.id = ADD_BUTTON_ID
     button.setAttribute('role', 'button')
-    button.setAttribute('aria-label', 'Create new element')
-    button.title = 'Create new element'
+    applyLabel(button, 'element.create', ['aria-label', 'title'])
     button.innerHTML = PLUS_SVG
     button.addEventListener('click', onAddClick)
     document.body.appendChild(button)
@@ -555,15 +567,15 @@ function elementAddButton(): HTMLElement {
 
 function onAddClick(): void {
   const element = handleTarget
-  const contextPath = element?.getAttribute(WRAPPER_ATTRIBUTE)
-  if (!element || !contextPath) return
+  const nodeAddress = element?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (!element || !nodeAddress) return
   // The dialog acts relative to the element - make it the selection first,
   // so outliner and inspector show the reference point.
   select(element, { notifyHost: true })
   post({
     type: 'neos-studio/insert-node-request',
-    contextPath,
-    parentContextPath: parentCollectionContextPath(element),
+    nodeAddress,
+    parentNodeAddress: parentCollectionNodeAddress(element),
     defaultMode: 'after',
   })
 }
@@ -614,16 +626,16 @@ function positionHandle(): void {
 
 function onHandleClick(): void {
   const element = handleTarget
-  const contextPath = element?.getAttribute(WRAPPER_ATTRIBUTE)
-  if (!element || !contextPath) return
+  const nodeAddress = element?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (!element || !nodeAddress) return
   // The menu acts on the element - make it the selection first, so the
   // outliner and inspector show what the menu is about to change.
   select(element, { notifyHost: true })
   const rect = elementHandle().getBoundingClientRect()
   post({
     type: 'neos-studio/element-menu-request',
-    contextPath,
-    parentContextPath: parentCollectionContextPath(element),
+    nodeAddress,
+    parentNodeAddress: parentCollectionNodeAddress(element),
     hidden: element.hasAttribute(HIDDEN_ATTRIBUTE),
     buttonRect: {
       left: rect.left,
@@ -666,7 +678,7 @@ function onHandleDragStart(event: DragEvent): void {
  */
 function resolveImageTarget(
   img: HTMLElement,
-): { property: string; contextPath: string } | null {
+): { property: string; nodeAddress: string } | null {
   if (img.closest(`[${PROPERTY_ATTRIBUTE}]`)) return null
   // Shine-through elements offer "Create variant" instead - the node should
   // be materialized in the viewed dimension before editing pieces of it.
@@ -675,11 +687,11 @@ function resolveImageTarget(
   const property = img
     .closest<HTMLElement>(`[${IMAGE_PROPERTY_ATTRIBUTE}]`)
     ?.getAttribute(IMAGE_PROPERTY_ATTRIBUTE)
-  const contextPath = img
+  const nodeAddress = img
     .closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
     ?.getAttribute(WRAPPER_ATTRIBUTE)
-  if (!property || !contextPath) return null
-  return { property, contextPath }
+  if (!property || !nodeAddress) return null
+  return { property, nodeAddress }
 }
 
 function imageOverlay(): HTMLElement {
@@ -692,7 +704,10 @@ function imageOverlay(): HTMLElement {
     button.innerHTML =
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' +
-      '<path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L6 20"/></svg>Select image'
+      '<path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L6 20"/></svg>'
+    const text = document.createElement('span')
+    applyLabel(text, 'image.select', ['text'])
+    button.appendChild(text)
     overlay.appendChild(button)
     // Only the button opens the picker. The rest of the overlay lets the
     // pointer through: clicks on the washed-blue background reach the image
@@ -759,7 +774,10 @@ function shineVariantButton(): HTMLElement {
     button.id = SHINE_BUTTON_ID
     button.innerHTML =
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-      '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/></svg>Create variant'
+      '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/></svg>'
+    const text = document.createElement('span')
+    applyLabel(text, 'variant.create', ['text'])
+    button.appendChild(text)
     button.addEventListener('click', onShineVariantClick)
     document.body.appendChild(button)
   }
@@ -799,13 +817,13 @@ function onShineVariantClick(event: MouseEvent): void {
   // Take precedence over node-select / link handling and never submit a form.
   event.preventDefault()
   event.stopPropagation()
-  const contextPath = hoveredShineElement?.getAttribute(WRAPPER_ATTRIBUTE)
-  if (contextPath)
-    post({ type: 'neos-studio/create-variant-request', contextPath })
+  const nodeAddress = hoveredShineElement?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (nodeAddress)
+    post({ type: 'neos-studio/create-variant-request', nodeAddress })
 }
 
 /** NodeAddress JSON of the collection containing the element, if any. */
-function parentCollectionContextPath(element: HTMLElement): string | null {
+function parentCollectionNodeAddress(element: HTMLElement): string | null {
   return (
     element.parentElement
       ?.closest(`[${COLLECTION_ATTRIBUTE}]`)
@@ -814,21 +832,20 @@ function parentCollectionContextPath(element: HTMLElement): string | null {
 }
 
 /**
- * The identity of an inline-editable property element, resolved the same way
- * the old contentEditable path did: the editable wrapping carries the node's
- * contextPath directly, otherwise it falls back to the enclosing content
- * element wrapper.
+ * The identity of an inline-editable property element: the editable wrapping
+ * (Neos.Neos:Editable) carries the node's NodeAddress JSON directly; without
+ * it, the enclosing content element wrapper's is used.
  */
 function propertyIdentity(
   element: HTMLElement,
-): { contextPath: string; property: string } | null {
+): { nodeAddress: string; property: string } | null {
   const property = element.getAttribute(PROPERTY_ATTRIBUTE)
-  const contextPath =
+  const nodeAddress =
     element
       .closest(`[${EDITABLE_NODE_ATTRIBUTE}]`)
       ?.getAttribute(EDITABLE_NODE_ATTRIBUTE) ??
     element.closest(`[${WRAPPER_ATTRIBUTE}]`)?.getAttribute(WRAPPER_ATTRIBUTE)
-  return property && contextPath ? { contextPath, property } : null
+  return property && nodeAddress ? { nodeAddress, property } : null
 }
 
 /** Report an inline edit to the host for persistence (the rich-text engine
@@ -943,9 +960,9 @@ function handleLinkClick(
     url.origin === window.location.origin &&
     url.pathname.endsWith('/neos/preview')
   ) {
-    const contextPath = url.searchParams.get('node')
-    if (contextPath) {
-      post({ type: 'neos-studio/navigate-to-node', contextPath })
+    const nodeAddress = url.searchParams.get('node')
+    if (nodeAddress) {
+      post({ type: 'neos-studio/navigate-to-node', nodeAddress })
       return true
     }
   }
@@ -1102,22 +1119,25 @@ function mountCollectionAddButtons(root: ParentNode = document): void {
     ...rootItself,
     ...root.querySelectorAll<HTMLElement>(selector),
   ]) {
-    const contextPath = collection.getAttribute(WRAPPER_ATTRIBUTE)
-    if (!contextPath || childElementsOf(collection).length > 0) continue
+    const nodeAddress = collection.getAttribute(WRAPPER_ATTRIBUTE)
+    if (!nodeAddress || childElementsOf(collection).length > 0) continue
     // Already carries its button (possible on re-runs after a swap).
     if (collection.querySelector(`:scope > .${COLLECTION_ADD_CLASS}`)) continue
     const button = document.createElement('button')
     button.type = 'button'
     button.className = COLLECTION_ADD_CLASS
-    button.innerHTML = `${PLUS_SVG}<span>Add content</span>`
+    button.innerHTML = PLUS_SVG
+    const text = document.createElement('span')
+    applyLabel(text, 'collection.add', ['text'])
+    button.appendChild(text)
     button.addEventListener('click', (event) => {
       event.preventDefault()
       event.stopPropagation()
       select(collection, { notifyHost: true })
       post({
         type: 'neos-studio/insert-node-request',
-        contextPath,
-        parentContextPath: parentCollectionContextPath(collection),
+        nodeAddress,
+        parentNodeAddress: parentCollectionNodeAddress(collection),
         defaultMode: 'inside',
       })
     })
@@ -1162,11 +1182,11 @@ function findInsertBefore(
     Math.max(...rects.map((r) => r.top + r.height / 2)) -
     Math.min(...rects.map((r) => r.top + r.height / 2))
   const horizontal = spreadX > spreadY
-  for (let i = 0; i < rects.length; i++) {
+  for (const [i, rect] of rects.entries()) {
     const midpoint = horizontal
-      ? rects[i].left + rects[i].width / 2
-      : rects[i].top + rects[i].height / 2
-    if ((horizontal ? x : y) < midpoint) return children[i]
+      ? rect.left + rect.width / 2
+      : rect.top + rect.height / 2
+    if ((horizontal ? x : y) < midpoint) return children[i] ?? null
   }
   return null
 }
@@ -1214,7 +1234,8 @@ function setDropTarget(
       Math.min(...rects.map((r) => r.top + r.height / 2))
     horizontal = spreadX > spreadY
     const beforeRect = drop.before?.getBoundingClientRect()
-    const lastRect = rects[rects.length - 1]
+    // children (and so rects) is not empty in this branch.
+    const lastRect = rects[rects.length - 1]!
     edge = horizontal
       ? (beforeRect ? beforeRect.left : lastRect.right) - 1
       : (beforeRect ? beforeRect.top : lastRect.bottom) - 1
@@ -1258,31 +1279,28 @@ function onDrop(event: DragEvent): void {
   event.preventDefault()
   const drag = activeDrag
   const { collection, before } = currentDrop
-  const parentContextPath = collection.getAttribute(WRAPPER_ATTRIBUTE)
-  const succeedingSiblingContextPath =
+  const parentNodeAddress = collection.getAttribute(WRAPPER_ATTRIBUTE)
+  const succeedingSiblingNodeAddress =
     before?.getAttribute(WRAPPER_ATTRIBUTE) ?? null
   let message: GuestToHostMessage | null = null
-  if (parentContextPath && drag.movingElement === null) {
+  if (parentNodeAddress && drag.movingElement === null) {
     message = {
       type: 'neos-studio/create-node-request',
       nodeTypeName: drag.nodeTypeName,
-      parentContextPath,
-      succeedingSiblingContextPath,
+      parentNodeAddress,
+      succeedingSiblingNodeAddress,
     }
-  } else if (parentContextPath && drag.movingElement !== null) {
-    const nodeContextPath = drag.movingElement.getAttribute(WRAPPER_ATTRIBUTE)
-    if (
-      nodeContextPath &&
-      !isNoOpMove(drag.movingElement, collection, before)
-    ) {
+  } else if (parentNodeAddress && drag.movingElement !== null) {
+    const nodeAddress = drag.movingElement.getAttribute(WRAPPER_ATTRIBUTE)
+    if (nodeAddress && !isNoOpMove(drag.movingElement, collection, before)) {
       message = {
         type: 'neos-studio/move-node-request',
-        nodeContextPath,
-        sourceParentContextPath: parentCollectionContextPath(
+        nodeAddress,
+        sourceParentNodeAddress: parentCollectionNodeAddress(
           drag.movingElement,
         ),
-        parentContextPath,
-        succeedingSiblingContextPath,
+        parentNodeAddress,
+        succeedingSiblingNodeAddress,
       }
     }
   }
@@ -1298,14 +1316,6 @@ function onDragLeaveDocument(event: DragEvent): void {
   if (activeDrag !== null && event.relatedTarget === null) setDropTarget(null)
 }
 
-/**
- * Swap a node's rendered element for freshly rendered markup (an out-of-band
- * re-render after an edit). The document-level event delegation keeps working
- * on the new DOM by itself; what needs re-running for the subtree is the
- * aggregate-id index, the rich-text editor mounts, and the selection decor
- * when the swapped element (or something inside it) was selected. Returns
- * false when the swap cannot happen - the host falls back to a full reload.
- */
 /**
  * Collaborators' positions on this page, pushed by the host: each focused
  * element gets a dashed outline in the person's color plus a floating
@@ -1466,7 +1476,9 @@ function renderPresence(): void {
     const badge = document.createElement('div')
     badge.className = PRESENCE_BADGE_CLASS
     badge.textContent = editing ? `✏ ${user.initials}` : user.initials
-    badge.title = editing ? `${user.name} is editing` : user.name
+    badge.title = editing
+      ? label('presence.editing', undefined, { name: user.name })
+      : user.name
     badge.style.backgroundColor = user.color
     if (editing) badge.classList.add(PRESENCE_BADGE_EDITING_CLASS)
     document.body.appendChild(badge)
@@ -1591,6 +1603,14 @@ function schedulePresenceUpdate(): void {
   })
 }
 
+/**
+ * Swap a node's rendered element for freshly rendered markup (an out-of-band
+ * re-render after an edit). The document-level event delegation keeps working
+ * on the new DOM by itself; what needs re-running for the subtree is the
+ * aggregate-id index, the rich-text editor mounts, and the selection decor
+ * when the swapped element (or something inside it) was selected. Returns
+ * false when the swap cannot happen - the host falls back to a full reload.
+ */
 function replaceElement(aggregateId: string, html: string): boolean {
   const element = elementsByAggregateId.get(aggregateId)
   if (!element || !element.isConnected) return false
@@ -1682,6 +1702,16 @@ function onHostMessage(event: MessageEvent): void {
   if (event.origin !== window.location.origin || event.source !== window.parent)
     return
   const message = event.data as HostToGuestMessage
+  if (message?.type === 'neos-studio/init') {
+    setTranslations(message.labels)
+    // Rendered toolbars carry the old labels - they rebuild on next show.
+    relabelToolbars()
+  }
+  if (message?.type === 'neos-studio/flush') {
+    // The host retires this frame: get every debounced edit out first.
+    flushPendingCommits()
+    post({ type: 'neos-studio/flushed', requestId: message.requestId })
+  }
   if (message?.type === 'neos-studio/select-node') {
     const indexed =
       message.aggregateId === null
@@ -1776,7 +1806,11 @@ function init(): void {
   window.addEventListener('scroll', schedulePresenceUpdate, true)
   window.addEventListener('resize', schedulePresenceUpdate)
   window.addEventListener('message', onHostMessage)
-  post({ type: 'neos-studio/guest-ready' })
+  // Leaving the page (reload, navigation, frame removal) must not swallow
+  // the edits still waiting out their debounce - post them now. The host
+  // accepts persistence messages from frames it is retiring.
+  window.addEventListener('pagehide', flushPendingCommits)
+  post({ type: 'neos-studio/guest-ready', labels: labelCatalogue() })
 }
 
 if (document.readyState === 'loading') {

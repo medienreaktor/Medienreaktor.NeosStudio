@@ -1,9 +1,8 @@
 import { Fragment, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
-  fetchAllowedChildNodeTypes,
-  fetchAncestors,
+  useAllowedChildNodeTypes,
   useNode,
+  useNodeAncestors,
 } from '@/api/neos/endpoints/nodes'
 import {
   configuredLabel,
@@ -45,7 +44,8 @@ const typeLabel = (nodeType: NodeType): string =>
  *
  * Inspector-only: it needs the node's address to resolve the parent, so
  * without one (e.g. in a creation dialog) it degrades to a read-only type
- * name - as it also does when the position offers no real alternative.
+ * name - as it also does for tethered and root nodes (their type is fixed)
+ * and when the position offers no real alternative.
  */
 export const NodeTypeEditor: PropertyEditorComponent = ({
   value,
@@ -64,24 +64,16 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
   // even though _nodeType still appears on them. Read from cache (the inspector
   // already fetched this node).
   const { data: self } = useNode(nodeAddress ?? null)
-  const switchable =
-    !self ||
-    (self.classification !== 'tethered' && self.classification !== 'root')
+  const fixedType =
+    self?.classification === 'tethered' || self?.classification === 'root'
 
-  const { data: allowedTypes } = useQuery({
-    queryKey: [
-      'nodeTypeSwitcher',
-      'allowedForParentOf',
-      nodeAddress ? nodeAddressOf(nodeAddress) : null,
-    ],
-    enabled: nodeAddress !== undefined,
-    // Constraints follow from the (immutable) node type model - stable for the session.
-    staleTime: Infinity,
-    queryFn: async () => {
-      const [parent] = await fetchAncestors(nodeAddress!)
-      return parent ? fetchAllowedChildNodeTypes(nodeAddressOf(parent)) : []
-    },
-  })
+  // What the parent allows below it - the same cached read (keyed by the
+  // parent's address, under nodes) the trees validate drops with.
+  const { data: ancestors } = useNodeAncestors(nodeAddress ?? null, !fixedType)
+  const parent = ancestors?.[0]
+  const { data: allowedTypes } = useAllowedChildNodeTypes(
+    parent && !fixedType ? nodeAddressOf(parent) : null,
+  )
 
   const groups = useMemo(() => {
     if (!nodeTypes) return []
@@ -140,6 +132,24 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
       }))
   }, [nodeTypes, groupConfigs, allowedTypes, currentType])
 
+  // Nothing to switch to - no node to resolve the position of, a structural
+  // node, or no alternative at its position: the type, read-only.
+  const optionCount = groups.reduce(
+    (count, group) => count + group.options.length,
+    0,
+  )
+  if (!nodeAddress || fixedType || (allowedTypes && optionCount <= 1)) {
+    const nodeType = nodeTypes?.get(currentType)
+    return (
+      <div className="flex min-h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400">
+        {nodeTypes && (
+          <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={currentType} />
+        )}
+        {nodeType ? typeLabel(nodeType) : currentType}
+      </div>
+    )
+  }
+
   const renderOption = (option: { value: string; label: string }) => (
     <SelectItem key={option.value} value={option.value}>
       {nodeTypes && (
@@ -154,8 +164,7 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
       value={currentType}
       onValueChange={(next) => {
         const selected = next as string | null
-        if (selected && selected !== currentType && switchable)
-          onCommit(selected)
+        if (selected && selected !== currentType) onCommit(selected)
       }}
     >
       <SelectTrigger className="w-full">

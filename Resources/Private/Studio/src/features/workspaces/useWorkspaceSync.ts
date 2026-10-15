@@ -7,17 +7,16 @@ import {
   rebaseWorkspace,
   workspaceConflicts,
 } from '@/api/neos/endpoints/workspaces'
-import { neosKeys } from '@/api/neos/keys'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import type { WorkspaceConflictProblem } from '@/api/neos/schema'
-import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
-import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 /** A failed rebase's conflict problem, remembering which workspace it
  * belongs to (callers can sync any workspace, not just the active one). */
-export interface SyncConflicts extends WorkspaceConflictProblem {
+interface SyncConflicts extends WorkspaceConflictProblem {
   workspaceName: string
 }
 
@@ -30,24 +29,22 @@ export interface SyncConflicts extends WorkspaceConflictProblem {
  * ConflictResolutionDialog), success/error toasts, and cache invalidation.
  *
  * Invalidation is scoped: the workspace list (status flags, pending events)
- * always refreshes; node caches, trees and the preview only when the synced
- * workspace is the active editing context - rebasing someone else's branch
- * from the graph must not reload the page being edited.
+ * and the synced workspace's node reads always refresh; trees and the preview
+ * only when it is the active editing context - rebasing someone else's
+ * branch from the graph must not reload the page being edited.
  */
 export function useWorkspaceSync() {
   const { workspaceName: activeWorkspaceName, workspaceContentChanged } =
     useStudio()
   const [conflicts, setConflicts] = useState<SyncConflicts | null>(null)
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   const invalidateWorkspace = (workspaceName: string) => {
     // The rebase/discard rewrote the workspace's content stream: the status
-    // flag and its pending events are stale in any case; node reads and tree
-    // items only matter for the workspace being edited.
-    void invalidateWorkspaceQueries()
-    if (workspaceName === activeWorkspaceName) {
-      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
-      workspaceContentChanged()
-    }
+    // flag, its pending events and its node reads are stale in any case;
+    // trees and the preview only matter for the workspace being edited.
+    void afterWorkspaceRewrite(contentRepositoryId!, workspaceName)
+    if (workspaceName === activeWorkspaceName) workspaceContentChanged()
   }
 
   const rebase = useMutation({
@@ -57,7 +54,7 @@ export function useWorkspaceSync() {
     }: {
       workspaceName: string
       strategy?: 'force'
-    }) => rebaseWorkspace(workspaceName, strategy),
+    }) => rebaseWorkspace(contentRepositoryId!, workspaceName, strategy),
     onSuccess: (_, { workspaceName }) => {
       invalidateWorkspace(workspaceName)
       setConflicts(null)
@@ -87,7 +84,8 @@ export function useWorkspaceSync() {
     }: {
       workspaceName: string
       baseWorkspace: string
-    }) => changeBaseWorkspace(workspaceName, baseWorkspace),
+    }) =>
+      changeBaseWorkspace(contentRepositoryId!, workspaceName, baseWorkspace),
     onSuccess: (_, { workspaceName }) => {
       invalidateWorkspace(workspaceName)
       toast.success(t('workspace.baseChanged', 'Base workspace changed.'))
@@ -110,7 +108,8 @@ export function useWorkspaceSync() {
   })
 
   const discardAll = useMutation({
-    mutationFn: (workspaceName: string) => discardWorkspace(workspaceName),
+    mutationFn: (workspaceName: string) =>
+      discardWorkspace(contentRepositoryId!, workspaceName),
     onSuccess: (_, workspaceName) => {
       invalidateWorkspace(workspaceName)
       setConflicts(null)

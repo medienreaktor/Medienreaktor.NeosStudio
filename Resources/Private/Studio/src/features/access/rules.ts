@@ -74,20 +74,6 @@ function normalizedClassification(classification: string): string {
   return classification.toLowerCase()
 }
 
-function roleAllowsWorkspaceRead(
-  c: AccessRoleConstraints,
-  workspaceName: string,
-  classification: string,
-): boolean {
-  const normalized = normalizedClassification(classification)
-  if (normalized === 'personal') return c.allowPersonalWorkspace
-  if (normalized === 'shared') return listAllowsWorkspace(c, workspaceName)
-  // Root workspaces (live above all) stay READABLE for everyone: the frontend
-  // renders from live, so cutting it off would take the website down for the
-  // members rather than narrowing their editing.
-  return true
-}
-
 function roleAllowsWorkspaceEditing(
   c: AccessRoleConstraints,
   workspaceName: string,
@@ -216,17 +202,6 @@ export function allowsDimensionSpacePoint(
   return anyRole(access, (c) => roleAllowsDimensions(c, coordinates))
 }
 
-/** May the account SEE this workspace's content? */
-export function allowsWorkspaceRead(
-  access: EffectiveAccess | undefined,
-  workspaceName: string,
-  classification: string,
-): boolean {
-  return anyRole(access, (c) =>
-    roleAllowsWorkspaceRead(c, workspaceName, classification),
-  )
-}
-
 /**
  * May the account WORK in it - edit in it, target it as a publish base, join
  * it collaboratively? The workspace switcher offers exactly these.
@@ -251,33 +226,6 @@ export function allowsWorkspaceCreation(
   access: EffectiveAccess | undefined,
 ): boolean {
   return anyRole(access, (c) => c.allowWorkspaceCreation)
-}
-
-export function allowsCapability(
-  access: EffectiveAccess | undefined,
-  capability: AccessCapability,
-): boolean {
-  return anyRole(access, (c) => c.capabilities[capability] !== false)
-}
-
-/**
- * The full node check: the site AND the position in the page tree, evaluated
- * inside one role - a role granting the branch but not the site must not
- * combine with another role the other way round.
- *
- * @param idPath node aggregate id first, then its ancestors outwards
- */
-export function allowsNode(
-  access: EffectiveAccess | undefined,
-  idPath: string[],
-  siteNodeName: string,
-): boolean {
-  return anyRole(
-    access,
-    (c) =>
-      (siteNodeName === '' || roleAllowsSite(c, siteNodeName)) &&
-      roleAllowsNodePath(c, idPath),
-  )
 }
 
 /**
@@ -342,7 +290,8 @@ export function nodeAccessState(
   if (verdicts.includes('allow')) return 'allowed'
 
   // Not granted - so it only earns a row if something granted lives below it.
-  return (access.pathAnchors ?? []).includes(idPath[0])
+  const nodeId = idPath[0]
+  return nodeId !== undefined && (access.pathAnchors ?? []).includes(nodeId)
     ? 'restricted'
     : 'hidden'
 }

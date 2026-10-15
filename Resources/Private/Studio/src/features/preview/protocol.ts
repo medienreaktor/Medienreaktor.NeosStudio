@@ -4,10 +4,18 @@
  * origin and must verify it on every message.
  *
  * Node identity travels as the raw value of the data-__neos-node-contextpath
- * attribute the edit-mode rendering emits: the NodeAddress JSON (see
- * ContentElementWrappingService). The host converts it to a Studio node
- * address via addressFromContextPath(). The host->guest direction only needs
- * the aggregateId - within one rendered document it identifies the element.
+ * attribute the edit-mode rendering emits (the attribute keeps its classic
+ * name): the NodeAddress JSON (see ContentElementWrappingService). The
+ * `nodeAddress` fields below carry that JSON; the host converts it to a
+ * Studio node address via nodeAddressFromContextPath() (api/neos/schema).
+ * The host->guest direction only needs the aggregateId - within one rendered
+ * document it identifies the element.
+ *
+ * Lifecycle: the guest announces itself with guest-ready (carrying the label
+ * catalogue it wants translated), the host answers with init. Before the
+ * host retires a frame (a reload or navigation replaced it), it sends flush
+ * and waits briefly for flushed, so inline edits still debouncing in that
+ * frame are posted first; the guest also flushes on pagehide on its own.
  */
 
 /**
@@ -25,21 +33,28 @@ export interface LinkAttributes {
 }
 
 export type GuestToHostMessage =
-  /** The guest script booted and the DOM is indexed - selection can be pushed. */
-  | { type: 'neos-studio/guest-ready' }
-  /** The user clicked a content element; contextPath is the NodeAddress JSON. */
-  | { type: 'neos-studio/node-selected'; contextPath: string }
+  /**
+   * The guest script booted and the DOM is indexed - selection can be pushed.
+   * labels is the guest's UI string catalogue (key → English fallback); the
+   * host answers with init carrying the translations.
+   */
+  | { type: 'neos-studio/guest-ready'; labels: Record<string, string> }
+  /** The user clicked a content element; nodeAddress is the NodeAddress JSON. */
+  | { type: 'neos-studio/node-selected'; nodeAddress: string }
   /**
    * The user clicked outside of any content element - the shell inspects the
    * current document instead (the guest does not know its address).
    */
   | { type: 'neos-studio/document-selected' }
   /** The user followed a link to another document (from its preview URI). */
-  | { type: 'neos-studio/navigate-to-node'; contextPath: string }
-  /** An inline edit should be persisted (debounced while typing, on blur). */
+  | { type: 'neos-studio/navigate-to-node'; nodeAddress: string }
+  /**
+   * An inline edit should be persisted (debounced while typing, on blur, on
+   * flush and on pagehide).
+   */
   | {
       type: 'neos-studio/property-changed'
-      contextPath: string
+      nodeAddress: string
       property: string
       value: string
     }
@@ -50,7 +65,7 @@ export type GuestToHostMessage =
    */
   | {
       type: 'neos-studio/live-edit'
-      contextPath: string
+      nodeAddress: string
       property: string
       value: string
       /** The sender's caret as a ProseMirror document position in `value`. */
@@ -64,8 +79,8 @@ export type GuestToHostMessage =
   | {
       type: 'neos-studio/create-node-request'
       nodeTypeName: string
-      parentContextPath: string
-      succeedingSiblingContextPath: string | null
+      parentNodeAddress: string
+      succeedingSiblingNodeAddress: string | null
     }
   /**
    * The "..." handle of the selected content element was clicked - the host
@@ -75,9 +90,9 @@ export type GuestToHostMessage =
    */
   | {
       type: 'neos-studio/element-menu-request'
-      contextPath: string
+      nodeAddress: string
       /** NodeAddress JSON of the enclosing collection, for post-delete focus. */
-      parentContextPath: string | null
+      parentNodeAddress: string | null
       /** The element is explicitly hidden (tagged "disabled"). */
       hidden: boolean
       buttonRect: { left: number; top: number; width: number; height: number }
@@ -86,13 +101,13 @@ export type GuestToHostMessage =
    * A "+" affordance in the preview was clicked - the host opens the
    * insertion dialog (mode + node type selection) relative to this node:
    * the element's "+" button (defaultMode "after") or the add button inside
-   * an empty collection (defaultMode "inside", contextPath = the collection).
+   * an empty collection (defaultMode "inside", nodeAddress = the collection).
    */
   | {
       type: 'neos-studio/insert-node-request'
-      contextPath: string
+      nodeAddress: string
       /** NodeAddress JSON of the enclosing collection, for sibling modes. */
-      parentContextPath: string | null
+      parentNodeAddress: string | null
       defaultMode: 'inside' | 'after'
     }
   /**
@@ -102,20 +117,21 @@ export type GuestToHostMessage =
    */
   | {
       type: 'neos-studio/move-node-request'
-      nodeContextPath: string
+      nodeAddress: string
       /** The collection the element came from - it needs refreshing too. */
-      sourceParentContextPath: string | null
-      parentContextPath: string
-      succeedingSiblingContextPath: string | null
+      sourceParentNodeAddress: string | null
+      parentNodeAddress: string
+      succeedingSiblingNodeAddress: string | null
     }
   /**
    * The image-select button of a rendered image was clicked - the host opens
-   * the Media Library picker and, on pick, sets the image property. contextPath
-   * is the owning node's NodeAddress JSON, property the image property name.
+   * the Media Library picker and, on pick, sets the image property.
+   * nodeAddress is the owning node's NodeAddress JSON, property the image
+   * property name.
    */
   | {
       type: 'neos-studio/image-select-request'
-      contextPath: string
+      nodeAddress: string
       property: string
     }
   /**
@@ -125,7 +141,7 @@ export type GuestToHostMessage =
    */
   | {
       type: 'neos-studio/create-variant-request'
-      contextPath: string
+      nodeAddress: string
     }
   /**
    * The link button of a rich-text toolbar was clicked - the host opens the
@@ -147,7 +163,8 @@ export type GuestToHostMessage =
    * Reply to element-info-request: where (and whether) the node is rendered
    * on this page. fusionPath is the element's rendering entry point (the
    * data-__neos-fusion-path attribute), null when the node has no rendered
-   * element here - the host then falls back to a full reload.
+   * element here - the host then falls back to a full reload for its own
+   * edits and ignores remote ones (they concern another page).
    */
   | {
       type: 'neos-studio/element-info'
@@ -163,6 +180,11 @@ export type GuestToHostMessage =
       requestId: number
       ok: boolean
     }
+  /**
+   * Reply to flush: every pending (debounced) inline edit has been posted as
+   * property-changed - the frame can be retired without losing keystrokes.
+   */
+  | { type: 'neos-studio/flushed'; requestId: number }
 
 /**
  * A collaborator's live position on the rendered page: the element of the
@@ -182,6 +204,17 @@ export interface PresenceHighlight {
 }
 
 export type HostToGuestMessage =
+  /**
+   * Answer to guest-ready: the guest's label catalogue, translated into the
+   * shell's interface language (keys the shell does not know keep their
+   * English fallback).
+   */
+  | { type: 'neos-studio/init'; labels: Record<string, string> }
+  /**
+   * The host is about to retire this frame: post every pending inline edit
+   * now and answer with flushed.
+   */
+  | { type: 'neos-studio/flush'; requestId: number }
   /**
    * Outline the element of this node and, unless `reveal` is false, scroll it into view; null
    * clears the selection.
@@ -253,3 +286,102 @@ export type HostToGuestMessage =
        * as a colored caret line; null when the tick carried none. */
       cursor: number | null
     }
+
+const isString = (value: unknown): value is string => typeof value === 'string'
+const isStringOrNull = (value: unknown): boolean =>
+  value === null || typeof value === 'string'
+const isNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+/**
+ * The fields every guest message must carry, by type - checked at runtime
+ * before the host acts on a message (see isGuestToHostMessage).
+ */
+const GUEST_MESSAGE_FIELDS: {
+  [Type in GuestToHostMessage['type']]: Record<
+    Exclude<keyof Extract<GuestToHostMessage, { type: Type }>, 'type'>,
+    (value: unknown) => boolean
+  >
+} = {
+  'neos-studio/guest-ready': { labels: isRecord },
+  'neos-studio/node-selected': { nodeAddress: isString },
+  'neos-studio/document-selected': {},
+  'neos-studio/navigate-to-node': { nodeAddress: isString },
+  'neos-studio/property-changed': {
+    nodeAddress: isString,
+    property: isString,
+    value: isString,
+  },
+  'neos-studio/live-edit': {
+    nodeAddress: isString,
+    property: isString,
+    value: isString,
+    cursor: isNumber,
+  },
+  'neos-studio/create-node-request': {
+    nodeTypeName: isString,
+    parentNodeAddress: isString,
+    succeedingSiblingNodeAddress: isStringOrNull,
+  },
+  'neos-studio/element-menu-request': {
+    nodeAddress: isString,
+    parentNodeAddress: isStringOrNull,
+    hidden: (value) => typeof value === 'boolean',
+    buttonRect: (value) =>
+      isRecord(value) &&
+      isNumber(value.left) &&
+      isNumber(value.top) &&
+      isNumber(value.width) &&
+      isNumber(value.height),
+  },
+  'neos-studio/insert-node-request': {
+    nodeAddress: isString,
+    parentNodeAddress: isStringOrNull,
+    defaultMode: (value) => value === 'inside' || value === 'after',
+  },
+  'neos-studio/move-node-request': {
+    nodeAddress: isString,
+    sourceParentNodeAddress: isStringOrNull,
+    parentNodeAddress: isString,
+    succeedingSiblingNodeAddress: isStringOrNull,
+  },
+  'neos-studio/image-select-request': {
+    nodeAddress: isString,
+    property: isString,
+  },
+  'neos-studio/create-variant-request': { nodeAddress: isString },
+  'neos-studio/link-edit-request': {
+    attributes: (value) =>
+      value === null || (isRecord(value) && isString(value.href)),
+  },
+  'neos-studio/editing-rejected': { name: isString },
+  'neos-studio/element-info': {
+    requestId: isNumber,
+    fusionPath: isStringOrNull,
+  },
+  'neos-studio/element-replaced': {
+    requestId: isNumber,
+    ok: (value) => typeof value === 'boolean',
+  },
+  'neos-studio/flushed': { requestId: isNumber },
+}
+
+/**
+ * Whether postMessage data is a well-formed guest message: a known type with
+ * every field it needs, of the right type. The guest runs inside a page the
+ * site renders - site scripts share its window and can post too - so the
+ * host never trusts the shape of what arrives.
+ */
+export function isGuestToHostMessage(
+  data: unknown,
+): data is GuestToHostMessage {
+  if (!isRecord(data) || !isString(data.type)) return false
+  if (!Object.prototype.hasOwnProperty.call(GUEST_MESSAGE_FIELDS, data.type))
+    return false
+  const fields = GUEST_MESSAGE_FIELDS[
+    data.type as GuestToHostMessage['type']
+  ] as Record<string, (value: unknown) => boolean>
+  return Object.entries(fields).every(([field, valid]) => valid(data[field]))
+}

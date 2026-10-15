@@ -48,20 +48,69 @@ export const neosKeys = {
     /** The assignable roles - nested under `users` so invalidating users covers it. */
     options: ['users', 'options'] as const,
   },
-  /** By content repository, after the prefix covering all of them. */
+  /**
+   * By content repository, after the prefix covering all of them. The list
+   * and the reads of one workspace differ in the segment after the content
+   * repository ('list' vs 'workspace'), so no workspace name can collide
+   * with the list.
+   */
   workspaces: {
     all: ['workspaces'] as const,
+    /** Prefix covering every workspace read of the content repository. */
+    contentRepository: (contentRepositoryId: string) =>
+      ['workspaces', contentRepositoryId] as const,
     list: (contentRepositoryId: string) =>
       ['workspaces', contentRepositoryId, 'list'] as const,
+    /** Prefix covering every read of one workspace. */
     workspace: (contentRepositoryId: string, name: string) =>
-      ['workspaces', contentRepositoryId, name] as const,
+      ['workspaces', contentRepositoryId, 'workspace', name] as const,
+    /** Prefix covering every read of the workspace's pending changes. */
     changes: (contentRepositoryId: string, name: string) =>
-      ['workspaces', contentRepositoryId, name, 'changes'] as const,
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'changes',
+      ] as const,
+    /**
+     * The pending changes (all, or of one site) with the workspace - under
+     * `changes`.
+     */
+    pendingChanges: (
+      contentRepositoryId: string,
+      name: string,
+      filterBySite: string | null,
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'changes',
+        'pending',
+        { filterBySite },
+      ] as const,
     roles: (contentRepositoryId: string, name: string) =>
-      ['workspaces', contentRepositoryId, name, 'roles'] as const,
-    /** The changes grouped by document, for the review - under `changes`. */
-    review: (contentRepositoryId: string, name: string) =>
-      ['workspaces', contentRepositoryId, name, 'changes', 'review'] as const,
+      ['workspaces', contentRepositoryId, 'workspace', name, 'roles'] as const,
+    /**
+     * The changes grouped by document (all, or of one site), for the review -
+     * under `changes`.
+     */
+    review: (
+      contentRepositoryId: string,
+      name: string,
+      filterBySite: string | null,
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'changes',
+        'review',
+        { filterBySite },
+      ] as const,
     /** One document's changes with their diffs - under `changes`. */
     documentDiff: (
       contentRepositoryId: string,
@@ -71,31 +120,86 @@ export const neosKeys = {
       [
         'workspaces',
         contentRepositoryId,
+        'workspace',
         name,
         'changes',
         'document',
         documentId,
       ] as const,
-    /** The deleted pages - under `changes`. */
-    trash: (contentRepositoryId: string, name: string) =>
-      ['workspaces', contentRepositoryId, name, 'changes', 'trash'] as const,
-    /** The labels of conflicting nodes - under `changes`. */
+    /** Prefix covering the deleted pages of every site - under `changes`. */
+    trashes: (contentRepositoryId: string, name: string) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'changes',
+        'trash',
+      ] as const,
+    /** The deleted pages (all, or of one site) - under `trashes`. */
+    trash: (
+      contentRepositoryId: string,
+      name: string,
+      filterBySite: string | null,
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'changes',
+        'trash',
+        { filterBySite },
+      ] as const,
+    /**
+     * The labels of conflicting nodes, read in a dimension space point -
+     * under `changes`.
+     */
     conflicts: (
       contentRepositoryId: string,
       name: string,
+      dimensionSpacePoint: string,
       nodeAggregateIds: string[],
     ) =>
       [
         'workspaces',
         contentRepositoryId,
+        'workspace',
         name,
         'changes',
         'conflicts',
+        dimensionSpacePoint,
         nodeAggregateIds,
       ] as const,
-    /** The newest events, for the pending history. */
+    /** Prefix covering every read of the workspace's events. */
     history: (contentRepositoryId: string, name: string) =>
-      ['workspaces', contentRepositoryId, name, 'events'] as const,
+      ['workspaces', contentRepositoryId, 'workspace', name, 'events'] as const,
+    /** The newest events (up to limit), for the pending history - under `history`. */
+    pendingEvents: (contentRepositoryId: string, name: string, limit: number) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'events',
+        'pending',
+        limit,
+      ] as const,
+    /** The newest events in one document, for its history - under `history`. */
+    documentEvents: (
+      contentRepositoryId: string,
+      name: string,
+      documentId: string,
+    ) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'events',
+        'document',
+        documentId,
+      ] as const,
     /** A range of events with their diffs - under `history`. */
     eventsDiff: (
       contentRepositoryId: string,
@@ -106,6 +210,7 @@ export const neosKeys = {
       [
         'workspaces',
         contentRepositoryId,
+        'workspace',
         name,
         'events',
         'diff',
@@ -172,12 +277,16 @@ export const neosKeys = {
     ) => ['dataSources', identifier, { node, additionalData }] as const,
   },
   assets: {
-    /** Broad prefix - invalidate after any asset, collection or tag write. */
+    /** Broad prefix covering every media read. */
     all: ['assets'] as const,
     sources: ['assets', 'sources'] as const,
+    /** Prefix covering every page of every asset list. */
+    lists: ['assets', 'list'] as const,
     /** The paginated asset list; the filter object keys the infinite query. */
     list: (filter: Record<string, unknown>) =>
       ['assets', 'list', filter] as const,
+    /** Prefix covering every read of single assets (and their usages). */
+    assets: ['assets', 'asset'] as const,
     asset: (assetSourceId: string, assetId: string) =>
       ['assets', 'asset', assetSourceId, assetId] as const,
     usages: (assetSourceId: string, assetId: string) =>

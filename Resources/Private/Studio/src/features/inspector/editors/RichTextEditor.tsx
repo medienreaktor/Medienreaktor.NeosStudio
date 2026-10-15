@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 import { Editor } from '@tiptap/core'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +38,7 @@ import {
   toggleStyle,
   type ResolvedStyle,
 } from '@/guest/styles'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
@@ -42,7 +50,9 @@ export const RICH_TEXT_EDITOR = 'Neos.Neos/Inspector/Editors/RichTextEditor'
  * editing in the preview (same schema mapping, so a property permits exactly
  * what its NodeType's `formatting` flags declare), mounted as an inspector
  * field with a persistent toolbar. Commits serializedHtml() on blur like the
- * inline editors; Escape reverts to the last committed markup.
+ * inline editors; Escape reverts to the last committed markup. While nothing
+ * is being edited (not focused, no uncommitted change) it follows a value
+ * changed elsewhere.
  */
 export const RichTextEditor: PropertyEditorComponent = ({
   value,
@@ -67,15 +77,28 @@ export const RichTextEditor: PropertyEditorComponent = ({
 
   // The latest callbacks, readable from editor event handlers without
   // recreating the editor when the inspector re-renders.
-  const callbacks = useRef({ onCommit, onChange })
-  callbacks.current = { onCommit, onChange }
+  const callbacks = useLatestRef({ onCommit, onChange })
+  // The committed baseline, captured after TipTap normalizes the markup so a
+  // blur without a real edit never reports a spurious change.
+  const committedHtml = useRef('')
+  // Set while a toolbar popup (the block format select) holds the focus: the
+  // editor blurs, but the edit is still in progress - no commit then.
+  const holdFocus = useRef(false)
+
+  // Commits the content if it differs from the committed baseline.
+  const commitPending = useCallback(
+    (instance: Editor) => {
+      const html = serializedHtml(instance, formatting)
+      if (html === committedHtml.current) return
+      committedHtml.current = html
+      callbacks.current.onCommit(html)
+    },
+    [formatting, callbacks],
+  )
 
   useEffect(() => {
     const element = containerRef.current
     if (!element) return
-    // The committed baseline, captured after TipTap normalizes the markup so
-    // a blur without a real edit never reports a spurious change.
-    let committedHtml = ''
     const instance = new Editor({
       element,
       content: typeof value === 'string' ? value : '',
@@ -83,7 +106,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
       editorProps: {
         handleKeyDown: (_view, event) => {
           if (event.key === 'Escape') {
-            instance.commands.setContent(committedHtml)
+            instance.commands.setContent(committedHtml.current)
             instance.commands.blur()
             return true
           }
@@ -91,7 +114,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
         },
       },
       onCreate: ({ editor }) => {
-        committedHtml = serializedHtml(editor, formatting)
+        committedHtml.current = serializedHtml(editor, formatting)
       },
       onUpdate: ({ editor }) => {
         callbacks.current.onChange?.(serializedHtml(editor, formatting))
@@ -101,10 +124,8 @@ export const RichTextEditor: PropertyEditorComponent = ({
       onFocus: refresh,
       onBlur: ({ editor }) => {
         refresh()
-        const html = serializedHtml(editor, formatting)
-        if (html === committedHtml) return
-        committedHtml = html
-        callbacks.current.onCommit(html)
+        if (holdFocus.current) return
+        commitPending(editor)
       },
     })
     if (autoFocus) instance.commands.focus('end')
@@ -113,10 +134,23 @@ export const RichTextEditor: PropertyEditorComponent = ({
       instance.destroy()
       setEditor(null)
     }
-    // The value prop only seeds the content (the host remounts on subject
-    // change); only a changed schema warrants recreating the editor.
+    // Only a changed schema warrants recreating the editor (commitPending and
+    // callbacks change with it or never): the value prop is followed by the
+    // effect below, and autoFocus only matters when the editor is created.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formatting])
+  }, [formatting, commitPending, callbacks])
+
+  // Follow a value changed elsewhere (a collaborator, an inline edit in the
+  // preview) - unless it is being edited: focused, or with uncommitted input.
+  useEffect(() => {
+    if (!editor || editor.isFocused || holdFocus.current) return
+    if (serializedHtml(editor, formatting) !== committedHtml.current) return
+    editor.commands.setContent(typeof value === 'string' ? value : '', {
+      emitUpdate: false,
+    })
+    committedHtml.current = serializedHtml(editor, formatting)
+    refresh()
+  }, [editor, value, formatting])
 
   const placeholder = plainEditorOption(options, 'placeholder')
   const isEmpty = editor?.isEmpty ?? true
@@ -128,6 +162,10 @@ export const RichTextEditor: PropertyEditorComponent = ({
           editor={editor}
           formatting={formatting}
           subject={subject.label}
+          onHoldFocus={(hold) => {
+            holdFocus.current = hold
+          }}
+          onLeave={() => commitPending(editor)}
         />
       )}
       <div className="relative">
@@ -195,7 +233,9 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       disabled={disabled}
-      className={cn(active && 'bg-neutral-200 dark:bg-neutral-800 text-blue-500')}
+      className={cn(
+        active && 'bg-neutral-200 dark:bg-neutral-800 text-blue-500',
+      )}
       onMouseDown={(event) => {
         event.preventDefault()
         if (!runOnClick) onRun()
@@ -222,13 +262,20 @@ function Toolbar({
   editor,
   formatting,
   subject,
+  onHoldFocus,
+  onLeave,
 }: {
   editor: Editor
   formatting: Formatting
   subject: string
+  /** Called with true while the block format popup is open - the editor skips the commit on its blur. */
+  onHoldFocus: (hold: boolean) => void
+  /** The focus left the editor for good while a popup held it - commit now. */
+  onLeave: () => void
 }) {
   // The link being edited while the dialog is open, with the selection to
   // apply it to (opening the dialog blurs the editor; the range survives).
+  const toolbarRef = useRef<HTMLDivElement>(null)
   const [linkEdit, setLinkEdit] = useState<{
     value: LinkValue | null
     from: number
@@ -301,11 +348,35 @@ function Toolbar({
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-300 dark:border-neutral-700 p-1">
+    <div
+      ref={toolbarRef}
+      className="flex flex-wrap items-center gap-0.5 border-b border-neutral-300 dark:border-neutral-700 p-1"
+    >
       {formatting.block && blockChoices.length > 1 && (
         <Select
           items={blockChoices}
           value={activeBlock(editor, formatting)}
+          // The popup takes the focus from the editor while open, which is
+          // part of the edit, not its end: no commit on that blur, and the
+          // focus goes back into the editor afterwards - unless the popup was
+          // left for another control, which ends the edit.
+          onOpenChange={(open) => {
+            onHoldFocus(open)
+            if (open) return
+            setTimeout(() => {
+              if (editor.isDestroyed || editor.isFocused) return
+              const active = document.activeElement
+              if (
+                active === null ||
+                active === document.body ||
+                toolbarRef.current?.contains(active)
+              ) {
+                editor.commands.focus()
+              } else {
+                onLeave()
+              }
+            })
+          }}
           onValueChange={(value) => {
             const block = String(value)
             if (block === 'p') chain().setParagraph().run()
@@ -322,6 +393,8 @@ function Toolbar({
           <SelectTrigger
             size="sm"
             aria-label={t('editor.rte.blockFormat', 'Block format')}
+            // Opening it must not blur the editor before holdFocus is set.
+            onMouseDown={(event) => event.preventDefault()}
             className="h-6 w-28 border-none bg-transparent text-xs shadow-none dark:bg-transparent"
           >
             <SelectValue />

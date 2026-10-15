@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/http/errors'
 import type { Node } from '@/api/neos/schema'
@@ -51,21 +51,15 @@ export function ShareLinkDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const queryClient = useQueryClient()
-  const [label, setLabel] = useState('')
+  // Seeded once: mounted per opening and per document (see ShareButton), so a
+  // refetch of the document never resets the form - nor drops the one-time
+  // URL of a link just created.
+  const [label, setLabel] = useState(() => documentLabel(document))
   const [ttlHours, setTtlHours] = useState<number>(48)
   const [creating, setCreating] = useState(false)
   const [createdUrl, setCreatedUrl] = useState<string | null>(null)
   const { data } = usePreviewLinks(open)
   const links = data ?? []
-
-  // Fresh form per document and per opening; a URL from a previous round
-  // must never linger (it looks current but belongs to another page).
-  useEffect(() => {
-    if (open) {
-      setLabel(documentLabel(document))
-      setCreatedUrl(null)
-    }
-  }, [open, document])
 
   const ttlItems = [
     { value: '24', label: t('share.ttl24', '24 hours') },
@@ -81,7 +75,7 @@ export function ShareLinkDialog({
         ttlHours,
       })
       setCreatedUrl(link.shareUrl)
-      queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
     } catch (e) {
       toast.error(
         apiErrorDescription(
@@ -113,7 +107,7 @@ export function ShareLinkDialog({
     try {
       await deletePreviewLink(link.id)
       toast.success(t('share.revoked', 'The preview link was revoked.'))
-      queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
     } catch (e) {
       toast.error(
         apiErrorDescription(

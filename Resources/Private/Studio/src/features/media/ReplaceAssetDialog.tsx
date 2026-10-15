@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useDropzone, type Accept } from 'react-dropzone'
 
 import {
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { translate as t } from '@/lib/i18n'
+import { translate as t, translatePlural as tp } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { AssetThumb } from './AssetThumb'
 import { formatBytes } from './format'
@@ -57,10 +57,9 @@ export function ReplaceAssetDialog({
   onReplaced,
 }: ReplaceAssetDialogProps) {
   // Mirrors AssetDetailsDialog: the parent mounts us only while a target
-  // exists, so drive `open` locally for the enter transition and defer the
+  // exists, so drive `open` locally - open from the start - and defer the
   // unmount to `onOpenChangeComplete` so the exit transition plays.
-  const [open, setOpen] = useState(false)
-  useEffect(() => setOpen(true), [])
+  const [open, setOpen] = useState(true)
 
   const [file, setFile] = useState<File | null>(null)
   const [keepOriginalFilename, setKeepOriginalFilename] = useState(false)
@@ -222,11 +221,10 @@ export function ReplaceAssetDialog({
                 aria-hidden
               />
               <span>
-                {t(
-                  'media.replaceAssetUsageNote',
-                  'This asset is used {0} time(s). All usages will show the new file.',
-                  [usageTotal],
-                )}
+                {tp('media.replaceAssetUsageNote', usageTotal, [
+                  'This asset is used {0} time. That usage will show the new file.',
+                  'This asset is used {0} times. All usages will show the new file.',
+                ])}
               </span>
             </p>
           )}

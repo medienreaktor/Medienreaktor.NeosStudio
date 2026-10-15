@@ -10,7 +10,7 @@ import {
   type NodeDecoratorDefinition,
 } from './decorators'
 import { faClassName } from './nodeTypeIcon'
-import type { PendingChanges } from './usePendingChanges'
+import { hasPendingChange, type PendingChanges } from './usePendingChanges'
 
 export interface TreeRowDecor {
   icon?: ReactNode
@@ -60,11 +60,11 @@ export function nodeDecor(
   decorators: NodeDecoratorDefinition[] = nodeDecoratorRegistry.getAll(),
 ): TreeRowDecor {
   const decoration = mergeNodeDecorations(node, { nodeTypes }, decorators)
-  const isDirty = changed !== null && changed.ids.has(node.nodeAggregateId)
+  // Only changes in the dimension the row is shown in count (see
+  // hasPendingChange) - an edit in another language is not this row's.
+  const isDirty = changed !== null && hasPendingChange(changed.ids, node)
   const containsDirty =
-    !isDirty &&
-    changed !== null &&
-    changed.documentIds.has(node.nodeAggregateId)
+    !isDirty && changed !== null && hasPendingChange(changed.documentIds, node)
 
   const markers: ReactNode[] = []
   for (const peer of peersHere) {

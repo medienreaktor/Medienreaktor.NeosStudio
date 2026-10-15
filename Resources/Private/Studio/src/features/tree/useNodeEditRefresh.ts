@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import type { AsyncDataLoaderDataRef, TreeInstance } from '@headless-tree/core'
+import { neosKeys } from '@/api/neos/keys'
 import type { NodeAddress } from '@/api/neos/schema'
+import { queryClient } from '@/app/queryClient'
 
 /**
  * An edit that happened elsewhere (preview, inspector, context menu); token
@@ -19,9 +21,11 @@ export interface NodeEdit {
 export const ALL_NODES = '*'
 
 /**
- * Refreshes a tree's items after reported edits. headless-tree caches item
- * data and children lists itself, so invalidating the TanStack queries alone
- * never updates rendered rows - the affected items must be invalidated here.
+ * Refreshes a tree's items after reported edits. Two caches stand between an
+ * edit and a rendered row: the TanStack node queries the tree's reads go
+ * through, and headless-tree's own item data and children lists. Both are
+ * invalidated here, in that order - the tree's re-reads must not be served
+ * the stale query cache - so a caller reporting an edit cannot forget one.
  */
 export function useNodeEditRefresh<T>(
   tree: TreeInstance<T>,
@@ -30,6 +34,19 @@ export function useNodeEditRefresh<T>(
 ): void {
   useEffect(() => {
     if (lastEdit === null) return
+    // Marking the queries stale is synchronous, so the re-reads below
+    // already fetch fresh data.
+    if (lastEdit.addresses.includes(ALL_NODES)) {
+      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+    } else {
+      for (const address of lastEdit.addresses) {
+        if (address === ALL_NODES) continue
+        // The node's reads and its children lists (keyed below the node).
+        void queryClient.invalidateQueries({
+          queryKey: neosKeys.nodes.node(address),
+        })
+      }
+    }
     if (lastEdit.addresses.includes(ALL_NODES)) {
       // Re-fetch every loaded item and the (never listed) root - not just
       // the currently visible ones. tree.getItems() only walks expanded

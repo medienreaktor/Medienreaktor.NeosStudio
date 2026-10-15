@@ -326,13 +326,31 @@ export function WorkspaceGraphPanel() {
 
   // Pending histories for every workspace - branches for their commit dots
   // and fork points, roots (live) for the published stretch children branch
-  // off of.
+  // off of, of which only the newest few are drawn (and read). A root is
+  // what the graph draws as one: no base, or one the account can't read.
   const workspaceNames = useMemo(
     () => workspaces.map((workspace) => workspace.name).sort(),
     [workspaces],
   )
+  const rootNames = useMemo(() => {
+    const names = new Set(workspaceNames)
+    return new Set(
+      workspaces
+        .filter(
+          (workspace) =>
+            workspace.baseWorkspaceName === null ||
+            !names.has(workspace.baseWorkspaceName),
+        )
+        .map((workspace) => workspace.name),
+    )
+  }, [workspaces, workspaceNames])
   const { byWorkspace: pending, isLoading: eventsLoading } =
-    useWorkspacesPendingEvents(workspaceNames, shown, refetchInterval)
+    useWorkspacesPendingEvents(
+      workspaceNames,
+      rootNames,
+      shown,
+      refetchInterval,
+    )
 
   const graph = useMemo(
     () => buildWorkspaceGraph(workspaces, pending),

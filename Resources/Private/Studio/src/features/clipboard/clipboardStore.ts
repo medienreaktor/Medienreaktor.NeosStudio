@@ -95,9 +95,10 @@ export function clipboardAdd(
   }
   const sameNodes = (other: ClipboardEntry) =>
     other.nodes.length === nodes.length &&
-    other.nodes.every((node, index) =>
-      sameNodeAddress(node.address, nodes[index].address),
-    )
+    other.nodes.every((node, index) => {
+      const own = nodes[index]
+      return own !== undefined && sameNodeAddress(node.address, own.address)
+    })
   const entries = [entry, ...state.entries.filter((o) => !sameNodes(o))].slice(
     0,
     MAX_ENTRIES,

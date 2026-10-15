@@ -18,8 +18,8 @@ import {
 import type { WorkspacePendingStep } from './pendingSteps'
 
 /**
- * The before/after diff of one editing step, lazily fetched from the
- * pending-events diff resource - the rendering the branch history panel and
+ * The before/after diff of one editing step, lazily fetched: the step's
+ * events read again with what each changed (include=diff) - the rendering the branch history panel and
  * the review dialog share. Per event: which node, then per-property rows
  * with the old value struck out and the new value below.
  */

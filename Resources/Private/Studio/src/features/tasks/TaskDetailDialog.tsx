@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useUsers } from '@/api/neos/endpoints/users'
 import { assignTask, updateTask } from '@/api/studio/endpoints/tasks'
 import { studioKeys } from '@/api/studio/keys'
@@ -28,6 +29,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
 
 const UNASSIGNED = '__unassigned__'
@@ -47,18 +49,24 @@ export function TaskDetailDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const users = useUsers().data
+  const contentRepositoryId = useActiveContentRepositoryId()
 
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [assignee, setAssignee] = useState(UNASSIGNED)
+  const [title, setTitle] = useState(
+    () => task?.workspace?.title ?? task?.workspaceName ?? '',
+  )
+  const [description, setDescription] = useState(
+    () => task?.workspace?.description ?? '',
+  )
+  const [assignee, setAssignee] = useState(() => task?.assignee ?? UNASSIGNED)
 
-  useEffect(() => {
-    if (task) {
-      setTitle(task.workspace?.title ?? task.workspaceName)
-      setDescription(task.workspace?.description ?? '')
-      setAssignee(task.assignee ?? UNASSIGNED)
-    }
-  }, [task])
+  // The form follows the shown task (a newer listing of it, or another one);
+  // closing (null) keeps the fields for the closing animation.
+  useValueChange(task, (next) => {
+    if (!next) return
+    setTitle(next.workspace?.title ?? next.workspaceName)
+    setDescription(next.workspace?.description ?? '')
+    setAssignee(next.assignee ?? UNASSIGNED)
+  })
 
   const canManage = task?.workspace?.permissions.manage ?? false
 
@@ -72,14 +80,14 @@ export function TaskDetailDialog({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!task) return
-      await updateTask(task.workspaceName, {
+      if (!task || contentRepositoryId === null) return
+      await updateTask(contentRepositoryId, task.workspaceName, {
         title: title.trim(),
         description: description.trim(),
       })
       const newAssignee = assignee === UNASSIGNED ? null : assignee
       if (newAssignee !== (task.assignee ?? null)) {
-        await assignTask(task.workspaceName, newAssignee)
+        await assignTask(contentRepositoryId, task.workspaceName, newAssignee)
       }
     },
     onSuccess: () => {

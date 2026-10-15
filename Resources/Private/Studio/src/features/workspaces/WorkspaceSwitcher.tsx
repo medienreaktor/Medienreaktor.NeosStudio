@@ -1,25 +1,15 @@
 import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { apiErrorDescription } from '@/api/http/errors'
 import { isConflict } from '@/api/http/errors'
-import {
-  canPublish,
-  changeBaseWorkspace,
-  useWorkspaces,
-} from '@/api/neos/endpoints/workspaces'
-import { neosKeys } from '@/api/neos/keys'
+import { changeBaseWorkspace } from '@/api/neos/endpoints/workspaces'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import type { Workspace } from '@/api/neos/schema'
-import { transitionTask, useTasks } from '@/api/studio/endpoints/tasks'
-import { studioKeys } from '@/api/studio/keys'
-import type { TaskStatus } from '@/api/studio/schema'
-import { queryClient } from '@/app/queryClient'
-import { useStudio } from '@/app/StudioContext'
+import { useStudioActions } from '@/app/StudioContext'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
@@ -29,11 +19,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
-import { CreateTaskDialog } from '@/features/tasks/CreateTaskDialog'
-import { SendToReviewDialog } from '@/features/tasks/SendToReviewDialog'
-import { ReviewChangesDialog } from '@/features/workspaces/ReviewChangesDialog'
 import {
   decorationsFor,
+  switcherActionsFor,
   useWorkspaceDecorators,
 } from '@/features/workspaces/decorators'
 import {
@@ -41,7 +29,7 @@ import {
   usePublishTarget,
 } from '@/features/workspaces/PublishTargetBadge'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
-import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
 import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
 
 /**
@@ -64,8 +52,10 @@ import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
  *   personal changes stay untouched.
  *
  * - Decorator groups (e.g. "Tasks"): checkout entries for decorated
- *   workspaces. The ACTIVE task's entry becomes a submenu carrying the
- *   status-dependent workflow actions (send to review / complete / reopen).
+ *   workspaces. The checked-out workspace's entry becomes a submenu carrying
+ *   its decorator's workflow actions (a task's send to review / complete /
+ *   reopen), and decorators may add entries of their own at the end - see
+ *   WorkspaceSwitcherExtension.
  */
 export function WorkspaceSwitcher({
   personalWorkspace,
@@ -81,70 +71,22 @@ export function WorkspaceSwitcher({
   /** Move the editing context to a shared workspace, or null = personal. */
   onSwitchEditingContext: (workspaceName: string | null) => void
 }) {
-  const { workspaceContentChanged, navigateToNodeInWorkspace } = useStudio()
+  const { workspaceContentChanged } = useStudioActions()
   const collaborative = activeWorkspace.name !== personalWorkspace.name
-  const [creatingTask, setCreatingTask] = React.useState(false)
-  const [reviewing, setReviewing] = React.useState(false)
-  const [submittingReview, setSubmittingReview] = React.useState(false)
-  // The full readable list for the review dialog (the `targets` prop is only
-  // the base-workspace subset).
-  const { data: workspacesData } = useWorkspaces()
-
-  // Workflow actions for the checked-out task branch (the submenu on its
-  // entry): submit / reopen transition directly, completing routes through
-  // the review dialog while changes are pending - the same semantics as the
-  // Tasks board.
-  const { data: tasks } = useTasks()
-  const activeTask =
-    tasks?.find((task) => task.workspaceName === activeWorkspace.name) ?? null
-  const taskTransition = useMutation({
-    mutationFn: ({
-      target,
-      comment,
-    }: {
-      target: TaskStatus
-      comment?: string
-    }) => transitionTask(activeWorkspace.name, target, comment),
-    onSuccess: (_response, { target }) => {
-      if (target === 'IN_REVIEW') setSubmittingReview(false)
-      toast.success(
-        target === 'IN_REVIEW'
-          ? t('tasks.submitted', 'The task has been submitted for review.')
-          : target === 'DONE'
-            ? t('tasks.completed', 'The task has been completed.')
-            : t('tasks.reopenedToast', 'The task has been reopened.'),
-      )
-    },
-    onError: (error) =>
-      toast.error(
-        apiErrorDescription(
-          error,
-          t('tasks.moveFailedDetail', 'Moving the task failed.'),
-        ),
-        { title: t('tasks.moveFailed', 'Could not move task') },
-      ),
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all })
-      void invalidateWorkspaceQueries()
-    },
-  })
-
-  const completeTask = () => {
-    // Pending changes: the reviewer picks what to publish first; the task
-    // completes after the publish. Nothing pending: complete directly.
-    if (activeWorkspace.hasPublishableChanges) setReviewing(true)
-    else taskTransition.mutate({ target: 'DONE' })
-  }
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   const switchBase = useMutation({
     mutationFn: (baseWorkspace: string) =>
-      changeBaseWorkspace(personalWorkspace.name, baseWorkspace),
+      changeBaseWorkspace(
+        contentRepositoryId!,
+        personalWorkspace.name,
+        baseWorkspace,
+      ),
     onSuccess: () => {
       // The workspace list carries the baseWorkspace shown as the selected
       // value, and every cached node read is stale - unchanged nodes now
       // show the new base's content.
-      void invalidateWorkspaceQueries()
-      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+      void afterWorkspaceRewrite(contentRepositoryId!, personalWorkspace.name)
       workspaceContentChanged()
       toast.success(t('workspace.switched', 'Workspace switched.'))
     },
@@ -229,7 +171,20 @@ export function WorkspaceSwitcher({
     }
   }
 
-  return (
+  // What decorators add: entries at the menu's end, and the providers their
+  // menu items reach their state and dialogs through.
+  const menuItems = decorators.flatMap((decorator) =>
+    decorator.switcher?.MenuItems
+      ? [{ id: decorator.id, MenuItems: decorator.switcher.MenuItems }]
+      : [],
+  )
+  const providers = decorators.flatMap((decorator) =>
+    decorator.switcher?.Provider
+      ? [{ id: decorator.id, Provider: decorator.switcher.Provider }]
+      : [],
+  )
+
+  const switcher = (
     <div className="flex items-center gap-3">
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -358,12 +313,14 @@ export function WorkspaceSwitcher({
                       aria-hidden
                     />
                   )
-                  const isActiveTask =
-                    activeTask !== null &&
+                  // The checked-out workspace nests its decorator's workflow
+                  // actions as a submenu; the other entries check the
+                  // workspace out.
+                  const Actions =
                     workspace.name === activeWorkspace.name
-                  // The checked-out task nests its workflow actions as a
-                  // submenu; the other entries check the workspace out.
-                  if (isActiveTask) {
+                      ? switcherActionsFor(activeWorkspace, decorators)
+                      : null
+                  if (Actions !== null) {
                     return (
                       <DropdownMenuSub key={`edit:${workspace.name}`}>
                         <DropdownMenuSubTrigger className="pl-8">
@@ -378,46 +335,7 @@ export function WorkspaceSwitcher({
                           <WorkspaceDecorationBadges workspace={workspace} />
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
-                          {activeTask.status === 'OPEN' &&
-                            activeWorkspace.permissions.write && (
-                              <DropdownMenuItem
-                                onClick={() => setSubmittingReview(true)}
-                              >
-                                <i
-                                  className="fas fa-paper-plane w-4 text-center"
-                                  aria-hidden
-                                />
-                                {t('tasks.sendToReview', 'Send to review')}
-                              </DropdownMenuItem>
-                            )}
-                          {activeTask.status !== 'DONE' &&
-                            activeWorkspace.permissions.manage &&
-                            canPublish(
-                              activeWorkspace,
-                              workspacesData ?? [],
-                            ) && (
-                              <DropdownMenuItem onClick={completeTask}>
-                                <i
-                                  className="fas fa-check w-4 text-center"
-                                  aria-hidden
-                                />
-                                {t('tasks.completeTask', 'Complete task')}
-                              </DropdownMenuItem>
-                            )}
-                          {activeTask.status !== 'OPEN' &&
-                            activeWorkspace.permissions.write && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  taskTransition.mutate({ target: 'OPEN' })
-                                }
-                              >
-                                <i
-                                  className="fas fa-rotate-left w-4 text-center"
-                                  aria-hidden
-                                />
-                                {t('tasks.reopenTask', 'Reopen task')}
-                              </DropdownMenuItem>
-                            )}
+                          <Actions workspace={activeWorkspace} />
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>
                     )
@@ -447,49 +365,28 @@ export function WorkspaceSwitcher({
               </DropdownMenuGroup>
             </React.Fragment>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => setCreatingTask(true)}>
-              <i className="fas fa-plus text-[0.7rem]" aria-hidden />
-              {t('tasks.addTaskWorkspace', 'Add task workspace')}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+          {menuItems.map(({ id, MenuItems }) => (
+            <React.Fragment key={`items:${id}`}>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <MenuItems />
+              </DropdownMenuGroup>
+            </React.Fragment>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreateTaskDialog
-        open={creatingTask}
-        onOpenChange={setCreatingTask}
-        // Check the fresh branch out right away - creating a task from the
-        // switcher means "I want to work in it now".
-        onCreated={(task) => onSwitchEditingContext(task.workspaceName)}
-      />
-      <SendToReviewDialog
-        open={submittingReview}
-        onOpenChange={setSubmittingReview}
-        pending={taskTransition.isPending}
-        onSubmit={(comment) =>
-          taskTransition.mutate({
-            target: 'IN_REVIEW',
-            comment: comment || undefined,
-          })
-        }
-      />
-      {reviewing && workspacesData && (
-        <ReviewChangesDialog
-          workspaces={workspacesData}
-          activeWorkspace={activeWorkspace}
-          initialSourceName={activeWorkspace.name}
-          open={reviewing}
-          onOpenChange={(open) => !open && setReviewing(false)}
-          onNavigate={navigateToNodeInWorkspace}
-          onPublished={(sourceWorkspaceName) => {
-            if (sourceWorkspaceName === activeWorkspace.name) {
-              taskTransition.mutate({ target: 'DONE' })
-              setReviewing(false)
-            }
-          }}
-        />
-      )}
     </div>
+  )
+  return providers.reduceRight(
+    (children, { id, Provider }) => (
+      <Provider
+        key={id}
+        activeWorkspace={activeWorkspace}
+        onCheckout={(workspaceName) => onSwitchEditingContext(workspaceName)}
+      >
+        {children}
+      </Provider>
+    ),
+    switcher,
   )
 }

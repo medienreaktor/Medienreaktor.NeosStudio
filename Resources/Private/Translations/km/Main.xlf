@@ -2,6 +2,478 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext" target-language="km">
     <body>
+      <trans-unit id="access.decor.restricted" xml:space="preserve">
+        <source>Outside your access role — read only</source>
+        <target xml:lang="km">នៅក្រៅតួនាទីចូលប្រើរបស់អ្នក — បានតែអាន</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutBase" xml:space="preserve">
+        <source>Your workspace publishes into "{0}", which your access role no longer covers. Pick a workspace you may publish into to continue.</source>
+        <target xml:lang="km">លំហការងាររបស់អ្នកដាក់ផ្សាយទៅ "{0}" ដែលតួនាទីចូលប្រើរបស់អ្នកលែងគ្របដណ្ដប់ទៀតហើយ។ សូមជ្រើសរើសលំហការងារដែលអ្នកអាចដាក់ផ្សាយទៅបាន ដើម្បីបន្ត។</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutContext" xml:space="preserve">
+        <source>You are editing in "{0}", which your access role no longer covers. Pick a workspace you may work in to continue.</source>
+        <target xml:lang="km">អ្នកកំពុងកែសម្រួលនៅក្នុង "{0}" ដែលតួនាទីចូលប្រើរបស់អ្នកលែងគ្របដណ្ដប់ទៀតហើយ។ សូមជ្រើសរើសលំហការងារដែលអ្នកអាចធ្វើការបាន ដើម្បីបន្ត។</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutNoTarget" xml:space="preserve">
+        <source>Your access role currently covers no workspace you could switch to. An administrator has to widen it.</source>
+        <target xml:lang="km">បច្ចុប្បន្ន តួនាទីចូលប្រើរបស់អ្នកមិនគ្របដណ្ដប់លំហការងារណាមួយដែលអ្នកអាចប្ដូរទៅបានទេ។ អ្នកគ្រប់គ្រងត្រូវពង្រីកវា។</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutRebaseFailed" xml:space="preserve">
+        <source>Switching failed. Publish or discard your pending changes first, then try again.</source>
+        <target xml:lang="km">ការប្ដូរបានបរាជ័យ។ សូមដាក់ផ្សាយ ឬបោះបង់ចោលការផ្លាស់ប្ដូរដែលកំពុងរង់ចាំរបស់អ្នកជាមុនសិន រួចព្យាយាមម្ដងទៀត។</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutTitle" xml:space="preserve">
+        <source>Your workspace is no longer available</source>
+        <target xml:lang="km">លំហការងាររបស់អ្នកលែងមានទៀតហើយ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.activated" xml:space="preserve">
+        <source>The role "{0}" is active again.</source>
+        <target xml:lang="km">តួនាទី "{0}" សកម្មឡើងវិញហើយ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="km">មិនអាចប្ដូរស្ថានភាពបានទេ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="km">ការប្ដូរស្ថានភាពបានបរាជ័យ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="km">សកម្ម</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPersonal" xml:space="preserve">
+        <source>May use their personal workspace</source>
+        <target xml:lang="km">អាចប្រើលំហការងារផ្ទាល់ខ្លួនរបស់ខ្លួន</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPersonalHint" xml:space="preserve">
+        <source>Off forces this role to edit directly in a shared workspace.</source>
+        <target xml:lang="km">បើបិទ តួនាទីនេះកែសម្រួលដោយផ្ទាល់នៅក្នុងលំហការងាររួម។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPublish" xml:space="preserve">
+        <source>May publish to live</source>
+        <target xml:lang="km">អាចដាក់ផ្សាយទៅ Live</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPublishHint" xml:space="preserve">
+        <source>Off means changes can only be handed on for review.</source>
+        <target xml:lang="km">បើបិទ ការផ្លាស់ប្ដូរអាចត្រឹមតែបញ្ជូនទៅពិនិត្យប៉ុណ្ណោះ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
+        <source>May create workspaces</source>
+        <target xml:lang="km">អាចបង្កើតលំហការងារ</target>
+      </trans-unit>
+      <group id="accessRoles.badgeBranches" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.badgeBranches[0]" xml:space="preserve">
+          <source>{0} branches</source>
+          <target xml:lang="km">{0} មែក</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="accessRoles.badgeCapabilities" xml:space="preserve">
+        <source>{0} restricted</source>
+        <target xml:lang="km">{0} ត្រូវបានកំណត់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeDenied" xml:space="preserve">
+        <source>{0} blocked</source>
+        <target xml:lang="km">{0} ត្រូវបានទប់ស្កាត់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeDimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="km">វិមាត្រ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeNoPublish" xml:space="preserve">
+        <source>No publishing</source>
+        <target xml:lang="km">មិនអាចដាក់ផ្សាយ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeNoPublishDetail" xml:space="preserve">
+        <source>Cannot publish to the live workspace.</source>
+        <target xml:lang="km">មិនអាចដាក់ផ្សាយទៅលំហការងារ Live បានទេ។</target>
+      </trans-unit>
+      <group id="accessRoles.badgeSites" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.badgeSites[0]" xml:space="preserve">
+          <source>{0} sites</source>
+          <target xml:lang="km">{0} គេហទំព័រ</target>
+        </trans-unit>
+      </group>
+      <group id="accessRoles.badgeWorkspaces" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.badgeWorkspaces[0]" xml:space="preserve">
+          <source>{0} workspaces</source>
+          <target xml:lang="km">{0} លំហការងារ</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="accessRoles.capCreate" xml:space="preserve">
+        <source>Create pages and content</source>
+        <target xml:lang="km">បង្កើតទំព័រ និងមាតិកា</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capCreateHint" xml:space="preserve">
+        <source>Also covers creating a page in another dimension.</source>
+        <target xml:lang="km">រួមទាំងការបង្កើតទំព័រនៅក្នុងវិមាត្រផ្សេងទៀតផងដែរ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capDelete" xml:space="preserve">
+        <source>Delete pages and content</source>
+        <target xml:lang="km">លុបទំព័រ និងមាតិកា</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capEdit" xml:space="preserve">
+        <source>Edit content</source>
+        <target xml:lang="km">កែសម្រួលមាតិកា</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capEditHint" xml:space="preserve">
+        <source>Change properties, references, and show/hide pages.</source>
+        <target xml:lang="km">ផ្លាស់ប្ដូរលក្ខណសម្បត្តិ និងឯកសារយោង បង្ហាញ ឬលាក់ទំព័រ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMove" xml:space="preserve">
+        <source>Move pages and content</source>
+        <target xml:lang="km">ផ្លាស់ទីទំព័រ និងមាតិកា</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMoveHint" xml:space="preserve">
+        <source>Reordering and drag-and-drop in the page tree.</source>
+        <target xml:lang="km">ការតម្រៀបឡើងវិញ និងការអូសទម្លាក់នៅក្នុងមែកធាងទំព័រ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capabilitiesHint" xml:space="preserve">
+        <source>What members may do inside everything above. Untick to take a capability away.</source>
+        <target xml:lang="km">អ្វីដែលសមាជិកអាចធ្វើបាននៅក្នុងអ្វីៗទាំងអស់ដែលបានអនុញ្ញាតខាងលើ។ ដោះធីកចេញ ដើម្បីដកសិទ្ធិមួយ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="km">សកម្មភាព</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnMembers" xml:space="preserve">
+        <source>Members</source>
+        <target xml:lang="km">សមាជិក</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnName" xml:space="preserve">
+        <source>Role</source>
+        <target xml:lang="km">តួនាទី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnScope" xml:space="preserve">
+        <source>Restrictions</source>
+        <target xml:lang="km">ការកំណត់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="km">ស្ថានភាព</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.create" xml:space="preserve">
+        <source>Create role</source>
+        <target xml:lang="km">បង្កើតតួនាទី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.created" xml:space="preserve">
+        <source>The role "{0}" has been created.</source>
+        <target xml:lang="km">តួនាទី "{0}" ត្រូវបានបង្កើត។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deactivated" xml:space="preserve">
+        <source>The role "{0}" is paused — it no longer restricts its members.</source>
+        <target xml:lang="km">តួនាទី "{0}" ត្រូវបានផ្អាក — វាលែងកំណត់សមាជិករបស់វាទៀតហើយ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.delete" xml:space="preserve">
+        <source>Delete role</source>
+        <target xml:lang="km">លុបតួនាទី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleteDescription" xml:space="preserve">
+        <source>The role and its memberships are removed. Its members keep their Neos roles and simply stop being restricted by it.</source>
+        <target xml:lang="km">តួនាទី និងសមាជិកភាពរបស់វានឹងត្រូវបានលុបចេញ។ សមាជិករបស់វានៅរក្សាតួនាទី Neos របស់ពួកគេ ហើយគ្រាន់តែលែងត្រូវបានកំណត់ដោយវាទៀតប៉ុណ្ណោះ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleteTitle" xml:space="preserve">
+        <source>Delete role "{0}"?</source>
+        <target xml:lang="km">លុបតួនាទី "{0}" ឬ?</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleted" xml:space="preserve">
+        <source>The role "{0}" has been deleted.</source>
+        <target xml:lang="km">តួនាទី "{0}" ត្រូវបានលុប។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="km">ការពិពណ៌នា</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.descriptionPlaceholder" xml:space="preserve">
+        <source>What this role is for — the next administrator will thank you.</source>
+        <target xml:lang="km">តួនាទីនេះសម្រាប់អ្វី — អ្នកគ្រប់គ្រងបន្ទាប់នឹងអរគុណអ្នក។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dialogHintWriting" xml:space="preserve">
+        <source>A role restricts what its members may change, not what they may see: content stays readable everywhere. Members keep their Neos roles — this only narrows where they may write. Everything left on "All" stays open.</source>
+        <target xml:lang="km">តួនាទីមួយកំណត់អ្វីដែលសមាជិករបស់វាអាចផ្លាស់ប្ដូរ មិនមែនអ្វីដែលពួកគេអាចមើលឃើញទេ៖ មាតិកានៅតែអាចអានបាននៅគ្រប់ទីកន្លែង។ សមាជិកនៅរក្សាតួនាទី Neos របស់ពួកគេ — តួនាទីនេះគ្រាន់តែរួមតូចកន្លែងដែលពួកគេអាចសរសេរបាន។ អ្វីៗដែលទុកនៅលើ "ទាំងអស់" នៅតែបើកចំហ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionEmpty" xml:space="preserve">
+        <source>Select at least one value, or allow all values.</source>
+        <target xml:lang="km">សូមជ្រើសរើសតម្លៃយ៉ាងហោចណាស់មួយ ឬអនុញ្ញាតតម្លៃទាំងអស់។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionScopeAll" xml:space="preserve">
+        <source>All values</source>
+        <target xml:lang="km">តម្លៃទាំងអស់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionScopeSelected" xml:space="preserve">
+        <source>Only the selected values</source>
+        <target xml:lang="km">តែតម្លៃដែលបានជ្រើសរើសប៉ុណ្ណោះ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionsHintWriting" xml:space="preserve">
+        <source>The dimension values members may make changes in. Content in all other values stays readable.</source>
+        <target xml:lang="km">តម្លៃវិមាត្រដែលសមាជិកអាចធ្វើការផ្លាស់ប្ដូរបាន។ មាតិកានៅក្នុងតម្លៃផ្សេងទៀតទាំងអស់នៅតែអាចអានបាន។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionsNone" xml:space="preserve">
+        <source>This installation has no content dimensions.</source>
+        <target xml:lang="km">ការដំឡើងនេះមិនមានវិមាត្រមាតិកាទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="km">កែសម្រួល</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.editRole" xml:space="preserve">
+        <source>Edit role</source>
+        <target xml:lang="km">កែសម្រួលតួនាទី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.enforcementOff" xml:space="preserve">
+        <source>Enforcement in the content repository is switched off — these roles shape the editing UI, but do not block direct API requests.</source>
+        <target xml:lang="km">ការអនុវត្តនៅក្នុង content repository ត្រូវបានបិទ — តួនាទីទាំងនេះកំណត់រូបរាងចំណុចប្រទាក់កែសម្រួល ប៉ុន្តែមិនទប់ស្កាត់សំណើ API ដោយផ្ទាល់ទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.identifierHint" xml:space="preserve">
+        <source>Identifier: {0}</source>
+        <target xml:lang="km">អត្តសញ្ញាណ៖ {0}</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.incomplete" xml:space="preserve">
+        <source>A restriction has nothing selected. Select something, or switch it back to "All".</source>
+        <target xml:lang="km">ការកំណត់មួយមិនមានអ្វីត្រូវបានជ្រើសរើសទេ។ សូមជ្រើសរើសអ្វីមួយ ឬប្ដូរវាត្រឡប់ទៅ "ទាំងអស់" វិញ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.label" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="km">ឈ្មោះ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.labelPlaceholder" xml:space="preserve">
+        <source>e.g. Editors North</source>
+        <target xml:lang="km">ឧ. ក្រុមវិចារណកថាខាងជើង</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.loadFailed" xml:space="preserve">
+        <source>Could not load access roles</source>
+        <target xml:lang="km">មិនអាចផ្ទុកតួនាទីចូលប្រើបានទេ</target>
+      </trans-unit>
+      <group id="accessRoles.memberCount" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.memberCount[0]" xml:space="preserve">
+          <source>{0} members</source>
+          <target xml:lang="km">សមាជិក {0} នាក់</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="accessRoles.memberExempt" xml:space="preserve">
+        <source>Exempt: {0}</source>
+        <target xml:lang="km">លើកលែង៖ {0}</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.membersHint" xml:space="preserve">
+        <source>Who this role applies to. Roles are additive: someone in two roles may do what either allows.</source>
+        <target xml:lang="km">តួនាទីនេះអនុវត្តចំពោះអ្នកណា។ តួនាទីបូកបញ្ចូលគ្នា៖ អ្នកដែលមានតួនាទីពីរ អាចធ្វើអ្វីដែលតួនាទីណាមួយអនុញ្ញាត។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.missing" xml:space="preserve">
+        <source>(missing)</source>
+        <target xml:lang="km">(បាត់)</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.missingHint" xml:space="preserve">
+        <source>This no longer exists. Untick it to remove it from the role.</source>
+        <target xml:lang="km">វាលែងមានទៀតហើយ។ ដោះធីកចេញ ដើម្បីលុបវាចេញពីតួនាទី។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.newRole" xml:space="preserve">
+        <source>New role</source>
+        <target xml:lang="km">តួនាទីថ្មី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.noMatches" xml:space="preserve">
+        <source>No roles match your search.</source>
+        <target xml:lang="km">មិនមានតួនាទីត្រូវនឹងការស្វែងរករបស់អ្នកទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.none" xml:space="preserve">
+        <source>No access roles yet. Everyone works unrestricted until you create one.</source>
+        <target xml:lang="km">មិនទាន់មានតួនាទីចូលប្រើនៅឡើយទេ។ គ្រប់គ្នាធ្វើការដោយគ្មានការកំណត់ រហូតដល់អ្នកបង្កើតតួនាទីមួយ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.pause" xml:space="preserve">
+        <source>Pause</source>
+        <target xml:lang="km">ផ្អាក</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.paused" xml:space="preserve">
+        <source>Paused</source>
+        <target xml:lang="km">បានផ្អាក</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.resume" xml:space="preserve">
+        <source>Resume</source>
+        <target xml:lang="km">បន្ត</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.rowActions" xml:space="preserve">
+        <source>Role actions</source>
+        <target xml:lang="km">សកម្មភាពតួនាទី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.save" xml:space="preserve">
+        <source>Save role</source>
+        <target xml:lang="km">រក្សាទុកតួនាទី</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saveFailed" xml:space="preserve">
+        <source>Could not save role</source>
+        <target xml:lang="km">មិនអាចរក្សាទុកតួនាទីបានទេ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saveFailedDetail" xml:space="preserve">
+        <source>Saving the role failed.</source>
+        <target xml:lang="km">ការរក្សាទុកតួនាទីបានបរាជ័យ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saved" xml:space="preserve">
+        <source>The role "{0}" has been saved.</source>
+        <target xml:lang="km">តួនាទី "{0}" ត្រូវបានរក្សាទុក។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="km">កំពុងរក្សាទុក…</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.search" xml:space="preserve">
+        <source>Search roles…</source>
+        <target xml:lang="km">ស្វែងរកតួនាទី…</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesEmpty" xml:space="preserve">
+        <source>Select at least one site, or allow all sites.</source>
+        <target xml:lang="km">សូមជ្រើសរើសគេហទំព័រយ៉ាងហោចណាស់មួយ ឬអនុញ្ញាតគេហទំព័រទាំងអស់។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesHintWriting" xml:space="preserve">
+        <source>The sites members may make changes on. All other sites stay readable.</source>
+        <target xml:lang="km">គេហទំព័រដែលសមាជិកអាចធ្វើការផ្លាស់ប្ដូរបាន។ គេហទំព័រផ្សេងទៀតទាំងអស់នៅតែអាចអានបាន។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesScopeAll" xml:space="preserve">
+        <source>All sites — including sites added later</source>
+        <target xml:lang="km">គេហទំព័រទាំងអស់ — រួមទាំងគេហទំព័រដែលបន្ថែមនៅពេលក្រោយ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesScopeSelected" xml:space="preserve">
+        <source>Only the selected sites</source>
+        <target xml:lang="km">តែគេហទំព័រដែលបានជ្រើសរើសប៉ុណ្ណោះ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.subtitleWriting" xml:space="preserve">
+        <source>Restrict where editors may make changes: sites, page-tree branches, dimensions and workspaces. Content stays readable for everyone.</source>
+        <target xml:lang="km">កំណត់កន្លែងដែលអ្នកកែសម្រួលអាចធ្វើការផ្លាស់ប្ដូរ៖ គេហទំព័រ មែកនៃមែកធាងទំព័រ វិមាត្រ និងលំហការងារ។ មាតិកានៅតែអាចអានបានសម្រាប់គ្រប់គ្នា។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabCapabilities" xml:space="preserve">
+        <source>Permissions</source>
+        <target xml:lang="km">សិទ្ធិ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabDimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="km">វិមាត្រ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabGeneral" xml:space="preserve">
+        <source>General</source>
+        <target xml:lang="km">ទូទៅ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabMembers" xml:space="preserve">
+        <source>Members</source>
+        <target xml:lang="km">សមាជិក</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabSites" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="km">គេហទំព័រ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabTree" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="km">ឯកសារ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="km">លំហការងារ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.title" xml:space="preserve">
+        <source>Access roles</source>
+        <target xml:lang="km">តួនាទីចូលប្រើ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeAllow" xml:space="preserve">
+        <source>Allow</source>
+        <target xml:lang="km">អនុញ្ញាត</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeAllowed" xml:space="preserve">
+        <source>Allowed</source>
+        <target xml:lang="km">បានអនុញ្ញាត</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeClear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="km">សម្អាត</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeDenied" xml:space="preserve">
+        <source>Denied</source>
+        <target xml:lang="km">បានទប់ស្កាត់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeDeny" xml:space="preserve">
+        <source>Deny</source>
+        <target xml:lang="km">ទប់ស្កាត់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeEmpty" xml:space="preserve">
+        <source>This site has no pages yet.</source>
+        <target xml:lang="km">គេហទំព័រនេះមិនទាន់មានទំព័រនៅឡើយទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeHint" xml:space="preserve">
+        <source>Without a rule the whole page tree is open. Add an allow rule and everything outside it closes; add deny rules to cut single pages out of a branch. The nearest rule to a page wins.</source>
+        <target xml:lang="km">បើគ្មានច្បាប់ មែកធាងទំព័រទាំងមូលបើកចំហ។ បន្ថែមច្បាប់អនុញ្ញាត នោះអ្វីៗនៅខាងក្រៅវានឹងត្រូវបិទ។ បន្ថែមច្បាប់ទប់ស្កាត់ ដើម្បីកាត់ទំព័រនីមួយៗចេញពីមែកមួយ។ ច្បាប់ដែលនៅជិតទំព័របំផុតមានអាទិភាព។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeIncludeDescendants" xml:space="preserve">
+        <source>Include sub-pages</source>
+        <target xml:lang="km">រួមបញ្ចូលទំព័ររង</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="km">ឯកសារ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
+        <source>Loading pages…</source>
+        <target xml:lang="km">កំពុងផ្ទុកទំព័រ…</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeNoSites" xml:space="preserve">
+        <source>No site to browse — every site is excluded by the Sites tab.</source>
+        <target xml:lang="km">មិនមានគេហទំព័រសម្រាប់រុករកទេ — ផ្ទាំង "គេហទំព័រ" មិនរាប់បញ្ចូលគេហទំព័រទាំងអស់។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeOnlyThisPage" xml:space="preserve">
+        <source>This page only</source>
+        <target xml:lang="km">តែទំព័រនេះប៉ុណ្ណោះ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRemoveRule" xml:space="preserve">
+        <source>Remove rule</source>
+        <target xml:lang="km">លុបច្បាប់ចេញ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRuleBranch" xml:space="preserve">
+        <source>Rule applies to this page and everything below</source>
+        <target xml:lang="km">ច្បាប់អនុវត្តចំពោះទំព័រនេះ និងអ្វីៗទាំងអស់នៅខាងក្រោម</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRulePage" xml:space="preserve">
+        <source>Rule applies to this page only</source>
+        <target xml:lang="km">ច្បាប់អនុវត្តចំពោះតែទំព័រនេះប៉ុណ្ណោះ</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSelectFirst" xml:space="preserve">
+        <source>Select a page above to allow or deny it.</source>
+        <target xml:lang="km">ជ្រើសរើសទំព័រមួយខាងលើ ដើម្បីអនុញ្ញាត ឬទប់ស្កាត់វា។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSelected" xml:space="preserve">
+        <source>Selected:</source>
+        <target xml:lang="km">បានជ្រើសរើស៖</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSiteUnavailable" xml:space="preserve">
+        <source>This site has no node in the live workspace.</source>
+        <target xml:lang="km">គេហទំព័រនេះមិនមានថ្នាំងនៅក្នុងលំហការងារ Live ទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.unavailable" xml:space="preserve">
+        <source>Access roles are currently unavailable.</source>
+        <target xml:lang="km">តួនាទីចូលប្រើមិនអាចប្រើបាននៅពេលនេះទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.unrestricted" xml:space="preserve">
+        <source>Unrestricted</source>
+        <target xml:lang="km">គ្មានការកំណត់</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspaceLive" xml:space="preserve">
+        <source>Live</source>
+        <target xml:lang="km">Live</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesEmpty" xml:space="preserve">
+        <source>Select at least one workspace, or allow all workspaces.</source>
+        <target xml:lang="km">សូមជ្រើសរើសលំហការងារយ៉ាងហោចណាស់មួយ ឬអនុញ្ញាតលំហការងារទាំងអស់។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesHintWriting" xml:space="preserve">
+        <source>Which workspaces members may work in — edit in, publish into, join collaboratively. With a selection, every other workspace is out, live included. All workspaces stay readable; the website is rendered from live.</source>
+        <target xml:lang="km">លំហការងារណាខ្លះដែលសមាជិកអាចធ្វើការបាន — កែសម្រួលនៅក្នុង ដាក់ផ្សាយទៅ ឬសហការនៅក្នុង។ នៅពេលមានការជ្រើសរើស លំហការងារផ្សេងទៀតទាំងអស់ត្រូវបានដកចេញ រួមទាំង Live។ លំហការងារទាំងអស់នៅតែអាចអានបាន។ គេហទំព័រត្រូវបានបង្ហាញពី Live។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesNone" xml:space="preserve">
+        <source>There are no shared workspaces yet.</source>
+        <target xml:lang="km">មិនទាន់មានលំហការងាររួមនៅឡើយទេ។</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesScopeAll" xml:space="preserve">
+        <source>All workspaces, including live</source>
+        <target xml:lang="km">លំហការងារទាំងអស់ រួមទាំង Live</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesScopeSelected" xml:space="preserve">
+        <source>Only the selected workspaces</source>
+        <target xml:lang="km">តែលំហការងារដែលបានជ្រើសរើសប៉ុណ្ណោះ</target>
+      </trans-unit>
       <trans-unit id="action.cancel" xml:space="preserve">
         <source>Cancel</source>
         <target xml:lang="km">បោះបង់</target>
@@ -65,6 +537,10 @@
       <trans-unit id="clipboard.statusCut" xml:space="preserve">
         <source>Cut</source>
         <target xml:lang="km">បានកាត់</target>
+      </trans-unit>
+      <trans-unit id="collaboration.editingRejected" xml:space="preserve">
+        <source>{name} is already editing this element - your changes were not saved.</source>
+        <target xml:lang="km">{name} កំពុងកែសម្រួលធាតុនេះរួចហើយ - ការផ្លាស់ប្ដូររបស់អ្នកមិនត្រូវបានរក្សាទុកទេ។</target>
       </trans-unit>
       <trans-unit id="common.actionFailed" xml:space="preserve">
         <source>The action failed.</source>
@@ -190,6 +666,10 @@
         <source>No {0} types can be created here.</source>
         <target xml:lang="km">មិនអាចបង្កើតប្រភេទ {0} នៅទីនេះបានទេ។</target>
       </trans-unit>
+      <trans-unit id="creation.notPermitted" xml:space="preserve">
+        <source>Your access role does not let you add content to this page.</source>
+        <target xml:lang="km">តួនាទីចូលប្រើរបស់អ្នកមិនអនុញ្ញាតឱ្យអ្នកបន្ថែមមាតិកាទៅទំព័រនេះទេ។</target>
+      </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
         <target xml:lang="km">ឯកសារ</target>
@@ -202,13 +682,9 @@
         <source>Relative to “{0}”.</source>
         <target xml:lang="km">ធៀបនឹង “{0}”។</target>
       </trans-unit>
-      <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
-        <source>Checking parent documents failed</source>
-        <target xml:lang="km">ការពិនិត្យឯកសារមេបានបរាជ័យ</target>
-      </trans-unit>
-      <trans-unit id="dimension.checkingParents" xml:space="preserve">
-        <source> Checking which parent documents are missing…</source>
-        <target xml:lang="km"> កំពុងពិនិត្យមើលថាឯកសារមេណាខ្លះដែលបាត់…</target>
+      <trans-unit id="dimension.accessLocked" xml:space="preserve">
+        <source>Outside your access role - an administrator can widen it.</source>
+        <target xml:lang="km">នៅក្រៅតួនាទីចូលប្រើរបស់អ្នក - អ្នកគ្រប់គ្រងអាចពង្រីកវាបាន។</target>
       </trans-unit>
       <trans-unit id="dimension.createAndCopy" xml:space="preserve">
         <source>Create and copy content</source>
@@ -230,13 +706,9 @@
         <source>Creating…</source>
         <target xml:lang="km">កំពុងបង្កើត…</target>
       </trans-unit>
-      <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
-        <source> {0} missing parent documents will be created as well.</source>
-        <target xml:lang="km"> ឯកសារមេដែលបាត់ចំនួន {0} នឹងត្រូវបានបង្កើតផងដែរ។</target>
-      </trans-unit>
-      <trans-unit id="dimension.missingParentsOne" xml:space="preserve">
-        <source> 1 missing parent document will be created as well.</source>
-        <target xml:lang="km"> ឯកសារមេដែលបាត់ចំនួន 1 នឹងត្រូវបានបង្កើតផងដែរ។</target>
+      <trans-unit id="dimension.missingParentsCreated" xml:space="preserve">
+        <source> Parent documents missing there are created as well.</source>
+        <target xml:lang="km"> ឯកសារមេដែលបាត់នៅទីនោះ នឹងត្រូវបានបង្កើតផងដែរ។</target>
       </trans-unit>
       <trans-unit id="dimension.missingVariant" xml:space="preserve">
         <source>The selected document does not exist here yet - create it?</source>
@@ -290,9 +762,17 @@
         <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
         <target xml:lang="km">{0} និងអ្វីៗទាំងអស់នៅក្នុងវានឹងត្រូវបានលុបចេញ។ អាចត្រឡប់វិញបានដោយបោះបង់ចោលការផ្លាស់ប្ដូរនេះពីលំហការងារ។</target>
       </trans-unit>
+      <trans-unit id="editing.deleteConfirm.descriptionMany" xml:space="preserve">
+        <source>The selected {0} and everything inside them will be removed. This is undone by discarding the changes from the workspace.</source>
+        <target xml:lang="km">{0} ដែលបានជ្រើសរើស និងអ្វីៗទាំងអស់នៅក្នុងនោះនឹងត្រូវបានលុបចេញ។ អាចត្រឡប់វិញបានដោយបោះបង់ចោលការផ្លាស់ប្ដូរទាំងនេះពីលំហការងារ។</target>
+      </trans-unit>
       <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
         <source>Delete this {0}?</source>
         <target xml:lang="km">លុប{0}នេះឬ?</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.titleMany" xml:space="preserve">
+        <source>Delete {0} {1}?</source>
+        <target xml:lang="km">លុប{1}ចំនួន {0} ឬ?</target>
       </trans-unit>
       <trans-unit id="editing.deleteFailed" xml:space="preserve">
         <source>Deleting failed</source>
@@ -302,8 +782,16 @@
         <source>document</source>
         <target xml:lang="km">ឯកសារ</target>
       </trans-unit>
+      <trans-unit id="editing.entity.documents" xml:space="preserve">
+        <source>documents</source>
+        <target xml:lang="km">ឯកសារ</target>
+      </trans-unit>
       <trans-unit id="editing.entity.element" xml:space="preserve">
         <source>element</source>
+        <target xml:lang="km">ធាតុ</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.elements" xml:space="preserve">
+        <source>elements</source>
         <target xml:lang="km">ធាតុ</target>
       </trans-unit>
       <trans-unit id="editing.hide" xml:space="preserve">
@@ -474,6 +962,10 @@
         <source>Now</source>
         <target xml:lang="km">ឥឡូវនេះ</target>
       </trans-unit>
+      <trans-unit id="editor.pickAssetFailed" xml:space="preserve">
+        <source>Picking asset failed</source>
+        <target xml:lang="km">ការជ្រើសរើសមេឌាបានបរាជ័យ</target>
+      </trans-unit>
       <trans-unit id="editor.range.currentValue" xml:space="preserve">
         <source>Current value</source>
         <target xml:lang="km">តម្លៃបច្ចុប្បន្ន</target>
@@ -485,10 +977,6 @@
       <trans-unit id="editor.range.minimum" xml:space="preserve">
         <source>Minimum</source>
         <target xml:lang="km">អប្បបរមា</target>
-      </trans-unit>
-      <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
-        <source>References can be set after creation</source>
-        <target xml:lang="km">សេចក្ដីយោងអាចកំណត់បានបន្ទាប់ពីការបង្កើត</target>
       </trans-unit>
       <trans-unit id="editor.reference.goToPage" xml:space="preserve">
         <source>Go to page</source>
@@ -642,6 +1130,190 @@
         <source>Zoom out</source>
         <target xml:lang="km">បង្រួម</target>
       </trans-unit>
+      <trans-unit id="guest.collection.add" xml:space="preserve">
+        <source>Add content</source>
+        <target xml:lang="km">បន្ថែមមាតិកា</target>
+      </trans-unit>
+      <trans-unit id="guest.element.create" xml:space="preserve">
+        <source>Create new element</source>
+        <target xml:lang="km">បង្កើតធាតុថ្មី</target>
+      </trans-unit>
+      <trans-unit id="guest.element.options" xml:space="preserve">
+        <source>Element options</source>
+        <target xml:lang="km">ជម្រើសធាតុ</target>
+      </trans-unit>
+      <trans-unit id="guest.image.select" xml:space="preserve">
+        <source>Select image</source>
+        <target xml:lang="km">ជ្រើសរើសរូបភាព</target>
+      </trans-unit>
+      <trans-unit id="guest.presence.editing" xml:space="preserve">
+        <source>{name} is editing</source>
+        <target xml:lang="km">{name} កំពុងកែសម្រួល</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addColumnAfter" xml:space="preserve">
+        <source>Add column after</source>
+        <target xml:lang="km">បញ្ចូលជួរឈរនៅខាងក្រោយ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addColumnBefore" xml:space="preserve">
+        <source>Add column before</source>
+        <target xml:lang="km">បញ្ចូលជួរឈរនៅខាងមុខ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addRowAfter" xml:space="preserve">
+        <source>Add row after</source>
+        <target xml:lang="km">បញ្ចូលជួរដេកនៅខាងក្រោម</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addRowBefore" xml:space="preserve">
+        <source>Add row before</source>
+        <target xml:lang="km">បញ្ចូលជួរដេកនៅខាងលើ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-center" xml:space="preserve">
+        <source>Align center</source>
+        <target xml:lang="km">តម្រឹមកណ្ដាល</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-justify" xml:space="preserve">
+        <source>Justify</source>
+        <target xml:lang="km">តម្រឹមសងខាង</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-left" xml:space="preserve">
+        <source>Align left</source>
+        <target xml:lang="km">តម្រឹមឆ្វេង</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-right" xml:space="preserve">
+        <source>Align right</source>
+        <target xml:lang="km">តម្រឹមស្ដាំ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.blockquote" xml:space="preserve">
+        <source>Blockquote</source>
+        <target xml:lang="km">អត្ថបទដកស្រង់</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.bold" xml:space="preserve">
+        <source>Bold</source>
+        <target xml:lang="km">ដិត</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.bulletList" xml:space="preserve">
+        <source>Bullet list</source>
+        <target xml:lang="km">បញ្ជីចំណុច</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.code" xml:space="preserve">
+        <source>Inline code</source>
+        <target xml:lang="km">កូដក្នុងបន្ទាត់</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.codeBlock" xml:space="preserve">
+        <source>Code block</source>
+        <target xml:lang="km">ប្លុកកូដ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.deleteColumn" xml:space="preserve">
+        <source>Delete column</source>
+        <target xml:lang="km">លុបជួរឈរ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.deleteRow" xml:space="preserve">
+        <source>Delete row</source>
+        <target xml:lang="km">លុបជួរដេក</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.deleteTable" xml:space="preserve">
+        <source>Delete table</source>
+        <target xml:lang="km">លុបតារាង</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-1" xml:space="preserve">
+        <source>Heading 1</source>
+        <target xml:lang="km">ចំណងជើងកម្រិត 1</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-2" xml:space="preserve">
+        <source>Heading 2</source>
+        <target xml:lang="km">ចំណងជើងកម្រិត 2</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-3" xml:space="preserve">
+        <source>Heading 3</source>
+        <target xml:lang="km">ចំណងជើងកម្រិត 3</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-4" xml:space="preserve">
+        <source>Heading 4</source>
+        <target xml:lang="km">ចំណងជើងកម្រិត 4</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-5" xml:space="preserve">
+        <source>Heading 5</source>
+        <target xml:lang="km">ចំណងជើងកម្រិត 5</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-6" xml:space="preserve">
+        <source>Heading 6</source>
+        <target xml:lang="km">ចំណងជើងកម្រិត 6</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.horizontalRule" xml:space="preserve">
+        <source>Horizontal rule</source>
+        <target xml:lang="km">បន្ទាត់ផ្ដេក</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.insertTable" xml:space="preserve">
+        <source>Insert table</source>
+        <target xml:lang="km">បញ្ចូលតារាង</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.italic" xml:space="preserve">
+        <source>Italic</source>
+        <target xml:lang="km">ទ្រេត</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.lift" xml:space="preserve">
+        <source>Outdent</source>
+        <target xml:lang="km">បន្ថយការចូលបន្ទាត់</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.link" xml:space="preserve">
+        <source>Link</source>
+        <target xml:lang="km">តំណ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.link-edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="km">កែសម្រួលតំណ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.mergeOrSplit" xml:space="preserve">
+        <source>Merge or split cells</source>
+        <target xml:lang="km">បញ្ចូល ឬបំបែកក្រឡា</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.orderedList" xml:space="preserve">
+        <source>Ordered list</source>
+        <target xml:lang="km">បញ្ជីលេខរៀង</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.paragraph" xml:space="preserve">
+        <source>Paragraph</source>
+        <target xml:lang="km">កថាខណ្ឌ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.removeFormat" xml:space="preserve">
+        <source>Clear formatting</source>
+        <target xml:lang="km">លុបទ្រង់ទ្រាយ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.sink" xml:space="preserve">
+        <source>Indent</source>
+        <target xml:lang="km">បង្កើនការចូលបន្ទាត់</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.strike" xml:space="preserve">
+        <source>Strikethrough</source>
+        <target xml:lang="km">គូសឆូត</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.styles-block" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="km">រចនាប័ទ្ម</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.styles-inline" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="km">រចនាប័ទ្ម</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.subscript" xml:space="preserve">
+        <source>Subscript</source>
+        <target xml:lang="km">អក្សរតូចក្រោម</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.superscript" xml:space="preserve">
+        <source>Superscript</source>
+        <target xml:lang="km">អក្សរតូចលើ</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.toggleHeaderRow" xml:space="preserve">
+        <source>Toggle header row</source>
+        <target xml:lang="km">បិទ/បើកជួរដេកក្បាល</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.underline" xml:space="preserve">
+        <source>Underline</source>
+        <target xml:lang="km">គូសបន្ទាត់ក្រោម</target>
+      </trans-unit>
+      <trans-unit id="guest.variant.create" xml:space="preserve">
+        <source>Create variant</source>
+        <target xml:lang="km">បង្កើតវ៉ារ្យ៉ង់</target>
+      </trans-unit>
       <trans-unit id="history.empty" xml:space="preserve">
         <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
         <target xml:lang="km">មិនមានការផ្លាស់ប្ដូរដែលមិនទាន់ដាក់ផ្សាយនៅលើទំព័រនេះទេ។ រាល់ការកែសម្រួលដែលអ្នកធ្វើនឹងបង្ហាញនៅទីនេះ រហូតដល់វាត្រូវបានដាក់ផ្សាយ។</target>
@@ -650,13 +1322,29 @@
         <source>Loading the history…</source>
         <target xml:lang="km">កំពុងផ្ទុកប្រវត្តិ…</target>
       </trans-unit>
+      <trans-unit id="history.older" xml:space="preserve">
+        <source>Older changes on this page are not shown.</source>
+        <target xml:lang="km">ការផ្លាស់ប្ដូរចាស់ៗនៅលើទំព័រនេះមិនត្រូវបានបង្ហាញទេ។</target>
+      </trans-unit>
+      <trans-unit id="inspector.accessLockedHint" xml:space="preserve">
+        <source>This page is outside your access role — you can read it, but not change it. An administrator can widen the role.</source>
+        <target xml:lang="km">ទំព័រនេះនៅក្រៅតួនាទីចូលប្រើរបស់អ្នក — អ្នកអាចអានវាបាន ប៉ុន្តែមិនអាចផ្លាស់ប្ដូរវាបានទេ។ អ្នកគ្រប់គ្រងអាចពង្រីកតួនាទីនេះបាន។</target>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="km">កម្មវិធីកែសម្រួលមិនទាន់ត្រូវបានគាំទ្រនៅឡើយទេ៖ {0}</target>
       </trans-unit>
+      <trans-unit id="inspector.elementLockedHint" xml:space="preserve">
+        <source>is editing this element right now - it is locked until they are done.</source>
+        <target xml:lang="km">កំពុងកែសម្រួលធាតុនេះឥឡូវនេះ - វាត្រូវបានចាក់សោរហូតដល់ការកែសម្រួលបញ្ចប់។</target>
+      </trans-unit>
       <trans-unit id="inspector.help" xml:space="preserve">
         <source>Help</source>
         <target xml:lang="km">ជំនួយ</target>
+      </trans-unit>
+      <trans-unit id="inspector.hiddenByAncestor" xml:space="preserve">
+        <source>Hidden because a page or element above it is hidden.</source>
+        <target xml:lang="km">ត្រូវបានលាក់ ដោយសារទំព័រ ឬធាតុនៅខាងលើវាត្រូវបានលាក់។</target>
       </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
@@ -818,6 +1506,10 @@
         <source>Remove link</source>
         <target xml:lang="km">លុបតំណ</target>
       </trans-unit>
+      <trans-unit id="link.schemeNotAllowed" xml:space="preserve">
+        <source>This kind of link is not allowed - use http(s), mailto, tel or a relative link.</source>
+        <target xml:lang="km">មិនអនុញ្ញាតតំណប្រភេទនេះទេ - សូមប្រើ http(s), mailto, tel ឬតំណដែលទាក់ទង។</target>
+      </trans-unit>
       <trans-unit id="link.searchAssets" xml:space="preserve">
         <source>Search assets…</source>
         <target xml:lang="km">ស្វែងរកមេឌា…</target>
@@ -841,10 +1533,6 @@
       <trans-unit id="link.urlPlaceholder" xml:space="preserve">
         <source>https://example.com</source>
         <target xml:lang="km">https://example.com</target>
-      </trans-unit>
-      <trans-unit id="media.actionFailed" xml:space="preserve">
-        <source>The action failed.</source>
-        <target xml:lang="km">សកម្មភាពបានបរាជ័យ។</target>
       </trans-unit>
       <trans-unit id="media.addTag" xml:space="preserve">
         <source>Add tag…</source>
@@ -1182,6 +1870,10 @@
         <source>Adding the tag failed</source>
         <target xml:lang="km">ការបន្ថែមស្លាកបានបរាជ័យ</target>
       </trans-unit>
+      <trans-unit id="media.tagFilterSuspended" xml:space="preserve">
+        <source>{0} (not while searching)</source>
+        <target xml:lang="km">{0} (មិនអំឡុងពេលស្វែងរក)</target>
+      </trans-unit>
       <trans-unit id="media.tagRemoveFailed" xml:space="preserve">
         <source>Removing the tag failed</source>
         <target xml:lang="km">ការលុបស្លាកចេញបានបរាជ័យ</target>
@@ -1197,6 +1889,22 @@
       <trans-unit id="media.type" xml:space="preserve">
         <source>Type</source>
         <target xml:lang="km">ប្រភេទ</target>
+      </trans-unit>
+      <trans-unit id="media.typeAudio" xml:space="preserve">
+        <source>Audio</source>
+        <target xml:lang="km">សំឡេង</target>
+      </trans-unit>
+      <trans-unit id="media.typeDocument" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="km">ឯកសារ</target>
+      </trans-unit>
+      <trans-unit id="media.typeImage" xml:space="preserve">
+        <source>Image</source>
+        <target xml:lang="km">រូបភាព</target>
+      </trans-unit>
+      <trans-unit id="media.typeVideo" xml:space="preserve">
+        <source>Video</source>
+        <target xml:lang="km">វីដេអូ</target>
       </trans-unit>
       <trans-unit id="media.untagged" xml:space="preserve">
         <source>Untagged</source>
@@ -1230,9 +1938,9 @@
         <source>Usage information is unavailable.</source>
         <target xml:lang="km">ព័ត៌មានការប្រើប្រាស់មិនអាចរកបានទេ។</target>
       </trans-unit>
-      <trans-unit id="media.working" xml:space="preserve">
-        <source>Working…</source>
-        <target xml:lang="km">កំពុងដំណើរការ…</target>
+      <trans-unit id="modal.accessRoles" xml:space="preserve">
+        <source>Access roles</source>
+        <target xml:lang="km">តួនាទីចូលប្រើ</target>
       </trans-unit>
       <trans-unit id="modal.adminsOnly" xml:space="preserve">
         <source>Administrators only</source>
@@ -1329,14 +2037,6 @@
       <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
         <source>Search node types…</source>
         <target xml:lang="km">ស្វែងរកប្រភេទថ្នាំង…</target>
-      </trans-unit>
-      <trans-unit id="notifications.clear" xml:space="preserve">
-        <source>Clear notifications</source>
-        <target xml:lang="km">សម្អាតការជូនដំណឹង</target>
-      </trans-unit>
-      <trans-unit id="notifications.clearFailed" xml:space="preserve">
-        <source>Clearing failed</source>
-        <target xml:lang="km">ការសម្អាតបានបរាជ័យ</target>
       </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
@@ -1437,6 +2137,10 @@
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="km">ទំព័រនេះត្រូវបានលុប។ វានឹងត្រឡប់មកវិញ នៅពេលអ្នកស្ដារវាឡើងវិញ - ឬបាត់ជារៀងរហូត នៅពេលការលុបត្រូវបានដាក់ផ្សាយ។</target>
+      </trans-unit>
+      <trans-unit id="preview.guestMissing" xml:space="preserve">
+        <source>The page loaded without the Studio editing script - selecting and editing in the preview are unavailable on it.</source>
+        <target xml:lang="km">ទំព័របានផ្ទុកដោយគ្មានស្គ្រីបកែសម្រួលរបស់ Studio - មិនអាចជ្រើសរើស និងកែសម្រួលនៅក្នុងការមើលជាមុនលើទំព័រនេះបានទេ។</target>
       </trans-unit>
       <trans-unit id="preview.openInNewTab" xml:space="preserve">
         <source>Open page in a new tab</source>
@@ -1750,6 +2454,14 @@
         <source>Delete</source>
         <target xml:lang="km">លុប</target>
       </trans-unit>
+      <trans-unit id="sites.deleteDomainDescription" xml:space="preserve">
+        <source>The site is no longer reachable under this domain.</source>
+        <target xml:lang="km">គេហទំព័រនឹងលែងអាចចូលបានតាមរយៈដូម៉ែននេះទៀតហើយ។</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDomainTitle" xml:space="preserve">
+        <source>Delete domain "{0}"?</source>
+        <target xml:lang="km">លុបដូម៉ែន "{0}" ឬ?</target>
+      </trans-unit>
       <trans-unit id="sites.deleteTitle" xml:space="preserve">
         <source>Delete site "{0}"?</source>
         <target xml:lang="km">លុបគេហទំព័រ "{0}" ឬ?</target>
@@ -1941,10 +2653,6 @@
       <trans-unit id="sites.unavailable" xml:space="preserve">
         <source>Sites are currently unavailable.</source>
         <target xml:lang="km">គេហទំព័រមិនអាចប្រើបាននៅពេលនេះទេ។</target>
-      </trans-unit>
-      <trans-unit id="sites.unsetPrimary" xml:space="preserve">
-        <source>Unset primary</source>
-        <target xml:lang="km">ដកការកំណត់ជាចម្បង</target>
       </trans-unit>
       <trans-unit id="sites.wentOffline" xml:space="preserve">
         <source>The site "{0}" is now offline.</source>
@@ -2245,10 +2953,6 @@
       <trans-unit id="trash.restoredWithAncestors" xml:space="preserve">
         <source>Restored {0} and {1} more.</source>
         <target xml:lang="km">បានស្ដារ {0} និង {1} ទៀតឡើងវិញ។</target>
-      </trans-unit>
-      <trans-unit id="trash.truncated" xml:space="preserve">
-        <source>Only the most recently deleted nodes are listed.</source>
-        <target xml:lang="km">មានតែថ្នាំងដែលបានលុបថ្មីៗបំផុតប៉ុណ្ណោះដែលត្រូវបានរាយ។</target>
       </trans-unit>
       <trans-unit id="tree.clearFilter" xml:space="preserve">
         <source>Clear filter</source>
@@ -2702,10 +3406,6 @@
         <source>the base workspace</source>
         <target xml:lang="km">លំហការងារមូលដ្ឋាន</target>
       </trans-unit>
-      <trans-unit id="workspace.cannotBeUndone" xml:space="preserve">
-        <source>This cannot be undone.</source>
-        <target xml:lang="km">មិនអាចត្រឡប់វិញបានទេ។</target>
-      </trans-unit>
       <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
         <source>You cannot publish to this workspace</source>
         <target xml:lang="km">អ្នកមិនអាចដាក់ផ្សាយទៅលំហការងារនេះបានទេ</target>
@@ -2729,14 +3429,6 @@
       <trans-unit id="workspace.changesPublished" xml:space="preserve">
         <source>Changes published.</source>
         <target xml:lang="km">បានដាក់ផ្សាយការផ្លាស់ប្ដូរ។</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborative" xml:space="preserve">
-        <source>Collaborative</source>
-        <target xml:lang="km">សហការ</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
-        <source>Editing together in a shared workspace</source>
-        <target xml:lang="km">កែសម្រួលរួមគ្នានៅក្នុងលំហការងារចែករំលែក</target>
       </trans-unit>
       <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
         <source>Collaborative editing (with everyone in the workspace)</source>
@@ -2794,34 +3486,6 @@
         <source>Changes discarded.</source>
         <target xml:lang="km">បានបោះបង់ចោលការផ្លាស់ប្ដូរ។</target>
       </trans-unit>
-      <trans-unit id="workspace.discardAll" xml:space="preserve">
-        <source>Discard all</source>
-        <target xml:lang="km">បោះបង់ចោលទាំងអស់</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardAllMany" xml:space="preserve">
-        <source>All {0} pending changes will be discarded.</source>
-        <target xml:lang="km">ការផ្លាស់ប្ដូរដែលរង់ចាំទាំង {0} នឹងត្រូវបានបោះបង់ចោល។</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardAllOne" xml:space="preserve">
-        <source>All 1 pending change will be discarded.</source>
-        <target xml:lang="km">ការផ្លាស់ប្ដូរដែលរង់ចាំទាំង 1 នឹងត្រូវបានបោះបង់ចោល។</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardAllTitle" xml:space="preserve">
-        <source>Discard all changes?</source>
-        <target xml:lang="km">បោះបង់ចោលការផ្លាស់ប្ដូរទាំងអស់ឬ?</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardPageMany" xml:space="preserve">
-        <source>{0} pending changes on this page will be discarded.</source>
-        <target xml:lang="km">ការផ្លាស់ប្ដូរដែលរង់ចាំ {0} នៅលើទំព័រនេះ នឹងត្រូវបានបោះបង់ចោល។</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardPageOne" xml:space="preserve">
-        <source>1 pending change on this page will be discarded.</source>
-        <target xml:lang="km">ការផ្លាស់ប្ដូរដែលរង់ចាំ 1 នៅលើទំព័រនេះ នឹងត្រូវបានបោះបង់ចោល។</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardPageTitle" xml:space="preserve">
-        <source>Discard changes on this page?</source>
-        <target xml:lang="km">បោះបង់ចោលការផ្លាស់ប្ដូរនៅលើទំព័រនេះឬ?</target>
-      </trans-unit>
       <trans-unit id="workspace.live" xml:space="preserve">
         <source>Live</source>
         <target xml:lang="km">Live</target>
@@ -2829,14 +3493,6 @@
       <trans-unit id="workspace.manyChanges" xml:space="preserve">
         <source>{0} changes</source>
         <target xml:lang="km">ការផ្លាស់ប្ដូរ {0}</target>
-      </trans-unit>
-      <trans-unit id="workspace.moreActions" xml:space="preserve">
-        <source>More publish and discard actions</source>
-        <target xml:lang="km">សកម្មភាពដាក់ផ្សាយ និងបោះបង់ចោលបន្ថែមទៀត</target>
-      </trans-unit>
-      <trans-unit id="workspace.noPendingChanges" xml:space="preserve">
-        <source>No pending changes</source>
-        <target xml:lang="km">មិនមានការផ្លាស់ប្ដូរដែលរង់ចាំទេ</target>
       </trans-unit>
       <trans-unit id="workspace.oneChange" xml:space="preserve">
         <source>1 change</source>
@@ -2846,10 +3502,6 @@
         <source>{0} pending changes</source>
         <target xml:lang="km">ការផ្លាស់ប្ដូរដែលរង់ចាំ {0}</target>
       </trans-unit>
-      <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
-        <source>Publish all</source>
-        <target xml:lang="km">ដាក់ផ្សាយទាំងអស់</target>
-      </trans-unit>
       <trans-unit id="workspace.publishDenied" xml:space="preserve">
         <source>You are not allowed to publish to "{0}"</source>
         <target xml:lang="km">អ្នកមិនត្រូវបានអនុញ្ញាតឱ្យដាក់ផ្សាយទៅ "{0}" ទេ</target>
@@ -2857,18 +3509,6 @@
       <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
         <source>Publish or discard your changes first.</source>
         <target xml:lang="km">ដាក់ផ្សាយ ឬបោះបង់ចោលការផ្លាស់ប្ដូររបស់អ្នកជាមុនសិន។</target>
-      </trans-unit>
-      <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
-        <source>Publish {0} pending changes</source>
-        <target xml:lang="km">ដាក់ផ្សាយការផ្លាស់ប្ដូរដែលរង់ចាំ {0}</target>
-      </trans-unit>
-      <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
-        <source>Publish 1 pending change</source>
-        <target xml:lang="km">ដាក់ផ្សាយការផ្លាស់ប្ដូរដែលរង់ចាំ 1</target>
-      </trans-unit>
-      <trans-unit id="workspace.publishTarget" xml:space="preserve">
-        <source>Workspace to publish to</source>
-        <target xml:lang="km">លំហការងារដែលត្រូវដាក់ផ្សាយទៅ</target>
       </trans-unit>
       <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
         <source>Review and publish</source>
@@ -2886,10 +3526,6 @@
         <source>Editing in {0}, publishing to {1}</source>
         <target xml:lang="km">កំពុងកែសម្រួលក្នុង {0} ហើយផ្សព្វផ្សាយទៅ {1}</target>
       </trans-unit>
-      <trans-unit id="workspace.publishThisPage" xml:space="preserve">
-        <source>Publish this page</source>
-        <target xml:lang="km">ដាក់ផ្សាយទំព័រនេះ</target>
-      </trans-unit>
       <trans-unit id="workspace.publishing.failed" xml:space="preserve">
         <source>Publishing failed</source>
         <target xml:lang="km">ការដាក់ផ្សាយបានបរាជ័យ</target>
@@ -2897,10 +3533,6 @@
       <trans-unit id="workspace.readOnly" xml:space="preserve">
         <source>read-only</source>
         <target xml:lang="km">បានតែអាន</target>
-      </trans-unit>
-      <trans-unit id="workspace.review.button" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="km">ពិនិត្យការផ្លាស់ប្ដូរ</target>
       </trans-unit>
       <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
         <source>Review pending changes between workspaces</source>
@@ -2950,13 +3582,13 @@
         <source>Hide changes</source>
         <target xml:lang="km">លាក់ការផ្លាស់ប្ដូរ</target>
       </trans-unit>
+      <trans-unit id="workspace.review.loadFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="km">មិនអាចផ្ទុកការផ្លាស់ប្ដូរបានទេ។</target>
+      </trans-unit>
       <trans-unit id="workspace.review.showChanges" xml:space="preserve">
         <source>Show changes</source>
         <target xml:lang="km">បង្ហាញការផ្លាស់ប្ដូរ</target>
-      </trans-unit>
-      <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
-        <source>Only the most recent changes are shown.</source>
-        <target xml:lang="km">មានតែការផ្លាស់ប្ដូរថ្មីៗបំផុតប៉ុណ្ណោះដែលត្រូវបានបង្ហាញ។</target>
       </trans-unit>
       <trans-unit id="workspace.review.loading" xml:space="preserve">
         <source>Loading changes…</source>
@@ -3069,22 +3701,6 @@
       <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
         <source>Visibility changed</source>
         <target xml:lang="km">បានផ្លាស់ប្ដូរភាពមើលឃើញ</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
-        <source>Pending change</source>
-        <target xml:lang="km">ការផ្លាស់ប្ដូរដែលរង់ចាំ</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
-        <source>Base has newer changes</source>
-        <target xml:lang="km">មូលដ្ឋានមានការផ្លាស់ប្ដូរថ្មីជាង</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
-        <source>Personal workspace</source>
-        <target xml:lang="km">លំហការងារផ្ទាល់ខ្លួន</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
-        <source>Shared workspace</source>
-        <target xml:lang="km">លំហការងារចែករំលែក</target>
       </trans-unit>
       <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
         <source>The workspaces could not be loaded.</source>

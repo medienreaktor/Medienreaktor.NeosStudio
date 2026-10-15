@@ -1,18 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { queryClient } from '@/app/queryClient'
 import { ApiError, problemOf } from '../../http/errors'
-import { queryString } from '../../http/request'
-import {
-  apiFetch,
-  contentRepositoryPath,
-  fetchAllPages,
-  type Listing,
-} from '../client'
+import { api, fetchAllPages, unwrap } from '../client'
 import {
   activeContentRepositoryId,
   useActiveContentRepositoryId,
 } from '../activeContentRepository'
 import { neosKeys } from '../keys'
 import type {
+  BaseWorkspaceChange,
   Change,
   DiscardingResult,
   PaginatedEventListing,
@@ -22,72 +18,108 @@ import type {
   WorkspaceCreate,
   WorkspaceDiscard,
   WorkspacePublish,
+  WorkspaceRebase,
   WorkspaceRole,
-  WorkspaceRoleAssignment,
+  WorkspaceRoleAssign,
   WorkspaceRoleSubject,
   WorkspaceUpdate,
 } from '../schema'
+import type { operations } from '../schema/openapi'
 
 /**
- * The workspaces of the selected site's content repository (Neos.Api's
- * Workspaces tag).
+ * The workspaces of a content repository (Neos.Api's Workspaces tag). The
+ * hooks read the selected site's content repository; the writes name theirs
+ * explicitly - a write must not land in whichever repository happens to be
+ * selected when it runs.
  */
 
-function workspacesPath(
-  workspaceName?: string,
-  contentRepositoryId: string = activeContentRepositoryId(),
-): string {
-  const base = `${contentRepositoryPath(contentRepositoryId)}/workspaces`
-  return workspaceName === undefined
-    ? base
-    : `${base}/${encodeURIComponent(workspaceName)}`
+const WORKSPACES = '/cr/{contentRepositoryId}/workspaces'
+const WORKSPACE = '/cr/{contentRepositoryId}/workspaces/{workspaceName}'
+
+/** The path parameters of a workspace operation. */
+function workspacePath(contentRepositoryId: string, workspaceName: string) {
+  return { contentRepositoryId, workspaceName }
 }
 
+/** All workspaces the account may read. Read-only - see ensurePersonalWorkspace. */
 async function listWorkspaces(
   contentRepositoryId: string,
+  signal?: AbortSignal,
 ): Promise<Workspace[]> {
   return (
-    await apiFetch<Listing<Workspace>>(
-      workspacesPath(undefined, contentRepositoryId),
+    await unwrap(
+      api.GET(WORKSPACES, {
+        params: { path: { contentRepositoryId } },
+        signal,
+      }),
     )
   ).data
-}
-
-/**
- * All workspaces the account may read.
- *
- * Provisions the acting user's personal workspace when it is missing (as the
- * classic Neos UI does on backend load): editing happens there by default,
- * and the shell cannot initialise without one. Neos.Api creates it for the
- * caller with classification "personal"; a second one would be a 409,
- * ignored like any other failure here.
- */
-async function fetchWorkspaces(
-  contentRepositoryId: string,
-): Promise<Workspace[]> {
-  const workspaces = await listWorkspaces(contentRepositoryId)
-  if (workspaces.some((workspace) => workspace.classification === 'personal')) {
-    return workspaces
-  }
-  try {
-    await apiFetch(workspacesPath(undefined, contentRepositoryId), {
-      method: 'POST',
-      body: { classification: 'personal' } satisfies WorkspaceCreate,
-    })
-    return await listWorkspaces(contentRepositoryId)
-  } catch {
-    // no Neos user behind the token, or created meanwhile
-    return workspaces
-  }
 }
 
 export function useWorkspaces(enabled = true, refetchInterval?: number) {
   const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
     queryKey: neosKeys.workspaces.list(contentRepositoryId ?? ''),
-    queryFn: () => fetchWorkspaces(contentRepositoryId!),
-    enabled: enabled && contentRepositoryId !== null,
+    queryFn:
+      enabled && contentRepositoryId !== null
+        ? ({ signal }) => listWorkspaces(contentRepositoryId, signal)
+        : skipToken,
     refetchInterval,
+  })
+}
+
+// One provisioning per content repository and document load (see below).
+const personalWorkspaceProvisioning = new Map<string, Promise<void>>()
+
+/**
+ * Provisions the acting user's personal workspace in the content repository
+ * when it is missing (as the classic Neos UI does on backend load): editing
+ * happens there by default, and the shell cannot initialise without one. The
+ * App calls it at boot, for the selected site's content repository, before
+ * it relies on the workspace list; the list is refreshed once the workspace
+ * exists.
+ *
+ * Runs once per content repository - later calls share the first one's
+ * outcome. Neos.Api creates the workspace for the caller with classification
+ * "personal"; a 4xx (no Neos user behind the token, or created meanwhile - a
+ * 409) is final and ignored, a transient failure (network, 5xx) lets a later
+ * call try again. Never rejects.
+ */
+export function ensurePersonalWorkspace(
+  contentRepositoryId: string,
+): Promise<void> {
+  let provisioning = personalWorkspaceProvisioning.get(contentRepositoryId)
+  if (!provisioning) {
+    provisioning = provisionPersonalWorkspace(contentRepositoryId).catch(
+      (error: unknown) => {
+        if (!(error instanceof ApiError && error.status < 500)) {
+          personalWorkspaceProvisioning.delete(contentRepositoryId)
+        }
+      },
+    )
+    personalWorkspaceProvisioning.set(contentRepositoryId, provisioning)
+  }
+  return provisioning
+}
+
+async function provisionPersonalWorkspace(
+  contentRepositoryId: string,
+): Promise<void> {
+  const workspaces = await queryClient.fetchQuery({
+    queryKey: neosKeys.workspaces.list(contentRepositoryId),
+    queryFn: ({ signal }) => listWorkspaces(contentRepositoryId, signal),
+  })
+  if (workspaces.some((workspace) => workspace.classification === 'personal')) {
+    return
+  }
+  await unwrap(
+    api.POST(WORKSPACES, {
+      params: { path: { contentRepositoryId } },
+      body: { classification: 'personal' } satisfies WorkspaceCreate,
+    }),
+  )
+  await queryClient.invalidateQueries({
+    queryKey: neosKeys.workspaces.list(contentRepositoryId),
   })
 }
 
@@ -113,26 +145,45 @@ export function countChangedNodes(changes: Change[]): number {
 }
 
 /**
- * The pending changes of the workspace, with the workspace itself - read
- * along because clients poll the changes anyway, so its status ("outdated":
- * the base has moved on) surfaces without another query.
+ * The pending changes of the workspace - all, or with filterBySite only the
+ * ones in that site (its site node's aggregate id) - with the workspace
+ * itself: read along because clients poll the changes anyway, so its status
+ * ("outdated": the base has moved on) surfaces without another query.
  */
-export function useWorkspaceChanges(workspaceName: string | null) {
+export function useWorkspaceChanges(
+  workspaceName: string | null,
+  options: { filterBySite?: string | null } = {},
+) {
   const contentRepositoryId = useActiveContentRepositoryId()
+  const filterBySite = options.filterBySite ?? null
   return useQuery({
-    queryKey: neosKeys.workspaces.changes(
+    queryKey: neosKeys.workspaces.pendingChanges(
       contentRepositoryId ?? '',
       workspaceName ?? '',
+      filterBySite,
     ),
-    queryFn: async () => {
-      const path = workspacesPath(workspaceName!, contentRepositoryId!)
-      const [workspace, changes] = await Promise.all([
-        apiFetch<Workspace>(path),
-        fetchAllPages<Change>(`${path}/changes`),
-      ])
-      return { workspace, changes }
-    },
-    enabled: workspaceName !== null && contentRepositoryId !== null,
+    queryFn:
+      workspaceName !== null && contentRepositoryId !== null
+        ? async ({ signal }) => {
+            const [workspace, changes] = await Promise.all([
+              unwrap(
+                api.GET(WORKSPACE, {
+                  params: {
+                    path: workspacePath(contentRepositoryId, workspaceName),
+                  },
+                  signal,
+                }),
+              ),
+              fetchWorkspaceChanges(
+                contentRepositoryId,
+                workspaceName,
+                { filterBySite: filterBySite ?? undefined },
+                signal,
+              ),
+            ])
+            return { workspace, changes }
+          }
+        : skipToken,
     // Dirty markers should feel current while editing elsewhere.
     staleTime: 10_000,
   })
@@ -140,29 +191,29 @@ export function useWorkspaceChanges(workspaceName: string | null) {
 
 /** Publishes the workspace's changes to its base - all, or of a site or documents. */
 export function publishWorkspace(
+  contentRepositoryId: string,
   workspaceName: string,
   scope: WorkspacePublish = {},
 ): Promise<PublishingResult> {
-  return apiFetch<PublishingResult>(
-    `${workspacesPath(workspaceName)}/publish`,
-    {
-      method: 'POST',
+  return unwrap(
+    api.POST('/cr/{contentRepositoryId}/workspaces/{workspaceName}/publish', {
+      params: { path: workspacePath(contentRepositoryId, workspaceName) },
       body: scope,
-    },
+    }),
   )
 }
 
 /** Discards the workspace's changes - all, or of a site or documents. */
 export function discardWorkspace(
+  contentRepositoryId: string,
   workspaceName: string,
   scope: WorkspaceDiscard = {},
 ): Promise<DiscardingResult> {
-  return apiFetch<DiscardingResult>(
-    `${workspacesPath(workspaceName)}/discard`,
-    {
-      method: 'POST',
+  return unwrap(
+    api.POST('/cr/{contentRepositoryId}/workspaces/{workspaceName}/discard', {
+      params: { path: workspacePath(contentRepositoryId, workspaceName) },
       body: scope,
-    },
+    }),
   )
 }
 
@@ -172,13 +223,16 @@ export function discardWorkspace(
  * with the incoming ones (see workspaceConflicts); "force" drops them.
  */
 export async function rebaseWorkspace(
+  contentRepositoryId: string,
   workspaceName: string,
   strategy: 'fail' | 'force' = 'fail',
 ): Promise<void> {
-  await apiFetch(`${workspacesPath(workspaceName)}/rebase`, {
-    method: 'POST',
-    body: { strategy },
-  })
+  await unwrap(
+    api.POST('/cr/{contentRepositoryId}/workspaces/{workspaceName}/rebase', {
+      params: { path: workspacePath(contentRepositoryId, workspaceName) },
+      body: { strategy } satisfies WorkspaceRebase,
+    }),
+  )
 }
 
 /**
@@ -186,13 +240,19 @@ export async function rebaseWorkspace(
  * publishable changes (see isConflict).
  */
 export async function changeBaseWorkspace(
+  contentRepositoryId: string,
   workspaceName: string,
   baseWorkspaceName: string,
 ): Promise<void> {
-  await apiFetch(`${workspacesPath(workspaceName)}/baseworkspace`, {
-    method: 'PUT',
-    body: { baseWorkspaceName },
-  })
+  await unwrap(
+    api.PUT(
+      '/cr/{contentRepositoryId}/workspaces/{workspaceName}/baseworkspace',
+      {
+        params: { path: workspacePath(contentRepositoryId, workspaceName) },
+        body: { baseWorkspaceName } satisfies BaseWorkspaceChange,
+      },
+    ),
+  )
 }
 
 /**
@@ -215,36 +275,60 @@ export function workspaceConflicts(
   }
 }
 
-export function createWorkspace(input: WorkspaceCreate): Promise<Workspace> {
-  return apiFetch<Workspace>(workspacesPath(), { method: 'POST', body: input })
+export function createWorkspace(
+  contentRepositoryId: string,
+  input: WorkspaceCreate,
+): Promise<Workspace> {
+  return unwrap(
+    api.POST(WORKSPACES, {
+      params: { path: { contentRepositoryId } },
+      body: input,
+    }),
+  )
 }
 
 export function updateWorkspace(
+  contentRepositoryId: string,
   workspaceName: string,
   input: WorkspaceUpdate,
 ): Promise<Workspace> {
-  return apiFetch<Workspace>(workspacesPath(workspaceName), {
-    method: 'PATCH',
-    body: input,
-  })
+  return unwrap(
+    api.PATCH(WORKSPACE, {
+      params: { path: workspacePath(contentRepositoryId, workspaceName) },
+      body: input,
+    }),
+  )
 }
 
 /** With force, pending changes are discarded along with the workspace. */
 export async function deleteWorkspace(
+  contentRepositoryId: string,
   workspaceName: string,
   force = false,
 ): Promise<void> {
-  await apiFetch(
-    `${workspacesPath(workspaceName)}${force ? queryString({ force: true }) : ''}`,
-    { method: 'DELETE' },
+  await unwrap(
+    api.DELETE(WORKSPACE, {
+      params: {
+        path: workspacePath(contentRepositoryId, workspaceName),
+        query: force ? { force: true } : {},
+      },
+    }),
   )
 }
 
+const ROLE =
+  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/roles/{subjectType}/{subjectId}'
+
 function rolePath(
+  contentRepositoryId: string,
   workspaceName: string,
   subject: WorkspaceRoleSubject,
-): string {
-  return `${workspacesPath(workspaceName)}/roles/${subject.type}/${encodeURIComponent(subject.id)}`
+) {
+  return {
+    ...workspacePath(contentRepositoryId, workspaceName),
+    subjectType: subject.type,
+    subjectId: subject.id,
+  }
 }
 
 /** Who (a user or a Flow role group) may do what. Requires manage permission. */
@@ -255,48 +339,80 @@ export function useWorkspaceRoles(workspaceName: string | null) {
       contentRepositoryId ?? '',
       workspaceName ?? '',
     ),
-    queryFn: async () =>
-      (
-        await apiFetch<Listing<WorkspaceRoleAssignment>>(
-          `${workspacesPath(workspaceName!, contentRepositoryId!)}/roles`,
-        )
-      ).data,
-    enabled: workspaceName !== null && contentRepositoryId !== null,
+    queryFn:
+      workspaceName !== null && contentRepositoryId !== null
+        ? async ({ signal }) =>
+            (
+              await unwrap(
+                api.GET(
+                  '/cr/{contentRepositoryId}/workspaces/{workspaceName}/roles',
+                  {
+                    params: {
+                      path: workspacePath(contentRepositoryId, workspaceName),
+                    },
+                    signal,
+                  },
+                ),
+              )
+            ).data
+        : skipToken,
   })
 }
 
 /** Gives the subject the role; a role it had is replaced. */
 export async function assignWorkspaceRole(
+  contentRepositoryId: string,
   workspaceName: string,
   subject: WorkspaceRoleSubject,
   role: WorkspaceRole,
 ): Promise<void> {
-  await apiFetch(rolePath(workspaceName, subject), {
-    method: 'PUT',
-    body: { role },
-  })
+  await unwrap(
+    api.PUT(ROLE, {
+      params: { path: rolePath(contentRepositoryId, workspaceName, subject) },
+      body: { role } satisfies WorkspaceRoleAssign,
+    }),
+  )
 }
 
 export async function unassignWorkspaceRole(
+  contentRepositoryId: string,
   workspaceName: string,
   subject: WorkspaceRoleSubject,
 ): Promise<void> {
-  await apiFetch(rolePath(workspaceName, subject), { method: 'DELETE' })
+  await unwrap(
+    api.DELETE(ROLE, {
+      params: { path: rolePath(contentRepositoryId, workspaceName, subject) },
+    }),
+  )
 }
+
+/** The query parameters of listWorkspaceEvents (Neos.Api's). */
+type WorkspaceEventsQuery = NonNullable<
+  operations['listWorkspaceEvents']['parameters']['query']
+>
 
 /**
  * A page of the events of the workspace's current content stream: after a
  * sequence number (a 409 if it is of an earlier content stream - the
  * workspace was published, discarded or rebased since), or sorted, with what
  * each changed (include=diff) and its node and document (node, document).
+ * The filters (by event type, node, document, tag) combine; a filtered page
+ * is filled with matching events.
  */
 export function listWorkspaceEvents(
   workspaceName: string,
-  params: { after?: number; sort?: string; limit?: number; include?: string },
+  params: WorkspaceEventsQuery,
   contentRepositoryId: string = activeContentRepositoryId(),
+  signal?: AbortSignal,
 ): Promise<PaginatedEventListing> {
-  return apiFetch<PaginatedEventListing>(
-    `${workspacesPath(workspaceName, contentRepositoryId)}/events${queryString(params)}`,
+  return unwrap(
+    api.GET('/cr/{contentRepositoryId}/workspaces/{workspaceName}/events', {
+      params: {
+        path: workspacePath(contentRepositoryId, workspaceName),
+        query: params,
+      },
+      signal,
+    }),
   )
 }
 
@@ -309,12 +425,69 @@ export function fetchWorkspaceChanges(
   workspaceName: string,
   params: {
     filterByDocument?: string
+    /** A site node's aggregate id: only the changes in that site. */
+    filterBySite?: string
     filterByChangeType?: string
     filterByNodeType?: string
     include?: string
   },
+  signal?: AbortSignal,
 ): Promise<Change[]> {
-  return fetchAllPages<Change>(
-    `${workspacesPath(workspaceName, contentRepositoryId)}/changes${queryString(params)}`,
+  return fetchAllPages((page) =>
+    unwrap(
+      api.GET('/cr/{contentRepositoryId}/workspaces/{workspaceName}/changes', {
+        params: {
+          path: workspacePath(contentRepositoryId, workspaceName),
+          query: { ...params, ...page },
+        },
+        signal,
+      }),
+    ),
   )
+}
+
+// --- Scoped invalidation: what a write affects, and nothing more ---
+
+/**
+ * Refetch the workspace's pending changes - every read under them: the
+ * dirty markers' list, the review, document diffs, the trash, conflicts.
+ */
+export function invalidateWorkspaceChanges(
+  contentRepositoryId: string,
+  workspaceName: string,
+): Promise<void> {
+  return queryClient.invalidateQueries({
+    queryKey: neosKeys.workspaces.changes(contentRepositoryId, workspaceName),
+  })
+}
+
+/** Refetch the workspace's event history (the pending history and its diffs). */
+export function invalidateWorkspaceHistory(
+  contentRepositoryId: string,
+  workspaceName: string,
+): Promise<void> {
+  return queryClient.invalidateQueries({
+    queryKey: neosKeys.workspaces.history(contentRepositoryId, workspaceName),
+  })
+}
+
+/**
+ * Refetch everything read of the workspace - changes, history, roles - and
+ * the workspace list, which carries its status and permissions.
+ */
+export async function invalidateWorkspace(
+  contentRepositoryId: string,
+  workspaceName: string,
+): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: neosKeys.workspaces.workspace(
+        contentRepositoryId,
+        workspaceName,
+      ),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: neosKeys.workspaces.list(contentRepositoryId),
+    }),
+  ])
 }

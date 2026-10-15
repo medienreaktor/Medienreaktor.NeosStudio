@@ -37,25 +37,12 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   )
 }
 
-function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
-  return (
-    <tfoot
-      data-slot="table-footer"
-      className={cn(
-        'border-t border-neutral-100 dark:border-neutral-700 bg-neutral-200/50 dark:bg-neutral-800/50 font-medium [&>tr]:last:border-b-0',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   return (
     <tr
       data-slot="table-row"
       className={cn(
-        'border-b border-neutral-100 dark:border-neutral-700 transition-colors hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 data-[state=selected]:bg-neutral-200 dark:data-[state=selected]:bg-neutral-800',
+        'border-b border-neutral-100 dark:border-neutral-700 transition-colors hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50',
         className,
       )}
       {...props}
@@ -86,29 +73,4 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   )
 }
 
-function TableCaption({
-  className,
-  ...props
-}: React.ComponentProps<'caption'>) {
-  return (
-    <caption
-      data-slot="table-caption"
-      className={cn(
-        'mt-2 text-sm text-neutral-600 dark:text-neutral-400',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-}
+export { Table, TableHeader, TableBody, TableHead, TableRow, TableCell }

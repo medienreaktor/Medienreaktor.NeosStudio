@@ -1,13 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
-import { studioFetch } from '../client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { api, unwrap } from '../../neos/client'
 import { studioKeys } from '../keys'
-import type {
-  AccessRole,
-  AccessRoleCreate,
-  AccessRoleListing,
-  AccessRoleUpdate,
-  MyAccess,
-} from '../schema'
+import type { AccessRole, AccessRoleCreate, AccessRoleUpdate } from '../schema'
 
 /**
  * Dynamic access roles: named restriction sets an administrator creates in
@@ -20,19 +14,10 @@ import type {
 export function useAccessRoles(enabled = true) {
   return useQuery({
     queryKey: studioKeys.access.roles,
-    queryFn: () => studioFetch<AccessRoleListing>('/accessroles'),
-    enabled,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/accessroles', { signal }))
+      : skipToken,
   })
-}
-
-function myAccessQuery() {
-  return {
-    queryKey: studioKeys.access.mine,
-    queryFn: () => studioFetch<MyAccess>('/access/me'),
-    // Roles change rarely; a stale answer only means the UI catches up one
-    // navigation later.
-    staleTime: 5 * 60 * 1000,
-  }
 }
 
 /**
@@ -40,33 +25,38 @@ function myAccessQuery() {
  * the restrictions they are already living inside.
  */
 export function useMyAccess(enabled = true) {
-  return useQuery({ ...myAccessQuery(), enabled })
+  return useQuery({
+    queryKey: studioKeys.access.mine,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/access/me', { signal }))
+      : skipToken,
+    // Roles change rarely; a stale answer only means the UI catches up one
+    // navigation later.
+    staleTime: 5 * 60 * 1000,
+  })
 }
 
-export function createAccessRole(input: AccessRoleCreate) {
-  return studioFetch<AccessRole>('/accessroles', {
-    method: 'POST',
-    body: input,
-  })
+export function createAccessRole(input: AccessRoleCreate): Promise<AccessRole> {
+  return unwrap(api.POST('/accessroles', { body: input }))
 }
 
 /** Partial update; "constraints" and "memberUserIds" each replace the whole set. */
-export function updateAccessRole(roleId: string, input: AccessRoleUpdate) {
-  return studioFetch<AccessRole>(`/accessroles/${encodeURIComponent(roleId)}`, {
-    method: 'PATCH',
-    body: input,
-  })
-}
-
-export function setAccessRoleMembers(roleId: string, userIds: string[]) {
-  return studioFetch<AccessRole>(
-    `/accessroles/${encodeURIComponent(roleId)}/members`,
-    { method: 'PUT', body: { userIds } },
+export function updateAccessRole(
+  roleId: string,
+  input: AccessRoleUpdate,
+): Promise<AccessRole> {
+  return unwrap(
+    api.PATCH('/accessroles/{accessRoleId}', {
+      params: { path: { accessRoleId: roleId } },
+      body: input,
+    }),
   )
 }
 
-export function deleteAccessRole(roleId: string) {
-  return studioFetch<null>(`/accessroles/${encodeURIComponent(roleId)}`, {
-    method: 'DELETE',
-  })
+export async function deleteAccessRole(roleId: string): Promise<void> {
+  await unwrap(
+    api.DELETE('/accessroles/{accessRoleId}', {
+      params: { path: { accessRoleId: roleId } },
+    }),
+  )
 }

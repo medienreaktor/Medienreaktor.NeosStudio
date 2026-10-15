@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
 import { studioKeys } from '@/api/studio/keys'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useUsers } from '@/api/neos/endpoints/users'
 import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
 import type { Workspace } from '@/api/neos/schema'
@@ -30,6 +31,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
 import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
@@ -51,6 +53,7 @@ export function CreateTaskDialog({
 }) {
   const users = useUsers().data
   const { data: workspacesData } = useWorkspaces(open)
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -58,14 +61,14 @@ export function CreateTaskDialog({
   // null = unassigned; the trigger then shows the "Select user" placeholder.
   const [assignee, setAssignee] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open) {
-      setTitle('')
-      setDescription('')
-      setBaseWorkspace('live')
-      setAssignee(null)
-    }
-  }, [open])
+  // Every open starts with an empty form.
+  useValueChange(open, (isOpen) => {
+    if (!isOpen) return
+    setTitle('')
+    setDescription('')
+    setBaseWorkspace('live')
+    setAssignee(null)
+  })
 
   // Base candidates: live and shared workspaces (incl. other task branches -
   // stacking a task on a feature branch is legitimate).
@@ -97,7 +100,7 @@ export function CreateTaskDialog({
 
   const mutation = useMutation({
     mutationFn: () =>
-      createTask({
+      createTask(contentRepositoryId!, {
         title: title.trim(),
         ...(description.trim() !== ''
           ? { description: description.trim() }

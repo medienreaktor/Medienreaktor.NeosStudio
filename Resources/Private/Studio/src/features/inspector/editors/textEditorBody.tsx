@@ -10,6 +10,11 @@ import type { PropertyEditorProps } from './registry'
  * and commits on blur (or Enter, in the single-line variant); Escape reverts
  * the draft. Doubles as the number editor for integer/float properties - an
  * empty field clears the value, a non-number is refused and reverts on commit.
+ *
+ * The draft follows the incoming value while there is no unsaved edit (a save
+ * from elsewhere, a collaborator's change, the refetch after the own commit),
+ * and a commit only fires when the draft differs from the value the edit
+ * started from - a focus+blur never writes a stale draft over a newer value.
  */
 export function TextEditorBody({
   multiline,
@@ -23,6 +28,12 @@ export function TextEditorBody({
 }: PropertyEditorProps & { multiline: boolean }) {
   const initial = value === null || value === undefined ? '' : String(value)
   const [draft, setDraft] = useState(initial)
+  // The value the current draft started from.
+  const [base, setBase] = useState(initial)
+  if (initial !== base && (draft === base || draft === initial)) {
+    setBase(initial)
+    setDraft(initial)
+  }
   const placeholder = plainEditorOption(options, 'placeholder')
   const isNumeric = subject.type === 'integer' || subject.type === 'float'
 
@@ -45,9 +56,10 @@ export function TextEditorBody({
   }
 
   const commit = () => {
-    if (draft === initial) return
+    if (draft === base) return
     const { ok, value: outgoing } = parse(draft)
     if (!ok) {
+      setBase(initial)
       setDraft(initial)
       return
     }
@@ -62,6 +74,7 @@ export function TextEditorBody({
         // preventDefault keeps any surrounding dialog/panel open - Escape here
         // only cancels the draft.
         event.preventDefault()
+        setBase(initial)
         setDraft(initial)
         onChange?.(parse(initial).value)
         event.currentTarget.blur()

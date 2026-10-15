@@ -30,8 +30,7 @@ import * as ReactJSXRuntime from 'react/jsx-runtime'
 
 import { ApiError } from '@/api/http/errors'
 import { apiFetch } from '@/api/neos/client'
-import { studioFetch } from '@/api/studio/client'
-import { useStudio } from '@/app/StudioContext'
+import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
   presenceColor,
@@ -82,8 +81,15 @@ import {
 export const version = 1 as const
 
 // Each registry is re-exported under a friendly name, annotated with its named
-// class so the generated declaration references the class rather than an
-// anonymous type (whose private members TS refuses to emit).
+// class so the public type reads as that class (what an editor's hover and a
+// plugin author's own typings refer to) rather than an anonymous structural
+// type. The declarations ship as one bundled file,
+// Resources/Public/Studio/types/index.d.ts (`npm run build:plugin-types`,
+// run at the end of `npm run build`): a plugin package maps
+// '@medienreaktor/neos-studio' to that file in its tsconfig `paths` (e.g.
+// "../../Packages/Plugins/Medienreaktor.NeosStudio/Resources/Public/Studio/types/index.d.ts")
+// and resolves the import to the window global at runtime. The bundle keeps
+// react/react-dom external, so the plugin needs @types/react installed.
 
 /** Register/unregister panels. See {@link PanelDefinition}. */
 export const panels: PanelRegistry = panelRegistry
@@ -95,9 +101,19 @@ export const views: InspectorViewRegistry = inspectorViewRegistry
 export const validators: ValidatorRegistry = validatorRegistry
 /** Register/unregister link-editor type tabs. */
 export const links: LinkEditorRegistry = linkEditorRegistry
-/** Register/unregister settings-dialog screens. */
-export const modals: ModalRegistry<SettingsDialogDefinition> =
+/**
+ * Register/unregister settings sections - the screens listed in the shared
+ * Settings modal's subnavigation (users, sites, workspaces, ...). See
+ * {@link SettingsDialogDefinition}.
+ */
+export const settingsSections: ModalRegistry<SettingsDialogDefinition> =
   settingsDialogRegistry
+/**
+ * @deprecated The registry only ever held settings sections - use
+ * {@link settingsSections}. Kept as an alias of the very same registry for
+ * plugins built against API version 1.
+ */
+export const modals: ModalRegistry<SettingsDialogDefinition> = settingsSections
 /**
  * Register/unregister keyboard shortcuts. See {@link KeyboardShortcutDefinition}.
  * Module-level `shortcuts.register(...)` suits always-available actions;
@@ -123,19 +139,27 @@ export const workspaceDecorators: WorkspaceDecoratorRegistry =
  */
 export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
 
-export { useStudio, useKeyboardShortcut }
+/**
+ * useStudio() reads the shell's state and actions and re-renders on every
+ * state change; useStudioActions() returns only the (stable) actions and
+ * never re-renders on its own - prefer it in components that only act.
+ */
+export { useStudio, useStudioActions, useKeyboardShortcut }
 
 /**
  * Typed requests sharing the shell's OAuth session (bearer token,
  * single-flighted refresh). Resolve with the parsed JSON body on 2xx and
  * throw {@link ApiError} otherwise.
  *  - apiFetch: Neos.Api, paths relative to its base ('/me' -> '/api/me').
- *  - studioFetch: the same, for the Studio's operations of the Neos API
- *    ('/notifications', '/cr/default/tasks'). A plugin package can add
+ *    The Studio's operations of the Neos API ('/notifications',
+ *    '/cr/default/tasks') are reached the same way. A plugin package can add
  *    operations of its own (an Api Class in
  *    Neos.OpenApi.FlowAdapter.apis.neos.classes, scopes as ApiPrivilege
  *    targets) and reach them exactly like the built-in ones.
+ *  - studioFetch: an alias of apiFetch, kept for plugins written when the
+ *    Studio's operations had a client of their own.
  */
+const studioFetch = apiFetch
 export { apiFetch, studioFetch, ApiError }
 
 /**
@@ -191,7 +215,11 @@ export type {
   PropertyEditorProps,
   PropertyEditorSubject,
 } from '@/features/inspector/editors/registry'
-export type { StudioContextValue } from '@/app/StudioContext'
+export type {
+  StudioActions,
+  StudioContextValue,
+  StudioState,
+} from '@/app/StudioContext'
 export type {
   InspectorViewComponent,
   InspectorViewDefinition,
@@ -237,12 +265,15 @@ export interface NeosStudioPluginApi {
   views: typeof views
   validators: typeof validators
   links: typeof links
+  settingsSections: typeof settingsSections
+  /** @deprecated Alias of settingsSections. */
   modals: typeof modals
   shortcuts: typeof shortcuts
   workspaceDecorators: typeof workspaceDecorators
   nodeDecorators: typeof nodeDecorators
   isMacPlatform: typeof isMacPlatform
   useStudio: typeof useStudio
+  useStudioActions: typeof useStudioActions
   useKeyboardShortcut: typeof useKeyboardShortcut
   toast: typeof toast
   apiFetch: typeof apiFetch
@@ -277,12 +308,14 @@ export function installPluginApiGlobals(): void {
     views,
     validators,
     links,
+    settingsSections,
     modals,
     shortcuts,
     workspaceDecorators,
     nodeDecorators,
     isMacPlatform,
     useStudio,
+    useStudioActions,
     useKeyboardShortcut,
     toast,
     apiFetch,

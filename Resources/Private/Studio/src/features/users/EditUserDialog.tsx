@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -39,45 +39,68 @@ export function EditUserDialog({
   user: User | null
   onOpenChange: (open: boolean) => void
 }) {
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [roles, setRoles] = useState<string[]>([])
+  // The last user shown, so the popup keeps its content while it fades out
+  // after `user` went back to null.
+  const [shown, setShown] = useState(user)
+  if (user !== null && user !== shown) setShown(user)
+
+  return (
+    <Dialog open={user !== null} onOpenChange={onOpenChange}>
+      <DialogContent size="lg">
+        {/* Mounted per opening (the popup unmounts while closed) and keyed
+            by user: seeded once from the user, so a refetch of the user list
+            while the form is open does not wipe the edits. */}
+        {shown !== null && (
+          <EditUserForm
+            key={shown.id}
+            user={shown}
+            onOpenChange={onOpenChange}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EditUserForm({
+  user,
+  onOpenChange,
+}: {
+  user: User
+  onOpenChange: (open: boolean) => void
+}) {
+  const [firstName, setFirstName] = useState(() => user.firstName ?? '')
+  const [lastName, setLastName] = useState(() => user.lastName ?? '')
+  const [email, setEmail] = useState(() => user.email ?? '')
+  const [roles, setRoles] = useState<string[]>(() => userRoles(user))
   const isCurrentUser = useIsCurrentUser()(user)
 
-  // Re-seed the form whenever a (new) user is opened for editing.
-  useEffect(() => {
-    if (user !== null) {
-      setFirstName(user.firstName ?? '')
-      setLastName(user.lastName ?? '')
-      setEmail(user.email ?? '')
-      setRoles(userRoles(user))
-    }
-  }, [user])
-
   const changes: UserUpdate = {}
-  if (user !== null) {
-    if (firstName !== (user.firstName ?? '')) changes.firstName = firstName
-    if (lastName !== (user.lastName ?? '')) changes.lastName = lastName
-    // An address can be changed but not removed - a cleared field is no change.
-    if (email.trim() !== '' && email !== (user.email ?? ''))
-      changes.email = email.trim()
-    const currentRoles = userRoles(user)
-    const rolesChanged =
-      roles.length !== currentRoles.length ||
-      roles.some((role) => !currentRoles.includes(role))
-    if (rolesChanged) changes.roles = roles
-  }
+  const trimmedFirstName = firstName.trim()
+  const trimmedLastName = lastName.trim()
+  const trimmedEmail = email.trim()
+  if (trimmedFirstName !== (user.firstName ?? ''))
+    changes.firstName = trimmedFirstName
+  if (trimmedLastName !== (user.lastName ?? ''))
+    changes.lastName = trimmedLastName
+  // An address can be changed but not removed - a cleared field is no change.
+  if (trimmedEmail !== '' && trimmedEmail !== (user.email ?? ''))
+    changes.email = trimmedEmail
+  const currentRoles = userRoles(user)
+  const rolesChanged =
+    roles.length !== currentRoles.length ||
+    roles.some((role) => !currentRoles.includes(role))
+  if (rolesChanged) changes.roles = roles
   const isDirty = Object.keys(changes).length > 0
-  const canSubmit = isDirty && firstName.trim() !== '' && lastName.trim() !== ''
+  const canSubmit = isDirty && trimmedFirstName !== '' && trimmedLastName !== ''
 
   const mutation = useMutation({
-    mutationFn: (input: UserUpdate) => updateUser(user!.id, input),
+    mutationFn: (input: UserUpdate) => updateUser(user.id, input),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       // Editing yourself can change your own label and roles.
       if (isCurrentUser) {
-        queryClient.invalidateQueries({ queryKey: neosKeys.me })
+        void queryClient.invalidateQueries({ queryKey: neosKeys.me })
       }
       toast.success(
         t('users.saved', 'The user "{0}" has been saved.', [response.label]),
@@ -100,91 +123,87 @@ export function EditUserDialog({
   }
 
   return (
-    <Dialog open={user !== null} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
-        <DialogHeader>
-          <DialogTitle>
-            {t('users.editUser', 'Edit user')}
-            {user !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
-                {user.label}
-              </span>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {t('users.editUserHint', 'Name, email address and roles.')}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {t('users.editUser', 'Edit user')}
+          <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+            {user.label}
+          </span>
+        </DialogTitle>
+        <DialogDescription>
+          {t('users.editUserHint', 'Name, email address and roles.')}
+        </DialogDescription>
+      </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label={t('users.firstName', 'First name')}
-              htmlFor="user-edit-first-name"
-            >
-              <Input
-                id="user-edit-first-name"
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
-                autoComplete="off"
-                required
-              />
-            </Field>
-            <Field
-              label={t('users.lastName', 'Last name')}
-              htmlFor="user-edit-last-name"
-            >
-              <Input
-                id="user-edit-last-name"
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
-                autoComplete="off"
-                required
-              />
-            </Field>
-          </div>
-
-          <Field label={t('users.email', 'Email')} htmlFor="user-edit-email">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            label={t('users.firstName', 'First name')}
+            htmlFor="user-edit-first-name"
+          >
             <Input
-              id="user-edit-email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              id="user-edit-first-name"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
               autoComplete="off"
+              required
             />
           </Field>
+          <Field
+            label={t('users.lastName', 'Last name')}
+            htmlFor="user-edit-last-name"
+          >
+            <Input
+              id="user-edit-last-name"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              autoComplete="off"
+              required
+            />
+          </Field>
+        </div>
 
-          <RolesField
-            value={roles}
-            onChange={setRoles}
-            lockedRoles={isCurrentUser ? [ADMINISTRATOR_ROLE] : []}
+        <Field label={t('users.email', 'Email')} htmlFor="user-edit-email">
+          <Input
+            id="user-edit-email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="off"
           />
-          {isCurrentUser && (
-            <p className="text-xs text-neutral-500">
-              {t(
-                'users.ownAdminLocked',
-                'You cannot remove your own Administrator role.',
-              )}
-            </p>
-          )}
+        </Field>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              disabled={mutation.isPending}
-            >
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button type="submit" disabled={!canSubmit || mutation.isPending}>
-              {mutation.isPending
-                ? t('users.saving', 'Saving…')
-                : t('users.save', 'Save user')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <RolesField
+          value={roles}
+          onChange={setRoles}
+          lockedRoles={isCurrentUser ? [ADMINISTRATOR_ROLE] : []}
+        />
+        {isCurrentUser && (
+          <p className="text-xs text-neutral-500">
+            {t(
+              'users.ownAdminLocked',
+              'You cannot remove your own Administrator role.',
+            )}
+          </p>
+        )}
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onOpenChange(false)}
+            disabled={mutation.isPending}
+          >
+            {t('common.cancel', 'Cancel')}
+          </Button>
+          <Button type="submit" disabled={!canSubmit || mutation.isPending}>
+            {mutation.isPending
+              ? t('users.saving', 'Saving…')
+              : t('users.save', 'Save user')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </>
   )
 }

@@ -12,6 +12,7 @@ use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryI
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\Domain\Service\WorkspaceService;
 use Neos\Neos\Security\ContentRepositoryAuthProvider\ContentRepositoryAuthProviderFactory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Builds the {@see AccessControlAuthProvider} around Neos' own provider.
@@ -29,6 +30,7 @@ final readonly class AccessControlAuthProviderFactory implements AuthProviderFac
         private ContentRepositoryAuthProviderFactory $neosAuthProviderFactory,
         private AccessControlService $accessControlService,
         private WorkspaceService $workspaceService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -40,6 +42,7 @@ final readonly class AccessControlAuthProviderFactory implements AuthProviderFac
             $contentGraphReadModel,
             $this->accessControlService,
             $this->workspaceService,
+            $this->logger,
         );
     }
 }

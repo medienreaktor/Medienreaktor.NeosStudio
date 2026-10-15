@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
 import { neosKeys } from '@/api/neos/keys'
 import { createSite, useSiteCreationOptions } from '@/api/neos/endpoints/sites'
+import type { SiteCreationOptions } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -43,33 +44,52 @@ export function CreateSiteDialog({
   const { data: options, isLoading: optionsLoading } =
     useSiteCreationOptions(open)
 
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent size="lg">
+        <DialogHeader>
+          <DialogTitle>{t('sites.newSite', 'New site')}</DialogTitle>
+          <DialogDescription>
+            {t(
+              'sites.newSiteHint',
+              'Creates a new site with an empty site node in the live workspace.',
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        {optionsLoading && (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        )}
+
+        {/* Mounted per opening (the popup unmounts while closed) and only
+            once the options are there, so the form starts empty with the
+            first package and node type preselected. */}
+        {options && (
+          <CreateSiteForm options={options} onOpenChange={onOpenChange} />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CreateSiteForm({
+  options,
+  onOpenChange,
+}: {
+  options: SiteCreationOptions
+  onOpenChange: (open: boolean) => void
+}) {
   const [name, setName] = useState('')
-  const [packageKey, setPackageKey] = useState('')
-  const [nodeTypeName, setNodeTypeName] = useState('')
+  const [packageKey, setPackageKey] = useState(() => options.packages[0] ?? '')
+  const [nodeTypeName, setNodeTypeName] = useState(
+    () => options.nodeTypes[0]?.name ?? '',
+  )
   const [nodeName, setNodeName] = useState('')
   const [startOffline, setStartOffline] = useState(false)
-
-  // A fresh form every time the dialog opens.
-  useEffect(() => {
-    if (open) {
-      setName('')
-      setPackageKey('')
-      setNodeTypeName('')
-      setNodeName('')
-      setStartOffline(false)
-    }
-  }, [open])
-
-  // Preselect the only (or first) choice once the options arrive.
-  useEffect(() => {
-    if (!options) return
-    setPackageKey((current) =>
-      current === '' ? (options.packages[0] ?? '') : current,
-    )
-    setNodeTypeName((current) =>
-      current === '' ? (options.nodeTypes[0]?.name ?? '') : current,
-    )
-  }, [options])
 
   const canSubmit =
     name.trim() !== '' && packageKey !== '' && nodeTypeName !== ''
@@ -84,7 +104,7 @@ export function CreateSiteDialog({
         ...(startOffline ? { online: false } : {}),
       }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
       toast.success(
         t('sites.created', 'The site "{0}" has been created.', [response.name]),
       )
@@ -113,138 +133,114 @@ export function CreateSiteDialog({
     if (canSubmit && !mutation.isPending) mutation.mutate()
   }
 
-  const packageItems = (options?.packages ?? []).map((pkg) => ({
+  const packageItems = options.packages.map((pkg) => ({
     value: pkg,
     label: pkg,
   }))
-  const nodeTypeItems = (options?.nodeTypes ?? []).map((nodeType) => ({
+  const nodeTypeItems = options.nodeTypes.map((nodeType) => ({
     value: nodeType.name,
     label: nodeType.label || nodeType.name,
   }))
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
-        <DialogHeader>
-          <DialogTitle>{t('sites.newSite', 'New site')}</DialogTitle>
-          <DialogDescription>
-            {t(
-              'sites.newSiteHint',
-              'Creates a new site with an empty site node in the live workspace.',
-            )}
-          </DialogDescription>
-        </DialogHeader>
+    <form onSubmit={onSubmit} className="space-y-4">
+      <Field label={t('sites.name', 'Name')} htmlFor="site-create-name">
+        <Input
+          id="site-create-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          autoComplete="off"
+          required
+        />
+      </Field>
 
-        {optionsLoading && (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+      <Field
+        label={t('sites.package', 'Site package')}
+        htmlFor="site-create-package"
+      >
+        <Select
+          value={packageKey}
+          onValueChange={(value) => setPackageKey(value as string)}
+          items={packageItems}
+        >
+          <SelectTrigger id="site-create-package" className="w-full">
+            <SelectValue
+              placeholder={t('sites.selectPackage', 'Select package…')}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {packageItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
             ))}
-          </div>
-        )}
+          </SelectContent>
+        </Select>
+      </Field>
 
-        {options && (
-          <form onSubmit={onSubmit} className="space-y-4">
-            <Field label={t('sites.name', 'Name')} htmlFor="site-create-name">
-              <Input
-                id="site-create-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                autoComplete="off"
-                required
-              />
-            </Field>
+      <Field
+        label={t('sites.nodeType', 'Site node type')}
+        htmlFor="site-create-node-type"
+      >
+        <Select
+          value={nodeTypeName}
+          onValueChange={(value) => setNodeTypeName(value as string)}
+          items={nodeTypeItems}
+        >
+          <SelectTrigger id="site-create-node-type" className="w-full">
+            <SelectValue
+              placeholder={t('sites.selectNodeType', 'Select node type…')}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {nodeTypeItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
 
-            <Field
-              label={t('sites.package', 'Site package')}
-              htmlFor="site-create-package"
-            >
-              <Select
-                value={packageKey}
-                onValueChange={(value) => setPackageKey(value as string)}
-                items={packageItems}
-              >
-                <SelectTrigger id="site-create-package" className="w-full">
-                  <SelectValue
-                    placeholder={t('sites.selectPackage', 'Select package…')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {packageItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+      <Field
+        label={t('sites.nodeName', 'Node name (optional)')}
+        htmlFor="site-create-node-name"
+      >
+        <Input
+          id="site-create-node-name"
+          value={nodeName}
+          onChange={(event) => setNodeName(event.target.value)}
+          placeholder={t(
+            'sites.nodeNamePlaceholder',
+            'Derived from the name when empty',
+          )}
+          autoComplete="off"
+        />
+      </Field>
 
-            <Field
-              label={t('sites.nodeType', 'Site node type')}
-              htmlFor="site-create-node-type"
-            >
-              <Select
-                value={nodeTypeName}
-                onValueChange={(value) => setNodeTypeName(value as string)}
-                items={nodeTypeItems}
-              >
-                <SelectTrigger id="site-create-node-type" className="w-full">
-                  <SelectValue
-                    placeholder={t('sites.selectNodeType', 'Select node type…')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {nodeTypeItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+      <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-800 dark:text-neutral-200">
+        <Checkbox
+          checked={startOffline}
+          onCheckedChange={(checked) => setStartOffline(checked === true)}
+        />
+        {t('sites.startOffline', 'Start offline (hidden from visitors)')}
+      </label>
 
-            <Field
-              label={t('sites.nodeName', 'Node name (optional)')}
-              htmlFor="site-create-node-name"
-            >
-              <Input
-                id="site-create-node-name"
-                value={nodeName}
-                onChange={(event) => setNodeName(event.target.value)}
-                placeholder={t(
-                  'sites.nodeNamePlaceholder',
-                  'Derived from the name when empty',
-                )}
-                autoComplete="off"
-              />
-            </Field>
-
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-800 dark:text-neutral-200">
-              <Checkbox
-                checked={startOffline}
-                onCheckedChange={(checked) => setStartOffline(checked === true)}
-              />
-              {t('sites.startOffline', 'Start offline (hidden from visitors)')}
-            </label>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                disabled={mutation.isPending}
-              >
-                {t('common.cancel', 'Cancel')}
-              </Button>
-              <Button type="submit" disabled={!canSubmit || mutation.isPending}>
-                {mutation.isPending
-                  ? t('sites.creating', 'Creating…')
-                  : t('sites.create', 'Create site')}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+      <DialogFooter>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onOpenChange(false)}
+          disabled={mutation.isPending}
+        >
+          {t('common.cancel', 'Cancel')}
+        </Button>
+        <Button type="submit" disabled={!canSubmit || mutation.isPending}>
+          {mutation.isPending
+            ? t('sites.creating', 'Creating…')
+            : t('sites.create', 'Create site')}
+        </Button>
+      </DialogFooter>
+    </form>
   )
 }

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
  * same instance is handed to <Toaster /> (the single render point) via the
  * provider's `toastManager` prop.
  */
-export const toastManager = ToastPrimitive.createToastManager()
+const toastManager = ToastPrimitive.createToastManager()
 
 type ToastKind = 'success' | 'error' | 'info' | 'loading'
 

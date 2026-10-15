@@ -1,6 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "new-york",
+  "$comment": "Vendored shadcn components on Base UI (@base-ui/react), hand-adapted: neutral/blue Tailwind palette instead of theme tokens, Font Awesome (<i className=\"fas fa-…\">) instead of an icon component library. \"shadcn add\" output needs the same adaptation before it fits in.",
+  "style": "base-vega",
   "rsc": false,
   "tsx": true,
   "tailwind": {
@@ -17,5 +18,5 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "iconLibrary": "lucide"
+  "iconLibrary": "fontawesome"
 }

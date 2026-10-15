@@ -7,7 +7,7 @@ import {
   untagNode,
 } from '@/api/neos/endpoints/nodeCommands'
 import { neosKeys } from '@/api/neos/keys'
-import { type NodeAddress, nodeAddressFromContextPath } from '@/api/neos/schema'
+import type { NodeAddress } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 
 /**
@@ -17,15 +17,6 @@ import { queryClient } from '@/app/queryClient'
  * points falling back to it as well, moves follow the node type's
  * moveNodeStrategy - so no variant creation is needed.
  */
-
-export interface MoveNodeRequest {
-  /** NodeAddress JSON of the element being moved. */
-  nodeContextPath: string
-  /** NodeAddress JSON of the target collection. */
-  parentContextPath: string
-  /** NodeAddress JSON of the sibling to insert before; null appends. */
-  succeedingSiblingContextPath: string | null
-}
 
 /** One move for {@link moveNodesByAddress}. */
 export interface MoveByAddress {
@@ -75,24 +66,11 @@ export async function deleteNodes(addresses: NodeAddress[]): Promise<void> {
   await structureChange(addresses, deleteNode)
 }
 
-export async function moveNode(request: MoveNodeRequest): Promise<void> {
-  await moveNodesByAddress([
-    {
-      nodeAddress: nodeAddressFromContextPath(request.nodeContextPath),
-      newParentAddress: nodeAddressFromContextPath(request.parentContextPath),
-      succeedingSiblingAddress:
-        request.succeedingSiblingContextPath !== null
-          ? nodeAddressFromContextPath(request.succeedingSiblingContextPath)
-          : null,
-    },
-  ])
-}
-
 /**
- * Moves one or more nodes in order, addressing them by NodeAddress (what the
- * trees carry) rather than the guest's JSON context paths. Each node is placed before the same succeeding sibling, so a
- * multi-selection keeps its relative order at the target ([A, B] before S
- * becomes ...A, B, S).
+ * Moves one or more nodes in order (tree drags, the preview's move-drag, cut
+ * and paste). Each node is placed
+ * before the same succeeding sibling, so a multi-selection keeps its relative
+ * order at the target ([A, B] before S becomes ...A, B, S).
  */
 export async function moveNodesByAddress(
   moves: MoveByAddress[],

@@ -277,7 +277,7 @@ export interface paths {
     }
     /**
      * List nodes
-     * @description A page of the nodes in the workspace and dimension space point: with filterByHierarchy the nodes below a node (type childOf its direct child nodes, in their order unless sorted, type descendantOf all of them), with filterByReference the nodes that reference a node, a node once per reference. The two can't be combined, each is a query of its own. Without either, all nodes below the site node of the content repository's default site (Neos.Neos.defaultSiteNodeName if it is in the content repository, else its first online site by name). filterByNodeType, filterByProperty and search narrow them down. sort takes properties.<name> and timestamps.created, timestamps.lastModified, timestamps.originalCreated, timestamps.originalLastModified. offset and limit (25 by default, 100 at most) choose the page, meta.total and links tell about the others. include, hasChildrenOfNodeType and includeRemoved work as in getNode, for each node. Hidden nodes are visible as in getNode.
+     * @description A page of the nodes in the workspace and dimension space point: with filterByHierarchy the nodes below a node (type childOf its direct child nodes, in their order unless sorted, type descendantOf all of them), with filterByReference the nodes that reference a node, a node once per reference. The two can't be combined, each is a query of its own. With filterByNodeAggregateId the nodes with these ids, in their order, e.g. to read the labels of several nodes in one request: ids of nodes the workspace and dimension space point don't have, or the account may not read, are left out (no 404), filterByNodeType applies, filterByHierarchy, filterByReference, filterByProperty, search and sort can't be combined with it. Without any of them, all nodes below the site node of the content repository's default site (Neos.Neos.defaultSiteNodeName if it is in the content repository, else its first online site by name). filterByNodeType, filterByProperty and search narrow them down. sort takes properties.<name> and timestamps.created, timestamps.lastModified, timestamps.originalCreated, timestamps.originalLastModified. offset and limit (25 by default, 100 at most) choose the page, meta.total and links tell about the others. include, hasChildrenOfNodeType and includeRemoved work as in getNode, for each node. Hidden nodes are visible as in getNode.
      */
     get: operations['listNodes']
     put?: never
@@ -753,7 +753,7 @@ export interface paths {
     }
     /**
      * List the events of a workspace
-     * @description The events of the workspace's current content stream: what was changed in it since it was created or last published, discarded or rebased, which each start a new content stream. Oldest first, sort=-sequenceNumber for newest first (sequenceNumber is the only field to sort by). The workspace must be one the account may read, by its workspace roles or as the owner. Events about a node the account may not read are left out. Events about a node that no longer exists in the workspace, e.g. its removal, are listed: it has no permissions left to check. In the events listed, the IDs of other nodes the account may not read (parent, siblings, reference targets, tethered children: every value of a payload key ending in nodeAggregateId or nodeAggregateIds) are null. after and limit (25 by default, 100 at most) choose the page: after is the sequenceNumber of the last event of the page before in the listing's order (so newer events oldest first, older ones newest first). Newest first, links.next continues after this page and is null on the last one. Oldest first, links.next is always there, after the last event of the page or, on an empty page, with the same after: a client polling for new events follows it. meta.contentStreamId is the content stream the events are from, meta.forkedFrom where it branched off its base workspace's (null for one that wasn't forked, e.g. live's). include=diff adds what each event changed about its node compared to just before it (diff, null if not included): the value before is the one the latest earlier event of the content stream set (looking back 1000 events before the page at most), else the base workspace's. include=node adds the node of the payload's nodeAggregateId and include=document its closest document, as getNode returns them now (not as they were then): in the dimension space point the event is about (a new variant's origin, the node's origin, else the first it affects, else one the aggregate covers), deleted nodes included, else from the base workspace, null if there is none the account may read; node.ancestors and document.ancestors add their ancestors. An after lower than the sequenceNumber of the current content stream's first event is from an earlier one: the workspace was published, discarded or rebased since, the events the client has are no longer the workspace's, and it is a 409, the client starts over without after.
+     * @description The events of the workspace's current content stream: what was changed in it since it was created or last published, discarded or rebased, which each start a new content stream. Oldest first, sort=-sequenceNumber for newest first (sequenceNumber is the only field to sort by). filterByEventType keeps the events of these types, filterByNodeAggregateId the ones about these nodes (the payload's nodeAggregateId), filterByDocument the ones in a document (about the document itself and its content, not its child documents: the closest document of the payload's node now, as documentAggregateId of the changes), filterByTag the SubtreeWasTagged and SubtreeWasUntagged events of these tags. The filters combine, e.g. filterByTag=removed&filterByEventType=SubtreeWasTagged&filterByNodeAggregateId=… and sort=-sequenceNumber for when and by whom (metadata.initiatingUserId) nodes were deleted. A filtered page is filled with the events that match as an unfiltered one, after and links work the same. The workspace must be one the account may read, by its workspace roles or as the owner. Events about a node the account may not read are left out. Events about a node that no longer exists in the workspace, e.g. its removal, are listed: it has no permissions left to check. In the events listed, the IDs of other nodes the account may not read (parent, siblings, reference targets, tethered children: every value of a payload key ending in nodeAggregateId or nodeAggregateIds) are null. after and limit (25 by default, 100 at most) choose the page: after is the sequenceNumber of the last event of the page before in the listing's order (so newer events oldest first, older ones newest first). Newest first, links.next continues after this page and is null on the last one. Oldest first, links.next is always there, after the last event of the page or, on an empty page, with the same after: a client polling for new events follows it. meta.contentStreamId is the content stream the events are from, meta.forkedFrom where it branched off its base workspace's (null for one that wasn't forked, e.g. live's). include=diff adds what each event changed about its node compared to just before it (diff, null if not included): the value before is the one the latest earlier event of the content stream set (looking back 1000 events before the page at most), else the base workspace's. include=node adds the node of the payload's nodeAggregateId and include=document its closest document, as getNode returns them now (not as they were then): in the dimension space point the event is about (a new variant's origin, the node's origin, else the first it affects, else one the aggregate covers), deleted nodes included, else from the base workspace, null if there is none the account may read; node.ancestors and document.ancestors add their ancestors. An after lower than the sequenceNumber of the current content stream's first event is from an earlier one: the workspace was published, discarded or rebased since, the events the client has are no longer the workspace's, and it is a 409, the client starts over without after.
      */
     get: operations['listWorkspaceEvents']
     put?: never
@@ -2421,6 +2421,11 @@ export interface components {
       forkedFrom: components['schemas']['ContentStreamPosition'] | null
     }
     /**
+     * @description Event types, comma-separated: the short names of the event classes, as an event's type. An event matches if it is of one of them
+     * @example SubtreeWasTagged,SubtreeWasUntagged
+     */
+    EventTypes: string
+    /**
      * HierarchyFilter
      * @description The nodes below the node with the aggregate id: with type childOf its direct child nodes (in their order unless sorted), with type descendantOf all nodes below it
      */
@@ -2547,7 +2552,101 @@ export interface components {
         [key: string]: unknown
       }
       references: {
-        [key: string]: unknown
+        [key: string]: {
+          /**
+           * @description The id of a node aggregate: the node in all its workspaces and dimension space points
+           * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
+           */
+          nodeAggregateId: string
+          /** @description The properties of the reference, serialized as the node's */
+          properties: {
+            [key: string]: unknown
+          }
+          node?: {
+            /**
+             * @description The identifier of a content repository, its key in the Neos.ContentRepositoryRegistry.contentRepositories settings
+             * @example default
+             */
+            contentRepositoryId: string
+            /**
+             * @description The name of a workspace, live or e.g. a user's personal workspace
+             * @example live
+             * @example user-admin
+             */
+            workspaceName: string
+            /**
+             * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
+             * @example {"language":"de"}
+             */
+            dimensionSpacePoint: string
+            /**
+             * @description A point in the content dimensions, as JSON with a value for each dimension: {"language":"de"}, {} without dimensions. GET /cr/{contentRepositoryId} lists the dimensions and their values
+             * @example {"language":"de"}
+             */
+            originDimensionSpacePoint: string
+            /**
+             * @description The id of a node aggregate: the node in all its workspaces and dimension space points
+             * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3
+             */
+            nodeAggregateId: string
+            name: string | null
+            /**
+             * @description The name of a content repository node type
+             * @example Neos.Demo:Document.Homepage
+             */
+            nodeType: string
+            /** @description The label as plain text, as the Neos backend shows it */
+            label: string
+            /**
+             * @description regular, tethered (created with its parent, can't be removed or moved) or root
+             * @enum {string}
+             */
+            classification: 'regular' | 'tethered' | 'root'
+            /** @description Whether the node itself is hidden */
+            isHidden: boolean
+            /** @description Whether the node is inside a hidden node, which hides it as well */
+            isHiddenByAncestor: boolean
+            /** @description Whether the node is shown with the content of another dimension space point (a fallback), e.g. en_UK showing en_US */
+            isShineThrough: boolean
+            /** @description The tags set on the node itself, sorted, e.g. disabled if it is hidden (isHidden) */
+            tags: string[]
+            /** @description The tags the node has from its ancestors, sorted, e.g. disabled if it is inside a hidden node (isHiddenByAncestor) */
+            inheritedTags: string[]
+            /** @description When the node was created and last modified, as ISO 8601 */
+            timestamps: {
+              /**
+               * @description When the node was created in its workspace
+               * @example 2026-10-01T09:30:00+00:00
+               */
+              created: string
+              lastModified: string | null
+              /**
+               * @description When the node was created in the live workspace
+               * @example 2026-10-01T09:30:00+00:00
+               */
+              originalCreated: string
+              originalLastModified: string | null
+            }
+            /**
+             * @description The properties in their serialized form, as the content repository stores them, e.g. a date as ISO 8601 string. Assets, also in a list, are {"id": "…", "url": "…"} instead, null if the asset is gone
+             * @example {
+             *       "title": "Home",
+             *       "image": {
+             *         "id": "a3474e1d-dd60-4a84-82b1-18d2f21891a3",
+             *         "url": "https://example.com/_Resources/Persistent/…/image.jpg"
+             *       }
+             *     }
+             */
+            properties: {
+              [key: string]: unknown
+            }
+            references: null
+            children: null
+            variants: null
+            ancestors: null
+            hasChildren: null
+          } | null
+        }[]
       } | null
       children: components['schemas']['Node'][] | null
       variants: components['schemas']['Node'][] | null
@@ -2564,6 +2663,11 @@ export interface components {
       old: components['schemas']['NodeAggregateId']
       new: components['schemas']['NodeAggregateId']
     }
+    /**
+     * @description Node aggregate ids, comma-separated, at most 100
+     * @example a3474e1d-dd60-4a84-82b1-18d2f21891a3,5a1b8c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2d
+     */
+    NodeAggregateIds: string
     /**
      * @description regular, tethered (created with its parent, can't be removed or moved) or root
      * @enum {string}
@@ -3175,6 +3279,11 @@ export interface components {
      * @example disabled
      */
     SubtreeTag: string
+    /**
+     * @description Tags of nodes, comma-separated, e.g. removed for deleted nodes, disabled for hidden ones
+     * @example removed
+     */
+    SubtreeTags: string
     /**
      * TagDiff
      * @description The tags a workspace set on or removed from a node itself (as Node's tags, not the inherited ones) compared to its base workspace (ChangeDiff), or the tag an event set or removed (EventDiff)
@@ -4589,6 +4698,9 @@ export interface operations {
         filterByReference?: components['schemas']['ReferenceFilter'] | null
         /** @description Only nodes of these node types or ones inheriting from them, comma-separated, a ! in front excludes a type and the ones inheriting from it. Unknown node types are a 400 */
         filterByNodeType?: components['schemas']['NodeTypeCriteria'] | null
+        /** @description The nodes with these aggregate ids, comma-separated, at most 100, in their order (limit applies, up to 100), the ones not found or not readable left out. Not with filterByHierarchy, filterByReference, filterByProperty, search or sort */
+        filterByNodeAggregateId?:
+          components['schemas']['NodeAggregateIds'] | null
         /** @description Only nodes whose properties match, in the content repository's syntax, e.g. title *= 'Neos' AND NOT (hideInMenu = true) */
         filterByProperty?: components['schemas']['PropertyCriteria'] | null
         /** @description Only nodes with a property containing this text */
@@ -6892,6 +7004,15 @@ export interface operations {
         sort?: components['schemas']['Sort'] | null
         /** @description What to include beyond each event's own fields, comma-separated: diff, what the event changed about its node, node, the node, document, its closest document, node.ancestors and document.ancestors, their ancestors */
         include?: components['schemas']['IncludePaths'] | null
+        /** @description Only the events of these types, comma-separated, the short names of the event classes as an event's type, e.g. SubtreeWasTagged,SubtreeWasUntagged */
+        filterByEventType?: components['schemas']['EventTypes'] | null
+        /** @description Only the events about the nodes with these aggregate ids (the payload's nodeAggregateId), comma-separated, at most 100 */
+        filterByNodeAggregateId?:
+          components['schemas']['NodeAggregateIds'] | null
+        /** @description Only the events in the document with this aggregate id: about the document itself and its content, not its child documents (the closest document of the payload's node now, as filterByDocument of listWorkspaceChanges) */
+        filterByDocument?: components['schemas']['NodeAggregateId'] | null
+        /** @description Only the SubtreeWasTagged and SubtreeWasUntagged events of these tags, comma-separated, e.g. removed for deletions and restorations, disabled for hiding and showing */
+        filterByTag?: components['schemas']['SubtreeTags'] | null
       }
       header?: never
       path: {

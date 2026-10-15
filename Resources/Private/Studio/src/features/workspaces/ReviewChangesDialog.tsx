@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { NodeAddress, Workspace } from '@/api/neos/schema'
 import { apiErrorDescription } from '@/api/http/errors'
-import { useStudio } from '@/app/StudioContext'
+import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { CountBadge } from '@/components/ui/count-badge'
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { useValueChange } from '@/hooks/use-value-change'
 import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
@@ -222,18 +223,21 @@ export function ReviewChangesDialog({
   // Armed on open when preselecting; fired once the initial source's list has
   // (re)loaded, so a fresh fetch rather than a stale cache decides what is
   // selected. Re-picking a source inside the dialog does not re-arm it.
-  const pendingPreselect = useRef(false)
+  const [pendingPreselect, setPendingPreselect] = useState(false)
 
   // Every open starts fresh on the requested (or active) workspace - the
-  // closed dialog does not carry a stale review over to the next one.
-  useEffect(() => {
-    if (open) {
-      pendingPreselect.current = preselectAll
-      setSourceName(initialSourceName ?? activeWorkspace.name)
-      setSelectedIds(new Set())
-      setExpandedIds(new Set())
-    }
-  }, [open, activeWorkspace.name, initialSourceName, preselectAll])
+  // closed dialog does not carry a stale review over to the next one. Also
+  // re-runs when the request changes while open, keyed by its values.
+  const openRequest = open
+    ? JSON.stringify([initialSourceName ?? activeWorkspace.name, preselectAll])
+    : null
+  useValueChange(openRequest, (request) => {
+    if (request === null) return
+    setPendingPreselect(preselectAll)
+    setSourceName(initialSourceName ?? activeWorkspace.name)
+    setSelectedIds(new Set())
+    setExpandedIds(new Set())
+  })
 
   const source =
     sources.find((w) => w.name === sourceName) ??
@@ -269,7 +273,7 @@ export function ReviewChangesDialog({
 
   const pickSource = (name: string) => {
     if (name === source?.name) return
-    pendingPreselect.current = false
+    setPendingPreselect(false)
     setSourceName(name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
@@ -287,11 +291,14 @@ export function ReviewChangesDialog({
     if (next) pickSource(next.name)
   }
 
-  const { site, navigateToNode } = useStudio()
+  const { site } = useStudio()
+  const { navigateToNode } = useStudioActions()
   // Fetch only while open; the query refreshes on publish/discard via the
   // workspaces invalidation the shared hook performs.
+  // Scoped to the active site, mirroring the Publish button's count
   const { data, error, isLoading, isFetching } = useWorkspaceDocumentChanges(
     source?.name ?? null,
+    site?.nodeAggregateId ?? null,
     open,
   )
   const { operation, resolve, pendingConflict, setPendingConflict } =
@@ -306,24 +313,14 @@ export function ReviewChangesDialog({
     })
   }
 
-  // Scope to the active site, mirroring the Publish button: the active site's
-  // documents plus any whose site could not be resolved (never silently hide a
-  // pending change).
-  const siteId = site?.nodeAggregateId ?? null
-  const documents = useMemo(() => {
-    const all = data?.documents ?? []
-    return siteId
-      ? all.filter(
-          (d) => d.siteAggregateId === siteId || d.siteAggregateId === null,
-        )
-      : all
-  }, [data, siteId])
+  const documents = useMemo(() => data?.documents ?? [], [data])
 
-  useEffect(() => {
-    if (!open || !pendingPreselect.current || isFetching || !data) return
-    pendingPreselect.current = false
+  // Settled while rendering, like the reset above: no frame shows the list
+  // unselected first.
+  if (open && pendingPreselect && !isFetching && data) {
+    setPendingPreselect(false)
     setSelectedIds(new Set(documents.map((d) => d.documentAggregateId)))
-  }, [open, isFetching, data, documents])
+  }
 
   // A discard waiting for confirmation; the confirm dialog is open while true.
   const [confirmDiscard, setConfirmDiscard] = useState(false)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
+import { useQueryErrorToast } from '@/hooks/use-query-error-toast'
 import { translate as t } from '@/lib/i18n'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { CreateSiteDialog } from './CreateSiteDialog'
@@ -50,12 +51,7 @@ export function SitesAdministration() {
   const [editingNodeName, setEditingNodeName] = useState<string | null>(null)
   const [deletingNodeName, setDeletingNodeName] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (error)
-      toast.error(error, {
-        title: t('sites.loadFailed', 'Could not load sites'),
-      })
-  }, [error])
+  useQueryErrorToast(error, t('sites.loadFailed', 'Could not load sites'))
 
   const sites = data ?? []
   const editing = sites.find((s) => s.nodeName === editingNodeName) ?? null
@@ -150,9 +146,9 @@ export function SitesAdministration() {
         onConfirm={async () => {
           const site = deleting!
           await deleteSite(site.nodeName)
-          queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
+          void queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
           // Content is gone with the site - the trees must not show it.
-          queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+          void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
           toast.success(
             t('sites.deleted', 'The site "{0}" has been deleted.', [site.name]),
           )
@@ -174,7 +170,7 @@ function SiteRow({
   const stateMutation = useMutation({
     mutationFn: (online: boolean) => updateSite(site.nodeName, { online }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
       toast.success(
         response.online
           ? t('sites.wentOnline', 'The site "{0}" is now online.', [

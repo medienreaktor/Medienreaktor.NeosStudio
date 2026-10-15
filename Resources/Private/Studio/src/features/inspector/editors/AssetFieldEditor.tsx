@@ -8,6 +8,7 @@ import {
 } from '@/api/neos/endpoints/assets'
 import type { Asset } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
 import type { PropertyEditorProps } from './registry'
@@ -89,11 +90,18 @@ export function AssetFieldEditor({
   const select = () => {
     requestPick({
       title: subject.label,
-      onPick: async (chosen) => {
-        const id = await localAssetIdFor(chosen)
-        setPicked(chosen)
-        setIdentifier(id)
-        onCommit(assetReference(id))
+      onPick: (chosen) => {
+        localAssetIdFor(chosen)
+          .then((id) => {
+            setPicked(chosen)
+            setIdentifier(id)
+            onCommit(assetReference(id))
+          })
+          .catch((e: unknown) =>
+            toast.error(e, {
+              title: t('editor.pickAssetFailed', 'Picking asset failed'),
+            }),
+          )
       },
     })
   }

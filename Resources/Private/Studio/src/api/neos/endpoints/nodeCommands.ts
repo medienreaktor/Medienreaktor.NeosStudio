@@ -1,8 +1,15 @@
 import { apiErrorDescription } from '../../http/errors'
-import { queryString } from '../../http/request'
-import { apiFetch } from '../client'
-import type { Node, NodeAddress, NodeCreate } from '../schema'
-import { nodePath, nodesPath, subgraphOf } from './nodes'
+import { api, unwrap } from '../client'
+import type {
+  Node,
+  NodeAddress,
+  NodeCopy,
+  NodeCreate,
+  NodeMove,
+  NodeTypeChange,
+  NodeVariantCreate,
+} from '../schema'
+import { nodePathParams, subgraphOf } from './nodes'
 
 /**
  * Node writes against Neos.Api - one function per operation. Each takes the
@@ -13,13 +20,17 @@ import { nodePath, nodesPath, subgraphOf } from './nodes'
  * operations on several nodes.
  */
 
-/** `{nodePath}{suffix}?workspaceName&dimensionSpacePoint` of the node. */
-function nodeUrl(address: NodeAddress, suffix = ''): string {
-  return nodePath(address, `${suffix}${queryString(subgraphOf(address))}`)
+const NODE = '/cr/{contentRepositoryId}/nodes/{nodeAggregateId}'
+
+/** The path and query parameters of a write to the node, in its subgraph. */
+function nodeParams(address: NodeAddress) {
+  return { path: nodePathParams(address), query: subgraphOf(address) }
 }
 
 /** References by name as Neos.Api writes them, from target aggregate ids. */
-function referencesBody(references: Record<string, string[]>) {
+function referencesBody(
+  references: Record<string, string[]>,
+): Record<string, { nodeAggregateId: string }[]> {
   return Object.fromEntries(
     Object.entries(references).map(([name, targets]) => [
       name,
@@ -37,10 +48,12 @@ export function setNodeProperties(
   address: NodeAddress,
   properties: Record<string, unknown>,
 ): Promise<Node> {
-  return apiFetch<Node>(nodeUrl(address, '/properties'), {
-    method: 'PATCH',
-    body: properties,
-  })
+  return unwrap(
+    api.PATCH(`${NODE}/properties`, {
+      params: nodeParams(address),
+      body: properties,
+    }),
+  )
 }
 
 /**
@@ -52,10 +65,12 @@ export async function setNodeReferences(
   address: NodeAddress,
   references: Record<string, string[]>,
 ): Promise<void> {
-  await apiFetch(nodeUrl(address, '/references'), {
-    method: 'PATCH',
-    body: referencesBody(references),
-  })
+  await unwrap(
+    api.PATCH(`${NODE}/references`, {
+      params: nodeParams(address),
+      body: referencesBody(references),
+    }),
+  )
 }
 
 /**
@@ -71,13 +86,15 @@ export function createNodeVariant(
   dimensionSpacePoint: string,
   copyContent = false,
 ): Promise<Node> {
-  return apiFetch<Node>(nodeUrl(address, '/variants'), {
-    method: 'POST',
-    body: {
-      dimensionSpacePoint,
-      ...(copyContent ? { copyContent: true } : {}),
-    },
-  })
+  return unwrap(
+    api.POST(`${NODE}/variants`, {
+      params: nodeParams(address),
+      body: {
+        dimensionSpacePoint,
+        ...(copyContent ? { copyContent: true } : {}),
+      } satisfies NodeVariantCreate,
+    }),
+  )
 }
 
 export interface CreateNodeOptions {
@@ -110,9 +127,14 @@ export function createNode(options: CreateNodeOptions): Promise<Node> {
   if (options.references && Object.keys(options.references).length > 0) {
     body.references = referencesBody(options.references)
   }
-  return apiFetch<Node>(
-    `${nodesPath(options.parent)}${queryString(subgraphOf(options.parent))}`,
-    { method: 'POST', body },
+  return unwrap(
+    api.POST('/cr/{contentRepositoryId}/nodes', {
+      params: {
+        path: { contentRepositoryId: options.parent.contentRepositoryId },
+        query: subgraphOf(options.parent),
+      },
+      body,
+    }),
   )
 }
 
@@ -127,16 +149,18 @@ export function copyNode(
   targetParent: NodeAddress,
   succeedingSiblingNodeAggregateId: string | null,
 ): Promise<Node> {
-  return apiFetch<Node>(
-    nodeUrl({ ...source, workspaceName: targetParent.workspaceName }, '/copy'),
-    {
-      method: 'POST',
+  return unwrap(
+    api.POST(`${NODE}/copy`, {
+      params: nodeParams({
+        ...source,
+        workspaceName: targetParent.workspaceName,
+      }),
       body: {
         parentNodeAggregateId: targetParent.nodeAggregateId,
         succeedingSiblingNodeAggregateId,
         targetDimensionSpacePoint: targetParent.dimensionSpacePoint,
-      },
-    },
+      } satisfies NodeCopy,
+    }),
   )
 }
 
@@ -151,10 +175,15 @@ export async function moveNode(
   parentNodeAggregateId: string | null,
   succeedingSiblingNodeAggregateId: string | null,
 ): Promise<void> {
-  await apiFetch(nodeUrl(address, '/move'), {
-    method: 'POST',
-    body: { parentNodeAggregateId, succeedingSiblingNodeAggregateId },
-  })
+  await unwrap(
+    api.POST(`${NODE}/move`, {
+      params: nodeParams(address),
+      body: {
+        parentNodeAggregateId,
+        succeedingSiblingNodeAggregateId,
+      } satisfies NodeMove,
+    }),
+  )
 }
 
 /**
@@ -165,9 +194,14 @@ export async function tagNode(
   address: NodeAddress,
   tag: string,
 ): Promise<void> {
-  await apiFetch(nodeUrl(address, `/tags/${encodeURIComponent(tag)}`), {
-    method: 'PUT',
-  })
+  await unwrap(
+    api.PUT(`${NODE}/tags/{tag}`, {
+      params: {
+        path: { ...nodePathParams(address), tag },
+        query: subgraphOf(address),
+      },
+    }),
+  )
 }
 
 /** Removes a subtree tag set on the node (UntagSubtree). */
@@ -175,9 +209,14 @@ export async function untagNode(
   address: NodeAddress,
   tag: string,
 ): Promise<void> {
-  await apiFetch(nodeUrl(address, `/tags/${encodeURIComponent(tag)}`), {
-    method: 'DELETE',
-  })
+  await unwrap(
+    api.DELETE(`${NODE}/tags/{tag}`, {
+      params: {
+        path: { ...nodePathParams(address), tag },
+        query: subgraphOf(address),
+      },
+    }),
+  )
 }
 
 /**
@@ -185,7 +224,7 @@ export async function untagNode(
  * it - a soft removal (tagged "removed"), restorable until published.
  */
 export async function deleteNode(address: NodeAddress): Promise<void> {
-  await apiFetch(nodeUrl(address), { method: 'DELETE' })
+  await unwrap(api.DELETE(NODE, { params: nodeParams(address) }))
 }
 
 /**
@@ -196,9 +235,16 @@ export async function deleteNode(address: NodeAddress): Promise<void> {
 export async function restoreNode(
   address: Omit<NodeAddress, 'dimensionSpacePoint'>,
 ): Promise<void> {
-  await apiFetch(
-    `${nodesPath(address)}/${encodeURIComponent(address.nodeAggregateId)}/restore${queryString({ workspaceName: address.workspaceName })}`,
-    { method: 'POST' },
+  await unwrap(
+    api.POST(`${NODE}/restore`, {
+      params: {
+        path: {
+          contentRepositoryId: address.contentRepositoryId,
+          nodeAggregateId: address.nodeAggregateId,
+        },
+        query: { workspaceName: address.workspaceName },
+      },
+    }),
   )
 }
 
@@ -211,10 +257,12 @@ export async function changeNodeType(
   address: NodeAddress,
   nodeType: string,
 ): Promise<void> {
-  await apiFetch(nodeUrl(address, '/nodetype'), {
-    method: 'PUT',
-    body: { nodeType },
-  })
+  await unwrap(
+    api.PUT(`${NODE}/nodetype`, {
+      params: nodeParams(address),
+      body: { nodeType } satisfies NodeTypeChange,
+    }),
+  )
 }
 
 /**

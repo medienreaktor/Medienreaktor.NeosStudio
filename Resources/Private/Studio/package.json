@@ -8,11 +8,14 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && vite build --config vite.guest.config.ts",
+    "build": "tsc && tsc -p tsconfig.node.json && vite build && vite build --config vite.guest.config.ts && npm run build:plugin-types",
+    "build:plugin-types": "node scripts/build-plugin-types.mjs",
     "preview": "vite preview",
     "api:schema": "NODE_USE_SYSTEM_CA=1 npx --yes openapi-typescript@7.13.0 ${NEOS_API_SPEC:-https://neos-development-distribution.ddev.site/api/openapi.json} -o src/api/neos/schema/openapi.ts",
     "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "format:check": "prettier --check src",
+    "i18n:check": "node scripts/check-translations.mjs",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -21,7 +24,6 @@
     "@headless-tree/core": "^1.7.0",
     "@headless-tree/react": "^1.7.0",
     "@hocuspocus/provider": "^4.5.0",
-    "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-query": "^5.101.2",
     "@tiptap/core": "^3.27.4",
     "@tiptap/extension-bold": "^3.27.4",
@@ -38,27 +40,69 @@
     "@tiptap/extension-text": "^3.27.4",
     "@tiptap/extension-text-align": "^3.27.4",
     "@tiptap/extension-underline": "^3.27.4",
+    "@tiptap/extensions": "^3.27.4",
     "@tiptap/pm": "^3.27.4",
     "@tiptap/starter-kit": "^3.27.4",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-dropzone": "^14.4.1",
     "react-image-crop": "^11.1.2",
     "tailwind-merge": "^3.6.0",
-    "tailwindcss": "^4.3.2",
+    "y-protocols": "^1.0.7",
     "yjs": "^13.6.32"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-query-devtools": "^5.101.2",
     "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "22.20.5",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@typescript/typescript6": "6.0.2",
     "@vitejs/plugin-react": "^6.0.3",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
     "prettier": "^3.6.2",
+    "rolldown": "~1.1.4",
+    "rolldown-plugin-dts": "^0.27.14",
+    "tailwindcss": "^4.3.2",
     "typescript": "^7.0.2",
+    "typescript-eslint": "8.71.2",
     "vite": "^8.1.4"
+  },
+  "overrides": {
+    "typescript-eslint": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/parser": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/project-service": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/type-utils": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/tsconfig-utils": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/utils": {
+      "typescript": "$typescript"
+    },
+    "ts-api-utils": {
+      "typescript": "$typescript"
+    }
   }
 }

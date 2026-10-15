@@ -13,6 +13,8 @@ function Dialog({
   // starting-style state never applies). Render one closed frame first so
   // dialogs that mount open still fade in.
   const [mounted, setMounted] = React.useState(false)
+  // The extra render after the first commit is the point here.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
   React.useEffect(() => setMounted(true), [])
   return (
     <DialogPrimitive.Root
@@ -21,18 +23,6 @@ function Dialog({
       {...props}
     />
   )
-}
-
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
-}
-
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
 function DialogPortal({
@@ -116,7 +106,7 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+          <DialogPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none">
             <i className="fas fa-xmark text-[1rem]" aria-hidden />
             <span className="sr-only">{t('common.close', 'Close')}</span>
           </DialogPrimitive.Close>
@@ -184,8 +174,6 @@ function DialogDescription({
 export {
   stackedDialogClassName,
   Dialog,
-  DialogTrigger,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogFooter,

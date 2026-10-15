@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -33,7 +33,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
-import { translate as t } from '@/lib/i18n'
+import { useQueryErrorToast } from '@/hooks/use-query-error-toast'
+import { translate as t, translatePlural } from '@/lib/i18n'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { fullName } from '@/features/users/user'
 import { AccessRoleDialog } from './AccessRoleDialog'
@@ -59,12 +60,10 @@ export function AccessRolesAdministration() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<AccessRole | null>(null)
 
-  useEffect(() => {
-    if (error)
-      toast.error(error, {
-        title: t('accessRoles.loadFailed', 'Could not load access roles'),
-      })
-  }, [error])
+  useQueryErrorToast(
+    error,
+    t('accessRoles.loadFailed', 'Could not load access roles'),
+  )
 
   const roles = useMemo(() => {
     const all = data?.data ?? []
@@ -90,8 +89,8 @@ export function AccessRolesAdministration() {
       <SettingsHeader
         title={t('accessRoles.title', 'Access roles')}
         subtitle={t(
-          'accessRoles.subtitle',
-          'Restrict what editors reach: sites, page-tree branches, dimensions and workspaces.',
+          'accessRoles.subtitleWriting',
+          'Restrict where editors may make changes: sites, page-tree branches, dimensions and workspaces. Content stays readable for everyone.',
         )}
       >
         <Button onClick={() => setCreating(true)}>
@@ -137,6 +136,7 @@ export function AccessRolesAdministration() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('accessRoles.search', 'Search roles…')}
+            aria-label={t('accessRoles.search', 'Search roles…')}
             wrapperClassName="mb-3 max-w-xs"
           />
 
@@ -220,7 +220,9 @@ export function AccessRolesAdministration() {
         onConfirm={async () => {
           const role = deleting!
           await deleteAccessRole(role.id)
-          queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
+          void queryClient.invalidateQueries({
+            queryKey: studioKeys.access.all,
+          })
           toast.success(
             t('accessRoles.deleted', 'The role "{0}" has been deleted.', [
               role.label,
@@ -246,7 +248,7 @@ function RoleRow({
   const activation = useMutation({
     mutationFn: (active: boolean) => updateAccessRole(role.id, { active }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
+      void queryClient.invalidateQueries({ queryKey: studioKeys.access.all })
       toast.success(
         response.active
           ? t('accessRoles.activated', 'The role "{0}" is active again.', [
@@ -306,9 +308,11 @@ function RoleRow({
           <span className="text-neutral-500">—</span>
         ) : (
           <span title={memberNames.join(', ')}>
-            {t('accessRoles.memberCount', '{0} member(s)', [
-              String(role.memberUserIds.length),
-            ])}
+            {translatePlural(
+              'accessRoles.memberCount',
+              role.memberUserIds.length,
+              ['{0} member', '{0} members'],
+            )}
           </span>
         )}
       </TableCell>

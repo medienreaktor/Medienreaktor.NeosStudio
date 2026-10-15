@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react'
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { skipToken, useQueries, useQuery } from '@tanstack/react-query'
 import {
   activeContentRepositoryId,
   useActiveContentRepositoryId,
 } from '@/api/neos/activeContentRepository'
-import { getNode } from '@/api/neos/endpoints/nodes'
+import { listNodesById } from '@/api/neos/endpoints/nodes'
 import { restoreNode } from '@/api/neos/endpoints/nodeCommands'
 import { type NodeTypeMap, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import { useUsers } from '@/api/neos/endpoints/users'
@@ -24,7 +24,7 @@ import {
   type PaginatedEventListing,
   type Workspace,
 } from '@/api/neos/schema'
-import type { WorkspaceFeedEvent } from '@/api/studio/schema'
+import type { WorkspaceFeedEvent } from '@/features/collaboration/types'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { parseFeedEvent } from '@/features/collaboration/eventFeed'
@@ -35,11 +35,11 @@ import { parseFeedEvent } from '@/features/collaboration/eventFeed'
  * ancestors) and shaped here into what the workspace panels show: changes
  * grouped by document, editing steps with before/after rows, deleted pages
  * with who deleted them. Labels of referenced nodes and parents, which the
- * diffs name by id, are read along with getNode.
+ * diffs name by id, are read along, a listNodes request per subgraph.
  */
 
 /** The kinds of before/after rows a diff shows, one vocabulary for all. */
-export type ValueChangeKind =
+type ValueChangeKind =
   | 'property'
   | 'reference'
   | 'nodeType'
@@ -50,7 +50,7 @@ export type ValueChangeKind =
   | 'variant'
 
 /** A node a diff row names: references and parents, by label if readable. */
-export interface NodeLabel {
+interface NodeLabel {
   id: string
   label: string | null
 }
@@ -146,7 +146,7 @@ export interface WorkspaceTrashItem {
 }
 
 /** A conflicting node with its labels and document. */
-export interface ConflictNodeDetail {
+interface ConflictNodeDetail {
   nodeAggregateId: string
   nodeLabel: string | null
   documentAggregateId: string | null
@@ -157,8 +157,12 @@ export interface ConflictNodeDetail {
 /** How many events the pending history shows. */
 const PENDING_EVENTS_LIMIT = 100
 
-/** How many pages of events the trash looks through for who deleted what. */
-const DELETION_SCAN_PAGES = 10
+/** How many events a root's (live's) lane in the Workspaces graph reads: it
+ * draws at most 25 dots, only the newest ones after the earliest fork. */
+export const ROOT_EVENTS_LIMIT = 25
+
+/** Neos.Api's maximum page size, and the most ids a filter takes. */
+const MAX_PAGE_SIZE = 100
 
 const DOCUMENT_NODE_TYPE = 'Neos.Neos:Document'
 
@@ -188,7 +192,7 @@ function navigableAddress(
 /** The label of the node's site: its last ancestor (include=…ancestors). */
 function siteLabelOf(node: Node | null | undefined): string | null {
   const ancestors = node?.ancestors ?? []
-  return ancestors.length > 0 ? ancestors[ancestors.length - 1].label : null
+  return ancestors[ancestors.length - 1]?.label ?? null
 }
 
 /** Labels from the site node down to the node, from include=…ancestors. */
@@ -218,7 +222,12 @@ function propertyLabel(
   )
 }
 
+/** Labels by labelKey: a node's label differs between dimension space points. */
 type Labels = Record<string, string | null>
+
+function labelKey(nodeAggregateId: string, dimensionSpacePoint: string) {
+  return `${nodeAggregateId}|${dimensionSpacePoint}`
+}
 
 /** The ids a diff names (references, parents), to read their labels. */
 function namedIds(diff: ChangeDiff | EventDiff | null | undefined): string[] {
@@ -235,55 +244,56 @@ function namedIds(diff: ChangeDiff | EventDiff | null | undefined): string[] {
 }
 
 /**
- * The labels of the nodes, read in the workspace and dimension space point
- * (deleted ones too); null for the ones that can't be read.
+ * The labels of the nodes, read in the workspace and each one's dimension
+ * space point (deleted ones too), one request per dimension space point;
+ * absent for the ones that can't be read.
  */
 async function readLabels(
   requests: { nodeAggregateId: string; dimensionSpacePoint: string }[],
   contentRepositoryId: string,
   workspaceName: string,
 ): Promise<Labels> {
-  const unique = new Map(
-    requests.map((request) => [request.nodeAggregateId, request]),
-  )
+  const idsByPoint = new Map<string, Set<string>>()
+  for (const { nodeAggregateId, dimensionSpacePoint } of requests) {
+    const ids = idsByPoint.get(dimensionSpacePoint) ?? new Set<string>()
+    ids.add(nodeAggregateId)
+    idsByPoint.set(dimensionSpacePoint, ids)
+  }
   const labels: Labels = {}
   await Promise.all(
-    [...unique.values()].map(
-      async ({ nodeAggregateId, dimensionSpacePoint }) => {
-        labels[nodeAggregateId] = await getNode(
-          {
-            contentRepositoryId,
-            workspaceName,
-            dimensionSpacePoint,
-            nodeAggregateId,
-          },
-          // none for a node of no dimension space point: the default one
-          {
-            includeRemoved: true,
-            dimensionSpacePoint: dimensionSpacePoint || undefined,
-          },
-        ).then(
-          (node) => node.label,
-          () => null,
-        )
-      },
-    ),
+    [...idsByPoint].map(async ([dimensionSpacePoint, ids]) => {
+      const nodes = await listNodesById(
+        contentRepositoryId,
+        // none for a node of no dimension space point: the default one
+        {
+          workspaceName,
+          dimensionSpacePoint: dimensionSpacePoint || undefined,
+        },
+        [...ids],
+        { includeRemoved: true },
+      ).catch(() => [])
+      for (const node of nodes) {
+        labels[labelKey(node.nodeAggregateId, dimensionSpacePoint)] = node.label
+      }
+    }),
   )
   return labels
-}
-
-function labelled(id: string, labels: Labels): NodeLabel {
-  return { id, label: labels[id] ?? null }
 }
 
 /** The before/after rows of a change's or an event's diff. */
 function diffRows(
   diff: ChangeDiff | EventDiff | null | undefined,
   nodeTypeName: string | null | undefined,
+  /** Where the diff's node is: the referenced nodes are labelled from there. */
+  dimensionSpacePoint: string,
   labels: Labels,
   nodeTypes: NodeTypeMap | undefined,
 ): ValueChange[] {
   if (!diff) return []
+  const labelled = (id: string): NodeLabel => ({
+    id,
+    label: labels[labelKey(id, dimensionSpacePoint)] ?? null,
+  })
   const rows: ValueChange[] = diff.properties.map((property) => ({
     kind: 'property',
     property: property.name,
@@ -314,8 +324,8 @@ function diffRows(
       kind: 'parent',
       property: null,
       label: null,
-      old: labelled(diff.parentAggregateId.old, labels),
-      new: labelled(diff.parentAggregateId.new, labels),
+      old: labelled(diff.parentAggregateId.old),
+      new: labelled(diff.parentAggregateId.new),
     })
   }
   for (const tag of diff.tags?.added ?? []) {
@@ -334,8 +344,8 @@ function diffRows(
         reference.name,
         'references',
       ),
-      old: reference.old.map((id) => labelled(id, labels)),
-      new: reference.new.map((id) => labelled(id, labels)),
+      old: reference.old.map(labelled),
+      new: reference.new.map(labelled),
     })
   }
   return rows
@@ -401,9 +411,13 @@ function documentChanges(
   return [...documents.values()]
 }
 
-/** The workspace's changes grouped by their document, for the review dialog. */
+/**
+ * The workspace's changes grouped by their document, for the review dialog:
+ * all, or with a site (its site node's aggregate id) the ones in that site.
+ */
 export function useWorkspaceDocumentChanges(
   workspaceName: string | null,
+  siteAggregateId: string | null,
   enabled = true,
 ) {
   const contentRepositoryId = useActiveContentRepositoryId()
@@ -412,11 +426,18 @@ export function useWorkspaceDocumentChanges(
     queryKey: neosKeys.workspaces.review(
       contentRepositoryId ?? '',
       workspaceName ?? '',
+      siteAggregateId,
     ),
-    queryFn: () =>
-      fetchWorkspaceChanges(contentRepositoryId!, workspaceName!, {
-        include: 'document.ancestors',
-      }),
+    queryFn: ({ signal }) =>
+      fetchWorkspaceChanges(
+        contentRepositoryId!,
+        workspaceName!,
+        {
+          filterBySite: siteAggregateId ?? undefined,
+          include: 'document.ancestors',
+        },
+        signal,
+      ),
     enabled: workspaceName !== null && contentRepositoryId !== null && enabled,
     // Read afresh whenever the review opens: changes made elsewhere (another
     // tab, a colleague, the classic UI) invalidate nothing here, and a review
@@ -458,7 +479,13 @@ function documentDiffNodes(
     const rows =
       status === 'removed'
         ? []
-        : diffRows(change.diff, change.node?.nodeType, labels, nodeTypes)
+        : diffRows(
+            change.diff,
+            change.node?.nodeType,
+            change.originDimensionSpacePoint ?? '',
+            labels,
+            nodeTypes,
+          )
     if (status === 'moved' && !change.diff?.parentAggregateId) {
       rows.push({
         kind: 'position',
@@ -575,75 +602,133 @@ function useUserLabels(): Map<string, string> {
   )
 }
 
+/** A listing of pending events (newest first) as a pending history. */
+function pendingEventsOf(
+  listing: PaginatedEventListing,
+  workspaceName: string,
+  users: Map<string, string>,
+  nodeTypes: NodeTypeMap | undefined,
+): WorkspacePendingEvents {
+  return {
+    contentStreamId: listing.meta.contentStreamId,
+    forkedFrom: listing.meta.forkedFrom,
+    truncated: listing.links.next !== null,
+    events: [...listing.data].reverse().flatMap((event) => {
+      const feedEvent = parseFeedEvent(event)
+      return feedEvent
+        ? [pendingEvent(feedEvent, event, workspaceName, users, nodeTypes)]
+        : []
+    }),
+  }
+}
+
 /**
  * The pending histories of several workspaces at once (the Workspaces graph
  * fetches one per visible branch), by workspace name; entries are absent
- * while loading or on error.
+ * while loading or on error. The roots' (rootNames) read only their newest
+ * ROOT_EVENTS_LIMIT events.
  */
 export function useWorkspacesPendingEvents(
   workspaceNames: string[],
+  rootNames: ReadonlySet<string>,
   enabled = true,
   refetchInterval?: number,
 ) {
   const contentRepositoryId = useActiveContentRepositoryId()
   const { data: nodeTypes } = useNodeTypes()
   const users = useUserLabels()
+  // Callers pass a fresh array every render: key the names by content, so
+  // combine (and with it the combined result) only changes with them.
+  const namesKey = JSON.stringify(workspaceNames)
+  const names = useMemo(() => JSON.parse(namesKey) as string[], [namesKey])
   const combine = useCallback(
     (results: { data?: PaginatedEventListing; isLoading: boolean }[]) => {
       const byWorkspace = new Map<string, WorkspacePendingEvents>()
       results.forEach((result, index) => {
-        const listing = result.data
-        if (!listing) return
-        const workspaceName = workspaceNames[index]
-        byWorkspace.set(workspaceName, {
-          contentStreamId: listing.meta.contentStreamId,
-          forkedFrom: listing.meta.forkedFrom,
-          truncated: listing.links.next !== null,
-          events: [...listing.data].reverse().flatMap((event) => {
-            const feedEvent = parseFeedEvent(event)
-            return feedEvent
-              ? [
-                  pendingEvent(
-                    feedEvent,
-                    event,
-                    workspaceName,
-                    users,
-                    nodeTypes,
-                  ),
-                ]
-              : []
-          }),
-        })
+        // One query per name, in the same order.
+        const workspaceName = names[index]
+        if (!result.data || workspaceName === undefined) return
+        byWorkspace.set(
+          workspaceName,
+          pendingEventsOf(result.data, workspaceName, users, nodeTypes),
+        )
       })
       return {
         byWorkspace,
         isLoading: results.some((result) => result.isLoading),
       }
     },
-    // workspaceNames by content: callers pass a fresh array every render
-    [workspaceNames.join('\n'), users, nodeTypes],
+    [names, users, nodeTypes],
   )
   return useQueries({
-    queries: workspaceNames.map((workspaceName) => ({
-      queryKey: neosKeys.workspaces.history(
-        contentRepositoryId ?? '',
-        workspaceName,
-      ),
-      queryFn: () =>
-        listWorkspaceEvents(
+    queries: names.map((workspaceName) => {
+      const limit = rootNames.has(workspaceName)
+        ? ROOT_EVENTS_LIMIT
+        : PENDING_EVENTS_LIMIT
+      return {
+        queryKey: neosKeys.workspaces.pendingEvents(
+          contentRepositoryId ?? '',
           workspaceName,
-          {
-            sort: '-sequenceNumber',
-            limit: PENDING_EVENTS_LIMIT,
-            include: 'node,document',
-          },
-          contentRepositoryId!,
+          limit,
         ),
-      enabled: enabled && contentRepositoryId !== null,
-      refetchInterval,
-    })),
+        queryFn: ({ signal }: { signal: AbortSignal }) =>
+          listWorkspaceEvents(
+            workspaceName,
+            { sort: '-sequenceNumber', limit, include: 'node,document' },
+            contentRepositoryId!,
+            signal,
+          ),
+        enabled: enabled && contentRepositoryId !== null,
+        refetchInterval,
+      }
+    }),
     combine,
   })
+}
+
+/**
+ * The pending history of one document in the workspace: the newest events
+ * about the document itself and its content (filterByDocument).
+ */
+export function useDocumentPendingEvents(
+  workspaceName: string | null,
+  documentAggregateId: string | null,
+) {
+  const contentRepositoryId = useActiveContentRepositoryId()
+  const { data: nodeTypes } = useNodeTypes()
+  const users = useUserLabels()
+  const query = useQuery({
+    queryKey: neosKeys.workspaces.documentEvents(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+      documentAggregateId ?? '',
+    ),
+    queryFn:
+      workspaceName !== null &&
+      documentAggregateId !== null &&
+      contentRepositoryId !== null
+        ? ({ signal }) =>
+            listWorkspaceEvents(
+              workspaceName,
+              {
+                sort: '-sequenceNumber',
+                limit: PENDING_EVENTS_LIMIT,
+                include: 'node,document',
+                filterByDocument: documentAggregateId,
+              },
+              contentRepositoryId,
+              signal,
+            )
+        : skipToken,
+  })
+  const data = useMemo(
+    () =>
+      query.data === undefined || workspaceName === null
+        ? undefined
+        : pendingEventsOf(query.data, workspaceName, users, nodeTypes),
+    [query.data, workspaceName, users, nodeTypes],
+  )
+  return { ...query, data }
 }
 
 /** The rows of an event that its diff has no field for. */
@@ -710,7 +795,8 @@ export function useWorkspacePendingEventsDiff(
         const inRange = page.data.filter((event) => event.sequenceNumber <= to!)
         events.push(...inRange)
         if (inRange.length < page.data.length || page.data.length === 0) break
-        after = page.data[page.data.length - 1].sequenceNumber
+        // page.data is not empty: the loop broke out above otherwise.
+        after = page.data[page.data.length - 1]!.sequenceNumber
         if (after >= to!) break
       }
       const labels = await readLabels(
@@ -745,7 +831,13 @@ export function useWorkspacePendingEventsDiff(
           {
             ...pendingEvent(feedEvent, event, workspaceName, users, nodeTypes),
             changes: [
-              ...diffRows(event.diff, event.node?.nodeType, labels, nodeTypes),
+              ...diffRows(
+                event.diff,
+                event.node?.nodeType,
+                event.node?.dimensionSpacePoint ?? '',
+                labels,
+                nodeTypes,
+              ),
               ...eventRows(event),
             ],
           },
@@ -770,46 +862,66 @@ interface TrashData {
 }
 
 /**
- * When and by whom the nodes were deleted: their SubtreeWasTagged "removed"
- * events in the workspace's content stream, newest first - an unpublished
- * deletion is there.
+ * When and by whom the nodes were deleted: their newest SubtreeWasTagged
+ * "removed" event in the workspace's content stream - an unpublished deletion
+ * is there. The events are filtered by the server, so a page of them is
+ * usually all it takes: one request per 100 nodes (the most the filter
+ * takes), another page only when they have more removals between them than
+ * a page holds (deleted in several dimension space points, or again after a
+ * restore).
  */
 async function findDeletions(
   contentRepositoryId: string,
   workspaceName: string,
-  nodeAggregateIds: Set<string>,
+  nodeAggregateIds: string[],
+  signal?: AbortSignal,
 ): Promise<Record<string, Deletion>> {
   const deletions: Record<string, Deletion> = {}
-  let after: number | undefined
-  for (let page = 0; page < DELETION_SCAN_PAGES; page++) {
-    if (Object.keys(deletions).length === nodeAggregateIds.size) break
-    const listing = await listWorkspaceEvents(
-      workspaceName,
-      { sort: '-sequenceNumber', limit: PENDING_EVENTS_LIMIT, after },
-      contentRepositoryId,
-    )
-    for (const event of listing.data) {
-      const id = event.payload?.nodeAggregateId
-      if (
-        event.type === 'SubtreeWasTagged' &&
-        event.payload?.tag === 'removed' &&
-        typeof id === 'string' &&
-        nodeAggregateIds.has(id) &&
-        deletions[id] === undefined
-      ) {
-        const userId = event.metadata?.initiatingUserId
-        deletions[id] = {
-          at:
-            typeof event.metadata?.initiatingTimestamp === 'string'
-              ? event.metadata.initiatingTimestamp
-              : event.recordedAt,
-          userId: typeof userId === 'string' ? userId : null,
-        }
-      }
-    }
-    if (listing.links.next === null || listing.data.length === 0) break
-    after = listing.data[listing.data.length - 1].sequenceNumber
+  const chunks: string[][] = []
+  for (let i = 0; i < nodeAggregateIds.length; i += MAX_PAGE_SIZE) {
+    chunks.push(nodeAggregateIds.slice(i, i + MAX_PAGE_SIZE))
   }
+  await Promise.all(
+    chunks.map(async (ids) => {
+      let after: number | undefined
+      for (;;) {
+        const listing = await listWorkspaceEvents(
+          workspaceName,
+          {
+            filterByTag: 'removed',
+            filterByEventType: 'SubtreeWasTagged',
+            filterByNodeAggregateId: ids.join(','),
+            sort: '-sequenceNumber',
+            limit: MAX_PAGE_SIZE,
+            after,
+          },
+          contentRepositoryId,
+          signal,
+        )
+        for (const event of listing.data) {
+          const id = event.payload?.nodeAggregateId
+          if (typeof id !== 'string' || deletions[id] !== undefined) continue
+          const userId = event.metadata?.initiatingUserId
+          deletions[id] = {
+            at:
+              typeof event.metadata?.initiatingTimestamp === 'string'
+                ? event.metadata.initiatingTimestamp
+                : event.recordedAt,
+            userId: typeof userId === 'string' ? userId : null,
+          }
+        }
+        if (
+          ids.every((id) => deletions[id] !== undefined) ||
+          listing.links.next === null ||
+          listing.data.length === 0
+        ) {
+          return
+        }
+        // listing.data is not empty: the loop returned above otherwise.
+        after = listing.data[listing.data.length - 1]!.sequenceNumber
+      }
+    }),
+  )
   return deletions
 }
 
@@ -866,34 +978,41 @@ function trashItems(
   )
 }
 
-function trashQueryKey(contentRepositoryId: string, workspaceName: string) {
-  return neosKeys.workspaces.trash(contentRepositoryId, workspaceName)
-}
-
 /**
- * The workspace's deleted PAGES. Deleted content elements are left out: they
- * are restored where they are edited.
+ * The workspace's deleted PAGES - all, or with a site (its site node's
+ * aggregate id) the ones in that site. Deleted content elements are left out:
+ * they are restored where they are edited.
  */
-export function useWorkspaceTrash(workspaceName: string | null) {
+export function useWorkspaceTrash(
+  workspaceName: string | null,
+  siteAggregateId: string | null,
+) {
   const contentRepositoryId = useActiveContentRepositoryId()
   const { data: nodeTypes } = useNodeTypes()
   const users = useUserLabels()
   const query = useQuery({
-    queryKey: trashQueryKey(contentRepositoryId ?? '', workspaceName ?? ''),
-    queryFn: async (): Promise<TrashData> => {
+    queryKey: neosKeys.workspaces.trash(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+      siteAggregateId,
+    ),
+    queryFn: async ({ signal }): Promise<TrashData> => {
       const changes = await fetchWorkspaceChanges(
         contentRepositoryId!,
         workspaceName!,
         {
           filterByChangeType: 'deleted',
           filterByNodeType: DOCUMENT_NODE_TYPE,
+          filterBySite: siteAggregateId ?? undefined,
           include: 'node.ancestors',
         },
+        signal,
       )
       const deletions = await findDeletions(
         contentRepositoryId!,
         workspaceName!,
-        new Set(changes.map((change) => change.nodeAggregateId)),
+        [...new Set(changes.map((change) => change.nodeAggregateId))],
+        signal,
       )
       return { changes, deletions }
     },
@@ -903,10 +1022,7 @@ export function useWorkspaceTrash(workspaceName: string | null) {
     () =>
       query.data === undefined || workspaceName === null
         ? undefined
-        : {
-            items: trashItems(query.data, workspaceName, users, nodeTypes),
-            truncated: false,
-          },
+        : { items: trashItems(query.data, workspaceName, users, nodeTypes) },
     [query.data, workspaceName, users, nodeTypes],
   )
   return { ...query, data }
@@ -924,13 +1040,18 @@ export async function restoreFromTrash(
   nodeAggregateId: string,
 ): Promise<{ nodeAggregateId: string; label: string | null }[]> {
   const contentRepositoryId = activeContentRepositoryId()
+  // The listing of whichever site the trash was offered for
   const node =
     queryClient
-      .getQueryData<TrashData>(
-        trashQueryKey(contentRepositoryId, workspaceName),
-      )
-      ?.changes.find((change) => change.nodeAggregateId === nodeAggregateId)
-      ?.node ?? null
+      .getQueriesData<TrashData>({
+        queryKey: neosKeys.workspaces.trashes(
+          contentRepositoryId,
+          workspaceName,
+        ),
+      })
+      .flatMap(([, data]) => data?.changes ?? [])
+      .find((change) => change.nodeAggregateId === nodeAggregateId)?.node ??
+    null
   await restoreNode({ contentRepositoryId, workspaceName, nodeAggregateId })
   return [
     { nodeAggregateId, label: node?.label ?? null },
@@ -961,12 +1082,13 @@ export function useConflictDetails(
     queryKey: neosKeys.workspaces.conflicts(
       contentRepositoryId ?? '',
       workspaceName ?? '',
+      dimensionSpacePoint ?? '',
       unique.map(
         (conflict) =>
           `${conflict.nodeAggregateId}|${conflict.documentAggregateId ?? ''}`,
       ),
     ),
-    queryFn: async (): Promise<ConflictNodeDetail[]> => {
+    queryFn: async ({ signal }): Promise<ConflictNodeDetail[]> => {
       const baseWorkspaceName =
         queryClient
           .getQueryData<Workspace[]>(
@@ -974,43 +1096,41 @@ export function useConflictDetails(
           )
           ?.find((workspace) => workspace.name === workspaceName)
           ?.baseWorkspaceName ?? null
-      const read = async (nodeAggregateId: string): Promise<Node | null> => {
-        for (const name of [workspaceName!, baseWorkspaceName]) {
-          if (name === null) continue
-          try {
-            return await getNode(
-              {
-                contentRepositoryId: contentRepositoryId!,
-                workspaceName: name,
-                dimensionSpacePoint: dimensionSpacePoint ?? '',
-                nodeAggregateId,
-              },
-              {
-                includeRemoved: true,
-                dimensionSpacePoint: dimensionSpacePoint || undefined,
-              },
-            )
-          } catch {
-            // not there, or not readable
-          }
-        }
-        return null
-      }
-      return Promise.all(
-        unique.map(async ({ nodeAggregateId, documentAggregateId }) => {
-          const [node, document] = await Promise.all([
-            read(nodeAggregateId),
-            documentAggregateId !== null ? read(documentAggregateId) : null,
-          ])
-          return {
-            nodeAggregateId,
-            nodeLabel: node?.label ?? null,
-            documentAggregateId,
-            documentLabel: document?.label ?? null,
-            documentAddress: navigableAddress(document, workspaceName!),
-          }
-        }),
+      const ids = new Set(
+        unique.flatMap(({ nodeAggregateId, documentAggregateId }) =>
+          documentAggregateId !== null
+            ? [nodeAggregateId, documentAggregateId]
+            : [nodeAggregateId],
+        ),
       )
+      // One batch in the workspace, then one in its base for the misses
+      const nodes = new Map<string, Node>()
+      for (const name of [workspaceName!, baseWorkspaceName]) {
+        const missing = [...ids].filter((id) => !nodes.has(id))
+        if (name === null || missing.length === 0) continue
+        const read = await listNodesById(
+          contentRepositoryId!,
+          {
+            workspaceName: name,
+            dimensionSpacePoint: dimensionSpacePoint || undefined,
+          },
+          missing,
+          { includeRemoved: true },
+          signal,
+        ).catch(() => [])
+        for (const node of read) nodes.set(node.nodeAggregateId, node)
+      }
+      return unique.map(({ nodeAggregateId, documentAggregateId }) => {
+        const document =
+          documentAggregateId !== null ? nodes.get(documentAggregateId) : null
+        return {
+          nodeAggregateId,
+          nodeLabel: nodes.get(nodeAggregateId)?.label ?? null,
+          documentAggregateId,
+          documentLabel: document?.label ?? null,
+          documentAddress: navigableAddress(document, workspaceName!),
+        }
+      })
     },
     enabled:
       workspaceName !== null &&

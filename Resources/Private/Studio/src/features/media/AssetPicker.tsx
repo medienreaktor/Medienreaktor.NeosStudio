@@ -36,7 +36,11 @@ const MEDIA_LIBRARY_PANEL = 'media-library'
 export interface AssetPickerRequest {
   /** The field the pick is for, shown in the picker banner (e.g. the property label). */
   title?: string
-  /** Called with the chosen asset when the user picks one. */
+  /**
+   * Called with the chosen asset when the user picks one. Synchronous by
+   * contract: nothing awaits it, so work it starts (importing a remote asset,
+   * say) must surface its own failure - a toast, as the asset editors do.
+   */
   onPick: (asset: Asset) => void
 }
 

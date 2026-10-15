@@ -1,5 +1,10 @@
-import * as React from 'react'
+import type * as React from 'react'
 import type { NodeAddress } from '@/api/neos/schema'
+import {
+  ObservableRegistry,
+  type ObservableStore,
+  useRegistrySelector,
+} from '@/lib/registry'
 
 /**
  * The node property editor registry: every editor - built-in or third-party -
@@ -10,9 +15,9 @@ import type { NodeAddress } from '@/api/neos/schema'
  * controls through this one registry, so an editor written once works in both,
  * and a plugin that registers a custom editor lights up everywhere.
  *
- * Modelled on the panel registry (see features/panels/registry.ts): a small
- * observable store, register-replaces-by-id for idempotent HMR and plugin
- * reloads, and a stable snapshot for React.
+ * Built on the shared observable store (see lib/registry.ts), like the panel
+ * registry: register-replaces-by-id for idempotent HMR and plugin reloads,
+ * and a stable snapshot for React.
  */
 
 /** What an editor is editing: a node property (inspector) or a creation-dialog element. */
@@ -47,7 +52,7 @@ export interface PropertyEditorSubject {
 export interface PropertyEditorProps {
   /** The property / element being edited. */
   subject: PropertyEditorSubject
-  /** The current value, already unwrapped from any transport envelope. Seeds the editor's state; `undefined` means unset, `null` clears it. */
+  /** The current value as the node carries it. Seeds the editor's state; `undefined` means unset, `null` clears it. */
   value: unknown
   /** Commit a value worth keeping (blur, Enter, a discrete pick). Required - the inspector persists here. */
   onCommit: (value: unknown) => void
@@ -95,19 +100,28 @@ export interface PropertyEditorDefinition {
   rendersOwnLabel?: boolean
 }
 
-export class PropertyEditorRegistry {
-  private definitions = new Map<string, PropertyEditorDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: PropertyEditorDefinition[] = []
+/**
+ * Composes the shared store rather than extending it: its public `get(id)`
+ * has always returned the editor *component* (the definition is
+ * getDefinition(id)), which an override of the base's definition-returning
+ * get() could not express.
+ */
+export class PropertyEditorRegistry implements ObservableStore<PropertyEditorDefinition> {
+  private readonly store = new ObservableRegistry<PropertyEditorDefinition>()
+
+  /** Stable snapshot in registration order - changes identity only on (un)register. Bound. */
+  readonly getAll = this.store.getAll
+
+  /** Listen for (un)registrations; returns the unsubscriber. Bound. */
+  readonly subscribe = this.store.subscribe
 
   /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
   register(definition: PropertyEditorDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
+    this.store.register(definition)
   }
 
   unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
+    this.store.unregister(id)
   }
 
   /** The component registered for an editor id, or undefined - the host renders a read-only fallback for unknown editors. */
@@ -119,23 +133,7 @@ export class PropertyEditorRegistry {
   getDefinition(
     id: string | null | undefined,
   ): PropertyEditorDefinition | undefined {
-    if (!id) return undefined
-    return this.definitions.get(id)
-  }
-
-  /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): PropertyEditorDefinition[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()]
-    this.listeners.forEach((listener) => listener())
+    return this.store.get(id)
   }
 }
 
@@ -150,8 +148,8 @@ export const propertyEditorRegistry = new PropertyEditorRegistry()
 export function usePropertyEditor(
   id: string | null | undefined,
 ): PropertyEditorDefinition | undefined {
-  return React.useSyncExternalStore(
-    (onChange) => propertyEditorRegistry.subscribe(onChange),
-    () => propertyEditorRegistry.getDefinition(id),
+  // The stored definition object itself - a stable, cached snapshot value.
+  return useRegistrySelector(propertyEditorRegistry, (registry) =>
+    registry.getDefinition(id),
   )
 }

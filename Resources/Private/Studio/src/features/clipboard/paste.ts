@@ -37,10 +37,22 @@ export async function pasteClipboardEntry(
   parentAddress: NodeAddress,
   succeedingSiblingAddress: NodeAddress | null,
 ): Promise<PasteResult> {
+  // Entries are never empty (see ClipboardEntry.nodes); a broken one must not
+  // turn into a paste that reports no node.
+  const [firstNode] = entry.nodes
+  if (!firstNode) throw new Error('Cannot paste an empty clipboard entry.')
+
   if (entry.mode === 'cut') {
+    // Like a copy, a move happens where it is pasted: in the target's
+    // workspace and dimension space point, whichever the node was cut in.
+    const inTarget = (address: NodeAddress): NodeAddress => ({
+      ...address,
+      workspaceName: parentAddress.workspaceName,
+      dimensionSpacePoint: parentAddress.dimensionSpacePoint,
+    })
     await moveNodesByAddress(
       entry.nodes.map((node) => ({
-        nodeAddress: node.address,
+        nodeAddress: inTarget(node.address),
         newParentAddress: parentAddress,
         succeedingSiblingAddress,
       })),
@@ -49,8 +61,9 @@ export async function pasteClipboardEntry(
     const sourceParents = entry.nodes
       .map((node) => node.sourceParentAddress)
       .filter((address): address is NodeAddress => address !== null)
+      .map(inTarget)
     return {
-      newAddress: entry.nodes[0].address,
+      newAddress: inTarget(firstNode.address),
       affectedAddresses: uniqueAddresses([parentAddress, ...sourceParents]),
     }
   }
@@ -60,7 +73,11 @@ export async function pasteClipboardEntry(
     parentAddress,
     succeedingSiblingAddress,
   )
-  return { newAddress: newAddresses[0], affectedAddresses: [parentAddress] }
+  return {
+    // copyNodes() returns one copy per input node, and there is at least one.
+    newAddress: newAddresses[0]!,
+    affectedAddresses: [parentAddress],
+  }
 }
 
 /**

@@ -63,21 +63,15 @@ export function NotificationBell() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t('notifications.label', 'Notifications')}
-        title={
-          unreadCount > 0
-            ? t('notifications.unreadCount', `${unreadCount} unread`, {
-                count: unreadCount,
-              })
-            : t('notifications.label', 'Notifications')
-        }
+        title={t('notifications.unreadCount', `${unreadCount} unread`, {
+          count: unreadCount,
+        })}
         className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-950 dark:text-white select-none hover:text-neutral-950 dark:hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
       >
         <i className="fas fa-bell text-[0.8rem]" aria-hidden />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-0.5 text-[0.55rem] leading-none font-semibold text-white">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
+        <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-0.5 text-[0.55rem] leading-none font-semibold text-white">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuGroup>

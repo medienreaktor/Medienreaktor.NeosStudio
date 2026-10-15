@@ -8,6 +8,7 @@ import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
 import {
+  isAllowedHref,
   parseAssetUri,
   parseDocumentUri,
   type LinkValue,
@@ -30,6 +31,9 @@ export const LINK_EDITOR = 'Neos.Neos/Inspector/Editors/LinkEditor'
  * (target, CSS class, ...) are not offered here - for a rendered link those
  * are the Fusion template's concern. Inline rich-text links do store them
  * (as <a> attributes; see the preview's link flow).
+ *
+ * Only links of the allowed schemes are stored (see isAllowedHref); a stored
+ * value of another one (javascript:, data:, ...) shows an inline error.
  */
 export const LinkFieldEditor: PropertyEditorComponent = ({
   subject,
@@ -69,6 +73,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
   const assetQuery = useAsset('neos', assetIdentifier)
 
   const commit = (next: string | null) => {
+    if (next !== null && !isAllowedHref(next)) return
     setHref(next)
     onCommit(next)
     onChange?.(next)
@@ -122,6 +127,14 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
             <i className="fas fa-xmark" aria-hidden />
           </Button>
         </div>
+      )}
+      {href !== null && !isAllowedHref(href) && (
+        <p role="alert" className="mt-1 text-xs text-red-500">
+          {t(
+            'link.schemeNotAllowed',
+            'This kind of link is not allowed - use http(s), mailto, tel or a relative link.',
+          )}
+        </p>
       )}
       {open && (
         <LinkEditorDialog

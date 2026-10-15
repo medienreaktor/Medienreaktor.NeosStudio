@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -13,6 +13,7 @@ import type { Domain, Site } from '@/api/neos/schema'
 import { queryClient } from '@/app/queryClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ type DomainFormState =
   { mode: 'create' } | { mode: 'edit'; domain: Domain } | null
 
 function invalidateSites() {
-  queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
+  void queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
 }
 
 function mutationErrorToast(error: unknown) {
@@ -72,24 +73,31 @@ export function EditSiteDialog({
   site: Site | null
   onOpenChange: (open: boolean) => void
 }) {
-  const [name, setName] = useState('')
+  // The last site shown, so the popup keeps its content while it fades out
+  // after `site` went back to null.
+  const [shown, setShown] = useState(site)
+  if (site !== null && site !== shown) setShown(site)
+
+  return (
+    <Dialog open={site !== null} onOpenChange={onOpenChange}>
+      <DialogContent size="lg">
+        {/* Mounted per opening (the popup unmounts while closed) and keyed
+            by node name, not the object: the site prop refreshes after every
+            domain mutation and must not clobber a half-typed name. */}
+        {shown !== null && <EditSiteForm key={shown.nodeName} site={shown} />}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EditSiteForm({ site }: { site: Site }) {
+  const [name, setName] = useState(() => site.name)
   const [domainForm, setDomainForm] = useState<DomainFormState>(null)
+  const [deletingDomain, setDeletingDomain] = useState<Domain | null>(null)
 
-  // Re-seed when a (new) site is opened. Deliberately keyed by nodeName, not
-  // the object: the site prop refreshes after every domain mutation and must
-  // not clobber a half-typed name.
-  const nodeName = site?.nodeName ?? null
-  useEffect(() => {
-    if (site !== null) {
-      setName(site.name)
-      setDomainForm(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeName])
-
-  const nameDirty = site !== null && name !== site.name
+  const nameDirty = name.trim() !== site.name
   const rename = useMutation({
-    mutationFn: () => updateSite(site!.nodeName, { name: name.trim() }),
+    mutationFn: () => updateSite(site.nodeName, { name: name.trim() }),
     onSuccess: (response) => {
       invalidateSites()
       toast.success(
@@ -101,16 +109,33 @@ export function EditSiteDialog({
 
   const setPrimary = useMutation({
     mutationFn: (domainId: string) =>
-      updateSite(site!.nodeName, { primaryDomainId: domainId }),
+      updateSite(site.nodeName, { primaryDomainId: domainId }),
     onSuccess: invalidateSites,
     onError: mutationErrorToast,
   })
 
   const domainMutation = useMutation({
-    mutationFn: (action: () => Promise<unknown>) => action(),
+    mutationFn: ({
+      action,
+    }: {
+      domainId: string
+      action: () => Promise<unknown>
+    }) => action(),
     onSuccess: invalidateSites,
     onError: mutationErrorToast,
   })
+  // No onError: the confirm dialog reports a failure itself, and stays open.
+  const domainDeletion = useMutation({
+    mutationFn: (domainId: string) => deleteDomain(site.nodeName, domainId),
+    onSuccess: invalidateSites,
+  })
+
+  /** A row's menu is closed while something is already happening to it. */
+  const domainBusy = (domainId: string) =>
+    (setPrimary.isPending && setPrimary.variables === domainId) ||
+    (domainMutation.isPending &&
+      domainMutation.variables?.domainId === domainId) ||
+    (domainDeletion.isPending && domainDeletion.variables === domainId)
 
   const onRenameSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -118,129 +143,136 @@ export function EditSiteDialog({
   }
 
   return (
-    <Dialog open={site !== null} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
-        <DialogHeader>
-          <DialogTitle>
-            {t('sites.editSite', 'Edit site')}
-            {site !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
-                {site.name}
-              </span>
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {t('sites.editSite', 'Edit site')}
+          <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+            {site.name}
+          </span>
+        </DialogTitle>
+        <DialogDescription>
+          {t('sites.editSiteHint', 'Node name "{0}", package {1}.', [
+            site.nodeName,
+            site.siteResourcesPackageKey,
+          ])}
+        </DialogDescription>
+      </DialogHeader>
+
+      <form onSubmit={onRenameSubmit} className="flex items-end gap-2">
+        <div className="flex-1">
+          <Field label={t('sites.name', 'Name')} htmlFor="site-edit-name">
+            <Input
+              id="site-edit-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              autoComplete="off"
+              required
+            />
+          </Field>
+        </div>
+        <Button
+          type="submit"
+          disabled={!nameDirty || name.trim() === '' || rename.isPending}
+        >
+          {rename.isPending
+            ? t('sites.saving', 'Saving…')
+            : t('sites.save', 'Save')}
+        </Button>
+      </form>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
+            {t('sites.domains', 'Domains')}
+          </h3>
+          {domainForm === null && (
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={() => setDomainForm({ mode: 'create' })}
+            >
+              <i className="fas fa-plus" aria-hidden />
+              {t('sites.addDomain', 'Add domain')}
+            </Button>
+          )}
+        </div>
+
+        {site.domains.length === 0 && domainForm === null && (
+          <p className="text-sm text-neutral-500">
+            {t(
+              'sites.noDomains',
+              'No domains configured. The site is reachable under any host pointing at this installation.',
             )}
-          </DialogTitle>
-          <DialogDescription>
-            {site !== null &&
-              t('sites.editSiteHint', 'Node name "{0}", package {1}.', [
-                site.nodeName,
-                site.siteResourcesPackageKey,
-              ])}
-          </DialogDescription>
-        </DialogHeader>
-
-        {site !== null && (
-          <>
-            <form onSubmit={onRenameSubmit} className="flex items-end gap-2">
-              <div className="flex-1">
-                <Field label={t('sites.name', 'Name')} htmlFor="site-edit-name">
-                  <Input
-                    id="site-edit-name"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    autoComplete="off"
-                    required
-                  />
-                </Field>
-              </div>
-              <Button
-                type="submit"
-                disabled={!nameDirty || name.trim() === '' || rename.isPending}
-              >
-                {rename.isPending
-                  ? t('sites.saving', 'Saving…')
-                  : t('sites.save', 'Save')}
-              </Button>
-            </form>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
-                  {t('sites.domains', 'Domains')}
-                </h3>
-                {domainForm === null && (
-                  <Button
-                    variant="secondary"
-                    size="xs"
-                    onClick={() => setDomainForm({ mode: 'create' })}
-                  >
-                    <i className="fas fa-plus" aria-hidden />
-                    {t('sites.addDomain', 'Add domain')}
-                  </Button>
-                )}
-              </div>
-
-              {site.domains.length === 0 && domainForm === null && (
-                <p className="text-sm text-neutral-500">
-                  {t(
-                    'sites.noDomains',
-                    'No domains configured. The site is reachable under any host pointing at this installation.',
-                  )}
-                </p>
-              )}
-
-              <ul className="space-y-1">
-                {site.domains.map((domain) => (
-                  <DomainRow
-                    key={domain.id}
-                    domain={domain}
-                    onSetPrimary={() => setPrimary.mutate(domain.id)}
-                    onToggleActive={() =>
-                      domainMutation.mutate(() =>
-                        updateDomain(site.nodeName, domain.id, {
-                          active: !domain.active,
-                        }),
-                      )
-                    }
-                    onEdit={() => setDomainForm({ mode: 'edit', domain })}
-                    onDelete={() =>
-                      domainMutation.mutate(() =>
-                        deleteDomain(site.nodeName, domain.id),
-                      )
-                    }
-                  />
-                ))}
-              </ul>
-
-              {domainForm !== null && (
-                <DomainForm
-                  key={
-                    domainForm.mode === 'edit' ? domainForm.domain.id : 'new'
-                  }
-                  siteNodeName={site.nodeName}
-                  editing={
-                    domainForm.mode === 'edit' ? domainForm.domain : null
-                  }
-                  onClose={() => setDomainForm(null)}
-                />
-              )}
-            </div>
-          </>
+          </p>
         )}
-      </DialogContent>
-    </Dialog>
+
+        <ul className="space-y-1">
+          {site.domains.map((domain) => (
+            <DomainRow
+              key={domain.id}
+              domain={domain}
+              busy={domainBusy(domain.id)}
+              onSetPrimary={() => setPrimary.mutate(domain.id)}
+              onToggleActive={() =>
+                domainMutation.mutate({
+                  domainId: domain.id,
+                  action: () =>
+                    updateDomain(site.nodeName, domain.id, {
+                      active: !domain.active,
+                    }),
+                })
+              }
+              onEdit={() => setDomainForm({ mode: 'edit', domain })}
+              onDelete={() => setDeletingDomain(domain)}
+            />
+          ))}
+        </ul>
+
+        {domainForm !== null && (
+          <DomainForm
+            key={domainForm.mode === 'edit' ? domainForm.domain.id : 'new'}
+            siteNodeName={site.nodeName}
+            editing={domainForm.mode === 'edit' ? domainForm.domain : null}
+            onClose={() => setDomainForm(null)}
+          />
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={deletingDomain !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeletingDomain(null)
+        }}
+        title={t('sites.deleteDomainTitle', 'Delete domain "{0}"?', [
+          deletingDomain?.url ?? '',
+        ])}
+        description={t(
+          'sites.deleteDomainDescription',
+          'The site is no longer reachable under this domain.',
+        )}
+        confirmLabel={t('sites.deleteDomain', 'Delete')}
+        onConfirm={async () => {
+          await domainDeletion.mutateAsync(deletingDomain!.id)
+        }}
+      />
+    </>
   )
 }
 
 function DomainRow({
   domain,
+  busy,
   onSetPrimary,
   onToggleActive,
   onEdit,
   onDelete,
 }: {
   domain: Domain
+  /** Something is already happening to this domain - no second action. */
+  busy: boolean
   onSetPrimary: () => void
   onToggleActive: () => void
   onEdit: () => void
@@ -273,6 +305,7 @@ function DomainRow({
             <Button
               variant="ghost"
               size="icon-xs"
+              disabled={busy}
               aria-label={t('sites.domainActions', 'Domain actions')}
             />
           }
@@ -332,26 +365,32 @@ function DomainForm({
     { value: 'https', label: 'https' },
   ]
 
+  // Empty is "any port" - omitted on create, cleared (null) on update. Anything
+  // else must be a valid port, the same for both.
+  const portValue = parsePort(port)
+  const portInvalid = portValue === undefined
+  const canSubmit = hostname.trim() !== '' && !portInvalid
+
   const mutation = useMutation({
     mutationFn: () => {
       const schemeValue = scheme === 'any' ? null : (scheme as 'http' | 'https')
-      const portValue = port.trim() === '' ? null : Number(port)
+      const portOrNull = portValue ?? null
       if (editing !== null) {
         // null clears the scheme / port.
         return updateDomain(siteNodeName, editing.id, {
           hostname: hostname.trim(),
           scheme: schemeValue,
-          port: portValue,
+          port: portOrNull,
         })
       }
       return createDomain(siteNodeName, {
         hostname: hostname.trim(),
         ...(schemeValue !== null ? { scheme: schemeValue } : {}),
-        ...(portValue !== null && portValue > 0 ? { port: portValue } : {}),
+        ...(portOrNull !== null ? { port: portOrNull } : {}),
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.sites.all })
       onClose()
     },
     onError: (error) =>
@@ -366,7 +405,7 @@ function DomainForm({
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (hostname.trim() !== '' && !mutation.isPending) mutation.mutate()
+    if (canSubmit && !mutation.isPending) mutation.mutate()
   }
 
   return (
@@ -415,6 +454,7 @@ function DomainForm({
             value={port}
             onChange={(event) => setPort(event.target.value)}
             autoComplete="off"
+            aria-invalid={portInvalid || undefined}
           />
         </Field>
       </div>
@@ -431,7 +471,7 @@ function DomainForm({
         <Button
           type="submit"
           size="xs"
-          disabled={hostname.trim() === '' || mutation.isPending}
+          disabled={!canSubmit || mutation.isPending}
         >
           {mutation.isPending
             ? t('sites.saving', 'Saving…')
@@ -442,4 +482,12 @@ function DomainForm({
       </div>
     </form>
   )
+}
+
+/** A port field's value: null when empty, undefined when not a valid port. */
+function parsePort(text: string): number | null | undefined {
+  const trimmed = text.trim()
+  if (trimmed === '') return null
+  const port = Number(trimmed)
+  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : undefined
 }

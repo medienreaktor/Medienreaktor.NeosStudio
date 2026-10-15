@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { queryString } from '@/api/http/request'
 import { renderNodeElement } from '@/api/neos/endpoints/nodes'
 import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
@@ -12,8 +12,8 @@ import {
 } from '@/api/neos/schema'
 import { toast } from '@/components/ui/toast'
 import { config } from '@/config'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 import { translate as t } from '@/lib/i18n'
-import { reportPreviewLoaded } from '@/app/boot'
 import {
   peekPendingFlash,
   subscribeFlashRequest,
@@ -31,7 +31,7 @@ import {
   type InsertRequest,
 } from '@/features/creation/InsertNodeDialog'
 import { CreateNodeFlow } from '@/features/creation/NodeCreationDialog'
-import { moveNode } from '@/features/editing/nodeActions'
+import { moveNodesByAddress } from '@/features/editing/nodeActions'
 import {
   NodeContextMenu,
   type NodeMenuTarget,
@@ -55,10 +55,11 @@ import {
 } from '@/features/links/linkValue'
 import type {
   GuestToHostMessage,
-  HostToGuestMessage,
   LinkAttributes,
   PresenceHighlight,
 } from './protocol'
+import { useGuestBridge } from './useGuestBridge'
+import { usePreviewLayers } from './usePreviewLayers'
 
 /**
  * URL of the Studio's own preview endpoint for a node. Its complete identity -
@@ -113,22 +114,33 @@ export function PreviewToolbar({
 }
 
 /**
- * One stacked preview iframe. Navigations and reloads mount a fresh layer on
- * top of the current one and fade it in once its guest is ready, so a page
- * swap crossfades instead of flashing white through a torn-down iframe.
+ * A request to refresh nodes' rendered elements in place (see
+ * PreviewPane's elementUpdate). Bump `token` for every new batch.
  */
-type PreviewLayer = {
-  /** Stable identity, so React keeps (never remounts) the element. */
-  id: number
-  src: string
-  /** src plus the reload counters - a change means "load a fresh frame". */
-  loadKey: string
-  /** The guest booted; the layer is faded in and takes over the bridge. */
-  ready: boolean
+export type PreviewElementUpdate = {
+  addresses: NodeAddress[]
+  token: number
+  /**
+   * The batch reports collaborators' edits rather than the user's own. A
+   * remote edit may well concern another page: an element not rendered on
+   * this one is skipped instead of reloading the frame. (Own edits reach the
+   * current page by definition, so there a missing element means the markup
+   * cannot be patched and the page reloads.)
+   */
+  remote?: boolean
 }
 
-/** Matches the iframe's opacity transition - lower layers retire after it. */
-const CROSSFADE_MS = 50
+/** How one element fared in an out-of-band update. */
+type ElementUpdateOutcome =
+  /** Re-rendered and swapped into the live page. */
+  | 'updated'
+  /** Not rendered on this page (or no guest to ask) - nothing to patch. */
+  | 'absent'
+  /** It is on the page, but could not be patched in place. */
+  | 'failed'
+
+/** How long the host waits for the guest's element-info / element-replaced. */
+const GUEST_REPLY_TIMEOUT_MS = 3000
 
 /**
  * Renders the selected document in an iframe and bridges it to the shell:
@@ -136,6 +148,11 @@ const CROSSFADE_MS = 50
  * the shell's selection is pushed back as an outline, and inline edits are
  * persisted through the commands API. The iframe is same-origin and
  * authenticated by the backend session, not the OAuth token.
+ *
+ * The frames themselves are managed by usePreviewLayers (stacking,
+ * crossfade, retirement), the postMessage plumbing by useGuestBridge; this
+ * component holds what the guest's messages lead to - menus, dialogs and
+ * persistence.
  */
 export function PreviewPane({
   document,
@@ -163,17 +180,18 @@ export function PreviewPane({
    * (an inspector edit with ui.reloadIfChanged, or remote collaborators'
    * edits): each element is re-rendered out-of-band and swapped into the
    * live page - no iframe reload, scroll position and inline editing
-   * elsewhere survive. Falls back to a full reload whenever an element
-   * cannot be updated in place.
+   * elsewhere survive. Elements that cannot be updated in place fall back
+   * to a single full reload per batch; with `remote` set, elements not on
+   * this page are skipped (see PreviewElementUpdate).
    */
-  elementUpdate?: { addresses: NodeAddress[]; token: number } | null
+  elementUpdate?: PreviewElementUpdate | null
   /** Collaborators on this document, outlined at the elements they focus. */
   presence?: PresenceHighlight[]
 }) {
   // Bumping this reloads the preview even when the src is unchanged (e.g.
   // after edits in the same document); it feeds into a layer's load key.
   const [reloadCount, setReloadCount] = useState(0)
-  const [guestReady, setGuestReady] = useState(false)
+  const reload = () => setReloadCount((count) => count + 1)
   // A drop from the creation panel landed in the preview - the creation flow
   // (optional creation dialog + command) runs for this insertion point.
   const [pendingCreation, setPendingCreation] =
@@ -192,51 +210,10 @@ export function PreviewPane({
   const { data: nodeTypes } = useNodeTypes()
   // Opening the Media Library picker for an image clicked in the preview.
   const { requestPick } = useAssetPicker()
-  const requestPickRef = useRef(requestPick)
-  requestPickRef.current = requestPick
 
-  // Double-buffered iframes stacked front-to-back: the last layer is the
-  // incoming/active one, earlier layers are the outgoing page still painted
-  // beneath it during the crossfade.
-  const [layers, setLayers] = useState<PreviewLayer[]>([])
-  // Live iframe elements by layer id, for identifying message senders and
-  // for posting to the active frame.
-  const framesRef = useRef(new Map<number, HTMLIFrameElement>())
-  // The topmost ready frame - the one the shell bridges to.
-  const activeFrameRef = useRef<HTMLIFrameElement | null>(null)
-  const nextLayerIdRef = useRef(0)
-
-  // Latest-callback refs keep the message listener subscription stable.
-  const onSelectNodeRef = useRef(onSelectNode)
-  onSelectNodeRef.current = onSelectNode
-  const documentAddressRef = useRef<NodeAddress | null>(document)
-  documentAddressRef.current = document
-  const onNavigateToNodeRef = useRef(onNavigateToNode)
-  onNavigateToNodeRef.current = onNavigateToNode
-  const onNodeEditedRef = useRef(onNodeEdited)
-  onNodeEditedRef.current = onNodeEdited
-
-  // Replies (element-info / element-replaced) to requests the shell sent
-  // into the guest, resolved by requestId from the message listener below.
-  const pendingGuestRepliesRef = useRef(
-    new Map<number, (message: GuestToHostMessage) => void>(),
-  )
-  const nextRequestIdRef = useRef(0)
-  const awaitGuestReply = (
-    requestId: number,
-    timeoutMs: number,
-  ): Promise<GuestToHostMessage | null> =>
-    new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        pendingGuestRepliesRef.current.delete(requestId)
-        resolve(null)
-      }, timeoutMs)
-      pendingGuestRepliesRef.current.set(requestId, (message) => {
-        clearTimeout(timer)
-        pendingGuestRepliesRef.current.delete(requestId)
-        resolve(message)
-      })
-    })
+  // Read by the message handler, which runs outside of render.
+  const documentAddressRef = useLatestRef(document)
+  const onNodeEditedRef = useLatestRef(onNodeEdited)
 
   // A deleted page (selected from the trash) renders in FRONTEND mode: the
   // page as it was, without the editing guest - there is nothing to edit in
@@ -263,358 +240,286 @@ export function PreviewPane({
 
   // A new load means a new guest lifecycle; a menu anchored in the previous
   // document has nothing to point at anymore - nor has a pending link edit.
-  useEffect(() => {
-    setGuestReady(false)
+  // Reset during render (not in an effect), so no frame shows them stale.
+  const [menusLoadKey, setMenusLoadKey] = useState(loadKey)
+  if (menusLoadKey !== loadKey) {
+    setMenusLoadKey(loadKey)
     setElementMenu(null)
     setLinkEdit(null)
-  }, [loadKey])
+  }
 
-  // A layer fades in once it is ready. Normally its guest reports that; a page
-  // rendered WITHOUT the guest (a deleted one) has to report it on load, or the
-  // frame would stay invisible forever waiting for a handshake that never comes.
-  const markLayerReady = (id: number) =>
-    setLayers((previous) =>
-      previous.map((layer) =>
-        layer.id === id ? { ...layer, ready: true } : layer,
-      ),
-    )
+  const layers = usePreviewLayers({
+    src,
+    loadKey,
+    guestless: documentReadOnly,
+    // Declared below; only called once a layer retires.
+    flushBeforeRetire: (frame) => bridge.flush(frame),
+  })
+  const { guestReady, activeFrameRef } = layers
 
-  // Start a new frame whenever the load key changes. We keep only the most
-  // recent ready layer as the fading-out background plus the new incoming
-  // layer, so at most two iframes are ever live.
-  useEffect(() => {
-    if (!loadKey || !src) return
-    const id = ++nextLayerIdRef.current
-    setLayers((previous) => {
-      if (previous[previous.length - 1]?.loadKey === loadKey) return previous
-      const background = previous.filter((layer) => layer.ready).slice(-1)
-      // The v parameter (ignored by the server) makes every load's URL
-      // unique: reloading the same document repeats the exact same GET
-      // otherwise, and Safari answers repeated URLs from its HTTP cache -
-      // stale entries stored under earlier, weaker caching headers included,
-      // which response headers alone can never evict.
-      return [
-        ...background,
-        { id, src: `${src}&v=${Date.now()}`, loadKey, ready: false },
-      ]
-    })
-  }, [loadKey, src])
-
-  // Once the incoming (topmost) layer's guest is ready it becomes the bridge
-  // target and fades in; after the crossfade the layers beneath it retire.
-  useEffect(() => {
-    const top = layers[layers.length - 1]
-    if (!top?.ready) return
-    activeFrameRef.current = framesRef.current.get(top.id) ?? null
-    // The shell's boot screen waits for the first painted page.
-    reportPreviewLoaded()
-    // A page rendered without the guest (deleted, or outside the account's
-    // access roles) leaves the bridge down: every guest-facing feature
-    // (selection sync, drop targets, inline editing) would be posting into a
-    // page with nobody listening.
-    setGuestReady(!documentReadOnly)
-    if (layers.length <= 1) return
-    const timer = setTimeout(() => {
-      setLayers((previous) => {
-        const index = previous.findIndex((layer) => layer.id === top.id)
-        return index > 0 ? previous.slice(index) : previous
-      })
-    }, CROSSFADE_MS)
-    return () => clearTimeout(timer)
-  }, [layers])
-
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return
-      // Only messages from one of our live preview frames are trusted.
-      let sourceId: number | null = null
-      for (const [id, frame] of framesRef.current) {
-        if (frame.contentWindow === event.source) {
-          sourceId = id
-          break
-        }
+  /** A guest message, with the frame's identity and shape verified. */
+  const handleGuestMessage = (message: GuestToHostMessage) => {
+    // A malformed NodeAddress JSON in the markup must not break anything:
+    // every conversion goes through here, and a message whose addresses do
+    // not parse is dropped.
+    const addressOf = (nodeAddress: string): NodeAddress | null => {
+      try {
+        return nodeAddressFromContextPath(nodeAddress)
+      } catch {
+        return null
       }
-      if (sourceId === null) return
-      const message = event.data as GuestToHostMessage
-      switch (message?.type) {
-        case 'neos-studio/guest-ready':
-          markLayerReady(sourceId)
-          break
-        case 'neos-studio/node-selected':
-          try {
-            onSelectNodeRef.current(nodeAddressFromContextPath(message.contextPath))
-          } catch {
-            /* malformed contextpath - ignore the click */
-          }
-          break
-        case 'neos-studio/document-selected':
-          // A click outside every content element inspects the document
-          // itself - matching a click on the document in the tree.
-          if (documentAddressRef.current)
-            onSelectNodeRef.current(documentAddressRef.current)
-          break
-        case 'neos-studio/navigate-to-node':
-          try {
-            onNavigateToNodeRef.current?.(
-              nodeAddressFromContextPath(message.contextPath),
-            )
-          } catch {
-            /* malformed contextpath - ignore the navigation */
-          }
-          break
-        case 'neos-studio/property-changed': {
-          const address = nodeAddressFromContextPath(message.contextPath)
-          // Queued: typing commits arrive every 1.5-5s and must never
-          // overlap in flight - newer values coalesce behind the running
-          // save, latest wins.
-          persistPropertyChangeQueued(address, message.property, message.value)
-            .then(() => onNodeEditedRef.current?.(address))
-            .catch((e: unknown) =>
-              toast.error(e, {
-                title: t('editing.saveFailed', 'Saving failed'),
-              }),
-            )
-          break
-        }
-        case 'neos-studio/editing-rejected':
-          // Lost the lock arbitration: the guest already reverted and left
-          // the editor; tell the user what happened to their keystrokes.
-          toast.info(
-            t(
-              'collaboration.editingRejected',
-              '{name} is already editing this element - your changes were not saved.',
-              { name: message.name },
-            ),
+    }
+    switch (message.type) {
+      case 'neos-studio/node-selected': {
+        const address = addressOf(message.nodeAddress)
+        if (address) onSelectNode(address)
+        break
+      }
+      case 'neos-studio/document-selected':
+        // A click outside every content element inspects the document
+        // itself - matching a click on the document in the tree.
+        if (documentAddressRef.current) onSelectNode(documentAddressRef.current)
+        break
+      case 'neos-studio/navigate-to-node': {
+        const address = addressOf(message.nodeAddress)
+        if (address) onNavigateToNode?.(address)
+        break
+      }
+      case 'neos-studio/property-changed': {
+        const address = addressOf(message.nodeAddress)
+        if (!address) break
+        // Queued: typing commits arrive every 1.5-5s and must never
+        // overlap in flight - newer values coalesce behind the running
+        // save, latest wins.
+        persistPropertyChangeQueued(address, message.property, message.value)
+          .then(() => onNodeEditedRef.current?.(address))
+          .catch((e: unknown) =>
+            toast.error(e, {
+              title: t('editing.saveFailed', 'Saving failed'),
+            }),
           )
+        break
+      }
+      case 'neos-studio/editing-rejected':
+        // Lost the lock arbitration: the guest already reverted and left
+        // the editor; tell the user what happened to their keystrokes.
+        toast.info(
+          t(
+            'collaboration.editingRejected',
+            '{name} is already editing this element - your changes were not saved.',
+            { name: message.name },
+          ),
+        )
+        break
+      case 'neos-studio/live-edit': {
+        // The own live-typing stream: hand to the collaboration channel;
+        // the realtime transport (if any) fans it out to peers.
+        const address = addressOf(message.nodeAddress)
+        if (!address) break
+        publishLocalLiveEdit({
+          nodeAggregateId: address.nodeAggregateId,
+          property: message.property,
+          value: message.value,
+          cursor: message.cursor,
+        })
+        break
+      }
+      case 'neos-studio/create-node-request': {
+        const parentAddress = addressOf(message.parentNodeAddress)
+        const succeedingSiblingAddress =
+          message.succeedingSiblingNodeAddress === null
+            ? null
+            : addressOf(message.succeedingSiblingNodeAddress)
+        if (
+          !parentAddress ||
+          (message.succeedingSiblingNodeAddress !== null &&
+            !succeedingSiblingAddress)
+        )
           break
-        case 'neos-studio/live-edit':
-          // The own live-typing stream: hand to the collaboration channel;
-          // the realtime transport (if any) fans it out to peers.
-          try {
-            const address = nodeAddressFromContextPath(message.contextPath)
-            publishLocalLiveEdit({
-              nodeAggregateId: address.nodeAggregateId,
-              property: message.property,
-              value: message.value,
-              cursor: message.cursor,
-            })
-          } catch {
-            /* malformed contextpath - live typing is cosmetic */
-          }
-          break
-        case 'neos-studio/create-node-request':
-          try {
-            setPendingCreation({
-              nodeTypeName: message.nodeTypeName,
-              parentAddress: nodeAddressFromContextPath(message.parentContextPath),
-              succeedingSiblingAddress:
-                message.succeedingSiblingContextPath === null
-                  ? null
-                  : nodeAddressFromContextPath(
-                      message.succeedingSiblingContextPath,
-                    ),
-            })
-          } catch {
-            /* malformed contextpath - ignore the drop */
-          }
-          break
-        case 'neos-studio/insert-node-request':
-          // A "+" affordance in the preview: the element's companion button
-          // (insert after) or an empty collection's add button (inside).
-          try {
-            setInsertRequest({
-              referenceAddress: nodeAddressFromContextPath(message.contextPath),
-              parentAddress: message.parentContextPath
-                ? nodeAddressFromContextPath(message.parentContextPath)
-                : null,
-              defaultMode: message.defaultMode,
-            })
-          } catch {
-            /* malformed contextpath - ignore the request */
-          }
-          break
-        case 'neos-studio/element-menu-request': {
-          const frameRect = activeFrameRef.current?.getBoundingClientRect()
-          if (!frameRect) break
-          try {
-            const address = nodeAddressFromContextPath(message.contextPath)
-            const parentAddress = message.parentContextPath
-              ? nodeAddressFromContextPath(message.parentContextPath)
-              : null
-            // A second click on the same handle closes the menu (toggle).
-            setElementMenu((previous) =>
-              sameNodeAddress(previous?.address, address)
-                ? null
-                : {
-                    address,
-                    parentAddress,
-                    hidden: message.hidden,
-                    tethered: false,
-                    anchor: {
-                      x: frameRect.left + message.buttonRect.left,
-                      y: frameRect.top + message.buttonRect.top,
-                      width: message.buttonRect.width,
-                      height: message.buttonRect.height,
-                    },
-                  },
+        setPendingCreation({
+          nodeTypeName: message.nodeTypeName,
+          parentAddress,
+          succeedingSiblingAddress,
+        })
+        break
+      }
+      case 'neos-studio/insert-node-request': {
+        // A "+" affordance in the preview: the element's companion button
+        // (insert after) or an empty collection's add button (inside).
+        const referenceAddress = addressOf(message.nodeAddress)
+        if (!referenceAddress) break
+        setInsertRequest({
+          referenceAddress,
+          parentAddress: message.parentNodeAddress
+            ? addressOf(message.parentNodeAddress)
+            : null,
+          defaultMode: message.defaultMode,
+        })
+        break
+      }
+      case 'neos-studio/element-menu-request': {
+        const frameRect = activeFrameRef.current?.getBoundingClientRect()
+        const address = addressOf(message.nodeAddress)
+        if (!frameRect || !address) break
+        const parentAddress = message.parentNodeAddress
+          ? addressOf(message.parentNodeAddress)
+          : null
+        // A second click on the same handle closes the menu (toggle).
+        setElementMenu((previous) =>
+          sameNodeAddress(previous?.address, address)
+            ? null
+            : {
+                address,
+                parentAddress,
+                hidden: message.hidden,
+                tethered: false,
+                anchor: {
+                  x: frameRect.left + message.buttonRect.left,
+                  y: frameRect.top + message.buttonRect.top,
+                  width: message.buttonRect.width,
+                  height: message.buttonRect.height,
+                },
+              },
+        )
+        break
+      }
+      case 'neos-studio/link-edit-request':
+        setLinkEdit({ attributes: message.attributes })
+        break
+      case 'neos-studio/create-variant-request': {
+        // The "Create variant" button over a shine-through element: run the
+        // CreateNodeVariant an edit would trigger implicitly, then reload -
+        // the element renders without the fallback pattern afterwards.
+        const address = addressOf(message.nodeAddress)
+        if (!address) break
+        createVariant(address)
+          .then(() => {
+            toast.success(
+              t(
+                'editing.variantCreated',
+                'Variant created in the current dimension.',
+              ),
             )
-          } catch {
-            /* malformed contextpath - ignore the request */
-          }
-          break
-        }
-        case 'neos-studio/link-edit-request':
-          setLinkEdit({ attributes: message.attributes })
-          break
-        case 'neos-studio/element-info':
-        case 'neos-studio/element-replaced':
-          pendingGuestRepliesRef.current.get(message.requestId)?.(message)
-          break
-        case 'neos-studio/create-variant-request': {
-          // The "Create variant" button over a shine-through element: run the
-          // CreateNodeVariant an edit would trigger implicitly, then reload -
-          // the element renders without the fallback pattern afterwards.
-          let address: NodeAddress
-          try {
-            address = nodeAddressFromContextPath(message.contextPath)
-          } catch {
-            break
-          }
-          createVariant(address)
-            .then(() => {
-              toast.success(
-                t(
-                  'editing.variantCreated',
-                  'Variant created in the current dimension.',
-                ),
-              )
-              setReloadCount((count) => count + 1)
-              onNodeEditedRef.current?.(address)
-              onSelectNodeRef.current(address)
-            })
-            .catch((e: unknown) =>
-              toast.error(e, {
-                title: t(
-                  'editing.createVariantFailed',
-                  'Creating the variant failed',
-                ),
-              }),
-            )
-          break
-        }
-        case 'neos-studio/image-select-request': {
-          let address: NodeAddress
-          try {
-            address = nodeAddressFromContextPath(message.contextPath)
-          } catch {
-            break
-          }
-          const property = message.property
-          // Hand off to the Media Library picker; on pick, resolve the chosen
-          // asset to a local identifier, set the image property, and reload the
-          // preview so the new image renders.
-          requestPickRef.current({
-            title: property,
-            onPick: (asset) => {
-              localAssetIdFor(asset)
-                .then((id) =>
-                  persistPropertyChange(address, property, assetReference(id)),
-                )
-                .then(() => {
-                  setReloadCount((count) => count + 1)
-                  onNodeEditedRef.current?.(address)
-                  // Inspect the edited node so the reloaded preview scrolls it
-                  // into view (the shell pushes the selection to the fresh
-                  // guest, which reveals it) - as an inspector edit does.
-                  onSelectNodeRef.current(address)
-                })
-                .catch((e: unknown) =>
-                  toast.error(e, {
-                    title: t('editing.setImageFailed', 'Setting image failed'),
-                  }),
-                )
-            },
+            reload()
+            onNodeEditedRef.current?.(address)
+            onSelectNode(address)
           })
-          break
-        }
-        case 'neos-studio/move-node-request': {
-          try {
-            const targetAddress = nodeAddressFromContextPath(
-              message.parentContextPath,
-            )
-            const sourceAddress = message.sourceParentContextPath
-              ? nodeAddressFromContextPath(message.sourceParentContextPath)
-              : null
-            moveNode(message)
+          .catch((e: unknown) =>
+            toast.error(e, {
+              title: t(
+                'editing.createVariantFailed',
+                'Creating the variant failed',
+              ),
+            }),
+          )
+        break
+      }
+      case 'neos-studio/image-select-request': {
+        const address = addressOf(message.nodeAddress)
+        if (!address) break
+        const property = message.property
+        // Hand off to the Media Library picker; on pick, resolve the chosen
+        // asset to a local identifier, set the image property, and reload the
+        // preview so the new image renders.
+        requestPick({
+          title: property,
+          onPick: (asset) => {
+            localAssetIdFor(asset)
+              .then((id) =>
+                persistPropertyChange(address, property, assetReference(id)),
+              )
               .then(() => {
-                // The moved element renders in its new place after a reload;
-                // both affected collections refresh in the outliner. The
-                // selection stays on the moved node.
-                setReloadCount((count) => count + 1)
-                const parents =
-                  sourceAddress && !sameNodeAddress(sourceAddress, targetAddress)
-                    ? [targetAddress, sourceAddress]
-                    : [targetAddress]
-                onNodeEditedRef.current?.(parents)
+                reload()
+                onNodeEditedRef.current?.(address)
+                // Inspect the edited node so the reloaded preview scrolls it
+                // into view (the shell pushes the selection to the fresh
+                // guest, which reveals it) - as an inspector edit does.
+                onSelectNode(address)
               })
               .catch((e: unknown) =>
                 toast.error(e, {
-                  title: t('editing.moveFailed', 'Moving failed'),
+                  title: t('editing.setImageFailed', 'Setting image failed'),
                 }),
               )
-          } catch {
-            /* malformed contextpath - ignore the drop */
-          }
+          },
+        })
+        break
+      }
+      case 'neos-studio/move-node-request': {
+        const nodeAddress = addressOf(message.nodeAddress)
+        const targetAddress = addressOf(message.parentNodeAddress)
+        const sourceAddress = message.sourceParentNodeAddress
+          ? addressOf(message.sourceParentNodeAddress)
+          : null
+        const succeedingSiblingAddress =
+          message.succeedingSiblingNodeAddress === null
+            ? null
+            : addressOf(message.succeedingSiblingNodeAddress)
+        if (
+          !nodeAddress ||
+          !targetAddress ||
+          (message.succeedingSiblingNodeAddress !== null &&
+            !succeedingSiblingAddress)
+        )
           break
-        }
+        moveNodesByAddress([
+          {
+            nodeAddress,
+            newParentAddress: targetAddress,
+            succeedingSiblingAddress,
+          },
+        ])
+          .then(() => {
+            // The moved element renders in its new place after a reload;
+            // both affected collections refresh in the outliner. The
+            // selection stays on the moved node.
+            reload()
+            const parents =
+              sourceAddress && !sameNodeAddress(sourceAddress, targetAddress)
+                ? [targetAddress, sourceAddress]
+                : [targetAddress]
+            onNodeEditedRef.current?.(parents)
+          })
+          .catch((e: unknown) =>
+            toast.error(e, {
+              title: t('editing.moveFailed', 'Moving failed'),
+            }),
+          )
+        break
       }
     }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [])
+  }
+
+  const bridge = useGuestBridge({ layers, onMessage: handleGuestMessage })
+  const { postToGuest } = bridge
 
   // Announce node-type drags from the creation panel to the guest, which
   // marks the collections allowing that type as drop targets. A drag can
   // already be underway when the guest (re)boots - push the current state.
   useEffect(() => {
     if (!guestReady) return
-    const frame = activeFrameRef.current?.contentWindow
-    if (!frame) return
-    const send = (drag: CreationDrag) => {
-      const message: HostToGuestMessage = drag
-        ? {
-            type: 'neos-studio/creation-drag-start',
-            nodeTypeName: drag.nodeTypeName,
-          }
-        : { type: 'neos-studio/creation-drag-end' }
-      frame.postMessage(message, window.location.origin)
-    }
+    const send = (drag: CreationDrag) =>
+      postToGuest(
+        drag
+          ? {
+              type: 'neos-studio/creation-drag-start',
+              nodeTypeName: drag.nodeTypeName,
+            }
+          : { type: 'neos-studio/creation-drag-end' },
+      )
     const current = getCreationDrag()
     if (current) send(current)
     return subscribeCreationDrag(send)
-  }, [guestReady])
-
-  // Answer the guest that asked for the Link Editor (the pending link edit
-  // lives in its rich-text editor).
-  const postToGuest = (message: HostToGuestMessage) => {
-    activeFrameRef.current?.contentWindow?.postMessage(
-      message,
-      window.location.origin,
-    )
-  }
+  }, [guestReady, postToGuest])
 
   // The selection by value: callers may pass a new object for the same node.
   const selectedKey = selectedAddress ? nodeAddressKey(selectedAddress) : null
 
-  // Push the shell's selection into the guest (also right after it boots).
-  useEffect(() => {
-    if (!guestReady) return
-    const frame = activeFrameRef.current?.contentWindow
-    if (!frame) return
-    const aggregateId =
-      selectedAddress === null
-        ? null
-        : selectedAddress.nodeAggregateId
+  // Push the shell's selection into the guest (also right after it boots) -
+  // on a changed selection value, read in an effect event, not on every new
+  // address object.
+  const pushSelection = useEffectEvent(() => {
+    const aggregateId = selectedAddress?.nodeAggregateId ?? null
     // Opening a page selects its document node, which sites wrap around the whole page body.
     // Revealing that element centers the body, so every page switch (and every reload) would land
     // somewhat below the top. The document is the page itself - there is nothing to reveal.
@@ -623,12 +528,14 @@ export function PreviewPane({
       aggregateId !== null &&
       documentAddress !== null &&
       documentAddress.nodeAggregateId === aggregateId
-    const message: HostToGuestMessage = {
+    postToGuest({
       type: 'neos-studio/select-node',
       aggregateId,
       reveal: !isDocument,
-    }
-    frame.postMessage(message, window.location.origin)
+    })
+  })
+  useEffect(() => {
+    if (guestReady) pushSelection()
   }, [guestReady, selectedKey])
 
   // A pending "pulse this element" request, held until the guest showing *that* element is ready.
@@ -638,96 +545,104 @@ export function PreviewPane({
   // the wrong page and consume the request before the linked document has even loaded. Matching the
   // selection makes the drain wait for the right guest - the request comes from a deep link, which
   // selects the node it names, so the two line up by the time it can be shown.
+  const selectedAggregateId = selectedAddress?.nodeAggregateId ?? null
   useEffect(() => {
-    if (!guestReady || selectedAddress === null) return
+    if (!guestReady || selectedAggregateId === null) return
     const drain = () => {
       const pending = peekPendingFlash()
       if (pending === null) return
-      if (pending !== selectedAddress.nodeAggregateId) return
-      const frame = activeFrameRef.current?.contentWindow
-      if (!frame) return
+      if (pending !== selectedAggregateId) return
+      if (!activeFrameRef.current?.contentWindow) return
       takePendingFlash()
-      const message: HostToGuestMessage = {
-        type: 'neos-studio/flash-node',
-        aggregateId: pending,
-      }
-      frame.postMessage(message, window.location.origin)
+      postToGuest({ type: 'neos-studio/flash-node', aggregateId: pending })
     }
     drain()
     return subscribeFlashRequest(drain)
-  }, [guestReady, selectedKey])
+  }, [guestReady, selectedAggregateId, activeFrameRef, postToGuest])
 
   // Out-of-band element update: re-render one node's element on the server
   // and swap it into the live page instead of reloading the iframe (the
   // ui.reloadIfChanged semantics; also hide/unhide of content elements).
-  // Every failure along the way - guest not ready, node not rendered on this
-  // page (e.g. a document), render error, swap failure, timeout - falls back
-  // to a full reload: correctness first, the optimization is best-effort.
-  const updateElementOutOfBand = async (address: NodeAddress): Promise<void> => {
-    const fallback = () => setReloadCount((count) => count + 1)
-    const frame = activeFrameRef.current?.contentWindow
-    if (!frame || !guestReady) return fallback()
-    let aggregateId: string
-    try {
-      aggregateId = address.nodeAggregateId
-    } catch {
-      return fallback()
-    }
-    const infoRequestId = ++nextRequestIdRef.current
-    const infoRequest: HostToGuestMessage = {
-      type: 'neos-studio/element-info-request',
-      requestId: infoRequestId,
-      aggregateId,
-    }
-    frame.postMessage(infoRequest, window.location.origin)
-    const info = await awaitGuestReply(infoRequestId, 3000)
-    if (info?.type !== 'neos-studio/element-info' || !info.fusionPath) {
-      return fallback()
-    }
+  const updateElementOutOfBand = async (
+    address: NodeAddress,
+  ): Promise<ElementUpdateOutcome> => {
+    // No guest to ask: whether the node is on this page is unknown.
+    if (!guestReady) return 'failed'
+    const aggregateId = address.nodeAggregateId
+    const info = await bridge.request(
+      (requestId) => ({
+        type: 'neos-studio/element-info-request',
+        requestId,
+        aggregateId,
+      }),
+      'neos-studio/element-info',
+      GUEST_REPLY_TIMEOUT_MS,
+    )
+    if (info === null) return 'failed'
+    // Answered, but not rendered here (e.g. a document, or a node of
+    // another page).
+    if (info.fusionPath === null) return 'absent'
     let html: string
     try {
       html = await renderNodeElement(address, info.fusionPath)
     } catch {
-      return fallback()
+      return 'failed'
     }
-    const replaceRequestId = ++nextRequestIdRef.current
-    const replaceRequest: HostToGuestMessage = {
-      type: 'neos-studio/replace-element',
-      requestId: replaceRequestId,
-      aggregateId,
-      html,
-    }
-    activeFrameRef.current?.contentWindow?.postMessage(
-      replaceRequest,
-      window.location.origin,
+    const ack = await bridge.request(
+      (requestId) => ({
+        type: 'neos-studio/replace-element',
+        requestId,
+        aggregateId,
+        html,
+      }),
+      'neos-studio/element-replaced',
+      GUEST_REPLY_TIMEOUT_MS,
     )
-    const ack = await awaitGuestReply(replaceRequestId, 3000)
-    if (ack?.type !== 'neos-studio/element-replaced' || !ack.ok) fallback()
+    return ack?.ok ? 'updated' : 'failed'
   }
 
-  const update = elementUpdate ?? undefined
+  /**
+   * Update a batch of elements out-of-band, falling back to ONE full reload
+   * when any of them could not be patched - correctness first, the
+   * optimization is best-effort. An element missing from the page counts as
+   * a failure for the user's own edits (the page should show it), but not
+   * for remote ones: collaborators edit other pages too.
+   */
+  const updateElementsOutOfBand = async (
+    addresses: NodeAddress[],
+    remote = false,
+  ): Promise<void> => {
+    const outcomes = await Promise.all(addresses.map(updateElementOutOfBand))
+    const needsReload = outcomes.some(
+      (outcome) => outcome === 'failed' || (outcome === 'absent' && !remote),
+    )
+    if (needsReload) reload()
+  }
+
+  // Only a new update (token) triggers a pass - everything else is read fresh
+  // when it runs (an effect event); a re-run on guestReady flips would replay
+  // old edits.
+  const runElementUpdate = useEffectEvent(() => {
+    if (!elementUpdate) return
+    void updateElementsOutOfBand(
+      elementUpdate.addresses,
+      elementUpdate.remote === true,
+    )
+  })
+  const updateToken = elementUpdate?.token
   useEffect(() => {
-    if (!update) return
-    for (const address of update.addresses) {
-      void updateElementOutOfBand(address)
-    }
-    // Only a new update (token) triggers a pass - the other values are read
-    // fresh when it runs; a re-run on guestReady flips would replay old edits.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [update?.token])
+    // The only state update in there, reload(), runs after the awaited guest
+    // and server round trips - never synchronously within this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
+    if (updateToken !== undefined) runElementUpdate()
+  }, [updateToken])
 
   // Push the collaborators' positions into the guest (also right after it
   // boots, so a reloaded frame regains the presence decor and edit locks).
   useEffect(() => {
     if (!guestReady) return
-    const frame = activeFrameRef.current?.contentWindow
-    if (!frame) return
-    const message: HostToGuestMessage = {
-      type: 'neos-studio/presence-update',
-      users: presence,
-    }
-    frame.postMessage(message, window.location.origin)
-  }, [guestReady, presence])
+    postToGuest({ type: 'neos-studio/presence-update', users: presence })
+  }, [guestReady, presence, postToGuest])
 
   // Forward collaborators' live-typing ticks into the guest, which paints
   // them into the locked inline text. The guest ignores ticks for elements
@@ -743,9 +658,7 @@ export function PreviewPane({
         cursor: edit.cursor,
       })
     })
-    // postToGuest reads the frame ref - stable across renders.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [guestReady])
+  }, [guestReady, postToGuest])
 
   // No document is a transient state only: one is selected automatically on
   // boot and after every site or dimension switch, so there is nothing to
@@ -755,20 +668,14 @@ export function PreviewPane({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="relative min-h-0 w-full flex-1">
-        {layers.map((layer) => (
+        {layers.layers.map((layer) => (
           <iframe
             key={layer.id}
-            ref={(element) => {
-              if (element) framesRef.current.set(layer.id, element)
-              else framesRef.current.delete(layer.id)
-            }}
+            ref={layers.frameRef(layer.id)}
             src={layer.src}
             title={t('preview.pageFrame', 'Page preview')}
-            onLoad={() => {
-              // Guest-less pages have to report their own readiness, or the
-              // layer never fades in.
-              if (documentReadOnly) markLayerReady(layer.id)
-            }}
+            // Readiness without a guest handshake (see usePreviewLayers).
+            onLoad={() => layers.onFrameLoad(layer)}
             // Until it is ready the incoming frame is invisible on top - keep
             // clicks flowing to the outgoing frame still painted beneath it.
             style={{
@@ -786,7 +693,7 @@ export function PreviewPane({
         onPasted={(affectedAddresses) => {
           // Structure changed - full reload (the pasted element isn't in the
           // current markup, so no out-of-band fragment can place it).
-          setReloadCount((count) => count + 1)
+          reload()
           onNodeEditedRef.current?.(affectedAddresses)
         }}
         onClose={() => setElementMenu(null)}
@@ -806,9 +713,8 @@ export function PreviewPane({
             // The element disappears only after a reload; the inspection
             // moves to the enclosing collection - the deleted node has no
             // data to inspect anymore.
-            setReloadCount((count) => count + 1)
-            if (target.parentAddress)
-              onSelectNodeRef.current(target.parentAddress)
+            reload()
+            if (target.parentAddress) onSelectNode(target.parentAddress)
             onNodeEditedRef.current?.(
               target.parentAddress ? [target.parentAddress] : [],
             )
@@ -816,9 +722,9 @@ export function PreviewPane({
             // Hide/unhide: the dimming attribute is server-rendered, so the
             // element re-renders out-of-band (with full-reload fallback).
             // The node stays inspected, with a fresh snapshot.
-            void updateElementOutOfBand(target.address)
+            void updateElementsOutOfBand([target.address])
             onNodeEditedRef.current?.(target.address)
-            onSelectNodeRef.current(target.address)
+            onSelectNode(target.address)
           }
         }}
       />
@@ -865,9 +771,9 @@ export function PreviewPane({
           // Same follow-up as a drop from the creation panel: the new element
           // renders after a reload, the outliner refreshes below the parent,
           // and the new node is inspected (outlining it in the fresh page).
-          setReloadCount((count) => count + 1)
+          reload()
           onNodeEditedRef.current?.(creation.parentAddress)
-          onSelectNodeRef.current(address)
+          onSelectNode(address)
         }}
         onClose={() => setInsertRequest(null)}
       />
@@ -881,9 +787,9 @@ export function PreviewPane({
             // The new node only renders after a reload; the shell then
             // refreshes the outliner below the collection and inspects the
             // new node (which also outlines it in the reloaded preview).
-            setReloadCount((count) => count + 1)
+            reload()
             onNodeEditedRef.current?.(parentAddress)
-            onSelectNodeRef.current(address)
+            onSelectNode(address)
           }}
           onCancel={(error) => {
             setPendingCreation(null)

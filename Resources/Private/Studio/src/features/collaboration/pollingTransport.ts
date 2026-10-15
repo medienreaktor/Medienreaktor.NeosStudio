@@ -1,7 +1,4 @@
-import {
-  fetchWorkspaceFeedBaseline,
-  pollWorkspaceFeed,
-} from './eventFeed'
+import { createFeedTail, takeRealtimeGap } from './eventFeed'
 import type {
   CollaborationPosition,
   CollaborationTransport,
@@ -26,62 +23,27 @@ export function startPollingTransport(
   _initialPosition: CollaborationPosition,
   callbacks: TransportCallbacks,
 ): CollaborationTransport {
-  let disposed = false
-
   callbacks.onRoster([], null)
 
   // --- Change feed -----------------------------------------------------------
-  let inFlight = false
-  // null = no position yet: the next tick takes the baseline.
-  let cursor: { stream: string; after: number } | null = null
+  const tail = createFeedTail(workspaceName, callbacks, {
+    onFirstBaseline() {
+      // Taking over from a realtime connection that dropped: changes between
+      // the drop and this baseline were signalled to nobody - refresh once,
+      // after the baseline, so none of them is lost.
+      if (takeRealtimeGap(workspaceName)) callbacks.onWorkspaceChanged()
+    },
+  })
 
-  const poll = async () => {
-    if (inFlight) return
-    inFlight = true
-    try {
-      if (cursor === null) {
-        // Baseline: adopt the current position, nothing to replay. A stream
-        // without a visible event yet has no position - baseline again.
-        const baseline = await fetchWorkspaceFeedBaseline(workspaceName)
-        if (disposed) return
-        if (baseline.after !== null) {
-          cursor = { stream: baseline.stream, after: baseline.after }
-        }
-        return
-      }
-      const result = await pollWorkspaceFeed(workspaceName, cursor)
-      if (disposed) return
-      if (result.status === 'reset') {
-        // The workspace moved to a different content stream (publish/
-        // discard/rebase): its content changed wholesale. Re-baseline.
-        cursor = null
-        callbacks.onWorkspaceChanged()
-        return
-      }
-      cursor = { stream: result.stream, after: result.after }
-      if (result.truncated) {
-        // More happened than one page describes - refresh wholesale and
-        // continue from the end of this page.
-        callbacks.onWorkspaceChanged()
-        return
-      }
-      if (result.events.length > 0) callbacks.onEvents(result.events)
-    } catch {
-      /* offline / a hiccup - the next poll retries with the same cursor */
-    } finally {
-      inFlight = false
-    }
-  }
-
-  void poll()
-  const eventsTimer = setInterval(() => void poll(), EVENTS_INTERVAL_MS)
+  tail.tick()
+  const eventsTimer = setInterval(() => tail.tick(), EVENTS_INTERVAL_MS)
 
   return {
     updatePosition() {
       // No presence over HTTP - positions only travel through the sidecar.
     },
     stop() {
-      disposed = true
+      tail.stop()
       clearInterval(eventsTimer)
     },
   }

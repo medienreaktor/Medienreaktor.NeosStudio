@@ -61,6 +61,38 @@ export function parseAssetUri(href: string): string | null {
   return isAssetUri(href) ? href.slice(ASSET_SCHEME.length) : null
 }
 
+/**
+ * The schemes a link may use: web, mail and phone links, and the Neos link
+ * URIs. Anything else - javascript:, data:, vbscript:, ... - could run script
+ * in the rendered page and is refused.
+ */
+const ALLOWED_SCHEMES = new Set([
+  'http',
+  'https',
+  'mailto',
+  'tel',
+  'node',
+  'asset',
+])
+
+/** Whether the href starts with a scheme (e.g. "https:"), not a relative path. */
+export function hasScheme(href: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:/i.test(href.trim())
+}
+
+/**
+ * Whether the href may be stored as a link: one of the allowed schemes, or a
+ * relative link (a path, query or anchor without scheme). Leading whitespace
+ * and control characters - which browsers ignore before a scheme - do not
+ * smuggle one past the check.
+ */
+export function isAllowedHref(href: string): boolean {
+  // eslint-disable-next-line no-control-regex
+  const cleaned = href.replace(/[\u0000-\u0020]/g, '')
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(cleaned)
+  return scheme === null || ALLOWED_SCHEMES.has((scheme[1] ?? '').toLowerCase())
+}
+
 /** An inline link's DOM attributes (guest protocol) as a LinkValue. */
 export function linkValueFromAttributes(attributes: LinkAttributes): LinkValue {
   return {

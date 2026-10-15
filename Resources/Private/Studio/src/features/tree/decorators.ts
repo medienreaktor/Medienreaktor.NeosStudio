@@ -1,6 +1,6 @@
-import * as React from 'react'
 import type { NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
 import type { Node } from '@/api/neos/schema'
+import { ObservableRegistry, useRegistry } from '@/lib/registry'
 
 /**
  * The node-decorator registry: how tree rows (document tree, content
@@ -16,9 +16,10 @@ import type { Node } from '@/api/neos/schema'
  * way for its own concerns - a lock overlay on access-restricted pages, a
  * tint for nodes in a review state, whatever its package knows about.
  *
- * Modelled on the other registries (see features/workspaces/decorators.ts):
- * a small observable store, register-replaces-by-id, stable snapshot for
- * useSyncExternalStore.
+ * Built on the shared observable store (see lib/registry.ts), like the
+ * other registries: register-replaces-by-id, stable snapshot for
+ * useSyncExternalStore, plus refresh() for decorators whose own data
+ * changed.
  */
 
 /** A small badge layered onto a corner of the node's type icon. */
@@ -73,50 +74,32 @@ export interface NodeDecoratorDefinition {
   ) => NodeDecoration | null
 }
 
-export class NodeDecoratorRegistry {
-  private definitions = new Map<string, NodeDecoratorDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: NodeDecoratorDefinition[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: NodeDecoratorDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
+/**
+ * Decorators sorted by `order` then registration order - the getAll()
+ * snapshot changes identity only on (un)register and refresh(), so
+ * useSyncExternalStore stays quiet otherwise.
+ */
+export class NodeDecoratorRegistry extends ObservableRegistry<NodeDecoratorDefinition> {
+  constructor() {
+    super({ sort: 'order' })
   }
 
   /**
-   * Stable snapshot sorted by `order` then registration order - changes
-   * identity only on (un)register, so useSyncExternalStore stays quiet.
+   * Re-emit without a registration change: a decorator's own data changed
+   * (e.g. the acting user's access, the active site), so its decorations did.
+   * Rebuilds the snapshot, which makes useSyncExternalStore consumers
+   * re-render and decorate again.
    */
-  getAll(): NodeDecoratorDefinition[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()].sort(
-      (a, b) => (a.order ?? 100) - (b.order ?? 100),
-    )
-    this.listeners.forEach((listener) => listener())
+  refresh(): void {
+    this.emit()
   }
 }
 
 export const nodeDecoratorRegistry = new NodeDecoratorRegistry()
 
-/** Subscribe to the decorator registry; re-renders on (un)register. */
+/** Subscribe to the decorator registry; re-renders on (un)register and refresh(). */
 export function useNodeDecorators(): NodeDecoratorDefinition[] {
-  return React.useSyncExternalStore(
-    (onChange) => nodeDecoratorRegistry.subscribe(onChange),
-    () => nodeDecoratorRegistry.getAll(),
-  )
+  return useRegistry(nodeDecoratorRegistry)
 }
 
 /** All decorators' contributions to one node, folded per the field rules above. */

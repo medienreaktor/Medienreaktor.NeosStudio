@@ -3,13 +3,15 @@ import { workspaceDecoratorRegistry } from '@/features/workspaces/decorators'
 import { translate as t } from '@/lib/i18n'
 import { knownUserLabel, taskOfWorkspace } from './decorationData'
 import { taskStatusColor } from './status'
+import { taskSwitcherExtension } from './switcher'
 import { TasksBoard } from './TasksBoard'
 
 /**
  * The built-in task workflow: the Tasks board as a main-region tab (after the
  * other built-ins) and the workspace decorator that badges task/feature
  * branches everywhere workspaces are listed - including their own
- * "Tasks & Features" group in the workspace switcher.
+ * "Tasks & Features" group in the workspace switcher, where the checked-out
+ * task's workflow actions and "Add task workspace" come from it as well.
  */
 export function registerBuiltinTaskWorkflow(): void {
   panelRegistry.register({
@@ -53,5 +55,6 @@ export function registerBuiltinTaskWorkflow(): void {
         switcherGroup: t('tasks.switcherGroup', 'Tasks'),
       }
     },
+    switcher: taskSwitcherExtension,
   })
 }

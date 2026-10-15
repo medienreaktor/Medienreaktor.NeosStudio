@@ -1,15 +1,11 @@
-import { useEffect, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
 
 import { apiErrorDescription } from '@/api/http/errors'
 import { studioKeys } from '@/api/studio/keys'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useUsers } from '@/api/neos/endpoints/users'
 import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
-import {
-  deleteTask,
-  transitionTask,
-  useTasks,
-} from '@/api/studio/endpoints/tasks'
+import { deleteTask, useTasks } from '@/api/studio/endpoints/tasks'
 import type { Task, TaskStatus } from '@/api/studio/schema'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
@@ -39,6 +35,7 @@ import { consumeTaskFocus, usePendingTaskFocus } from './focus'
 import { TaskDetailDialog } from './TaskDetailDialog'
 import { TaskViewDialog } from './TaskViewDialog'
 import { allowedTargets } from './transitions'
+import { useTaskTransition } from './useTaskTransition'
 
 const COLUMNS: { status: TaskStatus; title: () => string }[] = [
   { status: 'OPEN', title: () => t('tasks.columnOpen', 'Open') },
@@ -61,28 +58,32 @@ export function TasksBoard() {
   const { data, isLoading, error } = useTasks()
   const users = useUsers().data
   const { data: workspacesData } = useWorkspaces()
+  const contentRepositoryId = useActiveContentRepositoryId()
   const [dragged, setDragged] = useState<Task | null>(null)
   const [creating, setCreating] = useState(false)
   const [viewing, setViewing] = useState<Task | null>(null)
   const [editing, setEditing] = useState<Task | null>(null)
   const [deleting, setDeleting] = useState<Task | null>(null)
-  const [reviewing, setReviewing] = useState<Task | null>(null)
+  const transition = useTaskTransition()
 
-  const workspaces = workspacesData ?? []
+  const workspaces = useMemo(() => workspacesData ?? [], [workspacesData])
   const activeWorkspace =
     workspaces.find((workspace) => workspace.name === studio.workspaceName) ??
     null
 
   // The tasks response embeds a workspace snapshot that only refreshes with
-  // the board's 30s poll. Content edits invalidate the workspaces query
-  // immediately (persistProperty/nodeActions), so prefer its live object -
-  // the pending-changes dot must not lag a poll interval behind.
-  const tasks = (data ?? []).map((task) => ({
-    ...task,
-    workspace:
-      workspaces.find((workspace) => workspace.name === task.workspaceName) ??
-      task.workspace,
-  }))
+  // the task list's 5-minute poll. Content edits invalidate the workspaces
+  // query immediately (persistProperty/nodeActions), so prefer its live
+  // object - the pending-changes dot must not lag a poll interval behind.
+  const tasks = useMemo(() => {
+    const byName = new Map(
+      workspaces.map((workspace) => [workspace.name, workspace]),
+    )
+    return (data ?? []).map((task) => ({
+      ...task,
+      workspace: byName.get(task.workspaceName) ?? task.workspace,
+    }))
+  }, [data, workspaces])
 
   // A pending "open this task" request (e.g. from a clicked notification):
   // once the list contains the workspace, open its read-only view. A request
@@ -94,6 +95,9 @@ export function TasksBoard() {
     const task = data.find(
       (candidate) => candidate.workspaceName === pendingFocus,
     )
+    // Opening goes together with consuming the external one-shot request -
+    // a side effect, so both stay in this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
     if (task) setViewing(task)
     consumeTaskFocus()
   }, [pendingFocus, data])
@@ -106,52 +110,19 @@ export function TasksBoard() {
     void invalidateWorkspaceQueries()
   }
 
-  const move = useMutation({
-    mutationFn: ({ task, target }: { task: Task; target: TaskStatus }) =>
-      transitionTask(task.workspaceName, target),
-    onError: (mutationError) =>
-      toast.error(
-        apiErrorDescription(
-          mutationError,
-          t('tasks.moveFailedDetail', 'Moving the task failed.'),
-        ),
-        { title: t('tasks.moveFailed', 'Could not move task') },
-      ),
-    onSettled: invalidate,
-  })
-
   const onDrop = (task: Task, target: TaskStatus) => {
     if (task.status === target) return
-    if (target === 'DONE' && task.workspace?.hasPublishableChanges) {
-      // Publishing is the reviewer's explicit decision: open the review
-      // dialog on the task workspace; completion follows the publish.
-      // With nothing to publish the task just completes directly.
-      setReviewing(task)
+    if (target === 'DONE') {
+      // Publishing is the reviewer's explicit decision: with pending changes
+      // the review dialog opens on the task workspace and completion follows
+      // the publish; with nothing to publish the task completes directly.
+      transition.complete({
+        name: task.workspaceName,
+        hasPublishableChanges: task.workspace?.hasPublishableChanges ?? false,
+      })
       return
     }
-    move.mutate(
-      { task, target },
-      {
-        onSuccess: () => {
-          if (target === 'DONE') {
-            toast.success(t('tasks.completed', 'The task has been completed.'))
-          }
-        },
-      },
-    )
-  }
-
-  const onPublished = (sourceWorkspaceName: string) => {
-    if (reviewing && sourceWorkspaceName === reviewing.workspaceName) {
-      move.mutate(
-        { task: reviewing, target: 'DONE' },
-        {
-          onSuccess: () =>
-            toast.success(t('tasks.completed', 'The task has been completed.')),
-        },
-      )
-      setReviewing(null)
-    }
+    transition.transition({ workspaceName: task.workspaceName, target })
   }
 
   const checkout = (task: Task) => {
@@ -245,7 +216,7 @@ export function TasksBoard() {
                     active={task.workspaceName === studio.workspaceName}
                     assigneeLabel={userLabel(task.assignee)}
                     draggable={
-                      allowedTargets(task).length > 0 && !move.isPending
+                      allowedTargets(task).length > 0 && !transition.isPending
                     }
                     onDragStart={() => setDragged(task)}
                     onDragEnd={() => setDragged(null)}
@@ -286,11 +257,11 @@ export function TasksBoard() {
         <ReviewChangesDialog
           workspaces={workspaces}
           activeWorkspace={activeWorkspace}
-          initialSourceName={reviewing?.workspaceName}
-          open={reviewing !== null}
-          onOpenChange={(open) => !open && setReviewing(null)}
+          initialSourceName={transition.reviewing ?? undefined}
+          open={transition.reviewing !== null}
+          onOpenChange={(open) => !open && transition.cancelReview()}
           onNavigate={studio.navigateToNodeInWorkspace}
-          onPublished={onPublished}
+          onPublished={transition.published}
         />
       )}
       <ConfirmDialog
@@ -305,7 +276,7 @@ export function TasksBoard() {
         onOpenChange={(open) => !open && setDeleting(null)}
         onConfirm={async () => {
           if (!deleting) return
-          await deleteTask(deleting.workspaceName)
+          await deleteTask(contentRepositoryId!, deleting.workspaceName)
           invalidate()
           toast.success(t('tasks.deleted', 'The task has been deleted.'))
         }}

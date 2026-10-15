@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useUsers } from '@/api/neos/endpoints/users'
 import { deleteWorkspace, useWorkspaces } from '@/api/neos/endpoints/workspaces'
 import type { Workspace } from '@/api/neos/schema'
@@ -27,6 +28,8 @@ import {
 } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+import { allowsWorkspaceCreation } from '@/features/access/rules'
+import { useAccess } from '@/features/access/useAccess'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog'
@@ -59,8 +62,13 @@ function classificationLabel(classification: string): string {
  */
 export function WorkspacesAdministration() {
   const { data, isLoading, error } = useWorkspaces()
+  const contentRepositoryId = useActiveContentRepositoryId()
   const users = useUsers().data
   const { workspaceName: activeWorkspaceName } = useStudio()
+  // An access role may forbid creating workspaces; offered only once the
+  // access is known (the server refuses the create either way).
+  const access = useAccess()
+  const canCreate = access !== undefined && allowsWorkspaceCreation(access)
 
   const [creating, setCreating] = useState(false)
   // Tracked by name and resolved from live query data, so edits refresh.
@@ -93,10 +101,12 @@ export function WorkspacesAdministration() {
           'Where changes live until they are published.',
         )}
       >
-        <Button onClick={() => setCreating(true)}>
-          <i className="fas fa-plus" aria-hidden />
-          {t('workspacesAdmin.newWorkspace', 'New workspace')}
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setCreating(true)}>
+            <i className="fas fa-plus" aria-hidden />
+            {t('workspacesAdmin.newWorkspace', 'New workspace')}
+          </Button>
+        )}
       </SettingsHeader>
 
       {error && (
@@ -202,7 +212,7 @@ export function WorkspacesAdministration() {
         onConfirm={async () => {
           const workspace = deleting!
           try {
-            await deleteWorkspace(workspace.name, true)
+            await deleteWorkspace(contentRepositoryId!, workspace.name, true)
           } catch (deleteError) {
             // Surface the server's reason (e.g. dependent workspaces).
             throw new Error(
@@ -213,6 +223,7 @@ export function WorkspacesAdministration() {
                   'Deleting the workspace failed.',
                 ),
               ),
+              { cause: deleteError },
             )
           }
           void invalidateWorkspaceQueries()

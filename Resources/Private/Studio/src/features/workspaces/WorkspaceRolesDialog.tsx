@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useUserOptions, useUsers } from '@/api/neos/endpoints/users'
 import {
   assignWorkspaceRole,
@@ -75,6 +76,7 @@ export function WorkspaceRolesDialog({
 }) {
   const workspaceName = workspace?.name ?? null
   const { data, isLoading, error } = useWorkspaceRoles(workspaceName)
+  const contentRepositoryId = useActiveContentRepositoryId()
   // User subjects are named from the user list (readable by every editor in
   // the Studio); group subjects by their role identifier.
   const users = useUsers(workspace !== null).data
@@ -92,7 +94,11 @@ export function WorkspaceRolesDialog({
 
   const remove = useMutation({
     mutationFn: (assignment: WorkspaceRoleAssignment) =>
-      unassignWorkspaceRole(workspaceName!, assignment.subject),
+      unassignWorkspaceRole(
+        contentRepositoryId!,
+        workspaceName!,
+        assignment.subject,
+      ),
     onSuccess: () => invalidateWorkspaceQueries(),
     onError: (mutationError) =>
       toast.error(
@@ -214,6 +220,7 @@ function AddAssignmentForm({
 
   const isAdmin = useAdministrationPermissions().users
   const users = useUsers().data
+  const contentRepositoryId = useActiveContentRepositoryId()
   // The role catalog is admin-only; non-admin managers type the identifier.
   const { data: rolesData } = useUserOptions(isAdmin)
 
@@ -241,6 +248,7 @@ function AddAssignmentForm({
   const mutation = useMutation({
     mutationFn: () =>
       assignWorkspaceRole(
+        contentRepositoryId!,
         workspaceName,
         { type: subjectType, id: subject },
         role,

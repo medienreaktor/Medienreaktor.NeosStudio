@@ -13,8 +13,8 @@ import { config } from '@/config'
  * slashes in source file paths) replaced by underscores.
  *
  * The Studio's own UI strings live under the "Medienreaktor.NeosStudio:Main"
- * source; `translate()` (and its `useTranslate` hook) default to that source,
- * so call sites pass just the trans-unit id plus the English source text as a
+ * source; `translate()` and `translatePlural()` default to that source, so
+ * call sites pass just the trans-unit id plus the English source text as a
  * fallback - see Resources/Private/Translations.
  */
 
@@ -48,16 +48,20 @@ export async function loadTranslations(): Promise<void> {
   }
 }
 
+/** The raw bundle entry for a fully-qualified label id. */
+function translationValue(label: string): TranslationValue | undefined {
+  if (bundle === null) return undefined
+  const [packageKey, sourceName, ...idParts] = label.split(':')
+  if (packageKey === undefined || sourceName === undefined) return undefined
+  if (idParts.length === 0) return undefined
+  return bundle[packageKey.replace(/\./g, '_')]?.[
+    sourceName.replace(/\./g, '_')
+  ]?.[idParts.join(':').replace(/\./g, '_')]
+}
+
 /** The translation for a fully-qualified label id, or null when unknown. */
 export function translateLabel(label: string): string | null {
-  if (bundle === null) return null
-  const parts = label.split(':')
-  if (parts.length < 3) return null
-  const [packageKey, sourceName, ...idParts] = parts
-  const value =
-    bundle[packageKey.replace(/\./g, '_')]?.[sourceName.replace(/\./g, '_')]?.[
-      idParts.join(':').replace(/\./g, '_')
-    ]
+  const value = translationValue(label)
   if (typeof value === 'string') return value
   // Plural forms - the singular serves as the label.
   if (Array.isArray(value) && typeof value[0] === 'string') return value[0]
@@ -102,11 +106,69 @@ export function translate(
 }
 
 /**
- * Hook form of {@link translate}. The interface language is fixed for the
- * lifetime of the shell (changing it reloads the page), so this simply hands
- * back the stable `translate` function - the hook exists for call-site
- * ergonomics and so components read as translation-aware.
+ * Translate a Studio UI string that depends on a count - "1 site" vs "3
+ * sites".
+ *
+ * The catalogue holds such a string as a plural group, the way Flow does
+ * (`<group restype="x-gettext-plurals">` with trans-units "id[0]", "id[1]",
+ * ...), which the XLIFF endpoint hands over as an array of forms. The forms
+ * follow the CLDR plural categories the locale has, in CLDR order (zero, one,
+ * two, few, many, other): English and German have one/other, Polish
+ * one/few/many/other. The count picks the category, the category the form;
+ * a catalogue that still has a single string uses it for every count.
+ *
+ * `{0}` is the count; further args continue at `{1}`.
+ *
+ * @param fallback English [singular, plural], used without a bundle entry.
  */
-export function useTranslate(): typeof translate {
-  return translate
+export function translatePlural(
+  id: string,
+  count: number,
+  fallback: [singular: string, plural: string],
+  args: Array<string | number> = [],
+): string {
+  const label = id.includes(':')
+    ? id
+    : `${STUDIO_PACKAGE}:${STUDIO_SOURCE}:${id}`
+  const forms = translationValue(label)
+  const allArgs = [count, ...args]
+  if (typeof forms === 'string') return interpolate(forms, allArgs)
+  if (Array.isArray(forms)) {
+    const form = forms[pluralFormIndex(count, forms.length)] ?? forms[0]
+    if (form !== undefined) return interpolate(form, allArgs)
+  }
+  return interpolate(count === 1 ? fallback[0] : fallback[1], allArgs)
+}
+
+const CLDR_CATEGORY_ORDER: Intl.LDMLPluralRule[] = [
+  'zero',
+  'one',
+  'two',
+  'few',
+  'many',
+  'other',
+]
+
+let pluralRules: Intl.PluralRules | null = null
+
+/** Which of the locale's plural forms a count takes - Flow's PluralsReader. */
+function pluralFormIndex(count: number, formCount: number): number {
+  if (pluralRules === null) {
+    try {
+      pluralRules = new Intl.PluralRules(
+        config.interfaceLanguage.replace(/_/g, '-'),
+      )
+    } catch {
+      pluralRules = new Intl.PluralRules('en')
+    }
+  }
+  const available = pluralRules.resolvedOptions().pluralCategories
+  const categories = CLDR_CATEGORY_ORDER.filter((category) =>
+    available.includes(category),
+  )
+  const index = categories.indexOf(pluralRules.select(count))
+  // A catalogue with fewer forms than the locale has categories (an English
+  // pair in a Polish file): singular for one, the last form otherwise.
+  if (index < 0 || index >= formCount) return count === 1 ? 0 : formCount - 1
+  return index
 }

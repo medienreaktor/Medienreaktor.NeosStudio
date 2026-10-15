@@ -11,7 +11,9 @@ import { cn } from '@/lib/utils'
 export function faClassName(configured: string): string {
   const icon = configured.trim()
   // Full FA class list ("fas fa-file", "fa-solid fa-file") - use as-is.
-  if (icon.includes(' ')) return icon.replace('fas', 'fa')
+  // Only the standalone "fas" token maps to "fa" - never a substring of
+  // another class ("fa-fast-forward" must stay intact).
+  if (icon.includes(' ')) return icon.replace(/\bfas\b/, 'fa')
   // Legacy Neos "icon-file" syntax (FA3/4 era) - the v4 shims resolve names.
   if (icon.startsWith('icon-')) return `fa fa-${icon.slice(5)}`
   // Bare name with or without fa- prefix.

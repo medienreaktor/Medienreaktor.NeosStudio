@@ -374,11 +374,12 @@ export function stepSubject(step: WorkspacePendingStep): string | null {
         .filter((label): label is string => label !== null),
     ),
   ]
-  if (nodeLabels.length === 0) return null
-  if (nodeLabels.length === 1) return nodeLabels[0]
+  const [first, ...others] = nodeLabels
+  if (first === undefined) return null
+  if (others.length === 0) return first
   return t('workspaceGraph.step.nodeCount', '{0} (+{1} more)', [
-    nodeLabels[0],
-    String(nodeLabels.length - 1),
+    first,
+    String(others.length),
   ])
 }
 

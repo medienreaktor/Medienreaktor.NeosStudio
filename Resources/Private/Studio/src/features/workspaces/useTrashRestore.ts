@@ -1,15 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import { fetchNode } from '@/api/neos/endpoints/nodes'
-import { neosKeys } from '@/api/neos/keys'
-import { queryClient } from '@/app/queryClient'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
-import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
 import { restoreFromTrash } from './historyData'
 import { translate as t } from '@/lib/i18n'
 
 /** What the caller knows about the node it restores - enough to report it. */
-export interface RestorableNode {
+interface RestorableNode {
   nodeAggregateId: string
   label: string
 }
@@ -28,13 +27,13 @@ export interface RestorableNode {
 export function useTrashRestore(workspaceName: string | null) {
   const { selectedDocument, selectDocument, workspaceContentChanged } =
     useStudio()
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   return useMutation({
     mutationFn: (node: RestorableNode) =>
       restoreFromTrash(workspaceName!, node.nodeAggregateId),
     onSuccess: (restored, node) => {
-      void invalidateWorkspaceQueries()
-      void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+      void afterWorkspaceRewrite(contentRepositoryId!, workspaceName!)
       workspaceContentChanged()
       if (
         selectedDocument !== null &&

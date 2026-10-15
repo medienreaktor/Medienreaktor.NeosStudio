@@ -1,6 +1,8 @@
 import { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider'
-import type { PresenceUser, WorkspaceFeedEvent } from '@/api/studio/schema'
+import * as Y from 'yjs'
+import type { PresenceUser } from '@/features/collaboration/types'
 import { getValidAccessToken } from '@/auth/oauth'
+import { clearRealtimeGap, createFeedTail, markRealtimeGap } from './eventFeed'
 import type { LiveEdit } from './liveEdits'
 import type {
   CollaborationPosition,
@@ -10,29 +12,36 @@ import type {
 
 /**
  * Messages the realtime sidecar (Resources/Private/Realtime/server.js) sends over the stateless
- * channel of the Hocuspocus connection. Feed events have the shape the polling
- * transport classifies Neos.Api's events into, so both transports feed the
- * bridge identically.
+ * channel of the Hocuspocus connection. `changed` carries no events, only the
+ * workspace's new feed head (content stream + newest sequence number): the
+ * events themselves are read from Neos.Api with the editor's own token.
  */
 type ServerMessage =
   | { type: 'presence'; users: PresenceUser[] }
-  | { type: 'events'; events: WorkspaceFeedEvent[] }
-  | { type: 'workspaceChanged' }
+  | {
+      type: 'changed'
+      contentStreamId: string
+      sequenceNumber: number | null
+    }
   | ({ type: 'liveEdit' } & LiveEdit)
 
 /**
  * The WebSocket transport: one Hocuspocus connection per collaborative
  * session, authenticated with the same OAuth bearer token as the HTTP API
  * (the sidecar validates it against the API). Presence positions go up as
- * stateless messages; the sidecar answers with roster broadcasts and fans out
- * the workspace change feed it tails server-side - so an editing session
- * causes ONE feed poll per workspace on the sidecar instead of one per
- * editor per 2s, and remote changes arrive with sub-second latency.
+ * stateless messages; the sidecar answers with roster broadcasts and signals
+ * whenever the workspace's change feed moves (it watches the feed head once
+ * per workspace). On that signal the transport reads the new events through
+ * Neos.Api itself - the very feed tail the polling transport runs on an
+ * interval - so there is one classifier, Neos.Api's per-node read filtering
+ * applies, and remote changes still arrive with sub-second latency without
+ * every editor polling.
  *
  * The Yjs document behind the connection
  * (`workspace:<contentRepositoryId>:<workspaceName>`) is unused for
  * now - it is the seam where the planned collaborative text editing (phase 4)
- * attaches without a new connection concept.
+ * attaches without a new connection concept. Awareness is off: presence
+ * travels as stateless messages.
  */
 export function startWebsocketTransport(
   url: string,
@@ -46,7 +55,26 @@ export function startWebsocketTransport(
 ): CollaborationTransport {
   let position = initialPosition
   let disposed = false
-  let everConnected = false
+  /** Authenticated right now - losing that opens a gap in the signals. */
+  let authenticated = false
+  let providerDestroyed = false
+
+  // The feed tail starts right away over HTTP - its baseline does not wait
+  // for the socket, so nothing between session start and the first signal
+  // is missed.
+  const tail = createFeedTail(workspaceName, callbacks)
+  tail.tick()
+
+  const connectionLost = () => {
+    // Signals are missed from now on: whoever tails next (the polling
+    // fallback) must not start from a fresh baseline without a refresh.
+    if (authenticated) markRealtimeGap(workspaceName)
+    authenticated = false
+  }
+
+  // Ours, so stop() can destroy it - the provider leaves a document handed
+  // to it alone.
+  const ydoc = new Y.Doc()
 
   const sendPosition = () => {
     try {
@@ -59,6 +87,8 @@ export function startWebsocketTransport(
   const provider = new HocuspocusProvider({
     url,
     name: `workspace:${contentRepositoryId}:${workspaceName}`,
+    document: ydoc,
+    awareness: null,
     // Async token: always hands the CURRENT access token to (re)connects, so
     // a connection outliving the 1h token TTL re-authenticates cleanly.
     token: async () => (await getValidAccessToken()) ?? '',
@@ -68,19 +98,22 @@ export function startWebsocketTransport(
     // accepted it.
     onAuthenticated() {
       if (disposed) return
-      if (everConnected) {
-        // Events may have passed while disconnected - incremental updates
-        // cannot bridge the gap, refresh wholesale (same remedy as a
-        // truncated poll response).
-        callbacks.onWorkspaceChanged()
-      }
-      everConnected = true
+      authenticated = true
+      clearRealtimeGap(workspaceName)
+      // Signals may have passed while disconnected (or before the first
+      // connect): catch up from the tail's cursor, which outlived the
+      // outage. Events the polling fallback delivered meanwhile may come
+      // again - the bridge's updates are idempotent re-renders.
+      tail.tick()
       sendPosition()
       callbacks.onStatus(true)
     },
     onStatus({ status }) {
       if (disposed) return
-      if (status === WebSocketStatus.Disconnected) callbacks.onStatus(false)
+      if (status === WebSocketStatus.Disconnected) {
+        connectionLost()
+        callbacks.onStatus(false)
+      }
     },
     onStateless({ payload }) {
       if (disposed) return
@@ -95,11 +128,17 @@ export function startWebsocketTransport(
           // No `you` on the wire - the bridge falls back to /me's user id.
           callbacks.onRoster(message.users, null)
           break
-        case 'events':
-          if (message.events.length > 0) callbacks.onEvents(message.events)
-          break
-        case 'workspaceChanged':
-          callbacks.onWorkspaceChanged()
+        case 'changed':
+          // The feed head moved - read what is new (unless an earlier
+          // signal's run already got there).
+          if (
+            !tail.isAt({
+              stream: message.contentStreamId,
+              sequenceNumber: message.sequenceNumber,
+            })
+          ) {
+            tail.tick()
+          }
           break
         case 'liveEdit':
           callbacks.onLiveEdit?.({
@@ -119,10 +158,19 @@ export function startWebsocketTransport(
       console.warn(
         `[collaboration] realtime connection rejected (${reason}) - falling back to polling`,
       )
+      connectionLost()
       callbacks.onStatus(false)
-      provider.destroy()
+      destroyProvider()
     },
   })
+
+  // Once only: a rejected connection destroys the provider already, and
+  // stop() must not destroy it a second time.
+  function destroyProvider() {
+    if (providerDestroyed) return
+    providerDestroyed = true
+    provider.destroy()
+  }
 
   return {
     updatePosition(next) {
@@ -138,9 +186,13 @@ export function startWebsocketTransport(
     },
     stop() {
       disposed = true
+      tail.stop()
+      // The session ends - there is no fallback to hand a gap over to.
+      clearRealtimeGap(workspaceName)
       // Closing the connection is the leave announcement: the sidecar drops
       // the roster entry on disconnect and broadcasts the shrunk roster.
-      provider.destroy()
+      destroyProvider()
+      ydoc.destroy()
     },
   }
 }

@@ -7,18 +7,19 @@ import {
   rebaseWorkspace,
   workspaceConflicts,
 } from '@/api/neos/endpoints/workspaces'
-import { neosKeys } from '@/api/neos/keys'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import type {
   Workspace,
   WorkspaceConflictProblem,
   WorkspacePublish,
 } from '@/api/neos/schema'
+import { neosKeys } from '@/api/neos/keys'
 import { queryClient } from '@/app/queryClient'
-import { useStudio } from '@/app/StudioContext'
+import { useStudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { allowsPublishToLive } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
-import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 /**
@@ -47,7 +48,7 @@ export function useCanPublish(
  * WorkspacePublish, which a discard takes alike); no scope = the whole
  * workspace.
  */
-export interface WorkspaceOperation {
+interface WorkspaceOperation {
   kind: 'publish' | 'discard'
   scope?: WorkspacePublish
 }
@@ -65,7 +66,8 @@ export interface WorkspaceOperation {
  * ConflictResolutionDialog. Everything else is a toast.
  */
 export function useWorkspacePublishing(workspaceName: string) {
-  const { workspaceContentChanged } = useStudio()
+  const { workspaceContentChanged } = useStudioActions()
+  const contentRepositoryId = useActiveContentRepositoryId()
   // A publish that hit a conflict, plus the operation that triggered it (so the
   // resolution can retry it). The conflict dialog is open while set.
   const [pendingConflict, setPendingConflict] = useState<{
@@ -74,24 +76,29 @@ export function useWorkspacePublishing(workspaceName: string) {
   } | null>(null)
 
   const invalidateWorkspace = () => {
-    // Covers the changes queries (badges, counts) and the workspace list's
-    // hasPublishableChanges flag.
-    void invalidateWorkspaceQueries()
-    // Publishing rebases the workspace onto the new base (changes published by
-    // others flow in) and discarding rewrites its content - cached node reads
-    // are stale either way, and every loaded tree item needs a re-read
-    // (per-item caches in the trees never expire on their own).
-    void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+    // The changes queries (badges, counts), the workspace list's
+    // hasPublishableChanges flag - and the node reads: publishing rebases the
+    // workspace onto the new base (changes published by others flow in) and
+    // discarding rewrites its content, so they are stale either way, and
+    // every loaded tree item needs a re-read (per-item caches in the trees
+    // never expire on their own).
+    void afterWorkspaceRewrite(contentRepositoryId!, workspaceName)
     workspaceContentChanged()
   }
 
   const operation = useMutation({
     mutationFn: async (op: WorkspaceOperation): Promise<void> => {
-      if (op.kind === 'publish') await publishWorkspace(workspaceName, op.scope)
-      else await discardWorkspace(workspaceName, op.scope)
+      if (op.kind === 'publish')
+        await publishWorkspace(contentRepositoryId!, workspaceName, op.scope)
+      else await discardWorkspace(contentRepositoryId!, workspaceName, op.scope)
     },
     onSuccess: (_data, op) => {
       invalidateWorkspace()
+      // A publish also changed the base workspace's content (e.g. live):
+      // afterWorkspaceRewrite only covers this workspace's node reads.
+      if (op.kind === 'publish') {
+        void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
+      }
       toast.success(
         op.kind === 'discard'
           ? t('workspace.discard.success', 'Changes discarded.')
@@ -121,15 +128,23 @@ export function useWorkspacePublishing(workspaceName: string) {
   const resolve = useMutation({
     mutationFn: async (action: 'force' | 'discardAll'): Promise<void> => {
       if (action === 'discardAll') {
-        await discardWorkspace(workspaceName, pendingConflict?.op.scope)
+        await discardWorkspace(
+          contentRepositoryId!,
+          workspaceName,
+          pendingConflict?.op.scope,
+        )
         return
       }
-      await rebaseWorkspace(workspaceName, 'force')
+      await rebaseWorkspace(contentRepositoryId!, workspaceName, 'force')
       // Retry the publish now that the conflicting changes are gone. If nothing
       // is left to publish (they were all conflicting), that is success, not an
       // error - only a fresh conflict is worth re-surfacing.
       try {
-        await publishWorkspace(workspaceName, pendingConflict?.op.scope)
+        await publishWorkspace(
+          contentRepositoryId!,
+          workspaceName,
+          pendingConflict?.op.scope,
+        )
       } catch (error) {
         if (workspaceConflicts(error)) throw error
       }

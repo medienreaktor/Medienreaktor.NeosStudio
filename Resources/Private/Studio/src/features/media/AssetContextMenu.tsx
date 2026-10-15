@@ -31,9 +31,15 @@ export async function removeAsset(localId: string): Promise<void> {
     if (isAssetInUse(e)) {
       throw new Error(
         t('media.assetInUse', 'This asset is in use and cannot be deleted.'),
+        { cause: e },
       )
     }
-    throw new Error(t('media.deleteAssetFailed', 'Deleting the asset failed.'))
+    throw new Error(
+      t('media.deleteAssetFailed', 'Deleting the asset failed.'),
+      {
+        cause: e,
+      },
+    )
   }
 }
 

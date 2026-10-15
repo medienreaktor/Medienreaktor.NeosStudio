@@ -29,39 +29,6 @@ import {
  * under the Neos editor identifiers that node type configuration references.
  */
 
-export {
-  ASSET_EDITOR,
-  AssetEditor,
-  BOOLEAN_EDITOR,
-  BooleanEditor,
-  CODE_EDITOR,
-  CodeEditor,
-  DATE_TIME_EDITOR,
-  DateTimeEditor,
-  IMAGE_EDITOR,
-  ImageEditor,
-  LINK_EDITOR,
-  LinkFieldEditor,
-  NODE_TYPE_EDITOR,
-  NodeTypeEditor,
-  RANGE_EDITOR,
-  RangeEditor,
-  RICH_TEXT_EDITOR,
-  RichTextEditor,
-  REFERENCE_EDITOR,
-  REFERENCES_EDITOR,
-  ReferenceEditor,
-  ReferencesEditor,
-  SELECT_BOX_EDITOR,
-  SelectBoxEditor,
-  TEXT_AREA_EDITOR,
-  TextAreaEditor,
-  TEXT_FIELD_EDITOR,
-  TextFieldEditor,
-  URI_PATH_SEGMENT_EDITOR,
-  UriPathSegmentEditor,
-}
-
 /**
  * Register the built-in editors. Called once before the app mounts, exactly
  * like third-party editors would be registered from a plugin entry point.

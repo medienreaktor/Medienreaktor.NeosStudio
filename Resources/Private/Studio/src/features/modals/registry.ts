@@ -1,4 +1,9 @@
-import * as React from 'react'
+import type * as React from 'react'
+import {
+  ObservableRegistry,
+  type RegistryEntry,
+  useRegistry,
+} from '@/lib/registry'
 
 /**
  * The settings-dialog registry: Studio replaces the classic Neos backend
@@ -9,14 +14,13 @@ import * as React from 'react'
  * section (users, sites, workspaces, ...); picking one renders it in the modal
  * body. Built-ins and third-party plugins register the same way.
  *
- * It is modelled on the panel and property-editor registries (see
- * features/panels/registry.ts and features/inspector/editors/registry.ts): a small
- * observable store, register-replaces-by-id so HMR and plugin reloads stay
+ * Like every Studio registry it builds on the shared observable store (see
+ * lib/registry.ts): register-replaces-by-id so HMR and plugin reloads stay
  * idempotent, and a stable snapshot for React's useSyncExternalStore.
  */
 
 /** The minimum every registered definition provides: a unique, stable id. */
-interface RegistryDefinition {
+interface RegistryDefinition extends RegistryEntry {
   /** Unique id. Third-party entries should namespace ('vendor.package:media'). */
   id: string
   /**
@@ -28,48 +32,14 @@ interface RegistryDefinition {
 }
 
 /**
- * A small observable, id-keyed store, shaped exactly like the
- * panel/property-editor registries so consumers reuse the same subscribe +
- * snapshot pattern.
+ * The shared observable, id-keyed store (see {@link ObservableRegistry}),
+ * with its getAll() snapshot sorted by `order` then registration order.
  */
-export class ModalRegistry<Def extends RegistryDefinition> {
-  private definitions = new Map<string, Def>()
-  private listeners = new Set<() => void>()
-  private snapshot: Def[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: Def): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
-  }
-
-  get(id: string | null | undefined): Def | undefined {
-    if (!id) return undefined
-    return this.definitions.get(id)
-  }
-
-  /**
-   * Stable snapshot sorted by `order` then registration order - changes
-   * identity only on (un)register, so useSyncExternalStore stays quiet.
-   */
-  getAll(): Def[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()].sort(
-      (a, b) => (a.order ?? 100) - (b.order ?? 100),
-    )
-    this.listeners.forEach((listener) => listener())
+export class ModalRegistry<
+  Def extends RegistryDefinition,
+> extends ObservableRegistry<Def> {
+  constructor() {
+    super({ sort: 'order' })
   }
 }
 
@@ -114,8 +84,5 @@ export const settingsDialogRegistry =
 
 /** Subscribe to the settings-section registry; re-renders on (un)register. */
 export function useSettingsDialogs(): SettingsDialogDefinition[] {
-  return React.useSyncExternalStore(
-    (onChange) => settingsDialogRegistry.subscribe(onChange),
-    () => settingsDialogRegistry.getAll(),
-  )
+  return useRegistry(settingsDialogRegistry)
 }

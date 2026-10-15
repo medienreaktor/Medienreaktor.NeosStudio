@@ -1,5 +1,6 @@
 import * as React from 'react'
 import type { Node, NodeAddress, Site } from '@/api/neos/schema'
+import type { PreviewElementUpdate } from '@/features/preview/PreviewPane'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 
 /**
@@ -7,8 +8,15 @@ import type { NodeEdit } from '@/features/tree/ContentOutliner'
  * alike) render without props and read everything from this context, so a
  * panel component is self-contained and registerable. Keep this surface
  * deliberate - it is the beginning of the plugin API.
+ *
+ * Provided as two contexts: the state, which changes as the user works, and
+ * the actions, which keep their identity for the shell's lifetime. useStudio()
+ * reads both; a consumer that only acts (and never renders the state) can use
+ * useStudioActions() and is spared the re-renders.
  */
-export type StudioContextValue = {
+export type StudioContextValue = StudioState & StudioActions
+
+export type StudioState = {
   /** The active site, or null while sites load. */
   site: Site | null
   /** The active workspace's name, or null while workspaces load. */
@@ -35,10 +43,15 @@ export type StudioContextValue = {
   /**
    * The last edit that wants just its nodes' elements refreshed in the
    * preview (out-of-band render + DOM swap instead of an iframe reload).
-   * Usually one node; remote collaborators' edits can batch several. The
-   * token distinguishes successive updates of the same nodes.
+   * Usually one node; remote collaborators' edits can batch several (flagged
+   * `remote`, see PreviewElementUpdate). The token distinguishes successive
+   * updates of the same nodes.
    */
-  previewElementUpdate: { addresses: NodeAddress[]; token: number } | null
+  previewElementUpdate: PreviewElementUpdate | null
+}
+
+/** The actions - stable functions, safe as effect dependencies. */
+export type StudioActions = {
   /** Select a document (also inspects it). */
   selectDocument: (node: Node) => void
   /** Inspect a node without changing the selected document. */
@@ -99,12 +112,46 @@ export type StudioContextValue = {
   workspaceContentChanged: () => void
 }
 
-const StudioContext = React.createContext<StudioContextValue | null>(null)
+const StudioStateContext = React.createContext<StudioState | null>(null)
+const StudioActionsContext = React.createContext<StudioActions | null>(null)
 
-export const StudioProvider = StudioContext.Provider
+/**
+ * Provides the studio context. Pass a memoized state and stable actions -
+ * every new object re-renders every consumer.
+ */
+export function StudioProvider({
+  state,
+  actions,
+  children,
+}: {
+  state: StudioState
+  actions: StudioActions
+  children: React.ReactNode
+}) {
+  return (
+    <StudioActionsContext.Provider value={actions}>
+      <StudioStateContext.Provider value={state}>
+        {children}
+      </StudioStateContext.Provider>
+    </StudioActionsContext.Provider>
+  )
+}
 
 export function useStudio(): StudioContextValue {
-  const value = React.useContext(StudioContext)
+  const state = React.useContext(StudioStateContext)
+  const actions = React.useContext(StudioActionsContext)
+  const value = React.useMemo(
+    () => (state && actions ? { ...state, ...actions } : null),
+    [state, actions],
+  )
   if (!value) throw new Error('useStudio() requires a <StudioProvider> above')
   return value
+}
+
+/** Just the actions: never re-renders the consumer (they are stable). */
+export function useStudioActions(): StudioActions {
+  const actions = React.useContext(StudioActionsContext)
+  if (!actions)
+    throw new Error('useStudioActions() requires a <StudioProvider> above')
+  return actions
 }

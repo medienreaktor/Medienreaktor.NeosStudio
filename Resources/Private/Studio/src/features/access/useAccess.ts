@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
+import { hashKey } from '@tanstack/react-query'
 
 import { observedIdPath, useNodeAncestors } from '@/api/neos/endpoints/nodes'
 import {
@@ -8,47 +9,71 @@ import {
   type Workspace,
 } from '@/api/neos/schema'
 import { useMyAccess } from '@/api/studio/endpoints/accessRoles'
+import { studioKeys } from '@/api/studio/keys'
 import type { AccessCapability, EffectiveAccess } from '@/api/studio/schema'
+import { queryClient } from '@/app/queryClient'
+import { nodeDecoratorRegistry } from '@/features/tree/decorators'
 import { nodeAccessState, permits } from './rules'
 
 /**
- * The acting user's effective access, plus the module-level snapshot the
- * synchronous consumers need.
+ * The acting user's effective access, for render-time hooks and for the
+ * synchronous consumers alike.
  *
  * Node decorators are pure `(node) => decoration` functions called during
  * render for every visible row - they have no place to call a hook and no
- * props to receive access through. So the hook mirrors the query result into
- * a module snapshot, and those consumers read it from there. It is a cache of
- * one value that changes at most once per session, not shared mutable state
- * doing real work.
+ * props to receive access through. They read the access straight from the
+ * query cache (never a copy that lags a commit behind), and the decorator
+ * registry is refreshed whenever it - or the site / workspace context below -
+ * changes, so the rows decorate again.
+ *
+ * Until /access/me has answered, access is *unknown*, and every consumer
+ * treats it the same way: what is SHOWN fails open (no row is hidden or
+ * locked only to be revealed a moment later), what may be WRITTEN fails
+ * closed (no editor, menu action or drop is offered that the server might
+ * then refuse).
  */
 
-let snapshot: EffectiveAccess | undefined
+const ACCESS_QUERY_HASH = hashKey(studioKeys.access.mine)
+
+/** The settled effective access, or undefined while it is still unknown. */
+function knownAccess(): EffectiveAccess | undefined {
+  return queryClient.getQueryData<EffectiveAccess>(studioKeys.access.mine)
+}
+
 let activeSiteNodeName = ''
 let workspaceClassifications = new Map<string, string>()
+
+// Re-decorate whenever the cached access changes - refetched, invalidated
+// after a role edit, or dropped on logout.
+let lastSeenAccess: EffectiveAccess | undefined
+queryClient.getQueryCache().subscribe((event) => {
+  if (event.query.queryHash !== ACCESS_QUERY_HASH) return
+  const access = event.query.state.data as EffectiveAccess | undefined
+  if (access === lastSeenAccess) return
+  lastSeenAccess = access
+  nodeDecoratorRegistry.refresh()
+})
 
 /**
  * Subscribe to the own effective access. Safe to call from anywhere - the
  * query is deduplicated, so extra callers cost nothing.
  */
 export function useAccess(enabled = true): EffectiveAccess | undefined {
-  const { data } = useMyAccess(enabled)
-
-  useEffect(() => {
-    snapshot = data
-  }, [data])
-
-  return data
+  return useMyAccess(enabled).data
 }
 
 /**
  * Tell the synchronous consumers which site the shell is showing. Called once
  * by the App: site restrictions are per site, and a decorator looking at a
  * bare node has no way to tell which one it belongs to.
+ *
+ * A layout effect, so the rows re-decorated by the refresh are on screen in
+ * the same paint as the site switch.
  */
 export function useActiveSiteForAccess(siteNodeName: string | null): void {
-  useEffect(() => {
+  useLayoutEffect(() => {
     activeSiteNodeName = siteNodeName ?? ''
+    nodeDecoratorRegistry.refresh()
   }, [siteNodeName])
 }
 
@@ -60,20 +85,12 @@ export function useActiveSiteForAccess(siteNodeName: string | null): void {
 export function useWorkspaceClassificationsForAccess(
   workspaces: Pick<Workspace, 'name' | 'classification'>[],
 ): void {
-  useEffect(() => {
+  useLayoutEffect(() => {
     workspaceClassifications = new Map(
       workspaces.map((workspace) => [workspace.name, workspace.classification]),
     )
+    nodeDecoratorRegistry.refresh()
   }, [workspaces])
-}
-
-/**
- * The last known effective access, for synchronous consumers. Returns
- * undefined until /access/me has resolved - which every helper treats as
- * "unrestricted", so the UI never flashes a locked state it then takes back.
- */
-export function currentAccess(): EffectiveAccess | undefined {
-  return snapshot
 }
 
 /**
@@ -82,15 +99,17 @@ export function currentAccess(): EffectiveAccess | undefined {
  * against a short path, which can only ever fail *open* (fewer ancestors =
  * fewer rules match = no rule matched = the tree stays visible) - and the
  * server still refuses the write.
+ *
+ * While access is unknown every document is `allowed`: this decides what is
+ * shown, which fails open (see above).
  */
 export function documentAccessState(
   node: Node,
   siteNodeName: string = activeSiteNodeName,
-  access: EffectiveAccess | undefined = snapshot,
 ): 'allowed' | 'restricted' | 'hidden' {
   return nodeAccessState(
-    access,
-    observedIdPath(node.nodeAggregateId),
+    knownAccess(),
+    observedIdPath(nodeAddressOf(node)),
     siteNodeName,
   )
 }
@@ -109,9 +128,10 @@ export function documentAccessState(
  * so it asks the server for the real chain (cached per address, and only ever
  * fetched for accounts a role actually restricts).
  *
- * Fails closed while that chain is in flight: for a restricted account the
- * brief lock resolves into an unlocked editor, whereas the other way round
- * hands out an editor whose save the server would refuse.
+ * Fails closed while access or that chain is unknown - in flight or failed:
+ * for a restricted account the brief lock resolves into an unlocked editor,
+ * whereas the other way round hands out an editor whose save the server
+ * would refuse.
  */
 export function useNodeEditable(
   node: Node | null,
@@ -119,14 +139,16 @@ export function useNodeEditable(
 ): boolean {
   const access = useAccess()
   const restricted = access !== undefined && !access.unrestricted
-  const { data: ancestors, isPending } = useNodeAncestors(
-    restricted && node !== null ? nodeAddressOf(node) : null,
-  )
+  const {
+    data: ancestors,
+    isPending,
+    isError,
+  } = useNodeAncestors(restricted && node !== null ? nodeAddressOf(node) : null)
 
-  if (node === null || !restricted) return true
-  // isPending covers "not fetched yet"; a failed fetch resolves to no
-  // ancestors, which the rules below then evaluate against the node alone.
-  if (isPending) return false
+  if (node === null) return true
+  if (access === undefined) return false
+  if (!restricted) return true
+  if (isPending || isError) return false
 
   return permits(access, {
     siteNodeName: activeSiteNodeName,
@@ -145,16 +167,14 @@ export function useNodeEditable(
  * The synchronous sibling of useNodeEditable, for the surfaces that cannot
  * call a hook per row (tree rows, drag-and-drop callbacks). Settles for the
  * observed ancestry, which those surfaces do have: they walked the tree down
- * to the node.
+ * to the node. False while access is unknown, like useNodeEditable.
  */
-export function nodePermits(
-  node: Node,
-  capability: AccessCapability,
-  access: EffectiveAccess | undefined = snapshot,
-): boolean {
+export function nodePermits(node: Node, capability: AccessCapability): boolean {
+  const access = knownAccess()
+  if (access === undefined) return false
   return permits(access, {
     siteNodeName: activeSiteNodeName,
-    idPath: observedIdPath(node.nodeAggregateId),
+    idPath: observedIdPath(nodeAddressOf(node)),
     dimensionCoordinates: parseDimensionSpacePoint(node.dimensionSpacePoint),
     workspaceName: node.workspaceName,
     workspaceClassification: classificationOf(node.workspaceName),

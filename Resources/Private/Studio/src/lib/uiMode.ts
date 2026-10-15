@@ -9,7 +9,7 @@ import { config } from '@/config'
  */
 export type UiMode = 'light' | 'dark' | 'system'
 
-export const UI_MODES: readonly UiMode[] = ['light', 'dark', 'system']
+const UI_MODES: readonly UiMode[] = ['light', 'dark', 'system']
 
 /**
  * The key Studio stores the mode under in the free-form /me/profile

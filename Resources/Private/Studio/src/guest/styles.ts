@@ -32,13 +32,6 @@
 import { Extension, Mark, mergeAttributes, type Editor } from '@tiptap/core'
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 
-/** A style definition exactly as configured in the NodeType. */
-export interface StyleDefinition {
-  name: string
-  element: string
-  classes: string[]
-}
-
 /** What a definition's classes are applied to. */
 export type StyleTarget =
   | { kind: 'node'; name: string; attrs?: Record<string, unknown> }

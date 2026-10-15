@@ -4,7 +4,7 @@ import { useStudio } from '@/app/StudioContext'
 import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
-import { useWorkspacesPendingEvents } from './historyData'
+import { useDocumentPendingEvents } from './historyData'
 import { HistoryStepRow } from './HistoryStepRow'
 import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
 
@@ -25,32 +25,32 @@ import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
  * unpublished by definition. Publishing, discarding and rebasing swap that
  * stream, so the log empties itself.
  *
+ * Only the page's events are read (filterByDocument): the newest of them, not
+ * the page's share of the workspace's newest.
+ *
  * Live-updating comes for free from the query cache: every write path (and the
  * collaboration bridge, for a colleague's edits in a shared workspace)
- * invalidates the workspaces query prefix, which this history is part of - so
- * another editor's change to the page shows up here within the change feed's
- * poll cadence.
+ * invalidates the workspace's history, which this is part of - so another
+ * editor's change to the page shows up here within the change feed's poll
+ * cadence.
  */
 export function HistoryPanel() {
   const { workspaceName, selectedDocument, inspectAddress } = useStudio()
   const documentId = selectedDocument?.nodeAggregateId ?? null
-  const { byWorkspace, isLoading } = useWorkspacesPendingEvents(
-    workspaceName !== null ? [workspaceName] : [],
+  const { data: history, isLoading } = useDocumentPendingEvents(
+    workspaceName,
+    documentId,
   )
-  const history =
-    workspaceName !== null ? byWorkspace.get(workspaceName) : undefined
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
-  // This page's events only, filtered BEFORE grouping: a step's summary, icon
-  // and tone then describe what happened to this page, even when the command
-  // behind it touched several (a move, a paste across pages).
-  const steps = useMemo(() => {
-    if (documentId === null) return []
-    const events = (history?.events ?? []).filter(
-      (event) => event.documentAggregateId === documentId,
-    )
-    return groupPendingEvents(events).reverse()
-  }, [history, documentId])
+  // This page's events only, filtered BEFORE grouping (by the server): a
+  // step's summary, icon and tone then describe what happened to this page,
+  // even when the command behind it touched several (a move, a paste across
+  // pages).
+  const steps = useMemo(
+    () => groupPendingEvents(history?.events ?? []).reverse(),
+    [history],
+  )
 
   // Picking a step also inspects what it changed: the node is revealed in the
   // outliner and highlighted in the page, so a log entry leads straight to the
@@ -100,7 +100,7 @@ export function HistoryPanel() {
       ))}
       {history?.truncated === true && (
         <p className="px-2 py-2 text-center text-[10px] text-neutral-400 dark:text-neutral-600">
-          {t('workspaceHistory.older', 'Older history is not shown.')}
+          {t('history.older', 'Older changes on this page are not shown.')}
         </p>
       )}
     </div>

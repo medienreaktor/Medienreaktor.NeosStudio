@@ -1,5 +1,5 @@
 import { useAssetUsages } from '@/api/neos/endpoints/assets'
-import { translate as t } from '@/lib/i18n'
+import { translate as t, translatePlural as tp } from '@/lib/i18n'
 import { Skeleton } from '@/components/ui/skeleton'
 
 /** Where a given asset is referenced across the content repository. */
@@ -57,8 +57,9 @@ export function UsageTable({
       ))}
       {usage.data.meta.inaccessible > 0 && (
         <p className="text-xs text-neutral-500">
-          {t('media.usageInaccessible', '+ {0} usage(s) you cannot access', [
-            usage.data.meta.inaccessible,
+          {tp('media.usageInaccessible', usage.data.meta.inaccessible, [
+            '+ {0} usage you cannot access',
+            '+ {0} usages you cannot access',
           ])}
         </p>
       )}

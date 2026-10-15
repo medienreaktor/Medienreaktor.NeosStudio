@@ -47,7 +47,7 @@ const ESCAPES: Record<string, string> = {
 }
 
 function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (c) => ESCAPES[c])
+  return text.replace(/[&<>"']/g, (c) => ESCAPES[c] ?? c)
 }
 
 /** Wrap already-known-plain text in a color span (escaping it first). */
@@ -129,13 +129,59 @@ function highlightMarkup(code: string): string {
 }
 
 const KEYWORDS = new Set([
-  'abstract', 'async', 'await', 'break', 'case', 'catch', 'class', 'const',
-  'continue', 'default', 'delete', 'do', 'echo', 'else', 'enum', 'export',
-  'extends', 'false', 'final', 'finally', 'fn', 'for', 'from', 'function',
-  'if', 'implements', 'import', 'in', 'instanceof', 'interface', 'let', 'namespace',
-  'new', 'null', 'of', 'private', 'protected', 'public', 'return', 'static',
-  'super', 'switch', 'this', 'throw', 'true', 'try', 'typeof', 'undefined',
-  'use', 'var', 'void', 'while', 'yield',
+  'abstract',
+  'async',
+  'await',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'default',
+  'delete',
+  'do',
+  'echo',
+  'else',
+  'enum',
+  'export',
+  'extends',
+  'false',
+  'final',
+  'finally',
+  'fn',
+  'for',
+  'from',
+  'function',
+  'if',
+  'implements',
+  'import',
+  'in',
+  'instanceof',
+  'interface',
+  'let',
+  'namespace',
+  'new',
+  'null',
+  'of',
+  'private',
+  'protected',
+  'public',
+  'return',
+  'static',
+  'super',
+  'switch',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'typeof',
+  'undefined',
+  'use',
+  'var',
+  'void',
+  'while',
+  'yield',
 ])
 
 function highlightCode(code: string): string {

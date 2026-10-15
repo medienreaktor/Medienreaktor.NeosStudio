@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import type { Asset } from '@/api/neos/schema'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { LoadingState, Spinner } from '@/components/ui/spinner'
@@ -38,20 +39,27 @@ export function AssetList({
   onLoadMore,
 }: AssetListProps) {
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+  // The latest props for the observer callback - read, not depended on, so
+  // the observer is not rebuilt on every render.
+  const loadMore = useLatestRef({ onLoadMore, isFetchingNextPage })
 
-  // Infinite scroll: load the next page when the sentinel scrolls into view.
+  // Infinite scroll: load the next page when the sentinel scrolls into view -
+  // one page at a time. Rebuilt when a page arrives, so a sentinel that is
+  // still in view then asks for the next one.
   useEffect(() => {
     const node = sentinelRef.current
     if (!node || !hasNextPage) return
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) onLoadMore()
+        if (!entries[0]?.isIntersecting) return
+        if (loadMore.current.isFetchingNextPage) return
+        loadMore.current.onLoadMore()
       },
       { rootMargin: '400px' },
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [hasNextPage, onLoadMore, assets.length])
+  }, [hasNextPage, assets.length, loadMore]) // loadMore: a stable ref
 
   if (assets.length === 0) {
     return isLoading ? (

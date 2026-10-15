@@ -29,6 +29,7 @@ import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
+import { UndoRedo } from '@tiptap/extensions'
 import { resolveStyles, styleExtensions, type ResolvedStyle } from './styles'
 import { ParagraphWithFiller } from './serialize'
 
@@ -298,10 +299,13 @@ export function extensionsFor(config: Formatting): Extensions {
   if (!config.block) {
     // Inline-only: a single line of text with marks, no block nodes, so the
     // value round-trips as bare inline HTML (e.g. a heading or span property).
+    // Undo/redo comes with StarterKit in the block schema; here it has to be
+    // added explicitly, or Mod-Z would do nothing in inline properties.
     return [
       Document.extend({ content: 'inline*' }),
       Text,
       HardBreak,
+      UndoRedo,
       ...(config.bold ? [Bold] : []),
       ...(config.italic ? [Italic] : []),
       ...(config.underline ? [Underline] : []),

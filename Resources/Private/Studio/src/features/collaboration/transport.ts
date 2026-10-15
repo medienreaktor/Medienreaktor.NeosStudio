@@ -2,7 +2,7 @@ import type {
   EditingElement,
   PresenceUser,
   WorkspaceFeedEvent,
-} from '@/api/studio/schema'
+} from '@/features/collaboration/types'
 import type { DimensionCoordinates } from '@/api/neos/schema'
 import type { LiveEdit } from './liveEdits'
 

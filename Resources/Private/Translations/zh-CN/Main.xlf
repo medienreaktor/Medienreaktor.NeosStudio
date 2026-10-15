@@ -2,6 +2,478 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file original="" product-name="Medienreaktor.NeosStudio" source-language="en" datatype="plaintext" target-language="zh-CN">
     <body>
+      <trans-unit id="access.decor.restricted" xml:space="preserve">
+        <source>Outside your access role — read only</source>
+        <target xml:lang="zh-CN">超出你的访问角色范围——只读</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutBase" xml:space="preserve">
+        <source>Your workspace publishes into "{0}", which your access role no longer covers. Pick a workspace you may publish into to continue.</source>
+        <target xml:lang="zh-CN">你的工作区发布到“{0}”，但你的访问角色已不再涵盖它。请选择一个你可以发布到的工作区以继续。</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutContext" xml:space="preserve">
+        <source>You are editing in "{0}", which your access role no longer covers. Pick a workspace you may work in to continue.</source>
+        <target xml:lang="zh-CN">你正在“{0}”中编辑，但你的访问角色已不再涵盖它。请选择一个你可以在其中工作的工作区以继续。</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutNoTarget" xml:space="preserve">
+        <source>Your access role currently covers no workspace you could switch to. An administrator has to widen it.</source>
+        <target xml:lang="zh-CN">你的访问角色目前不涵盖任何可切换到的工作区。需要管理员扩大其范围。</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutRebaseFailed" xml:space="preserve">
+        <source>Switching failed. Publish or discard your pending changes first, then try again.</source>
+        <target xml:lang="zh-CN">切换失败。请先发布或放弃你的待处理更改，然后重试。</target>
+      </trans-unit>
+      <trans-unit id="access.lockoutTitle" xml:space="preserve">
+        <source>Your workspace is no longer available</source>
+        <target xml:lang="zh-CN">你的工作区已不可用</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.activated" xml:space="preserve">
+        <source>The role "{0}" is active again.</source>
+        <target xml:lang="zh-CN">角色“{0}”已重新启用。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.activationFailed" xml:space="preserve">
+        <source>Could not change status</source>
+        <target xml:lang="zh-CN">无法更改状态</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.activationFailedDetail" xml:space="preserve">
+        <source>Changing the status failed.</source>
+        <target xml:lang="zh-CN">更改状态失败。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.active" xml:space="preserve">
+        <source>Active</source>
+        <target xml:lang="zh-CN">已启用</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPersonal" xml:space="preserve">
+        <source>May use their personal workspace</source>
+        <target xml:lang="zh-CN">可以使用自己的个人工作区</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPersonalHint" xml:space="preserve">
+        <source>Off forces this role to edit directly in a shared workspace.</source>
+        <target xml:lang="zh-CN">关闭后，此角色将直接在共享工作区中编辑。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPublish" xml:space="preserve">
+        <source>May publish to live</source>
+        <target xml:lang="zh-CN">可以发布到 Live</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowPublishHint" xml:space="preserve">
+        <source>Off means changes can only be handed on for review.</source>
+        <target xml:lang="zh-CN">关闭后，更改只能提交审核。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
+        <source>May create workspaces</source>
+        <target xml:lang="zh-CN">可以创建工作区</target>
+      </trans-unit>
+      <group id="accessRoles.badgeBranches" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.badgeBranches[0]" xml:space="preserve">
+          <source>{0} branches</source>
+          <target xml:lang="zh-CN">{0} 个分支</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="accessRoles.badgeCapabilities" xml:space="preserve">
+        <source>{0} restricted</source>
+        <target xml:lang="zh-CN">{0} 项受限</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeDenied" xml:space="preserve">
+        <source>{0} blocked</source>
+        <target xml:lang="zh-CN">{0} 项已阻止</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeDimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="zh-CN">维度</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeNoPublish" xml:space="preserve">
+        <source>No publishing</source>
+        <target xml:lang="zh-CN">不可发布</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.badgeNoPublishDetail" xml:space="preserve">
+        <source>Cannot publish to the live workspace.</source>
+        <target xml:lang="zh-CN">无法发布到 Live 工作区。</target>
+      </trans-unit>
+      <group id="accessRoles.badgeSites" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.badgeSites[0]" xml:space="preserve">
+          <source>{0} sites</source>
+          <target xml:lang="zh-CN">{0} 个站点</target>
+        </trans-unit>
+      </group>
+      <group id="accessRoles.badgeWorkspaces" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.badgeWorkspaces[0]" xml:space="preserve">
+          <source>{0} workspaces</source>
+          <target xml:lang="zh-CN">{0} 个工作区</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="accessRoles.capCreate" xml:space="preserve">
+        <source>Create pages and content</source>
+        <target xml:lang="zh-CN">创建页面和内容</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capCreateHint" xml:space="preserve">
+        <source>Also covers creating a page in another dimension.</source>
+        <target xml:lang="zh-CN">也包括在其他维度中创建页面。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capDelete" xml:space="preserve">
+        <source>Delete pages and content</source>
+        <target xml:lang="zh-CN">删除页面和内容</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capEdit" xml:space="preserve">
+        <source>Edit content</source>
+        <target xml:lang="zh-CN">编辑内容</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capEditHint" xml:space="preserve">
+        <source>Change properties, references, and show/hide pages.</source>
+        <target xml:lang="zh-CN">更改属性和引用，显示或隐藏页面。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMove" xml:space="preserve">
+        <source>Move pages and content</source>
+        <target xml:lang="zh-CN">移动页面和内容</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capMoveHint" xml:space="preserve">
+        <source>Reordering and drag-and-drop in the page tree.</source>
+        <target xml:lang="zh-CN">在页面树中排序和拖放。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.capabilitiesHint" xml:space="preserve">
+        <source>What members may do inside everything above. Untick to take a capability away.</source>
+        <target xml:lang="zh-CN">成员在以上所有允许范围内可以执行的操作。取消勾选即可收回某项权限。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnActions" xml:space="preserve">
+        <source>Actions</source>
+        <target xml:lang="zh-CN">操作</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnMembers" xml:space="preserve">
+        <source>Members</source>
+        <target xml:lang="zh-CN">成员</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnName" xml:space="preserve">
+        <source>Role</source>
+        <target xml:lang="zh-CN">角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnScope" xml:space="preserve">
+        <source>Restrictions</source>
+        <target xml:lang="zh-CN">限制</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.columnStatus" xml:space="preserve">
+        <source>Status</source>
+        <target xml:lang="zh-CN">状态</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.create" xml:space="preserve">
+        <source>Create role</source>
+        <target xml:lang="zh-CN">创建角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.created" xml:space="preserve">
+        <source>The role "{0}" has been created.</source>
+        <target xml:lang="zh-CN">角色“{0}”已创建。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deactivated" xml:space="preserve">
+        <source>The role "{0}" is paused — it no longer restricts its members.</source>
+        <target xml:lang="zh-CN">角色“{0}”已暂停——它不再限制其成员。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.delete" xml:space="preserve">
+        <source>Delete role</source>
+        <target xml:lang="zh-CN">删除角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleteDescription" xml:space="preserve">
+        <source>The role and its memberships are removed. Its members keep their Neos roles and simply stop being restricted by it.</source>
+        <target xml:lang="zh-CN">该角色及其成员关系将被移除。成员保留其 Neos 角色，只是不再受此角色限制。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleteTitle" xml:space="preserve">
+        <source>Delete role "{0}"?</source>
+        <target xml:lang="zh-CN">删除角色“{0}”？</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.deleted" xml:space="preserve">
+        <source>The role "{0}" has been deleted.</source>
+        <target xml:lang="zh-CN">角色“{0}”已删除。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.description" xml:space="preserve">
+        <source>Description</source>
+        <target xml:lang="zh-CN">描述</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.descriptionPlaceholder" xml:space="preserve">
+        <source>What this role is for — the next administrator will thank you.</source>
+        <target xml:lang="zh-CN">此角色的用途——下一位管理员会感谢你。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dialogHintWriting" xml:space="preserve">
+        <source>A role restricts what its members may change, not what they may see: content stays readable everywhere. Members keep their Neos roles — this only narrows where they may write. Everything left on "All" stays open.</source>
+        <target xml:lang="zh-CN">角色限制的是成员可以更改的内容，而不是他们可以查看的内容：内容在任何地方都保持可读。成员保留其 Neos 角色——此角色只缩小他们可以写入的范围。所有保持为“全部”的设置均保持开放。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionEmpty" xml:space="preserve">
+        <source>Select at least one value, or allow all values.</source>
+        <target xml:lang="zh-CN">请至少选择一个值，或允许所有值。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionScopeAll" xml:space="preserve">
+        <source>All values</source>
+        <target xml:lang="zh-CN">所有值</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionScopeSelected" xml:space="preserve">
+        <source>Only the selected values</source>
+        <target xml:lang="zh-CN">仅所选值</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionsHintWriting" xml:space="preserve">
+        <source>The dimension values members may make changes in. Content in all other values stays readable.</source>
+        <target xml:lang="zh-CN">成员可以在其中进行更改的维度值。其他所有值中的内容保持可读。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.dimensionsNone" xml:space="preserve">
+        <source>This installation has no content dimensions.</source>
+        <target xml:lang="zh-CN">此安装没有内容维度。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target xml:lang="zh-CN">编辑</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.editRole" xml:space="preserve">
+        <source>Edit role</source>
+        <target xml:lang="zh-CN">编辑角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.enforcementOff" xml:space="preserve">
+        <source>Enforcement in the content repository is switched off — these roles shape the editing UI, but do not block direct API requests.</source>
+        <target xml:lang="zh-CN">Content Repository 中的强制执行已关闭——这些角色会影响编辑界面，但不会阻止直接的 API 请求。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.identifierHint" xml:space="preserve">
+        <source>Identifier: {0}</source>
+        <target xml:lang="zh-CN">标识符：{0}</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.incomplete" xml:space="preserve">
+        <source>A restriction has nothing selected. Select something, or switch it back to "All".</source>
+        <target xml:lang="zh-CN">某项限制没有选择任何内容。请选择内容，或将其改回“全部”。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.label" xml:space="preserve">
+        <source>Name</source>
+        <target xml:lang="zh-CN">名称</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.labelPlaceholder" xml:space="preserve">
+        <source>e.g. Editors North</source>
+        <target xml:lang="zh-CN">例如：北区编辑部</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.loadFailed" xml:space="preserve">
+        <source>Could not load access roles</source>
+        <target xml:lang="zh-CN">无法加载访问角色</target>
+      </trans-unit>
+      <group id="accessRoles.memberCount" restype="x-gettext-plurals">
+        <trans-unit id="accessRoles.memberCount[0]" xml:space="preserve">
+          <source>{0} members</source>
+          <target xml:lang="zh-CN">{0} 名成员</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="accessRoles.memberExempt" xml:space="preserve">
+        <source>Exempt: {0}</source>
+        <target xml:lang="zh-CN">豁免：{0}</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.membersHint" xml:space="preserve">
+        <source>Who this role applies to. Roles are additive: someone in two roles may do what either allows.</source>
+        <target xml:lang="zh-CN">此角色适用于哪些人。角色可以叠加：拥有两个角色的人可以执行其中任一角色允许的操作。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.missing" xml:space="preserve">
+        <source>(missing)</source>
+        <target xml:lang="zh-CN">（缺失）</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.missingHint" xml:space="preserve">
+        <source>This no longer exists. Untick it to remove it from the role.</source>
+        <target xml:lang="zh-CN">此项已不存在。取消勾选即可将其从角色中移除。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.newRole" xml:space="preserve">
+        <source>New role</source>
+        <target xml:lang="zh-CN">新建角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.noMatches" xml:space="preserve">
+        <source>No roles match your search.</source>
+        <target xml:lang="zh-CN">没有符合搜索条件的角色。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.none" xml:space="preserve">
+        <source>No access roles yet. Everyone works unrestricted until you create one.</source>
+        <target xml:lang="zh-CN">还没有访问角色。在你创建角色之前，所有人都可以不受限制地工作。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.pause" xml:space="preserve">
+        <source>Pause</source>
+        <target xml:lang="zh-CN">暂停</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.paused" xml:space="preserve">
+        <source>Paused</source>
+        <target xml:lang="zh-CN">已暂停</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.resume" xml:space="preserve">
+        <source>Resume</source>
+        <target xml:lang="zh-CN">恢复</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.rowActions" xml:space="preserve">
+        <source>Role actions</source>
+        <target xml:lang="zh-CN">角色操作</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.save" xml:space="preserve">
+        <source>Save role</source>
+        <target xml:lang="zh-CN">保存角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saveFailed" xml:space="preserve">
+        <source>Could not save role</source>
+        <target xml:lang="zh-CN">无法保存角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saveFailedDetail" xml:space="preserve">
+        <source>Saving the role failed.</source>
+        <target xml:lang="zh-CN">保存角色失败。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saved" xml:space="preserve">
+        <source>The role "{0}" has been saved.</source>
+        <target xml:lang="zh-CN">角色“{0}”已保存。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.saving" xml:space="preserve">
+        <source>Saving…</source>
+        <target xml:lang="zh-CN">正在保存…</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.search" xml:space="preserve">
+        <source>Search roles…</source>
+        <target xml:lang="zh-CN">搜索角色…</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesEmpty" xml:space="preserve">
+        <source>Select at least one site, or allow all sites.</source>
+        <target xml:lang="zh-CN">请至少选择一个站点，或允许所有站点。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesHintWriting" xml:space="preserve">
+        <source>The sites members may make changes on. All other sites stay readable.</source>
+        <target xml:lang="zh-CN">成员可以在其上进行更改的站点。其他所有站点保持可读。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesScopeAll" xml:space="preserve">
+        <source>All sites — including sites added later</source>
+        <target xml:lang="zh-CN">所有站点——包括以后添加的站点</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.sitesScopeSelected" xml:space="preserve">
+        <source>Only the selected sites</source>
+        <target xml:lang="zh-CN">仅所选站点</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.subtitleWriting" xml:space="preserve">
+        <source>Restrict where editors may make changes: sites, page-tree branches, dimensions and workspaces. Content stays readable for everyone.</source>
+        <target xml:lang="zh-CN">限制编辑人员可以进行更改的范围：站点、页面树分支、维度和工作区。内容对所有人保持可读。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabCapabilities" xml:space="preserve">
+        <source>Permissions</source>
+        <target xml:lang="zh-CN">权限</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabDimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="zh-CN">维度</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabGeneral" xml:space="preserve">
+        <source>General</source>
+        <target xml:lang="zh-CN">常规</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabMembers" xml:space="preserve">
+        <source>Members</source>
+        <target xml:lang="zh-CN">成员</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabSites" xml:space="preserve">
+        <source>Sites</source>
+        <target xml:lang="zh-CN">站点</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabTree" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="zh-CN">文档</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
+        <source>Workspaces</source>
+        <target xml:lang="zh-CN">工作区</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.title" xml:space="preserve">
+        <source>Access roles</source>
+        <target xml:lang="zh-CN">访问角色</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeAllow" xml:space="preserve">
+        <source>Allow</source>
+        <target xml:lang="zh-CN">允许</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeAllowed" xml:space="preserve">
+        <source>Allowed</source>
+        <target xml:lang="zh-CN">已允许</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeClear" xml:space="preserve">
+        <source>Clear</source>
+        <target xml:lang="zh-CN">清除</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeDenied" xml:space="preserve">
+        <source>Denied</source>
+        <target xml:lang="zh-CN">已阻止</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeDeny" xml:space="preserve">
+        <source>Deny</source>
+        <target xml:lang="zh-CN">阻止</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeEmpty" xml:space="preserve">
+        <source>This site has no pages yet.</source>
+        <target xml:lang="zh-CN">此站点还没有页面。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeHint" xml:space="preserve">
+        <source>Without a rule the whole page tree is open. Add an allow rule and everything outside it closes; add deny rules to cut single pages out of a branch. The nearest rule to a page wins.</source>
+        <target xml:lang="zh-CN">没有规则时，整个页面树都是开放的。添加允许规则后，其范围之外的所有内容都会关闭；添加阻止规则可从分支中排除单个页面。距离页面最近的规则优先。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeIncludeDescendants" xml:space="preserve">
+        <source>Include sub-pages</source>
+        <target xml:lang="zh-CN">包括子页面</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
+        <source>Documents</source>
+        <target xml:lang="zh-CN">文档</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
+        <source>Loading pages…</source>
+        <target xml:lang="zh-CN">正在加载页面…</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeNoSites" xml:space="preserve">
+        <source>No site to browse — every site is excluded by the Sites tab.</source>
+        <target xml:lang="zh-CN">没有可浏览的站点——“站点”选项卡排除了所有站点。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeOnlyThisPage" xml:space="preserve">
+        <source>This page only</source>
+        <target xml:lang="zh-CN">仅此页面</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRemoveRule" xml:space="preserve">
+        <source>Remove rule</source>
+        <target xml:lang="zh-CN">移除规则</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRuleBranch" xml:space="preserve">
+        <source>Rule applies to this page and everything below</source>
+        <target xml:lang="zh-CN">规则适用于此页面及其下的所有内容</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeRulePage" xml:space="preserve">
+        <source>Rule applies to this page only</source>
+        <target xml:lang="zh-CN">规则仅适用于此页面</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSelectFirst" xml:space="preserve">
+        <source>Select a page above to allow or deny it.</source>
+        <target xml:lang="zh-CN">在上方选择一个页面以允许或阻止它。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSelected" xml:space="preserve">
+        <source>Selected:</source>
+        <target xml:lang="zh-CN">已选择：</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.treeSiteUnavailable" xml:space="preserve">
+        <source>This site has no node in the live workspace.</source>
+        <target xml:lang="zh-CN">此站点在 Live 工作区中没有节点。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.unavailable" xml:space="preserve">
+        <source>Access roles are currently unavailable.</source>
+        <target xml:lang="zh-CN">访问角色当前不可用。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.unrestricted" xml:space="preserve">
+        <source>Unrestricted</source>
+        <target xml:lang="zh-CN">不受限制</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspaceLive" xml:space="preserve">
+        <source>Live</source>
+        <target xml:lang="zh-CN">Live</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesEmpty" xml:space="preserve">
+        <source>Select at least one workspace, or allow all workspaces.</source>
+        <target xml:lang="zh-CN">请至少选择一个工作区，或允许所有工作区。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesHintWriting" xml:space="preserve">
+        <source>Which workspaces members may work in — edit in, publish into, join collaboratively. With a selection, every other workspace is out, live included. All workspaces stay readable; the website is rendered from live.</source>
+        <target xml:lang="zh-CN">成员可以在哪些工作区中工作——在其中编辑、发布到其中、在其中协作。进行选择后，其他所有工作区（包括 Live）都将被排除。所有工作区都保持可读；网站从 Live 渲染。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesNone" xml:space="preserve">
+        <source>There are no shared workspaces yet.</source>
+        <target xml:lang="zh-CN">还没有共享工作区。</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesScopeAll" xml:space="preserve">
+        <source>All workspaces, including live</source>
+        <target xml:lang="zh-CN">所有工作区，包括 Live</target>
+      </trans-unit>
+      <trans-unit id="accessRoles.workspacesScopeSelected" xml:space="preserve">
+        <source>Only the selected workspaces</source>
+        <target xml:lang="zh-CN">仅所选工作区</target>
+      </trans-unit>
       <trans-unit id="action.cancel" xml:space="preserve">
         <source>Cancel</source>
         <target xml:lang="zh-CN">取消</target>
@@ -65,6 +537,10 @@
       <trans-unit id="clipboard.statusCut" xml:space="preserve">
         <source>Cut</source>
         <target xml:lang="zh-CN">已剪切</target>
+      </trans-unit>
+      <trans-unit id="collaboration.editingRejected" xml:space="preserve">
+        <source>{name} is already editing this element - your changes were not saved.</source>
+        <target xml:lang="zh-CN">{name} 已在编辑此元素——你的更改未保存。</target>
       </trans-unit>
       <trans-unit id="common.actionFailed" xml:space="preserve">
         <source>The action failed.</source>
@@ -190,6 +666,10 @@
         <source>No {0} types can be created here.</source>
         <target xml:lang="zh-CN">此处无法创建任何{0}类型。</target>
       </trans-unit>
+      <trans-unit id="creation.notPermitted" xml:space="preserve">
+        <source>Your access role does not let you add content to this page.</source>
+        <target xml:lang="zh-CN">你的访问角色不允许你向此页面添加内容。</target>
+      </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
         <target xml:lang="zh-CN">文档</target>
@@ -202,13 +682,9 @@
         <source>Relative to “{0}”.</source>
         <target xml:lang="zh-CN">相对于“{0}”。</target>
       </trans-unit>
-      <trans-unit id="dimension.checkParentsFailed" xml:space="preserve">
-        <source>Checking parent documents failed</source>
-        <target xml:lang="zh-CN">检查父级文档失败</target>
-      </trans-unit>
-      <trans-unit id="dimension.checkingParents" xml:space="preserve">
-        <source> Checking which parent documents are missing…</source>
-        <target xml:lang="zh-CN"> 正在检查缺少哪些父级文档…</target>
+      <trans-unit id="dimension.accessLocked" xml:space="preserve">
+        <source>Outside your access role - an administrator can widen it.</source>
+        <target xml:lang="zh-CN">超出你的访问角色范围——管理员可以扩大其范围。</target>
       </trans-unit>
       <trans-unit id="dimension.createAndCopy" xml:space="preserve">
         <source>Create and copy content</source>
@@ -230,13 +706,9 @@
         <source>Creating…</source>
         <target xml:lang="zh-CN">正在创建…</target>
       </trans-unit>
-      <trans-unit id="dimension.missingParentsMany" xml:space="preserve">
-        <source> {0} missing parent documents will be created as well.</source>
-        <target xml:lang="zh-CN"> 缺少的 {0} 个父级文档也将一并创建。</target>
-      </trans-unit>
-      <trans-unit id="dimension.missingParentsOne" xml:space="preserve">
-        <source> 1 missing parent document will be created as well.</source>
-        <target xml:lang="zh-CN"> 缺少的 1 个父级文档也将一并创建。</target>
+      <trans-unit id="dimension.missingParentsCreated" xml:space="preserve">
+        <source> Parent documents missing there are created as well.</source>
+        <target xml:lang="zh-CN"> 该处缺少的父级文档也将一并创建。</target>
       </trans-unit>
       <trans-unit id="dimension.missingVariant" xml:space="preserve">
         <source>The selected document does not exist here yet - create it?</source>
@@ -290,9 +762,17 @@
         <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
         <target xml:lang="zh-CN">该{0}及其包含的所有内容都将被移除。可以通过在工作区中放弃此更改来撤销。</target>
       </trans-unit>
+      <trans-unit id="editing.deleteConfirm.descriptionMany" xml:space="preserve">
+        <source>The selected {0} and everything inside them will be removed. This is undone by discarding the changes from the workspace.</source>
+        <target xml:lang="zh-CN">所选{0}及其包含的所有内容都将被移除。可以通过在工作区中放弃这些更改来撤销。</target>
+      </trans-unit>
       <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
         <source>Delete this {0}?</source>
         <target xml:lang="zh-CN">删除此{0}？</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.titleMany" xml:space="preserve">
+        <source>Delete {0} {1}?</source>
+        <target xml:lang="zh-CN">删除 {0} 个{1}？</target>
       </trans-unit>
       <trans-unit id="editing.deleteFailed" xml:space="preserve">
         <source>Deleting failed</source>
@@ -302,8 +782,16 @@
         <source>document</source>
         <target xml:lang="zh-CN">文档</target>
       </trans-unit>
+      <trans-unit id="editing.entity.documents" xml:space="preserve">
+        <source>documents</source>
+        <target xml:lang="zh-CN">文档</target>
+      </trans-unit>
       <trans-unit id="editing.entity.element" xml:space="preserve">
         <source>element</source>
+        <target xml:lang="zh-CN">元素</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.elements" xml:space="preserve">
+        <source>elements</source>
         <target xml:lang="zh-CN">元素</target>
       </trans-unit>
       <trans-unit id="editing.hide" xml:space="preserve">
@@ -474,6 +962,10 @@
         <source>Now</source>
         <target xml:lang="zh-CN">现在</target>
       </trans-unit>
+      <trans-unit id="editor.pickAssetFailed" xml:space="preserve">
+        <source>Picking asset failed</source>
+        <target xml:lang="zh-CN">选取资产失败</target>
+      </trans-unit>
       <trans-unit id="editor.range.currentValue" xml:space="preserve">
         <source>Current value</source>
         <target xml:lang="zh-CN">当前值</target>
@@ -485,10 +977,6 @@
       <trans-unit id="editor.range.minimum" xml:space="preserve">
         <source>Minimum</source>
         <target xml:lang="zh-CN">最小值</target>
-      </trans-unit>
-      <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
-        <source>References can be set after creation</source>
-        <target xml:lang="zh-CN">创建后可设置引用</target>
       </trans-unit>
       <trans-unit id="editor.reference.goToPage" xml:space="preserve">
         <source>Go to page</source>
@@ -642,6 +1130,190 @@
         <source>Zoom out</source>
         <target xml:lang="zh-CN">缩小</target>
       </trans-unit>
+      <trans-unit id="guest.collection.add" xml:space="preserve">
+        <source>Add content</source>
+        <target xml:lang="zh-CN">添加内容</target>
+      </trans-unit>
+      <trans-unit id="guest.element.create" xml:space="preserve">
+        <source>Create new element</source>
+        <target xml:lang="zh-CN">创建新元素</target>
+      </trans-unit>
+      <trans-unit id="guest.element.options" xml:space="preserve">
+        <source>Element options</source>
+        <target xml:lang="zh-CN">元素选项</target>
+      </trans-unit>
+      <trans-unit id="guest.image.select" xml:space="preserve">
+        <source>Select image</source>
+        <target xml:lang="zh-CN">选择图片</target>
+      </trans-unit>
+      <trans-unit id="guest.presence.editing" xml:space="preserve">
+        <source>{name} is editing</source>
+        <target xml:lang="zh-CN">{name} 正在编辑</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addColumnAfter" xml:space="preserve">
+        <source>Add column after</source>
+        <target xml:lang="zh-CN">在后面插入列</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addColumnBefore" xml:space="preserve">
+        <source>Add column before</source>
+        <target xml:lang="zh-CN">在前面插入列</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addRowAfter" xml:space="preserve">
+        <source>Add row after</source>
+        <target xml:lang="zh-CN">在下方插入行</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.addRowBefore" xml:space="preserve">
+        <source>Add row before</source>
+        <target xml:lang="zh-CN">在上方插入行</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-center" xml:space="preserve">
+        <source>Align center</source>
+        <target xml:lang="zh-CN">居中对齐</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-justify" xml:space="preserve">
+        <source>Justify</source>
+        <target xml:lang="zh-CN">两端对齐</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-left" xml:space="preserve">
+        <source>Align left</source>
+        <target xml:lang="zh-CN">左对齐</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.align-right" xml:space="preserve">
+        <source>Align right</source>
+        <target xml:lang="zh-CN">右对齐</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.blockquote" xml:space="preserve">
+        <source>Blockquote</source>
+        <target xml:lang="zh-CN">引用块</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.bold" xml:space="preserve">
+        <source>Bold</source>
+        <target xml:lang="zh-CN">粗体</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.bulletList" xml:space="preserve">
+        <source>Bullet list</source>
+        <target xml:lang="zh-CN">无序列表</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.code" xml:space="preserve">
+        <source>Inline code</source>
+        <target xml:lang="zh-CN">行内代码</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.codeBlock" xml:space="preserve">
+        <source>Code block</source>
+        <target xml:lang="zh-CN">代码块</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.deleteColumn" xml:space="preserve">
+        <source>Delete column</source>
+        <target xml:lang="zh-CN">删除列</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.deleteRow" xml:space="preserve">
+        <source>Delete row</source>
+        <target xml:lang="zh-CN">删除行</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.deleteTable" xml:space="preserve">
+        <source>Delete table</source>
+        <target xml:lang="zh-CN">删除表格</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-1" xml:space="preserve">
+        <source>Heading 1</source>
+        <target xml:lang="zh-CN">标题 1</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-2" xml:space="preserve">
+        <source>Heading 2</source>
+        <target xml:lang="zh-CN">标题 2</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-3" xml:space="preserve">
+        <source>Heading 3</source>
+        <target xml:lang="zh-CN">标题 3</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-4" xml:space="preserve">
+        <source>Heading 4</source>
+        <target xml:lang="zh-CN">标题 4</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-5" xml:space="preserve">
+        <source>Heading 5</source>
+        <target xml:lang="zh-CN">标题 5</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.heading-6" xml:space="preserve">
+        <source>Heading 6</source>
+        <target xml:lang="zh-CN">标题 6</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.horizontalRule" xml:space="preserve">
+        <source>Horizontal rule</source>
+        <target xml:lang="zh-CN">水平分隔线</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.insertTable" xml:space="preserve">
+        <source>Insert table</source>
+        <target xml:lang="zh-CN">插入表格</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.italic" xml:space="preserve">
+        <source>Italic</source>
+        <target xml:lang="zh-CN">斜体</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.lift" xml:space="preserve">
+        <source>Outdent</source>
+        <target xml:lang="zh-CN">减少缩进</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.link" xml:space="preserve">
+        <source>Link</source>
+        <target xml:lang="zh-CN">链接</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.link-edit" xml:space="preserve">
+        <source>Edit link</source>
+        <target xml:lang="zh-CN">编辑链接</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.mergeOrSplit" xml:space="preserve">
+        <source>Merge or split cells</source>
+        <target xml:lang="zh-CN">合并或拆分单元格</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.orderedList" xml:space="preserve">
+        <source>Ordered list</source>
+        <target xml:lang="zh-CN">有序列表</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.paragraph" xml:space="preserve">
+        <source>Paragraph</source>
+        <target xml:lang="zh-CN">段落</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.removeFormat" xml:space="preserve">
+        <source>Clear formatting</source>
+        <target xml:lang="zh-CN">清除格式</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.sink" xml:space="preserve">
+        <source>Indent</source>
+        <target xml:lang="zh-CN">增加缩进</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.strike" xml:space="preserve">
+        <source>Strikethrough</source>
+        <target xml:lang="zh-CN">删除线</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.styles-block" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="zh-CN">样式</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.styles-inline" xml:space="preserve">
+        <source>Styles</source>
+        <target xml:lang="zh-CN">样式</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.subscript" xml:space="preserve">
+        <source>Subscript</source>
+        <target xml:lang="zh-CN">下标</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.superscript" xml:space="preserve">
+        <source>Superscript</source>
+        <target xml:lang="zh-CN">上标</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.toggleHeaderRow" xml:space="preserve">
+        <source>Toggle header row</source>
+        <target xml:lang="zh-CN">切换标题行</target>
+      </trans-unit>
+      <trans-unit id="guest.toolbar.underline" xml:space="preserve">
+        <source>Underline</source>
+        <target xml:lang="zh-CN">下划线</target>
+      </trans-unit>
+      <trans-unit id="guest.variant.create" xml:space="preserve">
+        <source>Create variant</source>
+        <target xml:lang="zh-CN">创建变体</target>
+      </trans-unit>
       <trans-unit id="history.empty" xml:space="preserve">
         <source>No unpublished changes on this page. Every edit you make appears here until it is published.</source>
         <target xml:lang="zh-CN">此页面没有未发布的更改。你所做的每项编辑都会显示在这里，直到发布为止。</target>
@@ -650,13 +1322,29 @@
         <source>Loading the history…</source>
         <target xml:lang="zh-CN">正在加载历史记录…</target>
       </trans-unit>
+      <trans-unit id="history.older" xml:space="preserve">
+        <source>Older changes on this page are not shown.</source>
+        <target xml:lang="zh-CN">此页面上较早的更改未显示。</target>
+      </trans-unit>
+      <trans-unit id="inspector.accessLockedHint" xml:space="preserve">
+        <source>This page is outside your access role — you can read it, but not change it. An administrator can widen the role.</source>
+        <target xml:lang="zh-CN">此页面超出你的访问角色范围——你可以阅读，但不能更改。管理员可以扩大该角色的范围。</target>
+      </trans-unit>
       <trans-unit id="inspector.editorNotSupported" xml:space="preserve">
         <source>Editor not supported yet: {0}</source>
         <target xml:lang="zh-CN">尚不支持的编辑器：{0}</target>
       </trans-unit>
+      <trans-unit id="inspector.elementLockedHint" xml:space="preserve">
+        <source>is editing this element right now - it is locked until they are done.</source>
+        <target xml:lang="zh-CN">正在编辑此元素——在其完成之前，该元素处于锁定状态。</target>
+      </trans-unit>
       <trans-unit id="inspector.help" xml:space="preserve">
         <source>Help</source>
         <target xml:lang="zh-CN">帮助</target>
+      </trans-unit>
+      <trans-unit id="inspector.hiddenByAncestor" xml:space="preserve">
+        <source>Hidden because a page or element above it is hidden.</source>
+        <target xml:lang="zh-CN">已隐藏，因为其上级页面或元素已隐藏。</target>
       </trans-unit>
       <trans-unit id="inspector.no" xml:space="preserve">
         <source>No</source>
@@ -818,6 +1506,10 @@
         <source>Remove link</source>
         <target xml:lang="zh-CN">移除链接</target>
       </trans-unit>
+      <trans-unit id="link.schemeNotAllowed" xml:space="preserve">
+        <source>This kind of link is not allowed - use http(s), mailto, tel or a relative link.</source>
+        <target xml:lang="zh-CN">不允许此类链接——请使用 http(s)、mailto、tel 或相对链接。</target>
+      </trans-unit>
       <trans-unit id="link.searchAssets" xml:space="preserve">
         <source>Search assets…</source>
         <target xml:lang="zh-CN">搜索资产…</target>
@@ -841,10 +1533,6 @@
       <trans-unit id="link.urlPlaceholder" xml:space="preserve">
         <source>https://example.com</source>
         <target xml:lang="zh-CN">https://example.com</target>
-      </trans-unit>
-      <trans-unit id="media.actionFailed" xml:space="preserve">
-        <source>The action failed.</source>
-        <target xml:lang="zh-CN">操作失败。</target>
       </trans-unit>
       <trans-unit id="media.addTag" xml:space="preserve">
         <source>Add tag…</source>
@@ -1182,6 +1870,10 @@
         <source>Adding the tag failed</source>
         <target xml:lang="zh-CN">添加标签失败</target>
       </trans-unit>
+      <trans-unit id="media.tagFilterSuspended" xml:space="preserve">
+        <source>{0} (not while searching)</source>
+        <target xml:lang="zh-CN">{0}（搜索时不可用）</target>
+      </trans-unit>
       <trans-unit id="media.tagRemoveFailed" xml:space="preserve">
         <source>Removing the tag failed</source>
         <target xml:lang="zh-CN">移除标签失败</target>
@@ -1197,6 +1889,22 @@
       <trans-unit id="media.type" xml:space="preserve">
         <source>Type</source>
         <target xml:lang="zh-CN">类型</target>
+      </trans-unit>
+      <trans-unit id="media.typeAudio" xml:space="preserve">
+        <source>Audio</source>
+        <target xml:lang="zh-CN">音频</target>
+      </trans-unit>
+      <trans-unit id="media.typeDocument" xml:space="preserve">
+        <source>Document</source>
+        <target xml:lang="zh-CN">文档</target>
+      </trans-unit>
+      <trans-unit id="media.typeImage" xml:space="preserve">
+        <source>Image</source>
+        <target xml:lang="zh-CN">图片</target>
+      </trans-unit>
+      <trans-unit id="media.typeVideo" xml:space="preserve">
+        <source>Video</source>
+        <target xml:lang="zh-CN">视频</target>
       </trans-unit>
       <trans-unit id="media.untagged" xml:space="preserve">
         <source>Untagged</source>
@@ -1230,9 +1938,9 @@
         <source>Usage information is unavailable.</source>
         <target xml:lang="zh-CN">使用信息不可用。</target>
       </trans-unit>
-      <trans-unit id="media.working" xml:space="preserve">
-        <source>Working…</source>
-        <target xml:lang="zh-CN">处理中…</target>
+      <trans-unit id="modal.accessRoles" xml:space="preserve">
+        <source>Access roles</source>
+        <target xml:lang="zh-CN">访问角色</target>
       </trans-unit>
       <trans-unit id="modal.adminsOnly" xml:space="preserve">
         <source>Administrators only</source>
@@ -1329,14 +2037,6 @@
       <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
         <source>Search node types…</source>
         <target xml:lang="zh-CN">搜索节点类型…</target>
-      </trans-unit>
-      <trans-unit id="notifications.clear" xml:space="preserve">
-        <source>Clear notifications</source>
-        <target xml:lang="zh-CN">清除通知</target>
-      </trans-unit>
-      <trans-unit id="notifications.clearFailed" xml:space="preserve">
-        <source>Clearing failed</source>
-        <target xml:lang="zh-CN">清除失败</target>
       </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
@@ -1437,6 +2137,10 @@
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="zh-CN">此页面已被删除。恢复后它会回来——一旦删除被发布，它将永久消失。</target>
+      </trans-unit>
+      <trans-unit id="preview.guestMissing" xml:space="preserve">
+        <source>The page loaded without the Studio editing script - selecting and editing in the preview are unavailable on it.</source>
+        <target xml:lang="zh-CN">页面加载时未包含 Studio 编辑脚本——无法在预览中选择和编辑此页面。</target>
       </trans-unit>
       <trans-unit id="preview.openInNewTab" xml:space="preserve">
         <source>Open page in a new tab</source>
@@ -1750,6 +2454,14 @@
         <source>Delete</source>
         <target xml:lang="zh-CN">删除</target>
       </trans-unit>
+      <trans-unit id="sites.deleteDomainDescription" xml:space="preserve">
+        <source>The site is no longer reachable under this domain.</source>
+        <target xml:lang="zh-CN">该站点将无法再通过此域名访问。</target>
+      </trans-unit>
+      <trans-unit id="sites.deleteDomainTitle" xml:space="preserve">
+        <source>Delete domain "{0}"?</source>
+        <target xml:lang="zh-CN">删除域名“{0}”？</target>
+      </trans-unit>
       <trans-unit id="sites.deleteTitle" xml:space="preserve">
         <source>Delete site "{0}"?</source>
         <target xml:lang="zh-CN">删除站点“{0}”？</target>
@@ -1941,10 +2653,6 @@
       <trans-unit id="sites.unavailable" xml:space="preserve">
         <source>Sites are currently unavailable.</source>
         <target xml:lang="zh-CN">站点当前不可用。</target>
-      </trans-unit>
-      <trans-unit id="sites.unsetPrimary" xml:space="preserve">
-        <source>Unset primary</source>
-        <target xml:lang="zh-CN">取消主要</target>
       </trans-unit>
       <trans-unit id="sites.wentOffline" xml:space="preserve">
         <source>The site "{0}" is now offline.</source>
@@ -2245,10 +2953,6 @@
       <trans-unit id="trash.restoredWithAncestors" xml:space="preserve">
         <source>Restored {0} and {1} more.</source>
         <target xml:lang="zh-CN">已恢复 {0} 及另外 {1} 项。</target>
-      </trans-unit>
-      <trans-unit id="trash.truncated" xml:space="preserve">
-        <source>Only the most recently deleted nodes are listed.</source>
-        <target xml:lang="zh-CN">仅列出最近删除的节点。</target>
       </trans-unit>
       <trans-unit id="tree.clearFilter" xml:space="preserve">
         <source>Clear filter</source>
@@ -2702,10 +3406,6 @@
         <source>the base workspace</source>
         <target xml:lang="zh-CN">基础工作区</target>
       </trans-unit>
-      <trans-unit id="workspace.cannotBeUndone" xml:space="preserve">
-        <source>This cannot be undone.</source>
-        <target xml:lang="zh-CN">此操作无法撤销。</target>
-      </trans-unit>
       <trans-unit id="workspace.cannotPublishHere" xml:space="preserve">
         <source>You cannot publish to this workspace</source>
         <target xml:lang="zh-CN">你无法发布到此工作区</target>
@@ -2729,14 +3429,6 @@
       <trans-unit id="workspace.changesPublished" xml:space="preserve">
         <source>Changes published.</source>
         <target xml:lang="zh-CN">更改已发布。</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborative" xml:space="preserve">
-        <source>Collaborative</source>
-        <target xml:lang="zh-CN">协作</target>
-      </trans-unit>
-      <trans-unit id="workspace.collaborativeContext" xml:space="preserve">
-        <source>Editing together in a shared workspace</source>
-        <target xml:lang="zh-CN">在共享工作区中共同编辑</target>
       </trans-unit>
       <trans-unit id="workspace.collaborativeGroup" xml:space="preserve">
         <source>Collaborative editing (with everyone in the workspace)</source>
@@ -2794,34 +3486,6 @@
         <source>Changes discarded.</source>
         <target xml:lang="zh-CN">更改已放弃。</target>
       </trans-unit>
-      <trans-unit id="workspace.discardAll" xml:space="preserve">
-        <source>Discard all</source>
-        <target xml:lang="zh-CN">放弃所有</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardAllMany" xml:space="preserve">
-        <source>All {0} pending changes will be discarded.</source>
-        <target xml:lang="zh-CN">全部 {0} 项待处理更改都将被放弃。</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardAllOne" xml:space="preserve">
-        <source>All 1 pending change will be discarded.</source>
-        <target xml:lang="zh-CN">全部 1 项待处理更改将被放弃。</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardAllTitle" xml:space="preserve">
-        <source>Discard all changes?</source>
-        <target xml:lang="zh-CN">放弃所有更改？</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardPageMany" xml:space="preserve">
-        <source>{0} pending changes on this page will be discarded.</source>
-        <target xml:lang="zh-CN">此页面上的 {0} 项待处理更改将被放弃。</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardPageOne" xml:space="preserve">
-        <source>1 pending change on this page will be discarded.</source>
-        <target xml:lang="zh-CN">此页面上的 1 项待处理更改将被放弃。</target>
-      </trans-unit>
-      <trans-unit id="workspace.discardPageTitle" xml:space="preserve">
-        <source>Discard changes on this page?</source>
-        <target xml:lang="zh-CN">放弃此页面上的更改？</target>
-      </trans-unit>
       <trans-unit id="workspace.live" xml:space="preserve">
         <source>Live</source>
         <target xml:lang="zh-CN">Live</target>
@@ -2829,14 +3493,6 @@
       <trans-unit id="workspace.manyChanges" xml:space="preserve">
         <source>{0} changes</source>
         <target xml:lang="zh-CN">{0} 项更改</target>
-      </trans-unit>
-      <trans-unit id="workspace.moreActions" xml:space="preserve">
-        <source>More publish and discard actions</source>
-        <target xml:lang="zh-CN">更多发布和放弃操作</target>
-      </trans-unit>
-      <trans-unit id="workspace.noPendingChanges" xml:space="preserve">
-        <source>No pending changes</source>
-        <target xml:lang="zh-CN">没有待处理的更改</target>
       </trans-unit>
       <trans-unit id="workspace.oneChange" xml:space="preserve">
         <source>1 change</source>
@@ -2846,10 +3502,6 @@
         <source>{0} pending changes</source>
         <target xml:lang="zh-CN">{0} 项待处理更改</target>
       </trans-unit>
-      <trans-unit id="workspace.publishAllChanges" xml:space="preserve">
-        <source>Publish all</source>
-        <target xml:lang="zh-CN">发布所有</target>
-      </trans-unit>
       <trans-unit id="workspace.publishDenied" xml:space="preserve">
         <source>You are not allowed to publish to "{0}"</source>
         <target xml:lang="zh-CN">你无权发布到“{0}”</target>
@@ -2857,18 +3509,6 @@
       <trans-unit id="workspace.publishOrDiscardFirst" xml:space="preserve">
         <source>Publish or discard your changes first.</source>
         <target xml:lang="zh-CN">请先发布或放弃你的更改。</target>
-      </trans-unit>
-      <trans-unit id="workspace.publishPendingMany" xml:space="preserve">
-        <source>Publish {0} pending changes</source>
-        <target xml:lang="zh-CN">发布 {0} 项待处理更改</target>
-      </trans-unit>
-      <trans-unit id="workspace.publishPendingOne" xml:space="preserve">
-        <source>Publish 1 pending change</source>
-        <target xml:lang="zh-CN">发布 1 项待处理更改</target>
-      </trans-unit>
-      <trans-unit id="workspace.publishTarget" xml:space="preserve">
-        <source>Workspace to publish to</source>
-        <target xml:lang="zh-CN">发布目标工作区</target>
       </trans-unit>
       <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
         <source>Review and publish</source>
@@ -2886,10 +3526,6 @@
         <source>Editing in {0}, publishing to {1}</source>
         <target xml:lang="zh-CN">正在 {0} 中编辑，发布到 {1}</target>
       </trans-unit>
-      <trans-unit id="workspace.publishThisPage" xml:space="preserve">
-        <source>Publish this page</source>
-        <target xml:lang="zh-CN">发布此页面</target>
-      </trans-unit>
       <trans-unit id="workspace.publishing.failed" xml:space="preserve">
         <source>Publishing failed</source>
         <target xml:lang="zh-CN">发布失败</target>
@@ -2897,10 +3533,6 @@
       <trans-unit id="workspace.readOnly" xml:space="preserve">
         <source>read-only</source>
         <target xml:lang="zh-CN">只读</target>
-      </trans-unit>
-      <trans-unit id="workspace.review.button" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="zh-CN">审阅更改</target>
       </trans-unit>
       <trans-unit id="workspace.review.buttonHint" xml:space="preserve">
         <source>Review pending changes between workspaces</source>
@@ -2950,13 +3582,13 @@
         <source>Hide changes</source>
         <target xml:lang="zh-CN">隐藏更改</target>
       </trans-unit>
+      <trans-unit id="workspace.review.loadFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="zh-CN">无法加载更改。</target>
+      </trans-unit>
       <trans-unit id="workspace.review.showChanges" xml:space="preserve">
         <source>Show changes</source>
         <target xml:lang="zh-CN">显示更改</target>
-      </trans-unit>
-      <trans-unit id="workspace.review.historyTruncated" xml:space="preserve">
-        <source>Only the most recent changes are shown.</source>
-        <target xml:lang="zh-CN">仅显示最近的更改。</target>
       </trans-unit>
       <trans-unit id="workspace.review.loading" xml:space="preserve">
         <source>Loading changes…</source>
@@ -3069,22 +3701,6 @@
       <trans-unit id="workspaceGraph.event.visibilityChanged" xml:space="preserve">
         <source>Visibility changed</source>
         <target xml:lang="zh-CN">可见性已更改</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.change" xml:space="preserve">
-        <source>Pending change</source>
-        <target xml:lang="zh-CN">待处理更改</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.outdated" xml:space="preserve">
-        <source>Base has newer changes</source>
-        <target xml:lang="zh-CN">基础工作区有更新的更改</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.personal" xml:space="preserve">
-        <source>Personal workspace</source>
-        <target xml:lang="zh-CN">个人工作区</target>
-      </trans-unit>
-      <trans-unit id="workspaceGraph.legend.shared" xml:space="preserve">
-        <source>Shared workspace</source>
-        <target xml:lang="zh-CN">共享工作区</target>
       </trans-unit>
       <trans-unit id="workspaceGraph.loadFailed" xml:space="preserve">
         <source>The workspaces could not be loaded.</source>

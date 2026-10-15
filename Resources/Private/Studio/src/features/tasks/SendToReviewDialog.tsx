@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
+import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
 
 /**
@@ -30,9 +31,10 @@ export function SendToReviewDialog({
 }) {
   const [comment, setComment] = useState('')
 
-  useEffect(() => {
-    if (open) setComment('')
-  }, [open])
+  // Every open starts with an empty comment.
+  useValueChange(open, (isOpen) => {
+    if (isOpen) setComment('')
+  })
 
   const submit = (event: FormEvent) => {
     event.preventDefault()

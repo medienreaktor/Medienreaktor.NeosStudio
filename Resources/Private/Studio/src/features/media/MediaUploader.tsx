@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
-import { uploadAsset } from '@/api/neos/endpoints/assets'
+import { invalidateAssetLists, uploadAsset } from '@/api/neos/endpoints/assets'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -34,15 +34,17 @@ export function MediaUploader({
 
   const onDrop = useCallback(
     (files: File[]) => {
-      for (const file of files) {
+      const uploads = files.map((file) => {
         const id = `upload-${uploadCounter++}`
         setItems((current) => [
           ...current,
           { id, name: file.name, progress: 0, status: 'uploading' },
         ])
-        void uploadAsset(file, {
+        return uploadAsset(file, {
           collection,
           tags: tag ? [tag] : [],
+          // The lists refresh once for the whole batch, below.
+          invalidate: false,
           onProgress: (fraction) =>
             setItems((current) =>
               current.map((item) =>
@@ -71,7 +73,9 @@ export function MediaUploader({
               ]),
             })
           })
-      }
+      })
+      // The asset lists refresh once the whole batch is in, not per file.
+      void Promise.allSettled(uploads).then(() => invalidateAssetLists())
     },
     [collection, tag],
   )

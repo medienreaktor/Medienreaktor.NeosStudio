@@ -1,12 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { skipToken, useQuery } from '@tanstack/react-query'
 import { useActiveContentRepositoryId } from '../activeContentRepository'
-import { apiFetch, contentRepositoryPath } from '../client'
+import { api, unwrap } from '../client'
 import { neosKeys } from '../keys'
-import {
-  type ContentDimension,
-  type ContentRepository,
-  parseDimensionSpacePoint,
-} from '../schema'
+import { type ContentDimension, parseDimensionSpacePoint } from '../schema'
 
 /**
  * The content repository of the selected site (Neos.Api's ContentRepositories
@@ -18,10 +14,17 @@ export function useContentRepository(enabled = true) {
   const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
     queryKey: neosKeys.contentRepository(contentRepositoryId ?? ''),
-    queryFn: () =>
-      apiFetch<ContentRepository>(contentRepositoryPath(contentRepositoryId!)),
+    queryFn:
+      enabled && contentRepositoryId !== null
+        ? ({ signal }) =>
+            unwrap(
+              api.GET('/cr/{contentRepositoryId}', {
+                params: { path: { contentRepositoryId } },
+                signal,
+              }),
+            )
+        : skipToken,
     staleTime: Infinity,
-    enabled: enabled && contentRepositoryId !== null,
   })
 }
 

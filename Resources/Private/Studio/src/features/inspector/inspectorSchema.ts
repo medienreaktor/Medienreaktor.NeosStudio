@@ -193,6 +193,15 @@ const DATA_TYPE_EDITORS: Record<string, string> = {
     'Neos.Neos/Inspector/Editors/ImageEditor',
   'Neos\\Media\\Domain\\Model\\Asset':
     'Neos.Neos/Inspector/Editors/AssetEditor',
+  'Neos\\Media\\Domain\\Model\\Audio':
+    'Neos.Neos/Inspector/Editors/AssetEditor',
+  'Neos\\Media\\Domain\\Model\\Document':
+    'Neos.Neos/Inspector/Editors/AssetEditor',
+  'Neos\\Media\\Domain\\Model\\Video':
+    'Neos.Neos/Inspector/Editors/AssetEditor',
+  // The AssetEditor renders a list for collection types (MultiAssetFieldEditor).
+  'array<Neos\\Media\\Domain\\Model\\Asset>':
+    'Neos.Neos/Inspector/Editors/AssetEditor',
 }
 
 /** The editor a property of this type gets when it configures none itself, or null if the type has no default. */
@@ -200,13 +209,88 @@ export function defaultEditorForType(type: string): string | null {
   return DATA_TYPE_EDITORS[type] ?? null
 }
 
+/** The asset editors' default features (Neos' dataTypes settings). */
+const ASSET_FEATURES = { features: { upload: true, mediaBrowser: true } }
+
 /**
  * Default editor options per property type, applied when the property keeps
- * its type's default editor (mirroring how the dataTypes settings merge in
- * Neos): array properties are a multi-select unless configured otherwise.
+ * its type's default editor - the editorOptions of Neos' dataTypes settings,
+ * merged under the property's own the way Neos merges them (deeply): array
+ * properties are a multi-select, images crop with the default presets, audio
+ * and video pickers are constrained to their media type.
  */
 const DATA_TYPE_EDITOR_OPTIONS: Record<string, Record<string, unknown>> = {
-  array: { multiple: true },
+  array: { multiple: true, placeholder: 'Choose' },
+  'Neos\\Media\\Domain\\Model\\ImageInterface': {
+    maximumFileSize: null,
+    features: { crop: true, upload: true, mediaBrowser: true, resize: false },
+    crop: {
+      aspectRatio: {
+        options: {
+          square: { width: 1, height: 1, label: 'Square' },
+          fourFive: { width: 4, height: 5 },
+          fiveSeven: { width: 5, height: 7 },
+          twoThree: { width: 2, height: 3 },
+          fourThree: { width: 4, height: 3 },
+          sixteenNine: { width: 16, height: 9 },
+        },
+        enableOriginal: true,
+        allowCustom: true,
+        locked: { width: 0, height: 0 },
+      },
+    },
+  },
+  'Neos\\Media\\Domain\\Model\\Asset': ASSET_FEATURES,
+  'Neos\\Media\\Domain\\Model\\Audio': {
+    ...ASSET_FEATURES,
+    constraints: { mediaTypes: ['audio/*'] },
+  },
+  'Neos\\Media\\Domain\\Model\\Document': ASSET_FEATURES,
+  'Neos\\Media\\Domain\\Model\\Video': {
+    ...ASSET_FEATURES,
+    constraints: { mediaTypes: ['video/*'] },
+  },
+  'array<Neos\\Media\\Domain\\Model\\Asset>': {
+    multiple: true,
+    ...ASSET_FEATURES,
+  },
+  DateTime: { format: 'd-m-Y' },
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+/** Deep merge of option objects, later ones winning - Neos' configuration merge. */
+function mergeOptions(
+  base: Record<string, unknown> | undefined,
+  override: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...base }
+  for (const [key, value] of Object.entries(override ?? {})) {
+    result[key] =
+      isPlainObject(value) && isPlainObject(result[key])
+        ? mergeOptions(result[key], value)
+        : value
+  }
+  return result
+}
+
+/**
+ * A property's (or creation dialog element's) editor options: its configured
+ * ones over its type's defaults when it keeps the type's default editor.
+ */
+export function editorOptionsFor(
+  type: string,
+  editor: string | null,
+  configured: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  return mergeOptions(
+    editor === defaultEditorForType(type)
+      ? DATA_TYPE_EDITOR_OPTIONS[type]
+      : undefined,
+    configured,
+  )
 }
 
 /**
@@ -322,12 +406,11 @@ export function buildInspectorSchema(nodeType: NodeType): InspectorTab[] {
               : propertyConfig.ui?.reloadIfChanged
                 ? 'element'
                 : 'none',
-            editorOptions: {
-              ...(editor === defaultEditor
-                ? DATA_TYPE_EDITOR_OPTIONS[type]
-                : undefined),
-              ...propertyConfig.ui?.inspector?.editorOptions,
-            },
+            editorOptions: editorOptionsFor(
+              type,
+              editor,
+              propertyConfig.ui?.inspector?.editorOptions,
+            ),
           },
         }
       }

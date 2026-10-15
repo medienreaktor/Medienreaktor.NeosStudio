@@ -1,22 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
+import { skipToken, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
-import { queryString } from '../../http/request'
-import { apiFetch, contentRepositoryPath, fetchAllPages } from '../client'
+import { api, fetchAllPages, unwrap } from '../client'
 import { neosKeys } from '../keys'
 import type {
   Node,
   NodeAddress,
   NodeReference,
   NodeVariantListing,
-  UriPathSegment,
   ViewData,
 } from '../schema'
-import {
-  fetchNodeTypes,
-  isOfType,
-  matchesNodeTypeFilter,
-  nodeTypeMap,
-} from './nodeTypes'
+import { nodeAddressKey } from '../schema'
+import type { operations } from '../schema/openapi'
+import { fetchNodeTypes, matchesNodeTypeFilter, nodeTypeMap } from './nodeTypes'
 
 /**
  * Reading nodes (Neos.Api's Nodes tag). A node is addressed by a NodeAddress -
@@ -32,14 +27,21 @@ export const DOCUMENT_NODE_TYPE = 'Neos.Neos:Document'
 export const CONTENT_NODE_TYPES =
   'Neos.Neos:Content,Neos.Neos:ContentCollection'
 
-/** `/cr/{contentRepositoryId}/nodes`, for listings and creation. */
-export function nodesPath(address: Pick<NodeAddress, 'contentRepositoryId'>) {
-  return `${contentRepositoryPath(address.contentRepositoryId)}/nodes`
-}
+/** The query parameters of getNode (Neos.Api's). */
+type NodeQuery = NonNullable<operations['getNode']['parameters']['query']>
 
-/** `/cr/{contentRepositoryId}/nodes/{nodeAggregateId}{suffix}`. */
-export function nodePath(address: NodeAddress, suffix = ''): string {
-  return `${nodesPath(address)}/${encodeURIComponent(address.nodeAggregateId)}${suffix}`
+/** The query parameters of listNodes (Neos.Api's). */
+type NodeListQuery = NonNullable<operations['listNodes']['parameters']['query']>
+
+const NODES = '/cr/{contentRepositoryId}/nodes'
+const NODE = '/cr/{contentRepositoryId}/nodes/{nodeAggregateId}'
+
+/** The path parameters of a node operation. */
+export function nodePathParams(address: NodeAddress) {
+  return {
+    contentRepositoryId: address.contentRepositoryId,
+    nodeAggregateId: address.nodeAggregateId,
+  }
 }
 
 /** The subgraph of the address, as the query parameters of a node operation. */
@@ -50,13 +52,24 @@ export function subgraphOf(address: NodeAddress) {
   }
 }
 
-/** GET the node at the address, with the given further query parameters. */
+/**
+ * GET the node at the address, with the given further query parameters (an
+ * undefined one leaves the address's out, e.g. dimensionSpacePoint for the
+ * default one).
+ */
 export function getNode(
   address: NodeAddress,
-  params: Record<string, string | boolean | undefined> = {},
+  params: NodeQuery = {},
+  signal?: AbortSignal,
 ): Promise<Node> {
-  return apiFetch<Node>(
-    nodePath(address, queryString({ ...subgraphOf(address), ...params })),
+  return unwrap(
+    api.GET(NODE, {
+      params: {
+        path: nodePathParams(address),
+        query: { ...subgraphOf(address), ...params },
+      },
+      signal,
+    }),
   )
 }
 
@@ -77,15 +90,23 @@ function loadNode(
   address: NodeAddress,
   nodeTypes?: string,
   removed = false,
+  signal?: AbortSignal,
 ): Promise<Node> {
-  return getNode(address, hasChildrenParams(nodeTypes, removed))
+  return getNode(address, hasChildrenParams(nodeTypes, removed), signal)
 }
 
-export function useNode(address: NodeAddress | null, enabled = true) {
+export function useNode(
+  address: NodeAddress | null,
+  enabled = true,
+  /** Read a removed (deleted) node - without this it does not exist for the API. */
+  removed = false,
+) {
   return useQuery({
-    queryKey: neosKeys.nodes.get(address),
-    queryFn: () => loadNode(address!),
-    enabled: enabled && address !== null,
+    queryKey: neosKeys.nodes.get(address, undefined, removed),
+    queryFn:
+      enabled && address !== null
+        ? ({ signal }) => loadNode(address, undefined, removed, signal)
+        : skipToken,
   })
 }
 
@@ -98,7 +119,7 @@ export function fetchNode(
 ): Promise<Node> {
   return queryClient.fetchQuery({
     queryKey: neosKeys.nodes.get(address, nodeTypes, removed),
-    queryFn: () => loadNode(address, nodeTypes, removed),
+    queryFn: ({ signal }) => loadNode(address, nodeTypes, removed, signal),
   })
 }
 
@@ -119,16 +140,24 @@ export function fetchNode(
 export async function renderNodeElement(
   address: NodeAddress,
   fusionPath: string,
+  signal?: AbortSignal,
 ): Promise<string> {
-  const { html } = await apiFetch<ViewData & { html?: unknown }>(
-    `/views/fusionPathHtml${queryString({
-      contentRepositoryId: address.contentRepositoryId,
-      nodeAggregateId: address.nodeAggregateId,
-      ...subgraphOf(address),
-      renderingMode: 'inPlace',
-      'arguments[fusionPath]': fusionPath,
-    })}`,
+  const view: ViewData & { html?: unknown } = await unwrap(
+    api.GET('/views/{viewName}', {
+      params: {
+        path: { viewName: 'fusionPathHtml' },
+        query: {
+          contentRepositoryId: address.contentRepositoryId,
+          nodeAggregateId: address.nodeAggregateId,
+          ...subgraphOf(address),
+          renderingMode: 'inPlace',
+          arguments: { fusionPath },
+        },
+      },
+      signal,
+    }),
   )
+  const { html } = view
   if (typeof html !== 'string' || html.trim() === '') {
     throw new Error('The element rendered no HTML')
   }
@@ -143,12 +172,16 @@ export async function renderNodeElement(
 export async function generateUriPathSegment(
   address: NodeAddress,
   text: string,
+  signal?: AbortSignal,
 ): Promise<string> {
-  const { uriPathSegment } = await apiFetch<UriPathSegment>(
-    nodePath(
-      address,
-      `/uripathsegment${queryString({ ...subgraphOf(address), text: text || undefined })}`,
-    ),
+  const { uriPathSegment } = await unwrap(
+    api.GET(`${NODE}/uripathsegment`, {
+      params: {
+        path: nodePathParams(address),
+        query: { ...subgraphOf(address), text: text || undefined },
+      },
+      signal,
+    }),
   )
   return uriPathSegment
 }
@@ -158,30 +191,22 @@ export async function generateUriPathSegment(
  * space point) and every point it is reachable in (meta.coveredDimensionSpacePoints,
  * shine-through included). A point outside them needs a variant first.
  */
-function loadNodeVariants(address: NodeAddress): Promise<NodeVariantListing> {
-  return apiFetch<NodeVariantListing>(
-    nodePath(
-      address,
-      `/variants${queryString({ workspaceName: address.workspaceName })}`,
-    ),
-  )
-}
-
 export function useNodeVariants(address: NodeAddress | null, enabled = true) {
   return useQuery({
     queryKey: neosKeys.nodes.variants(address),
-    queryFn: () => loadNodeVariants(address!),
-    enabled: enabled && address !== null,
-  })
-}
-
-/** Imperative variant of useNodeVariants. */
-export function fetchNodeVariants(
-  address: NodeAddress,
-): Promise<NodeVariantListing> {
-  return queryClient.fetchQuery({
-    queryKey: neosKeys.nodes.variants(address),
-    queryFn: () => loadNodeVariants(address),
+    queryFn:
+      enabled && address !== null
+        ? ({ signal }): Promise<NodeVariantListing> =>
+            unwrap(
+              api.GET(`${NODE}/variants`, {
+                params: {
+                  path: nodePathParams(address),
+                  query: { workspaceName: address.workspaceName },
+                },
+                signal,
+              }),
+            )
+        : skipToken,
   })
 }
 
@@ -189,14 +214,19 @@ export function fetchNodeVariants(
  * The node types the content model allows as children of the node, as the
  * classic UI derives them: for a tethered node (an autocreated collection)
  * the constraints of its parent's tethered child node, for any other node its
- * own node type's.
+ * own node type's. Only the parent is needed, but Neos.Api has no include
+ * for it alone - the ancestors' first is the parent.
  */
 async function loadAllowedChildNodeTypes(
   address: NodeAddress,
+  signal?: AbortSignal,
 ): Promise<string[]> {
   const [node, nodeTypes] = await Promise.all([
-    getNode(address, { include: 'ancestors' }),
-    fetchNodeTypes('allowedChildNodeTypes,tetheredChildNodes'),
+    getNode(address, { include: 'ancestors' }, signal),
+    fetchNodeTypes(
+      address.contentRepositoryId,
+      'allowedChildNodeTypes,tetheredChildNodes',
+    ),
   ])
   const types = nodeTypeMap(nodeTypes)
   if (node.classification === 'tethered' && node.name !== null) {
@@ -221,7 +251,7 @@ export function fetchAllowedChildNodeTypes(
 ): Promise<string[]> {
   return queryClient.fetchQuery({
     queryKey: neosKeys.nodes.allowedChildNodeTypes(address),
-    queryFn: () => loadAllowedChildNodeTypes(address),
+    queryFn: ({ signal }) => loadAllowedChildNodeTypes(address, signal),
     staleTime: Infinity,
   })
 }
@@ -230,9 +260,11 @@ export function fetchAllowedChildNodeTypes(
 export function useAllowedChildNodeTypes(address: NodeAddress | null) {
   return useQuery({
     queryKey: neosKeys.nodes.allowedChildNodeTypes(address),
-    queryFn: () => loadAllowedChildNodeTypes(address!),
+    queryFn:
+      address !== null
+        ? ({ signal }) => loadAllowedChildNodeTypes(address, signal)
+        : skipToken,
     staleTime: Infinity,
-    enabled: address !== null,
   })
 }
 
@@ -240,16 +272,21 @@ export function useAllowedChildNodeTypes(address: NodeAddress | null) {
  * The ancestors, closest first (parent, grandparent, ... up to the site node -
  * the content repository root is not included).
  */
-async function loadAncestors(address: NodeAddress): Promise<Node[]> {
-  const node = await getNode(address, { include: 'ancestors' })
+async function loadAncestors(
+  address: NodeAddress,
+  signal?: AbortSignal,
+): Promise<Node[]> {
+  const node = await getNode(address, { include: 'ancestors' }, signal)
   return node.ancestors ?? []
 }
 
 export function useNodeAncestors(address: NodeAddress | null, enabled = true) {
   return useQuery({
     queryKey: neosKeys.nodes.ancestors(address),
-    queryFn: () => loadAncestors(address!),
-    enabled: enabled && address !== null,
+    queryFn:
+      enabled && address !== null
+        ? ({ signal }) => loadAncestors(address, signal)
+        : skipToken,
   })
 }
 
@@ -264,14 +301,16 @@ export async function fetchAncestors(
   const [ancestors, types] = await Promise.all([
     queryClient.fetchQuery({
       queryKey: neosKeys.nodes.ancestors(address),
-      queryFn: () => loadAncestors(address),
+      queryFn: ({ signal }) => loadAncestors(address, signal),
     }),
-    nodeTypes ? fetchNodeTypes() : Promise.resolve(null),
+    nodeTypes
+      ? fetchNodeTypes(address.contentRepositoryId)
+      : Promise.resolve(null),
   ])
-  if (types === null) return ancestors
+  if (types === null || !nodeTypes) return ancestors
   const map = nodeTypeMap(types)
   return ancestors.filter((ancestor) =>
-    matchesNodeTypeFilter(map, ancestor.nodeType, nodeTypes!),
+    matchesNodeTypeFilter(map, ancestor.nodeType, nodeTypes),
   )
 }
 
@@ -283,31 +322,78 @@ export async function fetchAncestors(
 export function useNodeReferences(address: NodeAddress | null, enabled = true) {
   return useQuery({
     queryKey: neosKeys.nodes.references(address),
-    queryFn: () => getNode(address!, { include: 'references.node' }),
-    enabled: enabled && address !== null,
+    queryFn:
+      enabled && address !== null
+        ? ({ signal }) =>
+            getNode(address, { include: 'references.node' }, signal)
+        : skipToken,
   })
+}
+
+/** How many ids one filterByNodeAggregateId request takes at most. */
+const NODE_IDS_PER_REQUEST = 100
+
+/**
+ * The nodes with these aggregate ids in one subgraph (listNodes'
+ * filterByNodeAggregateId), up to 100 per request - e.g. the labels of the
+ * nodes a diff names. Ids the subgraph lacks or the account may not read are
+ * left out. A dimension space point left undefined is the default one.
+ */
+export async function listNodesById(
+  contentRepositoryId: string,
+  subgraph: { workspaceName: string; dimensionSpacePoint?: string },
+  nodeAggregateIds: string[],
+  params: Pick<NodeListQuery, 'include' | 'includeRemoved'> = {},
+  signal?: AbortSignal,
+): Promise<Node[]> {
+  const unique = [...new Set(nodeAggregateIds)]
+  const chunks: string[][] = []
+  for (let i = 0; i < unique.length; i += NODE_IDS_PER_REQUEST) {
+    chunks.push(unique.slice(i, i + NODE_IDS_PER_REQUEST))
+  }
+  const listings = await Promise.all(
+    chunks.map((ids) =>
+      unwrap(
+        api.GET(NODES, {
+          params: {
+            path: { contentRepositoryId },
+            query: {
+              ...subgraph,
+              filterByNodeAggregateId: ids.join(','),
+              limit: ids.length,
+              ...params,
+            },
+          },
+          signal,
+        }),
+      ),
+    ),
+  )
+  return listings.flatMap((listing) => listing.data)
 }
 
 /** The references of a node read with include=references, by name. */
 export function nodeReferences(node: Node): Record<string, NodeReference[]> {
-  return (node.references ?? {}) as Record<string, NodeReference[]>
+  return node.references ?? {}
 }
 
-/** The query listing the descendants of a node, with their ancestors. */
+/** The listNodes query of the descendants of a node, with their ancestors. */
 function descendantsQuery(
   context: NodeAddress,
   nodeTypes: string,
-  params: Record<string, string | number | undefined>,
-): string {
-  return `${nodesPath(context)}${queryString({
+  params: NodeListQuery,
+): NodeListQuery {
+  return {
     ...subgraphOf(context),
-    'filterByHierarchy[type]': 'descendantOf',
-    'filterByHierarchy[nodeAggregateId]': context.nodeAggregateId,
+    filterByHierarchy: {
+      type: 'descendantOf',
+      nodeAggregateId: context.nodeAggregateId,
+    },
     filterByNodeType: nodeTypes || undefined,
     // The ancestors locate a hit: its breadcrumb, its place for access rules.
     include: 'ancestors',
     ...params,
-  })}`
+  }
 }
 
 /**
@@ -320,9 +406,19 @@ export async function searchNodes(
   term: string,
   nodeTypes: string,
   limit = 20,
+  signal?: AbortSignal,
 ): Promise<Node[]> {
-  const listing = await apiFetch<{ data: Node[] }>(
-    descendantsQuery(context, nodeTypes, { search: term || undefined, limit }),
+  const listing = await unwrap(
+    api.GET(NODES, {
+      params: {
+        path: { contentRepositoryId: context.contentRepositoryId },
+        query: descendantsQuery(context, nodeTypes, {
+          search: term || undefined,
+          limit,
+        }),
+      },
+      signal,
+    }),
   )
   return listing.data
 }
@@ -352,41 +448,38 @@ export function useFilteredDescendants(
 ) {
   return useQuery({
     queryKey: neosKeys.nodes.descendants(context, { nodeTypes, title }),
-    queryFn: () =>
-      fetchAllPages<Node>(
-        descendantsQuery(context!, nodeTypes, {
-          filterByProperty:
-            title !== ''
-              ? `title *=~ ${propertyCriteriaLiteral(title)}`
-              : undefined,
-        }),
-      ),
-    enabled: enabled && context !== null,
+    queryFn:
+      enabled && context !== null
+        ? ({ signal }) =>
+            fetchAllPages((page) =>
+              unwrap(
+                api.GET(NODES, {
+                  params: {
+                    path: { contentRepositoryId: context.contentRepositoryId },
+                    query: descendantsQuery(context, nodeTypes, {
+                      filterByProperty:
+                        title !== ''
+                          ? `title *=~ ${propertyCriteriaLiteral(title)}`
+                          : undefined,
+                      ...page,
+                    }),
+                  },
+                  signal,
+                }),
+              ),
+            )
+        : skipToken,
   })
 }
 
 /**
- * The labels of the documents from the site down to the node, the node's own
- * last - for a node read with its ancestors (search hits).
- */
-export async function documentBreadcrumb(node: Node): Promise<string[]> {
-  const types = nodeTypeMap(await fetchNodeTypes())
-  return [
-    ...(node.ancestors ?? [])
-      .filter((ancestor) =>
-        isOfType(types, ancestor.nodeType, DOCUMENT_NODE_TYPE),
-      )
-      .map((ancestor) => ancestor.label)
-      .reverse(),
-    node.label,
-  ]
-}
-
-/**
- * Parent aggregate id per child aggregate id, observed while reading
- * children. Aggregate ids are stable across workspaces and dimensions, so one
- * map serves every subgraph - and structural moves refresh the children list
- * that fills it, which overwrites the entry.
+ * Parent aggregate id per child node, observed while reading children - keyed
+ * by the child's full address (content repository, workspace, dimension space
+ * point, aggregate id). In Neos 9 the hierarchy is a property of the
+ * subgraph: a node moved in a workspace, or moved in one dimension only, has
+ * a different parent there than in live or in its other variants, so one map
+ * across subgraphs would answer with whichever was read last. Structural
+ * moves refresh the children list that fills it, which overwrites the entry.
  *
  * Kept outside the query cache on purpose: this is a fact about the content
  * graph, not a cached response, and consumers need it synchronously during
@@ -395,24 +488,28 @@ export async function documentBreadcrumb(node: Node): Promise<string[]> {
 const observedNodeParents = new Map<string, string>()
 
 /**
- * The ancestry of a node as far as it has been observed, node first and root
- * last - the shape ancestor-relative rules are evaluated against.
+ * The ancestry of a node in its subgraph as far as it has been observed, node
+ * first and root last - the shape ancestor-relative rules are evaluated
+ * against. Takes the node's address (a Node is one): the same aggregate can
+ * sit below different parents in other workspaces or dimensions.
  *
  * "As far as observed" is the honest contract: a node reached without ever
  * reading its parent's children yields just itself. Callers that need the
  * full chain for a decision must either have walked the tree down to the node
  * (which the trees do) or ask the server, which always knows.
  */
-export function observedIdPath(nodeAggregateId: string): string[] {
-  const path = [nodeAggregateId]
+export function observedIdPath(address: NodeAddress): string[] {
+  const parentOf = (nodeAggregateId: string) =>
+    observedNodeParents.get(nodeAddressKey({ ...address, nodeAggregateId }))
+  const path = [address.nodeAggregateId]
   const seen = new Set(path)
-  let current = observedNodeParents.get(nodeAggregateId)
+  let current = parentOf(address.nodeAggregateId)
   // Not paranoia about cycles in the content graph but about a stale map
   // during a move: two entries can briefly point at each other.
   while (current !== undefined && !seen.has(current)) {
     path.push(current)
     seen.add(current)
-    current = observedNodeParents.get(current)
+    current = parentOf(current)
   }
   return path
 }
@@ -433,22 +530,36 @@ export async function fetchChildren(
 ): Promise<Node[]> {
   const nodes = await queryClient.fetchQuery({
     queryKey: neosKeys.nodes.children(address, nodeTypes, removed),
-    queryFn: () =>
-      fetchAllPages<Node>(
-        `${nodesPath(address)}${queryString({
-          ...subgraphOf(address),
-          'filterByHierarchy[type]': 'childOf',
-          'filterByHierarchy[nodeAggregateId]': address.nodeAggregateId,
-          filterByNodeType: nodeTypes || undefined,
-          ...hasChildrenParams(nodeTypes, removed),
-        })}`,
+    queryFn: ({ signal }) =>
+      fetchAllPages((page) =>
+        unwrap(
+          api.GET(NODES, {
+            params: {
+              path: { contentRepositoryId: address.contentRepositoryId },
+              query: {
+                ...subgraphOf(address),
+                filterByHierarchy: {
+                  type: 'childOf',
+                  nodeAggregateId: address.nodeAggregateId,
+                },
+                filterByNodeType: nodeTypes || undefined,
+                ...hasChildrenParams(nodeTypes, removed),
+                ...page,
+              },
+            },
+            signal,
+          }),
+        ),
       ),
   })
   for (const node of nodes) {
     // Seeded under the filter this list was read with, so a later
     // fetchNode(child, nodeTypes) with a matching filter resolves from cache.
     queryClient.setQueryData(neosKeys.nodes.get(node, nodeTypes, removed), node)
-    observedNodeParents.set(node.nodeAggregateId, address.nodeAggregateId)
+    observedNodeParents.set(
+      nodeAddressKey({ ...address, nodeAggregateId: node.nodeAggregateId }),
+      address.nodeAggregateId,
+    )
   }
   return nodes
 }

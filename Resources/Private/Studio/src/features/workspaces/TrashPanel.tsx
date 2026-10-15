@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { fetchNode } from '@/api/neos/endpoints/nodes'
 import { useWorkspaces } from '@/api/neos/endpoints/workspaces'
 import { useWorkspaceTrash, type WorkspaceTrashItem } from './historyData'
@@ -31,7 +31,11 @@ import { useTrashRestore } from './useTrashRestore'
  */
 export function TrashPanel() {
   const { site, workspaceName, selectedDocument, selectDocument } = useStudio()
-  const { data, isLoading, isError } = useWorkspaceTrash(workspaceName)
+  // Scoped to the active site like the review dialog
+  const { data, isLoading, isError } = useWorkspaceTrash(
+    workspaceName,
+    site?.nodeAggregateId ?? null,
+  )
   const { data: workspaces } = useWorkspaces()
   // A page whose restore would bring deleted ancestors along - confirmed first.
   const [pendingRestore, setPendingRestore] =
@@ -43,18 +47,7 @@ export function TrashPanel() {
   const canWrite = workspace?.permissions.write ?? false
   const outdated = workspace?.status === 'outdated'
 
-  // Scoped to the active site like the review dialog, including entries whose
-  // site could not be resolved - never silently hide a deleted page.
-  const siteId = site?.nodeAggregateId ?? null
-  const items = useMemo(() => {
-    const all = data?.items ?? []
-    return all.filter(
-      (item) =>
-        siteId === null ||
-        item.siteAggregateId === siteId ||
-        item.siteAggregateId === null,
-    )
-  }, [data, siteId])
+  const items = data?.items ?? []
 
   const restore = useTrashRestore(workspaceName)
 
@@ -104,16 +97,7 @@ export function TrashPanel() {
           'trash.empty',
           'No deleted pages. They wait here until the deletion is published.',
         )}
-      >
-        {data?.truncated && (
-          <p className="text-xs text-neutral-500">
-            {t(
-              'trash.truncated',
-              'Only the most recently deleted nodes are listed.',
-            )}
-          </p>
-        )}
-      </Placeholder>
+      />
     )
   }
 
@@ -150,14 +134,6 @@ export function TrashPanel() {
           onRestore={() => runRestore(item)}
         />
       ))}
-      {data?.truncated && (
-        <p className="mt-1 text-xs text-neutral-500">
-          {t(
-            'trash.truncated',
-            'Only the most recently deleted nodes are listed.',
-          )}
-        </p>
-      )}
 
       <ConfirmDialog
         open={pendingRestore !== null}

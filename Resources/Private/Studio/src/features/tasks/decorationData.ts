@@ -21,8 +21,8 @@ let userLabels = new Map<string, string>()
 
 /**
  * Keep the task decoration snapshot current. Called once by the App; the
- * queries are deduplicated, so it costs nothing beyond what the board and the
- * switcher read anyway. A failing task list only drops the badges.
+ * queries are deduplicated, so it costs nothing beyond what the board reads
+ * anyway; the switcher's task actions read the snapshot too. A failing task list only drops the badges.
  */
 export function useTaskDecorationData(enabled = true): void {
   const { data: tasks } = useTasks(enabled)

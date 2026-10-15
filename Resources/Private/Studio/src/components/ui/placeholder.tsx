@@ -26,7 +26,10 @@ function Placeholder({
     >
       {icon && (
         <i
-          className={cn('fas text-[1.75rem] text-neutral-400 dark:text-neutral-600', icon)}
+          className={cn(
+            'fas text-[1.75rem] text-neutral-400 dark:text-neutral-600',
+            icon,
+          )}
           aria-hidden
         />
       )}

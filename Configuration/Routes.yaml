@@ -5,15 +5,16 @@
 #
 
 -
-  # Server-to-server: the realtime sidecar (Resources/Private/Realtime/server.js) tails
-  # workspace change feeds here, authenticated by the X-Realtime-Secret
-  # header (see RealtimeController). Sessionless like the share endpoint.
-  name: 'Studio: realtime sidecar event feed'
-  uriPattern: 'neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/events'
+  # Server-to-server: the realtime sidecar (Resources/Private/Realtime/server.js) watches
+  # the head of workspace change feeds here, authenticated by the
+  # X-Realtime-Secret header (see RealtimeController). Sessionless like the
+  # share endpoint.
+  name: 'Studio: realtime sidecar feed head'
+  uriPattern: 'neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/head'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Realtime'
-    '@action': 'events'
+    '@action': 'head'
     '@format': 'json'
   httpMethods: ['GET']
 

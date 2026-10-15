@@ -1,17 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
-import type { Listing } from '../../neos/client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { api, unwrap } from '../../neos/client'
 import type { NodeAddress } from '../../neos/schema'
 import { nodeAddressOf } from '../../neos/schema'
-import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
-import type { NewPreviewLink, PreviewLink } from '../schema'
+import type { NewPreviewLink, PreviewLinkCreate } from '../schema'
 
 /** The account's own preview links (the anonymous side is the ShareController). */
 export function usePreviewLinks(enabled = true) {
   return useQuery({
     queryKey: studioKeys.previewLinks,
-    queryFn: () => studioFetch<Listing<PreviewLink>>('/previewlinks'),
-    enabled,
+    queryFn: enabled
+      ? ({ signal }) => unwrap(api.GET('/previewlinks', { signal }))
+      : skipToken,
     select: (listing) => listing.data,
   })
 }
@@ -21,14 +21,17 @@ export function createPreviewLink(
   node: NodeAddress,
   options: { label?: string; ttlHours?: number } = {},
 ): Promise<NewPreviewLink> {
-  return studioFetch<NewPreviewLink>('/previewlinks', {
-    method: 'POST',
-    body: { ...nodeAddressOf(node), ...options },
-  })
+  return unwrap(
+    api.POST('/previewlinks', {
+      body: { ...nodeAddressOf(node), ...options } satisfies PreviewLinkCreate,
+    }),
+  )
 }
 
-export function deletePreviewLink(id: string): Promise<null> {
-  return studioFetch<null>(`/previewlinks/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-  })
+export async function deletePreviewLink(id: string): Promise<void> {
+  await unwrap(
+    api.DELETE('/previewlinks/{previewLinkId}', {
+      params: { path: { previewLinkId: id } },
+    }),
+  )
 }

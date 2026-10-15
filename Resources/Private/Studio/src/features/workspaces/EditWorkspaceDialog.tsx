@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { updateWorkspace } from '@/api/neos/endpoints/workspaces'
 import type { Workspace, WorkspaceUpdate } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
@@ -34,13 +35,21 @@ export function EditWorkspaceDialog({
 }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const contentRepositoryId = useActiveContentRepositoryId()
 
-  useEffect(() => {
+  // Seeded once per opening, by workspace name: `workspace` comes from live
+  // data, and a refetch of the list must not overwrite what is being typed.
+  // Adjusted while rendering, so the fields never show a stale round's values
+  // and keep theirs while the dialog fades out.
+  const [seededFor, setSeededFor] = useState<string | null>(null)
+  const name = workspace?.name ?? null
+  if (name !== seededFor) {
+    setSeededFor(name)
     if (workspace !== null) {
       setTitle(workspace.title)
       setDescription(workspace.description)
     }
-  }, [workspace])
+  }
 
   const changes: WorkspaceUpdate = {}
   if (workspace !== null) {
@@ -51,7 +60,8 @@ export function EditWorkspaceDialog({
   const canSubmit = isDirty && title.trim() !== ''
 
   const mutation = useMutation({
-    mutationFn: () => updateWorkspace(workspace!.name, changes),
+    mutationFn: () =>
+      updateWorkspace(contentRepositoryId!, workspace!.name, changes),
     onSuccess: (response) => {
       void invalidateWorkspaceQueries()
       toast.success(

@@ -17,11 +17,15 @@
  *   roster keyed by connection and broadcasts it on every change. A closed
  *   tab disappears with its connection - no TTLs, no heartbeats.
  *
- * - Change feed: the sidecar tails each active workspace's event feed ONCE
- *   via the shared-secret server-to-server endpoint (X-Realtime-Secret,
- *   see Medienreaktor.NeosStudio.realtime.sharedSecret) and fans new events
- *   out to every connection - replacing one API poll per editor per 2s with
- *   one per workspace, at sub-second latency for the editors.
+ * - Change signal: the sidecar watches the HEAD of each active workspace's
+ *   change feed ONCE (its content stream and newest sequence number) via the
+ *   shared-secret server-to-server endpoint (X-Realtime-Secret, see
+ *   Medienreaktor.NeosStudio.realtime.sharedSecret) and, whenever it moves,
+ *   tells every connection `{type: 'changed', contentStreamId,
+ *   sequenceNumber}`. No event contents pass through here: each editor then
+ *   reads the new events through Neos.Api with their own token, so the API's
+ *   per-node read filtering decides what they see - the sidecar only replaces
+ *   "every editor polls every 2s" with "fetch when there is something".
  *
  * The Yjs document behind each connection is unused for now; it is the seam
  * where collaborative text editing (Studio multiplayer phase 4) attaches.
@@ -32,7 +36,7 @@
  *   NEOS_HOST_HEADER       Host header override, for reaching Neos through
  *                          an internal hostname (e.g. DDEV's `web`)
  *   REALTIME_SHARED_SECRET must equal Medienreaktor.NeosStudio.realtime.sharedSecret
- *   FEED_INTERVAL_MS       feed tail cadence per workspace   (default 1000)
+ *   FEED_INTERVAL_MS       feed head check cadence per workspace (default 1000)
  */
 
 import { Server } from '@hocuspocus/server'
@@ -44,8 +48,8 @@ const NEOS_BASE_URL = (process.env.NEOS_BASE_URL ?? 'http://127.0.0.1:8080').rep
 const NEOS_HOST_HEADER = process.env.NEOS_HOST_HEADER || null
 const SHARED_SECRET = process.env.REALTIME_SHARED_SECRET || ''
 const FEED_INTERVAL_MS = Math.max(250, Number(process.env.FEED_INTERVAL_MS ?? 1000))
-/** Consecutive feed failures before the workspace's connections are dropped
- * (clients then fall back to HTTP polling, which re-checks everything). */
+/** Consecutive head-check failures before the workspace's connections are
+ * dropped (clients then fall back to HTTP polling of the feed). */
 const FEED_FAILURE_LIMIT = 5
 
 if (SHARED_SECRET === '') {
@@ -92,7 +96,7 @@ const neosFetch = (path, headers = {}) =>
         )
       },
     )
-    // A hung connection would otherwise stall the feed's setTimeout chain
+    // A hung connection would otherwise stall the head check's setTimeout chain
     // forever (ticks never overlap by design, they wait for the response).
     request.setTimeout(30_000, () => request.destroy(new Error('request timed out')))
     request.on('error', reject)
@@ -114,8 +118,9 @@ const ensureSession = (documentName, document) => {
       document,
       /** socketId -> presence entry; one entry per connection (= per tab). */
       roster: new Map(),
-      /** Feed cursor: null until the baseline request adopted a position. */
-      cursor: null,
+      /** The last seen feed head {stream, sequenceNumber}; null until the
+       * first check adopted one. */
+      head: null,
       failures: 0,
       timer: null,
       stopped: false,
@@ -181,50 +186,53 @@ const broadcastRoster = (session) => {
 const broadcast = (session, message) =>
   session.document.broadcastStateless(JSON.stringify(message))
 
-// --- Change feed tail --------------------------------------------------------
+// --- Change feed head -------------------------------------------------------
 
-const feedPath = (workspace, cursor) =>
-  `/neos/studio/realtime/cr/${encodeURIComponent(workspace.contentRepositoryId)}/workspaces/${encodeURIComponent(workspace.name)}/events` +
-  (cursor ? `?stream=${encodeURIComponent(cursor.stream)}&since=${cursor.since}` : '')
+const headPath = (workspace) =>
+  `/neos/studio/realtime/cr/${encodeURIComponent(workspace.contentRepositoryId)}/workspaces/${encodeURIComponent(workspace.name)}/head`
 
 const startFeed = (session) => {
   const tick = async () => {
     if (session.stopped) return
     try {
-      const response = await neosFetch(feedPath(session.workspace, session.cursor), {
+      const response = await neosFetch(headPath(session.workspace), {
         'X-Realtime-Secret': SHARED_SECRET,
       })
-      if (!response.ok) throw new Error(`feed answered ${response.status}`)
-      const feed = await response.json()
+      if (!response.ok) throw new Error(`feed head answered ${response.status}`)
+      const head = await response.json()
       session.failures = 0
 
-      if (session.cursor === null) {
-        // Baseline: adopt the current position, nothing to replay.
-        session.cursor = { stream: feed.contentStreamId, since: feed.sequenceNumber }
-      } else if (
-        feed.reset ||
-        feed.truncated ||
-        feed.contentStreamId !== session.cursor.stream
-      ) {
-        // The workspace content changed wholesale (someone published,
-        // discarded or rebased the session) or the feed overflowed -
-        // incremental updates cannot describe this.
-        session.cursor = { stream: feed.contentStreamId, since: feed.sequenceNumber }
-        broadcast(session, { type: 'workspaceChanged' })
-      } else {
-        session.cursor.since = feed.sequenceNumber
-        if (feed.events.length > 0) broadcast(session, { type: 'events', events: feed.events })
+      const next = {
+        stream: head.contentStreamId,
+        sequenceNumber: typeof head.sequenceNumber === 'number' ? head.sequenceNumber : null,
+      }
+      const moved =
+        session.head !== null &&
+        (next.stream !== session.head.stream ||
+          next.sequenceNumber !== session.head.sequenceNumber)
+      // The first check only adopts the position: clients take their own
+      // baseline when they connect.
+      session.head = next
+      if (moved && !session.stopped) {
+        // A signal, not the events: clients fetch those through Neos.Api with
+        // their own token (a moved stream - publish/discard/rebase - shows up
+        // there as a reset).
+        broadcast(session, {
+          type: 'changed',
+          contentStreamId: next.stream,
+          sequenceNumber: next.sequenceNumber,
+        })
       }
     } catch (error) {
       session.failures += 1
       console.warn(
-        `[realtime] feed tail for "${session.workspace.name}" failed (${session.failures}/${FEED_FAILURE_LIMIT}): ${error.message}`,
+        `[realtime] feed head check for "${session.workspace.name}" failed (${session.failures}/${FEED_FAILURE_LIMIT}): ${error.message}`,
       )
       if (session.failures >= FEED_FAILURE_LIMIT) {
-        // Fail loudly rather than serving presence without events: drop the
-        // connections so every client falls back to HTTP polling.
+        // Fail loudly rather than serving presence without change signals:
+        // drop the connections so every client falls back to HTTP polling.
         console.error(
-          `[realtime] feed tail for "${session.workspace.name}" keeps failing - disconnecting its clients`,
+          `[realtime] feed head check for "${session.workspace.name}" keeps failing - disconnecting its clients`,
         )
         for (const connection of session.document.getConnections()) connection.close()
         return // afterUnloadDocument stops the loop for good
@@ -376,7 +384,7 @@ const server = new Server({
 
 server.listen(PORT).then(() => {
   console.log(
-    `[realtime] listening on :${PORT}, tailing feeds at ${NEOS_BASE_URL} every ${FEED_INTERVAL_MS}ms`,
+    `[realtime] listening on :${PORT}, watching feed heads at ${NEOS_BASE_URL} every ${FEED_INTERVAL_MS}ms`,
   )
 })
 

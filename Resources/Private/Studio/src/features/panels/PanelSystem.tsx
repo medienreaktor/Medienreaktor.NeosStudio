@@ -13,7 +13,10 @@ import {
   SidebarResizeHandle,
   useResizableSidebar,
 } from '@/components/ui/sidebar-resize'
+import { useLatestRef } from '@/hooks/use-latest-ref'
+import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
+import { useRegistry } from '@/lib/registry'
 import { cn } from '@/lib/utils'
 import {
   clampToViewport,
@@ -46,7 +49,7 @@ import {
   toggleCollapsed,
 } from './panelLayout'
 import { onPanelRevealRequest } from './reveal'
-import { type PanelDefinition, panelRegistry } from './registry'
+import { type PanelDefinition, panelRegistry, panelTitle } from './registry'
 
 /**
  * Adobe-CS-style dockable panels: every panel registered in the panelRegistry
@@ -67,6 +70,8 @@ const SECONDARY_COLLAPSED_KEY = 'neos-studio.secondary_collapsed'
 const SECONDARY_WIDTH_KEY = 'neos-studio.secondary_width'
 const SECONDARY_DEFAULT_WIDTH = 320
 const DRAG_THRESHOLD = 5
+/** Pointer events that end a captured drag loop. */
+const END_EVENTS = ['pointerup', 'pointercancel', 'lostpointercapture'] as const
 
 /** A boolean flag persisted to localStorage under `key`. */
 function usePersistedFlag(
@@ -81,12 +86,25 @@ function usePersistedFlag(
   return [value, setValue]
 }
 
-type PanelsContextValue = {
+/**
+ * The panel system's context comes in three parts, split by how often they
+ * change, so a pointermove does not re-render more than it has to:
+ * - actions: stable callbacks, never change after mount
+ * - layout: the arrangement, registered definitions and attention requests -
+ *   changes on every layout edit (a floating group's rect per pointermove
+ *   while it is moved)
+ * - drag: the tab drag in progress - changes on every pointermove of a drag
+ * Panel bodies are memoized on top (see PanelBody), so neither of the
+ * frequent updates reaches their components.
+ */
+type PanelsLayoutValue = {
   layout: PanelLayout
   definitions: Map<PanelId, PanelDefinition>
-  drag: TabDrop | null
   /** Panels currently requesting attention (see useRequestAttention). */
   attention: ReadonlySet<PanelId>
+}
+
+type PanelsActionsValue = {
   /** Toggle a panel's attention request; called by useRequestAttention. */
   setPanelAttention: (panel: PanelId, active: boolean) => void
   onTabPointerDown: (
@@ -115,13 +133,29 @@ type PanelsContextValue = {
   ) => void
 }
 
-const PanelsContext = React.createContext<PanelsContextValue | null>(null)
+const PanelsLayoutContext = React.createContext<PanelsLayoutValue | null>(null)
+const PanelsActionsContext = React.createContext<PanelsActionsValue | null>(
+  null,
+)
+const PanelsDragContext = React.createContext<TabDrop | null>(null)
 
-function usePanels(): PanelsContextValue {
-  const context = React.useContext(PanelsContext)
-  if (!context)
+function required<T>(value: T | null): T {
+  if (value === null)
     throw new Error('Panel components must live inside <PanelsProvider>')
-  return context
+  return value
+}
+
+function usePanelsLayout(): PanelsLayoutValue {
+  return required(React.useContext(PanelsLayoutContext))
+}
+
+function usePanelsActions(): PanelsActionsValue {
+  return required(React.useContext(PanelsActionsContext))
+}
+
+/** The tab drag in progress, null outside a drag. */
+function usePanelDrag(): TabDrop | null {
+  return React.useContext(PanelsDragContext)
 }
 
 /**
@@ -141,7 +175,7 @@ const PanelIdContext = React.createContext<PanelId | null>(null)
  */
 export function useRequestAttention(active: boolean): void {
   const panel = React.useContext(PanelIdContext)
-  const { setPanelAttention } = usePanels()
+  const { setPanelAttention } = usePanelsActions()
   React.useEffect(() => {
     if (!panel || !active) return
     setPanelAttention(panel, true)
@@ -160,7 +194,8 @@ export function usePanelSwitcher(): {
   activate: (panel: PanelId) => void
   activeMainPanel: PanelId | null
 } {
-  const { activate, layout } = usePanels()
+  const { activate } = usePanelsActions()
+  const { layout } = usePanelsLayout()
   return { activate, activeMainPanel: layout.docks.main[0]?.active ?? null }
 }
 
@@ -264,10 +299,7 @@ export function PanelsProvider({
    */
   floatingVisibleForMainPanel?: PanelId
 }) {
-  const registered = React.useSyncExternalStore(
-    (onChange) => panelRegistry.subscribe(onChange),
-    () => panelRegistry.getAll(),
-  )
+  const registered = useRegistry(panelRegistry)
   const definitions = React.useMemo(
     () => new Map(registered.map((d) => [d.id, d])),
     [registered],
@@ -287,8 +319,10 @@ export function PanelsProvider({
     x: number
     y: number
   } | null>(null)
-  const layoutRef = React.useRef(layout)
-  layoutRef.current = layout
+  const layoutRef = useLatestRef(layout)
+  // Read by the stable `activate` action, which must not change identity
+  // whenever a plugin registers a panel.
+  const registeredRef = useLatestRef(registered)
 
   const setPanelAttention = React.useCallback(
     (panel: PanelId, active: boolean) => {
@@ -306,9 +340,10 @@ export function PanelsProvider({
   // Panels registered or unregistered after mount (plugins): reconcile the
   // layout - new panels appear at their default placement, unloaded panels'
   // entries drop out.
-  React.useEffect(() => {
-    setLayout((l) => normalizeLayout(l, registered))
-  }, [registered])
+  // Reconciled while rendering (no frame shows the stale layout).
+  useValueChange(registered, (current) =>
+    setLayout((l) => normalizeLayout(l, current)),
+  )
 
   // Programmatic "bring this panel on screen" requests (see reveal.ts) -
   // e.g. a notification jumping to the Tasks board.
@@ -330,7 +365,7 @@ export function PanelsProvider({
     const flush = () => saveLayout(STORAGE_KEY, layoutRef.current)
     window.addEventListener('beforeunload', flush)
     return () => window.removeEventListener('beforeunload', flush)
-  }, [])
+  }, [layoutRef]) // a stable ref: runs once
 
   React.useEffect(() => {
     const onWindowResize = () => setLayout((l) => clampFloating(l))
@@ -386,16 +421,23 @@ export function PanelsProvider({
         }
         setDrag(current)
       }
+      // pointercancel (the OS took the pointer) and lostpointercapture (the
+      // capture went away without a pointerup reaching us) end the drag the
+      // same way; the latter also follows every regular pointerup, hence
+      // the guard.
+      let ended = false
       const onUp = () => {
+        if (ended) return
+        ended = true
         handle.removeEventListener('pointermove', onMove)
-        handle.removeEventListener('pointerup', onUp)
+        for (const type of END_EVENTS) handle.removeEventListener(type, onUp)
         setDrag(null)
         if (current) setLayout((l) => applyDrop(l, current!))
       }
       handle.addEventListener('pointermove', onMove)
-      handle.addEventListener('pointerup', onUp)
+      for (const type of END_EVENTS) handle.addEventListener(type, onUp)
     },
-    [],
+    [layoutRef], // a stable ref
   )
 
   // Shared pointer-capture loop for moving/resizing floating groups.
@@ -420,41 +462,31 @@ export function PanelsProvider({
       }
       const onUp = () => {
         handle.removeEventListener('pointermove', onMove)
-        handle.removeEventListener('pointerup', onUp)
+        for (const type of END_EVENTS) handle.removeEventListener(type, onUp)
       }
       handle.addEventListener('pointermove', onMove)
-      handle.addEventListener('pointerup', onUp)
+      for (const type of END_EVENTS) handle.addEventListener(type, onUp)
     },
-    [],
+    [layoutRef], // a stable ref
   )
 
-  const context: PanelsContextValue = {
-    layout,
-    definitions,
-    drag,
-    attention,
-    setPanelAttention,
-    onTabPointerDown,
-    onTabContextMenu: React.useCallback((e, groupId, panel) => {
-      e.preventDefault()
-      setPanelMenu({ groupId, panel, x: e.clientX, y: e.clientY })
-    }, []),
-    toggle: React.useCallback(
-      (groupId) => setLayout((l) => toggleCollapsed(l, groupId)),
-      [],
-    ),
-    toFront: React.useCallback(
-      (groupId) => setLayout((l) => bringToFront(l, groupId)),
-      [],
-    ),
-    activate: React.useCallback(
-      (panel) =>
+  const actions = React.useMemo<PanelsActionsValue>(
+    () => ({
+      setPanelAttention,
+      onTabPointerDown,
+      onTabContextMenu: (e, groupId, panel) => {
+        e.preventDefault()
+        setPanelMenu({ groupId, panel, x: e.clientX, y: e.clientY })
+      },
+      toggle: (groupId) => setLayout((l) => toggleCollapsed(l, groupId)),
+      toFront: (groupId) => setLayout((l) => bringToFront(l, groupId)),
+      activate: (panel) =>
         setLayout((l) => {
           // A hidden panel reappears at its default placement first -
           // programmatic hand-offs (e.g. the asset picker jumping to the
           // Media Library) must work even after the user hid the target.
           const shown = l.hidden.includes(panel)
-            ? showPanel(l, panel, null, registered)
+            ? showPanel(l, panel, null, registeredRef.current)
             : l
           for (const region of DOCK_REGIONS) {
             const group = shown.docks[region].find((g) =>
@@ -465,68 +497,79 @@ export function PanelsProvider({
           const floating = shown.floating.find((g) => g.panels.includes(panel))
           return floating ? activatePanel(shown, floating.id, panel) : shown
         }),
-      [registered],
-    ),
-    trackFloatingDrag: React.useCallback(
-      (e, groupId) =>
+      trackFloatingDrag: (e, groupId) =>
         trackFloating(e, groupId, (start, dx, dy) =>
           clampToViewport({ ...start, x: start.x + dx, y: start.y + dy }),
         ),
-      [trackFloating],
-    ),
-    trackFloatingResize: React.useCallback(
-      (e, groupId, direction) =>
+      trackFloatingResize: (e, groupId, direction) =>
         trackFloating(e, groupId, (start, dx, dy) =>
           resizeRect(start, direction, dx, dy),
         ),
-      [trackFloating],
-    ),
-  }
+    }),
+    [setPanelAttention, onTabPointerDown, trackFloating, registeredRef],
+  )
+  const layoutValue = React.useMemo<PanelsLayoutValue>(
+    () => ({ layout, definitions, attention }),
+    [layout, definitions, attention],
+  )
 
   return (
-    <PanelsContext.Provider value={context}>
-      {children}
-      {createPortal(
-        <>
-          {layout.floating.map((group) => (
-            <FloatingGroupWindow
-              key={group.id}
-              group={group}
-              hidden={floatingHidden}
-            />
-          ))}
-          {drag && (
-            <DragGhost
-              drag={drag}
-              title={definitions.get(drag.panel)?.title ?? drag.panel}
+    <PanelsActionsContext.Provider value={actions}>
+      <PanelsLayoutContext.Provider value={layoutValue}>
+        <PanelsDragContext.Provider value={drag}>
+          {children}
+          {createPortal(
+            <>
+              {layout.floating.map((group) => (
+                <FloatingGroupWindow
+                  key={group.id}
+                  group={group}
+                  hidden={floatingHidden}
+                />
+              ))}
+              {drag && (
+                <DragGhost
+                  drag={drag}
+                  title={titleOf(definitions, drag.panel)}
+                />
+              )}
+            </>,
+            document.body,
+          )}
+          {panelMenu && (
+            <PanelVisibilityMenu
+              menu={panelMenu}
+              definitions={registered}
+              hidden={layout.hidden}
+              onClose={() => setPanelMenu(null)}
+              onSetVisible={(panel, visible) =>
+                setLayout((l) =>
+                  visible
+                    ? showPanel(
+                        l,
+                        panel,
+                        { groupId: panelMenu.groupId, after: panelMenu.panel },
+                        registered,
+                      )
+                    : hidePanel(l, panel, registered),
+                )
+              }
+              onReset={() => setLayout(normalizeLayout(null, registered))}
             />
           )}
-        </>,
-        document.body,
-      )}
-      {panelMenu && (
-        <PanelVisibilityMenu
-          menu={panelMenu}
-          definitions={registered}
-          hidden={layout.hidden}
-          onClose={() => setPanelMenu(null)}
-          onSetVisible={(panel, visible) =>
-            setLayout((l) =>
-              visible
-                ? showPanel(
-                    l,
-                    panel,
-                    { groupId: panelMenu.groupId, after: panelMenu.panel },
-                    registered,
-                  )
-                : hidePanel(l, panel, registered),
-            )
-          }
-          onReset={() => setLayout(normalizeLayout(null, registered))}
-        />
-      )}
-    </PanelsContext.Provider>
+        </PanelsDragContext.Provider>
+      </PanelsLayoutContext.Provider>
+    </PanelsActionsContext.Provider>
   )
+}
+
+/** A panel's tab label, translated at render time; the id when unregistered. */
+function titleOf(
+  definitions: Map<PanelId, PanelDefinition>,
+  panel: PanelId,
+): string {
+  const definition = definitions.get(panel)
+  return definition ? panelTitle(definition) : panel
 }
 
 /**
@@ -583,7 +626,7 @@ function PanelVisibilityMenu({
                 onSetVisible(definition.id, checked)
               }
             >
-              {definition.title}
+              {panelTitle(definition)}
             </DropdownMenuCheckboxItem>
           )
         })}
@@ -626,7 +669,8 @@ function attentionDimClasses(
 
 /** The docked groups of one region, stacked vertically. */
 export function PanelDock({ region }: { region: DockRegion }) {
-  const { layout, drag, attention } = usePanels()
+  const { layout, attention } = usePanelsLayout()
+  const drag = usePanelDrag()
   const gapIndex =
     drag?.target.kind === 'dock-gap' && drag.target.region === region
       ? drag.target.index
@@ -696,7 +740,8 @@ export function SecondaryDock({
 }: {
   visibleForMainPanel?: PanelId
 }) {
-  const { layout, drag } = usePanels()
+  const { layout } = usePanelsLayout()
+  const drag = usePanelDrag()
   const [preferredCollapsed, setPreferredCollapsed] = usePersistedFlag(
     SECONDARY_COLLAPSED_KEY,
   )
@@ -774,7 +819,8 @@ function FloatingGroupWindow({
   group: FloatingGroup
   hidden?: boolean
 }) {
-  const { definitions, attention, toFront, trackFloatingResize } = usePanels()
+  const { definitions, attention } = usePanelsLayout()
+  const { toFront, trackFloatingResize } = usePanelsActions()
   const handles = group.collapsed
     ? RESIZE_HANDLES.filter((h) => h.direction === 'e' || h.direction === 'w')
     : RESIZE_HANDLES
@@ -782,7 +828,7 @@ function FloatingGroupWindow({
     <div
       role="dialog"
       aria-label={group.panels
-        .map((panel) => definitions.get(panel)?.title ?? panel)
+        .map((panel) => titleOf(definitions, panel))
         .join(', ')}
       className={cn(
         'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-50 dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-lg',
@@ -818,14 +864,10 @@ function GroupTabBar({
   group: PanelGroup
   floating?: boolean
 }) {
-  const {
-    definitions,
-    drag,
-    attention,
-    onTabPointerDown,
-    onTabContextMenu,
-    trackFloatingDrag,
-  } = usePanels()
+  const { definitions, attention } = usePanelsLayout()
+  const drag = usePanelDrag()
+  const { onTabPointerDown, onTabContextMenu, trackFloatingDrag } =
+    usePanelsActions()
   const dropIndex =
     drag?.target.kind === 'tabs' && drag.target.groupId === group.id
       ? Math.min(drag.target.index, group.panels.length)
@@ -865,7 +907,7 @@ function GroupTabBar({
               drag?.panel === panel && 'opacity-50',
             )}
           >
-            {definitions.get(panel)?.title ?? panel}
+            {titleOf(definitions, panel)}
           </button>
         </React.Fragment>
       ))}
@@ -902,7 +944,7 @@ function GroupBody({
    */
   region?: DockRegion
 }) {
-  const { definitions, attention } = usePanels()
+  const { definitions, attention } = usePanelsLayout()
   const stacking = region !== undefined && !isTabRegion(region)
   return (
     // The body doubles as a drop zone. Collapsed groups keep the body mounted
@@ -935,15 +977,33 @@ function GroupBody({
               panel !== group.active && 'hidden',
             )}
           >
-            <PanelIdContext.Provider value={panel}>
-              <definition.component />
-            </PanelIdContext.Provider>
+            <PanelBody panel={panel} component={definition.component} />
           </div>
         )
       })}
     </div>
   )
 }
+
+/**
+ * A panel's component. Memoized on its (stable) id and component: the group
+ * around it re-renders on every layout change - per pointermove while a
+ * floating group moves or a tab is dragged - and none of that concerns the
+ * panel's own content.
+ */
+const PanelBody = React.memo(function PanelBody({
+  panel,
+  component: Component,
+}: {
+  panel: PanelId
+  component: React.ComponentType
+}) {
+  return (
+    <PanelIdContext.Provider value={panel}>
+      <Component />
+    </PanelIdContext.Provider>
+  )
+})
 
 function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
   return (

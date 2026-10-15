@@ -32,16 +32,3 @@ export function sameDimensionSpacePoint(a: string, b: string): boolean {
     keys.every((key) => left[key] === right[key])
   )
 }
-
-/**
- * The dimension space point with these coordinates, as one of the given points
- * (the content repository's, which keep the shell's strings identical to the
- * API's); JSON of the coordinates if none matches.
- */
-export function dimensionSpacePointFor(
-  coordinates: DimensionCoordinates,
-  points: readonly string[] = [],
-): string {
-  const json = JSON.stringify(coordinates)
-  return points.find((point) => sameDimensionSpacePoint(point, json)) ?? json
-}

@@ -38,6 +38,13 @@ export function useCreatableNodeTypes(
 ): { groups: CreatableNodeTypeGroup[]; nodeTypes: NodeTypeMap } | null {
   const { data: nodeTypes } = useNodeTypes()
   const { data: groupConfigs } = useNodeTypeGroups()
+  // Keyed by content, so a caller-side array literal does not re-run the
+  // memo every render.
+  const superTypesKey = JSON.stringify(superTypes)
+  const stableSuperTypes = useMemo(
+    () => JSON.parse(superTypesKey) as string[],
+    [superTypesKey],
+  )
 
   return useMemo(() => {
     if (!nodeTypes || !groupConfigs) return null
@@ -45,7 +52,7 @@ export function useCreatableNodeTypes(
     for (const nodeType of nodeTypes.values()) {
       if (nodeType.isAbstract || nodeType.group === null) continue
       if (
-        !superTypes.some((superType) =>
+        !stableSuperTypes.some((superType) =>
           isOfType(nodeTypes, nodeType.name, superType),
         )
       )
@@ -97,10 +104,7 @@ export function useCreatableNodeTypes(
         }),
       }))
     return { groups, nodeTypes }
-    // superTypes is spread so a caller-side array literal does not re-run
-    // the memo every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeTypes, groupConfigs, superTypes.join(',')])
+  }, [nodeTypes, groupConfigs, stableSuperTypes])
 }
 
 /**

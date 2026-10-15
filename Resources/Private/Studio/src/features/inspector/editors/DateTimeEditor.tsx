@@ -116,11 +116,16 @@ export const DateTimeEditor: PropertyEditorComponent = ({
             />
           }
         >
-          <i className="fas fa-calendar text-neutral-600 dark:text-neutral-400" aria-hidden />
+          <i
+            className="fas fa-calendar text-neutral-600 dark:text-neutral-400"
+            aria-hidden
+          />
           {date ? (
             phpFormat(date, format)
           ) : (
-            <span className="text-neutral-600 dark:text-neutral-400">{placeholder}</span>
+            <span className="text-neutral-600 dark:text-neutral-400">
+              {placeholder}
+            </span>
           )}
         </PopoverTrigger>
         {date && !disabled && (
@@ -232,7 +237,10 @@ function MonthCalendar({
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAY_LABELS.map((label, index) => (
-          <div key={index} className="py-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <div
+            key={index}
+            className="py-1 text-xs text-neutral-600 dark:text-neutral-400"
+          >
             {label}
           </div>
         ))}
@@ -247,11 +255,15 @@ function MonthCalendar({
               onClick={() => onSelect(day)}
               className={cn(
                 'flex h-8 items-center justify-center rounded-md text-sm',
-                outside ? 'text-neutral-400 dark:text-neutral-600' : 'text-neutral-950 dark:text-white',
+                outside
+                  ? 'text-neutral-400 dark:text-neutral-600'
+                  : 'text-neutral-950 dark:text-white',
                 isSelected
                   ? 'bg-blue-500 text-white hover:bg-blue-500/90'
                   : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
-                !isSelected && isToday && 'ring-1 ring-neutral-400 dark:ring-neutral-600',
+                !isSelected &&
+                  isToday &&
+                  'ring-1 ring-neutral-400 dark:ring-neutral-600',
               )}
             >
               {day.getDate()}
@@ -290,7 +302,8 @@ function TimePicker({
     <div
       className={cn(
         'flex items-center gap-2',
-        withDivider && 'mt-3 border-t border-neutral-200 dark:border-neutral-800 pt-3',
+        withDivider &&
+          'mt-3 border-t border-neutral-200 dark:border-neutral-800 pt-3',
       )}
     >
       <span className="text-xs text-neutral-600 dark:text-neutral-400">
@@ -353,7 +366,7 @@ function parseFormat(format: string): { hasDate: boolean; hasTime: boolean } {
   let hasDate = false
   let hasTime = false
   for (let i = 0; i < format.length; i++) {
-    const char = format[i]
+    const char = format.charAt(i)
     if (char === '\\') {
       i++ // escaped literal - not a token
       continue
@@ -420,7 +433,7 @@ function pad(value: number): string {
 function phpFormat(date: Date, format: string): string {
   let out = ''
   for (let i = 0; i < format.length; i++) {
-    const char = format[i]
+    const char = format.charAt(i)
     if (char === '\\') {
       out += format[++i] ?? ''
       continue

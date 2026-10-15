@@ -1,0 +1,15 @@
+{
+  // Declaration-only build of the plugin API (src/plugin-api/index.ts) for
+  // `npm run build:plugin-types`. Emits the per-file .d.ts closure into a
+  // cache dir; scripts/build-plugin-types.mjs bundles it into one file.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "./src",
+    "outDir": "./node_modules/.cache/plugin-api-dts"
+  },
+  "files": ["src/vite-env.d.ts", "src/plugin-api/index.ts"],
+  "include": []
+}

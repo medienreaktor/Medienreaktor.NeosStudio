@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { TreeInstance } from '@headless-tree/core'
 import { DOCUMENT_NODE_TYPE, fetchAncestors } from '@/api/neos/endpoints/nodes'
-import { type NodeAddress, nodeAddressKey } from '@/api/neos/schema'
+import {
+  type NodeAddress,
+  nodeAddressFromKey,
+  nodeAddressKey,
+} from '@/api/neos/schema'
 
 /**
  * Reveals a node selected outside the tree (e.g. the followed document after
@@ -23,34 +27,42 @@ export function useRevealSelection<T>(
 ) {
   // Stable across renders for the same address, whatever object carries it.
   const key = address === null ? null : nodeAddressKey(address)
-  const itemId = address?.nodeAggregateId ?? null
-  // Document rootline top-down (item ids), target last; null while unknown.
-  const [path, setPath] = useState<string[] | null>(null)
+  // Document rootline top-down (item ids), target last, for the address it
+  // was fetched for - a path of a previous address is no path at all.
+  const [fetched, setFetched] = useState<{
+    key: string
+    path: string[]
+  } | null>(null)
+  const path = fetched !== null && fetched.key === key ? fetched.path : null
   const revealed = useRef<string | null>(null)
 
   useEffect(() => {
-    if (key === null || itemId === null || revealed.current === key) {
-      setPath(null)
-      return
-    }
+    if (key === null || revealed.current === key) return
+    // Rebuilt from the key, so the effect depends on the address by value.
+    const target = nodeAddressFromKey(key)
+    const itemId = target.nodeAggregateId
     // Selection that originated in the tree (a click) needs no reveal - and
     // no ancestors request.
     const existing = tree.getItems().find((item) => item.getId() === itemId)
     if (existing?.isSelected()) {
       revealed.current = key
-      setPath(null)
       return
     }
     let cancelled = false
-    fetchAncestors(address!, nodeTypes)
+    fetchAncestors(target, nodeTypes)
       .then((ancestors) => {
         // Closest-first from the API; the tree wants root-first. The filter
         // already dropped the Neos.Neos:Sites root, so the site node leads.
         if (!cancelled)
-          setPath([
-            ...ancestors.map((ancestor) => ancestor.nodeAggregateId).reverse(),
-            itemId,
-          ])
+          setFetched({
+            key,
+            path: [
+              ...ancestors
+                .map((ancestor) => ancestor.nodeAggregateId)
+                .reverse(),
+              itemId,
+            ],
+          })
       })
       .catch(() => {
         /* fine - the node stays unrevealed */
@@ -65,13 +77,10 @@ export function useRevealSelection<T>(
   const items = tree.getItems()
 
   useEffect(() => {
-    if (
-      path === null ||
-      key === null ||
-      itemId === null ||
-      revealed.current === key
-    )
-      return
+    if (path === null || key === null || revealed.current === key) return
+    // The path ends with the target's item id.
+    const itemId = path[path.length - 1]
+    if (itemId === undefined) return
     const itemsById = new Map(items.map((item) => [item.getId(), item]))
     for (const ancestorId of path.slice(0, -1)) {
       const item = itemsById.get(ancestorId)
@@ -81,13 +90,12 @@ export function useRevealSelection<T>(
     if (target) {
       revealed.current = key
       tree.setSelectedItems([itemId])
-      setPath(null)
       target.scrollTo({ block: 'nearest' }).catch((e: unknown) => {
         console.error('Scrolling the revealed tree item into view failed', {
-          address,
+          address: nodeAddressFromKey(key),
           error: e,
         })
       })
     }
-  }, [items, path, key, itemId, tree])
+  }, [items, path, key, tree])
 }

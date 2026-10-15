@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -31,25 +31,47 @@ export function ResetPasswordDialog({
   user: User | null
   onOpenChange: (open: boolean) => void
 }) {
+  // The last user shown, so the popup keeps its content while it fades out
+  // after `user` went back to null.
+  const [shown, setShown] = useState(user)
+  if (user !== null && user !== shown) setShown(user)
+
+  return (
+    <Dialog open={user !== null} onOpenChange={onOpenChange}>
+      <DialogContent>
+        {/* Mounted per opening (the popup unmounts while closed) and keyed
+            by user, so the fields always start empty. */}
+        {shown !== null && (
+          <ResetPasswordForm
+            key={shown.id}
+            user={shown}
+            onOpenChange={onOpenChange}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ResetPasswordForm({
+  user,
+  onOpenChange,
+}: {
+  user: User
+  onOpenChange: (open: boolean) => void
+}) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-
-  useEffect(() => {
-    if (user !== null) {
-      setPassword('')
-      setConfirmPassword('')
-    }
-  }, [user])
 
   const mismatch = confirmPassword !== '' && password !== confirmPassword
   const canSubmit = password !== '' && password === confirmPassword
 
   const mutation = useMutation({
-    mutationFn: () => setUserPassword(user!.id, password),
+    mutationFn: () => setUserPassword(user.id, password),
     onSuccess: () => {
       toast.success(
         t('users.passwordReset', 'The password of "{0}" has been reset.', [
-          user?.label ?? '',
+          user.label,
         ]),
       )
       onOpenChange(false)
@@ -73,76 +95,75 @@ export function ResetPasswordDialog({
   }
 
   return (
-    <Dialog open={user !== null} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {t('users.resetPassword', 'Reset password')}
-            {user !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
-                {user.label}
-              </span>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {t(
-              'users.resetPasswordHint',
-              'Sets a new password without requiring the current one. Active sessions of this user are ended.',
-            )}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          <Field
-            label={t('users.newPassword', 'New password')}
-            htmlFor="user-reset-password"
-          >
-            <Input
-              id="user-reset-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="new-password"
-              required
-            />
-          </Field>
-          <Field
-            label={t('users.repeatNewPassword', 'Repeat new password')}
-            htmlFor="user-reset-confirm-password"
-          >
-            <Input
-              id="user-reset-confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              autoComplete="new-password"
-              aria-invalid={mismatch || undefined}
-              required
-            />
-          </Field>
-          {mismatch && (
-            <p className="text-sm text-red-500">
-              {t('users.passwordMismatch', 'The passwords do not match.')}
-            </p>
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {t('users.resetPassword', 'Reset password')}
+          <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+            {user.label}
+          </span>
+        </DialogTitle>
+        <DialogDescription>
+          {t(
+            'users.resetPasswordHint',
+            'Sets a new password without requiring the current one. Active sessions of this user are ended.',
           )}
+        </DialogDescription>
+      </DialogHeader>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              disabled={mutation.isPending}
-            >
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button type="submit" disabled={!canSubmit || mutation.isPending}>
-              {mutation.isPending
-                ? t('users.resetting', 'Resetting…')
-                : t('users.resetPassword', 'Reset password')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field
+          label={t('users.newPassword', 'New password')}
+          htmlFor="user-reset-password"
+        >
+          <Input
+            id="user-reset-password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="new-password"
+            required
+          />
+        </Field>
+        <Field
+          label={t('users.repeatNewPassword', 'Repeat new password')}
+          htmlFor="user-reset-confirm-password"
+        >
+          <Input
+            id="user-reset-confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            autoComplete="new-password"
+            aria-invalid={mismatch || undefined}
+            aria-describedby={
+              mismatch ? 'user-reset-password-mismatch' : undefined
+            }
+            required
+          />
+        </Field>
+        {mismatch && (
+          <p id="user-reset-password-mismatch" className="text-sm text-red-500">
+            {t('users.passwordMismatch', 'The passwords do not match.')}
+          </p>
+        )}
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onOpenChange(false)}
+            disabled={mutation.isPending}
+          >
+            {t('common.cancel', 'Cancel')}
+          </Button>
+          <Button type="submit" disabled={!canSubmit || mutation.isPending}>
+            {mutation.isPending
+              ? t('users.resetting', 'Resetting…')
+              : t('users.resetPassword', 'Reset password')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </>
   )
 }

@@ -10,6 +10,8 @@ use Neos\ContentRepository\Core\CommandHandler\CommandInterface;
 use Neos\ContentRepository\Core\Feature\NodeCreation\Command\CreateNodeAggregateWithNode;
 use Neos\ContentRepository\Core\Feature\NodeModification\Command\SetNodeProperties;
 use Neos\ContentRepository\Core\Feature\NodeMove\Command\MoveNodeAggregate;
+use Neos\ContentRepository\Core\Feature\NodeRenaming\Command\ChangeNodeAggregateName;
+use Neos\ContentRepository\Core\Feature\NodeTypeChange\Command\ChangeNodeAggregateType;
 use Neos\ContentRepository\Core\Feature\NodeReferencing\Command\SetNodeReferences;
 use Neos\ContentRepository\Core\Feature\NodeRemoval\Command\RemoveNodeAggregate;
 use Neos\ContentRepository\Core\Feature\NodeVariation\Command\CreateNodeVariant;
@@ -26,8 +28,11 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\ContentGraphReadModelInt
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Neos\Domain\Service\WorkspaceService;
+use Psr\Log\LoggerInterface;
 
 /**
  * Content repository authorization narrowed by the Studio's dynamic access
@@ -42,10 +47,10 @@ use Neos\Neos\Domain\Service\WorkspaceService;
  * (edit / create / delete / move).
  *
  * Only ever narrowing means this cannot grant anyone anything, which is what
- * makes it safe to sit in the write path of every editor. The other half of
- * that safety is failing open on its own errors: an exception while resolving
- * a node or a workspace leaves the core's decision standing rather than
- * blocking an editor over a bug in a restriction check.
+ * makes it safe to sit in the write path of every editor. Its own errors fail
+ * CLOSED: a restriction check that cannot complete (a node or workspace that
+ * will not resolve) denies with a reason and is logged - otherwise any error
+ * in resolving the node would be a way around the roles.
  *
  * Reading and working in a workspace are asked separately, and live is the
  * reason why. Root workspaces stay READABLE for everyone: the frontend
@@ -65,6 +70,7 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         private ContentGraphReadModelInterface $contentGraphReadModel,
         private AccessControlService $accessControlService,
         private WorkspaceService $workspaceService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -88,7 +94,12 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         if ($access === null) {
             return $privilege;
         }
-        if (!$access->allowsWorkspaceRead($workspaceName->value, $this->classificationOf($workspaceName))) {
+        try {
+            $classification = $this->classificationOf($workspaceName);
+        } catch (\Throwable $e) {
+            return $this->failedCheck($e, sprintf('reading workspace "%s"', $workspaceName->value));
+        }
+        if (!$access->allowsWorkspaceRead($workspaceName->value, $classification)) {
             return Privilege::denied(sprintf('Workspace "%s" is not part of your access role(s)', $workspaceName->value));
         }
 
@@ -108,10 +119,11 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
 
         try {
             $denial = $this->denialFor($command, $access);
-        } catch (\Throwable) {
-            // A restriction check that cannot complete must not block an
-            // editor - the core already granted this command.
-            return $privilege;
+        } catch (\Throwable $e) {
+            // A restriction check that cannot complete must not let the
+            // command through - the roles would be one exception away from
+            // meaning nothing.
+            return $this->failedCheck($e, sprintf('command "%s"', (new \ReflectionClass($command))->getShortName()));
         }
 
         return $denial ?? $privilege;
@@ -154,12 +166,22 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
             return Privilege::denied('Your access role(s) do not allow publishing to live');
         }
 
-        $requirement = $this->nodeRequirementOf($command);
-        if ($requirement === null) {
-            return null;
+        foreach ($this->nodeRequirementsOf($command) as [$address, $capability]) {
+            $denial = $this->denialForNode($access, $address, $capability);
+            if ($denial !== null) {
+                return $denial;
+            }
         }
-        [$address, $capability] = $requirement;
 
+        return null;
+    }
+
+    /**
+     * One node-level requirement: may the acting user perform $capability on
+     * the node at $address?
+     */
+    private function denialForNode(EffectiveAccess $access, NodeAddress $address, string $capability): ?Privilege
+    {
         $subgraph = $this->contentGraphReadModel
             ->getContentGraph($address->workspaceName)
             ->getSubgraph($address->dimensionSpacePoint, VisibilityConstraints::createEmpty());
@@ -225,46 +247,114 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * The node a command writes to, plus the capability it represents. Mirrors
-     * the core's own command-to-node mapping (which is private) and adds the
-     * capability dimension on top - the core knows *whether* a node may be
-     * edited, the roles additionally know *what kind* of edit is allowed.
+     * The nodes a command writes to, each with the capability it represents.
+     * Mirrors the core's own command-to-node mapping (which is private) and
+     * adds the capability dimension on top - the core knows *whether* a node
+     * may be edited, the roles additionally know *what kind* of edit is
+     * allowed. It also covers what the core only gates per workspace: a move
+     * is a write on the new parent too, and renaming / retyping an aggregate
+     * writes to it in every dimension it covers.
      *
-     * @return array{NodeAddress, string}|null
+     * Keep in step with the shell (features/tree/treeDnd.ts and the
+     * nodePermits() checks of the editing UI).
+     *
+     * @return list<array{NodeAddress, string}>
      */
-    private function nodeRequirementOf(CommandInterface $command): ?array
+    private function nodeRequirementsOf(CommandInterface $command): array
     {
         return match ($command::class) {
-            CreateNodeAggregateWithNode::class => [
+            CreateNodeAggregateWithNode::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->originDimensionSpacePoint->toDimensionSpacePoint(), $command->parentNodeAggregateId),
                 'createNodes',
-            ],
-            CreateNodeVariant::class => [
+            ]],
+            CreateNodeVariant::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->sourceOrigin->toDimensionSpacePoint(), $command->nodeAggregateId),
                 'createNodes',
-            ],
-            RemoveNodeAggregate::class => [
+            ]],
+            RemoveNodeAggregate::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->coveredDimensionSpacePoint, $command->nodeAggregateId),
                 'deleteNodes',
-            ],
-            TagSubtree::class, UntagSubtree::class => [
+            ]],
+            TagSubtree::class, UntagSubtree::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->coveredDimensionSpacePoint, $command->nodeAggregateId),
                 'editNodes',
-            ],
-            MoveNodeAggregate::class => [
-                NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->dimensionSpacePoint, $command->nodeAggregateId),
-                'moveNodes',
-            ],
-            SetNodeProperties::class => [
+            ]],
+            MoveNodeAggregate::class => $this->moveRequirementsOf($command),
+            SetNodeProperties::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->originDimensionSpacePoint->toDimensionSpacePoint(), $command->nodeAggregateId),
                 'editNodes',
-            ],
-            SetNodeReferences::class => [
+            ]],
+            SetNodeReferences::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->sourceOriginDimensionSpacePoint->toDimensionSpacePoint(), $command->sourceNodeAggregateId),
                 'editNodes',
-            ],
-            default => null,
+            ]],
+            ChangeNodeAggregateType::class, ChangeNodeAggregateName::class => $this->aggregateRequirementsOf($command->workspaceName, $command->nodeAggregateId, 'editNodes'),
+            default => [],
         };
+    }
+
+    /**
+     * A move writes to the node (moveNodes) and to the parent it ends up
+     * under, which gains a child (createNodes) - the same pair the tree's drag
+     * and drop checks before it lets a drop happen.
+     *
+     * Without a new parent the content repository keeps the current one (the
+     * given siblings then have to be current siblings), so that parent is the
+     * one gaining the child: a reorder via the API is held to the same rule as
+     * a reorder via the tree, which always names the parent.
+     *
+     * @return list<array{NodeAddress, string}>
+     */
+    private function moveRequirementsOf(MoveNodeAggregate $command): array
+    {
+        $requirements = [[
+            NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->dimensionSpacePoint, $command->nodeAggregateId),
+            'moveNodes',
+        ]];
+        $parentId = $command->newParentNodeAggregateId
+            ?? $this->contentGraphReadModel
+                ->getContentGraph($command->workspaceName)
+                ->getSubgraph($command->dimensionSpacePoint, VisibilityConstraints::createEmpty())
+                ->findParentNode($command->nodeAggregateId)
+                ?->aggregateId;
+        if ($parentId === null) {
+            // Neither named nor resolvable: nothing is being moved (the node
+            // does not exist here, or is a root) - the handler refuses it.
+            return $requirements;
+        }
+        $requirements[] = [
+            NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->dimensionSpacePoint, $parentId),
+            'createNodes',
+        ];
+
+        return $requirements;
+    }
+
+    /**
+     * Renaming or retyping is aggregate-wide - it carries no dimension because
+     * it changes the node in all of them, so the roles have to permit it in
+     * every dimension space point the aggregate covers.
+     *
+     * @return list<array{NodeAddress, string}>
+     */
+    private function aggregateRequirementsOf(WorkspaceName $workspaceName, NodeAggregateId $nodeAggregateId, string $capability): array
+    {
+        $nodeAggregate = $this->contentGraphReadModel
+            ->getContentGraph($workspaceName)
+            ->findNodeAggregateById($nodeAggregateId);
+        if ($nodeAggregate === null) {
+            // Nothing to write to - the handler refuses the command itself.
+            return [];
+        }
+        $requirements = [];
+        foreach ($nodeAggregate->coveredDimensionSpacePoints as $dimensionSpacePoint) {
+            $requirements[] = [
+                NodeAddress::create($this->contentRepositoryId, $workspaceName, $dimensionSpacePoint, $nodeAggregateId),
+                $capability,
+            ];
+        }
+
+        return $requirements;
     }
 
     /**
@@ -297,16 +387,34 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
             : null;
     }
 
-    /** ROOT, PERSONAL, SHARED or UNKNOWN - UNKNOWN never restricts. */
+    /**
+     * ROOT, PERSONAL, SHARED or UNKNOWN. A workspace that does not exist (yet -
+     * CreateWorkspace names the one it is about to create) is UNKNOWN; any
+     * other failure propagates and fails the check closed.
+     */
     private function classificationOf(WorkspaceName $workspaceName): string
     {
-        try {
-            return $this->workspaceService
-                ->getWorkspaceMetadata($this->contentRepositoryId, $workspaceName)
-                ->classification->value;
-        } catch (\Throwable) {
+        if ($this->contentGraphReadModel->findWorkspaceByName($workspaceName) === null) {
             return 'UNKNOWN';
         }
+
+        return $this->workspaceService
+            ->getWorkspaceMetadata($this->contentRepositoryId, $workspaceName)
+            ->classification->value;
+    }
+
+    /**
+     * The fail-closed answer to a restriction check that could not complete:
+     * denied, with the error logged for whoever has to find out why.
+     */
+    private function failedCheck(\Throwable $exception, string $subject): Privilege
+    {
+        $this->logger->error(
+            sprintf('Studio access check for %s failed and was denied: %s', $subject, $exception->getMessage()),
+            ['exception' => $exception] + LogEnvironment::fromMethodName(__METHOD__)
+        );
+
+        return Privilege::denied(sprintf('The access check for %s could not be completed; denied to be safe', $subject));
     }
 
     private function publishesIntoRootWorkspace(WorkspaceName $workspaceName): bool

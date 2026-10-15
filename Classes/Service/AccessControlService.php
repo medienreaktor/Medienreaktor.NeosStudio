@@ -139,11 +139,11 @@ class AccessControlService
      * site it belongs to - the two things page-tree and site rules are
      * evaluated against.
      *
-     * A node that cannot be resolved yields an empty context, which every
-     * caller reads as "these axes do not apply". That is the fail-open half
-     * of this service: an unresolvable node is not one this feature has
-     * anything to say about, and the content repository will fail the
-     * operation on its own terms anyway.
+     * A node the subgraph does not have yields just its own id and no site:
+     * the content repository fails the operation on its own terms anyway. A
+     * lookup that fails (an exception) is not swallowed - it reaches the
+     * caller, AccessControlAuthProvider, which denies the command rather than
+     * evaluating the rules against a context it could not read.
      *
      * @return array{0: array<int, string>, 1: string} [idPath, siteNodeName]
      */
@@ -176,29 +176,25 @@ class AccessControlService
      */
     private function resolveNodeContext(ContentSubgraphInterface $subgraph, NodeAggregateId $nodeAggregateId, ?Node $node): array
     {
-        try {
-            $idPath = [$nodeAggregateId->value];
-            $siteNodeName = '';
-            // Ordered closest-ancestor-first, so appending keeps the "index is
-            // distance from the node" property allowsNodePath() relies on.
-            $ancestors = $subgraph->findAncestorNodes($nodeAggregateId, FindAncestorNodesFilter::create());
-            // Only needed to name the site when the node IS the site node.
-            // Callers listing nodes already hold them - that halves the
-            // queries this costs, from two per node to one.
-            $previous = $node ?? $subgraph->findNodeById($nodeAggregateId);
-            foreach ($ancestors as $ancestor) {
-                /** @var Node $ancestor */
-                if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {
-                    // The child of the sites root IS the site node - and the
-                    // node itself when it has no non-root ancestor at all.
-                    $siteNodeName = $previous?->name?->value ?? '';
-                    break;
-                }
-                $idPath[] = $ancestor->aggregateId->value;
-                $previous = $ancestor;
+        $idPath = [$nodeAggregateId->value];
+        $siteNodeName = '';
+        // Ordered closest-ancestor-first, so appending keeps the "index is
+        // distance from the node" property allowsNodePath() relies on.
+        $ancestors = $subgraph->findAncestorNodes($nodeAggregateId, FindAncestorNodesFilter::create());
+        // Only needed to name the site when the node IS the site node.
+        // Callers listing nodes already hold them - that halves the
+        // queries this costs, from two per node to one.
+        $previous = $node ?? $subgraph->findNodeById($nodeAggregateId);
+        foreach ($ancestors as $ancestor) {
+            /** @var Node $ancestor */
+            if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {
+                // The child of the sites root IS the site node - and the
+                // node itself when it has no non-root ancestor at all.
+                $siteNodeName = $previous?->name?->value ?? '';
+                break;
             }
-        } catch (\Throwable) {
-            return [[], ''];
+            $idPath[] = $ancestor->aggregateId->value;
+            $previous = $ancestor;
         }
 
         return [$idPath, $siteNodeName];

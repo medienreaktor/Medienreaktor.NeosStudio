@@ -11,12 +11,17 @@ export const studioKeys = {
     /** The tasks (the Tasks board) - one list, polled. */
     list: (contentRepositoryId: string) =>
       ['studio', 'tasks', contentRepositoryId, 'list'] as const,
-    /** One task's comment thread - under `all` so invalidating tasks covers it. */
+    /**
+     * One task's comment thread - under `all` so invalidating tasks covers
+     * it. The 'task' segment keeps a task branch named "list" apart from the
+     * list.
+     */
     comments: (contentRepositoryId: string, workspaceName: string) =>
       [
         'studio',
         'tasks',
         contentRepositoryId,
+        'task',
         workspaceName,
         'comments',
       ] as const,

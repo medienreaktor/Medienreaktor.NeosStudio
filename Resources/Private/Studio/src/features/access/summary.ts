@@ -1,5 +1,5 @@
 import type { AccessRoleConstraints } from '@/api/studio/schema'
-import { translate as t } from '@/lib/i18n'
+import { translate as t, translatePlural } from '@/lib/i18n'
 
 /** One badge in the role listing: what this role narrows, in a word. */
 export interface ConstraintSummaryEntry {
@@ -25,9 +25,11 @@ export function constraintSummary(
     entries.push({
       key: 'sites',
       icon: 'fa-globe',
-      label: t('accessRoles.badgeSites', '{0} site(s)', [
-        String(constraints.siteNodeNames.length),
-      ]),
+      label: translatePlural(
+        'accessRoles.badgeSites',
+        constraints.siteNodeNames.length,
+        ['{0} site', '{0} sites'],
+      ),
       detail: constraints.siteNodeNames.join(', '),
     })
   }
@@ -40,8 +42,9 @@ export function constraintSummary(
       icon: 'fa-sitemap',
       label:
         allowed.length > 0
-          ? t('accessRoles.badgeBranches', '{0} branch(es)', [
-              String(allowed.length),
+          ? translatePlural('accessRoles.badgeBranches', allowed.length, [
+              '{0} branch',
+              '{0} branches',
             ])
           : t('accessRoles.badgeDenied', '{0} blocked', [
               String(denied.length),
@@ -61,8 +64,8 @@ export function constraintSummary(
       key: 'dimensions',
       icon: 'fa-language',
       label: t('accessRoles.badgeDimensions', 'Dimensions'),
-      detail: dimensionIds
-        .map((id) => `${id}: ${constraints.dimensionValues[id].join(', ')}`)
+      detail: Object.entries(constraints.dimensionValues)
+        .map(([id, values]) => `${id}: ${values.join(', ')}`)
         .join(' · '),
     })
   }
@@ -71,9 +74,11 @@ export function constraintSummary(
     entries.push({
       key: 'workspaces',
       icon: 'fa-layer-group',
-      label: t('accessRoles.badgeWorkspaces', '{0} workspace(s)', [
-        String(constraints.workspaceNames.length),
-      ]),
+      label: translatePlural(
+        'accessRoles.badgeWorkspaces',
+        constraints.workspaceNames.length,
+        ['{0} workspace', '{0} workspaces'],
+      ),
       detail: constraints.workspaceNames.join(', '),
     })
   }

@@ -207,7 +207,7 @@ export function NodeContextMenu({
     clipboardEntry === null
       ? ''
       : clipboardEntry.nodes.length === 1
-        ? clipboardEntry.nodes[0].label
+        ? (clipboardEntry.nodes[0]?.label ?? '')
         : `${clipboardEntry.nodes.length} ${entityLabelPlural}`
 
   const runVisibilityAction = (
@@ -242,16 +242,21 @@ export function NodeContextMenu({
   const runCapture = (menuTargets: NodeMenuTarget[], mode: ClipboardMode) => {
     if (clipboardKind === undefined) return
     onClose()
-    Promise.all(menuTargets.map((menuTarget) => fetchNode(menuTarget.address)))
-      .then((nodes) =>
+    Promise.all(
+      menuTargets.map(async (menuTarget) => ({
+        menuTarget,
+        node: await fetchNode(menuTarget.address),
+      })),
+    )
+      .then((captured) =>
         clipboardAdd(
           mode,
           clipboardKind,
-          nodes.map((node, index) => ({
+          captured.map(({ menuTarget, node }) => ({
             address: nodeAddressOf(node),
             nodeType: node.nodeType,
             label: node.label !== '' ? node.label : node.nodeAggregateId,
-            sourceParentAddress: menuTargets[index].parentAddress,
+            sourceParentAddress: menuTarget.parentAddress,
           })),
         ),
       )

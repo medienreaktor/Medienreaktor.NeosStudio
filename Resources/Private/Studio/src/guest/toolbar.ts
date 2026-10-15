@@ -11,7 +11,14 @@
  * Items come from one registry (registerToolbarItem) tagged with a `kind`; the
  * two toolbars each render the items of their kind. Availability is gated on
  * the property's NodeType formatting config (see formatting.ts), so a property
- * only offers the actions it permits - the extensible richtextToolbar seam.
+ * only offers the actions it permits.
+ *
+ * The registry is internal to the guest: the guest ships as a closed IIFE
+ * (vite.guest.config.ts) injected into the preview page, which exposes
+ * nothing and loads no plugin code - so there is no way for a third-party
+ * package to reach registerToolbarItem today. It is a seam for the guest's
+ * own built-in items, and the place a future guest plugin mechanism would
+ * hook into.
  *
  * Buttons act on mousedown with preventDefault so focus never leaves the
  * editor - otherwise clicking a button would blur the editor, collapse the
@@ -20,6 +27,7 @@
 import type { Editor } from '@tiptap/core'
 import { CellSelection } from '@tiptap/pm/tables'
 import { editorFormatting } from './formatting'
+import { label, registerLabels } from './labels'
 import { requestLinkEdit } from './linkEditing'
 import {
   isStyleActive,
@@ -80,11 +88,21 @@ const ACCENT = 'rgb(0, 173, 238)'
 
 const items: ToolbarItem[] = []
 
-/** Contribute a toolbar item; a later registration with the same id wins. */
+/**
+ * Add a toolbar item; a later registration with the same id wins. Guest-
+ * internal (see the module docs) - only the built-in items below call it.
+ */
 export function registerToolbarItem(item: ToolbarItem): void {
+  // The item's label joins the catalogue the host translates (see labels.ts).
+  registerLabels({ [toolbarLabelKey(item)]: item.label })
   const index = items.findIndex((existing) => existing.id === item.id)
   if (index === -1) items.push(item)
   else items[index] = item
+}
+
+/** The translation key of an item's label; its `label` is the fallback. */
+function toolbarLabelKey(item: ToolbarItem): string {
+  return `toolbar.${item.id}`
 }
 
 let stylesInjected = false
@@ -283,8 +301,11 @@ class Toolbar {
       previousGroup = item.group
       const button = document.createElement('button')
       button.type = 'button'
-      button.title = item.label
-      button.setAttribute('aria-label', item.label)
+      // Translated at render time - the translations arrive after the items
+      // registered (see labels.ts).
+      const text = label(toolbarLabelKey(item), item.label)
+      button.title = text
+      button.setAttribute('aria-label', text)
       button.innerHTML = item.icon
       this.buttons.set(item.id, button)
       if (item.menu) {
@@ -399,6 +420,11 @@ class Toolbar {
     if (this.element?.style.display === 'flex' && this.currentEditor)
       this.positioner(this.element, this.currentEditor)
   }
+
+  /** Rebuild the buttons on the next show (e.g. their labels changed). */
+  invalidate(): void {
+    this.renderedSignature = null
+  }
 }
 
 /** Float the inline bubble centered above the selection, flip below if needed. */
@@ -433,7 +459,7 @@ function positionBlock(element: HTMLElement, editor: Editor): void {
   }
   const width = element.offsetWidth
   const height = element.offsetHeight
-  let left = Math.max(4, Math.min(rect.left, window.innerWidth - width - 4))
+  const left = Math.max(4, Math.min(rect.left, window.innerWidth - width - 4))
   let top = rect.top - height - 4
   if (top < 4) top = rect.top + 4
   element.style.left = `${left}px`
@@ -471,6 +497,16 @@ export function updateToolbars(editor: Editor): void {
 export function hideToolbars(): void {
   inlineToolbar.hide()
   blockToolbar.hide()
+}
+
+/**
+ * The labels changed (the host's translations arrived): hide the bars and
+ * rebuild their buttons the next time they show.
+ */
+export function relabelToolbars(): void {
+  hideToolbars()
+  inlineToolbar.invalidate()
+  blockToolbar.invalidate()
 }
 
 function repositionToolbars(): void {

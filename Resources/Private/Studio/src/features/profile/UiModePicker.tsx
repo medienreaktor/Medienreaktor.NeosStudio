@@ -16,9 +16,12 @@ import type { UiMode } from '@/lib/uiMode'
 export function UiModePicker({
   value,
   onChange,
+  labelledBy,
 }: {
   value: UiMode
   onChange: (mode: UiMode) => void
+  /** Id of a visible label naming the group; falls back to "Appearance". */
+  labelledBy?: string
 }) {
   const groupRef = useRef<HTMLDivElement>(null)
 
@@ -41,6 +44,7 @@ export function UiModePicker({
     event.preventDefault()
     const index = options.findIndex((option) => option.mode === value)
     const next = options[(index + delta + options.length) % options.length]
+    if (!next) return
     onChange(next.mode)
     groupRef.current
       ?.querySelector<HTMLButtonElement>(`[data-mode="${next.mode}"]`)
@@ -51,7 +55,10 @@ export function UiModePicker({
     <div
       ref={groupRef}
       role="radiogroup"
-      aria-label={t('profile.uiMode', 'Appearance')}
+      aria-labelledby={labelledBy}
+      aria-label={
+        labelledBy === undefined ? t('profile.uiMode', 'Appearance') : undefined
+      }
       className="flex gap-4"
       onKeyDown={onKeyDown}
     >
@@ -137,7 +144,7 @@ function HalfThumbnail({ appearance }: { appearance: 'light' | 'dark' }) {
         <span
           className={cn(
             'absolute top-0.5 left-1 block size-1 rounded-full',
-            dark ? 'bg-white0' : 'bg-neutral-400',
+            dark ? 'bg-neutral-500' : 'bg-neutral-400',
           )}
         />
       </span>

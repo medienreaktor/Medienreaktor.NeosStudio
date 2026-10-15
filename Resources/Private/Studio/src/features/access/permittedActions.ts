@@ -9,13 +9,6 @@ export interface PermittedActions {
   move: boolean
 }
 
-const ALL: PermittedActions = {
-  create: true,
-  edit: true,
-  delete: true,
-  move: true,
-}
-
 /**
  * The per-action verdict for a tree row, in the shape the context menu takes.
  *
@@ -24,6 +17,7 @@ const ALL: PermittedActions = {
  * it does cover is then subject to the role's capabilities, action by action:
  * "may edit but not delete" is an ordinary thing for a role to say, and it
  * should read as a greyed-out Delete rather than as an error after the click.
+ * While the access is still unknown, nothing is permitted (see useAccess.ts).
  */
 export function permittedActionsOn(
   node: Node,
@@ -39,9 +33,4 @@ export function permittedActionsOn(
     delete: nodePermits(node, 'deleteNodes'),
     move: nodePermits(node, 'moveNodes'),
   }
-}
-
-/** The unrestricted answer, for callers with no node in hand. */
-export function allActionsPermitted(): PermittedActions {
-  return ALL
 }

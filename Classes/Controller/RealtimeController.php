@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller;
 
-use Medienreaktor\NeosStudio\Service\WorkspaceEventFeed;
-use Medienreaktor\NeosStudio\Service\WorkspaceEventFeedFactory;
-use Medienreaktor\NeosStudio\Service\WorkspaceHistoryService;
+use Neos\Api\Infrastructure\ContentRepository\ContentStreamEventsFactory;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
@@ -16,16 +14,17 @@ use Neos\Flow\Mvc\Controller\ActionController;
 
 /**
  * The server-to-server surface of the realtime sidecar (the Hocuspocus
- * WebSocket server in this package's Resources/Private/Realtime/): the sidecar tails each
- * active workspace's change feed ONCE here and fans the events out to every
- * connected editor - replacing one poll per editor per 2s with one poll per
- * workspace.
+ * WebSocket server in this package's Resources/Private/Realtime/): the sidecar
+ * watches the HEAD of each active workspace's content stream here - one
+ * request per workspace, not one per editor - and tells the workspace's
+ * editors "something changed" whenever it moves.
  *
- * It tails the content stream through the Studio's WorkspaceEventFeed and
- * classifies events with WorkspaceHistoryService::parseFeedEvent() - the same
- * classification the shell's polling transport applies client-side to
- * Neos.Api's workspace events (api/collaboration.ts), so both transports
- * deliver identical feed events.
+ * Deliberately no event contents: the editors then read the events
+ * themselves through Neos.Api's listWorkspaceEvents with their own token, so
+ * Neos.Api's per-node read filtering applies to what each of them sees, and
+ * the feed is classified in one place only (the shell's
+ * features/collaboration/eventFeed.ts). A moving head says nothing more than
+ * "this workspace you may read has new events".
  *
  * Deliberately no operation of the Studio API (no bearer token, no scopes)
  * and sessionless - excluded from the backend session provider like
@@ -43,18 +42,9 @@ use Neos\Flow\Mvc\Controller\ActionController;
 class RealtimeController extends ActionController
 {
     /**
-     * Feed page size per request; a full page tells the sidecar its clients
-     * must refresh wholesale.
-     */
-    private const EVENT_FEED_LIMIT = 200;
-
-    /**
      * @var array<string>
      */
     protected $supportedMediaTypes = ['application/json'];
-
-    #[Flow\Inject]
-    protected WorkspaceHistoryService $workspaceHistoryService;
 
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
@@ -66,13 +56,13 @@ class RealtimeController extends ActionController
     protected $sharedSecret;
 
     /**
-     * The workspace change feed: {workspace, contentStreamId, sequenceNumber,
-     * reset, truncated, events}. Without stream+since (the baseline), or when
-     * the workspace moved to a different content stream since (reset=true),
-     * no events are enumerated - only the current cursor is handed out. The
-     * sidecar relays the events to the shell without translation.
+     * The head of the workspace's change feed: {workspace, contentStreamId,
+     * sequenceNumber} - the current content stream and the (global) sequence
+     * number of its newest event, null for an empty stream. The same cursor
+     * Neos.Api's listWorkspaceEvents pages by (its `after`), so the shell can
+     * tell whether a head is news to it.
      */
-    public function eventsAction(string $contentRepositoryId, string $workspaceName): string
+    public function headAction(string $contentRepositoryId, string $workspaceName): string
     {
         $this->requireSharedSecret();
 
@@ -86,43 +76,17 @@ class RealtimeController extends ActionController
             $this->throwJsonStatus(404, 'workspace_not_found', 'The workspace does not exist.');
         }
 
-        $query = $this->request->getHttpRequest()->getQueryParams();
-        $knownStream = isset($query['stream']) && is_string($query['stream']) && $query['stream'] !== '' ? $query['stream'] : null;
-        $since = isset($query['since']) && is_numeric($query['since']) ? (int)$query['since'] : null;
-
-        /** @var WorkspaceEventFeed $feed */
-        $feed = $this->contentRepositoryRegistry->buildService($contentRepositoryId, new WorkspaceEventFeedFactory());
         $contentStreamId = $workspace->currentContentStreamId;
-
-        if ($knownStream === null || $since === null || $knownStream !== $contentStreamId->value) {
-            return $this->json([
-                'workspace' => $workspace->workspaceName->value,
-                'contentStreamId' => $contentStreamId->value,
-                'sequenceNumber' => $feed->latestSequenceNumber($contentStreamId),
-                'reset' => $knownStream !== null && $knownStream !== $contentStreamId->value,
-                'truncated' => false,
-                'events' => [],
-            ]);
-        }
-
-        $envelopes = $feed->eventsSince($contentStreamId, $since, self::EVENT_FEED_LIMIT);
-        $cursor = $since;
-        $events = [];
-        foreach ($envelopes as $envelope) {
-            $cursor = $envelope->sequenceNumber->value;
-            $parsed = $this->workspaceHistoryService->parseFeedEvent($envelope);
-            if ($parsed !== null) {
-                $events[] = $parsed['event'];
-            }
+        $newest = null;
+        $events = $this->contentRepositoryRegistry->buildService($contentRepositoryId, new ContentStreamEventsFactory());
+        foreach ($events->load($contentStreamId)->backwards()->limit(1) as $envelope) {
+            $newest = $envelope->sequenceNumber->value;
         }
 
         return $this->json([
             'workspace' => $workspace->workspaceName->value,
             'contentStreamId' => $contentStreamId->value,
-            'sequenceNumber' => $cursor,
-            'reset' => false,
-            'truncated' => count($envelopes) === self::EVENT_FEED_LIMIT,
-            'events' => $events,
+            'sequenceNumber' => $newest,
         ]);
     }
 

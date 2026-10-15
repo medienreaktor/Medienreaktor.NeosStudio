@@ -1,0 +1,22 @@
+{
+  // Type-checks the Node-side build tooling (the Vite configs); the app itself
+  // is covered by tsconfig.json. The "build" script runs both, so a broken
+  // config fails before Vite starts.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["vite.config.ts", "vite.guest.config.ts"]
+}

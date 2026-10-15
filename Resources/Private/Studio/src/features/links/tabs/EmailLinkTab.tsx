@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { Input } from '@/components/ui/input'
 import { translate as t } from '@/lib/i18n'
@@ -6,17 +6,21 @@ import type { LinkTypeTabProps } from '../registry'
 
 /** "E-Mail link": an address input stored as mailto:<address>. */
 export function EmailLinkTab({ href, onChange }: LinkTypeTabProps) {
+  const id = useId()
   const [address, setAddress] = useState(() =>
     href !== null ? href.replace(/^mailto:/i, '') : '',
   )
 
   return (
     <div className="flex flex-col gap-1.5 p-3">
-      <label className="text-xs text-neutral-600 dark:text-neutral-400" htmlFor="link-email-address">
+      <label
+        className="text-xs text-neutral-600 dark:text-neutral-400"
+        htmlFor={id}
+      >
         {t('link.emailAddress', 'E-Mail address')}
       </label>
       <Input
-        id="link-email-address"
+        id={id}
         type="email"
         value={address}
         autoFocus

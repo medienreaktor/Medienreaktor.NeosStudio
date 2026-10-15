@@ -21,6 +21,7 @@ import {
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
+import { moveItem } from '@/lib/arrays'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
@@ -238,8 +239,31 @@ function SelectBoxControl({
 }
 
 /**
+ * The option key of a stored value - as dataSourceSelectOptions keys them:
+ * scalars as strings, objects as their JSON. Null for no value.
+ */
+function valueKey(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
+/** The selected key of a single select's value - null for none. */
+function singleKey(value: unknown): string | null {
+  return Array.isArray(value) ? null : valueKey(value)
+}
+
+/** The selected keys of a multi select's value, in order. */
+function multiKeys(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.map(valueKey).filter((key): key is string => key !== null)
+    : []
+}
+
+/**
  * The single-select dropdown. It holds the selection locally so a pick
- * reflects instantly, ahead of any refetch, and commits on every pick.
+ * reflects instantly, ahead of any refetch, and commits on every pick; it
+ * adopts a value changed elsewhere (no editing phase to protect).
  */
 function SingleSelect({
   items,
@@ -256,11 +280,13 @@ function SingleSelect({
   placeholder: string
   disabled: boolean
 }) {
-  const [selected, setSelected] = useState<string | null>(() =>
-    (typeof value === 'string' || typeof value === 'number') && value !== ''
-      ? String(value)
-      : null,
-  )
+  const external = singleKey(value)
+  const [selected, setSelected] = useState<string | null>(external)
+  const [lastExternal, setLastExternal] = useState(external)
+  if (external !== lastExternal) {
+    setLastExternal(external)
+    setSelected(external)
+  }
 
   // A key not (or no longer) among the items - a stale stored value, or one
   // arriving before its data source - still commits back as its string key.
@@ -324,9 +350,8 @@ function SingleSelect({
  * values as a list - order is the stored order, rows drag to reorder (the
  * MultiAssetFieldEditor pattern: reorder live on drag-over, persist on drop)
  * and remove with ×, the last one only if allowEmpty - plus a dropdown below
- * offering the not-yet-selected options to add. State is seeded once from
- * `value` and thereafter owned here; the inspector remounts the editor when
- * the edited subject changes, which resets it.
+ * offering the not-yet-selected options to add. The selection is held here
+ * and follows a value changed elsewhere, except while a row is dragged.
  */
 function MultiSelectList({
   items,
@@ -343,18 +368,18 @@ function MultiSelectList({
   placeholder: string
   disabled: boolean
 }) {
-  const [selected, setSelected] = useState<string[]>(() =>
-    Array.isArray(value)
-      ? value
-          .filter(
-            (v): v is string | number =>
-              typeof v === 'string' || typeof v === 'number',
-          )
-          .map(String)
-      : [],
-  )
+  const external = multiKeys(value)
+  const externalKey = JSON.stringify(external)
+  const [selected, setSelected] = useState<string[]>(external)
   // The row being dragged, tracked while a reorder is in progress.
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  // The order when the drag started - a drop that ends there saves nothing.
+  const [dragStartOrder, setDragStartOrder] = useState<string[] | null>(null)
+  const [lastExternal, setLastExternal] = useState(externalKey)
+  if (externalKey !== lastExternal && dragIndex === null) {
+    setLastExternal(externalKey)
+    setSelected(external)
+  }
 
   const itemFor = (key: string) =>
     items.find((candidate) => candidate.key === key)
@@ -367,17 +392,16 @@ function MultiSelectList({
 
   const handleDragOver = (index: number) => {
     if (dragIndex === null || dragIndex === index) return
-    setSelected((current) => {
-      const next = [...current]
-      const [moved] = next.splice(dragIndex, 1)
-      next.splice(index, 0, moved)
-      return next
-    })
+    setSelected((current) => moveItem(current, dragIndex, index))
     setDragIndex(index)
   }
 
   const handleDragEnd = () => {
     setDragIndex(null)
+    const startOrder = dragStartOrder
+    setDragStartOrder(null)
+    if (startOrder && JSON.stringify(startOrder) === JSON.stringify(selected))
+      return
     onCommit(selected.map(valueFor))
   }
 
@@ -398,6 +422,7 @@ function MultiSelectList({
               event.dataTransfer.effectAllowed = 'move'
               event.dataTransfer.setData('text/plain', key)
               setDragIndex(index)
+              setDragStartOrder(selected)
             }}
             onDragOver={(event) => {
               event.preventDefault()

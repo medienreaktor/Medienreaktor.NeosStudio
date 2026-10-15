@@ -1,5 +1,5 @@
 import { useWorkspaceChanges } from '@/api/neos/endpoints/workspaces'
-import { useStudio } from '@/app/StudioContext'
+import { useStudioActions } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { translate as t } from '@/lib/i18n'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
@@ -21,7 +21,7 @@ export function SyncWorkspaceButton({
   // Same query the publish button uses; its status field tells us whether
   // the base workspace has moved on.
   const { data: changesResponse } = useWorkspaceChanges(workspaceName)
-  const { navigateToNode } = useStudio()
+  const { navigateToNode } = useStudioActions()
   const { rebase, discardAll, conflicts, clearConflicts, busy } =
     useWorkspaceSync()
 

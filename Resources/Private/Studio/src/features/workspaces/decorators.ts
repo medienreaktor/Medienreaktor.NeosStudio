@@ -1,5 +1,6 @@
-import * as React from 'react'
+import type * as React from 'react'
 import type { Workspace } from '@/api/neos/schema'
+import { ObservableRegistry, useRegistry } from '@/lib/registry'
 
 /**
  * The workspace-decorator registry: plugins visually mark workspaces the shell
@@ -15,9 +16,10 @@ import type { Workspace } from '@/api/neos/schema'
  * workspace listing re-renders (see features/tasks/decorationData.ts). The
  * shell never learns what a decoration means.
  *
- * Modelled on the other registries (see features/modals/registry.ts): a small
- * observable store, register-replaces-by-id, stable snapshot for
- * useSyncExternalStore.
+ * Built on the shared observable store (see lib/registry.ts), like the
+ * other registries: register-replaces-by-id, stable snapshot for
+ * useSyncExternalStore, plus refresh() for decorators whose own data
+ * changed.
  */
 
 /** One visual mark a decorator attaches to a workspace. */
@@ -40,6 +42,35 @@ export interface WorkspaceDecoration {
   switcherGroup?: string
 }
 
+/**
+ * What a decorator adds to the workspace switcher: workflow actions for the
+ * checked-out workspace it decorates (a task's send to review, complete,
+ * reopen) and entries of its own (e.g. "Add task workspace"). The switcher
+ * renders them without knowing what they do.
+ */
+export interface WorkspaceSwitcherExtension {
+  /**
+   * Wraps the switcher while it is mounted: the state and dialogs of the
+   * menu items below, which reach it through the decorator's own context. A
+   * menu unmounts its items when it closes, so a dialog they open must live
+   * here.
+   */
+  Provider?: React.ComponentType<{
+    /** The workspace being edited. */
+    activeWorkspace: Workspace
+    /** Checks a workspace out for editing, e.g. a freshly created one. */
+    onCheckout: (workspaceName: string) => void
+    children: React.ReactNode
+  }>
+  /**
+   * The checked-out workspace's actions (menu items), nested as the submenu
+   * of its entry - for a workspace this decorator decorates.
+   */
+  Actions?: React.ComponentType<{ workspace: Workspace }>
+  /** Menu items at the end of the switcher's menu. */
+  MenuItems?: React.ComponentType
+}
+
 export interface WorkspaceDecoratorDefinition {
   /** Unique id. Third-party entries should namespace ('vendor.package:task'). */
   id: string
@@ -52,21 +83,18 @@ export interface WorkspaceDecoratorDefinition {
    * looked up by `workspace.name`).
    */
   decorate: (workspace: Workspace) => WorkspaceDecoration | null
+  /** What the decorator adds to the workspace switcher. */
+  switcher?: WorkspaceSwitcherExtension
 }
 
-export class WorkspaceDecoratorRegistry {
-  private definitions = new Map<string, WorkspaceDecoratorDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: WorkspaceDecoratorDefinition[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: WorkspaceDecoratorDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
+/**
+ * Decorators sorted by `order` then registration order - the getAll()
+ * snapshot changes identity only on (un)register and refresh(), so
+ * useSyncExternalStore stays quiet otherwise.
+ */
+export class WorkspaceDecoratorRegistry extends ObservableRegistry<WorkspaceDecoratorDefinition> {
+  constructor() {
+    super({ sort: 'order' })
   }
 
   /**
@@ -77,37 +105,29 @@ export class WorkspaceDecoratorRegistry {
   refresh(): void {
     this.emit()
   }
-
-  /**
-   * Stable snapshot sorted by `order` then registration order - changes
-   * identity only on (un)register and refresh(), so useSyncExternalStore
-   * stays quiet otherwise.
-   */
-  getAll(): WorkspaceDecoratorDefinition[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()].sort(
-      (a, b) => (a.order ?? 100) - (b.order ?? 100),
-    )
-    this.listeners.forEach((listener) => listener())
-  }
 }
 
 export const workspaceDecoratorRegistry = new WorkspaceDecoratorRegistry()
 
 /** Subscribe to the decorator registry; re-renders on (un)register and refresh(). */
 export function useWorkspaceDecorators(): WorkspaceDecoratorDefinition[] {
-  return React.useSyncExternalStore(
-    (onChange) => workspaceDecoratorRegistry.subscribe(onChange),
-    () => workspaceDecoratorRegistry.getAll(),
-  )
+  return useRegistry(workspaceDecoratorRegistry)
+}
+
+/** The decorator's decoration; null when it throws (logged, skipped). */
+function safeDecorate(
+  decorator: WorkspaceDecoratorDefinition,
+  workspace: Workspace,
+): WorkspaceDecoration | null {
+  try {
+    return decorator.decorate(workspace)
+  } catch (error) {
+    console.error(
+      `Workspace decorator "${decorator.id}" threw and was skipped:`,
+      error,
+    )
+    return null
+  }
 }
 
 /**
@@ -118,17 +138,24 @@ export function decorationsFor(
   workspace: Workspace,
   decorators: WorkspaceDecoratorDefinition[],
 ): WorkspaceDecoration[] {
-  const decorations: WorkspaceDecoration[] = []
-  for (const decorator of decorators) {
-    try {
-      const decoration = decorator.decorate(workspace)
-      if (decoration) decorations.push(decoration)
-    } catch (error) {
-      console.error(
-        `Workspace decorator "${decorator.id}" threw and was skipped:`,
-        error,
-      )
-    }
-  }
-  return decorations
+  return decorators.flatMap((decorator) => {
+    const decoration = safeDecorate(decorator, workspace)
+    return decoration ? [decoration] : []
+  })
+}
+
+/**
+ * The switcher actions for the workspace: of the first decorator that
+ * decorates it and has actions, null for none.
+ */
+export function switcherActionsFor(
+  workspace: Workspace,
+  decorators: WorkspaceDecoratorDefinition[],
+): React.ComponentType<{ workspace: Workspace }> | null {
+  const decorator = decorators.find(
+    (candidate) =>
+      candidate.switcher?.Actions !== undefined &&
+      safeDecorate(candidate, workspace) !== null,
+  )
+  return decorator?.switcher?.Actions ?? null
 }

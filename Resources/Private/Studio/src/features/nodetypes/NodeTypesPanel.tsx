@@ -396,8 +396,8 @@ export function NodeTypesPanel() {
   const matchSet = useMemo(() => new Set(matches), [matches])
   const matchCursor = useRef(0)
   const jumpToNextMatch = () => {
-    if (matches.length === 0) return
     const name = matches[matchCursor.current % matches.length]
+    if (name === undefined) return // no matches
     matchCursor.current += 1
     setSelected(name)
     centerOn(name)

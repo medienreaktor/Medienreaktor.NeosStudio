@@ -1,60 +1,74 @@
-import { useQuery } from '@tanstack/react-query'
-import {
-  activeContentRepositoryId,
-  useActiveContentRepositoryId,
-} from '../../neos/activeContentRepository'
-import { contentRepositoryPath, type Listing } from '../../neos/client'
-import { studioFetch } from '../client'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { useActiveContentRepositoryId } from '../../neos/activeContentRepository'
+import { api, unwrap } from '../../neos/client'
 import { studioKeys } from '../keys'
 import type {
   Task,
+  TaskAssigneeChange,
   TaskComment,
+  TaskCommentCreate,
   TaskCreate,
   TaskStatus,
+  TaskSubmit,
   TaskUpdate,
 } from '../schema'
 
 /**
  * The task workflow: task branches are ordinary shared workspaces plus the
- * Studio's record of who works on them (the Studio API's Tasks), in the
- * selected site's content repository.
+ * Studio's record of who works on them (the Studio API's Tasks). The hooks
+ * read the selected site's content repository; the writes name theirs
+ * explicitly - the content repository of the task's workspace.
  */
 
-function tasksPath(contentRepositoryId: string = activeContentRepositoryId()) {
-  return `${contentRepositoryPath(contentRepositoryId)}/tasks`
+const TASK = '/cr/{contentRepositoryId}/tasks/{workspaceName}'
+
+/** The path parameters of a task operation. */
+function taskPath(contentRepositoryId: string, workspaceName: string) {
+  return { contentRepositoryId, workspaceName }
 }
 
 export function useTasks(enabled = true) {
   const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
     queryKey: studioKeys.tasks.list(contentRepositoryId ?? ''),
-    queryFn: () => studioFetch<Listing<Task>>(tasksPath(contentRepositoryId!)),
-    enabled: enabled && contentRepositoryId !== null,
+    queryFn:
+      enabled && contentRepositoryId !== null
+        ? ({ signal }) =>
+            unwrap(
+              api.GET('/cr/{contentRepositoryId}/tasks', {
+                params: { path: { contentRepositoryId } },
+                signal,
+              }),
+            )
+        : skipToken,
     refetchInterval: 300_000,
     select: (listing) => listing.data,
   })
 }
 
-function taskPath(
-  workspaceName: string,
-  suffix = '',
-  contentRepositoryId: string = activeContentRepositoryId(),
-): string {
-  return `${tasksPath(contentRepositoryId)}/${encodeURIComponent(workspaceName)}${suffix}`
-}
-
-export function createTask(input: TaskCreate): Promise<Task> {
-  return studioFetch<Task>(tasksPath(), { method: 'POST', body: input })
+export function createTask(
+  contentRepositoryId: string,
+  input: TaskCreate,
+): Promise<Task> {
+  return unwrap(
+    api.POST('/cr/{contentRepositoryId}/tasks', {
+      params: { path: { contentRepositoryId } },
+      body: input,
+    }),
+  )
 }
 
 export function updateTask(
+  contentRepositoryId: string,
   workspaceName: string,
   input: TaskUpdate,
 ): Promise<Task> {
-  return studioFetch<Task>(taskPath(workspaceName), {
-    method: 'PATCH',
-    body: input,
-  })
+  return unwrap(
+    api.PATCH(TASK, {
+      params: { path: taskPath(contentRepositoryId, workspaceName) },
+      body: input,
+    }),
+  )
 }
 
 /**
@@ -65,19 +79,24 @@ export function updateTask(
  * comment for the reviewers (it joins the task's comment thread).
  */
 export function transitionTask(
+  contentRepositoryId: string,
   workspaceName: string,
   target: TaskStatus,
   comment?: string,
 ): Promise<Task> {
+  const params = { path: taskPath(contentRepositoryId, workspaceName) }
   if (target === 'IN_REVIEW') {
-    return studioFetch<Task>(taskPath(workspaceName, '/submit'), {
-      method: 'POST',
-      body: comment ? { comment } : {},
-    })
+    return unwrap(
+      api.POST(`${TASK}/submit`, {
+        params,
+        body: (comment ? { comment } : {}) satisfies TaskSubmit,
+      }),
+    )
   }
-  return studioFetch<Task>(
-    taskPath(workspaceName, target === 'DONE' ? '/approve' : '/reopen'),
-    { method: 'POST' },
+  return unwrap(
+    target === 'DONE'
+      ? api.POST(`${TASK}/approve`, { params })
+      : api.POST(`${TASK}/reopen`, { params }),
   )
 }
 
@@ -89,35 +108,53 @@ export function useTaskComments(workspaceName: string | null) {
       contentRepositoryId ?? '',
       workspaceName ?? '',
     ),
-    queryFn: () =>
-      studioFetch<Listing<TaskComment>>(
-        taskPath(workspaceName!, '/comments', contentRepositoryId!),
-      ),
-    enabled: workspaceName !== null && contentRepositoryId !== null,
+    queryFn:
+      workspaceName !== null && contentRepositoryId !== null
+        ? ({ signal }) =>
+            unwrap(
+              api.GET(`${TASK}/comments`, {
+                params: { path: taskPath(contentRepositoryId, workspaceName) },
+                signal,
+              }),
+            )
+        : skipToken,
     select: (listing) => listing.data,
   })
 }
 
 export function addTaskComment(
+  contentRepositoryId: string,
   workspaceName: string,
   text: string,
 ): Promise<TaskComment> {
-  return studioFetch<TaskComment>(taskPath(workspaceName, '/comments'), {
-    method: 'POST',
-    body: { text },
-  })
+  return unwrap(
+    api.POST(`${TASK}/comments`, {
+      params: { path: taskPath(contentRepositoryId, workspaceName) },
+      body: { text } satisfies TaskCommentCreate,
+    }),
+  )
 }
 
 export function assignTask(
+  contentRepositoryId: string,
   workspaceName: string,
   assignee: string | null,
 ): Promise<Task> {
-  return studioFetch<Task>(taskPath(workspaceName, '/assignee'), {
-    method: 'PUT',
-    body: { assignee },
-  })
+  return unwrap(
+    api.PUT(`${TASK}/assignee`, {
+      params: { path: taskPath(contentRepositoryId, workspaceName) },
+      body: { assignee } satisfies TaskAssigneeChange,
+    }),
+  )
 }
 
-export function deleteTask(workspaceName: string): Promise<null> {
-  return studioFetch<null>(taskPath(workspaceName), { method: 'DELETE' })
+export async function deleteTask(
+  contentRepositoryId: string,
+  workspaceName: string,
+): Promise<void> {
+  await unwrap(
+    api.DELETE(TASK, {
+      params: { path: taskPath(contentRepositoryId, workspaceName) },
+    }),
+  )
 }

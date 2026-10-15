@@ -9,9 +9,11 @@ import {
 } from '@/api/neos/endpoints/assets'
 import type { Asset } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { AssetThumb } from '@/features/media/AssetThumb'
 import { cn } from '@/lib/utils'
+import { moveItem } from '@/lib/arrays'
 import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorProps } from './registry'
 
@@ -44,6 +46,8 @@ export function MultiAssetFieldEditor({
   const [pickedById, setPickedById] = useState<Record<string, Asset>>({})
   // The row being dragged, tracked while a reorder is in progress.
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  // The order when the drag started - a drop that ends there saves nothing.
+  const [dragStartKey, setDragStartKey] = useState<string | null>(null)
 
   // Adopt external value changes (same discipline as AssetFieldEditor): a
   // refetched list that differs from both the last-seen one and the held one
@@ -70,12 +74,19 @@ export function MultiAssetFieldEditor({
   const add = () => {
     requestPick({
       title: subject.label,
-      onPick: async (chosen) => {
-        const id = await localAssetIdFor(chosen)
-        // The same asset twice would just be a confusing duplicate row.
-        if (refs.some((ref) => ref.id === id)) return
-        setPickedById((cache) => ({ ...cache, [id]: chosen }))
-        commit([...refs, assetReference(id)])
+      onPick: (chosen) => {
+        localAssetIdFor(chosen)
+          .then((id) => {
+            // The same asset twice would just be a confusing duplicate row.
+            if (refs.some((ref) => ref.id === id)) return
+            setPickedById((cache) => ({ ...cache, [id]: chosen }))
+            commit([...refs, assetReference(id)])
+          })
+          .catch((e: unknown) =>
+            toast.error(e, {
+              title: t('editor.pickAssetFailed', 'Picking asset failed'),
+            }),
+          )
       },
     })
   }
@@ -87,17 +98,15 @@ export function MultiAssetFieldEditor({
   // not fire an auto-save per hovered row.
   const handleDragOver = (index: number) => {
     if (dragIndex === null || dragIndex === index) return
-    setRefs((current) => {
-      const next = [...current]
-      const [moved] = next.splice(dragIndex, 1)
-      next.splice(index, 0, moved)
-      return next
-    })
+    setRefs((current) => moveItem(current, dragIndex, index))
     setDragIndex(index)
   }
 
   const handleDragEnd = () => {
     setDragIndex(null)
+    const startKey = dragStartKey
+    setDragStartKey(null)
+    if (startKey === listKey(refs)) return
     onCommit(refs.length ? refs : null)
   }
 
@@ -109,7 +118,10 @@ export function MultiAssetFieldEditor({
           identifier={ref.id}
           picked={pickedById[ref.id] ?? null}
           dragging={dragIndex === index}
-          onDragStart={() => setDragIndex(index)}
+          onDragStart={() => {
+            setDragIndex(index)
+            setDragStartKey(listKey(refs))
+          }}
           onDragOver={() => handleDragOver(index)}
           onDragEnd={handleDragEnd}
           onRemove={() => remove(ref.id)}

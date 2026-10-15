@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -33,6 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
+import { useQueryErrorToast } from '@/hooks/use-query-error-toast'
 import { translate as t } from '@/lib/i18n'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { CreateUserDialog } from './CreateUserDialog'
@@ -60,12 +61,7 @@ export function UserAdministration() {
   const [resetting, setResetting] = useState<User | null>(null)
   const [deleting, setDeleting] = useState<User | null>(null)
 
-  useEffect(() => {
-    if (error)
-      toast.error(error, {
-        title: t('users.loadFailed', 'Could not load users'),
-      })
-  }, [error])
+  useQueryErrorToast(error, t('users.loadFailed', 'Could not load users'))
 
   const users = useMemo(() => {
     const all = data ?? []
@@ -112,6 +108,7 @@ export function UserAdministration() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.search', 'Search users…')}
+            aria-label={t('users.search', 'Search users…')}
             wrapperClassName="mb-3 max-w-xs"
           />
 
@@ -188,7 +185,7 @@ export function UserAdministration() {
         onConfirm={async () => {
           const user = deleting!
           await deleteUser(user.id)
-          queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
+          void queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
           toast.success(
             t('users.deleted', 'The user "{0}" has been deleted.', [
               user.label,
@@ -216,7 +213,7 @@ function UserRow({
   const activation = useMutation({
     mutationFn: (active: boolean) => updateUser(user.id, { active }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       toast.success(
         response.active
           ? t('users.activated', 'The user "{0}" has been activated.', [

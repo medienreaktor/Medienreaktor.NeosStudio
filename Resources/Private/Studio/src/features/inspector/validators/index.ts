@@ -38,47 +38,7 @@ import { validatorRegistry } from './registry'
  * identifiers that node type configuration references.
  */
 
-export {
-  ALPHANUMERIC_VALIDATOR,
-  Alphanumeric,
-  COUNT_VALIDATOR,
-  Count,
-  DATE_TIME_VALIDATOR,
-  DateTime,
-  EMAIL_ADDRESS_VALIDATOR,
-  EmailAddress,
-  FLOAT_VALIDATOR,
-  Float,
-  INTEGER_VALIDATOR,
-  Integer,
-  LABEL_VALIDATOR,
-  Label,
-  NOT_EMPTY_VALIDATOR,
-  NotEmpty,
-  NUMBER_RANGE_VALIDATOR,
-  NumberRange,
-  REGULAR_EXPRESSION_VALIDATOR,
-  RegularExpression,
-  STRING_LENGTH_VALIDATOR,
-  STRING_VALIDATOR,
-  StringLength,
-  StringType,
-  TEXT_VALIDATOR,
-  Text,
-  UUID_VALIDATOR,
-  Uuid,
-}
-export {
-  validateValue,
-  validatorRegistry,
-  useValidator,
-  ValidatorRegistry,
-} from './registry'
-export type {
-  ValidationConfig,
-  ValidatorDefinition,
-  ValidatorFunction,
-} from './registry'
+export { validateValue } from './registry'
 
 /**
  * Register the built-in validators. Called once before the app mounts,

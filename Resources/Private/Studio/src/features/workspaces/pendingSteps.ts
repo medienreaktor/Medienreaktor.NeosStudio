@@ -12,8 +12,8 @@ export interface WorkspacePendingStep {
   id: number
   command: string | null
   /** Oldest first; never empty. */
-  events: WorkspacePendingEvent[]
-  /** Sequence-number range, for the diff resource. */
+  events: [WorkspacePendingEvent, ...WorkspacePendingEvent[]]
+  /** Sequence-number range, which the step's diff reads its events by. */
   from: number
   to: number
   /** Stream version of the last event - what fork points compare against. */
@@ -38,15 +38,16 @@ export interface WorkspacePendingStep {
  * this sliding window ("one editing session on this element"). Only
  * CONSECUTIVE events squash, so anything interleaving (another user,
  * another element) cuts the step - the from..to sequence range stays exact
- * for the diff resource.
+ * for the step's diff.
  */
 const SQUASH_COMMANDS = new Set([
   'SetNodeProperties',
   'SetSerializedNodeProperties',
 ])
 const SQUASH_WINDOW_MS = 30_000
-/** Hard cap per squashed step - the pending-events diff resource rejects
- * sequence ranges of 200+, and a step must stay diffable. */
+/** Cap per squashed step: its diff reads the from..to range in pages of 100
+ * events (listWorkspaceEvents' maximum), so an uninterrupted step stays one
+ * request - and one dot doesn't swallow an hour of typing. */
 const SQUASH_MAX_EVENTS = 100
 
 function withinSquashWindow(a: string | null, b: string | null): boolean {

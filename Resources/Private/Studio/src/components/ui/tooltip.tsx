@@ -22,29 +22,12 @@ function Tooltip({
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
+/** Renders a <button>, so the tooltip is reachable by keyboard; compose onto
+ * another element with Base UI's `render` prop. */
 function TooltipTrigger({
-  asChild,
-  children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger> & {
-  asChild?: boolean
-}) {
-  // Base UI composes via the render prop; asChild is kept for shadcn API
-  // compatibility (the sidebar uses it internally).
-  if (asChild && React.isValidElement(children)) {
-    return (
-      <TooltipPrimitive.Trigger
-        data-slot="tooltip-trigger"
-        render={children as React.ReactElement<Record<string, unknown>>}
-        {...props}
-      />
-    )
-  }
-  return (
-    <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props}>
-      {children}
-    </TooltipPrimitive.Trigger>
-  )
+}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
 function TooltipContent({

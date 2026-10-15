@@ -183,14 +183,14 @@ function LineChart({
     const bounds = event.currentTarget.getBoundingClientRect()
     const pointerX = event.clientX - bounds.left
     let nearest = 0
-    for (let i = 1; i < points.length; i++) {
-      if (
-        Math.abs(x(points[i].time) - pointerX) <
-        Math.abs(x(points[nearest].time) - pointerX)
-      ) {
+    let nearestDistance = Infinity
+    points.forEach((point, i) => {
+      const distance = Math.abs(x(point.time) - pointerX)
+      if (distance < nearestDistance) {
         nearest = i
+        nearestDistance = distance
       }
-    }
+    })
     setHover(nearest)
   }
 

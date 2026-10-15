@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { createWorkspace } from '@/api/neos/endpoints/workspaces'
 import type { Workspace, WorkspaceCreate } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
+import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
 
 /** public: every editor may collaborate; private: only the creator. */
@@ -50,15 +52,16 @@ export function CreateWorkspaceDialog({
   const [description, setDescription] = useState('')
   const [baseWorkspaceName, setBaseWorkspaceName] = useState('live')
   const [visibility, setVisibility] = useState<Visibility>('public')
+  const contentRepositoryId = useActiveContentRepositoryId()
 
-  useEffect(() => {
-    if (open) {
-      setTitle('')
-      setDescription('')
-      setBaseWorkspaceName('live')
-      setVisibility('public')
-    }
-  }, [open])
+  // Every open starts with an empty form.
+  useValueChange(open, (isOpen) => {
+    if (!isOpen) return
+    setTitle('')
+    setDescription('')
+    setBaseWorkspaceName('live')
+    setVisibility('public')
+  })
 
   const baseItems = workspaces
     .filter((workspace) => workspace.classification !== 'personal')
@@ -79,7 +82,7 @@ export function CreateWorkspaceDialog({
 
   const mutation = useMutation({
     mutationFn: () =>
-      createWorkspace({
+      createWorkspace(contentRepositoryId!, {
         classification: 'shared',
         title: title.trim(),
         ...(description.trim() !== ''

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   dimensionSpacePointLabel,
   useContentRepository,
@@ -32,6 +32,7 @@ import {
 import {
   persistPropertyChange,
   persistReferenceChange,
+  PropertyValidationError,
 } from '@/features/editing/persistProperty'
 import { useNodeEditable } from '@/features/access/useAccess'
 import { usePresence } from '@/features/collaboration/PresenceContext'
@@ -52,10 +53,12 @@ import { InspectorViewRenderer } from './views/InspectorViewRenderer'
 /**
  * The visibility flag from the Neos.Neos:Hidable mixin. Configured as a
  * boolean property, but in Neos 9 it is not a real content-repository property
- * - it is the "disabled" subtree tag. So its value comes from the node's tags,
- * and toggling it goes through the enable/disable commands rather than
- * SetNodeProperties (see the save routing below). hiddenInMenu, by contrast,
- * is an ordinary boolean property and takes the normal property path.
+ * - it is the "disabled" subtree tag. So its value comes from the node's own
+ * tags (a node hidden through an ancestor's tag is shown as such, but cannot
+ * be unhidden here), and toggling it goes through the enable/disable commands
+ * rather than SetNodeProperties (see the save routing below). hiddenInMenu, by
+ * contrast, is an ordinary boolean property and takes the normal property
+ * path.
  */
 const HIDDEN_PROPERTY = '_hidden'
 
@@ -86,21 +89,23 @@ function referenceTargets(value: unknown): string[] {
  * the node's tags and type, since they have no property value of their own.
  */
 function propertyValue(node: Node, name: string): unknown {
-  if (name === HIDDEN_PROPERTY) {
-    return (
-      node.tags.includes('disabled') || node.inheritedTags.includes('disabled')
-    )
-  }
+  if (name === HIDDEN_PROPERTY) return node.tags.includes('disabled')
   if (name === NODE_TYPE_PROPERTY) return node.nodeType
   return node.properties[name]
+}
+
+/** Whether the node is hidden only through an ancestor's "disabled" tag. */
+function hiddenByAncestor(node: Node): boolean {
+  return (
+    !node.tags.includes('disabled') && node.inheritedTags.includes('disabled')
+  )
 }
 
 /**
  * The inspector panel's content (the panel chrome - tab, dragging, floating -
  * comes from the panel system). The node type's inspector configuration
- * drives the structure: tabs containing groups containing properties. Text
- * properties are editable; other editors render their value read-only until
- * implemented.
+ * drives the structure: tabs containing groups containing properties, each
+ * edited by its registered editor (read-only for an editor that is not).
  */
 export function InspectorPanel({
   node,
@@ -132,16 +137,39 @@ export function InspectorPanel({
   // Live, not-yet-committed editor input, overlaid on node.properties for
   // ClientEval - dependent fields react while the user types, like the
   // classic UI's transient values. Keyed by node address so switching the
-  // inspected node discards them; after a commit the refetched node carries
-  // the same values, so stale shadowing cannot occur.
+  // inspected node discards them; a value is dropped once its save settles
+  // (see save), and ignored as soon as the node carries it - so it can never
+  // shadow a newer value from elsewhere.
   const [transient, setTransient] = useState<{
     address: NodeAddress
     values: Record<string, unknown>
   } | null>(null)
-  const transientValues =
-    node && sameNodeAddress(transient?.address, node)
-      ? transient!.values
-      : undefined
+  const transientValues = useMemo(() => {
+    if (!node || !sameNodeAddress(transient?.address, node)) return undefined
+    const pending = Object.entries(transient!.values).filter(
+      ([name, value]) => !deepEqual(value, propertyValue(node, name)),
+    )
+    return pending.length > 0 ? Object.fromEntries(pending) : undefined
+  }, [node, transient])
+  // Drops a property's transient value - unless newer input replaced it.
+  const clearTransient = (
+    address: NodeAddress,
+    propertyName: string,
+    value: unknown,
+  ) => {
+    setTransient((previous) => {
+      if (
+        !previous ||
+        !sameNodeAddress(previous.address, address) ||
+        !(propertyName in previous.values) ||
+        previous.values[propertyName] !== value
+      ) {
+        return previous
+      }
+      const { [propertyName]: _, ...values } = previous.values
+      return { address: previous.address, values }
+    })
+  }
   const reportLiveChange = (propertyName: string, value: unknown) => {
     if (!node) return
     setTransient((previous) => ({
@@ -185,11 +213,13 @@ export function InspectorPanel({
       parentNode: parentNode ? clientEvalNode(parentNode) : null,
     })
   }, [tabs, node, transientValues, parentNode])
-  const stableTabsRef = useRef(evaluatedTabs)
-  if (!deepEqual(stableTabsRef.current, evaluatedTabs)) {
-    stableTabsRef.current = evaluatedTabs
+  // Adopted only when the content differs - React's "adjust state while
+  // rendering" pattern (it re-renders right away, before the children), which
+  // keeps render pure where a ref written here would not.
+  const [visibleTabs, setVisibleTabs] = useState(evaluatedTabs)
+  if (visibleTabs !== evaluatedTabs && !deepEqual(visibleTabs, evaluatedTabs)) {
+    setVisibleTabs(evaluatedTabs)
   }
-  const visibleTabs = stableTabsRef.current
 
   // Validate every visible property's current value (persisted, overlaid with
   // live edits) - like the classic UI's validation of transient values, so
@@ -241,34 +271,27 @@ export function InspectorPanel({
       .flatMap((item) => (item.kind === 'property' ? [item.property] : []))
       .find((property) => property.name === propertyName)
     const propertyType = propertySchema?.type
-    // An invalid value is never persisted: the commit is dropped and the
-    // inline error (already visible - reportLiveChange above put the value
-    // into the validation overlay) tells the user why. The editor keeps its
-    // draft, so fixing the input and re-committing saves normally.
-    if (
-      propertySchema &&
-      validateValue(value, propertySchema.validation).length > 0
-    ) {
-      return
-    }
+    const address = nodeAddressOf(node)
     // Two further "properties" are not real properties and route to their own
     // commands: _hidden is the "disabled" subtree tag (enable/disable, like the
     // tree/preview hide actions), and the node type is changed with
     // ChangeNodeAggregateType.
+    // Properties and references are validated on the way out (see
+    // persistProperty); an invalid value is never persisted.
     const persist =
       propertyName === HIDDEN_PROPERTY
         ? value === true
-          ? hideNodes([nodeAddressOf(node)])
-          : unhideNodes([nodeAddressOf(node)])
+          ? hideNodes([address])
+          : unhideNodes([address])
         : propertyName === NODE_TYPE_PROPERTY
-          ? changeNodeType(nodeAddressOf(node), String(value))
+          ? changeNodeType(address, String(value))
           : propertyType === 'reference' || propertyType === 'references'
             ? persistReferenceChange(
-                nodeAddressOf(node),
+                address,
                 propertyName,
                 referenceTargets(value),
               )
-            : persistPropertyChange(nodeAddressOf(node), propertyName, value)
+            : persistPropertyChange(address, propertyName, value)
     // How the preview refreshes follows ui.reloadPageIfChanged ('page') /
     // ui.reloadIfChanged ('element': out-of-band re-render of just this
     // node's element) / neither ('none'). Two exceptions: a type change
@@ -299,10 +322,19 @@ export function InspectorPanel({
     const reload =
       configuredReload === 'element' && isDocument ? 'page' : configuredReload
     persist
-      .then(() => onNodeEdited?.(nodeAddressOf(node), { reload }))
-      .catch((e: unknown) =>
-        toast.error(e, { title: t('inspector.savingFailed', 'Saving failed') }),
-      )
+      .then(() => {
+        clearTransient(address, propertyName, value)
+        onNodeEdited?.(address, { reload })
+      })
+      .catch((e: unknown) => {
+        // A refused value keeps its transient overlay, so the inline error
+        // (already visible - reportLiveChange above put the value into the
+        // validation overlay) tells the user why; the editor keeps its draft,
+        // so fixing the input and re-committing saves normally.
+        if (e instanceof PropertyValidationError) return
+        clearTransient(address, propertyName, value)
+        toast.error(e, { title: t('inspector.savingFailed', 'Saving failed') })
+      })
   }
 
   if (!node) {
@@ -374,7 +406,7 @@ export function InspectorPanel({
                 value={
                   visibleTabs.some((tab) => tab.id === selectedTab)
                     ? selectedTab
-                    : visibleTabs[0].id
+                    : visibleTabs[0]?.id
                 }
                 onValueChange={(value) => setSelectedTab(value as string)}
               >
@@ -504,12 +536,6 @@ function ShineThroughNotice({ node }: { node: Node }) {
 }
 
 /**
- * Alert under the inspector header while a collaborator holds the edit lock
- * on this element (they have it selected in a realtime session). Advisory,
- * like the preview's lock rendering: locks are a Studio/sidecar concept and
- * deliberately not enforced by the API.
- */
-/**
  * Why the editors are inert: this page is not inside the access role the
  * account works under. Deliberately says who to ask rather than only what is
  * forbidden - the editor cannot lift this themselves.
@@ -531,6 +557,12 @@ function AccessLockNotice() {
   )
 }
 
+/**
+ * Alert under the inspector header while a collaborator holds the edit lock
+ * on this element (they have it selected in a realtime session). Advisory,
+ * like the preview's lock rendering: locks are a Studio/sidecar concept and
+ * deliberately not enforced by the API.
+ */
 function ElementLockNotice({ node }: { node: Node }) {
   const { peers } = usePresence()
   const holder = peers.find(
@@ -586,27 +618,52 @@ function PropertyGroup({
       }
       bodyClassName="space-y-4"
     >
-      {group.items.map((item) =>
-        item.kind === 'property' ? (
+      {group.items.map((item) => {
+        if (item.kind !== 'property') {
+          return (
+            <div key={item.view.name}>
+              <InspectorViewRenderer view={item.view} node={node} />
+            </div>
+          )
+        }
+        // Hidden through an ancestor: nothing to toggle on this node - the
+        // box shows it disabled, the hint says where it comes from.
+        const inheritedHidden =
+          item.property.name === HIDDEN_PROPERTY && hiddenByAncestor(node)
+        return (
           <div key={item.property.name}>
             <PropertyEditor
               // Reset drafts when the inspected node changes, keep them
               // across the refetch after a save.
               key={`${nodeAddressKey(node)}:${item.property.name}`}
-              property={item.property}
+              property={
+                inheritedHidden
+                  ? {
+                      ...item.property,
+                      editorOptions: {
+                        ...item.property.editorOptions,
+                        disabled: true,
+                      },
+                    }
+                  : item.property
+              }
               value={propertyValue(node, item.property.name)}
               nodeAddress={node}
               errors={validationErrors[item.property.name]}
               onSave={onSave}
               onLiveChange={onLiveChange}
             />
+            {inheritedHidden && (
+              <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                {t(
+                  'inspector.hiddenByAncestor',
+                  'Hidden because a page or element above it is hidden.',
+                )}
+              </p>
+            )}
           </div>
-        ) : (
-          <div key={item.view.name}>
-            <InspectorViewRenderer view={item.view} node={node} />
-          </div>
-        ),
-      )}
+        )
+      })}
     </CollapsibleGroup>
   )
 }

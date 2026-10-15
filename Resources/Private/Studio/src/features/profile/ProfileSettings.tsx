@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { apiErrorDescription } from '@/api/http/errors'
@@ -34,6 +34,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { useQueryErrorToast } from '@/hooks/use-query-error-toast'
 
 /**
  * The own account, rendered as a section of the shared Settings modal (see
@@ -44,12 +45,10 @@ import { toast } from '@/components/ui/toast'
 export function ProfileSettings() {
   const { data, isLoading, error } = useProfile()
 
-  useEffect(() => {
-    if (error)
-      toast.error(error, {
-        title: t('profile.loadFailed', 'Could not load your profile'),
-      })
-  }, [error])
+  useQueryErrorToast(
+    error,
+    t('profile.loadFailed', 'Could not load your profile'),
+  )
 
   return (
     <div className="max-w-xl p-6 pt-3">
@@ -120,8 +119,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
   if (firstName !== profile.firstName) changes.firstName = firstName
   if (lastName !== profile.lastName) changes.lastName = lastName
   // An address can be changed but not removed - a cleared field is no change.
-  if (email.trim() !== '' && email !== (profile.email ?? ''))
-    changes.email = email
+  const trimmedEmail = email.trim()
+  if (trimmedEmail !== '' && trimmedEmail !== (profile.email ?? ''))
+    changes.email = trimmedEmail
   if (language !== profile.interfaceLanguage)
     changes.interfaceLanguage = language
   if (uiMode !== savedUiMode)
@@ -132,8 +132,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
     mutationFn: (input: ProfileUpdate) => updateProfile(input),
     onSuccess: (_response, input) => {
       // me covers profile (nested key); users so an admin's own row updates.
-      queryClient.invalidateQueries({ queryKey: neosKeys.me })
-      queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.me })
+      void queryClient.invalidateQueries({ queryKey: neosKeys.users.all })
       toast.success(t('profile.saved', 'Your profile has been saved.'))
       // The theme switches live - no reload needed for the UI mode.
       if (input.preferences?.[UI_MODE_PREFERENCE] !== undefined) {
@@ -231,9 +231,21 @@ function ProfileForm({ profile }: { profile: Profile }) {
         </Select>
       </Field>
 
-      <Field label={t('profile.uiMode', 'Appearance')}>
-        <UiModePicker value={uiMode} onChange={setUiMode} />
-      </Field>
+      {/* Not a Field: the picker is a radiogroup of its own, named by this
+          label - a wrapping group would announce "Appearance" twice. */}
+      <div className="space-y-1.5">
+        <div
+          id="profile-ui-mode-label"
+          className="block text-sm font-medium text-neutral-800 dark:text-neutral-200"
+        >
+          {t('profile.uiMode', 'Appearance')}
+        </div>
+        <UiModePicker
+          value={uiMode}
+          onChange={setUiMode}
+          labelledBy="profile-ui-mode-label"
+        />
+      </div>
 
       <Button type="submit" disabled={!isDirty || mutation.isPending}>
         {mutation.isPending
@@ -336,12 +348,15 @@ function PasswordForm() {
             onChange={(event) => setConfirmPassword(event.target.value)}
             autoComplete="new-password"
             aria-invalid={mismatch || undefined}
+            aria-describedby={
+              mismatch ? 'profile-password-mismatch' : undefined
+            }
             required
           />
         </Field>
       </div>
       {mismatch && (
-        <p className="text-sm text-red-500">
+        <p id="profile-password-mismatch" className="text-sm text-red-500">
           {t('profile.passwordMismatch', 'The new passwords do not match.')}
         </p>
       )}

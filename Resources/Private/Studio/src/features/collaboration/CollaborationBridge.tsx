@@ -3,13 +3,14 @@ import type {
   EditingElement,
   PresenceUser,
   WorkspaceFeedEvent,
-} from '@/api/studio/schema'
+} from '@/features/collaboration/types'
 import {
   parseDimensionSpacePoint,
   sameDimensionSpacePoint,
 } from '@/api/neos/schema'
 import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { config } from '@/config'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 import { publishRemoteLiveEdit, subscribeLocalLiveEdits } from './liveEdits'
 import { startPollingTransport } from './pollingTransport'
 import { startWebsocketTransport } from './websocketTransport'
@@ -76,16 +77,11 @@ export function CollaborationBridge({
   // Latest-value refs keep the transport session stable while props change
   // beneath it - a re-created transport would tear down its connection (or
   // reset its poll cadence) on every render.
-  const callbacksRef = useRef({
+  const callbacksRef = useLatestRef({
     onPresence,
     onRemoteContentChange,
     onRemoteWorkspaceChange,
   })
-  callbacksRef.current = {
-    onPresence,
-    onRemoteContentChange,
-    onRemoteWorkspaceChange,
-  }
   // The position as the transports announce it: the sidecar's roster carries
   // the dimension space point as coordinates.
   const position = {
@@ -97,12 +93,9 @@ export function CollaborationBridge({
         : parseDimensionSpacePoint(dimensionSpacePoint),
     editingElement,
   }
-  const positionRef = useRef(position)
-  positionRef.current = position
-  const dimensionSpacePointRef = useRef(dimensionSpacePoint)
-  dimensionSpacePointRef.current = dimensionSpacePoint
-  const ownUserIdRef = useRef(ownUserId)
-  ownUserIdRef.current = ownUserId
+  const positionRef = useLatestRef(position)
+  const dimensionSpacePointRef = useLatestRef(dimensionSpacePoint)
+  const ownUserIdRef = useLatestRef(ownUserId)
   // Serialized last roster - identical reports do not re-render the app.
   const lastPresenceRef = useRef<string | null>(null)
   // The running transports, for out-of-band position announcements. During a
@@ -254,12 +247,23 @@ export function CollaborationBridge({
       transportsRef.current = []
       lastPresenceRef.current = null
     }
-  }, [contentRepositoryId, workspaceName])
+    // The *Ref values are stable latest-value refs (useLatestRef), listed
+    // only because the linter cannot know that; the session restarts only
+    // with the workspace.
+  }, [
+    contentRepositoryId,
+    workspaceName,
+    callbacksRef,
+    dimensionSpacePointRef,
+    ownUserIdRef,
+    positionRef,
+  ])
 
-  // A document/focus/editing change announces the new position out-of-band,
-  // so colleagues' indicators (and edit locks) follow in one feed cycle
-  // instead of one interval - WITHOUT restarting the transport (a torn-down
-  // connection on every node click would defeat a persistent socket).
+  // A document/focus/editing/dimension change announces the new position
+  // out-of-band, so colleagues' indicators (and edit locks) follow in one
+  // feed cycle instead of one interval - WITHOUT restarting the transport (a
+  // torn-down connection on every node click would defeat a persistent
+  // socket).
   const mounted = useRef(false)
   useEffect(() => {
     if (!mounted.current) {
@@ -273,8 +277,10 @@ export function CollaborationBridge({
   }, [
     documentAggregateId,
     focusedAggregateId,
+    dimensionSpacePoint,
     editingElement?.nodeAggregateId,
     editingElement?.property,
+    positionRef, // stable
   ])
 
   return null

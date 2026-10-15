@@ -1,23 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
+import { skipToken, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
-import {
-  activeContentRepositoryId,
-  useActiveContentRepositoryId,
-} from '../activeContentRepository'
-import { apiFetch, contentRepositoryPath } from '../client'
+import { useActiveContentRepositoryId } from '../activeContentRepository'
+import { api, unwrap } from '../client'
 import { neosKeys } from '../keys'
 import type { NodeType, NodeTypeListing } from '../schema'
 
 /**
- * The node types of the selected site's content repository (Neos.Api's
- * NodeTypes tag). The
+ * The node types of a content repository (Neos.Api's NodeTypes tag) - the
+ * hooks read the selected site's, the imperative reads name theirs. The
  * model changes on deployments, not during a session, so every read is
  * cached for good.
  */
-
-function nodeTypesPath(contentRepositoryId: string): string {
-  return `${contentRepositoryPath(contentRepositoryId)}/nodetypes`
-}
 
 /**
  * The node type listing with the given include (comma-separated: properties,
@@ -28,11 +21,15 @@ function nodeTypesPath(contentRepositoryId: string): string {
 function listingQuery(contentRepositoryId: string, include = '') {
   return {
     queryKey: neosKeys.nodeTypes.listing(contentRepositoryId, include),
-    queryFn: () =>
-      apiFetch<NodeTypeListing>(
-        include === ''
-          ? nodeTypesPath(contentRepositoryId)
-          : `${nodeTypesPath(contentRepositoryId)}?include=${include}`,
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      unwrap(
+        api.GET('/cr/{contentRepositoryId}/nodetypes', {
+          params: {
+            path: { contentRepositoryId },
+            query: { include: include || undefined },
+          },
+          signal,
+        }),
       ),
     staleTime: Infinity,
   }
@@ -55,30 +52,51 @@ export function nodeTypeMap(nodeTypes: NodeType[]): NodeTypeMap {
 /** The node types by name, with the given include (see listingQuery). */
 export function useNodeTypes(include = '', enabled = true) {
   const contentRepositoryId = useActiveContentRepositoryId()
+  const query = listingQuery(contentRepositoryId ?? '', include)
   return useQuery({
-    ...listingQuery(contentRepositoryId ?? '', include),
-    enabled: enabled && contentRepositoryId !== null,
+    ...query,
+    queryFn:
+      enabled && contentRepositoryId !== null ? query.queryFn : skipToken,
     select: (listing: NodeTypeListing) => nodeTypeMap(listing.data),
   })
 }
 
-/** Imperative variant of useNodeTypes, same cache entries. */
-export async function fetchNodeTypes(include = ''): Promise<NodeType[]> {
+/**
+ * Imperative variant of useNodeTypes, same cache entries - of the content
+ * repository given (a node address's, where there is one).
+ */
+export async function fetchNodeTypes(
+  contentRepositoryId: string,
+  include = '',
+): Promise<NodeType[]> {
   return (
-    await queryClient.fetchQuery(
-      listingQuery(activeContentRepositoryId(), include),
-    )
+    await queryClient.fetchQuery(listingQuery(contentRepositoryId, include))
   ).data
 }
 
 /** The node type groups (Neos.Neos.nodeTypes.groups), for creation UIs. */
 export function useNodeTypeGroups(enabled = true) {
   const contentRepositoryId = useActiveContentRepositoryId()
+  const query = listingQuery(contentRepositoryId ?? '')
   return useQuery({
-    ...listingQuery(contentRepositoryId ?? ''),
-    enabled: enabled && contentRepositoryId !== null,
+    ...query,
+    queryFn:
+      enabled && contentRepositoryId !== null ? query.queryFn : skipToken,
     select: (listing: NodeTypeListing) => listing.meta.groups,
   })
+}
+
+function loadNodeType(
+  contentRepositoryId: string,
+  name: string,
+  signal?: AbortSignal,
+): Promise<NodeType> {
+  return unwrap(
+    api.GET('/cr/{contentRepositoryId}/nodetypes/{nodeTypeName}', {
+      params: { path: { contentRepositoryId, nodeTypeName: name } },
+      signal,
+    }),
+  )
 }
 
 /** One node type with everything: its configuration, properties, references, constraints. */
@@ -89,12 +107,23 @@ export function useNodeType(name: string | null, enabled = true) {
       contentRepositoryId ?? '',
       name ?? '',
     ),
-    queryFn: () =>
-      apiFetch<NodeType>(
-        `${nodeTypesPath(contentRepositoryId!)}/${encodeURIComponent(name!)}`,
-      ),
+    queryFn:
+      enabled && name !== null && contentRepositoryId !== null
+        ? ({ signal }) => loadNodeType(contentRepositoryId, name, signal)
+        : skipToken,
     staleTime: Infinity,
-    enabled: enabled && name !== null && contentRepositoryId !== null,
+  })
+}
+
+/** Imperative variant of useNodeType, sharing its cache entries. */
+export function fetchNodeType(
+  contentRepositoryId: string,
+  name: string,
+): Promise<NodeType> {
+  return queryClient.ensureQueryData({
+    queryKey: neosKeys.nodeTypes.nodeType(contentRepositoryId, name),
+    queryFn: ({ signal }) => loadNodeType(contentRepositoryId, name, signal),
+    staleTime: Infinity,
   })
 }
 

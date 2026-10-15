@@ -101,8 +101,8 @@ function reportNodeAction(
   action: NodeMenuAction,
   targets: NodeMenuTarget[],
 ): void {
-  if (targets.length === 1) {
-    const [target] = targets
+  const [target] = targets
+  if (target && targets.length === 1) {
     if (action === 'delete') {
       if (target.parentAddress) studio.nodeEdited(target.parentAddress)
     } else {
@@ -358,12 +358,6 @@ function NodeInspectorPanel() {
 }
 
 /**
- * The Visual Editor: the page preview with in-place editing. All of its wiring
- * (selected document, reload token, selection/navigation
- * callbacks) comes from the studio context, so the panel is self-contained.
- * The preview toolbar itself stays in the app header.
- */
-/**
  * The strip over a deleted page: selecting a trash entry opens the page here,
  * which is otherwise indistinguishable from an ordinary one - the preview shows
  * it as it was. Says why nothing can be edited, and offers the way back.
@@ -406,6 +400,12 @@ function DeletedDocumentBanner({ document }: { document: Node }) {
   )
 }
 
+/**
+ * The Visual Editor: the page preview with in-place editing. All of its wiring
+ * (selected document, reload token, selection/navigation
+ * callbacks) comes from the studio context, so the panel is self-contained.
+ * The preview toolbar itself stays in the app header.
+ */
 function VisualEditorPanel() {
   const {
     selectedDocument,
@@ -490,7 +490,8 @@ function MediaLibraryPanel() {
 }
 
 /**
- * Call once before the app mounts. The default layout: the sidebar holds the
+ * Call once before the app mounts. Titles are functions, so they translate
+ * when rendered rather than when registered. The default layout: the sidebar holds the
  * Documents tree alone on top and an Outline/Create/Clipboard/Trash tab group below
  * (stacked groups split the height evenly); the main area tabs the Visual
  * Editor and the Media Library; the Inspector docks in the right-hand
@@ -501,13 +502,13 @@ export function registerBuiltinPanels(): void {
   // main area, with Media Library alongside it.
   panelRegistry.register({
     id: 'visual-editor',
-    title: t('panel.title.visualEditor', 'Visual Editor'),
+    title: () => t('panel.title.visualEditor', 'Visual Editor'),
     component: VisualEditorPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({
     id: 'media-library',
-    title: t('panel.title.mediaLibrary', 'Media Library'),
+    title: () => t('panel.title.mediaLibrary', 'Media Library'),
     component: MediaLibraryPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
@@ -515,43 +516,43 @@ export function registerBuiltinPanels(): void {
   // of the Media Library, Node Types after it.
   panelRegistry.register({
     id: 'workspaces',
-    title: t('panel.title.workspaces', 'Workspaces'),
+    title: () => t('panel.title.workspaces', 'Workspaces'),
     component: WorkspaceGraphPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({
     id: 'node-types',
-    title: t('panel.title.nodeTypes', 'Node Types'),
+    title: () => t('panel.title.nodeTypes', 'Node Types'),
     component: NodeTypesPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({
     id: 'documents',
-    title: t('panel.title.documents', 'Documents'),
+    title: () => t('panel.title.documents', 'Documents'),
     component: DocumentsPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar' },
   })
   panelRegistry.register({
     id: 'outline',
-    title: t('panel.title.outline', 'Outline'),
+    title: () => t('panel.title.outline', 'Outline'),
     component: OutlinePanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'create',
-    title: t('panel.title.create', 'Create'),
+    title: () => t('panel.title.create', 'Create'),
     component: CreatePanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'clipboard',
-    title: t('panel.title.clipboard', 'Clipboard'),
+    title: () => t('panel.title.clipboard', 'Clipboard'),
     component: ClipboardPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({
     id: 'trash',
-    title: t('panel.title.trash', 'Trash'),
+    title: () => t('panel.title.trash', 'Trash'),
     component: TrashPanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
@@ -560,13 +561,13 @@ export function registerBuiltinPanels(): void {
   // currently being edited, and both want the full height.
   panelRegistry.register({
     id: 'inspector',
-    title: t('panel.title.inspector', 'Inspector'),
+    title: () => t('panel.title.inspector', 'Inspector'),
     component: NodeInspectorPanel,
     defaultPlacement: { kind: 'dock', region: 'secondary', group: 'inspect' },
   })
   panelRegistry.register({
     id: 'history',
-    title: t('panel.title.history', 'History'),
+    title: () => t('panel.title.history', 'History'),
     component: HistoryPanel,
     defaultPlacement: { kind: 'dock', region: 'secondary', group: 'inspect' },
   })

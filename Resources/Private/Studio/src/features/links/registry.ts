@@ -1,4 +1,5 @@
-import * as React from 'react'
+import type * as React from 'react'
+import { ObservableRegistry, useRegistry } from '@/lib/registry'
 
 /**
  * The link type registry: each entry contributes one tab to the Link Editor
@@ -7,9 +8,9 @@ import * as React from 'react'
  * third-party plugin would register a tab for its own link source (an external
  * DAM, a shop's product catalogue, ...).
  *
- * Modelled on the property editor registry (see features/inspector/editors/
- * registry.ts): a small observable store, register-replaces-by-id for
- * idempotent HMR and plugin reloads, and a stable snapshot for React.
+ * Built on the shared observable store (see lib/registry.ts), like the
+ * property editor registry: register-replaces-by-id for idempotent HMR and
+ * plugin reloads, and a stable snapshot for React.
  */
 
 /** The props a link type tab receives from the Link Editor dialog. */
@@ -54,46 +55,19 @@ export interface LinkTypeDefinition {
   isFallback?: boolean
 }
 
-export class LinkEditorRegistry {
-  private definitions = new Map<string, LinkTypeDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: LinkTypeDefinition[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: LinkTypeDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
-  }
-
-  /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): LinkTypeDefinition[] {
-    return this.snapshot
-  }
-
+/** Link types (tabs) in registration order, plus href → type matching. */
+export class LinkEditorRegistry extends ObservableRegistry<LinkTypeDefinition> {
   /**
    * The type an href belongs to: the first registered type that matches it,
    * the fallback type otherwise (or the first registered as a last resort).
    */
   match(href: string): LinkTypeDefinition | undefined {
+    const types = this.getAll()
     return (
-      this.snapshot.find((type) => type.matches(href)) ??
-      this.snapshot.find((type) => type.isFallback) ??
-      this.snapshot[0]
+      types.find((type) => type.matches(href)) ??
+      types.find((type) => type.isFallback) ??
+      types[0]
     )
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()]
-    this.listeners.forEach((listener) => listener())
   }
 }
 
@@ -104,8 +78,5 @@ export const linkEditorRegistry = new LinkEditorRegistry()
  * when the set changes (a plugin registering a type, HMR).
  */
 export function useLinkTypes(): LinkTypeDefinition[] {
-  return React.useSyncExternalStore(
-    (onChange) => linkEditorRegistry.subscribe(onChange),
-    () => linkEditorRegistry.getAll(),
-  )
+  return useRegistry(linkEditorRegistry)
 }

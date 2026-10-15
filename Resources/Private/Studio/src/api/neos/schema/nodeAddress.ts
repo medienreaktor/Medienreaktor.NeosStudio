@@ -49,7 +49,8 @@ export function nodeAddressFromKey(key: string): NodeAddress {
     workspaceName,
     dimensionSpacePoint,
     nodeAggregateId,
-  ] = JSON.parse(key) as string[]
+    // nodeAddressKey() always serializes exactly these four strings.
+  ] = JSON.parse(key) as [string, string, string, string]
   return {
     contentRepositoryId,
     workspaceName,

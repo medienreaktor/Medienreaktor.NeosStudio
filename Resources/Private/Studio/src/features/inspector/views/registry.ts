@@ -1,14 +1,15 @@
-import * as React from 'react'
+import type * as React from 'react'
 import type { Node } from '@/api/neos/schema'
+import { ObservableRegistry, useRegistrySelector } from '@/lib/registry'
 
 /**
  * The inspector view registry: read-only widgets that node type configuration
  * places between inspector properties (ui.inspector.views), registered under
  * the view identifier the configuration references (e.g.
- * "Neos.Neos/Inspector/Views/Data/TableView"). Modelled on the property
- * editor registry (features/inspector/editors/registry.ts): a small observable
- * store, register-replaces-by-id for idempotent HMR and plugin reloads, and a
- * stable snapshot for React - the same seam third-party views plug into.
+ * "Neos.Neos/Inspector/Views/Data/TableView"). Built on the shared observable
+ * store (see lib/registry.ts), like the property editor registry:
+ * register-replaces-by-id for idempotent HMR and plugin reloads, and a stable
+ * snapshot for React - the same seam third-party views plug into.
  */
 
 export interface InspectorViewProps {
@@ -28,43 +29,8 @@ export interface InspectorViewDefinition {
   component: InspectorViewComponent
 }
 
-export class InspectorViewRegistry {
-  private definitions = new Map<string, InspectorViewDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: InspectorViewDefinition[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: InspectorViewDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
-  }
-
-  getDefinition(
-    id: string | null | undefined,
-  ): InspectorViewDefinition | undefined {
-    if (!id) return undefined
-    return this.definitions.get(id)
-  }
-
-  /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): InspectorViewDefinition[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()]
-    this.listeners.forEach((listener) => listener())
-  }
-}
+/** Views in registration order; look one up with getDefinition(id) (or get(id)). */
+export class InspectorViewRegistry extends ObservableRegistry<InspectorViewDefinition> {}
 
 export const inspectorViewRegistry = new InspectorViewRegistry()
 
@@ -75,8 +41,8 @@ export const inspectorViewRegistry = new InspectorViewRegistry()
 export function useInspectorView(
   id: string | null | undefined,
 ): InspectorViewDefinition | undefined {
-  return React.useSyncExternalStore(
-    (onChange) => inspectorViewRegistry.subscribe(onChange),
-    () => inspectorViewRegistry.getDefinition(id),
+  // The stored definition object itself - a stable, cached snapshot value.
+  return useRegistrySelector(inspectorViewRegistry, (registry) =>
+    registry.getDefinition(id),
   )
 }

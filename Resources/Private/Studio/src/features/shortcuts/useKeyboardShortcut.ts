@@ -3,6 +3,7 @@ import {
   keyboardShortcutRegistry,
   type KeyboardShortcutDefinition,
 } from './registry'
+import { useLatestRef } from '@/hooks/use-latest-ref'
 
 /**
  * Register a keyboard shortcut for the lifetime of the calling component.
@@ -14,11 +15,17 @@ import {
 export function useKeyboardShortcut(
   definition: KeyboardShortcutDefinition,
 ): void {
-  const latest = React.useRef(definition)
-  latest.current = definition
-  // Re-register only when identity or key binding changes; everything else
-  // (handler, guard, labels) is read through the ref at dispatch time.
-  const comboKey = JSON.stringify([definition.key, definition.combo])
+  const latest = useLatestRef(definition)
+  // Re-register when identity, key binding or the overview labels change;
+  // handler and guard are read through the ref at dispatch time. The labels
+  // are part of the registered entry the overview renders, so they must not
+  // be snapshotted at mount - a translated title has to follow the language.
+  const comboKey = JSON.stringify([
+    definition.key,
+    definition.combo,
+    definition.title,
+    definition.category,
+  ])
   React.useEffect(() => {
     const { id } = latest.current
     keyboardShortcutRegistry.register({
@@ -27,5 +34,5 @@ export function useKeyboardShortcut(
       when: () => latest.current.when?.() ?? true,
     })
     return () => keyboardShortcutRegistry.unregister(id)
-  }, [definition.id, comboKey])
+  }, [definition.id, comboKey, latest]) // latest: a stable ref
 }

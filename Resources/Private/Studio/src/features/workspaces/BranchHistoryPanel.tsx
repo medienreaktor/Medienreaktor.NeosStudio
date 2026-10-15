@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { translate as t } from '@/lib/i18n'
 import { HistoryStepRow } from './HistoryStepRow'
@@ -8,7 +8,7 @@ import type { WorkspaceBranch } from './workspaceGraphModel'
  * The history log of one branch in the Workspaces graph: its editing steps
  * newest first - a git log for the workspace. Opens when a head card or a
  * commit dot is picked; a picked dot's step starts expanded. Expanding a step
- * lazily fetches its before/after diff (the pending-events diff resource) and
+ * lazily fetches its before/after diff (its events with include=diff) and
  * shows, per event, what changed: old value struck out, new value below.
  */
 
@@ -19,17 +19,12 @@ export function BranchHistoryPanel({
   onClose,
 }: {
   branch: WorkspaceBranch
-  /** The picked commit dot's step, expanded initially; null = head pick. */
+  /** The picked commit dot's step, the one expanded; null = head pick. */
   selectedStepId: number | null
-  /** Keeps the graph's dot selection in sync with the expanded step. */
+  /** Selects (expands) a step - the graph's dot selection is the state. */
   onSelectStep: (stepId: number | null) => void
   onClose: () => void
 }) {
-  const [expandedId, setExpandedId] = useState<number | null>(selectedStepId)
-  // A dot pick (from the graph) drives the expansion; row clicks below flow
-  // back through onSelectStep, so both stay one state.
-  useEffect(() => setExpandedId(selectedStepId), [selectedStepId])
-
   const steps = useMemo(
     () => branch.dots.map((dot) => dot.step).reverse(),
     [branch],
@@ -68,12 +63,10 @@ export function BranchHistoryPanel({
               key={step.id}
               workspaceName={workspaceName}
               step={step}
-              expanded={expandedId === step.id}
-              onToggle={() => {
-                const next = expandedId === step.id ? null : step.id
-                setExpandedId(next)
-                onSelectStep(next)
-              }}
+              expanded={selectedStepId === step.id}
+              onToggle={() =>
+                onSelectStep(selectedStepId === step.id ? null : step.id)
+              }
             />
           ))}
         </div>

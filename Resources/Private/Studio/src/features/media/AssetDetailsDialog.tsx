@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import {
   importAsset,
@@ -45,7 +45,7 @@ import { ReplaceAssetDialog } from './ReplaceAssetDialog'
 import { UsageTable } from './UsageTable'
 
 interface AssetDetailsDialogProps {
-  /** The asset selected in the list (list DTO; may lack the editable block for detail freshness). */
+  /** The asset selected in the list - shown until its detail is read. */
   asset: Asset
   /** Called with `false` when the dialog should close. */
   onOpenChange: (open: boolean) => void
@@ -70,10 +70,10 @@ export function AssetDetailsDialog({
   const localId = asset.localAssetId
 
   // The parent mounts us only while an asset is selected, so drive `open` from
-  // local state: flip it true on mount for the enter transition, and defer the
-  // parent's unmount until `onOpenChangeComplete` so the exit transition plays.
-  const [open, setOpen] = useState(false)
-  useEffect(() => setOpen(true), [])
+  // local state: open from the start (the dialog plays its enter transition on
+  // mount), and defer the parent's unmount until `onOpenChangeComplete` so the
+  // exit transition plays.
+  const [open, setOpen] = useState(true)
 
   return (
     <Dialog

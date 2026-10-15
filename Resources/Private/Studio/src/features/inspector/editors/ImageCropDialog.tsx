@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -127,10 +127,19 @@ export function ImageCropDialog({
     options.find((o) => o.value === value)?.aspect
 
   // (Re)initialise the selection and crop whenever the dialog opens on an
-  // image. Prefill from an existing crop; otherwise honour defaultOption.
-  useEffect(() => {
-    if (!open || !dimsKnown) return
+  // image (or a different image is loaded into it). Prefill from an existing
+  // crop; otherwise honour defaultOption. Done while rendering, keyed by what
+  // was initialised last - React's "adjust state when a prop changes"
+  // pattern, which re-renders right away instead of after a painted frame
+  // with the stale crop, as an effect would.
+  const initKey = open && dimsKnown ? (original?.id ?? '') : null
+  const [initializedFor, setInitializedFor] = useState<string | null>(null)
+  if (initKey !== initializedFor) {
+    setInitializedFor(initKey)
+    if (initKey !== null) initialize()
+  }
 
+  function initialize() {
     const prefill: PercentCrop | undefined = initialCrop
       ? {
           unit: '%',
@@ -167,9 +176,7 @@ export function ImageCropDialog({
           ? centeredAspectCrop(aspect, width!, height!)
           : { unit: '%', x: 5, y: 5, width: 90, height: 90 }),
     )
-    // Re-run when a different image is loaded into the dialog.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, original?.id, dimsKnown])
+  }
 
   function selectRatio(value: string) {
     setSelected(value)

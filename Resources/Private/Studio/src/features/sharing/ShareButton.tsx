@@ -36,8 +36,11 @@ export function ShareButton({
         <i className="fas fa-fw fa-share-nodes" aria-hidden />
       </Button>
 
+      {/* Mounted per opening and per page: a fresh form each time, and a
+          one-time URL never lingers into another round or onto another page. */}
       {open && (
         <ShareLinkDialog
+          key={document.nodeAggregateId}
           document={document}
           open={open}
           onOpenChange={setOpen}

@@ -68,6 +68,8 @@ function ClipboardRow({
   // A group entry (multi-selection capture) shows its first node's label and
   // icon plus a "+N" marker; the full list sits in the row's tooltip.
   const [firstNode] = entry.nodes
+  // Entries are never empty; render nothing rather than crash if one is.
+  if (!firstNode) return null
   return (
     <div
       className={cn(

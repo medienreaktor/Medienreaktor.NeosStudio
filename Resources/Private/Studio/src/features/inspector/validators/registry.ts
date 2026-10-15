@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { ObservableRegistry } from '@/lib/registry'
 
 /**
  * The property validator registry: every validator - built-in or third-party -
@@ -10,9 +10,9 @@ import * as React from 'react'
  * once works in both, and a plugin that registers a custom validator lights up
  * everywhere.
  *
- * Modelled on the property editor registry (see editors/registry.ts): a small
- * observable store, register-replaces-by-id for idempotent HMR and plugin
- * reloads, and a stable snapshot for React.
+ * Built on the shared observable store (see lib/registry.ts): register-
+ * replaces-by-id for idempotent HMR and plugin reloads, and a stable
+ * snapshot.
  */
 
 /**
@@ -38,42 +38,12 @@ export interface ValidatorDefinition {
   validate: ValidatorFunction
 }
 
-export class ValidatorRegistry {
-  private definitions = new Map<string, ValidatorDefinition>()
-  private listeners = new Set<() => void>()
-  private snapshot: ValidatorDefinition[] = []
-
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: ValidatorDefinition): void {
-    this.definitions.set(definition.id, definition)
-    this.emit()
-  }
-
-  unregister(id: string): void {
-    if (this.definitions.delete(id)) this.emit()
-  }
-
-  /** The definition registered for a validator id, or undefined - unknown validators are skipped (with a console warning) when validating. */
-  get(id: string | null | undefined): ValidatorDefinition | undefined {
-    if (!id) return undefined
-    return this.definitions.get(id)
-  }
-
-  /** Stable snapshot in registration order - changes identity only on (un)register. */
-  getAll(): ValidatorDefinition[] {
-    return this.snapshot
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  private emit(): void {
-    this.snapshot = [...this.definitions.values()]
-    this.listeners.forEach((listener) => listener())
-  }
-}
+/**
+ * Validators in registration order. get(id) yields the definition or
+ * undefined - unknown validators are skipped (with a console warning) when
+ * validating, see validateValue().
+ */
+export class ValidatorRegistry extends ObservableRegistry<ValidatorDefinition> {}
 
 export const validatorRegistry = new ValidatorRegistry()
 
@@ -118,19 +88,4 @@ export function validateValue(
     if (error !== null) errors.push(error)
   }
   return errors
-}
-
-/**
- * Subscribe to the registry and resolve a validator definition by id,
- * re-rendering when the registered set changes (a plugin registering a
- * validator, HMR). Hosts that validate whole schemas use validateValue
- * directly; this hook exists for symmetry with the other registries.
- */
-export function useValidator(
-  id: string | null | undefined,
-): ValidatorDefinition | undefined {
-  return React.useSyncExternalStore(
-    (onChange) => validatorRegistry.subscribe(onChange),
-    () => validatorRegistry.get(id),
-  )
 }

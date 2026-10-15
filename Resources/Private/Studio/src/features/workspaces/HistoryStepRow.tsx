@@ -16,7 +16,7 @@ import { StepDiff } from './StepDiff'
 /**
  * One editing step of a pending history as a log row: what kind of edit it was,
  * who made it and when, expandable into its before/after diff (lazily fetched
- * from the pending-events diff resource). Shared by every history log - the
+ * with the step's events, see StepDiff). Shared by every history log - the
  * branch history in the Workspaces graph and the History panel of the page
  * being edited - so they stay one look.
  *

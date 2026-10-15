@@ -94,7 +94,6 @@ export function evaluateClientEval(
   try {
     let fn = compiledExpressions.get(expression)
     if (!fn) {
-      // eslint-disable-next-line no-new-func
       fn = new Function(
         'node',
         'parentNode',

@@ -96,11 +96,12 @@ function debounceWithMaxWait(fn: () => void, wait: number, maxWait: number) {
 }
 
 /** Leading + trailing throttle: fires immediately, then at most once per
- * interval, and always ends with a trailing call carrying the final state. */
+ * interval, and always ends with a trailing call carrying the final state -
+ * unless cancel() dropped it (the editor is gone). */
 function throttle(fn: () => void, interval: number) {
   let last = 0
   let timer: number | null = null
-  return () => {
+  const call = () => {
     const now = Date.now()
     const remaining = interval - (now - last)
     if (remaining <= 0) {
@@ -114,6 +115,11 @@ function throttle(fn: () => void, interval: number) {
       }, remaining)
     }
   }
+  call.cancel = () => {
+    if (timer !== null) clearTimeout(timer)
+    timer = null
+  }
+  return call
 }
 
 /** Toggle the empty class that drives the CSS placeholder (::before). */
@@ -207,6 +213,8 @@ interface ManagedEditor {
   setLocked(locked: boolean): void
   /** A peer's live-typing content; ignored while the local user is typing. */
   applyRemoteContent(html: string): void
+  /** Commit now whatever the debounce still holds (no-op when nothing is). */
+  flush(): void
   /**
    * The user lost the edit-lock arbitration while already typing: discard
    * the unpersisted keystrokes (revert to the committed state), cancel the
@@ -322,6 +330,8 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     },
     onDestroy: () => {
       commit.cancel()
+      // The trailing live tick would serialize a destroyed editor.
+      emitLiveUpdate.cancel()
       element.removeEventListener('mousedown', focusFromHost)
     },
   })
@@ -360,6 +370,9 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       // baseline so a later local edit diffs against current reality.
       committedHtml = serializedHtml(editor, config)
       refreshEmptyState(element, editor)
+    },
+    flush() {
+      commit.flush()
     },
     eject() {
       // Order matters: cancel first, then revert (the setContent-triggered
@@ -414,6 +427,14 @@ export function unmountRichTextEditors(root: HTMLElement): void {
       editorsByElement.delete(element)
     }
   }
+}
+
+/**
+ * Commit every pending (debounced) edit right away - the page is going away
+ * (pagehide) or the host is about to retire this frame (its flush message).
+ */
+export function flushPendingCommits(): void {
+  for (const managed of editorsByElement.values()) managed.flush()
 }
 
 /** Lock/unlock a property editor (a collaborator is editing this text). */

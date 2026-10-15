@@ -9,7 +9,12 @@ import {
 import { useSidebar } from '@/components/ui/sidebar'
 import { useModals } from '@/features/modals/ModalHost'
 import { translate as t } from '@/lib/i18n'
-import { formatCombo, keyboardShortcutRegistry } from './registry'
+import { useRegistry } from '@/lib/registry'
+import {
+  captureShortcuts,
+  formatCombo,
+  keyboardShortcutRegistry,
+} from './registry'
 import { useKeyboardShortcut } from './useKeyboardShortcut'
 
 /**
@@ -25,15 +30,8 @@ export function ShortcutHost() {
   const { openSettings } = useModals()
   const [overviewOpen, setOverviewOpen] = React.useState(false)
 
-  React.useEffect(() => {
-    // Capture phase, so shortcuts still work while focus sits inside widgets
-    // that stop keydown propagation. The editable-target guard in dispatch
-    // keeps typing safe regardless.
-    const onKeyDown = (event: KeyboardEvent) =>
-      keyboardShortcutRegistry.dispatch(event)
-    window.addEventListener('keydown', onKeyDown, true)
-    return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [])
+  // The preview frames forward theirs on their own (see usePreviewLayers).
+  React.useEffect(() => captureShortcuts(window), [])
 
   const generalCategory = t('shortcuts.category.general', 'General')
   useKeyboardShortcut({
@@ -71,13 +69,6 @@ export function ShortcutHost() {
   )
 }
 
-function useRegisteredShortcuts() {
-  return React.useSyncExternalStore(
-    (onChange) => keyboardShortcutRegistry.subscribe(onChange),
-    () => keyboardShortcutRegistry.getAll(),
-  )
-}
-
 /** All registered shortcuts, grouped by category in first-seen order. */
 function ShortcutOverviewDialog({
   open,
@@ -86,7 +77,7 @@ function ShortcutOverviewDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const shortcuts = useRegisteredShortcuts()
+  const shortcuts = useRegistry(keyboardShortcutRegistry)
   const groups = new Map<string, typeof shortcuts>()
   const fallbackCategory = t('shortcuts.category.other', 'Other')
   for (const shortcut of shortcuts) {
