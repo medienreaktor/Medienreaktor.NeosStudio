@@ -7,6 +7,10 @@ import {
   fetchAllPages,
   type Listing,
 } from '../client'
+import {
+  activeContentRepositoryId,
+  useActiveContentRepositoryId,
+} from '../activeContentRepository'
 import { neosKeys } from '../keys'
 import type {
   Change,
@@ -24,17 +28,29 @@ import type {
   WorkspaceUpdate,
 } from '../schema'
 
-/** The workspaces of the content repository (Neos.Api's Workspaces tag). */
+/**
+ * The workspaces of the selected site's content repository (Neos.Api's
+ * Workspaces tag).
+ */
 
-function workspacesPath(workspaceName?: string): string {
-  const base = `${contentRepositoryPath()}/workspaces`
+function workspacesPath(
+  workspaceName?: string,
+  contentRepositoryId: string = activeContentRepositoryId(),
+): string {
+  const base = `${contentRepositoryPath(contentRepositoryId)}/workspaces`
   return workspaceName === undefined
     ? base
     : `${base}/${encodeURIComponent(workspaceName)}`
 }
 
-async function listWorkspaces(): Promise<Workspace[]> {
-  return (await apiFetch<Listing<Workspace>>(workspacesPath())).data
+async function listWorkspaces(
+  contentRepositoryId: string,
+): Promise<Workspace[]> {
+  return (
+    await apiFetch<Listing<Workspace>>(
+      workspacesPath(undefined, contentRepositoryId),
+    )
+  ).data
 }
 
 /**
@@ -46,17 +62,19 @@ async function listWorkspaces(): Promise<Workspace[]> {
  * caller with classification "personal"; a second one would be a 409,
  * ignored like any other failure here.
  */
-async function fetchWorkspaces(): Promise<Workspace[]> {
-  const workspaces = await listWorkspaces()
+async function fetchWorkspaces(
+  contentRepositoryId: string,
+): Promise<Workspace[]> {
+  const workspaces = await listWorkspaces(contentRepositoryId)
   if (workspaces.some((workspace) => workspace.classification === 'personal')) {
     return workspaces
   }
   try {
-    await apiFetch(workspacesPath(), {
+    await apiFetch(workspacesPath(undefined, contentRepositoryId), {
       method: 'POST',
       body: { classification: 'personal' } satisfies WorkspaceCreate,
     })
-    return await listWorkspaces()
+    return await listWorkspaces(contentRepositoryId)
   } catch {
     // no Neos user behind the token, or created meanwhile
     return workspaces
@@ -64,10 +82,11 @@ async function fetchWorkspaces(): Promise<Workspace[]> {
 }
 
 export function useWorkspaces(enabled = true, refetchInterval?: number) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: neosKeys.workspaces.all,
-    queryFn: fetchWorkspaces,
-    enabled,
+    queryKey: neosKeys.workspaces.list(contentRepositoryId ?? ''),
+    queryFn: () => fetchWorkspaces(contentRepositoryId!),
+    enabled: enabled && contentRepositoryId !== null,
     refetchInterval,
   })
 }
@@ -99,16 +118,21 @@ export function countChangedNodes(changes: Change[]): number {
  * the base has moved on) surfaces without another query.
  */
 export function useWorkspaceChanges(workspaceName: string | null) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: neosKeys.workspaces.changes(workspaceName ?? ''),
+    queryKey: neosKeys.workspaces.changes(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+    ),
     queryFn: async () => {
+      const path = workspacesPath(workspaceName!, contentRepositoryId!)
       const [workspace, changes] = await Promise.all([
-        apiFetch<Workspace>(workspacesPath(workspaceName!)),
-        fetchAllPages<Change>(`${workspacesPath(workspaceName!)}/changes`),
+        apiFetch<Workspace>(path),
+        fetchAllPages<Change>(`${path}/changes`),
       ])
       return { workspace, changes }
     },
-    enabled: workspaceName !== null,
+    enabled: workspaceName !== null && contentRepositoryId !== null,
     // Dirty markers should feel current while editing elsewhere.
     staleTime: 10_000,
   })
@@ -225,15 +249,19 @@ function rolePath(
 
 /** Who (a user or a Flow role group) may do what. Requires manage permission. */
 export function useWorkspaceRoles(workspaceName: string | null) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: neosKeys.workspaces.roles(workspaceName ?? ''),
+    queryKey: neosKeys.workspaces.roles(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+    ),
     queryFn: async () =>
       (
         await apiFetch<Listing<WorkspaceRoleAssignment>>(
-          `${workspacesPath(workspaceName!)}/roles`,
+          `${workspacesPath(workspaceName!, contentRepositoryId!)}/roles`,
         )
       ).data,
-    enabled: workspaceName !== null,
+    enabled: workspaceName !== null && contentRepositoryId !== null,
   })
 }
 

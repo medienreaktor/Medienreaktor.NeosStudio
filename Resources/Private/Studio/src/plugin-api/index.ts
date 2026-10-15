@@ -130,9 +130,10 @@ export { useStudio, useKeyboardShortcut }
  * single-flighted refresh). Resolve with the parsed JSON body on 2xx and
  * throw {@link ApiError} otherwise.
  *  - apiFetch: Neos.Api, paths relative to its base ('/me' -> '/api/me').
- *  - studioFetch: the Studio API, paths relative to '/neos/studio/api'
- *    ('/tasks'). A plugin package can add operations to it (an Api Class in
- *    Neos.OpenApi.FlowAdapter.apis.studio.classes, scopes as ApiPrivilege
+ *  - studioFetch: the same, for the Studio's operations of the Neos API
+ *    ('/notifications', '/cr/default/tasks'). A plugin package can add
+ *    operations of its own (an Api Class in
+ *    Neos.OpenApi.FlowAdapter.apis.neos.classes, scopes as ApiPrivilege
  *    targets) and reach them exactly like the built-in ones.
  */
 export { apiFetch, studioFetch, ApiError }

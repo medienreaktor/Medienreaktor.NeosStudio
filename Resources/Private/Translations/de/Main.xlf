@@ -3386,6 +3386,10 @@
         <source>No pending changes.</source>
         <target xml:lang="de">Keine ausstehenden Änderungen.</target>
       </trans-unit>
+      <trans-unit id="workspace.review.loadFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+        <target xml:lang="de">Die Änderungen konnten nicht geladen werden.</target>
+      </trans-unit>
       <trans-unit id="workspace.review.goToPage" xml:space="preserve">
         <source>Go to page</source>
         <target xml:lang="de">Zur Seite</target>

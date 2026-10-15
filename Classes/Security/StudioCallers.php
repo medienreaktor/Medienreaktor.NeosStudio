@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Security;
 
+use Neos\Api\Endpoint\ContentRepositories\Schema\ContentRepositoryId;
 use Neos\Api\Endpoint\Workspaces\Domain\WorkspaceResolver;
 use Neos\Api\Endpoint\Workspaces\Schema\Workspace;
 use Neos\Api\Security\ApiCaller;
 use Neos\Api\Shared\Response\Forbidden;
+use Neos\Api\Shared\Response\NotFound;
 use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\SharedModel;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
@@ -16,7 +18,7 @@ use Neos\Neos\Domain\Model;
 use Neos\Neos\Domain\Service\WorkspaceService;
 
 /**
- * Who calls a Studio operation, in the content repository the Studio edits
+ * Who calls a Studio operation, and in which content repository
  *
  * As in Neos.Api, always the token's account (its roles, its Neos user), never
  * Flow's security context: the user behind the token, and what it may do in a
@@ -30,26 +32,25 @@ final class StudioCallers
      */
     private array $permissions = [];
 
-    private SharedModel\ContentRepository\ContentRepositoryId $contentRepositoryId;
-
     public function __construct(
         private readonly ContentRepositoryRegistry $contentRepositoryRegistry,
         private readonly WorkspaceResolver $workspaceResolver,
         private readonly WorkspaceService $workspaceService,
-        #[Flow\InjectConfiguration(path: 'contentRepository', package: 'Medienreaktor.NeosStudio')]
-        string $contentRepositoryId,
     ) {
-        $this->contentRepositoryId = SharedModel\ContentRepository\ContentRepositoryId::fromString($contentRepositoryId);
     }
 
-    public function contentRepositoryId(): SharedModel\ContentRepository\ContentRepositoryId
+    /**
+     * The content repository of the path, or the 404 for an unknown one
+     */
+    public function contentRepository(ContentRepositoryId $contentRepositoryId): ContentRepository|NotFound
     {
-        return $this->contentRepositoryId;
-    }
-
-    public function contentRepository(): ContentRepository
-    {
-        return $this->contentRepositoryRegistry->get($this->contentRepositoryId());
+        $id = $contentRepositoryId->toContentRepositoryId();
+        foreach ($this->contentRepositoryRegistry->getContentRepositoryIds() as $configuredId) {
+            if ($configuredId->equals($id)) {
+                return $this->contentRepositoryRegistry->get($id);
+            }
+        }
+        return NotFound::contentRepository($contentRepositoryId->value);
     }
 
     /**
@@ -71,10 +72,10 @@ final class StudioCallers
             ?? Forbidden::because('This operation requires an access token of a Neos user');
     }
 
-    public function permissionsOf(ApiCaller $caller, SharedModel\Workspace\WorkspaceName $workspaceName): Model\WorkspacePermissions
+    public function permissionsOf(ApiCaller $caller, SharedModel\ContentRepository\ContentRepositoryId $contentRepositoryId, SharedModel\Workspace\WorkspaceName $workspaceName): Model\WorkspacePermissions
     {
-        return $this->permissions[$caller->account->getAccountIdentifier() . '|' . $workspaceName->value]
-            ??= $this->workspaceResolver->permissionsOf($this->contentRepositoryId(), $workspaceName, $caller->account);
+        return $this->permissions[$caller->account->getAccountIdentifier() . '|' . $contentRepositoryId->value . '|' . $workspaceName->value]
+            ??= $this->workspaceResolver->permissionsOf($contentRepositoryId, $workspaceName, $caller->account);
     }
 
     /**
@@ -82,25 +83,25 @@ final class StudioCallers
      * base workspace - the check the content repository applies to
      * PublishWorkspace
      */
-    public function mayPublish(ApiCaller $caller, SharedModel\Workspace\Workspace $workspace): bool
+    public function mayPublish(ApiCaller $caller, SharedModel\ContentRepository\ContentRepositoryId $contentRepositoryId, SharedModel\Workspace\Workspace $workspace): bool
     {
         return $workspace->baseWorkspaceName !== null
-            && $this->permissionsOf($caller, $workspace->baseWorkspaceName)->write;
+            && $this->permissionsOf($caller, $contentRepositoryId, $workspace->baseWorkspaceName)->write;
     }
 
     /**
      * The workspace as Neos.Api's getWorkspace has it, null if the caller may
      * not read it
      */
-    public function workspaceFor(ApiCaller $caller, SharedModel\Workspace\Workspace $workspace): ?Workspace
+    public function workspaceFor(ApiCaller $caller, SharedModel\ContentRepository\ContentRepositoryId $contentRepositoryId, SharedModel\Workspace\Workspace $workspace): ?Workspace
     {
-        $permissions = $this->permissionsOf($caller, $workspace->workspaceName);
+        $permissions = $this->permissionsOf($caller, $contentRepositoryId, $workspace->workspaceName);
         if (!$permissions->read) {
             return null;
         }
         return Workspace::from(
             $workspace,
-            $this->workspaceService->getWorkspaceMetadata($this->contentRepositoryId(), $workspace->workspaceName),
+            $this->workspaceService->getWorkspaceMetadata($contentRepositoryId, $workspace->workspaceName),
             $permissions,
         );
     }

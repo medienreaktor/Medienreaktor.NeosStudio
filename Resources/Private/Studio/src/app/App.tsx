@@ -7,6 +7,7 @@ import {
   logout,
 } from '@/auth/oauth'
 import { ApiError } from '@/api/http/errors'
+import { setActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useContentRepository } from '@/api/neos/endpoints/contentRepositories'
 import { useMe } from '@/api/neos/endpoints/me'
 import {
@@ -469,6 +470,12 @@ export function App() {
   // Site restrictions are per site, and the synchronous consumers (the tree
   // row decorator) only ever see a bare node - tell them which site is open.
   useActiveSiteForAccess(activeSite?.nodeName ?? null)
+  // Workspaces, node types, dimensions and tasks are those of the selected
+  // site's content repository - its reads wait for it.
+  const activeContentRepositoryId = activeSite?.contentRepositoryId ?? null
+  useEffect(() => {
+    setActiveContentRepositoryId(activeContentRepositoryId)
+  }, [activeContentRepositoryId])
   // Same reason: a node names its workspace, not how that workspace is
   // classified - and live is treated differently from shared and personal.
   useWorkspaceClassificationsForAccess(workspaces)

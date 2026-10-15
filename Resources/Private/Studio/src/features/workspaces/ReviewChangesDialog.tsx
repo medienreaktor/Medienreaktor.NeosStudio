@@ -5,6 +5,7 @@ import {
   useWorkspaceDocumentDiff,
 } from '@/api/studio/endpoints/workspaces'
 import type { WorkspaceDocumentChange } from '@/api/studio/schema'
+import { apiErrorDescription } from '@/api/http/errors'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -289,7 +290,7 @@ export function ReviewChangesDialog({
   const { site, navigateToNode } = useStudio()
   // Fetch only while open; the query refreshes on publish/discard via the
   // workspaces invalidation the shared hook performs.
-  const { data, isLoading, isFetching } = useWorkspaceDocumentChanges(
+  const { data, error, isLoading, isFetching } = useWorkspaceDocumentChanges(
     source?.name ?? null,
     open,
   )
@@ -559,6 +560,19 @@ export function ReviewChangesDialog({
             {isLoading ? (
               <LoadingState
                 label={t('workspace.review.loading', 'Loading changes…')}
+                className="py-8"
+              />
+            ) : error && !data ? (
+              // Not "no changes": the review could not be loaded at all.
+              <Placeholder
+                icon="fa-triangle-exclamation"
+                title={apiErrorDescription(
+                  error,
+                  t(
+                    'workspace.review.loadFailed',
+                    'The changes could not be loaded.',
+                  ),
+                )}
                 className="py-8"
               />
             ) : documents.length === 0 ? (

@@ -4,7 +4,7 @@
 
 **A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.** Built from scratch on a clean HTTP API — fully independent of `Neos.Neos.Ui`, free to make its own architectural choices. This is what content editing in Neos can feel like: instant, fluid, together with your team, and open for extension from day one.
 
-Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Neos.Api](https://github.com/danielkestler/Neos.Api) — the OAuth-secured HTTP API (OpenAPI-described, secured by Neos.OAuth) over the Event-Sourced Content Repository — plus the Studio API of its own below `/neos/studio/api`, built and secured exactly like Neos.Api. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
+Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Neos.Api](https://github.com/danielkestler/Neos.Api) — the OAuth-secured HTTP API (OpenAPI-described, secured by Neos.OAuth) over the Event-Sourced Content Repository — plus the Studio API, operations it adds to Neos.Api itself. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
 
 > **Why a new UI?** The classic Neos UI is a great piece of engineering that has served editors well for years — and Studio owes a lot to the ideas it pioneered. But some of its 2016-era architectural constraints are hard to move past today: the plugin API ties extensions to React 16, and the internal wire protocol was never designed as a public contract. Neos Studio starts from a different premise: an API-first backend, a lean modern frontend, and extensibility through observable registries that _are_ the public contract. It grows alongside the classic UI, adopting editing surfaces one at a time.
 
@@ -140,10 +140,10 @@ Open `/neos/studio` and log in with your Neos backend account. That's it — Stu
 
 Multiplayer needs no extra infrastructure — but it can use some. `Resources/Private/Realtime/` ships a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus) WebSocket server that upgrades Studio's collaboration transport from HTTP polling to push. Without it, everything keeps working: collaboration falls back to plain HTTP polling of the workspace's events in Neos.Api (2s change feed; presence - who else is in the workspace - is only available through the sidecar). The fallback is also automatic at runtime — while the sidecar is unreachable, connected Studios poll; when it comes back, they stop.
 
-One WebSocket per editing session (document name `workspace:<name>`):
+One WebSocket per editing session (document name `workspace:<contentRepositoryId>:<workspaceName>`):
 
 - **Presence** — clients announce their position as stateless messages; the sidecar keeps a server-authoritative roster per workspace (identity comes from the validated token, never from the client) and broadcasts changes instantly. No heartbeats, no TTL ghosts: a closed tab leaves with its connection.
-- **Change feed** — the sidecar tails each active workspace's event feed once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/neos/studio/api/realtime/workspaces/{name}/events`) and fans new events out to every editor. That replaces one API poll _per editor_ per 2s with one poll _per workspace_, and remote edits reach colleagues in well under a second.
+- **Change feed** — the sidecar tails each active workspace's event feed once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/events`) and fans new events out to every editor. That replaces one API poll _per editor_ per 2s with one poll _per workspace_, and remote edits reach colleagues in well under a second.
 - **Yjs seam** — the (currently unused) Yjs document behind each connection is where collaborative text editing attaches later, without a new connection concept.
 
 ### Authentication
@@ -166,7 +166,6 @@ REALTIME_SHARED_SECRET=... NEOS_BASE_URL=https://your-site npm start
 | `PORT`                    | `1234`                  | Listen port                                                 |
 | `NEOS_BASE_URL`           | `http://127.0.0.1:8080` | Base URL of the Neos installation                           |
 | `NEOS_HOST_HEADER`        | _(none)_                | Host header override for internal hostnames                 |
-| `NEOS_CONTENT_REPOSITORY` | `default`               | Must equal `Medienreaktor.NeosStudio.contentRepository`     |
 | `REALTIME_SHARED_SECRET`  | _(required)_            | Must equal `Medienreaktor.NeosStudio.realtime.sharedSecret` |
 | `FEED_INTERVAL_MS`        | `1000`                  | Feed tail cadence per active workspace                      |
 
@@ -207,13 +206,14 @@ Conventions: every query key comes from `api/keys.ts` (never inline literals); o
 
 ### The Studio API
 
-What the Studio adds to Neos is an API of its own below `/neos/studio/api`, built exactly like Neos.Api: [neos/openapi](https://github.com/neos/openapi) operations in `Classes/Endpoint/<Tag>/<Tag>.php` with schematic/jsonschema types (`Schema/`, `RequestBody/`, `Response/`), registered as `Neos.OpenApi.FlowAdapter.apis.studio` and secured by Neos.Api's `ApiAuthContextProvider`. So it gets everything Neos.Api gets:
+What the Studio adds to Neos (tasks, notifications, preview links, access roles, the review, history and trash of a workspace) are operations of Neos.Api's API itself: [neos/openapi](https://github.com/neos/openapi) Api Classes in `Classes/Endpoint/<Tag>/<Tag>.php` with schematic/jsonschema types (`Schema/`, `RequestBody/`, `Response/`), added to `Neos.OpenApi.FlowAdapter.apis.neos.classes`. So they share everything with Neos.Api's own operations:
 
-- an OpenAPI document at `/neos/studio/api/openapi.json`, from which the SPA's types are generated (`npm run api:studio-schema` → `src/api/studio/schema/openapi.ts`, never edited by hand; `npm run api:schema` does the same for Neos.Api);
+- the paths below `/api`, content-repository ones below `/api/cr/{contentRepositoryId}` like Neos.Api's - the shell uses the content repository of the selected site;
+- the OpenAPI document (`/api/openapi.json`) and its docs (`/api/docs`); the SPA's types are generated from it (`npm run api:schema` → `src/api/neos/schema/openapi.ts`, never edited by hand), `src/api/studio/schema` names the Studio's models;
 - OAuth scopes that are Neos privileges: each capability is a `Neos\Api\Security\ApiPrivilege` target in `Policy.yaml` whose matcher is the scope (`studio.tasks.read`, … in `Security\StudioScopes`). The account's roles decide what is possible, the token's scopes only narrow it down; both are checked before an operation runs, rules depending on a workspace by the operation (`Security\StudioCallers`);
-- RFC 9457 problem documents, the cache headers, and the tools of Neos.Mcp's MCP server (`Neos.Mcp.servers.neos.apis.studio`).
+- problem documents, the cache headers, and the tools of Neos.Mcp's MCP server.
 
-Follow Neos.Api's conventions (its `CLAUDE.md`) for new operations. The realtime sidecar's feed is no operation of it: it authenticates with a shared secret, not a token (`RealtimeController`).
+Follow Neos.Api's conventions (its `CLAUDE.md`) for new operations. The realtime sidecar's feed is no operation: it authenticates with a shared secret, not a token (`RealtimeController`).
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 

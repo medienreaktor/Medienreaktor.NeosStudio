@@ -47,9 +47,6 @@ class StudioController extends ActionController
     #[Flow\Inject]
     protected ScopeRegistry $scopeRegistry;
 
-    #[Flow\InjectConfiguration(path: 'contentRepository')]
-    protected string $contentRepositoryId;
-
     /**
      * Studio respects the same tree-depth preferences as the classic Neos
      * backend (Neos.Neos.userInterface.navigateComponent.*.loadingDepth).
@@ -129,8 +126,6 @@ class StudioController extends ActionController
             'authorizeEndpoint' => $origin . '/oauth/authorize',
             'tokenEndpoint' => $origin . '/oauth/token',
             'apiBase' => $origin . '/api',
-            'studioApiBase' => $origin . '/neos/studio/api',
-            'contentRepositoryId' => $this->contentRepositoryId,
             'previewBase' => $origin . '/neos/studio/preview',
             'redirectUri' => $redirectUri,
             'scopes' => $scopes,

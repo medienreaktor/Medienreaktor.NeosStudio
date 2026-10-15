@@ -2,7 +2,8 @@
  * The Neos Studio realtime sidecar: a Hocuspocus WebSocket server carrying
  * the collaboration signals of shared-workspace editing sessions.
  *
- * One connection per editing session, document name `workspace:<name>`:
+ * One connection per editing session, document name
+ * `workspace:<contentRepositoryId>:<workspaceName>`:
  *
  * - Authentication: the client hands over its own OAuth bearer token; the
  *   sidecar validates it against Neos.Api (a read of the workspace,
@@ -30,8 +31,6 @@
  *   NEOS_BASE_URL          base URL of the Neos installation (default http://127.0.0.1:8080)
  *   NEOS_HOST_HEADER       Host header override, for reaching Neos through
  *                          an internal hostname (e.g. DDEV's `web`)
- *   NEOS_CONTENT_REPOSITORY content repository id the Studio edits
- *                          (Medienreaktor.NeosStudio.contentRepository, default "default")
  *   REALTIME_SHARED_SECRET must equal Medienreaktor.NeosStudio.realtime.sharedSecret
  *   FEED_INTERVAL_MS       feed tail cadence per workspace   (default 1000)
  */
@@ -44,7 +43,6 @@ const PORT = Number(process.env.PORT ?? 1234)
 const NEOS_BASE_URL = (process.env.NEOS_BASE_URL ?? 'http://127.0.0.1:8080').replace(/\/+$/, '')
 const NEOS_HOST_HEADER = process.env.NEOS_HOST_HEADER || null
 const SHARED_SECRET = process.env.REALTIME_SHARED_SECRET || ''
-const CONTENT_REPOSITORY = process.env.NEOS_CONTENT_REPOSITORY || 'default'
 const FEED_INTERVAL_MS = Math.max(250, Number(process.env.FEED_INTERVAL_MS ?? 1000))
 /** Consecutive feed failures before the workspace's connections are dropped
  * (clients then fall back to HTTP polling, which re-checks everything). */
@@ -57,8 +55,15 @@ if (SHARED_SECRET === '') {
   process.exit(1)
 }
 
-const workspaceOf = (documentName) =>
-  documentName.startsWith('workspace:') ? documentName.slice('workspace:'.length) : null
+/**
+ * The content repository and workspace of a document name
+ * `workspace:<contentRepositoryId>:<workspaceName>` (neither contains a
+ * colon), null for any other
+ */
+const workspaceOf = (documentName) => {
+  const match = /^workspace:([^:]+):([^:]+)$/.exec(documentName)
+  return match ? { contentRepositoryId: match[1], name: match[2] } : null
+}
 
 /**
  * Fetch-alike over node:http - deliberately NOT global fetch(): WHATWG fetch
@@ -179,7 +184,7 @@ const broadcast = (session, message) =>
 // --- Change feed tail --------------------------------------------------------
 
 const feedPath = (workspace, cursor) =>
-  `/neos/studio/api/realtime/workspaces/${encodeURIComponent(workspace)}/events` +
+  `/neos/studio/realtime/cr/${encodeURIComponent(workspace.contentRepositoryId)}/workspaces/${encodeURIComponent(workspace.name)}/events` +
   (cursor ? `?stream=${encodeURIComponent(cursor.stream)}&since=${cursor.since}` : '')
 
 const startFeed = (session) => {
@@ -213,13 +218,13 @@ const startFeed = (session) => {
     } catch (error) {
       session.failures += 1
       console.warn(
-        `[realtime] feed tail for "${session.workspace}" failed (${session.failures}/${FEED_FAILURE_LIMIT}): ${error.message}`,
+        `[realtime] feed tail for "${session.workspace.name}" failed (${session.failures}/${FEED_FAILURE_LIMIT}): ${error.message}`,
       )
       if (session.failures >= FEED_FAILURE_LIMIT) {
         // Fail loudly rather than serving presence without events: drop the
         // connections so every client falls back to HTTP polling.
         console.error(
-          `[realtime] feed tail for "${session.workspace}" keeps failing - disconnecting its clients`,
+          `[realtime] feed tail for "${session.workspace.name}" keeps failing - disconnecting its clients`,
         )
         for (const connection of session.document.getConnections()) connection.close()
         return // afterUnloadDocument stops the loop for good
@@ -254,7 +259,7 @@ const server = new Server({
     // read this very workspace (Neos.Api answers 404 for a workspace the
     // account may not read, as for an unknown one).
     const workspaceProbe = await neosFetch(
-      `/api/cr/${encodeURIComponent(CONTENT_REPOSITORY)}/workspaces/${encodeURIComponent(workspace)}`,
+      `/api/cr/${encodeURIComponent(workspace.contentRepositoryId)}/workspaces/${encodeURIComponent(workspace.name)}`,
       { authorization: `Bearer ${token}` },
     )
     if (!workspaceProbe.ok) throw new Error(`workspace access denied (${workspaceProbe.status})`)

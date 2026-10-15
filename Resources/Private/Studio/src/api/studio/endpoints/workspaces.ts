@@ -1,6 +1,11 @@
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
 import { queryString } from '../../http/request'
+import {
+  activeContentRepositoryId,
+  useActiveContentRepositoryId,
+} from '../../neos/activeContentRepository'
+import { contentRepositoryPath } from '../../neos/client'
 import { restoreNode } from '../../neos/endpoints/nodeCommands'
 import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
@@ -12,17 +17,21 @@ import type {
   WorkspacePendingEventsDiff,
   WorkspaceTrash,
 } from '../schema'
-import { config } from '@/config'
 
 /**
  * The Studio's read models of a workspace, beyond what Neos.Api offers: the
  * review (changes grouped by document, net diffs), the pending history and
  * the trash bin (the Studio API's WorkspaceHistory,
- * /neos/studio/api/workspaces/{workspaceName}/...).
+ * /api/cr/{contentRepositoryId}/workspaces/{workspaceName}/...), in the
+ * selected site's content repository.
  */
 
-function workspacePath(workspaceName: string, suffix: string): string {
-  return `/workspaces/${encodeURIComponent(workspaceName)}${suffix}`
+function workspacePath(
+  contentRepositoryId: string,
+  workspaceName: string,
+  suffix: string,
+): string {
+  return `${contentRepositoryPath(contentRepositoryId)}/workspaces/${encodeURIComponent(workspaceName)}${suffix}`
 }
 
 /** The workspace's changes grouped by their document, for the review dialog. */
@@ -30,13 +39,21 @@ export function useWorkspaceDocumentChanges(
   workspaceName: string | null,
   enabled = true,
 ) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: studioKeys.workspaces.documentChanges(workspaceName ?? ''),
+    queryKey: studioKeys.workspaces.documentChanges(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+    ),
     queryFn: () =>
       studioFetch<WorkspaceDocumentChanges>(
-        workspacePath(workspaceName!, '/documentchanges'),
+        workspacePath(contentRepositoryId!, workspaceName!, '/documentchanges'),
       ),
-    enabled: workspaceName !== null && enabled,
+    enabled: workspaceName !== null && contentRepositoryId !== null && enabled,
+    // Read afresh whenever the review opens: changes made elsewhere (another
+    // tab, a colleague, the classic UI) invalidate nothing here, and a review
+    // must never offer a stale "no pending changes".
+    staleTime: 0,
   })
 }
 
@@ -49,19 +66,26 @@ export function useWorkspaceDocumentDiff(
   documentAggregateId: string | null,
   enabled = true,
 ) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
     queryKey: studioKeys.workspaces.documentDiff(
+      contentRepositoryId ?? '',
       workspaceName ?? '',
       documentAggregateId ?? '',
     ),
     queryFn: () =>
       studioFetch<WorkspaceDocumentDiff>(
         workspacePath(
+          contentRepositoryId!,
           workspaceName!,
           `/documentdiff${queryString({ documentAggregateId })}`,
         ),
       ),
-    enabled: enabled && workspaceName !== null && documentAggregateId !== null,
+    enabled:
+      enabled &&
+      workspaceName !== null &&
+      documentAggregateId !== null &&
+      contentRepositoryId !== null,
     // Mirrors the changes queries: state diffs go stale with further edits.
     staleTime: 10_000,
   })
@@ -75,17 +99,24 @@ export function useConflictDetails(
   workspaceName: string | null,
   nodeAggregateIds: string[],
 ) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   const ids = [...new Set(nodeAggregateIds)].sort()
   return useQuery({
-    queryKey: studioKeys.workspaces.conflictDetails(workspaceName ?? '', ids),
+    queryKey: studioKeys.workspaces.conflictDetails(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+      ids,
+    ),
     queryFn: () =>
       studioFetch<ConflictingNodes>(
         workspacePath(
+          contentRepositoryId!,
           workspaceName!,
           `/conflictingnodes${queryString({ nodeAggregateIds: ids.join(',') })}`,
         ),
       ),
-    enabled: workspaceName !== null && ids.length > 0,
+    enabled:
+      workspaceName !== null && contentRepositoryId !== null && ids.length > 0,
     staleTime: Infinity,
     select: (response) => response.nodes,
   })
@@ -100,8 +131,10 @@ export function useWorkspacePendingEventsDiff(
   from: number | null,
   to: number | null,
 ) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
     queryKey: studioKeys.workspaces.pendingEventsDiff(
+      contentRepositoryId ?? '',
       workspaceName ?? '',
       from ?? 0,
       to ?? 0,
@@ -109,11 +142,16 @@ export function useWorkspacePendingEventsDiff(
     queryFn: () =>
       studioFetch<WorkspacePendingEventsDiff>(
         workspacePath(
+          contentRepositoryId!,
           workspaceName!,
           `/pendingevents/diff${queryString({ from, to })}`,
         ),
       ),
-    enabled: workspaceName !== null && from !== null && to !== null,
+    enabled:
+      workspaceName !== null &&
+      contentRepositoryId !== null &&
+      from !== null &&
+      to !== null,
     // The slice is immutable (events never change once recorded); only a
     // stream swap invalidates it, and that changes the key via from/to.
     staleTime: Infinity,
@@ -130,14 +168,18 @@ export function useWorkspacesPendingEvents(
   enabled = true,
   refetchInterval?: number,
 ) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQueries({
     queries: workspaceNames.map((name) => ({
-      queryKey: studioKeys.workspaces.pendingEvents(name),
+      queryKey: studioKeys.workspaces.pendingEvents(
+        contentRepositoryId ?? '',
+        name,
+      ),
       queryFn: () =>
         studioFetch<WorkspacePendingEvents>(
-          workspacePath(name, '/pendingevents'),
+          workspacePath(contentRepositoryId!, name, '/pendingevents'),
         ),
-      enabled,
+      enabled: enabled && contentRepositoryId !== null,
       refetchInterval,
     })),
     combine: (results) => {
@@ -159,16 +201,21 @@ export function useWorkspacesPendingEvents(
  * list that belongs to the pages.
  */
 export function useWorkspaceTrash(workspaceName: string | null) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: studioKeys.workspaces.trash(workspaceName ?? ''),
+    queryKey: studioKeys.workspaces.trash(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+    ),
     queryFn: () =>
       studioFetch<WorkspaceTrash>(
         workspacePath(
+          contentRepositoryId!,
           workspaceName!,
           `/trash${queryString({ filterByDocuments: true })}`,
         ),
       ),
-    enabled: workspaceName !== null,
+    enabled: workspaceName !== null && contentRepositoryId !== null,
   })
 }
 
@@ -183,14 +230,13 @@ export async function restoreFromTrash(
   workspaceName: string,
   nodeAggregateId: string,
 ): Promise<{ nodeAggregateId: string; label: string | null }[]> {
+  const contentRepositoryId = activeContentRepositoryId()
   const item = queryClient
-    .getQueryData<WorkspaceTrash>(studioKeys.workspaces.trash(workspaceName))
+    .getQueryData<WorkspaceTrash>(
+      studioKeys.workspaces.trash(contentRepositoryId, workspaceName),
+    )
     ?.items.find((candidate) => candidate.nodeAggregateId === nodeAggregateId)
-  await restoreNode({
-    contentRepositoryId: config.contentRepositoryId,
-    workspaceName,
-    nodeAggregateId,
-  })
+  await restoreNode({ contentRepositoryId, workspaceName, nodeAggregateId })
   return [
     { nodeAggregateId, label: item?.label ?? null },
     ...(item?.restoresAncestors ?? []),

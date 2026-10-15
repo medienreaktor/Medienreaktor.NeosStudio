@@ -10,6 +10,7 @@ use Medienreaktor\NeosStudio\Service\WorkspaceHistoryService;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
+use Neos\ContentRepositoryRegistry\Exception\ContentRepositoryNotFoundException;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
 
@@ -58,9 +59,6 @@ class RealtimeController extends ActionController
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
-    #[Flow\InjectConfiguration(path: 'contentRepository')]
-    protected string $contentRepositoryId;
-
     /**
      * Untyped: absent configuration injects null.
      */
@@ -74,12 +72,16 @@ class RealtimeController extends ActionController
      * no events are enumerated - only the current cursor is handed out. The
      * sidecar relays the events to the shell without translation.
      */
-    public function eventsAction(string $workspaceName): string
+    public function eventsAction(string $contentRepositoryId, string $workspaceName): string
     {
         $this->requireSharedSecret();
 
-        $contentRepositoryId = ContentRepositoryId::fromString($this->contentRepositoryId);
-        $workspace = $this->contentRepositoryRegistry->get($contentRepositoryId)->findWorkspaceByName(WorkspaceName::fromString($workspaceName));
+        try {
+            $contentRepositoryId = ContentRepositoryId::fromString($contentRepositoryId);
+            $workspace = $this->contentRepositoryRegistry->get($contentRepositoryId)->findWorkspaceByName(WorkspaceName::fromString($workspaceName));
+        } catch (\InvalidArgumentException | ContentRepositoryNotFoundException) {
+            $workspace = null;
+        }
         if ($workspace === null) {
             $this->throwJsonStatus(404, 'workspace_not_found', 'The workspace does not exist.');
         }

@@ -13,12 +13,8 @@ export interface StudioConfig {
   clientId: string
   authorizeEndpoint: string
   tokenEndpoint: string
-  /** Neos.Api (content, workspaces, media, users, sites). */
+  /** The Neos API: Neos.Api's operations and the Studio's. */
   apiBase: string
-  /** The Studio's own endpoints (tasks, notifications, access, review, history). */
-  studioApiBase: string
-  /** The content repository the Studio edits (Neos.Api: /cr/{id}/...). */
-  contentRepositoryId: string
   /** Endpoint of the Studio's own preview action (session-authenticated). */
   previewBase: string
   redirectUri: string
@@ -80,8 +76,6 @@ const fallback: StudioConfig = {
   authorizeEndpoint: '/oauth/authorize',
   tokenEndpoint: '/oauth/token',
   apiBase: '/api',
-  studioApiBase: '/neos/studio/api',
-  contentRepositoryId: 'default',
   previewBase: '/neos/studio/preview',
   redirectUri: window.location.origin + '/neos/studio',
   // The real list (every scope of Neos.Api and the Studio API) comes from

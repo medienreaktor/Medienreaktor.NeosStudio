@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useActiveContentRepositoryId } from '../activeContentRepository'
 import { apiFetch, contentRepositoryPath } from '../client'
 import { neosKeys } from '../keys'
 import {
@@ -8,17 +9,19 @@ import {
 } from '../schema'
 
 /**
- * The content repository the Studio edits (Neos.Api's ContentRepositories
+ * The content repository of the selected site (Neos.Api's ContentRepositories
  * tag): its dimensions, depth-first with specializations after their
  * generalization, and all allowed dimension space points. Static per
  * deployment - cached for good.
  */
 export function useContentRepository(enabled = true) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: neosKeys.contentRepository,
-    queryFn: () => apiFetch<ContentRepository>(contentRepositoryPath()),
+    queryKey: neosKeys.contentRepository(contentRepositoryId ?? ''),
+    queryFn: () =>
+      apiFetch<ContentRepository>(contentRepositoryPath(contentRepositoryId!)),
     staleTime: Infinity,
-    enabled,
+    enabled: enabled && contentRepositoryId !== null,
   })
 }
 

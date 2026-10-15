@@ -2540,6 +2540,9 @@
       <trans-unit id="workspace.review.empty" xml:space="preserve">
         <source>No pending changes.</source>
       </trans-unit>
+      <trans-unit id="workspace.review.loadFailed" xml:space="preserve">
+        <source>The changes could not be loaded.</source>
+      </trans-unit>
       <trans-unit id="workspace.review.goToPage" xml:space="preserve">
         <source>Go to page</source>
       </trans-unit>

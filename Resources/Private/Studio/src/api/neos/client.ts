@@ -1,5 +1,6 @@
 import { config } from '@/config'
 import { type FetchInit, request, upload } from '../http/request'
+import { activeContentRepositoryId } from './activeContentRepository'
 import type { ListingLinks, ListingMeta } from './schema'
 
 /** A request against Neos.Api below config.apiBase ('/api'). */
@@ -48,9 +49,9 @@ export async function fetchAllPages<T>(path: string): Promise<T[]> {
   }
 }
 
-/** `/cr/{contentRepositoryId}` of the content repository the Studio edits. */
+/** `/cr/{contentRepositoryId}`, of the selected site's content repository if none is given. */
 export function contentRepositoryPath(
-  contentRepositoryId: string = config.contentRepositoryId,
+  contentRepositoryId: string = activeContentRepositoryId(),
 ): string {
   return `/cr/${encodeURIComponent(contentRepositoryId)}`
 }

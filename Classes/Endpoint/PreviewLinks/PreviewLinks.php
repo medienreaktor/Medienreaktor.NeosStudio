@@ -19,6 +19,7 @@ use Neos\Api\Security\ApiCaller;
 use Neos\Api\Shared\Response\Forbidden;
 use Neos\Api\Shared\Response\NotFound;
 use Neos\Api\Shared\Response\UnprocessableContent;
+use Neos\ContentRepository\Core\ContentRepository;
 use Neos\Neos\Domain\Model\User;
 use Neos\OpenApi\Attributes\AuthContext;
 use Neos\OpenApi\Attributes\Operation;
@@ -66,7 +67,7 @@ final readonly class PreviewLinks
         path: '/previewlinks',
         method: 'POST',
         summary: 'Create a preview link',
-        description: 'A link that shows the document to anybody who has it, as the website would show it in the workspace and dimension space point (hidden pages included), until it expires. The response has the share URL, the only time it is readable. A workspace the caller may not read is a 403, a node that doesn\'t exist there or a content repository other than the Studio\'s a 422.',
+        description: 'A link that shows the document to anybody who has it, as the website would show it in the workspace and dimension space point (hidden pages included), until it expires. The response has the share URL, the only time it is readable. A workspace the caller may not read is a 403, a node or content repository that doesn\'t exist a 422.',
         operationId: 'createPreviewLink',
         security: [
             ApiAuthContextProvider::SCOPES => [StudioScopes::PREVIEWLINKS_CREATE],
@@ -81,17 +82,18 @@ final readonly class PreviewLinks
         if (!$user instanceof User) {
             return $user;
         }
-        $address = $previewLink->nodeAddress();
-        if (!$address->contentRepositoryId->equals($this->studioCallers->contentRepositoryId())) {
-            return UnprocessableContent::because(sprintf('The Studio edits the content repository %s, not %s', $this->studioCallers->contentRepositoryId()->value, $address->contentRepositoryId->value));
+        $contentRepository = $this->studioCallers->contentRepository($previewLink->contentRepositoryId);
+        if (!$contentRepository instanceof ContentRepository) {
+            return UnprocessableContent::because(sprintf('There is no content repository %s', $previewLink->contentRepositoryId->value));
         }
+        $address = $previewLink->nodeAddress();
         if ($previewLink->ttlHours !== null && $previewLink->ttlHours < 1) {
             return UnprocessableContent::because('ttlHours must be at least 1');
         }
-        if (!$this->studioCallers->permissionsOf($caller, $address->workspaceName)->read) {
+        if (!$this->studioCallers->permissionsOf($caller, $address->contentRepositoryId, $address->workspaceName)->read) {
             return Forbidden::because(sprintf('You may not read the workspace %s', $address->workspaceName->value));
         }
-        $node = $this->studioCallers->contentRepository()
+        $node = $contentRepository
             ->getContentSubgraph($address->workspaceName, $address->dimensionSpacePoint)
             ->findNodeById($address->aggregateId);
         if ($node === null) {

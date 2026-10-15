@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import type { Listing } from '../../neos/client'
+import {
+  activeContentRepositoryId,
+  useActiveContentRepositoryId,
+} from '../../neos/activeContentRepository'
+import { contentRepositoryPath, type Listing } from '../../neos/client'
 import { studioFetch } from '../client'
 import { studioKeys } from '../keys'
 import type {
@@ -12,25 +16,35 @@ import type {
 
 /**
  * The task workflow: task branches are ordinary shared workspaces plus the
- * Studio's record of who works on them (the Studio API's Tasks).
+ * Studio's record of who works on them (the Studio API's Tasks), in the
+ * selected site's content repository.
  */
 
+function tasksPath(contentRepositoryId: string = activeContentRepositoryId()) {
+  return `${contentRepositoryPath(contentRepositoryId)}/tasks`
+}
+
 export function useTasks(enabled = true) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: studioKeys.tasks.all,
-    queryFn: () => studioFetch<Listing<Task>>('/tasks'),
-    enabled,
+    queryKey: studioKeys.tasks.list(contentRepositoryId ?? ''),
+    queryFn: () => studioFetch<Listing<Task>>(tasksPath(contentRepositoryId!)),
+    enabled: enabled && contentRepositoryId !== null,
     refetchInterval: 300_000,
     select: (listing) => listing.data,
   })
 }
 
-function taskPath(workspaceName: string, suffix = ''): string {
-  return `/tasks/${encodeURIComponent(workspaceName)}${suffix}`
+function taskPath(
+  workspaceName: string,
+  suffix = '',
+  contentRepositoryId: string = activeContentRepositoryId(),
+): string {
+  return `${tasksPath(contentRepositoryId)}/${encodeURIComponent(workspaceName)}${suffix}`
 }
 
 export function createTask(input: TaskCreate): Promise<Task> {
-  return studioFetch<Task>('/tasks', { method: 'POST', body: input })
+  return studioFetch<Task>(tasksPath(), { method: 'POST', body: input })
 }
 
 export function updateTask(
@@ -69,11 +83,17 @@ export function transitionTask(
 
 /** The task's comment thread, oldest first. Pass null while no task is open. */
 export function useTaskComments(workspaceName: string | null) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: studioKeys.tasks.comments(workspaceName ?? ''),
+    queryKey: studioKeys.tasks.comments(
+      contentRepositoryId ?? '',
+      workspaceName ?? '',
+    ),
     queryFn: () =>
-      studioFetch<Listing<TaskComment>>(taskPath(workspaceName!, '/comments')),
-    enabled: workspaceName !== null,
+      studioFetch<Listing<TaskComment>>(
+        taskPath(workspaceName!, '/comments', contentRepositoryId!),
+      ),
+    enabled: workspaceName !== null && contentRepositoryId !== null,
     select: (listing) => listing.data,
   })
 }

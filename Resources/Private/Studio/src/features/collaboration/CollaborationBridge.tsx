@@ -8,6 +8,7 @@ import {
   parseDimensionSpacePoint,
   sameDimensionSpacePoint,
 } from '@/api/neos/schema'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { config } from '@/config'
 import { publishRemoteLiveEdit, subscribeLocalLiveEdits } from './liveEdits'
 import { startPollingTransport } from './pollingTransport'
@@ -107,8 +108,12 @@ export function CollaborationBridge({
   // The running transports, for out-of-band position announcements. During a
   // realtime outage this briefly holds two (socket + polling fallback).
   const transportsRef = useRef<CollaborationTransport[]>([])
+  // Workspaces are named per content repository: a site in another one is
+  // another session, even under the same workspace name.
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   useEffect(() => {
+    if (contentRepositoryId === null) return
     // --- Interpretation: identical for every transport ----------------------
     const handleRoster = (users: PresenceUser[], you: string | null) => {
       const self = you ?? ownUserIdRef.current
@@ -209,6 +214,7 @@ export function CollaborationBridge({
       transports.push(
         startWebsocketTransport(
           realtimeUrl,
+          contentRepositoryId,
           workspaceName,
           positionRef.current,
           {
@@ -248,7 +254,7 @@ export function CollaborationBridge({
       transportsRef.current = []
       lastPresenceRef.current = null
     }
-  }, [workspaceName])
+  }, [contentRepositoryId, workspaceName])
 
   // A document/focus/editing change announces the new position out-of-band,
   // so colleagues' indicators (and edit locks) follow in one feed cycle

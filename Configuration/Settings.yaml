@@ -1,10 +1,5 @@
 Medienreaktor:
   NeosStudio:
-    # The content repository the Studio edits. The content API is Neos.Api
-    # (all content repositories below /api/cr/{id}); this one is what the
-    # Studio's own endpoints (/neos/studio/api) and the shell work with.
-    contentRepository: "default"
-
     # Third-party plugin bundles loaded into the Studio shell. Each extending
     # package adds one entry keyed by its package key; the StudioController
     # injects the referenced assets into the served index.html. See
@@ -46,7 +41,7 @@ Medienreaktor:
       # WebSocket URL the Studio shell connects to (wss://... in production).
       websocketUrl: ""
       # The sidecar's server-to-server credential: it tails workspace change
-      # feeds via /neos/studio/api/realtime/... with this secret in the X-Realtime-Secret
+      # feeds via /neos/studio/realtime/... with this secret in the X-Realtime-Secret
       # header (REALTIME_SHARED_SECRET on the sidecar). Empty disables the
       # endpoint entirely - it answers 404. Generate a long random value,
       # e.g.: openssl rand -hex 32
@@ -166,8 +161,9 @@ Neos:
           # Require a logged-in Neos backend user to open the Studio shell.
           # Once loaded, the SPA obtains an OAuth token via the (first-party,
           # auto-approving) authorization flow using the same session.
-          # The Studio API (Neos.OpenApi.FlowAdapter.apis.studio below) is not
-          # a controller of this package and bearer-token only. ShareController
+          # The Studio API (operations of Neos.Api's API under /api, see
+          # Neos.OpenApi.FlowAdapter.apis.neos below) is no controller of this
+          # package and bearer-token only. ShareController
           # is excluded: the anonymous preview-link endpoint is deliberately
           # sessionless - its token is the sole credential, no backend session
           # must ever get involved. Same for RealtimeController: the sidecar's
@@ -179,20 +175,6 @@ Neos:
                 pattern: "ControllerObjectName"
                 patternOptions:
                   controllerObjectNamePattern: 'Medienreaktor\NeosStudio\Controller\(?!ShareController|RealtimeController).*'
-
-          # Put the Studio API behind the same OAuth 2.1 bearer firewall as
-          # Neos.Api. Neos.Api adds a Uri pattern for /api/.*; request patterns
-          # of the same type are OR-combined, so this extends the provider to
-          # /neos/studio/api/.* (a pattern of another type would be
-          # AND-combined and disable Neos.Api's). The realtime sidecar's feed
-          # below that path sends no token and authenticates with its shared
-          # secret instead.
-          "Neos.OAuth:Bearer":
-            requestPatterns:
-              "Medienreaktor.NeosStudio:Api":
-                pattern: "Uri"
-                patternOptions:
-                  uriPattern: "/neos/studio/api/.*"
 
   OAuth:
     # The Studio API's scopes are the ApiPrivilege targets of Policy.yaml
@@ -208,19 +190,12 @@ Neos:
       apis:
         # The Studio API: what the Studio adds to Neos (tasks, notifications,
         # preview links, access roles, the review, history and trash read
-        # models of a workspace). Built and secured exactly like Neos.Api's
-        # own "neos" API: neos/openapi operations, Neos.Api's auth context
-        # provider (scopes = ApiPrivilege targets), problem documents.
-        studio:
-          uriPrefix: "neos/studio/api"
-          info:
-            title: "Neos Studio API"
-            version: "1.0.0"
-          # Access first: neos/openapi can only describe an error response
-          # (Forbidden, NotFound, ...) once an earlier operation registered the
-          # ProblemDocument component through its automatic 401 - an API whose
-          # first operation returns one fails to compile, and with it the
-          # routing of every request. getMyAccess returns none.
+        # models of a workspace), operations of the Neos API itself. Built and
+        # secured exactly like Neos.Api's: neos/openapi Api Classes, its
+        # ApiAuthContextProvider (scopes = ApiPrivilege targets of Policy.yaml),
+        # problem documents - one OpenAPI document, one docs page, and the
+        # tools of Neos.Mcp's server.
+        neos:
           classes:
             'Medienreaktor\NeosStudio\Endpoint\Access\Access': true
             'Medienreaktor\NeosStudio\Endpoint\Tasks\Tasks': true
@@ -228,13 +203,3 @@ Neos:
             'Medienreaktor\NeosStudio\Endpoint\PreviewLinks\PreviewLinks': true
             'Medienreaktor\NeosStudio\Endpoint\AccessRoles\AccessRoles': true
             'Medienreaktor\NeosStudio\Endpoint\WorkspaceHistory\WorkspaceHistory': true
-          specPath: "openapi.json"
-          authContextProvider: 'Neos\Api\Security\ApiAuthContextProvider'
-
-  Mcp:
-    servers:
-      # Neos.Mcp's server offers the Studio API's operations as tools as well
-      # (if installed; the setting is inert otherwise).
-      neos:
-        apis:
-          "studio": true

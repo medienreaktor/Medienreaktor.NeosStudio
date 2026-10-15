@@ -29,12 +29,14 @@ type ServerMessage =
  * causes ONE feed poll per workspace on the sidecar instead of one per
  * editor per 2s, and remote changes arrive with sub-second latency.
  *
- * The Yjs document behind the connection (`workspace:<name>`) is unused for
+ * The Yjs document behind the connection
+ * (`workspace:<contentRepositoryId>:<workspaceName>`) is unused for
  * now - it is the seam where the planned collaborative text editing (phase 4)
  * attaches without a new connection concept.
  */
 export function startWebsocketTransport(
   url: string,
+  contentRepositoryId: string,
   workspaceName: string,
   initialPosition: CollaborationPosition,
   callbacks: TransportCallbacks & {
@@ -56,7 +58,7 @@ export function startWebsocketTransport(
 
   const provider = new HocuspocusProvider({
     url,
-    name: `workspace:${workspaceName}`,
+    name: `workspace:${contentRepositoryId}:${workspaceName}`,
     // Async token: always hands the CURRENT access token to (re)connects, so
     // a connection outliving the 1h token TTL re-authenticates cleanly.
     token: async () => (await getValidAccessToken()) ?? '',

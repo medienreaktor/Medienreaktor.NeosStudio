@@ -22,6 +22,7 @@ use Medienreaktor\NeosStudio\Endpoint\Tasks\Schema\TaskListing;
 use Medienreaktor\NeosStudio\Security\StudioCallers;
 use Medienreaktor\NeosStudio\Security\StudioScopes;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
+use Neos\Api\Endpoint\ContentRepositories\Schema\ContentRepositoryId;
 use Neos\Api\Endpoint\Users\Schema\UserId;
 use Neos\Api\Endpoint\Workspaces\Schema\WorkspaceName;
 use Neos\Api\Security\ApiAuthContextProvider;
@@ -29,6 +30,7 @@ use Neos\Api\Security\ApiCaller;
 use Neos\Api\Shared\Response\Forbidden;
 use Neos\Api\Shared\Response\NotFound;
 use Neos\Api\Shared\Response\UnprocessableContent;
+use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\SharedModel;
 use Neos\Neos\Domain\Model\User;
 use Neos\Neos\Domain\Model\WorkspaceDescription;
@@ -41,7 +43,7 @@ use Neos\OpenApi\Attributes\RequestBody;
 /**
  * The task workflow: a task is a shared workspace (its branch) plus the
  * Studio's record of who works on it and where it is (OPEN → IN_REVIEW →
- * DONE)
+ * DONE), in a content repository
  *
  * The workspace roles a task gets decide who may do what: its creator and the
  * reviewers (the reviewerRole setting) manage it, the assignee collaborates,
@@ -60,7 +62,7 @@ final readonly class Tasks
     }
 
     #[Operation(
-        path: '/tasks',
+        path: '/cr/{contentRepositoryId}/tasks',
         method: 'GET',
         summary: 'List the tasks',
         description: 'The tasks whose workspace the caller may read, i.e. the ones they created, are assigned to or review.',
@@ -69,21 +71,24 @@ final readonly class Tasks
             ApiAuthContextProvider::SCOPES => [StudioScopes::TASKS_READ],
         ],
     )]
-    public function list(#[AuthContext] ApiCaller $caller): TaskListing
+    public function list(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId): TaskListing|NotFound
     {
-        $contentRepositoryId = $this->studioCallers->contentRepositoryId();
-        $commentCounts = $this->taskWorkspaceService->getCommentCounts($contentRepositoryId);
+        $contentRepository = $this->studioCallers->contentRepository($contentRepositoryId);
+        if (!$contentRepository instanceof ContentRepository) {
+            return $contentRepository;
+        }
+        $commentCounts = $this->taskWorkspaceService->getCommentCounts($contentRepository->id);
         $tasks = [];
-        foreach ($this->taskWorkspaceService->findAllTasks($contentRepositoryId) as $task) {
-            if ($this->studioCallers->permissionsOf($caller, $task->workspaceName)->read) {
-                $tasks[] = $this->task($caller, $task, $commentCounts[$task->workspaceName->value] ?? 0);
+        foreach ($this->taskWorkspaceService->findAllTasks($contentRepository->id) as $task) {
+            if ($this->studioCallers->permissionsOf($caller, $contentRepository->id, $task->workspaceName)->read) {
+                $tasks[] = $this->task($caller, $contentRepository, $task, $commentCounts[$task->workspaceName->value] ?? 0);
             }
         }
         return TaskListing::of(new TaskList(...$tasks));
     }
 
     #[Operation(
-        path: '/tasks',
+        path: '/cr/{contentRepositoryId}/tasks',
         method: 'POST',
         summary: 'Create a task',
         description: 'Creates the task\'s shared workspace on the base workspace, named after the title, with the caller and the reviewers as managers and the assignee as collaborator. The assignee is notified. An empty title, a base workspace the caller may not read or an unknown assignee is a 422.',
@@ -94,8 +99,13 @@ final readonly class Tasks
     )]
     public function create(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         #[RequestBody(description: 'The new task')] TaskCreate $newTask,
-    ): TaskCreated|Forbidden|UnprocessableContent {
+    ): TaskCreated|NotFound|Forbidden|UnprocessableContent {
+        $contentRepository = $this->studioCallers->contentRepository($contentRepositoryId);
+        if (!$contentRepository instanceof ContentRepository) {
+            return $contentRepository;
+        }
         $user = $this->studioCallers->requireUserOf($caller);
         if (!$user instanceof User) {
             return $user;
@@ -105,8 +115,8 @@ final readonly class Tasks
             return UnprocessableContent::because('The title must not be empty');
         }
         $baseWorkspaceName = $newTask->baseWorkspaceName?->toWorkspaceName() ?? SharedModel\Workspace\WorkspaceName::forLive();
-        if ($this->studioCallers->contentRepository()->findWorkspaceByName($baseWorkspaceName) === null
-            || !$this->studioCallers->permissionsOf($caller, $baseWorkspaceName)->read
+        if ($contentRepository->findWorkspaceByName($baseWorkspaceName) === null
+            || !$this->studioCallers->permissionsOf($caller, $contentRepository->id, $baseWorkspaceName)->read
         ) {
             return UnprocessableContent::because(sprintf('There is no workspace %s', $baseWorkspaceName->value));
         }
@@ -115,18 +125,18 @@ final readonly class Tasks
             return $assignee;
         }
         $workspaceName = $this->taskWorkspaceService->createTaskWorkspace(
-            $this->studioCallers->contentRepositoryId(),
+            $contentRepository->id,
             WorkspaceTitle::fromString($title),
             WorkspaceDescription::fromString(trim($newTask->description ?? '')),
             $baseWorkspaceName,
             $user->getId(),
             $assignee,
         );
-        return new TaskCreated($this->reread($caller, $workspaceName));
+        return new TaskCreated($this->reread($caller, $contentRepositoryId, $workspaceName));
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}',
         method: 'GET',
         summary: 'Get a task',
         description: 'The task of the workspace.',
@@ -135,17 +145,17 @@ final readonly class Tasks
             ApiAuthContextProvider::SCOPES => [StudioScopes::TASKS_READ],
         ],
     )]
-    public function get(#[AuthContext] ApiCaller $caller, WorkspaceName $workspaceName): Task|NotFound
+    public function get(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): Task|NotFound
     {
-        $task = $this->resolve($caller, $workspaceName);
+        $task = $this->resolve($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
-        return $this->reread($caller, $task->workspaceName);
+        return $this->reread($caller, $contentRepositoryId, $task->workspaceName);
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}',
         method: 'PATCH',
         summary: 'Update a task',
         description: 'Changes the title or description, which are the workspace\'s. Only for its managers (403 otherwise), an empty title is a 422.',
@@ -156,28 +166,29 @@ final readonly class Tasks
     )]
     public function update(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[RequestBody(description: 'The changes, what is left out stays as it is')] TaskUpdate $changes,
     ): Task|NotFound|Forbidden|UnprocessableContent {
-        $task = $this->resolveManageable($caller, $workspaceName);
+        $task = $this->resolveManageable($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
         if ($changes->title !== null && trim($changes->title) === '') {
             return UnprocessableContent::because('The title must not be empty');
         }
-        $current = $this->reread($caller, $task->workspaceName)->workspace;
+        $current = $this->reread($caller, $contentRepositoryId, $task->workspaceName)->workspace;
         $this->taskWorkspaceService->updateTask(
-            $this->studioCallers->contentRepositoryId(),
+            $contentRepositoryId->toContentRepositoryId(),
             $task->workspaceName,
             WorkspaceTitle::fromString($changes->title !== null ? trim($changes->title) : (string)$current?->title),
             WorkspaceDescription::fromString($changes->description !== null ? trim($changes->description) : (string)$current?->description),
         );
-        return $this->reread($caller, $task->workspaceName);
+        return $this->reread($caller, $contentRepositoryId, $task->workspaceName);
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}',
         method: 'DELETE',
         summary: 'Delete a task',
         description: 'Removes the task\'s workspace with all its changes, and the task with its comments. Only for its managers (403 otherwise).',
@@ -186,18 +197,18 @@ final readonly class Tasks
             ApiAuthContextProvider::SCOPES => [StudioScopes::TASKS_UPDATE],
         ],
     )]
-    public function delete(#[AuthContext] ApiCaller $caller, WorkspaceName $workspaceName): NotFound|Forbidden|null
+    public function delete(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): NotFound|Forbidden|null
     {
-        $task = $this->resolveManageable($caller, $workspaceName);
+        $task = $this->resolveManageable($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
-        $this->taskWorkspaceService->deleteTaskWorkspace($this->studioCallers->contentRepositoryId(), $task->workspaceName);
+        $this->taskWorkspaceService->deleteTaskWorkspace($contentRepositoryId->toContentRepositoryId(), $task->workspaceName);
         return null;
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}/assignee',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}/assignee',
         method: 'PUT',
         summary: 'Assign a task',
         description: 'Who works on the task from now on: the new assignee becomes collaborator of its workspace (and is notified), the previous one stops being one. Only for its managers (403 otherwise), an unknown user is a 422.',
@@ -208,6 +219,7 @@ final readonly class Tasks
     )]
     public function setAssignee(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[RequestBody(description: 'The assignee, null for nobody')] TaskAssigneeChange $assignment,
     ): Task|NotFound|Forbidden|UnprocessableContent {
@@ -215,7 +227,7 @@ final readonly class Tasks
         if (!$user instanceof User) {
             return $user;
         }
-        $task = $this->resolveManageable($caller, $workspaceName);
+        $task = $this->resolveManageable($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
@@ -223,12 +235,12 @@ final readonly class Tasks
         if ($assignee instanceof UnprocessableContent) {
             return $assignee;
         }
-        $this->taskWorkspaceService->assignTask($this->studioCallers->contentRepositoryId(), $task->workspaceName, $assignee, $user->getId());
-        return $this->reread($caller, $task->workspaceName);
+        $this->taskWorkspaceService->assignTask($contentRepositoryId->toContentRepositoryId(), $task->workspaceName, $assignee, $user->getId());
+        return $this->reread($caller, $contentRepositoryId, $task->workspaceName);
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}/submit',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}/submit',
         method: 'POST',
         summary: 'Submit a task for review',
         description: 'Hands the task to the reviewers: IN_REVIEW, and every reviewer is notified. For everybody who may write in its workspace (403 otherwise).',
@@ -239,6 +251,7 @@ final readonly class Tasks
     )]
     public function submit(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[RequestBody(description: 'A comment for the reviewers, optional')] TaskSubmit $submission = new TaskSubmit(),
     ): Task|NotFound|Forbidden {
@@ -246,16 +259,16 @@ final readonly class Tasks
         if (!$user instanceof User) {
             return $user;
         }
-        $task = $this->resolveWritable($caller, $workspaceName);
+        $task = $this->resolveWritable($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
-        $this->taskWorkspaceService->submitForReview($this->studioCallers->contentRepositoryId(), $task->workspaceName, $user->getId(), trim($submission->comment ?? ''));
-        return $this->reread($caller, $task->workspaceName);
+        $this->taskWorkspaceService->submitForReview($contentRepositoryId->toContentRepositoryId(), $task->workspaceName, $user->getId(), trim($submission->comment ?? ''));
+        return $this->reread($caller, $contentRepositoryId, $task->workspaceName);
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}/approve',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}/approve',
         method: 'POST',
         summary: 'Approve a task',
         description: 'Makes the task DONE, e.g. after some of its changes were published with publishWorkspace of the Neos API. It doesn\'t publish anything itself: publishing all of the workspace makes the task DONE anyway. Only for its managers (403 otherwise).',
@@ -264,18 +277,18 @@ final readonly class Tasks
             ApiAuthContextProvider::SCOPES => [StudioScopes::TASKS_APPROVE],
         ],
     )]
-    public function approve(#[AuthContext] ApiCaller $caller, WorkspaceName $workspaceName): Task|NotFound|Forbidden
+    public function approve(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): Task|NotFound|Forbidden
     {
-        $task = $this->resolveManageable($caller, $workspaceName);
+        $task = $this->resolveManageable($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
-        $this->taskWorkspaceService->completeTask($this->studioCallers->contentRepositoryId(), $task->workspaceName);
-        return $this->reread($caller, $task->workspaceName);
+        $this->taskWorkspaceService->completeTask($contentRepositoryId->toContentRepositoryId(), $task->workspaceName);
+        return $this->reread($caller, $contentRepositoryId, $task->workspaceName);
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}/reopen',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}/reopen',
         method: 'POST',
         summary: 'Reopen a task',
         description: 'Puts the task back into work (OPEN), e.g. when the review found something; its assignee and creator are notified. For everybody who may write in its workspace (403 otherwise).',
@@ -286,6 +299,7 @@ final readonly class Tasks
     )]
     public function reopen(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[RequestBody(description: 'Why, optional')] TaskReopen $reopening = new TaskReopen(),
     ): Task|NotFound|Forbidden {
@@ -293,16 +307,16 @@ final readonly class Tasks
         if (!$user instanceof User) {
             return $user;
         }
-        $task = $this->resolveWritable($caller, $workspaceName);
+        $task = $this->resolveWritable($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
-        $this->taskWorkspaceService->reopenTask($this->studioCallers->contentRepositoryId(), $task->workspaceName, $user->getId(), trim($reopening->reason ?? ''));
-        return $this->reread($caller, $task->workspaceName);
+        $this->taskWorkspaceService->reopenTask($contentRepositoryId->toContentRepositoryId(), $task->workspaceName, $user->getId(), trim($reopening->reason ?? ''));
+        return $this->reread($caller, $contentRepositoryId, $task->workspaceName);
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}/comments',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}/comments',
         method: 'GET',
         summary: 'List the comments of a task',
         description: 'Oldest first, with the authors\' names.',
@@ -311,20 +325,20 @@ final readonly class Tasks
             ApiAuthContextProvider::SCOPES => [StudioScopes::TASKS_READ],
         ],
     )]
-    public function listComments(#[AuthContext] ApiCaller $caller, WorkspaceName $workspaceName): TaskCommentListing|NotFound
+    public function listComments(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): TaskCommentListing|NotFound
     {
-        $task = $this->resolve($caller, $workspaceName);
+        $task = $this->resolve($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
         return TaskCommentListing::of(new TaskCommentList(...array_map(
             $this->comment(...),
-            $this->taskWorkspaceService->getComments($this->studioCallers->contentRepositoryId(), $task->workspaceName),
+            $this->taskWorkspaceService->getComments($contentRepositoryId->toContentRepositoryId(), $task->workspaceName),
         )));
     }
 
     #[Operation(
-        path: '/tasks/{workspaceName}/comments',
+        path: '/cr/{contentRepositoryId}/tasks/{workspaceName}/comments',
         method: 'POST',
         summary: 'Comment on a task',
         description: 'Everybody who sees the task may join its conversation; the others involved are notified. An empty text is a 422.',
@@ -335,6 +349,7 @@ final readonly class Tasks
     )]
     public function createComment(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[RequestBody(description: 'The comment')] TaskCommentCreate $newComment,
     ): TaskCommentCreated|NotFound|Forbidden|UnprocessableContent {
@@ -342,7 +357,7 @@ final readonly class Tasks
         if (!$user instanceof User) {
             return $user;
         }
-        $task = $this->resolve($caller, $workspaceName);
+        $task = $this->resolve($caller, $contentRepositoryId, $workspaceName);
         if (!$task instanceof Model\TaskWorkspace) {
             return $task;
         }
@@ -350,37 +365,42 @@ final readonly class Tasks
         if ($text === '') {
             return UnprocessableContent::because('The comment must not be empty');
         }
-        $comment = $this->taskWorkspaceService->commentOnTask($this->studioCallers->contentRepositoryId(), $task->workspaceName, $user->getId(), $text);
+        $comment = $this->taskWorkspaceService->commentOnTask($contentRepositoryId->toContentRepositoryId(), $task->workspaceName, $user->getId(), $text);
         return new TaskCommentCreated($this->comment($comment));
     }
 
     /**
-     * The same 404 for a task the caller may not read as for an unknown one,
-     * so tasks can't be probed
+     * The task in the content repository, the same 404 for one the caller may
+     * not read as for an unknown one (and an unknown content repository), so
+     * tasks can't be probed
      */
-    private function resolve(ApiCaller $caller, WorkspaceName $workspaceName): Model\TaskWorkspace|NotFound
+    private function resolve(ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): Model\TaskWorkspace|NotFound
     {
+        $contentRepository = $this->studioCallers->contentRepository($contentRepositoryId);
+        if (!$contentRepository instanceof ContentRepository) {
+            return $contentRepository;
+        }
         $name = $workspaceName->toWorkspaceName();
-        $task = $this->taskWorkspaceService->getTask($this->studioCallers->contentRepositoryId(), $name);
-        if ($task === null || !$this->studioCallers->permissionsOf($caller, $name)->read) {
-            return NotFound::because(sprintf('There is no task with the workspace %s', $workspaceName->value));
+        $task = $this->taskWorkspaceService->getTask($contentRepository->id, $name);
+        if ($task === null || !$this->studioCallers->permissionsOf($caller, $contentRepository->id, $name)->read) {
+            return NotFound::because(sprintf('There is no task with the workspace %s in the content repository %s', $workspaceName->value, $contentRepositoryId->value));
         }
         return $task;
     }
 
-    private function resolveManageable(ApiCaller $caller, WorkspaceName $workspaceName): Model\TaskWorkspace|NotFound|Forbidden
+    private function resolveManageable(ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): Model\TaskWorkspace|NotFound|Forbidden
     {
-        $task = $this->resolve($caller, $workspaceName);
-        if ($task instanceof Model\TaskWorkspace && !$this->studioCallers->permissionsOf($caller, $task->workspaceName)->manage) {
+        $task = $this->resolve($caller, $contentRepositoryId, $workspaceName);
+        if ($task instanceof Model\TaskWorkspace && !$this->studioCallers->permissionsOf($caller, $contentRepositoryId->toContentRepositoryId(), $task->workspaceName)->manage) {
             return Forbidden::because(sprintf('Only the managers of the workspace %s may do this: the task\'s creator and the reviewers', $workspaceName->value));
         }
         return $task;
     }
 
-    private function resolveWritable(ApiCaller $caller, WorkspaceName $workspaceName): Model\TaskWorkspace|NotFound|Forbidden
+    private function resolveWritable(ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): Model\TaskWorkspace|NotFound|Forbidden
     {
-        $task = $this->resolve($caller, $workspaceName);
-        if ($task instanceof Model\TaskWorkspace && !$this->studioCallers->permissionsOf($caller, $task->workspaceName)->write) {
+        $task = $this->resolve($caller, $contentRepositoryId, $workspaceName);
+        if ($task instanceof Model\TaskWorkspace && !$this->studioCallers->permissionsOf($caller, $contentRepositoryId->toContentRepositoryId(), $task->workspaceName)->write) {
             return Forbidden::because(sprintf('You may not write in the workspace %s', $workspaceName->value));
         }
         return $task;
@@ -396,25 +416,28 @@ final readonly class Tasks
     }
 
     /**
-     * The task as it is now, after a change
+     * The task as it is now, after a change, in the content repository the
+     * operation resolved already
      */
-    private function reread(ApiCaller $caller, SharedModel\Workspace\WorkspaceName $workspaceName): Task
+    private function reread(ApiCaller $caller, ContentRepositoryId $contentRepositoryId, SharedModel\Workspace\WorkspaceName $workspaceName): Task
     {
-        $contentRepositoryId = $this->studioCallers->contentRepositoryId();
-        $task = $this->taskWorkspaceService->getTask($contentRepositoryId, $workspaceName)
-            ?? throw new \RuntimeException(sprintf('The task %s is gone', $workspaceName->value), 1792500001);
-        return $this->task($caller, $task, $this->taskWorkspaceService->countComments($contentRepositoryId, $workspaceName));
+        $contentRepository = $this->studioCallers->contentRepository($contentRepositoryId);
+        $task = $contentRepository instanceof ContentRepository ? $this->taskWorkspaceService->getTask($contentRepository->id, $workspaceName) : null;
+        if ($task === null) {
+            throw new \RuntimeException(sprintf('The task %s is gone', $workspaceName->value), 1792500001);
+        }
+        return $this->task($caller, $contentRepository, $task, $this->taskWorkspaceService->countComments($contentRepository->id, $workspaceName));
     }
 
-    private function task(ApiCaller $caller, Model\TaskWorkspace $task, int $commentCount): Task
+    private function task(ApiCaller $caller, ContentRepository $contentRepository, Model\TaskWorkspace $task, int $commentCount): Task
     {
         // null for a workspace that was just removed while its task record waits for the catch-up hook
-        $workspace = $this->studioCallers->contentRepository()->findWorkspaceByName($task->workspaceName);
+        $workspace = $contentRepository->findWorkspaceByName($task->workspaceName);
         return Task::from(
             $task,
             $commentCount,
-            $workspace !== null ? $this->studioCallers->workspaceFor($caller, $workspace) : null,
-            $workspace !== null && $this->studioCallers->mayPublish($caller, $workspace),
+            $workspace !== null ? $this->studioCallers->workspaceFor($caller, $contentRepository->id, $workspace) : null,
+            $workspace !== null && $this->studioCallers->mayPublish($caller, $contentRepository->id, $workspace),
         );
     }
 

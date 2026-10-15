@@ -8,8 +8,9 @@ import type { NodeAddress } from './schema'
  *   queryClient.invalidateQueries({ queryKey: neosKeys.nodes.node(address) })
  *
  * Every Neos.Api query takes its key from here - never inline key literals in
- * hooks, or invalidation silently misses them. The Studio's own endpoints
- * have theirs in api/studio/keys.ts.
+ * hooks, or invalidation silently misses them. The Studio's operations have
+ * theirs in api/studio/keys.ts. What belongs to a content repository has its
+ * ID right after the key's root, so the root covers all of them.
  */
 
 /**
@@ -34,7 +35,9 @@ export const neosKeys = {
   me: ['me'] as const,
   /** The own editable profile - nested under `me` so invalidating me covers it. */
   profile: ['me', 'profile'] as const,
-  contentRepository: ['contentRepository'] as const,
+  /** A content repository with its dimensions. */
+  contentRepository: (contentRepositoryId: string) =>
+    ['contentRepository', contentRepositoryId] as const,
   sites: {
     all: ['sites'] as const,
     /** Site packages + site node types for the creation dialog. */
@@ -45,17 +48,26 @@ export const neosKeys = {
     /** The assignable roles - nested under `users` so invalidating users covers it. */
     options: ['users', 'options'] as const,
   },
+  /** By content repository, after the prefix covering all of them. */
   workspaces: {
     all: ['workspaces'] as const,
-    workspace: (name: string) => ['workspaces', name] as const,
-    changes: (name: string) => ['workspaces', name, 'changes'] as const,
-    roles: (name: string) => ['workspaces', name, 'roles'] as const,
+    list: (contentRepositoryId: string) =>
+      ['workspaces', contentRepositoryId, 'list'] as const,
+    workspace: (contentRepositoryId: string, name: string) =>
+      ['workspaces', contentRepositoryId, name] as const,
+    changes: (contentRepositoryId: string, name: string) =>
+      ['workspaces', contentRepositoryId, name, 'changes'] as const,
+    roles: (contentRepositoryId: string, name: string) =>
+      ['workspaces', contentRepositoryId, name, 'roles'] as const,
   },
+  /** By content repository, after the prefix covering all of them. */
   nodeTypes: {
     all: ['nodeTypes'] as const,
     /** The listing with an include, e.g. properties,references. */
-    listing: (include: string) => ['nodeTypes', 'listing', include] as const,
-    nodeType: (name: string) => ['nodeTypes', 'nodeType', name] as const,
+    listing: (contentRepositoryId: string, include: string) =>
+      ['nodeTypes', contentRepositoryId, 'listing', include] as const,
+    nodeType: (contentRepositoryId: string, name: string) =>
+      ['nodeTypes', contentRepositoryId, 'nodeType', name] as const,
   },
   nodes: {
     all: ['nodes'] as const,

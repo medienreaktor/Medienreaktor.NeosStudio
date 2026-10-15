@@ -18,7 +18,10 @@ use Neos\Api\Security\ApiCaller;
 use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
+use Neos\Neos\Domain\Repository\SiteRepository;
 use Neos\OpenApi\Attributes\AuthContext;
 use Neos\OpenApi\Attributes\Operation;
 
@@ -35,6 +38,8 @@ final readonly class Access
         private AccessControlService $accessControlService,
         private AccountPrivileges $accountPrivileges,
         private StudioCallers $studioCallers,
+        private SiteRepository $siteRepository,
+        private ContentRepositoryRegistry $contentRepositoryRegistry,
     ) {
     }
 
@@ -61,25 +66,38 @@ final readonly class Access
                 static fn (AccessRole $role) => EffectiveAccessRole::from($role),
                 $access->roles,
             )),
-            array_values($this->accessControlService->pathAnchorsFor($access, $this->liveSubgraph())),
+            array_values($this->accessControlService->pathAnchorsFor($access, $this->liveSubgraphOfSite(...))),
             AccessCapabilityList::all(),
             $this->accountPrivileges->isGranted($caller->account, StudioScopes::ACCESSROLES_UPDATE_PRIVILEGE),
         );
     }
 
     /**
-     * The live subgraph in the content repository's first root dimension space
-     * point - ancestry is what is read from it, which doesn't meaningfully
-     * differ between dimensions.
+     * The live subgraph of the site's content repository, in its first root
+     * dimension space point - ancestry is what is read from it, which doesn't
+     * meaningfully differ between dimensions. null for an unknown site
      *
      * Deliberately WITHOUT visibility constraints: a hidden (or soft-removed)
      * page is still a row in the page tree, so it still has to count as a path
      * anchor, or the allowed branch below it would be stranded. Nothing leaks:
      * anchors only decide whether a row is drawn, never what it contains.
      */
-    private function liveSubgraph(): ContentSubgraphInterface
+    private function liveSubgraphOfSite(string $siteNodeName): ?ContentSubgraphInterface
     {
-        $contentRepository = $this->studioCallers->contentRepository();
+        try {
+            $site = $this->siteRepository->findOneByNodeName($siteNodeName);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+        if ($site === null) {
+            return null;
+        }
+        return $this->liveSubgraphOf($site->getConfiguration()->contentRepositoryId);
+    }
+
+    private function liveSubgraphOf(ContentRepositoryId $contentRepositoryId): ContentSubgraphInterface
+    {
+        $contentRepository = $this->contentRepositoryRegistry->get($contentRepositoryId);
         $dimensionSpacePoint = array_values($contentRepository->getVariationGraph()->getRootGeneralizations())[0]
             ?? DimensionSpacePoint::createWithoutDimensions();
 

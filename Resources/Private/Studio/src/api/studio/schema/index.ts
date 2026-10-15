@@ -1,11 +1,10 @@
-import type { components } from './openapi'
+import type { components } from '../../neos/schema/openapi'
 
 /**
- * The models of the Studio API (/neos/studio/api), by the names its OpenAPI
- * document gives them. openapi.ts is generated from that document
- * (`npm run api:studio-schema`) and never edited; the shell uses these types
- * as they are, without mapping them into models of its own. Nodes and
- * workspaces in them have the shapes of Neos.Api's schema.
+ * The models of the Studio's operations of the Neos API, by the names its
+ * OpenAPI document gives them - generated with Neos.Api's into
+ * api/neos/schema/openapi.ts (`npm run api:schema`). The shell uses these
+ * types as they are, without mapping them into models of its own.
  */
 type Schemas = components['schemas']
 

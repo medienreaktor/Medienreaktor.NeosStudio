@@ -1,7 +1,7 @@
 #
-# The Studio API below neos/studio/api is no route of its own: it is a
-# neos/openapi API (Neos.OpenApi.FlowAdapter.apis.studio in Settings.yaml),
-# whose routes the FlowAdapter registers.
+# The Studio API has no routes of its own: its operations are part of
+# Neos.Api's neos/openapi API below /api (Neos.OpenApi.FlowAdapter.apis.neos
+# in Settings.yaml), whose routes the FlowAdapter registers.
 #
 
 -
@@ -9,7 +9,7 @@
   # workspace change feeds here, authenticated by the X-Realtime-Secret
   # header (see RealtimeController). Sessionless like the share endpoint.
   name: 'Studio: realtime sidecar event feed'
-  uriPattern: 'neos/studio/api/realtime/workspaces/{workspaceName}/events'
+  uriPattern: 'neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/events'
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Realtime'

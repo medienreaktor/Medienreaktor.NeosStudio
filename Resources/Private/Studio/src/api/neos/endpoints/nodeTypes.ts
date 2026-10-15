@@ -1,17 +1,22 @@
 import { useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
+import {
+  activeContentRepositoryId,
+  useActiveContentRepositoryId,
+} from '../activeContentRepository'
 import { apiFetch, contentRepositoryPath } from '../client'
 import { neosKeys } from '../keys'
 import type { NodeType, NodeTypeListing } from '../schema'
 
 /**
- * The node types of the content repository (Neos.Api's NodeTypes tag). The
+ * The node types of the selected site's content repository (Neos.Api's
+ * NodeTypes tag). The
  * model changes on deployments, not during a session, so every read is
  * cached for good.
  */
 
-function nodeTypesPath(): string {
-  return `${contentRepositoryPath()}/nodetypes`
+function nodeTypesPath(contentRepositoryId: string): string {
+  return `${contentRepositoryPath(contentRepositoryId)}/nodetypes`
 }
 
 /**
@@ -20,14 +25,14 @@ function nodeTypesPath(): string {
  * meta with the node type groups. The plain listing every consumer boots with
  * stays lean; the content model graph and the child constraints ask for more.
  */
-function listingQuery(include = '') {
+function listingQuery(contentRepositoryId: string, include = '') {
   return {
-    queryKey: neosKeys.nodeTypes.listing(include),
+    queryKey: neosKeys.nodeTypes.listing(contentRepositoryId, include),
     queryFn: () =>
       apiFetch<NodeTypeListing>(
         include === ''
-          ? nodeTypesPath()
-          : `${nodeTypesPath()}?include=${include}`,
+          ? nodeTypesPath(contentRepositoryId)
+          : `${nodeTypesPath(contentRepositoryId)}?include=${include}`,
       ),
     staleTime: Infinity,
   }
@@ -49,35 +54,47 @@ export function nodeTypeMap(nodeTypes: NodeType[]): NodeTypeMap {
 
 /** The node types by name, with the given include (see listingQuery). */
 export function useNodeTypes(include = '', enabled = true) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    ...listingQuery(include),
-    enabled,
+    ...listingQuery(contentRepositoryId ?? '', include),
+    enabled: enabled && contentRepositoryId !== null,
     select: (listing: NodeTypeListing) => nodeTypeMap(listing.data),
   })
 }
 
 /** Imperative variant of useNodeTypes, same cache entries. */
 export async function fetchNodeTypes(include = ''): Promise<NodeType[]> {
-  return (await queryClient.fetchQuery(listingQuery(include))).data
+  return (
+    await queryClient.fetchQuery(
+      listingQuery(activeContentRepositoryId(), include),
+    )
+  ).data
 }
 
 /** The node type groups (Neos.Neos.nodeTypes.groups), for creation UIs. */
 export function useNodeTypeGroups(enabled = true) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    ...listingQuery(),
-    enabled,
+    ...listingQuery(contentRepositoryId ?? ''),
+    enabled: enabled && contentRepositoryId !== null,
     select: (listing: NodeTypeListing) => listing.meta.groups,
   })
 }
 
 /** One node type with everything: its configuration, properties, references, constraints. */
 export function useNodeType(name: string | null, enabled = true) {
+  const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
-    queryKey: neosKeys.nodeTypes.nodeType(name ?? ''),
+    queryKey: neosKeys.nodeTypes.nodeType(
+      contentRepositoryId ?? '',
+      name ?? '',
+    ),
     queryFn: () =>
-      apiFetch<NodeType>(`${nodeTypesPath()}/${encodeURIComponent(name!)}`),
+      apiFetch<NodeType>(
+        `${nodeTypesPath(contentRepositoryId!)}/${encodeURIComponent(name!)}`,
+      ),
     staleTime: Infinity,
-    enabled: enabled && name !== null,
+    enabled: enabled && name !== null && contentRepositoryId !== null,
   })
 }
 

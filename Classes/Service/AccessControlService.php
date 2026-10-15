@@ -219,15 +219,18 @@ class AccessControlService
      * exactly the path an editor needs. The client caches the answer for a
      * few minutes, so this costs one traversal per allow rule per session.
      *
+     * Each rule is resolved in the subgraph of its own site: sites may live in
+     * different content repositories.
+     *
+     * @param \Closure(string $siteNodeName): ?ContentSubgraphInterface $subgraphOfSite null for a site that doesn't exist (any more)
      * @return array<int, string> node aggregate ids, ancestors of allow rules
      */
-    public function pathAnchorsFor(EffectiveAccess $access, ContentSubgraphInterface $subgraph): array
+    public function pathAnchorsFor(EffectiveAccess $access, \Closure $subgraphOfSite): array
     {
         if ($access->unrestricted) {
             return [];
         }
-        $cacheKey = $subgraph->getWorkspaceName()->value . '|' . $subgraph->getDimensionSpacePoint()->hash
-            . '|' . implode(',', array_map(static fn (AccessRole $role) => $role->id, $access->roles));
+        $cacheKey = implode(',', array_map(static fn (AccessRole $role) => $role->id, $access->roles));
         if (isset($this->pathAnchorCache[$cacheKey])) {
             return $this->pathAnchorCache[$cacheKey];
         }
@@ -239,6 +242,10 @@ class AccessControlService
                     continue;
                 }
                 try {
+                    $subgraph = $subgraphOfSite($rule->siteNodeName);
+                    if ($subgraph === null) {
+                        continue;
+                    }
                     $ancestors = $subgraph->findAncestorNodes(
                         NodeAggregateId::fromString($rule->nodeAggregateId),
                         FindAncestorNodesFilter::create()

@@ -10,7 +10,6 @@ use Medienreaktor\NeosStudio\Endpoint\WorkspaceHistory\Schema\DocumentDiff;
 use Medienreaktor\NeosStudio\Endpoint\WorkspaceHistory\Schema\PendingEvents;
 use Medienreaktor\NeosStudio\Endpoint\WorkspaceHistory\Schema\PendingEventsDiff;
 use Medienreaktor\NeosStudio\Endpoint\WorkspaceHistory\Schema\Trash;
-use Medienreaktor\NeosStudio\Security\StudioCallers;
 use Medienreaktor\NeosStudio\Security\StudioScopes;
 use Medienreaktor\NeosStudio\Service\EventBeforeWindow;
 use Medienreaktor\NeosStudio\Service\NodeAddresses;
@@ -49,7 +48,8 @@ use Neos\OpenApi\Attributes\Parameter;
  * against the base workspace, the events since the workspace was last based
  * on its base with what each changed, the trash, and the nodes of a conflict.
  * Changing anything (publish, discard, rebase, restore) is the Neos API's.
- * A workspace the caller may not read is a 404, as an unknown one.
+ * A workspace the caller may not read is a 404, as an unknown one (and an
+ * unknown content repository).
  *
  * The services read through a WorkspaceReadContext per request, which caches
  * subgraphs, ancestors and node type configuration across the many nodes.
@@ -84,12 +84,11 @@ final readonly class WorkspaceHistory
         private WorkspaceDiffService $workspaceDiffService,
         private WorkspaceTrashService $workspaceTrashService,
         private NodeLabelRenderer $labelRenderer,
-        private StudioCallers $studioCallers,
     ) {
     }
 
     #[Operation(
-        path: '/workspaces/{workspaceName}/documentchanges',
+        path: '/cr/{contentRepositoryId}/workspaces/{workspaceName}/documentchanges',
         method: 'GET',
         summary: 'List the changes of a workspace by document',
         description: 'The changes of the workspace grouped by the document they are in, for a review: each document with its label, icon and breadcrumb, how it changed and how many of its nodes did. Publishing and discarding by document (documentAggregateIds of publishWorkspace and discardWorkspace in the Neos API) work on the same documents. Changes no document can be found for are left out, only publishing or discarding everything covers them.',
@@ -98,9 +97,9 @@ final readonly class WorkspaceHistory
             ApiAuthContextProvider::SCOPES => [StudioScopes::WORKSPACEHISTORY_READ],
         ],
     )]
-    public function documentChanges(#[AuthContext] ApiCaller $caller, WorkspaceName $workspaceName): DocumentChanges|NotFound
+    public function documentChanges(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): DocumentChanges|NotFound
     {
-        $readable = $this->resolve($caller, $workspaceName);
+        $readable = $this->workspaceResolver->resolve($contentRepositoryId, $workspaceName, $caller->account);
         if (!$readable instanceof ReadableWorkspace) {
             return $readable;
         }
@@ -175,7 +174,7 @@ final readonly class WorkspaceHistory
     }
 
     #[Operation(
-        path: '/workspaces/{workspaceName}/documentdiff',
+        path: '/cr/{contentRepositoryId}/workspaces/{workspaceName}/documentdiff',
         method: 'GET',
         summary: 'Get the diff of a document of a workspace',
         description: 'What publishing the document (as listed by listWorkspaceDocumentChanges) would change in the base workspace: each of its changed nodes, each dimension variant once, with its properties, references, node type, name, parent and visibility before (base workspace) and after (workspace). A node edited back to what it was is left out. status variant is a dimension variant of a node the base workspace has.',
@@ -186,11 +185,12 @@ final readonly class WorkspaceHistory
     )]
     public function documentDiff(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[Parameter(in: 'query', description: 'The document, as documentAggregateId of listWorkspaceDocumentChanges')]
         NodeAggregateId $documentAggregateId,
     ): DocumentDiff|NotFound {
-        $readable = $this->resolve($caller, $workspaceName);
+        $readable = $this->workspaceResolver->resolve($contentRepositoryId, $workspaceName, $caller->account);
         if (!$readable instanceof ReadableWorkspace) {
             return $readable;
         }
@@ -257,7 +257,7 @@ final readonly class WorkspaceHistory
     }
 
     #[Operation(
-        path: '/workspaces/{workspaceName}/pendingevents',
+        path: '/cr/{contentRepositoryId}/workspaces/{workspaceName}/pendingevents',
         method: 'GET',
         summary: 'List what happened in a workspace',
         description: 'The events of the workspace\'s content stream, i.e. since it was last based on its base workspace (created, published, discarded or rebased), oldest first: the newest 100, truncated says if there were more. Each with its node, the closest document and who caused it, for display; the events of one editing step share user and initiatingTimestamp. forkedFrom says where the content stream branched off its base\'s.',
@@ -266,14 +266,14 @@ final readonly class WorkspaceHistory
             ApiAuthContextProvider::SCOPES => [StudioScopes::WORKSPACEHISTORY_READ],
         ],
     )]
-    public function pendingEvents(#[AuthContext] ApiCaller $caller, WorkspaceName $workspaceName): PendingEvents|NotFound
+    public function pendingEvents(#[AuthContext] ApiCaller $caller, ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): PendingEvents|NotFound
     {
-        $readable = $this->resolve($caller, $workspaceName);
+        $readable = $this->workspaceResolver->resolve($contentRepositoryId, $workspaceName, $caller->account);
         if (!$readable instanceof ReadableWorkspace) {
             return $readable;
         }
         $workspace = $readable->workspace;
-        $feed = $this->eventFeed();
+        $feed = $this->eventFeed($readable);
         $envelopes = $feed->latestEvents($workspace->currentContentStreamId, self::PENDING_EVENTS_LIMIT);
 
         // the first event of a forked stream names the source stream and its version then
@@ -303,7 +303,7 @@ final readonly class WorkspaceHistory
     }
 
     #[Operation(
-        path: '/workspaces/{workspaceName}/pendingevents/diff',
+        path: '/cr/{contentRepositoryId}/workspaces/{workspaceName}/pendingevents/diff',
         method: 'GET',
         summary: 'Get what events of a workspace changed',
         description: 'The events from one sequence number to another (as listWorkspacePendingEvents lists them, e.g. one editing step), each with what it changed: the value before is the one of the latest event before it (looking back 500 events at most), else the base workspace\'s. A range wider than 200 or with to before from is a 400.',
@@ -314,6 +314,7 @@ final readonly class WorkspaceHistory
     )]
     public function pendingEventsDiff(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[Parameter(in: 'query', description: 'The sequence number of the first event')]
         SequenceNumber $from,
@@ -323,12 +324,12 @@ final readonly class WorkspaceHistory
         if ($to->value < $from->value || $to->value - $from->value >= self::DIFF_RANGE_LIMIT) {
             return BadRequest::because(sprintf('to must not be before from, and the range must be narrower than %d', self::DIFF_RANGE_LIMIT));
         }
-        $readable = $this->resolve($caller, $workspaceName);
+        $readable = $this->workspaceResolver->resolve($contentRepositoryId, $workspaceName, $caller->account);
         if (!$readable instanceof ReadableWorkspace) {
             return $readable;
         }
         $workspace = $readable->workspace;
-        $feed = $this->eventFeed();
+        $feed = $this->eventFeed($readable);
         $slice = $feed->eventsBetween($workspace->currentContentStreamId, $from->value, $to->value);
 
         // the events before the range, loaded on the first lookup of a value before an event, decoded once
@@ -355,7 +356,7 @@ final readonly class WorkspaceHistory
     }
 
     #[Operation(
-        path: '/workspaces/{workspaceName}/trash',
+        path: '/cr/{contentRepositoryId}/workspaces/{workspaceName}/trash',
         method: 'GET',
         summary: 'List what was deleted in a workspace',
         description: 'The nodes deleted in the workspace and not yet published, newest first, for display: restoreNode of the Neos API brings them back (with the deleted ancestors they are in), which needs an up_to_date workspace. filterByDocuments lists deleted documents only.',
@@ -366,11 +367,12 @@ final readonly class WorkspaceHistory
     )]
     public function trash(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[Parameter(in: 'query', description: 'true lists deleted documents only')]
         bool $filterByDocuments = false,
     ): Trash|NotFound {
-        $readable = $this->resolve($caller, $workspaceName);
+        $readable = $this->workspaceResolver->resolve($contentRepositoryId, $workspaceName, $caller->account);
         if (!$readable instanceof ReadableWorkspace) {
             return $readable;
         }
@@ -379,7 +381,7 @@ final readonly class WorkspaceHistory
     }
 
     #[Operation(
-        path: '/workspaces/{workspaceName}/conflictingnodes',
+        path: '/cr/{contentRepositoryId}/workspaces/{workspaceName}/conflictingnodes',
         method: 'GET',
         summary: 'Describe the nodes of a conflict',
         description: 'The nodes a conflict of publishWorkspace or rebaseWorkspace of the Neos API names by ID, with their labels and closest documents, found in the workspace in any dimension space point (deleted ones included), else in the base workspace. A document only the base workspace has, or a deleted one, has no address. At most 200 IDs, more are a 400.',
@@ -390,6 +392,7 @@ final readonly class WorkspaceHistory
     )]
     public function conflictingNodes(
         #[AuthContext] ApiCaller $caller,
+        ContentRepositoryId $contentRepositoryId,
         WorkspaceName $workspaceName,
         #[Parameter(in: 'query', description: 'The IDs of the nodes, comma separated')]
         string $nodeAggregateIds,
@@ -398,7 +401,7 @@ final readonly class WorkspaceHistory
         if (count($ids) > self::CONFLICTING_NODES_LIMIT) {
             return BadRequest::because(sprintf('At most %d node aggregate IDs', self::CONFLICTING_NODES_LIMIT));
         }
-        $readable = $this->resolve($caller, $workspaceName);
+        $readable = $this->workspaceResolver->resolve($contentRepositoryId, $workspaceName, $caller->account);
         if (!$readable instanceof ReadableWorkspace) {
             return $readable;
         }
@@ -439,28 +442,15 @@ final readonly class WorkspaceHistory
         return new ConflictingNodes($workspaceName, $nodes);
     }
 
-    /**
-     * The workspace in the Studio's content repository, the same 404 for one
-     * the caller may not read as for an unknown one
-     */
-    private function resolve(ApiCaller $caller, WorkspaceName $workspaceName): ReadableWorkspace|NotFound
-    {
-        return $this->workspaceResolver->resolve(
-            ContentRepositoryId::fromString($this->studioCallers->contentRepositoryId()->value),
-            $workspaceName,
-            $caller->account,
-        );
-    }
-
     private function readContext(ReadableWorkspace $readable): WorkspaceReadContext
     {
         return new WorkspaceReadContext($readable->contentRepository, $readable->workspace, $this->labelRenderer);
     }
 
-    private function eventFeed(): WorkspaceEventFeed
+    private function eventFeed(ReadableWorkspace $readable): WorkspaceEventFeed
     {
         /** @var WorkspaceEventFeed $feed */
-        $feed = $this->contentRepositoryRegistry->buildService($this->studioCallers->contentRepositoryId(), new WorkspaceEventFeedFactory());
+        $feed = $this->contentRepositoryRegistry->buildService($readable->contentRepository->id, new WorkspaceEventFeedFactory());
         return $feed;
     }
 
