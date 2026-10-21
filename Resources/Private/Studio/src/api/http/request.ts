@@ -110,6 +110,88 @@ export async function request<T>(
   return parsed as T
 }
 
+/** One Server-Sent Event as received by {@link stream}. */
+export interface StreamEvent {
+  /** The event's `data:` lines, joined with newlines. */
+  data: string
+  /** The `event:` field; `message` when the server sent none. */
+  event: string
+  /** The last `id:` field seen on the stream, or null. */
+  id: string | null
+}
+
+export interface StreamInit extends FetchInit {
+  onEvent: (event: StreamEvent) => void
+}
+
+/**
+ * A request below the base URL whose answer is a stream of Server-Sent
+ * Events, e.g. a long-running job that reports progress (see the plugin API's
+ * apiStream): the body is read incrementally and onEvent runs for every event
+ * as it arrives. Resolves when the server closes the stream (or `signal`
+ * aborts it, which rejects with the AbortError); a non-2xx answer rejects
+ * with ApiError before any event is delivered.
+ */
+export async function stream(
+  base: string,
+  path: string,
+  init: StreamInit,
+): Promise<void> {
+  const body = init.body !== undefined ? JSON.stringify(init.body) : undefined
+  const headers: Record<string, string> = { Accept: 'text/event-stream' }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const response = await authorizedFetch(
+    new Request(base + path, {
+      method: init.method ?? 'GET',
+      headers,
+      body,
+      signal: init.signal,
+    }),
+  )
+  if (!response.ok || !response.body) {
+    throw new ApiError(response.status, parse(await response.text()))
+  }
+
+  // Minimal SSE parser (WHATWG event stream format): events are separated by
+  // a blank line; `data:` lines accumulate, `event:`/`id:` set fields, lines
+  // starting with `:` are comments.
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buffer = ''
+  let data: string[] = []
+  let event = ''
+  let id: string | null = null
+
+  const processLine = (line: string) => {
+    if (line === '') {
+      if (data.length > 0) {
+        init.onEvent({ data: data.join('\n'), event: event || 'message', id })
+      }
+      data = []
+      event = ''
+      return
+    }
+    if (line.startsWith(':')) return
+    const colon = line.indexOf(':')
+    const field = colon === -1 ? line : line.slice(0, colon)
+    let value = colon === -1 ? '' : line.slice(colon + 1)
+    if (value.startsWith(' ')) value = value.slice(1)
+    if (field === 'data') data.push(value)
+    else if (field === 'event') event = value
+    else if (field === 'id') id = value
+  }
+
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += value
+    const lines = buffer.split('\n').map((line) => line.replace(/\r$/, ''))
+    buffer = lines.pop() ?? ''
+    lines.forEach(processLine)
+  }
+  if (buffer !== '') processLine(buffer)
+  processLine('')
+}
+
 export interface UploadOptions {
   method?: string
   onProgress?: (fraction: number) => void

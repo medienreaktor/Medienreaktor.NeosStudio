@@ -14,14 +14,26 @@ declare class ApiError extends Error {
   constructor(status: number, body: unknown);
 }
 //#endregion
-//#region api/http/request.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/api/http/request.d.ts
 interface FetchInit {
   method?: string;
   body?: unknown;
   signal?: AbortSignal;
 }
+/** One Server-Sent Event as received by {@link stream}. */
+interface StreamEvent$1 {
+  /** The event's `data:` lines, joined with newlines. */
+  data: string;
+  /** The `event:` field; `message` when the server sent none. */
+  event: string;
+  /** The last `id:` field seen on the stream, or null. */
+  id: string | null;
+}
+interface StreamInit extends FetchInit {
+  onEvent: (event: StreamEvent$1) => void;
+}
 //#endregion
-//#region api/neos/schema/openapi.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/api/neos/schema/openapi.d.ts
 interface components {
   schemas: {
     /**
@@ -1995,8 +2007,15 @@ interface components {
  * operations. The shell's own code uses {@link api}.
  */
 declare function apiFetch<T>(path: string, init?: FetchInit): Promise<T>;
+/**
+ * A request to a Neos API operation that answers with Server-Sent Events
+ * (see http/request.ts stream()), e.g. a plugin's long-running job reporting
+ * progress - the plugin API hands it to plugins. Same auth and base URL as
+ * {@link apiFetch}.
+ */
+declare function apiStream(path: string, init: StreamInit): Promise<void>;
 //#endregion
-//#region api/neos/schema/dimensionSpacePoint.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/api/neos/schema/dimensionSpacePoint.d.ts
 /**
  * Dimension space points as Neos.Api reads and writes them: JSON strings with
  * a value for each dimension, e.g. {"language":"de"} ({} without dimensions).
@@ -2009,32 +2028,7 @@ declare function parseDimensionSpacePoint(dimensionSpacePoint: string): Dimensio
 /** Whether two dimension space points are the same point, whatever their key order. */
 declare function sameDimensionSpacePoint(a: string, b: string): boolean;
 //#endregion
-//#region api/neos/schema/nodeAddress.d.ts
-/**
- * Helpers for NodeAddress, the four fields that identify a node. Another
- * address of the same node is a spread away, e.g. the node in another
- * dimension space point: { ...nodeAddressOf(node), dimensionSpacePoint }.
- */
-/** Just the address of a node (or address), without the node's other fields. */
-declare function nodeAddressOf(node: NodeAddress): NodeAddress;
-declare function sameNodeAddress(a: NodeAddress | null | undefined, b: NodeAddress | null | undefined): boolean;
-/**
- * A string for the address, where one is needed to tell nodes apart in the
- * shell: Map and Set keys, React keys. Never sent anywhere.
- */
-declare function nodeAddressKey(address: NodeAddress): string;
-/** The address a nodeAddressKey() was made of. */
-declare function nodeAddressFromKey(key: string): NodeAddress;
-/**
- * The address of a node in rendered edit-mode markup: Neos core's NodeAddress
- * JSON (data-__neos-node-contextpath), which names the aggregate id
- * "aggregateId" and has the dimension space point as an object.
- */
-declare function nodeAddressFromContextPath(contextPath: string): NodeAddress;
-/** Whether the node is deleted (soft removed: tagged "removed", itself or by an ancestor). */
-declare function isRemoved(node: Pick<Node, 'tags' | 'inheritedTags'>): boolean;
-//#endregion
-//#region api/neos/schema/nodeTypeConfiguration.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/api/neos/schema/nodeTypeConfiguration.d.ts
 /**
  * The parts of a node type's configuration (NodeType.configuration, the
  * merged YAML with its super types) the shell reads. Neos.Api passes the
@@ -2164,7 +2158,50 @@ interface NodeTypeConfiguration {
   } | null;
 }
 /** The configuration of a node type read with it (getNodeType), {} without. */
-declare function nodeTypeConfiguration(nodeType: Pick<NodeType, 'configuration'>): NodeTypeConfiguration;
+declare function nodeTypeConfiguration(nodeType: Pick<NodeType$1, 'configuration'>): NodeTypeConfiguration;
+//#endregion
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/api/neos/schema/index.d.ts
+/**
+ * The models of Neos.Api, by the names its OpenAPI document gives them.
+ * openapi.ts is generated from that document (`npm run api:schema`) and never
+ * edited; the shell uses these types as they are, without mapping them into
+ * models of its own.
+ */
+type Schemas$2 = components['schemas'];
+type Node$1 = Schemas$2['Node'];
+type NodeType$1 = Schemas$2['NodeType'];
+/**
+ * Where a node is: the four fields of a Node that identify it in a content
+ * repository, workspace and dimension space point (as JSON, the way Neos.Api
+ * reads and writes it). Every Node is a NodeAddress, so a node read from the
+ * API can be passed wherever one is asked for.
+ */
+type NodeAddress$1 = Pick<Node$1, 'contentRepositoryId' | 'workspaceName' | 'dimensionSpacePoint' | 'nodeAggregateId'>;
+//#endregion
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/api/neos/schema/nodeAddress.d.ts
+/**
+ * Helpers for NodeAddress, the four fields that identify a node. Another
+ * address of the same node is a spread away, e.g. the node in another
+ * dimension space point: { ...nodeAddressOf(node), dimensionSpacePoint }.
+ */
+/** Just the address of a node (or address), without the node's other fields. */
+declare function nodeAddressOf(node: NodeAddress$1): NodeAddress$1;
+declare function sameNodeAddress(a: NodeAddress$1 | null | undefined, b: NodeAddress$1 | null | undefined): boolean;
+/**
+ * A string for the address, where one is needed to tell nodes apart in the
+ * shell: Map and Set keys, React keys. Never sent anywhere.
+ */
+declare function nodeAddressKey(address: NodeAddress$1): string;
+/** The address a nodeAddressKey() was made of. */
+declare function nodeAddressFromKey(key: string): NodeAddress$1;
+/**
+ * The address of a node in rendered edit-mode markup: Neos core's NodeAddress
+ * JSON (data-__neos-node-contextpath), which names the aggregate id
+ * "aggregateId" and has the dimension space point as an object.
+ */
+declare function nodeAddressFromContextPath(contextPath: string): NodeAddress$1;
+/** Whether the node is deleted (soft removed: tagged "removed", itself or by an ancestor). */
+declare function isRemoved(node: Pick<Node$1, 'tags' | 'inheritedTags'>): boolean;
 //#endregion
 //#region api/neos/schema/index.d.ts
 /**
@@ -2292,7 +2329,7 @@ type PreviewElementUpdate = {
   remote?: boolean;
 };
 //#endregion
-//#region features/tree/useNodeEditRefresh.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/features/tree/useNodeEditRefresh.d.ts
 /**
  * An edit that happened elsewhere (preview, inspector, context menu); token
  * distinguishes repeats. Usually one address; structural edits (a move)
@@ -2511,25 +2548,25 @@ declare class ObservableRegistry<Def extends RegistryEntry> implements Observabl
   protected onSnapshot(_snapshot: readonly Def[]): void;
 }
 //#endregion
-//#region features/panels/geometry.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/features/panels/geometry.d.ts
 /**
  * Shared geometry for floating panel groups: viewport clamping and
  * edge/corner resizing.
  */
-type PanelRect = {
+type PanelRect$1 = {
   x: number;
   y: number;
   width: number;
   height: number;
 };
 //#endregion
-//#region features/panels/panelLayout.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/features/panels/panelLayout.d.ts
 /**
  * The docked homes a group can occupy: the left `sidebar`, the big center
  * `main` area, and the optional right `secondary` sidebar. Each is an
  * independent vertical stack of groups.
  */
-type DockRegion = 'sidebar' | 'main' | 'secondary';
+type DockRegion$1 = 'sidebar' | 'main' | 'secondary';
 //#endregion
 //#region features/panels/registry.d.ts
 /**
@@ -2550,13 +2587,13 @@ type PanelPlacement =
  */
 {
   kind: 'dock';
-  region: DockRegion;
+  region: DockRegion$1;
   group?: string;
 } |
 /** Floating; `rect` is evaluated lazily against the live viewport. */
 {
   kind: 'floating';
-  rect: () => PanelRect;
+  rect: () => PanelRect$1;
 };
 type PanelDefinition = {
   /** Unique id, persisted in layouts. Third-party panels should namespace ('vendor.package:panel'). */
@@ -3017,6 +3054,101 @@ declare class KeyboardShortcutRegistry extends ObservableRegistry<ResolvedKeyboa
   protected onSnapshot(snapshot: readonly ResolvedKeyboardShortcut[]): void;
 }
 //#endregion
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/features/shortcuts/registry.d.ts
+/**
+ * The keyboard-shortcut registry: every shortcut - built-in or third-party -
+ * registers here, and one window-level dispatcher (see ShortcutHost) routes
+ * keydown events to the matching handler. Modelled on the panel and modal
+ * registries: a small observable store, register-replaces-by-id so HMR and
+ * plugin reloads stay idempotent, and a stable snapshot for
+ * useSyncExternalStore (the shortcut overview dialog renders it).
+ *
+ * ## The unified accessor
+ *
+ * Studio shortcuts share one accessor: mod+shift (⌘⇧ on macOS, Ctrl+Shift
+ * elsewhere). It is the only modifier family that is safe everywhere we need
+ * it to be: it never produces text (unlike Shift or Option, so it works
+ * during inline editing and in inputs), it dodges the single-modifier
+ * browser/OS menu shortcuts (⌘B, ⌘,), and it survives non-US layouts
+ * (Option and AltGr carry everyday characters on German keyboards).
+ * Declare shortcuts with `key: 'p'` - a single letter or digit - and the
+ * registry binds the accessor itself; consistency is structural, not a
+ * convention. Letters/digits only: symbol keys move between layouts (a
+ * German '/' is Shift+7) and shifted symbols collide with system shortcuts
+ * (⌘⇧/ is macOS Help-menu search).
+ *
+ * Accessor shortcuts match the physical key (KeyboardEvent.code: 'KeyP',
+ * 'Digit1'), not the character it produces: with Shift held, event.key of a
+ * digit is its symbol ('!' for 1 on a US layout, '§' for 3 on a German one),
+ * and on non-Latin layouts a letter key reports its Cyrillic or Greek
+ * character - neither of which would ever match 'p' or '1'.
+ *
+ * Some accessor keys never reach the page and are rejected at registration
+ * (see RESERVED_ACCESSOR_KEYS). Others shadow browser shortcuts the page IS
+ * allowed to take over (capture-phase dispatch preventDefault()s them):
+ * 'r' (hard reload - shadowed deliberately by the preview), 'b' (Chrome
+ * bookmarks bar), 'p' (Firefox private window / Safari print), 'o'
+ * (bookmark managers). Shadowing is a per-shortcut judgement call; the
+ * reserved list is not.
+ *
+ * ## Raw combos (the escape hatch)
+ *
+ * `combo` bypasses the accessor for the few sanctioned exceptions where a
+ * universal convention beats consistency (⇧? for the shortcut overview -
+ * the Gmail/GitHub/Slack help key). New shortcuts should use `key`.
+ * Combos are '+'-joined tokens, e.g. 'mod+shift+p' or 'shift+?'. Recognised
+ * modifiers: 'mod' (⌘ on macOS, Ctrl elsewhere), 'ctrl', 'meta',
+ * 'alt'/'option', 'shift'. The final token is the key as reported by
+ * KeyboardEvent.key ('p', '/', 'escape', 'arrowup', 'f5', ...). Because
+ * matching uses event.key, declare shifted symbols as the symbol the shift
+ * produces ('shift+?' not 'shift+/'). Layouts differ in which symbols need
+ * Shift at all (a German '/' is Shift+7): when a symbol key arrives with
+ * Shift held, dispatch retries the match without it, so 'mod+/' fires for
+ * Ctrl+Shift+7 on a German layout just like for Ctrl+/ on a US one.
+ *
+ * Scope: shortcuts fire on the Studio shell's own window and - forwarded by
+ * the preview (see {@link captureShortcuts}) - inside the same-origin preview
+ * frames, so they keep working while the caret sits in an inline editor.
+ * The editable-target guard applies there as well: raw combos stay with the
+ * text being typed.
+ */
+interface KeyboardShortcutDefinition$1 {
+  /** Unique id, e.g. 'workspace.publish'. Third-party shortcuts should namespace ('vendor.package:my-shortcut'). */
+  id: string;
+  /**
+   * The preferred way to bind: a single letter or digit, bound under the
+   * unified accessor as mod+shift+<key>. Rejected (with a console warning)
+   * for keys the browser never hands over - see RESERVED_ACCESSOR_KEYS.
+   */
+  key?: string;
+  /**
+   * Raw combo(s), e.g. 'shift+?' or ['mod+/', 'shift+?'] - the escape hatch
+   * for sanctioned exceptions to the accessor scheme. Ignored when `key` is
+   * set. One of `key` or `combo` is required.
+   */
+  combo?: string | string[];
+  /** Human-readable action name, shown in the shortcut overview. */
+  title: string;
+  /** Overview grouping label; shortcuts sharing a category list together. */
+  category?: string;
+  /**
+   * Runs on a matching keydown. Return false to decline ("nothing to do
+   * here") - dispatch then falls through to the next registered shortcut on
+   * the same combo, and finally back to the browser. Any other return value
+   * counts as handled and the event is preventDefault()ed.
+   */
+  handler: (event: KeyboardEvent) => void | boolean;
+  /**
+   * Fire even while focus is in an input, textarea, select or contenteditable.
+   * Defaults to true for `key`-based shortcuts (the accessor never types
+   * text, so they are always input-safe) and false for raw combos - those
+   * must opt in, plain-key combos must not swallow typing.
+   */
+  allowInInput?: boolean;
+  /** Extra guard consulted at dispatch time; false skips this shortcut. */
+  when?: () => boolean;
+}
+//#endregion
 //#region features/shortcuts/useKeyboardShortcut.d.ts
 /**
  * Register a keyboard shortcut for the lifetime of the calling component.
@@ -3025,10 +3157,10 @@ declare class KeyboardShortcutRegistry extends ObservableRegistry<ResolvedKeyboa
  * while handler and guard always see the latest render's closures, and
  * unmounting unregisters - a shortcut only exists while its action does.
  */
-declare function useKeyboardShortcut(definition: KeyboardShortcutDefinition): void;
+declare function useKeyboardShortcut(definition: KeyboardShortcutDefinition$1): void;
 //#endregion
 //#region api/neos/endpoints/nodeTypes.d.ts
-type NodeTypeMap = Map<string, NodeType>;
+type NodeTypeMap = Map<string, NodeType$1>;
 //#endregion
 //#region features/tree/decorators.d.ts
 /**
@@ -3210,6 +3342,37 @@ declare class WorkspaceDecoratorRegistry extends ObservableRegistry<WorkspaceDec
   refresh(): void;
 }
 //#endregion
+//#region api/http/request.d.ts
+/** One Server-Sent Event as received by {@link stream}. */
+interface StreamEvent {
+  /** The event's `data:` lines, joined with newlines. */
+  data: string;
+  /** The `event:` field; `message` when the server sent none. */
+  event: string;
+  /** The last `id:` field seen on the stream, or null. */
+  id: string | null;
+}
+//#endregion
+//#region features/panels/geometry.d.ts
+/**
+ * Shared geometry for floating panel groups: viewport clamping and
+ * edge/corner resizing.
+ */
+type PanelRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+//#endregion
+//#region features/panels/panelLayout.d.ts
+/**
+ * The docked homes a group can occupy: the left `sidebar`, the big center
+ * `main` area, and the optional right `secondary` sidebar. Each is an
+ * independent vertical stack of groups.
+ */
+type DockRegion = 'sidebar' | 'main' | 'secondary';
+//#endregion
 //#region api/studio/schema/index.d.ts
 /**
  * The models of the Studio's operations of the Neos API, by the names its
@@ -3221,7 +3384,7 @@ type Schemas = components['schemas'];
 type Task = Schemas['Task'];
 type TaskStatus = Schemas['TaskStatus'];
 //#endregion
-//#region plugin-api/index.d.ts
+//#region ../../../../../../../../../../../../../Users/danielkestler/Sites/neos-development-distribution/DistributionPackages/Medienreaktor.NeosStudio/Resources/Private/Studio/node_modules/.cache/plugin-api-dts/plugin-api/index.d.ts
 /**
  * The API version a plugin can read to feature-detect. Bump on a
  * breaking change to any exported type or registry contract; plugins that
@@ -3288,6 +3451,10 @@ declare const nodeDecorators: NodeDecoratorRegistry;
  *    targets) and reach them exactly like the built-in ones.
  *  - studioFetch: an alias of apiFetch, kept for plugins written when the
  *    Studio's operations had a client of their own.
+ *  - apiStream: for operations answering with Server-Sent Events, e.g. the
+ *    progress of a long-running job - onEvent runs for every event as it
+ *    arrives; resolves when the stream ends, a non-2xx answer rejects with
+ *    ApiError.
  */
 declare const studioFetch: typeof apiFetch;
 /** Options accepted by the toast helpers. */
@@ -3333,6 +3500,7 @@ interface NeosStudioPluginApi {
   toast: typeof toast;
   apiFetch: typeof apiFetch;
   studioFetch: typeof studioFetch;
+  apiStream: typeof apiStream;
   ApiError: typeof ApiError;
   presenceColor: typeof presenceColor;
   presenceInitials: typeof presenceInitials;
@@ -3352,4 +3520,4 @@ declare global {
  */
 declare function installPluginApiGlobals(): void;
 //#endregion
-export { type Account, type AccountRole, ApiError, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, type BaseWorkspaceChange, type Change, type ChangeDiff, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, type Event, type EventDiff, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, type ModalIcon, NeosStudioPluginApi, type Node, type NodeAddress, type NodeClassification, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type ResolvedKeyboardShortcut, type SettingsDialogDefinition, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, type StudioActions, type StudioContextValue, type StudioState, type Task, type TaskStatus, ToastApi, ToastOptions, type UriPathSegment, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, apiFetch, editors, installPluginApiGlobals, isMacPlatform, type isRemoved, links, modals, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, nodeDecorators, type nodeTypeConfiguration, panels, type parseDimensionSpacePoint, presenceColor, presenceInitials, type sameDimensionSpacePoint, type sameNodeAddress, settingsSections, shortcuts, studioFetch, toast, useKeyboardShortcut, useStudio, useStudioActions, validators, version, views, workspaceDecorators };
+export { type Account, type AccountRole, ApiError, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, type BaseWorkspaceChange, type Change, type ChangeDiff, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, type Event, type EventDiff, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, type ModalIcon, NeosStudioPluginApi, type Node, type NodeAddress, type NodeClassification, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type ResolvedKeyboardShortcut, type SettingsDialogDefinition, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, type StreamEvent, type StudioActions, type StudioContextValue, type StudioState, type Task, type TaskStatus, ToastApi, ToastOptions, type UriPathSegment, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, apiFetch, apiStream, editors, installPluginApiGlobals, isMacPlatform, type isRemoved, links, modals, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, nodeDecorators, type nodeTypeConfiguration, panels, type parseDimensionSpacePoint, presenceColor, presenceInitials, type sameDimensionSpacePoint, type sameNodeAddress, settingsSections, shortcuts, studioFetch, toast, useKeyboardShortcut, useStudio, useStudioActions, validators, version, views, workspaceDecorators };

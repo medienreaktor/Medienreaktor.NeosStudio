@@ -6,7 +6,7 @@ privilegeTargets:
     # user may actually see is enforced by the CR's structural authorization
     # inside the subgraph, this target only gates the endpoint as such.
     'Medienreaktor.NeosStudio:Preview':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->showAction())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->(show|live)Action())'
 
     # The anonymous consumption endpoint for preview links: granted to
     # Everybody (below) following the core's Neos.Neos:PublicFrontendAccess

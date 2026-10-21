@@ -18,6 +18,7 @@ use Neos\Neos\Domain\Model\RenderingMode;
 use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\Domain\Service\RenderingModeService;
 use Neos\Neos\Domain\SubtreeTagging\NeosSubtreeTag;
+use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\View\FusionView;
 use Psr\Http\Message\ResponseInterface;
 
@@ -57,6 +58,46 @@ class PreviewController extends ActionController
 
     #[Flow\Inject]
     protected RenderingModeService $renderingModeService;
+
+    #[Flow\Inject]
+    protected NodeUriBuilderFactory $nodeUriBuilderFactory;
+
+    /**
+     * Opens a document of the live workspace under its public url - the one
+     * visitors see, ready to be copied or shared. Only live documents have such
+     * a url; everything else, and a live page that has none (hidden, or below a
+     * hidden page), falls back to the preview rendering of {@see showAction()}.
+     */
+    public function liveAction(
+        string $contentRepositoryId,
+        string $workspaceName,
+        string $dimensionSpacePoint,
+        string $nodeAggregateId
+    ): ResponseInterface|string {
+        try {
+            $nodeAddress = NodeAddresses::fromArray([
+                'contentRepositoryId' => $contentRepositoryId,
+                'workspaceName' => $workspaceName,
+                'dimensionSpacePoint' => $dimensionSpacePoint,
+                'nodeAggregateId' => $nodeAggregateId,
+            ]);
+        } catch (\Throwable) {
+            $this->throwStatus(400, 'The node address could not be parsed.');
+        }
+
+        if ($nodeAddress->workspaceName->isLive()) {
+            try {
+                $uri = $this->nodeUriBuilderFactory->forActionRequest($this->request)->uriFor($nodeAddress);
+            } catch (\Neos\Flow\Mvc\Routing\Exception\NoMatchingRouteException) {
+                $uri = null;
+            }
+            if ($uri !== null) {
+                $this->redirectToUri($uri);
+            }
+        }
+
+        return $this->showAction($contentRepositoryId, $workspaceName, $dimensionSpacePoint, $nodeAggregateId);
+    }
 
     public function showAction(
         string $contentRepositoryId,

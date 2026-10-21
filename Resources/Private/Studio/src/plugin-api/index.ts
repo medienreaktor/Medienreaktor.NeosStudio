@@ -29,7 +29,7 @@ import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
 import { ApiError } from '@/api/http/errors'
-import { apiFetch } from '@/api/neos/client'
+import { apiFetch, apiStream } from '@/api/neos/client'
 import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
@@ -161,9 +161,14 @@ export { useStudio, useStudioActions, useKeyboardShortcut }
  *    targets) and reach them exactly like the built-in ones.
  *  - studioFetch: an alias of apiFetch, kept for plugins written when the
  *    Studio's operations had a client of their own.
+ *  - apiStream: for operations answering with Server-Sent Events, e.g. the
+ *    progress of a long-running job - onEvent runs for every event as it
+ *    arrives; resolves when the stream ends, a non-2xx answer rejects with
+ *    ApiError.
  */
 const studioFetch = apiFetch
-export { apiFetch, studioFetch, ApiError }
+export { apiFetch, studioFetch, apiStream, ApiError }
+export type { StreamEvent } from '@/api/http/request'
 
 /**
  * The shell's per-user avatar scheme (initials avatars colored by user id) -
@@ -281,6 +286,7 @@ export interface NeosStudioPluginApi {
   toast: typeof toast
   apiFetch: typeof apiFetch
   studioFetch: typeof studioFetch
+  apiStream: typeof apiStream
   ApiError: typeof ApiError
   presenceColor: typeof presenceColor
   presenceInitials: typeof presenceInitials
@@ -323,6 +329,7 @@ export function installPluginApiGlobals(): void {
     toast,
     apiFetch,
     studioFetch,
+    apiStream,
     ApiError,
     presenceColor,
     presenceInitials,

@@ -5,6 +5,8 @@ import {
   type FetchInit,
   request,
   serializeQuery,
+  stream,
+  type StreamInit,
   upload,
   type UploadOptions,
 } from '../http/request'
@@ -109,6 +111,16 @@ export const api = client as unknown as {
  */
 export function apiFetch<T>(path: string, init?: FetchInit): Promise<T> {
   return request<T>(config.apiBase, path, init)
+}
+
+/**
+ * A request to a Neos API operation that answers with Server-Sent Events
+ * (see http/request.ts stream()), e.g. a plugin's long-running job reporting
+ * progress - the plugin API hands it to plugins. Same auth and base URL as
+ * {@link apiFetch}.
+ */
+export function apiStream(path: string, init: StreamInit): Promise<void> {
+  return stream(config.apiBase, path, init)
 }
 
 /** The path parameters of an operation. */
