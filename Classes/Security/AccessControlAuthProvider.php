@@ -32,6 +32,7 @@ use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Neos\Domain\Service\WorkspaceService;
+use Neos\Neos\Domain\SubtreeTagging\NeosSubtreeTag;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -275,7 +276,13 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->coveredDimensionSpacePoint, $command->nodeAggregateId),
                 'deleteNodes',
             ]],
-            TagSubtree::class, UntagSubtree::class => [[
+            // Neos deletes by tagging the subtree as removed (soft removal), so
+            // that is a delete; restoring it again stays an edit
+            TagSubtree::class => [[
+                NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->coveredDimensionSpacePoint, $command->nodeAggregateId),
+                $command->tag->equals(NeosSubtreeTag::removed()) ? 'deleteNodes' : 'editNodes',
+            ]],
+            UntagSubtree::class => [[
                 NodeAddress::create($this->contentRepositoryId, $command->workspaceName, $command->coveredDimensionSpacePoint, $command->nodeAggregateId),
                 'editNodes',
             ]],

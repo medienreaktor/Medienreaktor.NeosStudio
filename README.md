@@ -103,13 +103,29 @@ Extensibility isn't bolted on; it's the architecture. Studio's building blocks a
 
 Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state and actions (`useStudioActions()` for just the stable actions), and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
 
-The types ship with the package as one bundled declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (resolved to `window.NeosStudio` at runtime); `react` stays external too, so install `@types/react`:
+The types ship with the package as one bundled declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (resolved to `window.NeosStudio` at runtime); `react` stays external too, so install `@types/react` and map `react` to it too (the declaration file lies outside your package, so TypeScript would look for `react` next to it):
 
 ```jsonc
 "paths": {
-  "@medienreaktor/neos-studio": ["../../Packages/Plugins/Medienreaktor.NeosStudio/Resources/Public/Studio/types/index.d.ts"]
+  "@medienreaktor/neos-studio": ["../../Packages/Plugins/Medienreaktor.NeosStudio/Resources/Public/Studio/types/index.d.ts"],
+  "react": ["./node_modules/@types/react"],
+  "react/*": ["./node_modules/@types/react/*"],
+  "react-dom": ["./node_modules/@types/react-dom"]
 }
 ```
+
+### Plugin API version 2
+
+`NeosStudio.version` is `2` since the Studio runs on Neos.Api instead of Medienreaktor.NeosApi. What a version 1 plugin has to change:
+
+- **Nodes** are Neos.Api's `Node` (`useStudio().selectedDocument`, `inspectedNode`, inspector views, node decorators): `nodeAggregateId` instead of `address`/`aggregateId`, `workspaceName` instead of `workspace`, the dimension space point is a JSON string, `properties[name]` is the plain value instead of `{value, type}`, and `tags` are the node's own tags, its inherited ones are `inheritedTags`.
+- **Node addresses** are `NodeAddress` objects (`contentRepositoryId`, `workspaceName`, `dimensionSpacePoint`, `nodeAggregateId`) instead of strings - in the Studio actions (`inspectAddress`, `navigateToNode…`, `nodeEdited`, `nodesEdited`, `reportInlineEdit`) and `PropertyEditorProps.nodeAddress`. A `Node` is one.
+- **Asset values** of asset/image properties are written as `{id}` (read as `{id, url}`) instead of `{__flow_object_type, __identifier}`.
+- **Workspaces** are Neos.Api's `Workspace`: `baseWorkspaceName` and `ownerId` instead of `baseWorkspace` and `owner`, and there is no `extensions` bag - a workspace decorator keeps its own data (see `features/tasks/decorationData.ts`).
+- **Node types** are Neos.Api's `NodeType` (`isAbstract` instead of `abstract`), sites its `Site`.
+- **`apiFetch`** talks to Neos.Api (`/api`, see `/api/docs`); the old Medienreaktor.NeosApi routes are gone, the Studio's own operations are content repository scoped (e.g. `/api/cr/{contentRepositoryId}/tasks`).
+- **Custom preview guest scripts**: the `…ContextPath` fields of the guest protocol are `…NodeAddress` fields holding the NodeAddress JSON, `guest-ready` carries the guest's `labels` (the host answers with `init`), and the guest answers `flush` with `flushed`.
+- `modals` is deprecated in favour of `settingsSections` (still an alias).
 
 **Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel, a custom inspector editor (a color picker) and a node decorator from a completely separate package.
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
   createAssetCollection,
@@ -110,6 +110,22 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
   const tags = useAssetTags()
   const { filter } = state
 
+  // A collection or tag filtered by that is gone (deleted here, with its
+  // parent or by someone else) would make every listing a 400: back to all.
+  const { selectCollection, selectTag } = state
+  const collectionGone =
+    filter.collection !== null &&
+    collections.data !== undefined &&
+    !collections.data.some((c) => c.id === filter.collection)
+  const tagGone =
+    filter.tag !== null &&
+    tags.data !== undefined &&
+    !tags.data.some((tag) => tag.id === filter.tag)
+  useEffect(() => {
+    if (collectionGone) selectCollection(null)
+    if (tagGone) selectTag(null)
+  }, [collectionGone, tagGone, selectCollection, selectTag])
+
   // The collection/tag the right-click context menu is open for.
   const [menuTarget, setMenuTarget] = useState<MediaMenuTarget | null>(null)
   const openMenu = (
@@ -123,6 +139,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
   const activeSource = sources.data?.find((s) => s.id === filter.assetSource)
   const supportsCollections = activeSource?.supportsCollections ?? true
   const supportsTagging = activeSource?.supportsTagging ?? true
+  const supportsSorting = activeSource?.supportsSorting ?? true
   const hasSources = (sources.data?.length ?? 0) > 1
 
   const sortValue = `${filter.sortBy}-${filter.sortDirection}`
@@ -301,30 +318,35 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         </div>
       )}
 
-      <div className="hidden @[48rem]:flex">
-        <Select
-          value={sortValue}
-          onValueChange={(v) => {
-            const sort = SORTS.find((s) => s.value === v)!
-            state.setSort(sort.sortBy, sort.dir)
-          }}
-          items={SORTS.map((sort) => ({
-            value: sort.value,
-            label: t(sort.labelKey, sort.label),
-          }))}
-        >
-          <SelectTrigger className={cn('h-8 w-36', floatingControl)} size="sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORTS.map((sort) => (
-              <SelectItem key={sort.value} value={sort.value}>
-                {t(sort.labelKey, sort.label)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {supportsSorting && (
+        <div className="hidden @[48rem]:flex">
+          <Select
+            value={sortValue}
+            onValueChange={(v) => {
+              const sort = SORTS.find((s) => s.value === v)!
+              state.setSort(sort.sortBy, sort.dir)
+            }}
+            items={SORTS.map((sort) => ({
+              value: sort.value,
+              label: t(sort.labelKey, sort.label),
+            }))}
+          >
+            <SelectTrigger
+              className={cn('h-8 w-36', floatingControl)}
+              size="sm"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORTS.map((sort) => (
+                <SelectItem key={sort.value} value={sort.value}>
+                  {t(sort.labelKey, sort.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <MediaItemActions
         target={menuTarget}

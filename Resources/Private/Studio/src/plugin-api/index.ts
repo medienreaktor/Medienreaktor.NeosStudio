@@ -76,9 +76,12 @@ import {
 /**
  * The API version a plugin can read to feature-detect. Bump on a
  * breaking change to any exported type or registry contract; plugins that
- * care can compare against it before registering.
+ * care can compare against it before registering. 2: the shell runs on
+ * Neos.Api - its models (Node, Workspace, NodeType, Site, ...) and NodeAddress
+ * objects replace the version 1 DTOs and address strings (see the README's
+ * "Plugin API version 2").
  */
-export const version = 1 as const
+export const version = 2 as const
 
 // Each registry is re-exported under a friendly name, annotated with its named
 // class so the public type reads as that class (what an editor's hover and a
@@ -125,8 +128,8 @@ export const modals: ModalRegistry<SettingsDialogDefinition> = settingsSections
 export const shortcuts: KeyboardShortcutRegistry = keyboardShortcutRegistry
 /**
  * Register/unregister workspace decorators - visual marks (badges) on
- * workspaces in the switcher and administration, derived from the workspace's
- * `extensions` data. See {@link WorkspaceDecoratorDefinition}.
+ * workspaces in the switcher and administration, derived from the workspace
+ * and the decorator's own data about it. See {@link WorkspaceDecoratorDefinition}.
  */
 export const workspaceDecorators: WorkspaceDecoratorRegistry =
   workspaceDecoratorRegistry

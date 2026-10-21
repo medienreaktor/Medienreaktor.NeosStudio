@@ -4,16 +4,22 @@ import {
 } from '@/api/neos/endpoints/workspaces'
 import { neosKeys } from '@/api/neos/keys'
 import type { Workspace } from '@/api/neos/schema'
+import { studioKeys } from '@/api/studio/keys'
 import { queryClient } from '@/app/queryClient'
 
 /**
  * Refresh everything workspace-related: Neos.Api's workspace reads (the list,
  * changes, roles, events - and what the review, pending history and trash are
  * made of) - after a write that may affect any of them: publish, discard,
- * rebase, a base workspace change, a workspace created or deleted.
+ * rebase, a base workspace change, a workspace created or deleted. The
+ * tasks too: the server marks a task done when its workspace is published
+ * and drops it with its workspace.
  */
 export function invalidateWorkspaceQueries(): Promise<unknown> {
-  return queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all }),
+    queryClient.invalidateQueries({ queryKey: studioKeys.tasks.all }),
+  ])
 }
 
 /**

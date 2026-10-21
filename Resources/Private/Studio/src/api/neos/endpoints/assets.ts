@@ -75,8 +75,15 @@ export function tagFilterApplies(filter: AssetListFilter): boolean {
 
 const PAGE_SIZE = 40
 
-/** The listAssets query of a page of the filtered list. */
-function assetListQuery(filter: AssetListFilter, offset: number) {
+/**
+ * The listAssets query of a page of the filtered list. Neos.Api refuses a sort
+ * for a source that can't sort, so it is left out for those.
+ */
+function assetListQuery(
+  filter: AssetListFilter,
+  sortable: boolean,
+  offset: number,
+) {
   const search = filter.search.trim()
   const field = filter.sortBy === 'name' ? 'name' : 'lastModified'
   const tags = tagFilterApplies(filter)
@@ -89,7 +96,11 @@ function assetListQuery(filter: AssetListFilter, offset: number) {
         : undefined,
     filterByUntagged: tags && filter.tagMode === 'none' ? true : undefined,
     search: search !== '' ? search : undefined,
-    sort: filter.sortDirection === 'desc' ? `-${field}` : field,
+    sort: !sortable
+      ? undefined
+      : filter.sortDirection === 'desc'
+        ? `-${field}`
+        : field,
     offset,
     limit: PAGE_SIZE,
   }
@@ -102,22 +113,34 @@ function assetListQuery(filter: AssetListFilter, offset: number) {
  * starts a fresh list.
  */
 export function useAssets(filter: AssetListFilter, enabled = true) {
+  // Whether the source sorts is only known from the source list - the local
+  // Neos source always does, other sources wait for the list.
+  const sources = useAssetSources(
+    enabled && filter.assetSource !== LOCAL_ASSET_SOURCE,
+  )
+  const sortable =
+    filter.assetSource === LOCAL_ASSET_SOURCE
+      ? true
+      : sources.data?.find((source) => source.id === filter.assetSource)
+          ?.supportsSorting
   return useInfiniteQuery({
-    queryKey: neosKeys.assets.list(
-      filter as unknown as Record<string, unknown>,
-    ),
-    queryFn: enabled
-      ? ({ pageParam, signal }) =>
-          unwrap(
-            api.GET('/assets/{assetSourceId}', {
-              params: {
-                path: { assetSourceId: filter.assetSource },
-                query: assetListQuery(filter, pageParam),
-              },
-              signal,
-            }),
-          )
-      : skipToken,
+    queryKey: neosKeys.assets.list({
+      ...filter,
+      sortable,
+    } as unknown as Record<string, unknown>),
+    queryFn:
+      enabled && sortable !== undefined
+        ? ({ pageParam, signal }) =>
+            unwrap(
+              api.GET('/assets/{assetSourceId}', {
+                params: {
+                  path: { assetSourceId: filter.assetSource },
+                  query: assetListQuery(filter, sortable, pageParam),
+                },
+                signal,
+              }),
+            )
+        : skipToken,
     initialPageParam: 0,
     getNextPageParam: (last, _pages, offset) => {
       const next = offset + last.data.length

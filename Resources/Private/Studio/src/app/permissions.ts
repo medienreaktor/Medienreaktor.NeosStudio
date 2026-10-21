@@ -9,8 +9,9 @@ import { useMyAccess } from '@/api/studio/endpoints/accessRoles'
 export function useAdministrationPermissions() {
   const { data: me } = useMe()
   const { data: access } = useMyAccess()
+  // Not users.read: the Studio grants that to every editor, to name people
   const users =
-    hasPrivilege(me, 'users.read') || hasPrivilege(me, 'users.update')
+    hasPrivilege(me, 'users.update') || hasPrivilege(me, 'users.create')
   const sites = hasPrivilege(me, 'sites.update')
   return {
     media: hasPrivilege(me, 'assets.read'),

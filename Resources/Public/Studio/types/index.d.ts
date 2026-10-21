@@ -3225,9 +3225,12 @@ type TaskStatus = Schemas['TaskStatus'];
 /**
  * The API version a plugin can read to feature-detect. Bump on a
  * breaking change to any exported type or registry contract; plugins that
- * care can compare against it before registering.
+ * care can compare against it before registering. 2: the shell runs on
+ * Neos.Api - its models (Node, Workspace, NodeType, Site, ...) and NodeAddress
+ * objects replace the version 1 DTOs and address strings (see the README's
+ * "Plugin API version 2").
  */
-declare const version: 1;
+declare const version: 2;
 /** Register/unregister panels. See {@link PanelDefinition}. */
 declare const panels: PanelRegistry;
 /** Register/unregister inspector + creation-dialog property editors. See {@link PropertyEditorDefinition}. */
@@ -3261,8 +3264,8 @@ declare const modals: ModalRegistry<SettingsDialogDefinition>;
 declare const shortcuts: KeyboardShortcutRegistry;
 /**
  * Register/unregister workspace decorators - visual marks (badges) on
- * workspaces in the switcher and administration, derived from the workspace's
- * `extensions` data. See {@link WorkspaceDecoratorDefinition}.
+ * workspaces in the switcher and administration, derived from the workspace
+ * and the decorator's own data about it. See {@link WorkspaceDecoratorDefinition}.
  */
 declare const workspaceDecorators: WorkspaceDecoratorRegistry;
 /**
