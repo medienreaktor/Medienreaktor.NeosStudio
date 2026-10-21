@@ -104,6 +104,11 @@ function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
       {t('workspaceHistory.value.empty', 'empty')}
     </span>
   )
+  const unknown = (
+    <span className="text-neutral-500 italic">
+      {t('workspaceHistory.value.unknown', 'unknown')}
+    </span>
+  )
   return (
     <div className="min-w-0">
       <div className="truncate text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
@@ -111,7 +116,7 @@ function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
       </div>
       {oldText !== newText && (
         <div className="wrap-break-word text-red-600/90 dark:text-red-400/90 line-through">
-          {oldText ?? empty}
+          {oldText ?? (change.oldUnknown ? unknown : empty)}
         </div>
       )}
       <div className="wrap-break-word text-green-600/90 dark:text-green-400/90">

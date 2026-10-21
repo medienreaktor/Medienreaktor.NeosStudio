@@ -2894,6 +2894,9 @@
       <trans-unit id="workspaceHistory.value.empty" xml:space="preserve">
         <source>empty</source>
       </trans-unit>
+      <trans-unit id="workspaceHistory.value.unknown" xml:space="preserve">
+        <source>unknown</source>
+      </trans-unit>
       <trans-unit id="workspaceHistory.value.no" xml:space="preserve">
         <source>no</source>
       </trans-unit>

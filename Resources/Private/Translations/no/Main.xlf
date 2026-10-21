@@ -3826,6 +3826,10 @@
         <source>empty</source>
         <target xml:lang="no">tom</target>
       </trans-unit>
+      <trans-unit id="workspaceHistory.value.unknown" xml:space="preserve">
+        <source>unknown</source>
+        <target xml:lang="no">ukjent</target>
+      </trans-unit>
       <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
         <source>Node type</source>
         <target xml:lang="no">Nodetype</target>

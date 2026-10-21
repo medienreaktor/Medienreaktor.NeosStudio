@@ -3842,6 +3842,10 @@
         <source>empty</source>
         <target xml:lang="lv">tukšs</target>
       </trans-unit>
+      <trans-unit id="workspaceHistory.value.unknown" xml:space="preserve">
+        <source>unknown</source>
+        <target xml:lang="lv">nezināms</target>
+      </trans-unit>
       <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
         <source>Node type</source>
         <target xml:lang="lv">Mezgla tips</target>

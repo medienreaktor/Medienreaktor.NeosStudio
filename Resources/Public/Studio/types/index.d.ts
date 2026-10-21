@@ -838,6 +838,7 @@ interface components {
       properties: components['schemas']['PropertyDiffList'];
       references: components['schemas']['ReferenceDiffList'];
       tags: components['schemas']['TagDiff'] | null;
+      complete: boolean;
     };
     EventList: components['schemas']['Event'][];
     /**

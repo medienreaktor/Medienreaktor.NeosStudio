@@ -417,6 +417,17 @@ export function listWorkspaceEvents(
 }
 
 /**
+ * The after of a listing's next page (links.next), null on the last one. A
+ * page may end before it is full - Neos.Api reads at most so many events per
+ * request - even empty, so a client pages by it, not by the last event listed.
+ */
+export function nextEventsAfter(listing: PaginatedEventListing): number | null {
+  if (listing.links.next === null) return null
+  const after = new URL(listing.links.next).searchParams.get('after')
+  return after === null ? null : Number(after)
+}
+
+/**
  * All changes of the workspace with the filters and include given (see
  * Neos.Api's listWorkspaceChanges), every page.
  */

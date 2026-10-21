@@ -11,6 +11,7 @@ import { useUsers } from '@/api/neos/endpoints/users'
 import {
   fetchWorkspaceChanges,
   listWorkspaceEvents,
+  nextEventsAfter,
 } from '@/api/neos/endpoints/workspaces'
 import { neosKeys } from '@/api/neos/keys'
 import {
@@ -64,6 +65,8 @@ export interface ValueChange {
   label: string | null
   old: unknown
   new: unknown
+  /** The value before is unknown (an event diff that isn't complete), not empty. */
+  oldUnknown?: boolean
 }
 
 /** A document with changes, for the review. */
@@ -290,6 +293,9 @@ function diffRows(
   nodeTypes: NodeTypeMap | undefined,
 ): ValueChange[] {
   if (!diff) return []
+  // An event's diff without the value before (no base workspace to read it
+  // from, or the node is older than the events looked back at).
+  const unknownBefore = 'complete' in diff && !diff.complete
   const labelled = (id: string): NodeLabel => ({
     id,
     label: labels[labelKey(id, dimensionSpacePoint)] ?? null,
@@ -300,6 +306,7 @@ function diffRows(
     label: propertyLabel(nodeTypes, nodeTypeName, property.name, 'properties'),
     old: property.old,
     new: property.new,
+    oldUnknown: unknownBefore && property.old === null,
   }))
   if (diff.nodeType) {
     rows.push({
@@ -346,6 +353,7 @@ function diffRows(
       ),
       old: reference.old.map(labelled),
       new: reference.new.map(labelled),
+      oldUnknown: unknownBefore && reference.old.length === 0,
     })
   }
   return rows
@@ -910,15 +918,11 @@ async function findDeletions(
             userId: typeof userId === 'string' ? userId : null,
           }
         }
-        if (
-          ids.every((id) => deletions[id] !== undefined) ||
-          listing.links.next === null ||
-          listing.data.length === 0
-        ) {
+        const next = nextEventsAfter(listing)
+        if (ids.every((id) => deletions[id] !== undefined) || next === null) {
           return
         }
-        // listing.data is not empty: the loop returned above otherwise.
-        after = listing.data[listing.data.length - 1]!.sequenceNumber
+        after = next
       }
     }),
   )

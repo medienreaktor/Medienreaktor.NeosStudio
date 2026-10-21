@@ -3842,6 +3842,10 @@
         <source>empty</source>
         <target xml:lang="fr">vide</target>
       </trans-unit>
+      <trans-unit id="workspaceHistory.value.unknown" xml:space="preserve">
+        <source>unknown</source>
+        <target xml:lang="fr">inconnu</target>
+      </trans-unit>
       <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
         <source>Node type</source>
         <target xml:lang="fr">Type de nœud</target>

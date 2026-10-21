@@ -3810,6 +3810,10 @@
         <source>empty</source>
         <target xml:lang="km">ទទេ</target>
       </trans-unit>
+      <trans-unit id="workspaceHistory.value.unknown" xml:space="preserve">
+        <source>unknown</source>
+        <target xml:lang="km">មិនស្គាល់</target>
+      </trans-unit>
       <trans-unit id="workspaceHistory.change.nodeType" xml:space="preserve">
         <source>Node type</source>
         <target xml:lang="km">ប្រភេទថ្នាំង</target>
