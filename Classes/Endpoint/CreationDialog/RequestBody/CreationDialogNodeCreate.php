@@ -7,6 +7,8 @@ namespace Medienreaktor\NeosStudio\Endpoint\CreationDialog\RequestBody;
 use Neos\Api\Endpoint\Nodes\RequestBody\NodeCreate;
 use Neos\Api\Endpoint\Nodes\Schema\NodeAggregateId;
 use Neos\Api\Endpoint\NodeTypes\Schema\NodeTypeName;
+use Neos\ContentRepository\Core\Feature\NodeCreation\Command\CreateNodeAggregateWithNode;
+use Neos\ContentRepository\Core\SharedModel;
 use Neos\JsonSchema\Nullable;
 use Neos\JsonSchema\ObjectSchema;
 use Neos\JsonSchema\ProvidesSchema;
@@ -37,11 +39,24 @@ final readonly class CreationDialogNodeCreate implements ProvidesSchema
     }
 
     /**
-     * The node to create without the creation dialog, as Neos.Api's createNode takes it
+     * The node to create without the creation dialog, as Neos.Api's createNode takes it. With the creation command the
+     * node creation handlers ran on, with its node aggregate id and the ones of its tethered descendants, which what
+     * they add refers to
      */
-    public function toNodeCreate(): NodeCreate
+    public function toNodeCreate(CreateNodeAggregateWithNode|null $handled = null): NodeCreate
     {
-        return new NodeCreate($this->nodeType, $this->parentNodeAggregateId, $this->succeedingSiblingNodeAggregateId, $this->nodeAggregateId, $this->properties, $this->references);
+        if ($handled === null) {
+            return new NodeCreate($this->nodeType, $this->parentNodeAggregateId, $this->succeedingSiblingNodeAggregateId, $this->nodeAggregateId, $this->properties, $this->references);
+        }
+        return new NodeCreate(
+            $this->nodeType,
+            $this->parentNodeAggregateId,
+            $this->succeedingSiblingNodeAggregateId,
+            NodeAggregateId::fromString($handled->nodeAggregateId->value),
+            $this->properties,
+            $this->references,
+            array_map(static fn (SharedModel\Node\NodeAggregateId $id) => $id->value, $handled->tetheredDescendantNodeAggregateIds->getNodeAggregateIds()),
+        );
     }
 
     public static function schema(): Schema
