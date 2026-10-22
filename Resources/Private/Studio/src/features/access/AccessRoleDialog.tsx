@@ -606,14 +606,6 @@ function WorkspacesTab({
             )}
           </span>
         </CheckboxRow>
-        <CheckboxRow
-          checked={constraints.allowWorkspaceCreation}
-          onCheckedChange={(checked) =>
-            onChange({ allowWorkspaceCreation: checked })
-          }
-        >
-          {t('accessRoles.allowWorkspaceCreation', 'May create workspaces')}
-        </CheckboxRow>
       </div>
     </>
   )

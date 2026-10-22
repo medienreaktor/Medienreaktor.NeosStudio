@@ -48,7 +48,6 @@ export interface AccessRoleConstraints {
   workspaceNames: string[]
   allowPersonalWorkspace: boolean
   allowPublishToLive: boolean
-  allowWorkspaceCreation: boolean
   /** Only withheld capabilities are listed (value false); absent = granted. */
   capabilities: Partial<Record<AccessCapability, boolean>>
 }
@@ -182,7 +181,6 @@ export function unrestrictedConstraints(): AccessRoleConstraints {
     workspaceNames: [],
     allowPersonalWorkspace: true,
     allowPublishToLive: true,
-    allowWorkspaceCreation: true,
     capabilities: {},
   }
 }
@@ -385,12 +383,6 @@ export function allowsPublishToLive(
   access: EffectiveAccess | undefined,
 ): boolean {
   return anyRole(access, (c) => c.allowPublishToLive)
-}
-
-export function allowsWorkspaceCreation(
-  access: EffectiveAccess | undefined,
-): boolean {
-  return anyRole(access, (c) => c.allowWorkspaceCreation)
 }
 
 export function allowsCapability(

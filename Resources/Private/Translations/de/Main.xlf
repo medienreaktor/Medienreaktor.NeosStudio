@@ -58,10 +58,6 @@
         <source>Off means changes can only be handed on for review.</source>
         <target xml:lang="de">Aus: Änderungen können nur zur Prüfung weitergegeben werden.</target>
       </trans-unit>
-      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
-        <source>May create workspaces</source>
-        <target xml:lang="de">Darf Workspaces anlegen</target>
-      </trans-unit>
       <trans-unit id="accessRoles.badgeBranches" xml:space="preserve">
         <source>{0} branch(es)</source>
         <target xml:lang="de">{0} Bereich(e)</target>
