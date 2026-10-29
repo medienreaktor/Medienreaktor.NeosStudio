@@ -1,5 +1,19 @@
 import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { extendTailwindMerge } from 'tailwind-merge'
+
+/**
+ * tailwind-merge knows Tailwind's own utilities, not the type-* text styles
+ * generated from Figma (styles/texts.css). Registering them as one group lets
+ * a className override replace the base text style instead of both landing in
+ * the class list, where CSS source order would pick the winner.
+ */
+const twMerge = extendTailwindMerge<'type'>({
+  extend: {
+    classGroups: {
+      type: [{ type: [(value: string) => /^[a-z0-9-]+$/.test(value)] }],
+    },
+  },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
