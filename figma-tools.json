@@ -1,0 +1,45 @@
+{
+    "$comment": "Configuration for medienreaktor/figma-tools, run from a project that installs it with --base-path pointing at this package. `figma-download` refreshes figma-variables.json and figma-text-styles.json from the Neos Studio design file and needs FIGMA_MCP_TOKEN; `figma-import` turns them into CSS and needs no credentials.",
+    "fileKey": "ks1Uf9OdtvGCA9zjDsSYCu",
+    "rootFontSize": 16,
+    "$comment-rootFontSize": "Studio renders at the browser default of 16px. Figma holds the rendered pixel values; every length comes out in rem against this root.",
+    "sources": {
+        "variables": "figma-variables.json",
+        "textStyles": "figma-text-styles.json"
+    },
+    "output": {
+        "$comment": "No public copy: Studio and its plugins load the Tailwind build, never a plain :root file. indent is 2 to match .editorconfig.",
+        "private": "Resources/Private/Studio/src/styles/",
+        "public": null,
+        "indent": 2
+    },
+    "baseVariant": null,
+    "$comment-baseVariant": "null on purpose: no leaf is named \"default\"; the semantic names are shadcn's and stay whole.",
+    "collections": {
+        "Primitives": { "layer": "primitives" },
+        "Theme": {
+            "layer": "semantics",
+            "axis": "theme",
+            "modes": { "Light": "", "Dark": "dark" }
+        },
+        "Radius": { "layer": "semantics" }
+    },
+    "routes": {
+        "$comment": "Colours land directly in --color-*: the primitives keep Tailwind's palette names (--color-neutral-50), the theme tokens are shadcn's vocabulary (--color-muted-foreground), so neither the shell nor shadcn components need renaming. Radius replaces Tailwind's --radius-sm/md/lg/xl with Studio's sharper scale.",
+        "primitives": "color",
+        "theme": "color",
+        "radius": "radius"
+    },
+    "options": {
+        "typography": {
+            "sizeStrategy": "pixelsOnly",
+            "$comment-sizeStrategy": "styles.css switches Tailwind's font-size scale off, so a size never names a step (24px would otherwise become text-2xl).",
+            "$comment": "Families map onto the --font-* tokens styles.css declares: Noto Sans is --font-sans, the code font is Tailwind's mono stack (Figma uses JetBrains Mono to draw it), and the icon styles describe Font Awesome glyphs, which Studio declares as --font-icon. 'Solid' names Font Awesome's variant, not a weight, and correctly produces no font-* class.",
+            "familyAliases": {
+                "Noto Sans": "sans",
+                "JetBrains Mono": "mono",
+                "Font Awesome 6 Pro": "icon"
+            }
+        }
+    }
+}

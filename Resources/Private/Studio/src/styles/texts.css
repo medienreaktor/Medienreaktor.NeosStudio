@@ -1,0 +1,69 @@
+/*
+ * GENERATED — do not edit.
+ * Produced by medienreaktor/figma-tools from figma-text-styles.json.
+ * Change it in Figma, then run `composer exec figma-download` followed by
+ * `composer exec figma-import`.
+ */
+@utility type-body {
+  @apply font-sans font-normal leading-[18px] text-body;
+}
+@utility type-body-strong {
+  @apply font-sans font-medium leading-[18px] text-body-strong;
+}
+@utility type-small {
+  @apply font-sans font-normal leading-[15px] text-small;
+}
+@utility type-small-strong {
+  @apply font-sans font-medium leading-[15px] text-small-strong;
+}
+@utility type-caption {
+  @apply font-sans font-normal leading-[14px] text-caption;
+}
+@utility type-count {
+  @apply font-sans font-semibold leading-[10px] text-count;
+}
+@utility type-overline {
+  @apply font-sans font-semibold leading-[10px] tracking-wide uppercase text-overline;
+}
+@utility type-heading-s {
+  @apply font-sans font-semibold leading-[22px] text-heading-s;
+}
+@utility type-heading-m {
+  @apply font-sans font-semibold leading-[26px] text-heading-m;
+}
+@utility type-heading-l {
+  @apply font-sans font-semibold leading-[30px] text-heading-l;
+}
+@utility type-code {
+  @apply font-mono font-normal leading-[19px] text-code;
+}
+@utility type-code-small {
+  @apply font-mono font-normal leading-[15px] text-code-small;
+}
+@utility type-icon-xs {
+  @apply font-icon leading-[9px] text-icon-xs;
+}
+@utility type-icon-s {
+  @apply font-icon leading-[10px] text-icon-s;
+}
+@utility type-icon-m {
+  @apply font-icon leading-[11px] text-icon-m;
+}
+@utility type-icon-l {
+  @apply font-icon leading-[13px] text-icon-l;
+}
+@utility type-icon-xl {
+  @apply font-icon leading-[15px] text-icon-xl;
+}
+@utility type-icon-2xl {
+  @apply font-icon leading-[19px] text-icon-2xl;
+}
+@utility type-icon-3xl {
+  @apply font-icon leading-[24px] text-icon-3xl;
+}
+@utility type-count-small {
+  @apply font-sans font-semibold leading-[8px] text-count-small;
+}
+@utility type-default {
+  @apply font-sans font-normal leading-[22px] text-default;
+}

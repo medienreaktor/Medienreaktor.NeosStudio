@@ -1,0 +1,382 @@
+{
+    "styles": [
+        {
+            "name": "Body",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "Regular",
+            "fontSize": 13,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 18
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Body Strong",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "Medium",
+            "fontSize": 13,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 18
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Small",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "Regular",
+            "fontSize": 11,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 15
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Small Strong",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "Medium",
+            "fontSize": 11,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 15
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Caption",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "Regular",
+            "fontSize": 10,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 14
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Count",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "SemiBold",
+            "fontSize": 10,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 10
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Overline",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "SemiBold",
+            "fontSize": 10,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 10
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 2.5
+            },
+            "textCase": "UPPER",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Heading S",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "SemiBold",
+            "fontSize": 15,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 22
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Heading M",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "SemiBold",
+            "fontSize": 17,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 26
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Heading L",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "SemiBold",
+            "fontSize": 22,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 30
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Code",
+            "fontFamily": "JetBrains Mono",
+            "fontStyle": "Regular",
+            "fontSize": 13,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 19
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Code Small",
+            "fontFamily": "JetBrains Mono",
+            "fontStyle": "Regular",
+            "fontSize": 11,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 15
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon XS",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 9,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 9
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon S",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 10,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 10
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon M",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 11,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 11
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon L",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 13,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 13
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon XL",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 15,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 15
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon 2XL",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 19,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 19
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Icon 3XL",
+            "fontFamily": "Font Awesome 6 Pro",
+            "fontStyle": "Solid",
+            "fontSize": 24,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 24
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Count Small",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "SemiBold",
+            "fontSize": 8,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 8
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        },
+        {
+            "name": "Default",
+            "fontFamily": "Noto Sans",
+            "fontStyle": "Regular",
+            "fontSize": 15,
+            "sizeToken": null,
+            "sizesByMode": null,
+            "lineHeight": {
+                "unit": "PIXELS",
+                "value": 22
+            },
+            "letterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+            },
+            "textCase": "ORIGINAL",
+            "textDecoration": "NONE"
+        }
+    ]
+}

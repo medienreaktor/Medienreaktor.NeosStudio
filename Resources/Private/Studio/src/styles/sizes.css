@@ -1,0 +1,69 @@
+/*
+ * GENERATED — do not edit.
+ * Produced by medienreaktor/figma-tools from figma-text-styles.json.
+ * Change it in Figma, then run `composer exec figma-download` followed by
+ * `composer exec figma-import`.
+ */
+@utility text-body {
+  @apply text-[13px];
+}
+@utility text-body-strong {
+  @apply text-[13px];
+}
+@utility text-small {
+  @apply text-[11px];
+}
+@utility text-small-strong {
+  @apply text-[11px];
+}
+@utility text-caption {
+  @apply text-[10px];
+}
+@utility text-count {
+  @apply text-[10px];
+}
+@utility text-overline {
+  @apply text-[10px];
+}
+@utility text-heading-s {
+  @apply text-[15px];
+}
+@utility text-heading-m {
+  @apply text-[17px];
+}
+@utility text-heading-l {
+  @apply text-[22px];
+}
+@utility text-code {
+  @apply text-[13px];
+}
+@utility text-code-small {
+  @apply text-[11px];
+}
+@utility text-icon-xs {
+  @apply text-[9px];
+}
+@utility text-icon-s {
+  @apply text-[10px];
+}
+@utility text-icon-m {
+  @apply text-[11px];
+}
+@utility text-icon-l {
+  @apply text-[13px];
+}
+@utility text-icon-xl {
+  @apply text-[15px];
+}
+@utility text-icon-2xl {
+  @apply text-[19px];
+}
+@utility text-icon-3xl {
+  @apply text-[24px];
+}
+@utility text-count-small {
+  @apply text-[8px];
+}
+@utility text-default {
+  @apply text-[15px];
+}
