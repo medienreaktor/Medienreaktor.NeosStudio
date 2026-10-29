@@ -108,9 +108,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
           <span>
             {native}
             {english && (
-              <span className="ml-2 text-neutral-600 dark:text-neutral-400">
-                {english}
-              </span>
+              <span className="ml-2 text-muted-foreground">{english}</span>
             )}
           </span>
         ),
@@ -286,10 +284,10 @@ function PasswordForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <header>
-        <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
+        <h3 className="type-body-strong text-foreground">
           {t('profile.changePassword', 'Change password')}
         </h3>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="type-body text-muted-foreground">
           {t(
             'profile.changePasswordHint',
             'Enter your current password to set a new one.',
@@ -341,7 +339,7 @@ function PasswordForm() {
         </Field>
       </div>
       {mismatch && (
-        <p className="text-sm text-red-500">
+        <p className="type-body text-destructive-text">
           {t('profile.passwordMismatch', 'The new passwords do not match.')}
         </p>
       )}

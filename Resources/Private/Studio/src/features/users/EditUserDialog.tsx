@@ -63,8 +63,7 @@ export function EditUserDialog({
     if (rolesChanged) changes.roles = roles
   }
   const isDirty = Object.keys(changes).length > 0
-  const canSubmit =
-    isDirty && firstName.trim() !== '' && lastName.trim() !== ''
+  const canSubmit = isDirty && firstName.trim() !== '' && lastName.trim() !== ''
 
   const mutation = useMutation({
     mutationFn: (input: UpdateUserInput) => updateUser(user!.id, input),
@@ -103,7 +102,7 @@ export function EditUserDialog({
           <DialogTitle>
             {t('users.editUser', 'Edit user')}
             {user !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {user.label}
               </span>
             )}
@@ -157,7 +156,7 @@ export function EditUserDialog({
             lockedRoles={user?.isCurrentUser ? [ADMINISTRATOR_ROLE] : []}
           />
           {user?.isCurrentUser && (
-            <p className="text-xs text-neutral-500">
+            <p className="type-small text-muted-foreground">
               {t(
                 'users.ownAdminLocked',
                 'You cannot remove your own Administrator role.',

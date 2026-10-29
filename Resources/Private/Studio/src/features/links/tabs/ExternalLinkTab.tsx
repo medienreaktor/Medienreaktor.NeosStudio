@@ -25,7 +25,10 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex flex-col gap-1.5 p-3">
-      <label className="text-xs text-neutral-600 dark:text-neutral-400" htmlFor="link-external-url">
+      <label
+        className="type-small text-muted-foreground"
+        htmlFor="link-external-url"
+      >
         {t('link.url', 'URL')}
       </label>
       <Input
@@ -41,7 +44,7 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
         }}
         placeholder={t('link.urlPlaceholder', 'https://example.com')}
       />
-      <p className="text-xs text-neutral-500">
+      <p className="type-small text-muted-foreground">
         {t(
           'link.externalHelp',
           'A full web address; https:// is added when no scheme is given.',

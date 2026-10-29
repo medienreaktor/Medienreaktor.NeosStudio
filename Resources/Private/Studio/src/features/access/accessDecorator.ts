@@ -32,7 +32,7 @@ export function registerAccessNodeDecorator(): void {
         overlay: {
           icon: 'lock',
           label: title,
-          color: 'var(--color-amber-500)',
+          color: 'var(--color-node-locked)',
           position: 'bottom-right',
         },
       }

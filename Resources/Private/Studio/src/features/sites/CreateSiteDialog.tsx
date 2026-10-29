@@ -220,7 +220,7 @@ export function CreateSiteDialog({
               />
             </Field>
 
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-800 dark:text-neutral-200">
+            <label className="flex cursor-pointer items-center gap-2.5 type-body text-foreground">
               <Checkbox
                 checked={startOffline}
                 onCheckedChange={(checked) => setStartOffline(checked === true)}
@@ -237,10 +237,7 @@ export function CreateSiteDialog({
               >
                 {t('common.cancel', 'Cancel')}
               </Button>
-              <Button
-                type="submit"
-                disabled={!canSubmit || mutation.isPending}
-              >
+              <Button type="submit" disabled={!canSubmit || mutation.isPending}>
                 {mutation.isPending
                   ? t('sites.creating', 'Creating…')
                   : t('sites.create', 'Create site')}

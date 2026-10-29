@@ -35,7 +35,7 @@ export function SiteSwitcher({
       <SelectTrigger title={t('sites.activeSite', 'Active site')}>
         <div className="flex items-center gap-2">
           <i
-            className={`fa fa-globe fa-fw text-[0.7rem] text-neutral-600 dark:text-neutral-400`}
+            className={`fa fa-globe fa-fw type-icon-s text-muted-foreground`}
             aria-hidden
           />
           <SelectValue
@@ -53,7 +53,7 @@ export function SiteSwitcher({
           >
             {site.name}
             {site.nodeAddress === null && (
-              <span className="ml-1.5 text-xs text-neutral-500">
+              <span className="ml-1.5 type-small text-muted-foreground">
                 {t('sites.synchronizeToAccess', '(synchronize to access)')}
               </span>
             )}

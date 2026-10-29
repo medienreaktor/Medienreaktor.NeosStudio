@@ -18,8 +18,10 @@ export function SettingsHeader({
   return (
     <header className="mb-4 flex items-start justify-between gap-4">
       <div>
-        <h2 className="text-base font-semibold text-neutral-950 dark:text-white">{title}</h2>
-        {subtitle && <p className="text-sm text-neutral-600 dark:text-neutral-400">{subtitle}</p>}
+        <h2 className="type-heading-s text-foreground">{title}</h2>
+        {subtitle && (
+          <p className="type-body text-muted-foreground">{subtitle}</p>
+        )}
       </div>
       {children}
     </header>

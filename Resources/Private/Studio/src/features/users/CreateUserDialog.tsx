@@ -111,7 +111,10 @@ export function CreateUserDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4">
-          <Field label={t('users.username', 'Username')} htmlFor="user-create-username">
+          <Field
+            label={t('users.username', 'Username')}
+            htmlFor="user-create-username"
+          >
             <Input
               id="user-create-username"
               value={username}
@@ -188,7 +191,7 @@ export function CreateUserDialog({
             </Field>
           </div>
           {mismatch && (
-            <p className="text-sm text-red-500">
+            <p className="type-body text-destructive-text">
               {t('users.passwordMismatch', 'The passwords do not match.')}
             </p>
           )}

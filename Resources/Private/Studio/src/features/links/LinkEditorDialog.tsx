@@ -110,7 +110,7 @@ export function LinkEditorDialog({
         </DialogHeader>
 
         {types.length === 0 ? (
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="type-body text-muted-foreground">
             {t('link.noTypes', 'No link types are registered.')}
           </p>
         ) : (
@@ -154,36 +154,36 @@ export function LinkEditorDialog({
             <legend className="sr-only">
               {t('link.options', 'Link options')}
             </legend>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 type-body">
               <Checkbox
                 checked={targetBlank}
                 onCheckedChange={(next) => setTargetBlank(next)}
               />
               {t('link.openNewWindow', 'Open in new window')}
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 type-body">
               <Checkbox
                 checked={nofollow}
                 onCheckedChange={(next) => setNofollow(next)}
               />
               {t('link.nofollow', 'No follow (rel="nofollow")')}
             </label>
-            <label className="flex flex-col gap-1 text-xs text-neutral-600 dark:text-neutral-400">
+            <label className="flex flex-col gap-1 type-small text-muted-foreground">
               {t('link.cssClass', 'CSS class')}
               <Input
                 value={cssClass}
                 onChange={(event) => setCssClass(event.target.value)}
                 placeholder={t('link.cssClassPlaceholder', 'e.g. button')}
-                className="h-8 text-sm"
+                className="h-8 type-body"
               />
             </label>
-            <label className="flex flex-col gap-1 text-xs text-neutral-600 dark:text-neutral-400">
+            <label className="flex flex-col gap-1 type-small text-muted-foreground">
               {t('link.title', 'Title')}
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={t('link.titlePlaceholder', 'Shown as tooltip')}
-                className="h-8 text-sm"
+                className="h-8 type-body"
               />
             </label>
           </fieldset>
@@ -193,7 +193,7 @@ export function LinkEditorDialog({
           {onRemove && value !== null && (
             <Button
               variant="outline"
-              className="text-red-500 sm:mr-auto"
+              className="text-destructive-text sm:mr-auto"
               onClick={onRemove}
             >
               {t('link.remove', 'Remove link')}

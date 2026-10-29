@@ -648,7 +648,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
           <div
             data-panel-group
             className={cn(
-              'flex min-h-0 min-w-0 flex-col overflow-hidden bg-neutral-50 dark:bg-neutral-900 text-neutral-950 dark:text-white',
+              'flex min-h-0 min-w-0 flex-col overflow-hidden bg-card text-foreground',
               !group.collapsed && 'flex-1',
               attentionDimClasses(group, attention),
             )}
@@ -669,7 +669,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
         <div
           data-panel-drop="dock"
           data-region={region}
-          className="grid flex-1 place-items-center text-xs text-neutral-600 dark:text-neutral-400"
+          className="grid flex-1 place-items-center type-small text-muted-foreground"
         >
           {t('panel.dragHere', 'Drag panels here')}
         </div>
@@ -729,7 +729,7 @@ export function SecondaryDock({
   return (
     <div
       className={cn(
-        'relative flex shrink-0 flex-col bg-neutral-50 dark:bg-neutral-900',
+        'relative flex shrink-0 flex-col bg-card',
         // Collapsed: take no width and drop the border so no bar shows - only
         // the expand button, overlaid on the top-right of the main region.
         showCollapsed ? 'w-0' : 'border-l',
@@ -741,9 +741,9 @@ export function SecondaryDock({
           type="button"
           aria-label={t('panel.expand', 'Expand panel')}
           onClick={() => setCollapsed(false)}
-          className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+          className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-muted-foreground hover:text-foreground"
         >
-          <i className="fas fa-angles-left text-xs" aria-hidden />
+          <i className="fas fa-angles-left type-icon-m" aria-hidden />
         </button>
       ) : (
         <>
@@ -756,9 +756,9 @@ export function SecondaryDock({
               type="button"
               aria-label={t('panel.collapse', 'Collapse panel')}
               onClick={() => setCollapsed(true)}
-              className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+              className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-muted-foreground hover:text-foreground"
             >
-              <i className="fas fa-angles-right text-xs" aria-hidden />
+              <i className="fas fa-angles-right type-icon-m" aria-hidden />
             </button>
           )}
         </>
@@ -785,7 +785,7 @@ function FloatingGroupWindow({
         .map((panel) => definitions.get(panel)?.title ?? panel)
         .join(', ')}
       className={cn(
-        'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-neutral-50 dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-lg',
+        'fixed z-100 flex flex-col overflow-hidden rounded-lg border rounded-tl-none bg-card text-foreground shadow-lg',
         hidden && 'hidden',
         attentionDimClasses(group, attention),
       )}
@@ -839,7 +839,7 @@ function GroupTabBar({
         // so the centered tabs don't shift by the border width on toggle.
         'flex shrink-0 items-center',
         group.collapsed && 'border-b-transparent',
-        dropIndex !== null && 'bg-neutral-200/40 dark:bg-neutral-800/40',
+        dropIndex !== null && 'bg-muted/40',
       )}
     >
       {group.panels.map((panel, index) => (
@@ -851,17 +851,17 @@ function GroupTabBar({
             onPointerDown={(e) => onTabPointerDown(e, group.id, panel)}
             onContextMenu={(e) => onTabContextMenu(e, group.id, panel)}
             className={cn(
-              'cursor-grab touch-none px-3 py-1.5 text-xs font-medium select-none border-t',
+              'cursor-grab touch-none px-3 py-1.5 type-small-strong select-none border-t',
               panel === group.active
-                ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white border-blue-500'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white border-transparent',
+                ? 'bg-background text-foreground border-primary'
+                : 'text-muted-foreground hover:text-foreground border-transparent',
               // A panel asking for attention gets a solid blue tab so it reads
               // as the place to look, whether or not it is the active tab.
               // Both color-scheme variants are spelled out: tailwind-merge
               // only drops the active tab's unprefixed bg/text, its dark:
               // ones would otherwise still win in dark mode.
               attention.has(panel) &&
-                'bg-blue-500 dark:bg-blue-500 text-white dark:text-white border-blue-500 hover:text-white dark:hover:text-white',
+                'bg-primary text-primary-foreground border-primary hover:text-primary-foreground',
               drag?.panel === panel && 'opacity-50',
             )}
           >
@@ -913,11 +913,11 @@ function GroupBody({
       data-region={stacking ? region : undefined}
       data-group-id={group.id}
       className={cn(
-        'flex min-h-0 flex-1 flex-col bg-white dark:bg-neutral-950',
+        'flex min-h-0 flex-1 flex-col bg-background',
         collapsed && 'hidden',
         // A panel asking for attention frames its content (not the tab bar) in
         // blue, tying together with its blue tab above.
-        groupNeedsAttention(group, attention) && 'border-2 border-blue-500',
+        groupNeedsAttention(group, attention) && 'border-2 border-primary',
       )}
     >
       {group.panels.map((panel) => {
@@ -948,7 +948,7 @@ function GroupBody({
 function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
   return (
     <div
-      className="pointer-events-none fixed z-120 rounded-md border bg-neutral-50 dark:bg-neutral-900 px-2 py-1 text-xs shadow-md"
+      className="pointer-events-none fixed z-120 rounded-md border bg-card px-2 py-1 type-small shadow-md"
       style={{ left: drag.pointer.x + 12, top: drag.pointer.y + 12 }}
     >
       {title}
@@ -959,11 +959,11 @@ function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
 // Negative margins cancel the marker's own footprint (its box plus the extra
 // flex gap), so showing it does not shift the layout being hit-tested.
 const TabDropMarker = () => (
-  <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-blue-500" />
+  <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-primary" />
 )
 const DockGapMarker = ({ horizontal = false }: { horizontal?: boolean }) =>
   horizontal ? (
-    <div className="-mx-1.25 w-0.5 shrink-0 self-stretch rounded bg-blue-500" />
+    <div className="-mx-1.25 w-0.5 shrink-0 self-stretch rounded bg-primary" />
   ) : (
-    <div className="-my-1.25 h-0.5 shrink-0 rounded bg-blue-500" />
+    <div className="-my-1.25 h-0.5 shrink-0 rounded bg-primary" />
   )

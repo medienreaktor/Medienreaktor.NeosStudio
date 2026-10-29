@@ -45,7 +45,7 @@ export function RolesField({
             return (
               <label
                 key={role.identifier}
-                className="flex cursor-pointer items-center gap-2.5 py-0.5 text-sm text-neutral-800 dark:text-neutral-200 has-[[disabled]]:cursor-not-allowed"
+                className="flex cursor-pointer items-center gap-2.5 py-0.5 type-body text-foreground has-[[disabled]]:cursor-not-allowed"
               >
                 <Checkbox
                   checked={value.includes(role.identifier)}
@@ -56,7 +56,7 @@ export function RolesField({
                 />
                 <span className="min-w-0">
                   {role.label}
-                  <span className="ml-2 text-xs text-neutral-500">
+                  <span className="ml-2 type-small text-muted-foreground">
                     {role.identifier}
                   </span>
                 </span>

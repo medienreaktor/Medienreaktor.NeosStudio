@@ -225,7 +225,7 @@ export function ImageCropDialog({
 
         {showSelector && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-600 dark:text-neutral-400">
+            <span className="type-small text-muted-foreground">
               {t('editor.crop.aspectRatio', 'Aspect ratio')}
             </span>
             <Select
@@ -247,14 +247,14 @@ export function ImageCropDialog({
           </div>
         )}
 
-        <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950">
+        <div className="flex max-h-[60vh] items-center justify-center overflow-hidden rounded-md border border-border bg-background">
           {!original ? (
             <i
-              className="fas fa-spinner fa-spin text-[1.5rem] text-neutral-500"
+              className="fas fa-spinner fa-spin type-icon-3xl text-muted-foreground"
               aria-hidden
             />
           ) : !dimsKnown || !original.previewUri ? (
-            <span className="py-12 text-sm text-neutral-500">
+            <span className="py-12 type-body text-muted-foreground">
               {t('editor.crop.cannotCrop', 'This image cannot be cropped.')}
             </span>
           ) : (

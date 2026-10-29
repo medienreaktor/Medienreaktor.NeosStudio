@@ -229,9 +229,9 @@ function UserRow({
   })
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
+        <span className="font-medium text-foreground">
           {user.fullName || user.label}
         </span>
         {user.isCurrentUser && (
@@ -242,12 +242,12 @@ function UserRow({
       </TableCell>
       <TableCell>
         {user.accounts.length === 0 ? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         ) : (
           user.accounts.map((account) => (
             <div
               key={account.accountIdentifier}
-              className="text-neutral-700 dark:text-neutral-300"
+              className="text-muted-foreground"
             >
               {account.accountIdentifier}
             </div>
@@ -255,12 +255,12 @@ function UserRow({
         )}
       </TableCell>
       <TableCell>
-        {user.email ?? <span className="text-neutral-500">—</span>}
+        {user.email ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {user.roles.length === 0 ? (
-            <span className="text-neutral-500">—</span>
+            <span className="text-muted-foreground">—</span>
           ) : (
             user.roles.map((role) => (
               <Badge key={role} variant="secondary">
@@ -272,13 +272,13 @@ function UserRow({
       </TableCell>
       <TableCell>
         {user.active ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-green-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-success" />
             {t('users.active', 'Active')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-neutral-500">
-            <span className="size-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-placeholder" />
             {t('users.inactive', 'Inactive')}
           </span>
         )}

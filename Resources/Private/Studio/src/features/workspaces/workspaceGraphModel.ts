@@ -46,16 +46,16 @@ const ROOT_MAX_DOTS = 25
  * stay neutral; the palette starts with the Neos brand hues, then falls back
  * to default Tailwind hues (which the Studio theme extends, not replaces).
  */
-const ROOT_COLOR = 'light-dark(var(--color-neutral-600), var(--color-neutral-400))'
+const ROOT_COLOR = 'var(--color-graph-trunk)'
 const BRANCH_COLORS = [
-  'var(--color-blue-500)',
-  'var(--color-orange-500)',
-  'var(--color-green-500)',
-  'light-dark(var(--color-purple-600), var(--color-purple-400))',
-  'var(--color-pink-500)',
-  'var(--color-cyan-500)',
-  'var(--color-red-500)',
-  'var(--color-teal-500)',
+  'var(--color-graph-branch-1)',
+  'var(--color-graph-branch-2)',
+  'var(--color-graph-branch-3)',
+  'var(--color-graph-branch-4)',
+  'var(--color-graph-branch-5)',
+  'var(--color-graph-branch-6)',
+  'var(--color-graph-branch-7)',
+  'var(--color-graph-branch-8)',
 ]
 
 export interface CommitDot {

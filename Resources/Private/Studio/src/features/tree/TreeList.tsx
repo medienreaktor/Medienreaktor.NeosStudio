@@ -86,7 +86,7 @@ export function TreeList<T>({
         // Reorder indicator between rows; getDragLineStyle hides it (display:
         // none) when the current drop target is "into" a folder instead.
         <div
-          className="pointer-events-none z-10 h-0.5 rounded-full bg-blue-500"
+          className="pointer-events-none z-10 h-0.5 rounded-full bg-primary"
           style={dnd.getDragLineStyle()}
         />
       )}
@@ -149,20 +149,18 @@ export function TreeList<T>({
               })
             }
             className={cn(
-              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 motion-safe:animate-tree-row-in',
-              item.isSelected() &&
-                'border-blue-500 bg-neutral-100 dark:bg-neutral-800',
+              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left type-body transition-colors hover:bg-accent motion-safe:animate-tree-row-in',
+              item.isSelected() && 'border-primary bg-accent',
               item.isFocused() && 'outline-0',
-              isDropTarget && 'border-blue-500 bg-blue-500/10',
+              isDropTarget && 'border-primary bg-primary-tint',
             )}
             style={{ paddingLeft: `${indentLevel * 14 + 2}px` }}
           >
             {!isRoot && (
               <span
                 className={cn(
-                  'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-neutral-600 dark:text-neutral-400',
-                  item.isFolder() &&
-                    'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white',
+                  'flex size-5 shrink-0 items-center justify-center rounded-sm type-small text-muted-foreground',
+                  item.isFolder() && 'hover:bg-accent hover:text-foreground',
                 )}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -177,7 +175,7 @@ export function TreeList<T>({
                 {item.isFolder() ? (
                   <i
                     className={cn(
-                      'fas fa-caret-right fa-fw text-[0.75rem] transition-transform duration-150',
+                      'fas fa-caret-right fa-fw type-icon-m transition-transform duration-150',
                       item.isExpanded() && 'rotate-90',
                     )}
                     aria-hidden
@@ -188,9 +186,7 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.icon && (
-              <span className="shrink-0 text-neutral-950 dark:text-white">
-                {decor.icon}
-              </span>
+              <span className="shrink-0 text-foreground">{decor.icon}</span>
             )}
             {/* Not isLoading(): that also covers children-loading, which
                 would swap an expanding folder's own label out for a skeleton
@@ -212,7 +208,7 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.markers && (
-              <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-neutral-600 dark:text-neutral-400">
+              <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-muted-foreground">
                 {decor.markers}
               </span>
             )}

@@ -43,9 +43,7 @@ import { translate as t } from '@/lib/i18n'
 
 /** The domain add/edit form state: creating, or editing one domain. */
 type DomainFormState =
-  | { mode: 'create' }
-  | { mode: 'edit'; domain: SiteDomain }
-  | null
+  { mode: 'create' } | { mode: 'edit'; domain: SiteDomain } | null
 
 function invalidateSites() {
   queryClient.invalidateQueries({ queryKey: queryKeys.sitesAll })
@@ -129,7 +127,7 @@ export function EditSiteDialog({
           <DialogTitle>
             {t('sites.editSite', 'Edit site')}
             {site !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {site.name}
               </span>
             )}
@@ -171,7 +169,7 @@ export function EditSiteDialog({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
+                <h3 className="type-body-strong text-foreground">
                   {t('sites.domains', 'Domains')}
                 </h3>
                 {domainForm === null && (
@@ -187,7 +185,7 @@ export function EditSiteDialog({
               </div>
 
               {site.domains.length === 0 && domainForm === null && (
-                <p className="text-sm text-neutral-500">
+                <p className="type-body text-muted-foreground">
                   {t(
                     'sites.noDomains',
                     'No domains configured. The site is reachable under any host pointing at this installation.',
@@ -221,9 +219,13 @@ export function EditSiteDialog({
 
               {domainForm !== null && (
                 <DomainForm
-                  key={domainForm.mode === 'edit' ? domainForm.domain.id : 'new'}
+                  key={
+                    domainForm.mode === 'edit' ? domainForm.domain.id : 'new'
+                  }
                   siteNodeName={site.nodeName}
-                  editing={domainForm.mode === 'edit' ? domainForm.domain : null}
+                  editing={
+                    domainForm.mode === 'edit' ? domainForm.domain : null
+                  }
                   onClose={() => setDomainForm(null)}
                 />
               )}
@@ -251,11 +253,13 @@ function DomainRow({
   onDelete: () => void
 }) {
   return (
-    <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
+    <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 type-body">
       <span className="flex min-w-0 items-center gap-2">
         <span
           className={
-            domain.active ? 'truncate text-neutral-800 dark:text-neutral-200' : 'truncate text-neutral-500'
+            domain.active
+              ? 'truncate text-foreground'
+              : 'truncate text-muted-foreground'
           }
         >
           {domain.url}
@@ -264,7 +268,9 @@ function DomainRow({
           <Badge variant="secondary">{t('sites.primary', 'Primary')}</Badge>
         )}
         {!domain.active && (
-          <Badge variant="outline">{t('sites.inactiveDomain', 'Inactive')}</Badge>
+          <Badge variant="outline">
+            {t('sites.inactiveDomain', 'Inactive')}
+          </Badge>
         )}
       </span>
       <DropdownMenu>
@@ -337,8 +343,7 @@ function DomainForm({
 
   const mutation = useMutation({
     mutationFn: () => {
-      const schemeValue =
-        scheme === 'any' ? '' : (scheme as 'http' | 'https')
+      const schemeValue = scheme === 'any' ? '' : (scheme as 'http' | 'https')
       const portValue = port.trim() === '' ? 0 : Number(port)
       if (editing !== null) {
         return updateDomain(siteNodeName, editing.id, {

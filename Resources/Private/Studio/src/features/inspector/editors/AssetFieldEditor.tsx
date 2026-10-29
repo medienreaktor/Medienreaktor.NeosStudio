@@ -50,7 +50,8 @@ export function AssetFieldEditor({
   // editor's own pick is not "external": by the time the refetch lands, the
   // held identifier already matches, so the instant local preview survives.
   const valueIdentifier = referenceIdentifier(value)
-  const [seenValueIdentifier, setSeenValueIdentifier] = useState(valueIdentifier)
+  const [seenValueIdentifier, setSeenValueIdentifier] =
+    useState(valueIdentifier)
   if (valueIdentifier !== seenValueIdentifier) {
     setSeenValueIdentifier(valueIdentifier)
     if (valueIdentifier !== identifier) {
@@ -112,9 +113,9 @@ export function AssetFieldEditor({
       <button
         type="button"
         onClick={select}
-        className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-4 text-sm text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-950 dark:hover:text-white"
+        className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-4 type-body text-muted-foreground hover:border-placeholder hover:text-foreground"
       >
-        <i className={`fas ${iconClass} text-[1rem]`} aria-hidden />
+        <i className={`fas ${iconClass} type-icon-xl`} aria-hidden />
         {kind === 'image'
           ? t('editor.selectImage', 'Select image…')
           : t('editor.selectAsset', 'Select asset…')}
@@ -130,17 +131,17 @@ export function AssetFieldEditor({
   if (kind === 'image') {
     return (
       <div>
-        <div className="group relative overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950">
+        <div className="group relative overflow-hidden rounded-md border border-border bg-background">
           <div className="flex min-h-24 items-center justify-center p-2">
             {asset ? (
               <AssetThumb asset={asset} preview className="max-h-48" />
             ) : loading ? (
               <i
-                className="fas fa-spinner fa-spin text-[1.25rem] text-neutral-500"
+                className="fas fa-spinner fa-spin type-icon-2xl text-muted-foreground"
                 aria-hidden
               />
             ) : (
-              <span className="py-6 text-xs text-neutral-500">
+              <span className="py-6 type-small text-muted-foreground">
                 {t('editor.assetNotFound', 'Asset not found')}
               </span>
             )}
@@ -150,9 +151,9 @@ export function AssetFieldEditor({
           <button
             type="button"
             onClick={select}
-            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
+            className="absolute inset-0 flex items-center justify-center bg-scrim/60 opacity-0 transition-opacity group-hover:opacity-100"
           >
-            <span className="rounded-md bg-blue-500 px-3 py-1.5 text-sm font-medium text-white">
+            <span className="rounded-md bg-primary px-3 py-1.5 type-body-strong text-primary-foreground">
               {t('editor.select', 'Select…')}
             </span>
           </button>
@@ -179,7 +180,7 @@ export function AssetFieldEditor({
         </div>
         {asset && (
           <div
-            className="mt-1 truncate text-xs text-neutral-600 dark:text-neutral-400"
+            className="mt-1 truncate type-small text-muted-foreground"
             title={asset.label}
           >
             {asset.label}
@@ -200,24 +201,24 @@ export function AssetFieldEditor({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-2">
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-50 dark:bg-neutral-900">
+    <div className="flex items-center gap-3 rounded-md border border-border bg-background p-2">
+      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-card">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (
           <i
-            className="fas fa-spinner fa-spin text-[1rem] text-neutral-500"
+            className="fas fa-spinner fa-spin type-icon-xl text-muted-foreground"
             aria-hidden
           />
         ) : (
           <i
-            className="fas fa-paperclip text-[1.25rem] text-neutral-400 dark:text-neutral-600"
+            className="fas fa-paperclip type-icon-2xl text-placeholder"
             aria-hidden
           />
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm" title={asset?.label}>
+        <div className="truncate type-body" title={asset?.label}>
           {asset
             ? asset.label
             : missing

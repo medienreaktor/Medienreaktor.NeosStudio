@@ -49,10 +49,10 @@ const REFRESH_INTERVAL = 30_000
 const DOT_RADIUS = 6
 
 const CLASSIFICATION_ICONS: Record<string, string> = {
-  ROOT: 'fas fa-earth-americas text-neutral-950 dark:text-white',
-  SHARED: 'fas fa-users text-purple-500',
-  PRIVATE: 'fas fa-lock text-neutral-950/50 dark:text-white/50',
-  PERSONAL: 'fas fa-user text-neutral-950/50 dark:text-white/50',
+  ROOT: 'fas fa-earth-americas text-foreground',
+  SHARED: 'fas fa-users text-workspace-shared-text',
+  PRIVATE: 'fas fa-lock text-placeholder',
+  PERSONAL: 'fas fa-user text-placeholder',
 }
 
 function workspaceLabel(workspace: Workspace): string {
@@ -154,7 +154,7 @@ const GraphSurface = memo(function GraphSurface({
               x={branch.startX + DOT_SPACING * 0.5}
               y={branch.y + 4}
               textAnchor="middle"
-              className="fill-neutral-500 text-[11px] font-bold tracking-widest"
+              className="fill-muted-foreground type-small-strong tracking-widest"
               opacity={dimmed(branch.workspace.name) ? 0.2 : 1}
             >
               …
@@ -172,7 +172,7 @@ const GraphSurface = memo(function GraphSurface({
               key={`${branch.workspace.name}:${dot.step.id}`}
               data-graph-id={`event:${branch.workspace.name}:${dot.step.id}`}
               className={cn(
-                'absolute cursor-pointer rounded-full border-2 bg-white dark:bg-neutral-950 transition-transform',
+                'absolute cursor-pointer rounded-full border-2 bg-background transition-transform',
                 selected && cn('scale-150', SELECTED_RING),
                 dimmed(branch.workspace.name) && 'opacity-20',
               )}
@@ -226,21 +226,21 @@ const GraphSurface = memo(function GraphSurface({
               }}
             >
               <div className="flex flex-col gap-0.5 px-3 py-2">
-                <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-neutral-950 dark:text-white">
+                <div className="flex min-w-0 items-center gap-1.5 type-small-strong text-foreground">
                   <i
                     className={cn(
                       CLASSIFICATION_ICONS[workspace.classification] ??
-                        'fas fa-layer-group text-neutral-950/50 dark:text-white/50',
-                      'fa-fw shrink-0 text-[0.7rem]',
+                        'fas fa-layer-group text-placeholder',
+                      'fa-fw shrink-0 type-icon-s',
                     )}
                     aria-hidden
                   />
                   <span className="truncate">{workspaceLabel(workspace)}</span>
                 </div>
-                <div className="truncate font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
+                <div className="truncate type-code-small text-placeholder">
                   {workspace.name}
                 </div>
-                <div className="flex items-center gap-2 text-[9px] text-neutral-950 dark:text-white">
+                <div className="flex items-center gap-2 type-caption text-foreground">
                   {branch.branchFrom !== null && (
                     <span>
                       {t('workspaceGraph.changeCount', '{0} changes', [
@@ -250,7 +250,7 @@ const GraphSurface = memo(function GraphSurface({
                   )}
                   {workspace.status === 'OUTDATED' && (
                     <span
-                      className="text-amber-500"
+                      className="text-workspace-outdated-text"
                       title={t(
                         'workspaceGraph.outdated',
                         'The base workspace has newer changes',
@@ -288,7 +288,7 @@ const GraphSurface = memo(function GraphSurface({
                 }}
                 title={t('workspaceGraph.youAreHere', 'You are here')}
               >
-                <span className="text-[11px] leading-none font-bold tracking-widest text-white">
+                <span className="type-small-strong tracking-widest text-graph-foreground">
                   HEAD
                 </span>
               </div>
@@ -572,7 +572,7 @@ export function WorkspaceGraphPanel() {
             />
           )}
           {isError && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-600 dark:text-neutral-400">
+            <div className="absolute inset-0 flex items-center justify-center type-body text-muted-foreground">
               {t(
                 'workspaceGraph.loadFailed',
                 'The workspaces could not be loaded.',

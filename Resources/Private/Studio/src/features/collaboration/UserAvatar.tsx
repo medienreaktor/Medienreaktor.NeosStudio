@@ -31,7 +31,7 @@ export function UserAvatar({
   title?: string
 }) {
   const shared = cn(
-    'flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-[0.65rem] font-semibold text-white select-none',
+    'flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full type-count text-presence-foreground select-none',
     className,
   )
   if (imageUrl != null && imageUrl !== '') {

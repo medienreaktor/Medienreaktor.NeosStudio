@@ -90,7 +90,12 @@ export function WorkspaceRolesDialog({
             'Removing the access failed.',
           ),
         ),
-        { title: t('workspacesAdmin.roleRemoveFailed', 'Could not remove access') },
+        {
+          title: t(
+            'workspacesAdmin.roleRemoveFailed',
+            'Could not remove access',
+          ),
+        },
       ),
   })
 
@@ -101,7 +106,7 @@ export function WorkspaceRolesDialog({
           <DialogTitle>
             {t('workspacesAdmin.manageAccess', 'Manage access')}
             {workspace !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {workspace.title || workspace.name}
               </span>
             )}
@@ -138,14 +143,14 @@ export function WorkspaceRolesDialog({
                 {data.assignments.map((assignment) => (
                   <li
                     key={`${assignment.subjectType}:${assignment.subject}`}
-                    className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm"
+                    className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 type-body"
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <i
-                        className={`fas ${assignment.subjectType === 'USER' ? 'fa-user' : 'fa-users'} text-xs text-neutral-500`}
+                        className={`fas ${assignment.subjectType === 'USER' ? 'fa-user' : 'fa-users'} type-icon-m text-muted-foreground`}
                         aria-hidden
                       />
-                      <span className="truncate text-neutral-800 dark:text-neutral-200">
+                      <span className="truncate text-foreground">
                         {assignment.label}
                       </span>
                       <Badge variant="secondary">
@@ -155,7 +160,10 @@ export function WorkspaceRolesDialog({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      aria-label={t('workspacesAdmin.removeAccess', 'Remove access')}
+                      aria-label={t(
+                        'workspacesAdmin.removeAccess',
+                        'Remove access',
+                      )}
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(assignment)}
                     >
@@ -188,7 +196,8 @@ function AddAssignmentForm({
 }) {
   const [subjectType, setSubjectType] = useState<'USER' | 'GROUP'>('USER')
   const [subject, setSubject] = useState('')
-  const [role, setRole] = useState<(typeof WORKSPACE_ROLES)[number]>('COLLABORATOR')
+  const [role, setRole] =
+    useState<(typeof WORKSPACE_ROLES)[number]>('COLLABORATOR')
 
   const isAdmin = useMe().data?.permissions.users ?? false
   const { data: usersData } = useUsers()
@@ -206,7 +215,10 @@ function AddAssignmentForm({
     .map((group) => ({ value: group.identifier, label: group.label }))
   const subjectTypeItems = [
     { value: 'USER', label: t('workspacesAdmin.subjectUser', 'User') },
-    { value: 'GROUP', label: t('workspacesAdmin.subjectGroup', 'Group (role)') },
+    {
+      value: 'GROUP',
+      label: t('workspacesAdmin.subjectGroup', 'Group (role)'),
+    },
   ]
   const roleItems = WORKSPACE_ROLES.map((value) => ({
     value,
@@ -224,9 +236,17 @@ function AddAssignmentForm({
       toast.error(
         apiErrorDescription(
           error,
-          t('workspacesAdmin.roleAssignFailedDetail', 'Assigning the access failed.'),
+          t(
+            'workspacesAdmin.roleAssignFailedDetail',
+            'Assigning the access failed.',
+          ),
         ),
-        { title: t('workspacesAdmin.roleAssignFailed', 'Could not assign access') },
+        {
+          title: t(
+            'workspacesAdmin.roleAssignFailed',
+            'Could not assign access',
+          ),
+        },
       ),
   })
 

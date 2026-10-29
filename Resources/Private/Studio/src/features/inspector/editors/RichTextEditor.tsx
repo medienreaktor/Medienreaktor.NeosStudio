@@ -122,7 +122,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
   const isEmpty = editor?.isEmpty ?? true
 
   return (
-    <div className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 dark:bg-neutral-700/30 shadow-xs transition-[color,box-shadow] focus-within:border-blue-500">
+    <div className="rounded-md border border-border bg-input/30 shadow-xs transition-[color,box-shadow] focus-within:border-primary">
       {editor && (
         <Toolbar
           editor={editor}
@@ -134,7 +134,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
         {placeholder && isEmpty && (
           <span
             aria-hidden
-            className="pointer-events-none absolute top-2 left-3 text-sm text-neutral-600 dark:text-neutral-400"
+            className="pointer-events-none absolute top-2 left-3 type-body text-muted-foreground"
           >
             {placeholder}
           </span>
@@ -142,20 +142,20 @@ export const RichTextEditor: PropertyEditorComponent = ({
         <div
           ref={containerRef}
           className={cn(
-            'px-3 py-2 text-sm',
+            'px-3 py-2 type-body',
             '[&_.tiptap]:min-h-20 [&_.tiptap]:outline-none',
             // Tailwind's preflight strips list and heading styling; restore a
             // compact editing rendition scoped to the editor content.
-            '[&_.tiptap_h1]:text-xl [&_.tiptap_h1]:font-bold',
-            '[&_.tiptap_h2]:text-lg [&_.tiptap_h2]:font-bold',
-            '[&_.tiptap_h3]:text-base [&_.tiptap_h3]:font-bold',
+            '[&_.tiptap_h1]:type-default [&_.tiptap_h1]:font-bold',
+            '[&_.tiptap_h2]:type-default [&_.tiptap_h2]:font-bold',
+            '[&_.tiptap_h3]:type-default [&_.tiptap_h3]:font-bold',
             '[&_.tiptap_:is(h4,h5,h6)]:font-bold',
             '[&_.tiptap_ul]:list-disc [&_.tiptap_ol]:list-decimal',
             '[&_.tiptap_:is(ul,ol)]:pl-5',
-            '[&_.tiptap_blockquote]:border-l-2 [&_.tiptap_blockquote]:border-neutral-300 dark:[&_.tiptap_blockquote]:border-neutral-700 [&_.tiptap_blockquote]:pl-3 [&_.tiptap_blockquote]:text-neutral-600 dark:[&_.tiptap_blockquote]:text-neutral-400',
-            '[&_.tiptap_pre]:rounded [&_.tiptap_pre]:bg-neutral-200 dark:[&_.tiptap_pre]:bg-neutral-800 [&_.tiptap_pre]:p-2 [&_.tiptap_pre]:font-mono [&_.tiptap_pre]:text-xs',
-            '[&_.tiptap_hr]:my-2 [&_.tiptap_hr]:border-neutral-300 dark:[&_.tiptap_hr]:border-neutral-700',
-            '[&_.tiptap_a]:text-blue-500 [&_.tiptap_a]:underline',
+            '[&_.tiptap_blockquote]:border-l-2 [&_.tiptap_blockquote]:border-border [&_.tiptap_blockquote]:pl-3 [&_.tiptap_blockquote]:text-muted-foreground',
+            '[&_.tiptap_pre]:rounded [&_.tiptap_pre]:bg-muted [&_.tiptap_pre]:p-2 [&_.tiptap_pre]:font-mono [&_.tiptap_pre]:type-small',
+            '[&_.tiptap_hr]:my-2 [&_.tiptap_hr]:border-border',
+            '[&_.tiptap_a]:text-primary-text [&_.tiptap_a]:underline',
             '[&_.tiptap_p+p]:mt-2',
           )}
         />
@@ -195,7 +195,7 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       disabled={disabled}
-      className={cn(active && 'bg-neutral-200 dark:bg-neutral-800 text-blue-500')}
+      className={cn(active && 'bg-muted text-primary-text')}
       onMouseDown={(event) => {
         event.preventDefault()
         if (!runOnClick) onRun()
@@ -301,7 +301,7 @@ function Toolbar({
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-300 dark:border-neutral-700 p-1">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-border p-1">
       {formatting.block && blockChoices.length > 1 && (
         <Select
           items={blockChoices}
@@ -322,7 +322,7 @@ function Toolbar({
           <SelectTrigger
             size="sm"
             aria-label={t('editor.rte.blockFormat', 'Block format')}
-            className="h-6 w-28 border-none bg-transparent text-xs shadow-none dark:bg-transparent"
+            className="h-6 w-28 border-none bg-transparent type-small shadow-none"
           >
             <SelectValue />
           </SelectTrigger>
@@ -341,7 +341,7 @@ function Toolbar({
           active={editor.isActive('bold')}
           onRun={() => chain().toggleBold().run()}
         >
-          <i className="fas fa-bold text-xs" aria-hidden />
+          <i className="fas fa-bold type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.italic && (
@@ -350,7 +350,7 @@ function Toolbar({
           active={editor.isActive('italic')}
           onRun={() => chain().toggleItalic().run()}
         >
-          <i className="fas fa-italic text-xs" aria-hidden />
+          <i className="fas fa-italic type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.underline && (
@@ -359,7 +359,7 @@ function Toolbar({
           active={editor.isActive('underline')}
           onRun={() => chain().toggleUnderline().run()}
         >
-          <i className="fas fa-underline text-xs" aria-hidden />
+          <i className="fas fa-underline type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.strike && (
@@ -368,7 +368,7 @@ function Toolbar({
           active={editor.isActive('strike')}
           onRun={() => chain().toggleStrike().run()}
         >
-          <i className="fas fa-strikethrough text-xs" aria-hidden />
+          <i className="fas fa-strikethrough type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.code && (
@@ -377,7 +377,7 @@ function Toolbar({
           active={editor.isActive('code')}
           onRun={() => chain().toggleCode().run()}
         >
-          <i className="fas fa-code text-xs" aria-hidden />
+          <i className="fas fa-code type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.subscript && (
@@ -386,7 +386,7 @@ function Toolbar({
           active={editor.isActive('subscript')}
           onRun={() => chain().toggleSubscript().run()}
         >
-          <i className="fas fa-subscript text-xs" aria-hidden />
+          <i className="fas fa-subscript type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.superscript && (
@@ -395,7 +395,7 @@ function Toolbar({
           active={editor.isActive('superscript')}
           onRun={() => chain().toggleSuperscript().run()}
         >
-          <i className="fas fa-superscript text-xs" aria-hidden />
+          <i className="fas fa-superscript type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.link && (
@@ -405,7 +405,7 @@ function Toolbar({
           onRun={openLinkDialog}
           runOnClick
         >
-          <i className="fas fa-link text-xs" aria-hidden />
+          <i className="fas fa-link type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.bulletList && (
@@ -414,7 +414,7 @@ function Toolbar({
           active={editor.isActive('bulletList')}
           onRun={() => chain().toggleBulletList().run()}
         >
-          <i className="fas fa-list text-xs" aria-hidden />
+          <i className="fas fa-list type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.orderedList && (
@@ -423,7 +423,7 @@ function Toolbar({
           active={editor.isActive('orderedList')}
           onRun={() => chain().toggleOrderedList().run()}
         >
-          <i className="fas fa-list-ol text-xs" aria-hidden />
+          <i className="fas fa-list-ol type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.blockquote && (
@@ -432,7 +432,7 @@ function Toolbar({
           active={editor.isActive('blockquote')}
           onRun={() => chain().toggleBlockquote().run()}
         >
-          <i className="fas fa-quote-left text-xs" aria-hidden />
+          <i className="fas fa-quote-left type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.horizontalRule && formatting.multiline && (
@@ -440,7 +440,7 @@ function Toolbar({
           label={t('editor.rte.horizontalRule', 'Horizontal rule')}
           onRun={() => chain().setHorizontalRule().run()}
         >
-          <i className="fas fa-minus text-xs" aria-hidden />
+          <i className="fas fa-minus type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {formatting.removeFormat && (
@@ -448,7 +448,7 @@ function Toolbar({
           label={t('editor.rte.removeFormat', 'Remove formatting')}
           onRun={() => chain().unsetAllMarks().run()}
         >
-          <i className="fas fa-eraser text-xs" aria-hidden />
+          <i className="fas fa-eraser type-icon-m" aria-hidden />
         </ToolbarButton>
       )}
       {availableStyles.length > 0 && (
@@ -464,7 +464,7 @@ function Toolbar({
               />
             }
           >
-            <i className="fas fa-paintbrush text-xs" aria-hidden />
+            <i className="fas fa-paintbrush type-icon-m" aria-hidden />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {availableStyles.map((style) => {
@@ -476,13 +476,13 @@ function Toolbar({
                 >
                   <i
                     className={cn(
-                      'fas fa-check text-[0.65rem]',
+                      'fas fa-check type-icon-s',
                       !active && 'invisible',
                     )}
                     aria-hidden
                   />
                   {style.name}
-                  <span className="ml-auto pl-2 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                  <span className="ml-auto pl-2 type-code-small text-muted-foreground">
                     {`<${style.element}>`}
                   </span>
                 </DropdownMenuItem>

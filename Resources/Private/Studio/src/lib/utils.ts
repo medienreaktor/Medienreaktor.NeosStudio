@@ -11,13 +11,11 @@ export function cn(...inputs: ClassValue[]) {
  * translucent background + blur, not its container, so the content stays
  * visible between the controls.
  */
-export const floatingControl =
-  'bg-neutral-50/80 dark:bg-neutral-900/80 backdrop-blur-xs'
+export const floatingControl = 'bg-card/80 backdrop-blur-xs'
 
 /**
  * Companion backdrop for the toolbars holding floating controls: the panel
  * background fades in from transparent (bottom) to opaque (top), so content
  * scrolling underneath dims towards the panel edge without a full blur.
  */
-export const toolbarFade =
-  'bg-gradient-to-t from-transparent to-white dark:to-neutral-950'
+export const toolbarFade = 'bg-gradient-to-t from-transparent to-background'

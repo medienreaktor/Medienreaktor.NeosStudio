@@ -249,7 +249,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       <div className="relative h-full min-h-0 overflow-hidden">
         {overlay}
         <div className="pointer-events-none absolute top-0 right-0 z-10 p-3">
-          <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-1 backdrop-blur-xs">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-card/80 p-1 backdrop-blur-xs">
             <Button
               variant="ghost"
               size="icon-xs"
@@ -258,7 +258,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
             >
               <i className="fas fa-minus" aria-hidden />
             </Button>
-            <span className="w-10 text-center text-[10px] text-neutral-600 dark:text-neutral-400 tabular-nums">
+            <span className="w-10 text-center type-caption text-muted-foreground tabular-nums">
               {Math.round(view.scale * 100)}%
             </span>
             <Button

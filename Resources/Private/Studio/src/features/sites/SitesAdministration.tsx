@@ -197,19 +197,19 @@ function SiteRow({
   })
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
-          {site.name}
+        <span className="font-medium text-foreground">{site.name}</span>
+        <span className="ml-2 type-small text-muted-foreground">
+          {site.nodeName}
         </span>
-        <span className="ml-2 text-xs text-neutral-500">{site.nodeName}</span>
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
+      <TableCell className="text-muted-foreground">
         {site.siteResourcesPackageKey}
       </TableCell>
       <TableCell>
         {site.domains.length === 0 ? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         ) : (
           <div className="flex flex-wrap gap-1">
             {site.domains.map((domain) => (
@@ -226,13 +226,13 @@ function SiteRow({
       </TableCell>
       <TableCell>
         {site.state === 'online' ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-green-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-site-online" />
             {t('sites.online', 'Online')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-neutral-500">
-            <span className="size-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-site-offline" />
             {t('sites.offline', 'Offline')}
           </span>
         )}

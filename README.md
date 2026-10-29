@@ -83,7 +83,7 @@ Full parity with the classic inspector — and then some:
 - **Trash panel**: deleting a node is a soft removal, so every deleted page waits in the trash until the deletion is published — with who deleted it and when, and one click to restore it (deleted parent pages come back with it).
 - **User & profile management**: administer users, and every editor gets self-service profile settings (name, email, password, interface language).
 - **Localized UI** in English and German via Neos' own XLIFF infrastructure (450+ keys) — translated the Neos way, extendable the Neos way.
-- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, themed with the official Neos UI palette. Dark, focused, familiar.
+- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, on semantic design tokens from Figma, with light and dark themes. Focused, familiar.
 
 ### 🔌 Extensible by design — registries all the way down
 
@@ -199,7 +199,18 @@ src/
   lib/, hooks/          shared utilities
 ```
 
-Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) mapped onto the shadcn token contract with the official Neos palette; primitives are Base UI (`@base-ui/react`), not Radix.
+Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) on semantic tokens; primitives are Base UI (`@base-ui/react`), not Radix.
+
+### Design tokens
+
+Colours, radii and text styles come from the [Neos Studio Figma file](https://www.figma.com/design/ks1Uf9OdtvGCA9zjDsSYCu/) through `medienreaktor/figma-tools`, configured by `figma-tools.json`. The Figma dumps (`figma-variables.json`, `figma-text-styles.json`) are checked in, so the export is reproducible without Figma access. From a project that installs figma-tools:
+
+```bash
+composer exec -- figma-download --base-path <path to this package>   # refresh the dumps; needs FIGMA_MCP_TOKEN
+composer exec -- figma-import --base-path <path to this package>     # regenerate src/styles/*.css
+```
+
+`src/styles/{primitives,semantics,sizes,texts}.css` are generated: never hand-edit them, change Figma and re-export. Components use semantic utilities only (`bg-card`, `text-muted-foreground`, `border-divider`, `type-body`, `type-icon-s`), never palette shades or `dark:` variants; Tailwind's own font-size scale is switched off. The theme axis is `data-theme="light|dark"` on `<html>`, and any subtree can set its own `data-theme` to render in the other mode. The root font size is the browser default of 16px.
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 

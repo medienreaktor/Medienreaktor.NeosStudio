@@ -37,18 +37,18 @@ import {
  */
 
 const HEADER_HEIGHT = 54
-/** The CollapsibleGroup summary: py-2 + one text-xs line, plus the border-t. */
-const SECTION_HEADER_HEIGHT = 33
+/** The CollapsibleGroup summary: py-2 + one type-overline line, plus the border-t. */
+const SECTION_HEADER_HEIGHT = 27
 const ROW_HEIGHT = 18
 /** Edges attach at the header's vertical center. */
 const EDGE_ANCHOR_Y = HEADER_HEIGHT / 2
 
 /** The kind color carries the whole card (outline + surface tint). */
 const KIND_COLOR: Record<CardKind, string> = {
-  document: 'var(--color-blue-500)',
-  collection: 'var(--color-amber-500)',
-  content: 'var(--color-emerald-500)',
-  other: 'var(--color-neutral-500)',
+  document: 'var(--color-node-type-document)',
+  collection: 'var(--color-node-type-collection)',
+  content: 'var(--color-node-type-content)',
+  other: 'var(--color-node-type-other)',
 }
 
 /** Which of a card's two sections are expanded. */
@@ -104,7 +104,7 @@ function CardSection({
   onToggle: () => void
 }) {
   return (
-    <div className="border-t border-neutral-950/10 dark:border-white/10 px-3">
+    <div className="border-t border-border px-3">
       <CollapsibleGroup
         label={<span className="truncate">{title}</span>}
         open={open}
@@ -115,7 +115,7 @@ function CardSection({
           <div
             key={(row.isReference ? 'ref:' : 'prop:') + row.name}
             className={cn(
-              'flex items-center gap-1 text-[10px] text-neutral-950 dark:text-white',
+              'flex items-center gap-1 type-caption text-foreground',
             )}
             style={{ height: ROW_HEIGHT }}
             title={
@@ -128,12 +128,12 @@ function CardSection({
           >
             {row.isReference && (
               <i
-                className="fas fa-link fa-fw shrink-0 text-[7px] text-neutral-950/50 dark:text-white/50"
+                className="fas fa-link fa-fw shrink-0 type-icon-xs text-placeholder"
                 aria-hidden
               />
             )}
             <span className="truncate">{row.name}</span>
-            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
+            <span className="ml-auto shrink-0 pl-2 type-code-small text-placeholder">
               {row.type}
             </span>
           </div>
@@ -192,8 +192,8 @@ const GraphSurface = memo(function GraphSurface({
               fill="none"
               stroke={
                 active
-                  ? 'var(--color-blue-500)'
-                  : 'light-dark(var(--color-neutral-400), var(--color-neutral-600))'
+                  ? 'var(--color-node-type-edge-active)'
+                  : 'var(--color-node-type-edge)'
               }
               strokeWidth={active ? 2 : 1}
               opacity={highlight !== null && !active ? 0.25 : 1}
@@ -212,7 +212,7 @@ const GraphSurface = memo(function GraphSurface({
             className={cn(
               'absolute cursor-pointer overflow-hidden rounded-md border-2 shadow-md',
               model.abstract && 'border-dashed',
-              matches.has(card.name) && 'ring-2 ring-blue-500/60',
+              matches.has(card.name) && 'ring-2 ring-ring/60',
               highlight?.selected === card.name && SELECTED_RING,
               !emphasized(card.name) && 'opacity-30',
             )}
@@ -228,11 +228,11 @@ const GraphSurface = memo(function GraphSurface({
               className="flex flex-col justify-center gap-0.5 px-3"
               style={{ height: HEADER_HEIGHT }}
             >
-              <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-neutral-950 dark:text-white">
+              <div className="flex min-w-0 items-center gap-1.5 type-small-strong text-foreground">
                 <i
                   className={cn(
                     model.icon ? faClassName(model.icon) : 'fas fa-cube',
-                    'fa-fw shrink-0 text-[0.7rem] text-neutral-950 dark:text-white',
+                    'fa-fw shrink-0 type-icon-s text-foreground',
                   )}
                   aria-hidden
                 />
@@ -240,12 +240,12 @@ const GraphSurface = memo(function GraphSurface({
                   {model.label}
                 </span>
                 {model.abstract && (
-                  <span className="ml-auto shrink-0 rounded-sm bg-neutral-200 dark:bg-neutral-800 px-1 text-[8px] tracking-wide text-neutral-950/50 dark:text-white/50 uppercase">
+                  <span className="ml-auto shrink-0 rounded-sm bg-muted px-1 type-overline text-placeholder">
                     {t('nodeTypes.abstract', 'Abstract')}
                   </span>
                 )}
               </div>
-              <div className="truncate font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
+              <div className="truncate type-code-small text-placeholder">
                 {model.name}
               </div>
             </div>
@@ -285,7 +285,7 @@ function Legend() {
     { kind: 'other', label: t('nodeTypes.legend.other', 'Mixin / other') },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-col gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
+    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-col gap-1 rounded-md bg-card/80 p-2 type-caption text-placeholder backdrop-blur-xs">
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
@@ -296,7 +296,7 @@ function Legend() {
         </div>
       ))}
       <div className="flex items-center gap-1.5">
-        <span className="size-2 rounded-sm border border-dashed border-neutral-500" />
+        <span className="size-2 rounded-sm border border-dashed border-node-type-other" />
         {t('nodeTypes.legend.abstract', 'Abstract type')}
       </div>
     </div>
@@ -434,7 +434,7 @@ export function NodeTypesPanel() {
               )}
             />
             {term.trim() !== '' && (
-              <span className="shrink-0 text-xs text-neutral-950/50 dark:text-white/50">
+              <span className="shrink-0 type-small text-placeholder">
                 {t('nodeTypes.matches', '{0} matches', [matches.length])}
               </span>
             )}
@@ -447,7 +447,7 @@ export function NodeTypesPanel() {
             />
           )}
           {isError && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-950/50 dark:text-white/50">
+            <div className="absolute inset-0 flex items-center justify-center type-body text-placeholder">
               {t('nodeTypes.loadFailed', 'The node types could not be loaded.')}
             </div>
           )}

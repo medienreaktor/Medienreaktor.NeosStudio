@@ -282,15 +282,15 @@ function ReferencePicker({
           if (index !== highlighted) setHighlighted(index)
         }}
         className={cn(
-          'flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50',
-          index === highlighted && 'bg-neutral-200 dark:bg-neutral-800',
+          'flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left type-body disabled:pointer-events-none disabled:opacity-50',
+          index === highlighted && 'bg-muted',
         )}
       >
         {option.iconClass && (
           <i
             className={cn(
               option.iconClass,
-              'fa-fw mt-0.5 text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+              'fa-fw mt-0.5 type-icon-m text-muted-foreground',
             )}
             aria-hidden
           />
@@ -298,7 +298,7 @@ function ReferencePicker({
         <span className="min-w-0">
           <span className="block truncate">{option.label}</span>
           {option.secondary && (
-            <span className="block truncate text-xs text-neutral-600 dark:text-neutral-400">
+            <span className="block truncate type-small text-muted-foreground">
               {option.secondary}
             </span>
           )}
@@ -311,14 +311,14 @@ function ReferencePicker({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         disabled={disabled}
-        className="flex h-9 w-full items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-9 w-full items-center gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body shadow-xs outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {triggerContent}
       </PopoverTrigger>
       <PopoverContent className="w-(--anchor-width) p-1">
         <div className="relative">
           <i
-            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 text-[1rem] -translate-y-1/2 text-neutral-600 dark:text-neutral-400"
+            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 type-icon-xl -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
@@ -379,15 +379,12 @@ function ReferencePicker({
           className="mt-1 max-h-64 overflow-y-auto"
         >
           {loading ? (
-            <div className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-600 dark:text-neutral-400">
-              <i
-                className="fas fa-spinner fa-spin text-[0.875rem]"
-                aria-hidden
-              />{' '}
+            <div className="flex items-center gap-2 px-2 py-2 type-small text-muted-foreground">
+              <i className="fas fa-spinner fa-spin type-icon-l" aria-hidden />{' '}
               {translate('editor.searching', 'Searching…')}
             </div>
           ) : options.length === 0 ? (
-            <p className="px-2 py-2 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="px-2 py-2 type-small text-muted-foreground">
               {hint ?? translate('editor.noMatches', 'No matches')}
             </p>
           ) : (
@@ -395,7 +392,7 @@ function ReferencePicker({
               {ungrouped.map(renderOption)}
               {[...groups.entries()].map(([group, groupOptions]) => (
                 <div key={group}>
-                  <p className="px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                  <p className="px-2 py-1.5 type-small text-muted-foreground">
                     {group}
                   </p>
                   {groupOptions.map(renderOption)}
@@ -505,7 +502,7 @@ function ReferenceEditorBase({
     // The creation dialog: the node does not exist yet, and references cannot
     // ride along in CreateNodeAggregateWithNode's property values.
     return (
-      <div className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="flex min-h-9 items-center rounded-md border border-dashed border-border px-3 py-2 type-body text-muted-foreground">
         {translate(
           'editor.reference.afterCreation',
           'References can be set after creation',
@@ -550,7 +547,7 @@ function ReferenceEditorBase({
                     <i
                       className={cn(
                         display.iconClass,
-                        'fa-fw text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                        'fa-fw type-icon-m text-muted-foreground',
                       )}
                       aria-hidden
                     />
@@ -558,9 +555,7 @@ function ReferenceEditorBase({
                   <span className="truncate">{display.label}</span>
                 </>
               ) : (
-                <span className="text-neutral-600 dark:text-neutral-400">
-                  {placeholder}
-                </span>
+                <span className="text-muted-foreground">{placeholder}</span>
               )
             }
           />
@@ -629,13 +624,13 @@ function ReferenceEditorBase({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 text-sm',
+              'flex h-9 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
               dragIndex === index && 'opacity-50',
             )}
           >
             {draggable && (
               <i
-                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-400 dark:text-neutral-600"
+                className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
                 aria-hidden
               />
             )}
@@ -643,7 +638,7 @@ function ReferenceEditorBase({
               <i
                 className={cn(
                   display.iconClass,
-                  'fa-fw text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                  'fa-fw type-icon-m text-muted-foreground',
                 )}
                 aria-hidden
               />
@@ -653,7 +648,7 @@ function ReferenceEditorBase({
                 type="button"
                 title={goToPageLabel}
                 onClick={() => navigateToNode(display.documentAddress!)}
-                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-blue-500/50"
+                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {display.label}
               </button>
@@ -674,9 +669,7 @@ function ReferenceEditorBase({
       <ReferencePicker
         {...pickerProps}
         triggerContent={
-          <span className="text-neutral-600 dark:text-neutral-400">
-            {placeholder}
-          </span>
+          <span className="text-muted-foreground">{placeholder}</span>
         }
       />
     </div>

@@ -29,12 +29,12 @@ export function BootScreen({ done = false }: { done?: boolean }) {
       aria-label={t('app.loadingStudio', 'Loading Neos Studio…')}
       aria-hidden={done}
       className={cn(
-        'fixed inset-0 z-[900] grid place-items-center bg-white transition-opacity duration-300 dark:bg-neutral-950',
+        'fixed inset-0 z-[900] grid place-items-center bg-background transition-opacity duration-300',
         done && 'pointer-events-none opacity-0',
       )}
     >
       <div
-        className="size-16 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"
+        className="size-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
         style={{ animationDelay }}
       />
     </div>

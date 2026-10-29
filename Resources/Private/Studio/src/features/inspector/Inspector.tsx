@@ -312,7 +312,7 @@ export function InspectorPanel({
   // invisible to every read that does not deliberately ask for them.
   if (isDeleted(node)) {
     return (
-      <div className="text-sm">
+      <div className="type-body">
         <div className="px-3 py-4">
           <h2 className="flex items-center gap-2 font-semibold">
             <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
@@ -331,7 +331,7 @@ export function InspectorPanel({
   }
 
   return (
-    <div className="text-sm">
+    <div className="type-body">
       <div className="py-4 px-3">
         <h2 className="flex items-center gap-2 font-semibold">
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
@@ -348,7 +348,7 @@ export function InspectorPanel({
         {visibleTabs && (
           <>
             {visibleTabs.length === 0 ? (
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+              <p className="type-small text-muted-foreground">
                 {t(
                   'inspector.noProperties',
                   'This node type has no inspector properties.',
@@ -409,7 +409,7 @@ export function InspectorPanel({
                         </span>
                         {errorCount > 0 && (
                           <span
-                            className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.65rem] font-semibold text-white"
+                            className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 type-count text-destructive-foreground"
                             title={
                               errorCount === 1
                                 ? t(
@@ -474,15 +474,12 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border border-purple-500/60 bg-purple-100/60 dark:bg-purple-900/60 p-2.5 text-xs text-purple-900 dark:text-purple-100"
+      className="mt-3 flex items-start gap-2 rounded-md border border-variant bg-variant-tint p-2.5 type-small text-variant-text"
     >
-      <FaIcon
-        icon="layer-group"
-        className="mt-0.5 text-purple-700 dark:text-purple-300"
-      />
+      <FaIcon icon="layer-group" className="mt-0.5 text-variant-text" />
       <p>
         {t('inspector.shineThroughFrom', 'Shines through from')}{' '}
-        <strong className="text-neutral-950 dark:text-white">{origin}</strong>.{' '}
+        <strong className="text-foreground">{origin}</strong>.{' '}
         {t(
           'inspector.shineThroughHint',
           'This node does not exist in the current dimension yet - editing it creates an independent variant here.',
@@ -507,7 +504,7 @@ function AccessLockNotice() {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+      className="mt-3 flex items-start gap-2 rounded-md border border-warning bg-warning-tint p-2.5 type-small text-warning-text"
     >
       <i className="fas fa-lock mt-0.5" aria-hidden />
       <p>
@@ -531,14 +528,12 @@ function ElementLockNotice({ node }: { node: NodeDto }) {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border p-2.5 text-xs"
+      className="mt-3 flex items-start gap-2 rounded-md border p-2.5 type-small"
       style={{ borderColor: holder.color }}
     >
       <i className="fas fa-pen mt-0.5" style={{ color: holder.color }} />
       <p>
-        <strong className="text-neutral-950 dark:text-white">
-          {holder.name}
-        </strong>{' '}
+        <strong className="text-foreground">{holder.name}</strong>{' '}
         {t(
           'inspector.elementLockedHint',
           'is editing this element right now - it is locked until they are done.',
@@ -566,7 +561,7 @@ function PropertyGroup({
   return (
     <CollapsibleGroup
       defaultOpen={!group.collapsed}
-      className="border-b border-neutral-300 dark:border-neutral-700 p-3"
+      className="border-b border-border p-3"
       label={
         <>
           {group.icon && <FaIcon icon={group.icon} />}

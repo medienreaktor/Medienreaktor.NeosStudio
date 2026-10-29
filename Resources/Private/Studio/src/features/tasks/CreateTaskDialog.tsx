@@ -208,7 +208,7 @@ export function CreateTaskDialog({
                 <SelectTrigger id="task-create-assignee" className="w-full">
                   <SelectValue
                     placeholder={t('tasks.selectUser', 'Select user')}
-                    className="data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-400"
+                    className="data-placeholder:text-muted-foreground"
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,7 +266,7 @@ function BaseOption({
         // Only the fallback item (list not loaded yet) lacks a workspace -
         // and that one is live.
         <i
-          className="fas fa-fw fa-earth-americas text-[0.7rem] text-blue-500"
+          className="fas fa-fw fa-earth-americas type-icon-s text-workspace-live-text"
           aria-hidden
         />
       )}

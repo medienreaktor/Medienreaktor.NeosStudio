@@ -83,7 +83,7 @@ export function SidebarResizeHandle({
       aria-orientation="vertical"
       aria-label={t('common.resizeSidebar', 'Resize sidebar')}
       className={cn(
-        'absolute inset-y-0 z-20 hidden w-1.5 cursor-col-resize transition-colors hover:bg-blue-500/40 active:bg-blue-500/60 md:block',
+        'absolute inset-y-0 z-20 hidden w-1.5 cursor-col-resize transition-colors hover:bg-primary/40 active:bg-primary/60 md:block',
         side === 'left' ? 'right-0' : 'left-0',
       )}
       {...props}

@@ -259,20 +259,24 @@ function WorkspaceRow({
     !isActive
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
+        <span className="font-medium text-foreground">
           {workspace.title || workspace.name}
         </span>
-        <span className="ml-2 text-xs text-neutral-500">{workspace.name}</span>
+        <span className="ml-2 type-small text-muted-foreground">
+          {workspace.name}
+        </span>
         {isActive && (
           <Badge variant="outline" className="ml-2 align-middle">
             {t('workspacesAdmin.active', 'Active')}
           </Badge>
         )}
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
-        {workspace.baseWorkspace ?? <span className="text-neutral-500">—</span>}
+      <TableCell className="text-muted-foreground">
+        {workspace.baseWorkspace ?? (
+          <span className="text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell>
         <span className="inline-flex items-center gap-1.5">
@@ -282,17 +286,17 @@ function WorkspaceRow({
           <WorkspaceDecorationBadges workspace={workspace} />
         </span>
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
-        {ownerLabel ?? <span className="text-neutral-500">—</span>}
+      <TableCell className="text-muted-foreground">
+        {ownerLabel ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell>
         {workspace.hasPublishableChanges ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-amber-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-node-modified" />
             {t('workspacesAdmin.pending', 'Pending')}
           </span>
         ) : (
-          <span className="text-neutral-500">
+          <span className="text-muted-foreground">
             {t('workspacesAdmin.none2', 'None')}
           </span>
         )}

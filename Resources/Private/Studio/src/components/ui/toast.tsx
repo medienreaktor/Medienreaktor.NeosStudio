@@ -88,25 +88,25 @@ export const toast = {
 const ICONS: Record<string, React.ReactNode> = {
   success: (
     <i
-      className="fas fa-circle-check text-[1rem] shrink-0 text-green-500"
+      className="fas fa-circle-check type-icon-xl shrink-0 text-success-text"
       aria-hidden
     />
   ),
   error: (
     <i
-      className="fas fa-triangle-exclamation text-[1rem] shrink-0 text-red-500"
+      className="fas fa-triangle-exclamation type-icon-xl shrink-0 text-destructive-text"
       aria-hidden
     />
   ),
   info: (
     <i
-      className="fas fa-circle-info text-[1rem] shrink-0 text-blue-500"
+      className="fas fa-circle-info type-icon-xl shrink-0 text-primary-text"
       aria-hidden
     />
   ),
   loading: (
     <i
-      className="fas fa-spinner fa-spin text-[1rem] shrink-0 text-neutral-600 dark:text-neutral-400"
+      className="fas fa-spinner fa-spin type-icon-xl shrink-0 text-muted-foreground"
       aria-hidden
     />
   ),
@@ -122,7 +122,7 @@ function ToastList() {
       // Base UI drives the stacking/swipe geometry through these CSS vars; the
       // `after` gap keeps the collapsed stack hoverable between toasts.
       className={cn(
-        'absolute right-0 bottom-0 left-auto w-full rounded-lg border bg-neutral-50 dark:bg-neutral-900 p-4 pr-8 text-neutral-950 dark:text-white shadow-lg select-none',
+        'absolute right-0 bottom-0 left-auto w-full rounded-lg border bg-popover p-4 pr-8 text-foreground shadow-lg select-none',
         'z-[calc(1000-var(--toast-index))] transform-[translateX(var(--toast-swipe-movement-x))_translateY(calc(var(--toast-swipe-movement-y)+calc(min(var(--toast-index),10)*-15px)))_scale(calc(max(0,1-(var(--toast-index)*0.1))))]',
         'transition-all [transition-property:transform,opacity] duration-300 ease-out',
         "after:absolute after:bottom-full after:left-0 after:h-4.25 after:w-full after:content-['']",
@@ -134,22 +134,20 @@ function ToastList() {
       <div className="flex items-start gap-2.5">
         {ICONS[toast.type ?? 'info'] ?? ICONS.info}
         <div className="flex min-w-0 flex-col gap-1">
-          {toast.title && (
-            <ToastPrimitive.Title className="text-sm leading-tight font-medium" />
-          )}
+          {toast.title && <ToastPrimitive.Title className="type-body-strong" />}
           {toast.description && (
-            <ToastPrimitive.Description className="text-sm leading-snug wrap-break-word text-neutral-600 dark:text-neutral-400" />
+            <ToastPrimitive.Description className="type-body wrap-break-word text-muted-foreground" />
           )}
           {toast.actionProps && (
-            <ToastPrimitive.Action className="mt-1 inline-flex h-7 w-fit items-center rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-800" />
+            <ToastPrimitive.Action className="mt-1 inline-flex h-7 w-fit items-center rounded-md border px-2.5 type-small-strong transition-colors hover:bg-accent" />
           )}
         </div>
       </div>
       <ToastPrimitive.Close
         aria-label={t('common.close', 'Close')}
-        className="absolute top-3 right-3 rounded-xs text-neutral-600 dark:text-neutral-400 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+        className="absolute top-3 right-3 rounded-xs text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:outline-hidden"
       >
-        <i className="fas fa-xmark text-[1rem]" aria-hidden />
+        <i className="fas fa-xmark type-icon-xl" aria-hidden />
       </ToastPrimitive.Close>
     </ToastPrimitive.Root>
   ))

@@ -52,7 +52,12 @@ export function AssetThumb({
   const iconClass = TYPE_ICON[asset.assetType] ?? 'fa-file'
   return (
     <i
-      className={cn('fas', iconClass, 'text-[2.5rem] text-neutral-400 dark:text-neutral-600', className)}
+      className={cn(
+        'fas',
+        iconClass,
+        'type-heading-l text-placeholder',
+        className,
+      )}
       aria-hidden
     />
   )

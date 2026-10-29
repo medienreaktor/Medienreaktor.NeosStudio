@@ -36,7 +36,7 @@ export const TableView: InspectorViewComponent = ({ node, options }) => {
           )
         }
         return (
-          <Table className="text-xs">
+          <Table className="type-small">
             <TableBody>
               {rows.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
@@ -53,7 +53,7 @@ export const TableView: InspectorViewComponent = ({ node, options }) => {
                         {typeof icon === 'string' && (
                           <FaIcon
                             icon={icon}
-                            className="mr-1 text-neutral-600 dark:text-neutral-400"
+                            className="mr-1 text-muted-foreground"
                           />
                         )}
                         {value}

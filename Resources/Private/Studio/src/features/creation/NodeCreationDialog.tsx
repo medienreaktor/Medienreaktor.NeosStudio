@@ -231,7 +231,7 @@ export function CreateNodeFlow({
             <NodeTypeIcon
               nodeTypes={nodeTypes}
               nodeTypeName={request.nodeTypeName}
-              className="text-[1rem]"
+              className="type-default"
             />
             {t('creation.createType', 'Create {0}', [typeLabel])}
           </DialogTitle>
@@ -347,7 +347,7 @@ function ElementEditor({
   // wrapping in a <label> (which would nest labels) or adding one above.
   if (definition?.rendersOwnLabel) {
     return (
-      <div className="text-sm">
+      <div className="type-body">
         {control}
         <ValidationErrors errors={errors} />
       </div>
@@ -355,10 +355,10 @@ function ElementEditor({
   }
 
   return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+    <label className="flex flex-col gap-1.5 type-body">
+      <span className="type-small-strong text-muted-foreground">
         {element.label}
-        {element.required && <span className="text-red-500"> *</span>}
+        {element.required && <span className="text-destructive-text"> *</span>}
       </span>
       {control}
       <ValidationErrors errors={errors} />

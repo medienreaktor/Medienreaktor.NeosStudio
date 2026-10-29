@@ -114,7 +114,7 @@ export function NodeCreationPanel() {
                       '{0} ({1}) - drag into the preview',
                       [nodeType.label, nodeType.name],
                     )}
-                    className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-200/40 dark:bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-200 dark:hover:bg-neutral-800 active:cursor-grabbing"
+                    className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-border bg-muted/40 px-2 pt-2 pb-1 text-center hover:bg-accent active:cursor-grabbing"
                     onDragStart={(event) => {
                       event.dataTransfer.effectAllowed = 'copy'
                       event.dataTransfer.setData(
@@ -128,9 +128,9 @@ export function NodeCreationPanel() {
                     <NodeTypeIcon
                       nodeTypes={nodeTypes}
                       nodeTypeName={nodeType.name}
-                      className="text-base"
+                      className="type-default"
                     />
-                    <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                    <span className="line-clamp-2 w-full wrap-break-word type-small">
                       {nodeType.label}
                     </span>
                   </div>

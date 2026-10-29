@@ -91,14 +91,16 @@ export function MediaBrowser({
       className="relative flex h-full min-h-0 flex-col outline-none"
     >
       {mode === 'picker' && (
-        <div className="flex shrink-0 items-center justify-between gap-2 bg-blue-500 px-3 py-2 text-xs">
-          <span className="min-w-0 truncate text-white">
+        <div className="flex shrink-0 items-center justify-between gap-2 bg-primary px-3 py-2 type-small">
+          <span className="min-w-0 truncate text-scrim-foreground">
             {t('media.pickAsset', 'Pick an asset')}
             {pickerTitle && (
               <>
                 {' '}
                 {t('media.for', 'for')}{' '}
-                <span className="font-medium text-white">{pickerTitle}</span>
+                <span className="font-medium text-scrim-foreground">
+                  {pickerTitle}
+                </span>
               </>
             )}{' '}
             {t('media.doubleClickToChoose', '— double-click to choose.')}
@@ -107,7 +109,7 @@ export function MediaBrowser({
             <Button variant="ghost" size="xs" onClick={onCancel}>
               {t('media.cancel', 'Cancel')}
               {/* Escape cancels too (see AssetPickerPanelBridge) - say so. */}
-              <kbd className="rounded border border-white/40 px-1 font-sans text-[10px] leading-4 text-white/90">
+              <kbd className="rounded border border-scrim-foreground/40 px-1 font-sans type-caption text-scrim-foreground/90">
                 Esc
               </kbd>
             </Button>

@@ -78,7 +78,7 @@ export function DocumentsToolbar({
               disabled={creatable === null}
               className={cn(
                 floatingControl,
-                filterActive && 'border-blue-500 text-blue-500',
+                filterActive && 'border-primary text-primary-text',
               )}
             />
           }

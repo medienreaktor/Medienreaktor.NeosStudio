@@ -40,7 +40,7 @@ export function UserMenu() {
       <DropdownMenuTrigger
         aria-label={t('userMenu.label', 'User menu')}
         title={name}
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-[0.65rem] font-semibold text-white select-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full type-count text-presence-foreground select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
         style={{ backgroundColor: presenceColor(colorKey) }}
       >
         {presenceInitials(name)}
@@ -49,7 +49,7 @@ export function UserMenu() {
         {/* GroupLabel must live inside a Group (Base UI error 31 otherwise). */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            <span className="block truncate font-medium text-neutral-950 dark:text-white">
+            <span className="block truncate font-medium text-foreground">
               {name}
             </span>
             {me.account && me.account !== name && (
