@@ -538,6 +538,10 @@
         <source>After</source>
         <target xml:lang="de">Nachher</target>
       </trans-unit>
+      <trans-unit id="compare.allDimensions" xml:space="preserve">
+        <source>Publishing or discarding covers all {0} dimensions</source>
+        <target xml:lang="de">Veröffentlichen oder Verwerfen gilt für alle {0} Dimensionen</target>
+      </trans-unit>
       <trans-unit id="compare.beforeCaption" xml:space="preserve">
         <source>Before</source>
         <target xml:lang="de">Vorher</target>

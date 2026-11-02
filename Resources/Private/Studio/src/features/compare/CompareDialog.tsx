@@ -46,7 +46,10 @@ import {
   type ChangeTone,
 } from '@/features/workspaces/historyLabels'
 import { ChangeRow } from '@/features/workspaces/StepDiff'
-import { useWorkspacePublishing } from '@/features/workspaces/useWorkspacePublishing'
+import {
+  useCanPublish,
+  useWorkspacePublishing,
+} from '@/features/workspaces/useWorkspacePublishing'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { ComparePane, type ComparePaneHandle } from './ComparePane'
@@ -197,6 +200,10 @@ export function CompareDialog({
         initialDocumentId ?? documents[0]?.documentAggregateId ?? null,
       )
       setActiveChange(-1)
+    } else {
+      // Or the next open renders the previous page once before this effect
+      // runs, loading both of its frames for nothing.
+      setDocumentId(null)
     }
   }, [open, initialDocumentId])
 
@@ -307,27 +314,50 @@ export function CompareDialog({
       ? address
       : addressInDimension(address, renderedDimension)
 
-  const baseAddress = useMemo(() => {
-    if (!document || targetWorkspaceName === null) return null
-    // Created here - there is nothing on the other side to compare against.
-    if (document.created) return null
+  /**
+   * What happened to the page itself in the rendered dimension. The document's
+   * created and deleted flags cover every dimension at once - a French variant
+   * created here marks the whole document as created - so whether a side has
+   * the page at all is decided from this dimension's own changes. Without
+   * dimension groups (no diff yet) the document-wide flags are all there is.
+   */
+  const pageStatus = activeGroup
+    ? (activeGroup.nodes.find(
+        (node) => node.nodeAggregateId === document?.documentAggregateId,
+      )?.status ?? null)
+    : document?.created
+      ? 'created'
+      : document?.deleted
+        ? 'removed'
+        : null
+
+  // The page in the rendered dimension, wherever it lives. A page deleted in
+  // every dimension has no address of its own; its aggregate id on a sibling
+  // address stands in (see addressTemplate).
+  const pageAddress = useMemo(() => {
+    if (!document) return null
     const address =
       document.documentAddress ??
       (addressTemplate === null
         ? null
         : addressWithAggregateId(addressTemplate, document.documentAggregateId))
-    return address === null
-      ? null
-      : addressInWorkspace(inRenderedDimension(address), targetWorkspaceName)
+    return address === null ? null : inRenderedDimension(address)
     // inRenderedDimension is derived from renderedDimension.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [document, targetWorkspaceName, addressTemplate, renderedDimension])
+  }, [document, addressTemplate, renderedDimension])
 
-  // The reviewed version. A page deleted in this workspace has none.
-  const targetAddress =
-    document && !document.deleted && document.documentAddress !== null
-      ? inRenderedDimension(document.documentAddress)
-      : null
+  // Created here, as a new page or a new variant of one - there is nothing on
+  // the other side to compare against.
+  const baseAddress =
+    pageAddress === null ||
+    targetWorkspaceName === null ||
+    pageStatus === 'created' ||
+    pageStatus === 'variant'
+      ? null
+      : addressInWorkspace(pageAddress, targetWorkspaceName)
+
+  // The reviewed version. A page removed in this dimension has none.
+  const targetAddress = pageStatus === 'removed' ? null : pageAddress
 
   // Only the changes of the rendered dimension: a change made in another one
   // belongs to another version of this page and has no business being marked
@@ -616,26 +646,44 @@ export function CompareDialog({
   const { operation, resolve, pendingConflict, setPendingConflict } =
     useWorkspacePublishing(source.name)
   const busy = operation.isPending
-  const canPublish = source.permissions.publish
+  // The same rule the review dialog applies: the workspace permission, and
+  // the access role's say on publishing to live.
+  const canPublish = useCanPublish(source, workspaces)
   const canDiscard = source.permissions.write
+  const publishDeniedHint = t(
+    'workspace.publishDenied',
+    'You are not allowed to publish to "{0}"',
+    [baseLabel],
+  )
+  const discardDeniedHint = t(
+    'workspace.review.noWriteAccess',
+    'You are not allowed to change "{0}"',
+    [sourceLabel],
+  )
+  /**
+   * Publishing and discarding work on the whole document, in every dimension -
+   * the content repository's unit, the same as in the review dialog. The
+   * frames show one dimension, so the footer says when there are others.
+   */
+  const otherDimensions = dimensionGroups.length > 1
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+
+  // The document has no pending changes anymore - move on to the next one, or
+  // leave when that was the last.
+  const moveOn = (published: boolean) => {
+    if (published) onPublished?.(source.name)
+    const remaining = documents.filter(
+      (d) => d.documentAggregateId !== documentId,
+    )
+    if (remaining.length === 0) onOpenChange(false)
+    else setDocumentId(remaining[0].documentAggregateId)
+  }
 
   const run = (kind: 'publish' | 'discard') => {
     if (documentId === null) return
     operation.mutate(
       { kind, filter: { documents: [documentId] } },
-      {
-        onSuccess: () => {
-          if (kind === 'publish') onPublished?.(source.name)
-          // The document has no pending changes anymore - move on to the next
-          // one, or leave when that was the last.
-          const remaining = documents.filter(
-            (d) => d.documentAggregateId !== documentId,
-          )
-          if (remaining.length === 0) onOpenChange(false)
-          else setDocumentId(remaining[0].documentAggregateId)
-        },
-      },
+      { onSuccess: () => moveOn(kind === 'publish') },
     )
   }
 
@@ -971,6 +1019,16 @@ export function CompareDialog({
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-divider px-3.5 py-3">
             <span className="mr-auto truncate type-small text-muted-foreground">
               {document?.label}
+              {otherDimensions && (
+                <>
+                  {' · '}
+                  {t(
+                    'compare.allDimensions',
+                    'Publishing or discarding covers all {0} dimensions',
+                    [dimensionGroups.length],
+                  )}
+                </>
+              )}
             </span>
             <Button
               variant="secondary"
@@ -982,6 +1040,7 @@ export function CompareDialog({
             <Button
               variant="destructive"
               disabled={documentId === null || !canDiscard || busy}
+              title={canDiscard ? undefined : discardDeniedHint}
               onClick={() => setConfirmDiscard(true)}
             >
               <i className="fas fa-fw fa-trash-can" aria-hidden />
@@ -989,6 +1048,7 @@ export function CompareDialog({
             </Button>
             <Button
               disabled={documentId === null || !canPublish || busy}
+              title={canPublish ? undefined : publishDeniedHint}
               className={
                 documentId !== null && canPublish
                   ? 'bg-success text-success-foreground hover:bg-success'
@@ -1057,8 +1117,14 @@ export function CompareDialog({
         }
         busy={resolve.isPending}
         onCancel={() => setPendingConflict(null)}
-        onForce={() => resolve.mutate('force')}
-        onDiscardAll={() => resolve.mutate('discardAll')}
+        // A resolved conflict finishes the publish/discard, as a direct
+        // success does.
+        onForce={() =>
+          resolve.mutate('force', { onSuccess: () => moveOn(true) })
+        }
+        onDiscardAll={() =>
+          resolve.mutate('discardAll', { onSuccess: () => moveOn(false) })
+        }
         onNavigate={(address) => {
           setPendingConflict(null)
           onOpenPage(address)
