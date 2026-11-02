@@ -407,6 +407,9 @@
       <trans-unit id="compare.afterCaption" xml:space="preserve">
         <source>After</source>
       </trans-unit>
+      <trans-unit id="compare.allDimensions" xml:space="preserve">
+        <source>Publishing or discarding covers all {0} dimensions</source>
+      </trans-unit>
       <trans-unit id="compare.beforeCaption" xml:space="preserve">
         <source>Before</source>
       </trans-unit>

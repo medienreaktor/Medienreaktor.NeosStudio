@@ -35,6 +35,13 @@ export function compareUrl(address: string): string {
 
 /** How long a frame may take to boot before it is called broken. */
 const READY_TIMEOUT_MS = 15_000
+/**
+ * How long a frame that has finished loading may stay silent. The compare
+ * script reports in as soon as the page is parsed, so a loaded frame without
+ * a handshake is an error page (404 when the node is not readable there) -
+ * no reason to keep the reviewer waiting for the full boot timeout.
+ */
+const LOADED_GRACE_MS = 2_000
 
 export interface ComparePaneHandle {
   /** Scroll the rendered page; instant for sync, smooth for change jumps. */
@@ -76,6 +83,8 @@ export const ComparePane = forwardRef<
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
+  /** The frame's load event fired - the response is in, script or not. */
+  const [loaded, setLoaded] = useState(false)
 
   // The v parameter (ignored by the server) makes every load's URL unique:
   // Safari answers repeated URLs from its HTTP cache, stale entries included -
@@ -133,6 +142,7 @@ export const ComparePane = forwardRef<
   useEffect(() => {
     setReady(false)
     setFailed(false)
+    setLoaded(false)
   }, [src])
 
   // A frame that never reports in is not rendering the page: the preview
@@ -142,9 +152,12 @@ export const ComparePane = forwardRef<
   // forever.
   useEffect(() => {
     if (src === null || ready) return
-    const timer = setTimeout(() => setFailed(true), READY_TIMEOUT_MS)
+    const timer = setTimeout(
+      () => setFailed(true),
+      loaded ? LOADED_GRACE_MS : READY_TIMEOUT_MS,
+    )
     return () => clearTimeout(timer)
-  }, [src, ready])
+  }, [src, ready, loaded])
 
   // Push the marks once the frame is up, and again whenever they change (a
   // refetched diff, another document).
@@ -166,8 +179,13 @@ export const ComparePane = forwardRef<
   return (
     <div className="relative min-h-0 flex-1 bg-background">
       <iframe
+        // A fresh frame per page: a reused one keeps the old document running
+        // until the new response arrives, and its late messages would pass
+        // the source check above as the new page's.
+        key={src}
         ref={frameRef}
         src={src}
+        onLoad={() => setLoaded(true)}
         title={t('compare.frameTitle', 'Page version')}
         className={cn(
           'absolute inset-0 h-full w-full border-0 transition-opacity duration-100',
