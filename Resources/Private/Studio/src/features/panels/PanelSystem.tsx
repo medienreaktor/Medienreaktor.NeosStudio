@@ -14,10 +14,11 @@ import {
   useResizableSidebar,
 } from '@/components/ui/sidebar-resize'
 import { translate as t } from '@/lib/i18n'
-import { rem } from '@/lib/rem'
+import { rootFontSize } from '@/lib/rem'
 import { cn } from '@/lib/utils'
 import {
   clampToViewport,
+  floatingRectStyle,
   RESIZE_HANDLES,
   type PanelRect,
   type ResizeDirection,
@@ -66,7 +67,7 @@ import { type PanelDefinition, panelRegistry } from './registry'
 const STORAGE_KEY = 'neos-studio.panel_layout'
 const SECONDARY_COLLAPSED_KEY = 'neos-studio.secondary_collapsed'
 const SECONDARY_WIDTH_KEY = 'neos-studio.secondary_width'
-const SECONDARY_DEFAULT_WIDTH = rem(20)
+const SECONDARY_DEFAULT_WIDTH = 20
 const DRAG_THRESHOLD = 5
 
 /** A boolean flag persisted to localStorage under `key`. */
@@ -415,8 +416,14 @@ export function PanelsProvider({
       const start = group.rect
       const startX = e.clientX
       const startY = e.clientY
+      // Pointer movement is px; the rect is rem.
+      const root = rootFontSize()
       const onMove = (ev: PointerEvent) => {
-        const rect = update(start, ev.clientX - startX, ev.clientY - startY)
+        const rect = update(
+          start,
+          (ev.clientX - startX) / root,
+          (ev.clientY - startY) / root,
+        )
         setLayout((l) => setFloatingRect(l, groupId, rect))
       }
       const onUp = () => {
@@ -735,7 +742,7 @@ export function SecondaryDock({
         // the expand button, overlaid on the top-right of the main region.
         showCollapsed ? 'w-0' : 'border-l',
       )}
-      style={showCollapsed ? undefined : { width: sidebarWidth }}
+      style={showCollapsed ? undefined : { width: `${sidebarWidth}rem` }}
     >
       {showCollapsed ? (
         <button
@@ -790,12 +797,7 @@ function FloatingGroupWindow({
         hidden && 'hidden',
         attentionDimClasses(group, attention),
       )}
-      style={{
-        left: group.rect.x,
-        top: group.rect.y,
-        width: group.rect.width,
-        height: group.collapsed ? undefined : group.rect.height,
-      }}
+      style={floatingRectStyle(group.rect, group.collapsed)}
       onPointerDownCapture={() => toFront(group.id)}
     >
       <GroupTabBar group={group} floating />

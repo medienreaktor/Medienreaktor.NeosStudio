@@ -1,5 +1,3 @@
-import { rem } from '@/lib/rem'
-
 /**
  * Layered layout for the node type graph. Node type inheritance is a DAG
  * (multi-inheritance through mixins), so the classic tree layouts don't
@@ -13,18 +11,18 @@ import { rem } from '@/lib/rem'
  *     against the tallest one.
  *
  * Pure geometry - measuring/rendering stays with the caller, which passes
- * each card's precomputed pixel height.
+ * each card's precomputed height. All lengths are rem (see lib/rem.ts).
  */
 
-export const CARD_WIDTH = rem(17.5)
-const COLUMN_GAP = rem(6.875)
-const ROW_GAP = rem(1.75)
+export const CARD_WIDTH = 17.5
+const COLUMN_GAP = 6.875
+const ROW_GAP = 1.75
 
 export interface LayoutInput {
   name: string
   /** Declared super types - unknown names are ignored. */
   superTypes: string[]
-  /** Card height in px, precomputed from the card's row count. */
+  /** Card height in rem, precomputed from the card's row count. */
   height: number
 }
 

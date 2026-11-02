@@ -767,7 +767,7 @@ export function App() {
 
   return (
     <SidebarProvider
-      style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+      style={{ '--sidebar-width': `${sidebarWidth}rem` } as React.CSSProperties}
       // The shell fills the viewport exactly and never scrolls as a whole: this
       // bounds the height so every flex-1/min-h-0 chain below resolves against
       // it, and scrolling happens inside the panels (and the preview iframe),

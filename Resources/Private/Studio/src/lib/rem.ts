@@ -1,17 +1,22 @@
 /**
- * Lengths JavaScript computes with - graph geometry, panel and sidebar limits -
- * are written in rem like the CSS, so they scale with the reader's default font
- * size together with the text they hold. `rem()` turns one into the px value
- * layout code and SVG attributes need.
+ * Studio's lengths are rem: in CSS, and in JavaScript as plain numbers meaning
+ * rem, rendered as `${value}rem`. Everything then scales with the root font
+ * size - the reader's default font size, which browsers apply to open pages
+ * live - without JavaScript having to notice.
  *
- * The root font size is read once: browsers apply a changed default font size
- * on reload, and reading it per call would put a style recalculation into every
- * layout loop.
+ * Pixels only exist where code reads the screen: pointer positions, scroll
+ * offsets, element and window sizes. These helpers convert at that boundary,
+ * reading the root font size fresh every time, because it can change at any
+ * moment.
  */
-let rootFontSize: number | undefined
+export function rootFontSize(): number {
+  return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+}
 
-export function rem(value: number): number {
-  rootFontSize ??=
-    parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-  return value * rootFontSize
+export function pxToRem(px: number): number {
+  return px / rootFontSize()
+}
+
+export function remToPx(rem: number): number {
+  return rem * rootFontSize()
 }

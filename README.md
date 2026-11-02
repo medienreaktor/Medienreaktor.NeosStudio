@@ -210,7 +210,7 @@ composer exec -- figma-download --base-path <path to this package>   # refresh t
 composer exec -- figma-import --base-path <path to this package>     # regenerate src/styles/*.css
 ```
 
-`src/styles/{primitives,semantics,sizes,texts}.css` are generated: never hand-edit them, change Figma and re-export. Components use semantic utilities only (`bg-card`, `text-muted-foreground`, `border-divider`, `type-body`, `type-icon-s`), never palette shades or `dark:` variants; Tailwind's own font-size scale is switched off (`src/text-scale.css`). The theme axis is `data-theme="light|dark"` on `<html>`, and any subtree can set its own `data-theme` to render in the other mode. The root font size is left at the browser default, and every length, text sizes included, is in rem, so Studio follows the reader's default font size.
+`src/styles/{primitives,semantics,sizes,texts}.css` are generated: never hand-edit them, change Figma and re-export. Components use semantic utilities only (`bg-card`, `text-muted-foreground`, `border-divider`, `type-body`, `type-icon-s`), never palette shades or `dark:` variants; Tailwind's own font-size scale is switched off (`src/text-scale.css`). The theme axis is `data-theme="light|dark"` on `<html>`, and any subtree can set its own `data-theme` to render in the other mode. The root font size is left at the browser default, and every length, text sizes included, is in rem, so Studio follows the reader's default font size - also when it changes while Studio is open. That includes lengths JavaScript computes with: graph geometry and panel rects are plain numbers meaning rem, rendered as `${value}rem`. Pixels only exist where code reads the screen - pointer positions, scroll offsets, element and window sizes - and `lib/rem.ts` converts them there, reading the root font size fresh each time.
 
 ### Styling plugins
 
@@ -234,6 +234,8 @@ The variables a plugin may rely on are listed in [`src/plugin-api/css-variables.
 - **Radii:** `--radius-sm`, `-md`, `-lg`, `-xl`.
 - **Text:** one `--text-{style}` per Studio text style with its `--text-{style}--line-height`: `default`, `body`, `body-strong`, `small`, `small-strong`, `caption`, `count`, `count-small`, `overline`, `heading-s`/`-m`/`-l`, `code`, `code-small`, and the icon sizes `icon-xs` to `icon-3xl`. Weights are not variables: the `-strong` styles are 500, `count`, `count-small`, `overline` and the headings 600, the rest 400; `overline` is also upper case with `letter-spacing: 0.025em`.
 - **Fonts and spacing:** `--font-sans`, `--font-mono`, `--font-icon`, and Tailwind's spacing unit `--spacing` (4px at the default root).
+
+Sizes in a plugin follow the same rule as Studio's own: lengths in rem, also where JavaScript computes them, and pixels only where the plugin reads the screen, converted with the root font size read at that moment (`parseFloat(getComputedStyle(document.documentElement).fontSize)`). Then a reader's larger default font size scales the plugin with the shell, even while Studio is open.
 
 Everything else in the build is internal. The build fails when a listed variable goes missing, so a rename in Figma is caught in Studio rather than in a plugin; an intended rename keeps the old name alive through `extraNames` in `figma-tools.json` until the known plugins have moved. Larger plugin UIs should use Studio's components rather than restyle them; exposing those through the plugin API is planned.
 

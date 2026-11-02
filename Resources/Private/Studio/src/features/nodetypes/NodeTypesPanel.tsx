@@ -10,7 +10,6 @@ import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
-import { rem } from '@/lib/rem'
 import { cn, floatingControl } from '@/lib/utils'
 import {
   buildCardModels,
@@ -33,14 +32,22 @@ import {
  * a card simply has several incoming edges.
  *
  * Card geometry is computed, not measured: the layout and the card markup
- * share the pixel constants below, so edges anchor exactly without a
- * measure-then-layout round trip.
+ * share the constants below, in rem like everything else (see lib/rem.ts), so
+ * edges anchor exactly without a measure-then-layout round trip, and the whole
+ * graph scales with the root font size.
  */
 
-const HEADER_HEIGHT = rem(3.375)
-/** The CollapsibleGroup summary: py-2 + one type-overline line, plus the 1px border-t. */
-const SECTION_HEADER_HEIGHT = rem(1.625) + 1
-const ROW_HEIGHT = rem(1.125)
+const HEADER_HEIGHT = 3.375
+/**
+ * The CollapsibleGroup summary: py-2 + one type-overline line, plus its 1px
+ * border-t. The borders here are the only lengths that are not rem; counted as
+ * 1/16rem they are exact at the default root and off by a fraction of a pixel
+ * at others, which the card's overflow absorbs.
+ */
+const SECTION_HEADER_HEIGHT = 1.625 + 1 / 16
+const ROW_HEIGHT = 1.125
+/** The card's border-2, top and bottom: its height is the border box. */
+const CARD_BORDERS = (2 * 2) / 16
 /** Edges attach at the header's vertical center. */
 const EDGE_ANCHOR_Y = HEADER_HEIGHT / 2
 
@@ -71,7 +78,7 @@ function cardHeight(model: CardModel, open: SectionOpenState): number {
       ? SECTION_HEADER_HEIGHT +
         (open.inherited ? model.inheritedRows.length * ROW_HEIGHT : 0)
       : 0)
-  return HEADER_HEIGHT + sections
+  return HEADER_HEIGHT + sections + CARD_BORDERS
 }
 
 /** What a selection emphasizes: the inheritance chain and the direct subtypes. */
@@ -88,7 +95,7 @@ function edgePath(from: PositionedCard, to: PositionedCard): string {
   const y1 = from.y + EDGE_ANCHOR_Y
   const x2 = to.x
   const y2 = to.y + EDGE_ANCHOR_Y
-  const bend = Math.max(40, (x2 - x1) / 2)
+  const bend = Math.max(2.5, (x2 - x1) / 2)
   return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`
 }
 
@@ -118,7 +125,7 @@ function CardSection({
             className={cn(
               'flex items-center gap-1 type-caption text-foreground',
             )}
-            style={{ height: ROW_HEIGHT }}
+            style={{ height: `${ROW_HEIGHT}rem` }}
             title={
               row.inheritedFrom
                 ? t('nodeTypes.inheritedFrom', 'Inherited from {0}', [
@@ -169,10 +176,13 @@ const GraphSurface = memo(function GraphSurface({
     highlight.children.has(name)
   return (
     <>
+      {/* Sized in rem with a viewBox in the same units, so the path
+          coordinates are the layout's rem values. */}
       <svg
         className="pointer-events-none absolute top-0 left-0 overflow-visible"
-        width={layout.width}
-        height={layout.height}
+        width={`${layout.width}rem`}
+        height={`${layout.height}rem`}
+        viewBox={`0 0 ${layout.width} ${layout.height}`}
         aria-hidden
       >
         {layout.edges.map((edge) => {
@@ -196,7 +206,7 @@ const GraphSurface = memo(function GraphSurface({
                   ? 'var(--color-node-type-edge-active)'
                   : 'var(--color-node-type-edge)'
               }
-              strokeWidth={active ? 2 : 1}
+              strokeWidth={(active ? 2 : 1) / 16}
               opacity={highlight !== null && !active ? 0.25 : 1}
             />
           )
@@ -218,16 +228,16 @@ const GraphSurface = memo(function GraphSurface({
               !emphasized(card.name) && 'opacity-30',
             )}
             style={{
-              left: card.x,
-              top: card.y,
-              width: CARD_WIDTH,
-              height: card.height,
+              left: `${card.x}rem`,
+              top: `${card.y}rem`,
+              width: `${CARD_WIDTH}rem`,
+              height: `${card.height}rem`,
               ...cardSurface(KIND_COLOR[model.kind]),
             }}
           >
             <div
               className="flex flex-col justify-center gap-0.5 px-3"
-              style={{ height: HEADER_HEIGHT }}
+              style={{ height: `${HEADER_HEIGHT}rem` }}
             >
               <div className="flex min-w-0 items-center gap-1.5 type-small-strong text-foreground">
                 <i
