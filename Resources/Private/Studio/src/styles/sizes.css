@@ -4,66 +4,47 @@
  * Change it in Figma, then run `composer exec figma-download` followed by
  * `composer exec figma-import`.
  */
-@utility text-body {
-  @apply text-[13px];
-}
-@utility text-body-strong {
-  @apply text-[13px];
-}
-@utility text-small {
-  @apply text-[11px];
-}
-@utility text-small-strong {
-  @apply text-[11px];
-}
-@utility text-caption {
-  @apply text-[10px];
-}
-@utility text-count {
-  @apply text-[10px];
-}
-@utility text-overline {
-  @apply text-[10px];
-}
-@utility text-heading-s {
-  @apply text-[15px];
-}
-@utility text-heading-m {
-  @apply text-[17px];
-}
-@utility text-heading-l {
-  @apply text-[22px];
-}
-@utility text-code {
-  @apply text-[13px];
-}
-@utility text-code-small {
-  @apply text-[11px];
-}
-@utility text-icon-xs {
-  @apply text-[9px];
-}
-@utility text-icon-s {
-  @apply text-[10px];
-}
-@utility text-icon-m {
-  @apply text-[11px];
-}
-@utility text-icon-l {
-  @apply text-[13px];
-}
-@utility text-icon-xl {
-  @apply text-[15px];
-}
-@utility text-icon-2xl {
-  @apply text-[19px];
-}
-@utility text-icon-3xl {
-  @apply text-[24px];
-}
-@utility text-count-small {
-  @apply text-[8px];
-}
-@utility text-default {
-  @apply text-[15px];
+@theme static {
+  --text-body: 0.8125rem;
+  --text-body--line-height: 1.125rem;
+  --text-body-strong: 0.8125rem;
+  --text-body-strong--line-height: 1.125rem;
+  --text-small: 0.6875rem;
+  --text-small--line-height: 0.9375rem;
+  --text-small-strong: 0.6875rem;
+  --text-small-strong--line-height: 0.9375rem;
+  --text-caption: 0.625rem;
+  --text-caption--line-height: 0.875rem;
+  --text-count: 0.625rem;
+  --text-count--line-height: 0.625rem;
+  --text-overline: 0.625rem;
+  --text-overline--line-height: 0.625rem;
+  --text-heading-s: 0.9375rem;
+  --text-heading-s--line-height: 1.375rem;
+  --text-heading-m: 1.0625rem;
+  --text-heading-m--line-height: 1.625rem;
+  --text-heading-l: 1.375rem;
+  --text-heading-l--line-height: 1.875rem;
+  --text-code: 0.8125rem;
+  --text-code--line-height: 1.1875rem;
+  --text-code-small: 0.6875rem;
+  --text-code-small--line-height: 0.9375rem;
+  --text-icon-xs: 0.5625rem;
+  --text-icon-xs--line-height: 0.5625rem;
+  --text-icon-s: 0.625rem;
+  --text-icon-s--line-height: 0.625rem;
+  --text-icon-m: 0.6875rem;
+  --text-icon-m--line-height: 0.6875rem;
+  --text-icon-l: 0.8125rem;
+  --text-icon-l--line-height: 0.8125rem;
+  --text-icon-xl: 0.9375rem;
+  --text-icon-xl--line-height: 0.9375rem;
+  --text-icon-2xl: 1.1875rem;
+  --text-icon-2xl--line-height: 1.1875rem;
+  --text-icon-3xl: 1.5rem;
+  --text-icon-3xl--line-height: 1.5rem;
+  --text-count-small: 0.5rem;
+  --text-count-small--line-height: 0.5rem;
+  --text-default: 0.9375rem;
+  --text-default--line-height: 1.375rem;
 }

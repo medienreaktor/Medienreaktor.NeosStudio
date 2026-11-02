@@ -1,0 +1,12 @@
+/*
+ * Text is set with the generated type-* utilities and --text-* variables only.
+ * Tailwind's own size scale is switched off so text-xs / text-sm cannot creep
+ * back in next to them.
+ *
+ * Its own file because of the order: `--text-*: initial` clears every --text-*
+ * declared before it, so it has to come after tailwindcss and before
+ * styles/sizes.css - and imports have to precede every other rule.
+ */
+@theme {
+  --text-*: initial;
+}

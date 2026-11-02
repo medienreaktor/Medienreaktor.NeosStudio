@@ -32,8 +32,8 @@
     },
     "options": {
         "typography": {
-            "sizeStrategy": "pixelsOnly",
-            "$comment-sizeStrategy": "styles.css switches Tailwind's font-size scale off, so a size never names a step (24px would otherwise become text-2xl).",
+            "sizeStrategy": "exact",
+            "$comment-sizeStrategy": "text-scale.css switches Tailwind's font-size scale off, so a size never references a step (24px would otherwise become var(--text-2xl)). Sizes come out in rem against rootFontSize, so text follows the reader's default font size.",
             "$comment": "Families map onto the --font-* tokens styles.css declares: Noto Sans is --font-sans, the code font is Tailwind's mono stack (Figma uses JetBrains Mono to draw it), and the icon styles describe Font Awesome glyphs, which Studio declares as --font-icon. 'Solid' names Font Awesome's variant, not a weight, and correctly produces no font-* class.",
             "familyAliases": {
                 "Noto Sans": "sans",

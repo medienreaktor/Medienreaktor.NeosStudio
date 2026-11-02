@@ -14,14 +14,17 @@
  *                   (workspace, change, task, access, site, node, presence,
  *                   graph, syntax) and the radius scale. Light is the base;
  *                   [data-theme="dark"] overrides it.
+ *   sizes.css       the size half of each Figma text style as --text-*
+ *                   variables with their --line-height, emitted statically so
+ *                   plugins can read them (font-size: var(--text-body)).
  *   texts.css       one type-* utility per Figma text style (type-body,
- *                   type-small-strong, type-icon-m, ...), sizes.css the size
- *                   half of each.
+ *                   type-small-strong, type-icon-m, ...), applying the size.
  *
  * `static`: emit every variable, not just the ones Tailwind sees in a
  * utility - runtime code (task status colors, workspace decorators, plugins)
  * references tokens via var(--color-...) strings the scanner cannot detect.
  */
+@import './text-scale.css';
 @import './styles/primitives.css' theme(static);
 @import './styles/semantics.css' theme(static);
 @import './styles/sizes.css';
@@ -37,12 +40,6 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  /*
-   * Text is set with the type-* utilities only. Tailwind's own size scale is
-   * switched off so text-xs / text-sm cannot creep back in next to them.
-   */
-  --text-*: initial;
-
   --font-sans: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Icons are Font Awesome glyphs (<i class="fas fa-...">); the type-icon-*
      utilities size them. */
