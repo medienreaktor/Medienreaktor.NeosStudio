@@ -28,7 +28,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
-import { apiFetch, ApiError } from '@/api/client'
+import { apiFetch, apiStream, ApiError } from '@/api/client'
 import { useStudio } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
@@ -131,7 +131,8 @@ export { useStudio, useKeyboardShortcut }
  * built-in ones. Resolves with the parsed JSON body on 2xx and throws
  * {@link ApiError} otherwise.
  */
-export { apiFetch, ApiError }
+export { apiFetch, apiStream, ApiError }
+export type { StreamEvent } from '@/api/client'
 
 /**
  * The shell's per-user avatar scheme (initials avatars colored by user id) -
@@ -238,6 +239,7 @@ export interface NeosStudioPluginApi {
   useKeyboardShortcut: typeof useKeyboardShortcut
   toast: typeof toast
   apiFetch: typeof apiFetch
+  apiStream: typeof apiStream
   ApiError: typeof ApiError
   presenceColor: typeof presenceColor
   presenceInitials: typeof presenceInitials
@@ -277,6 +279,7 @@ export function installPluginApiGlobals(): void {
     useKeyboardShortcut,
     toast,
     apiFetch,
+    apiStream,
     ApiError,
     presenceColor,
     presenceInitials,

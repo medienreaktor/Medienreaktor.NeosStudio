@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useIsFetching } from '@tanstack/react-query'
 import {
   beginLogin,
   getTokens,
@@ -39,7 +40,10 @@ import { loadTranslations, translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
-import { LoadingState } from '@/components/ui/spinner'
+import { BootScreen } from '@/app/BootScreen'
+import { subscribePreviewLoaded } from '@/app/boot'
+import { clearDeepLink, deepLinkReveal, deepLinkTarget } from '@/app/deepLink'
+import { flashNode } from '@/app/flash'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -89,8 +93,7 @@ import { SiteSwitcher } from '@/features/sites/SiteSwitcher'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
 import { ALL_NODES } from '@/features/tree/useNodeEditRefresh'
 import { ShareButton } from '@/features/sharing/ShareButton'
-import { PublishButton } from '@/features/workspaces/PublishButton'
-import { ReviewButton } from '@/features/workspaces/ReviewButton'
+import { PublishReviewButton } from '@/features/workspaces/PublishReviewButton'
 import { SyncWorkspaceButton } from '@/features/workspaces/SyncWorkspaceButton'
 import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
@@ -107,6 +110,13 @@ const SELECTED_DOCUMENT_KEY = 'neos-studio.selected_document'
 
 // Remember the site and dimension the user was working in across reloads.
 const SELECTED_SITE_KEY = 'neos-studio.selected_site'
+
+// The boot screen never outstays its welcome: whatever fails to report (a
+// preview that never paints, a request that hangs) the shell is uncovered
+// after this long and the panels show their own error/loading states.
+const BOOT_TIMEOUT_MS = 15_000
+// Matches BootScreen's fade-out; the overlay unmounts after it.
+const BOOT_FADE_MS = 300
 const DIMENSION_SPACE_POINT_KEY = 'neos-studio.dimension_space_point'
 
 // Remember a collaborative editing context (a shared workspace edited
@@ -137,6 +147,30 @@ function storedDimensionSpacePoint(): DimensionSpacePoint | null {
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
+  // The boot screen covers the shell from the first render until the first
+  // preview page has painted and no request is in flight anymore (the trees
+  // and the inspector have their data by then) - so the user sees one spinner
+  // instead of a shell assembling itself panel by panel. `booted` latches:
+  // later site/dimension/workspace switches reload the preview uncovered.
+  const [previewLoaded, setPreviewLoaded] = useState(false)
+  const [booted, setBooted] = useState(false)
+  const [bootScreenMounted, setBootScreenMounted] = useState(true)
+  const inFlightQueries = useIsFetching()
+  useEffect(() => subscribePreviewLoaded(() => setPreviewLoaded(true)), [])
+  useEffect(() => {
+    if (booted || auth !== 'authenticated') return
+    if (previewLoaded && inFlightQueries === 0) setBooted(true)
+  }, [booted, auth, previewLoaded, inFlightQueries])
+  useEffect(() => {
+    if (booted || auth !== 'authenticated') return
+    const timer = setTimeout(() => setBooted(true), BOOT_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [booted, auth])
+  useEffect(() => {
+    if (!booted) return
+    const timer = setTimeout(() => setBootScreenMounted(false), BOOT_FADE_MS)
+    return () => clearTimeout(timer)
+  }, [booted])
   const [selectedDocument, setSelectedDocument] = useState<NodeDto | null>(null)
   // The node shown in the inspector drawer - a document or a content node.
   // Also the node outlined in the preview and revealed in the outliner.
@@ -267,9 +301,13 @@ export function App() {
   const dimensions = dimensionsResponse?.dimensions ?? []
   // null = let the backend pick its default dimension space point; the sites
   // response reports the point actually in effect, which the switcher shows.
-  // Starts from the point remembered across reloads, if any.
+  // Starts from the dimension a deep link asked for, else the point remembered
+  // across reloads. A deep-linked point the access roles forbid is dropped by
+  // the validation effect below, same as a stored one.
   const [dimensionSpacePoint, setDimensionSpacePoint] =
-    useState<DimensionSpacePoint | null>(storedDimensionSpacePoint)
+    useState<DimensionSpacePoint | null>(
+      () => deepLinkTarget?.dimensionSpacePoint ?? storedDimensionSpacePoint(),
+    )
 
   // Remember the dimension across reloads. A restored point that the current
   // dimension configuration no longer allows (config changed since it was
@@ -375,7 +413,9 @@ export function App() {
               'Publish or discard your changes first.',
             )
           : error,
-        { title: t('workspace.switchFailed', 'Switching the workspace failed') },
+        {
+          title: t('workspace.switchFailed', 'Switching the workspace failed'),
+        },
       )
       return false
     }
@@ -463,6 +503,12 @@ export function App() {
     sites.find((s) => s.nodeName === siteNodeName) ??
     sites.find((s) => s.nodeAddress !== null) ??
     null
+  // Nothing to preview (no online site the account may open): the boot
+  // screen would otherwise wait for a page that never comes.
+  const noSiteToOpen = sitesResponse !== undefined && activeSite === null
+  useEffect(() => {
+    if (noSiteToOpen) setBooted(true)
+  }, [noSiteToOpen])
 
   useEffect(() => {
     if (siteNodeName) localStorage.setItem(SELECTED_SITE_KEY, siteNodeName)
@@ -536,8 +582,55 @@ export function App() {
       fetchNode(siteAddress)
         .then(select)
         .catch(() => {
-          /* fine - the tree simply starts unselected */
+          // Fine - the tree simply starts unselected. Nothing will reach the
+          // preview, so the boot screen has nothing to wait for either.
+          setBooted(true)
         })
+    }
+    // A deep link wins over the remembered selection - it is an explicit
+    // request from outside the shell. Only its aggregate id and dimension are
+    // used: the site address supplies the content repository and, crucially,
+    // the workspace the editor is actually working in. A link built elsewhere
+    // names the live workspace, and dropping the editor into live would show
+    // them a document they cannot edit.
+    const deepLinkedId = deepLinkTarget?.aggregateId ?? null
+    if (deepLinkedId) {
+      clearDeepLink()
+      const documentAddress = deepLinkTarget?.dimensionSpacePoint
+        ? addressInDimension(
+            addressWithAggregateId(siteAddress, deepLinkedId),
+            deepLinkTarget.dimensionSpacePoint,
+          )
+        : addressWithAggregateId(siteAddress, deepLinkedId)
+      // Bound locally: the narrowing below has to survive into the nested callbacks.
+      const revealId = deepLinkReveal
+      fetchNode(documentAddress)
+        .then((document) => {
+          // The document has to be the selected one either way - the preview
+          // renders it, and the content node only exists inside it.
+          setSelectedDocument(document)
+          if (revealId === null) {
+            setInspectedNode(document)
+            return
+          }
+          // Selecting the content node is all it takes to reveal it: the
+          // preview pane mirrors the shell's selection into the guest, which
+          // scrolls it into view and outlines it. flashNode adds the brief
+          // pulse on top, so the editor sees *which* element was meant even
+          // when the outline alone is easy to miss.
+          fetchNode(addressWithAggregateId(documentAddress, revealId))
+            .then((contentNode) => {
+              setInspectedNode(contentNode)
+              flashNode(revealId)
+            })
+            // The node may have been deleted or moved since the link was made;
+            // landing on the page is still the useful half of the answer.
+            .catch(() => setInspectedNode(document))
+        })
+        // The document may live in another site, or not exist in that
+        // dimension at all - fall back rather than showing an empty shell.
+        .catch(selectRoot)
+      return
     }
     const storedId = localStorage.getItem(SELECTED_DOCUMENT_KEY)
     if (!storedId) {
@@ -550,19 +643,15 @@ export function App() {
   }, [siteAddress])
 
   if (auth === 'checking') {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <LoadingState label={t('app.loadingStudio', 'Loading Neos Studio…')} />
-      </div>
-    )
+    return <BootScreen />
   }
 
   if (auth === 'anonymous') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <div className="rounded-lg border bg-neutral-50 dark:bg-neutral-900 px-12 py-10 text-center">
-          <h1 className="mb-1 text-2xl font-semibold">Neos Studio</h1>
-          <p className="mb-6 text-neutral-600 dark:text-neutral-400">
+        <div className="rounded-lg border bg-card px-11 py-9.5 text-center">
+          <h1 className="mb-1 type-heading-l">Neos Studio</h1>
+          <p className="mb-5.5 text-muted-foreground">
             {t('app.tagline', 'Editing environment for Neos')}
           </p>
           <Button onClick={() => beginLogin()}>
@@ -726,7 +815,7 @@ export function App() {
 
   return (
     <SidebarProvider
-      style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+      style={{ '--sidebar-width': `${sidebarWidth}rem` } as React.CSSProperties}
       // The shell fills the viewport exactly and never scrolls as a whole: this
       // bounds the height so every flex-1/min-h-0 chain below resolves against
       // it, and scrolling happens inside the panels (and the preview iframe),
@@ -737,6 +826,7 @@ export function App() {
           'select-none **:data-[slot=sidebar-container]:transition-none! **:data-[slot=sidebar-gap]:transition-none!',
       )}
     >
+      {bootScreenMounted && <BootScreen done={booted} />}
       <StudioProvider value={studio}>
         <PresenceProvider
           value={{
@@ -788,7 +878,7 @@ export function App() {
                   {/* Fixed to the main header's height (h-14, plus an
                     invisible border matching its border-b) so the row does
                     not shift when the avatar mounts after /me resolves. */}
-                  <SidebarHeader className="h-12 shrink-0 justify-center border-b border-transparent">
+                  <SidebarHeader className="h-11 shrink-0 justify-center border-b border-transparent">
                     <div className="flex items-center justify-between gap-2.5 px-2 pt-2">
                       <div className="flex items-center gap-1.5">
                         {/* The classic backend modules - hidden when
@@ -796,45 +886,45 @@ export function App() {
                         <LegacyModulesMenu />
                         <svg
                           viewBox="0 0 254 98"
-                          className="-mt-1 h-8 w-auto shrink-0"
+                          className="-mt-1 h-7.5 w-auto shrink-0"
                           role="img"
                           aria-label="Neos"
                         >
                           <path
                             d="M16 33.7913L55 88.5959L41.3896 97.7942L16 61.5334V97.7913H0V33.7913H16Z"
-                            fill="#009FE3"
+                            className="fill-brand"
                           />
                           <path
                             d="M108.85 89.2039C101.776 89.2039 95.944 85.5319 94 80.5099L98.482 78.188C100.21 82.13 104.044 84.6139 108.85 84.6139C113.17 84.6139 116.572 82.67 117.814 79.8619V76.2439C117.058 74.4619 115.492 73.1119 113.062 72.3019C109.39 71.0599 106.852 71.4919 102.694 70.0879C98.752 68.7379 96.052 66.3079 94.918 63.3919V57.2359C96.808 52.6999 102.208 49.4059 108.688 49.4059C115.438 49.4059 121.054 52.8619 123.052 57.9919L118.57 60.2599C116.95 56.4259 113.278 54.0499 108.688 54.0499C104.638 54.0499 101.29 55.8859 100.048 58.7479V61.8799C100.804 63.6619 102.316 64.9039 104.746 65.7139C108.364 66.9019 110.956 66.5239 115.114 67.9279C119.056 69.278 121.81 71.7619 122.944 74.7319V81.374C121.108 85.856 115.546 89.2039 108.85 89.2039Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                           <path
                             d="M140.967 88.7719C135.945 88.7719 132.867 86.8279 131.139 83.4259V64.1479H125.307V60.2059H128.871C130.059 60.2059 130.815 59.7739 131.139 58.9639V51.2959H135.891V60.2059H144.045V64.1479H135.891V81.32C136.701 83.156 138.267 84.3439 141.669 84.3439H144.207V88.394C143.397 88.61 142.101 88.7719 140.967 88.7719Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                           <path
                             d="M168.625 60.2059H173.377V88.394H168.841V85.3159C166.843 87.6919 163.927 89.2039 160.039 89.2039C154.369 89.2039 150.049 85.8019 148.645 81.7519V60.2059H153.397V80.4019C154.423 82.8319 157.015 84.722 161.065 84.722C164.899 84.722 167.923 82.5619 168.625 80.1859V60.2059Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                           <path
                             d="M202.113 48.9739H206.865V88.394H202.329V84.992C200.115 87.584 196.767 89.2039 192.609 89.2039C186.237 89.2039 181.107 85.2079 179.541 79.9699V68.5759C181.107 63.3379 186.237 59.3419 192.609 59.3419C196.605 59.3419 199.899 60.9079 202.113 63.3379V48.9739ZM202.113 79.9699V68.6299C200.655 65.8759 197.361 63.8239 193.311 63.8239C188.721 63.8239 185.157 66.6319 184.293 69.8719V78.674C185.157 81.968 188.721 84.776 193.311 84.776C197.361 84.776 200.655 82.6699 202.113 79.9699Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                           <path
                             d="M216.661 54.8599C215.203 54.8599 213.907 54.1579 213.367 53.1319V50.3239C213.907 49.2979 215.203 48.5959 216.661 48.5959C218.119 48.5959 219.415 49.2979 219.955 50.3239V53.1319C219.415 54.1579 218.119 54.8599 216.661 54.8599ZM214.285 88.394V60.2059H219.037V88.394H214.285Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                           <path
                             d="M239.277 89.2579C232.473 89.2579 226.965 85.2079 225.291 79.9699V68.5759C226.965 63.3379 232.473 59.3419 239.277 59.3419C246.027 59.3419 251.535 63.3379 253.209 68.5759V79.9699C251.535 85.2079 246.027 89.2579 239.277 89.2579ZM239.277 84.776C243.813 84.776 247.539 81.968 248.457 78.674V69.8719C247.539 66.6319 243.813 63.8239 239.277 63.8239C234.687 63.8239 230.961 66.6319 230.043 69.8719V78.674C230.961 81.968 234.687 84.776 239.277 84.776Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                           <path
                             d="M97.5 17.5959L22 3.59595L68.5 67.5959V35.0959L97.5 17.5959Z"
-                            className="fill-neutral-50 dark:fill-[#141414]"
+                            className="fill-card"
                           />
                           <path
                             d="M106.999 16.2666L70.6943 36.4883L70.5557 76.7373L16 0L106.999 16.2666ZM65.6094 61.1514L65.7051 33.5439L92.3164 18.7207L27.1641 7.07422L65.6094 61.1514Z"
-                            className="fill-neutral-950 dark:fill-white"
+                            className="fill-foreground"
                           />
                         </svg>
                       </div>
@@ -854,7 +944,7 @@ export function App() {
                 <SidebarInset>
                   {/* Fixed height so the bar does not jump as the switchers and
                     workspace buttons resolve and render after load. */}
-                  <header className="@container flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4">
+                  <header className="@container flex h-13 shrink-0 items-center justify-between gap-3.5 border-b px-3.5">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
                         <SidebarTrigger />
@@ -907,6 +997,20 @@ export function App() {
                           }}
                         />
                       )}
+                      {/* Preview + Share as one split button; gap-px splits
+                          the segments with a hairline of header background. */}
+                      {selectedDocument && (
+                        <div className="flex gap-px">
+                          <PreviewButton
+                            document={selectedDocument}
+                            className="rounded-r-none"
+                          />
+                          <ShareButton
+                            document={selectedDocument}
+                            className="rounded-l-none"
+                          />
+                        </div>
+                      )}
 
                       <PreviewToolbar
                         document={selectedDocument}
@@ -955,23 +1059,16 @@ export function App() {
                             onSwitchEditingContext={switchEditingContext}
                           />
                         )}
-                      {selectedDocument && (
-                        <>
-                          <PreviewButton document={selectedDocument} />
-                          <ShareButton document={selectedDocument} />
-                        </>
-                      )}
                       {activeWorkspace && (
                         <>
                           <SyncWorkspaceButton
                             workspaceName={activeWorkspace.name}
                           />
-                          <ReviewButton
+                          <PublishReviewButton
                             workspaces={workspaces}
                             activeWorkspace={activeWorkspace}
                             onNavigate={navigateToNodeInWorkspace}
                           />
-                          <PublishButton workspace={activeWorkspace} />
                         </>
                       )}
                     </div>

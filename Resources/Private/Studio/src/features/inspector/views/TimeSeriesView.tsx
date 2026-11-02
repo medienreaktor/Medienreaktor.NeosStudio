@@ -36,7 +36,7 @@ export const TimeSeriesView: InspectorViewComponent = ({ node, options }) => {
           .filter((p) => Number.isFinite(p.time) && Number.isFinite(p.value))
         if (points.length < 2) {
           return (
-            <p className="text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="type-small text-muted-foreground">
               {t('view.notEnoughData', 'Not enough data for a chart.')}
             </p>
           )
@@ -215,7 +215,7 @@ function LineChart({
                 x2={width - margin.right}
                 y1={y(tick)}
                 y2={y(tick)}
-                className="stroke-neutral-300/60 dark:stroke-neutral-700/60"
+                className="stroke-placeholder"
                 strokeWidth={1}
               />
               <text
@@ -223,7 +223,7 @@ function LineChart({
                 y={y(tick)}
                 textAnchor="end"
                 dominantBaseline="middle"
-                className="fill-neutral-600 dark:fill-neutral-400 text-[10px] tabular-nums"
+                className="fill-muted-foreground type-caption tabular-nums"
               >
                 {tick}
               </text>
@@ -235,7 +235,7 @@ function LineChart({
               x={x(tick.time)}
               y={height - 4}
               textAnchor="middle"
-              className="fill-neutral-600 dark:fill-neutral-400 text-[10px]"
+              className="fill-muted-foreground type-caption"
             >
               {tick.label}
             </text>
@@ -243,7 +243,7 @@ function LineChart({
           <path
             d={line}
             fill="none"
-            className="stroke-blue-500"
+            className="stroke-primary-text"
             strokeWidth={2}
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -255,7 +255,7 @@ function LineChart({
                 x2={x(hovered.time)}
                 y1={margin.top}
                 y2={margin.top + plotHeight}
-                className="stroke-neutral-600/50 dark:stroke-neutral-400/50"
+                className="stroke-placeholder"
                 strokeWidth={1}
               />
               {/* Marker with a surface ring so it reads over the line. */}
@@ -263,7 +263,7 @@ function LineChart({
                 cx={x(hovered.time)}
                 cy={y(hovered.value)}
                 r={4}
-                className="fill-blue-500 stroke-neutral-100 dark:stroke-neutral-900"
+                className="fill-primary-text stroke-card"
                 strokeWidth={2}
               />
             </g>
@@ -272,17 +272,17 @@ function LineChart({
       )}
       {hovered && (
         <div
-          className="pointer-events-none absolute top-1 z-10 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 text-xs whitespace-nowrap shadow-md"
+          className="pointer-events-none absolute top-1 z-10 rounded-md border border-border bg-card px-2 py-1 type-small whitespace-nowrap shadow-md"
           style={
             x(hovered.time) > width / 2
               ? { right: width - x(hovered.time) + 8 }
               : { left: x(hovered.time) + 8 }
           }
         >
-          <div className="text-neutral-600 dark:text-neutral-400">
+          <div className="text-muted-foreground">
             {new Date(hovered.time).toLocaleString()}
           </div>
-          <div className="font-medium text-neutral-950 dark:text-white tabular-nums">
+          <div className="font-medium text-foreground tabular-nums">
             {hovered.value}
           </div>
         </div>

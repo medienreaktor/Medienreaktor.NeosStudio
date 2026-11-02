@@ -15,8 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
   changeNodeType,
-  hideNode,
-  unhideNode,
+  hideNodes,
+  unhideNodes,
 } from '@/features/editing/nodeActions'
 import {
   persistPropertyChange,
@@ -247,8 +247,8 @@ export function InspectorPanel({
     const persist =
       propertyName === HIDDEN_PROPERTY
         ? value === true
-          ? hideNode(node.address)
-          : unhideNode(node.address)
+          ? hideNodes([node.address])
+          : unhideNodes([node.address])
         : propertyName === NODE_TYPE_PROPERTY
           ? changeNodeType(node.address, String(value))
           : propertyType === 'reference' || propertyType === 'references'
@@ -312,8 +312,8 @@ export function InspectorPanel({
   // invisible to every read that does not deliberately ask for them.
   if (isDeleted(node)) {
     return (
-      <div className="text-sm">
-        <div className="px-3 py-4">
+      <div className="type-body">
+        <div className="px-3 py-3.5">
           <h2 className="flex items-center gap-2 font-semibold">
             <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
             {nodeLabel(node)}
@@ -331,8 +331,8 @@ export function InspectorPanel({
   }
 
   return (
-    <div className="text-sm">
-      <div className="py-4 px-3">
+    <div className="type-body">
+      <div className="py-3.5 px-3">
         <h2 className="flex items-center gap-2 font-semibold">
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
           {nodeLabel(node)}
@@ -348,7 +348,7 @@ export function InspectorPanel({
         {visibleTabs && (
           <>
             {visibleTabs.length === 0 ? (
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+              <p className="type-small text-muted-foreground">
                 {t(
                   'inspector.noProperties',
                   'This node type has no inspector properties.',
@@ -367,7 +367,10 @@ export function InspectorPanel({
                 }
                 onValueChange={(value) => setSelectedTab(value as string)}
               >
-                <TabsList>
+                {/* Wrapping, not scrolling: the inspector panel is narrow and
+                    resizable, and a horizontal scroller parks tabs behind an
+                    edge with nothing on screen to hint that they are there. */}
+                <TabsList className="h-auto w-full flex-wrap overflow-x-visible">
                   {visibleTabs.map((tab) => {
                     // The classic UI's per-tab badge: how many of this tab's
                     // properties currently fail validation.
@@ -378,17 +381,35 @@ export function InspectorPanel({
                           item.kind === 'property' &&
                           validationErrors[item.property.name] !== undefined,
                       ).length
+                    // Icon alone, like the classic Neos inspector: labelling
+                    // five or six tabs does not fit a 320px panel. Every tab
+                    // is the same width that way, so the wrapped list keeps
+                    // its shape as the selection moves. A tab configured
+                    // without an icon has nothing else to go by and keeps its
+                    // label.
+                    const labelled = !tab.icon
                     return (
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
                         title={tab.label}
+                        // The triggers carry their own size now that the
+                        // wrapping list has no fixed height. h-9/min-w-9 is
+                        // the same footprint the icon button and the toggle
+                        // use for an icon-only control; min-w rather than a
+                        // square so a tab showing an error badge can grow.
+                        className="h-8.5 min-w-8.5 flex-none px-2"
                       >
                         {tab.icon && <FaIcon icon={tab.icon} />}
-                        {tab.label}
+                        {/* Hidden, never dropped: the title attribute is not
+                            an accessible name every screen reader announces,
+                            so the label stays in the tree either way. */}
+                        <span className={cn(!labelled && 'sr-only')}>
+                          {tab.label}
+                        </span>
                         {errorCount > 0 && (
                           <span
-                            className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.65rem] font-semibold text-white"
+                            className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-1 type-count text-destructive-foreground"
                             title={
                               errorCount === 1
                                 ? t(
@@ -414,7 +435,7 @@ export function InspectorPanel({
                   <TabsContent
                     key={tab.id}
                     value={tab.id}
-                    className="space-y-4"
+                    className="space-y-3.5"
                   >
                     {tab.groups.map((group) => (
                       <PropertyGroup
@@ -453,15 +474,12 @@ function ShineThroughNotice({ node }: { node: NodeDto }) {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border border-purple-500/60 bg-purple-100/60 dark:bg-purple-900/60 p-2.5 text-xs text-purple-900 dark:text-purple-100"
+      className="mt-3 flex items-start gap-2 rounded-md border border-variant bg-variant-tint p-2.5 type-small text-variant-text"
     >
-      <FaIcon
-        icon="layer-group"
-        className="mt-0.5 text-purple-700 dark:text-purple-300"
-      />
+      <FaIcon icon="layer-group" className="mt-0.5 text-variant-text" />
       <p>
         {t('inspector.shineThroughFrom', 'Shines through from')}{' '}
-        <strong className="text-neutral-950 dark:text-white">{origin}</strong>.{' '}
+        <strong className="text-foreground">{origin}</strong>.{' '}
         {t(
           'inspector.shineThroughHint',
           'This node does not exist in the current dimension yet - editing it creates an independent variant here.',
@@ -486,7 +504,7 @@ function AccessLockNotice() {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+      className="mt-3 flex items-start gap-2 rounded-md border border-warning bg-warning-tint p-2.5 type-small text-warning-text"
     >
       <i className="fas fa-lock mt-0.5" aria-hidden />
       <p>
@@ -510,14 +528,12 @@ function ElementLockNotice({ node }: { node: NodeDto }) {
   return (
     <div
       role="status"
-      className="mt-3 flex items-start gap-2 rounded-md border p-2.5 text-xs"
+      className="mt-3 flex items-start gap-2 rounded-md border p-2.5 type-small"
       style={{ borderColor: holder.color }}
     >
       <i className="fas fa-pen mt-0.5" style={{ color: holder.color }} />
       <p>
-        <strong className="text-neutral-950 dark:text-white">
-          {holder.name}
-        </strong>{' '}
+        <strong className="text-foreground">{holder.name}</strong>{' '}
         {t(
           'inspector.elementLockedHint',
           'is editing this element right now - it is locked until they are done.',
@@ -545,14 +561,14 @@ function PropertyGroup({
   return (
     <CollapsibleGroup
       defaultOpen={!group.collapsed}
-      className="border-b border-neutral-300 dark:border-neutral-700 p-3"
+      className="border-b border-border p-3"
       label={
         <>
           {group.icon && <FaIcon icon={group.icon} />}
           {group.label}
         </>
       }
-      bodyClassName="space-y-4"
+      bodyClassName="space-y-3.5"
     >
       {group.items.map((item) =>
         item.kind === 'property' ? (

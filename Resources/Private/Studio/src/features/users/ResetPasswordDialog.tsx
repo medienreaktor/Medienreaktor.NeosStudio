@@ -57,7 +57,10 @@ export function ResetPasswordDialog({
       toast.error(
         apiErrorDescription(
           error,
-          t('users.passwordResetFailedDetail', 'Resetting the password failed.'),
+          t(
+            'users.passwordResetFailedDetail',
+            'Resetting the password failed.',
+          ),
         ),
         { title: t('users.passwordResetFailed', 'Could not reset password') },
       ),
@@ -75,7 +78,7 @@ export function ResetPasswordDialog({
           <DialogTitle>
             {t('users.resetPassword', 'Reset password')}
             {user !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {user.label}
               </span>
             )}
@@ -88,7 +91,7 @@ export function ResetPasswordDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field
             label={t('users.newPassword', 'New password')}
             htmlFor="user-reset-password"
@@ -117,7 +120,7 @@ export function ResetPasswordDialog({
             />
           </Field>
           {mismatch && (
-            <p className="text-sm text-red-500">
+            <p className="type-body text-destructive-text">
               {t('users.passwordMismatch', 'The passwords do not match.')}
             </p>
           )}

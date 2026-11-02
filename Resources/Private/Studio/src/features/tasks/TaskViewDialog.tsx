@@ -52,13 +52,13 @@ export function TaskViewDialog({
         {/* The header carries everything about the task itself - title +
             status, description, assignee, actions; the body below is the
             conversation. The dialog's built-in X closes it. */}
-        <DialogHeader className="gap-3 border-b border-neutral-200 dark:border-neutral-800 pb-4">
-          <div className="min-w-0 pr-8">
+        <DialogHeader className="gap-3 border-b border-divider pb-3.5">
+          <div className="min-w-0 pr-7.5">
             <DialogTitle className="flex items-center gap-2">
               {task?.workspace?.title || task?.workspaceName}
               {task && (
                 <span
-                  className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
+                  className="inline-flex items-center rounded-sm border border-current px-1 py-px type-overline select-none"
                   style={{ color: taskStatusColor(task.status) }}
                 >
                   {taskStatusLabel(task.status)}
@@ -74,13 +74,13 @@ export function TaskViewDialog({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div
-              className="flex items-center gap-2 text-sm text-neutral-950 dark:text-white"
+              className="flex items-center gap-2 type-body text-foreground"
               title={t('tasks.assignee', 'Assignee')}
             >
               {task?.assignee ? (
                 <>
                   <span
-                    className="flex size-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white select-none"
+                    className="flex size-4.5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
                     style={{ backgroundColor: presenceColor(task.assignee) }}
                   >
                     {presenceInitials(assigneeLabel ?? '?')}
@@ -89,10 +89,10 @@ export function TaskViewDialog({
                 </>
               ) : (
                 <>
-                  <span className="flex size-5 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-700 text-[0.55rem] text-neutral-600 dark:text-neutral-400 select-none">
+                  <span className="flex size-4.5 items-center justify-center rounded-full bg-border type-caption text-muted-foreground select-none">
                     ?
                   </span>
-                  <span className="text-neutral-600 dark:text-neutral-400">
+                  <span className="text-muted-foreground">
                     {t('tasks.unassignedHint', 'Unassigned')}
                   </span>
                 </>
@@ -154,11 +154,11 @@ function TaskComments({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+      <div className="flex items-center justify-between gap-2 type-small text-muted-foreground">
         <span>{t('review.comments', 'Comments')}</span>
         {pinnedOpen > 0 && (
           <span
-            className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+            className="flex items-center gap-1 text-warning-text"
             title={t(
               'review.pinnedOpenHint',
               'Open remarks on single changes — they show up in the side-by-side comparison',
@@ -177,7 +177,7 @@ function TaskComments({
       {workspaceName !== null && (
         <CommentThread
           className="mt-2"
-          listClassName="max-h-64 overflow-y-auto"
+          listClassName="max-h-60 overflow-y-auto"
           workspaceName={workspaceName}
           comments={general}
           canManage={canManage}

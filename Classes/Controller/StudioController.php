@@ -11,8 +11,10 @@ use Neos\Flow\I18n\Locale;
 use Neos\Flow\I18n\Translator;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Controller\Backend\MenuHelper;
 use Neos\Neos\Service\UserService;
+use Neos\Neos\Service\XliffService;
 
 /**
  * Serves the Neos Studio single-page application and lazily provisions its
@@ -36,6 +38,9 @@ class StudioController extends ActionController
     #[Flow\Inject]
     protected UserService $userService;
 
+    #[Flow\Inject]
+    protected XliffService $xliffService;
+
     /**
      * @var array<string, string>
      */
@@ -58,10 +63,14 @@ class StudioController extends ActionController
      * extends the Studio contributes an entry here (see Settings.yaml for the
      * schema); the SPA build itself has no knowledge of them.
      *
-     * @var array<string, array{javascript?: string, stylesheet?: string, position?: int}>
+     * Untyped: absent configuration injects null. This package must not declare
+     * an empty default for the path either - see Settings.yaml for why an empty
+     * array would drop the entries of packages merged before this one.
+     *
+     * @var array<string, array{javascript?: string, stylesheet?: string, position?: int}>|null
      */
     #[Flow\InjectConfiguration(path: 'plugins')]
-    protected array $plugins = [];
+    protected $plugins;
 
     /**
      * WebSocket URL of the optional realtime sidecar (see "The realtime
@@ -78,11 +87,22 @@ class StudioController extends ActionController
     #[Flow\InjectConfiguration(path: 'enableLegacyModules')]
     protected $enableLegacyModules;
 
+    /**
+     * Whether a successful publish (review dialog) celebrates with a confetti
+     * burst.
+     * Untyped: absent configuration injects null, which keeps the default on.
+     */
+    #[Flow\InjectConfiguration(path: 'publishCelebration')]
+    protected $publishCelebration;
+
     #[Flow\Inject]
     protected MenuHelper $menuHelper;
 
     #[Flow\Inject]
     protected Translator $translator;
+
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
 
     public function indexAction(): string
     {
@@ -116,10 +136,22 @@ class StudioController extends ActionController
             // roundtrip. Schema-less preference array: coerce out-of-range
             // values to the dark default.
             'uiMode' => $this->uiMode(),
+            // Whether a successful publish (review dialog) celebrates with a
+            // confetti burst; the publishCelebration setting, off for the whole
+            // installation when an operator sets it to false.
+            'publishCelebration' => $this->publishCelebration !== false,
             'xliffEndpoint' => $origin . '/neos/xliff.json',
+            // The bundle is browser-cached for a week; the classic backend
+            // busts that with the XLIFF cache version (renewed on every
+            // translation cache flush) - so does the Studio.
+            'xliffVersion' => $this->xliffService->getCacheVersion(),
             // The classic backend logout (POST, session-authenticated): ends
             // the Flow session the shell and the silent OAuth flow ride on.
             'logoutEndpoint' => $origin . '/neos/logout',
+            // The shell's own API is bearer-authenticated and CSRF-exempt, but
+            // a plugin calling a classic session-authenticated backend route
+            // needs this as `X-Flow-Csrftoken`, like the classic UI sends it.
+            'csrfToken' => $this->securityContext->getCsrfProtectionToken(),
             // Optional realtime sidecar; null keeps collaboration on HTTP
             // polling (no extra infrastructure required).
             'realtime' => [
@@ -355,7 +387,7 @@ class StudioController extends ActionController
      */
     private function pluginTags(): array
     {
-        $plugins = $this->plugins;
+        $plugins = $this->plugins ?? [];
         // Stable order: explicit `position` ascending, then package key.
         uasort($plugins, static function (array $a, array $b): int {
             return ((int)($a['position'] ?? 100)) <=> ((int)($b['position'] ?? 100));

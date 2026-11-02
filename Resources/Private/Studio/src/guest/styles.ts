@@ -494,9 +494,26 @@ export function toggleStyle(editor: Editor, style: ResolvedStyle): void {
         .focus()
         .unsetMark(markName, { extendEmptyMarkRange: true })
         .run()
-    } else {
-      editor.chain().focus().setMark(markName, { class: next }).run()
+      return
     }
+    const { selection } = editor.state
+    if (selection.empty) {
+      // A collapsed caret comes from the block toolbar, where the classic
+      // UI's style dropdown styles the whole block: wrap the caret's
+      // textblock, then put the caret back where it was.
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({
+          from: selection.$from.start(),
+          to: selection.$from.end(),
+        })
+        .setMark(markName, { class: next })
+        .setTextSelection(selection.head)
+        .run()
+      return
+    }
+    editor.chain().focus().setMark(markName, { class: next }).run()
     return
   }
   // A built-in mark keeps its own identity; only the class attribute changes.

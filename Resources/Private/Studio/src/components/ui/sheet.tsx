@@ -34,7 +34,7 @@ function SheetOverlay({
     <SheetPrimitive.Backdrop
       data-slot="sheet-overlay"
       className={cn(
-        'fixed inset-0 z-200 bg-white/80 dark:bg-neutral-950/80 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0',
+        'fixed inset-0 z-200 bg-background/80 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0',
         className,
       )}
       {...props}
@@ -58,11 +58,11 @@ function SheetContent({
       <SheetPrimitive.Popup
         data-slot="sheet-content"
         className={cn(
-          'fixed z-200 flex flex-col gap-4 bg-white dark:bg-neutral-950 shadow-lg transition-transform duration-300 ease-in-out',
+          'fixed z-200 flex flex-col gap-3.5 bg-background shadow-lg transition-transform duration-300 ease-in-out',
           side === 'right' &&
-            'inset-y-0 right-0 h-full w-3/4 border-l data-starting-style:translate-x-full data-ending-style:translate-x-full sm:max-w-sm',
+            'inset-y-0 right-0 h-full w-3/4 border-l data-starting-style:translate-x-full data-ending-style:translate-x-full sm:max-w-90',
           side === 'left' &&
-            'inset-y-0 left-0 h-full w-3/4 border-r data-starting-style:-translate-x-full data-ending-style:-translate-x-full sm:max-w-sm',
+            'inset-y-0 left-0 h-full w-3/4 border-r data-starting-style:-translate-x-full data-ending-style:-translate-x-full sm:max-w-90',
           side === 'top' &&
             'inset-x-0 top-0 h-auto border-b data-starting-style:-translate-y-full data-ending-style:-translate-y-full',
           side === 'bottom' &&
@@ -73,8 +73,8 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
-            <i className="fas fa-xmark text-[1rem]" aria-hidden />
+          <SheetPrimitive.Close className="absolute top-3.5 right-3.5 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+            <i className="fas fa-xmark type-icon-xl" aria-hidden />
             <span className="sr-only">{t('common.close', 'Close')}</span>
           </SheetPrimitive.Close>
         )}
@@ -87,7 +87,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn('flex flex-col gap-1.5 p-4', className)}
+      className={cn('flex flex-col gap-1.5 p-3.5', className)}
       {...props}
     />
   )
@@ -97,7 +97,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn('mt-auto flex flex-col gap-2 p-4', className)}
+      className={cn('mt-auto flex flex-col gap-2 p-3.5', className)}
       {...props}
     />
   )
@@ -110,10 +110,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn(
-        'font-semibold text-neutral-950 dark:text-white',
-        className,
-      )}
+      className={cn('font-semibold text-foreground', className)}
       {...props}
     />
   )
@@ -126,10 +123,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn(
-        'text-sm text-neutral-600 dark:text-neutral-400',
-        className,
-      )}
+      className={cn('type-body text-muted-foreground', className)}
       {...props}
     />
   )

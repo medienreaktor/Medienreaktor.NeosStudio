@@ -58,10 +58,6 @@
         <source>Off means changes can only be handed on for review.</source>
         <target xml:lang="de">Aus: Änderungen können nur zur Prüfung weitergegeben werden.</target>
       </trans-unit>
-      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
-        <source>May create workspaces</source>
-        <target xml:lang="de">Darf Workspaces anlegen</target>
-      </trans-unit>
       <trans-unit id="accessRoles.badgeBranches" xml:space="preserve">
         <source>{0} branch(es)</source>
         <target xml:lang="de">{0} Bereich(e)</target>
@@ -319,8 +315,8 @@
         <target xml:lang="de">Websites</target>
       </trans-unit>
       <trans-unit id="accessRoles.tabTree" xml:space="preserve">
-        <source>Page tree</source>
-        <target xml:lang="de">Seitenbaum</target>
+        <source>Documents</source>
+        <target xml:lang="de">Dokumente</target>
       </trans-unit>
       <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
         <source>Workspaces</source>
@@ -355,8 +351,8 @@
         <target xml:lang="de">Unterseiten einschließen</target>
       </trans-unit>
       <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
-        <source>Page tree</source>
-        <target xml:lang="de">Seitenbaum</target>
+        <source>Documents</source>
+        <target xml:lang="de">Dokumente</target>
       </trans-unit>
       <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
         <source>Loading pages…</source>
@@ -886,9 +882,17 @@
         <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
         <target xml:lang="de">Das {0} und alles darin Enthaltene wird entfernt. Dies kann durch Verwerfen der Änderung im Arbeitsbereich rückgängig gemacht werden.</target>
       </trans-unit>
+      <trans-unit id="editing.deleteConfirm.descriptionMany" xml:space="preserve">
+        <source>The selected {0} and everything inside them will be removed. This is undone by discarding the changes from the workspace.</source>
+        <target xml:lang="de">Die ausgewählten {0} und alles darin Enthaltene werden entfernt. Dies kann durch Verwerfen der Änderungen im Arbeitsbereich rückgängig gemacht werden.</target>
+      </trans-unit>
       <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
         <source>Delete this {0}?</source>
         <target xml:lang="de">Dieses {0} löschen?</target>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.titleMany" xml:space="preserve">
+        <source>Delete {0} {1}?</source>
+        <target xml:lang="de">{0} {1} löschen?</target>
       </trans-unit>
       <trans-unit id="editing.deleteFailed" xml:space="preserve">
         <source>Deleting failed</source>
@@ -898,9 +902,17 @@
         <source>document</source>
         <target xml:lang="de">Dokument</target>
       </trans-unit>
+      <trans-unit id="editing.entity.documents" xml:space="preserve">
+        <source>documents</source>
+        <target xml:lang="de">Dokumente</target>
+      </trans-unit>
       <trans-unit id="editing.entity.element" xml:space="preserve">
         <source>element</source>
         <target xml:lang="de">Element</target>
+      </trans-unit>
+      <trans-unit id="editing.entity.elements" xml:space="preserve">
+        <source>elements</source>
+        <target xml:lang="de">Elemente</target>
       </trans-unit>
       <trans-unit id="editing.hide" xml:space="preserve">
         <source>Hide</source>
@@ -1085,6 +1097,10 @@
       <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
         <source>References can be set after creation</source>
         <target xml:lang="de">Referenzen können nach dem Erstellen gesetzt werden</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="de">Zur Seite</target>
       </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
@@ -2034,10 +2050,6 @@
         <source>Workspaces</source>
         <target xml:lang="de">Arbeitsbereiche</target>
       </trans-unit>
-      <trans-unit id="preview.button" xml:space="preserve">
-        <source>Preview</source>
-        <target xml:lang="de">Vorschau</target>
-      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="de">Diese Seite ist gelöscht. Sie kommt zurück, wenn Du sie wiederherstellst – oder ist endgültig weg, sobald die Löschung veröffentlicht wird.</target>
@@ -2053,10 +2065,6 @@
       <trans-unit id="preview.reload" xml:space="preserve">
         <source>Reload preview</source>
         <target xml:lang="de">Vorschau neu laden</target>
-      </trans-unit>
-      <trans-unit id="preview.selectDocument" xml:space="preserve">
-        <source>Select a document to preview it.</source>
-        <target xml:lang="de">Wähle ein Dokument, um es in der Vorschau anzuzeigen.</target>
       </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
@@ -2277,10 +2285,6 @@
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
         <target xml:lang="de">Deine aktiven Links</target>
-      </trans-unit>
-      <trans-unit id="share.button" xml:space="preserve">
-        <source>Share</source>
-        <target xml:lang="de">Teilen</target>
       </trans-unit>
       <trans-unit id="share.buttonHint" xml:space="preserve">
         <source>Share a preview link to this page with people without a login</source>
@@ -3034,10 +3038,6 @@
         <source>Loading the outline failed</source>
         <target xml:lang="de">Laden der Gliederung fehlgeschlagen</target>
       </trans-unit>
-      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
-        <source>Select a document to outline its content.</source>
-        <target xml:lang="de">Wähle ein Dokument, um dessen Inhalt zu gliedern.</target>
-      </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>
         <target xml:lang="de">Inhaltsgliederung</target>
@@ -3590,9 +3590,21 @@
         <source>Workspace to publish to</source>
         <target xml:lang="de">Arbeitsbereich zum Veröffentlichen</target>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+        <target xml:lang="de">Prüfen und veröffentlichen</target>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
         <target xml:lang="de">Mein Arbeitsbereich, veröffentlicht nach</target>
+      </trans-unit>
+      <trans-unit id="workspace.myWorkspace" xml:space="preserve">
+        <source>My workspace</source>
+        <target xml:lang="de">Mein Arbeitsbereich</target>
+      </trans-unit>
+      <trans-unit id="workspace.contextTooltip" xml:space="preserve">
+        <source>Editing in {0}, publishing to {1}</source>
+        <target xml:lang="de">Du bearbeitest {0} und veröffentlichst nach {1}</target>
       </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>
@@ -3674,13 +3686,9 @@
         <source>Publish selected</source>
         <target xml:lang="de">Auswahl veröffentlichen</target>
       </trans-unit>
-      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
-        <source>Publish selected ({0})</source>
-        <target xml:lang="de">Auswahl veröffentlichen ({0})</target>
-      </trans-unit>
       <trans-unit id="workspace.review.selectAll" xml:space="preserve">
-        <source>Select all ({0})</source>
-        <target xml:lang="de">Alle auswählen ({0})</target>
+        <source>Select all</source>
+        <target xml:lang="de">Alle auswählen</target>
       </trans-unit>
       <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
         <source>Select documents to publish or discard.</source>
@@ -3701,10 +3709,6 @@
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
         <target xml:lang="de">Veröffentlicht nach</target>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="de">Änderungen prüfen</target>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

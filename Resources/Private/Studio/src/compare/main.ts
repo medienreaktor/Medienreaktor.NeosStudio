@@ -75,14 +75,15 @@ const INSET_CLASS = 'neos-compare-inset'
 
 /**
  * The change tones of the Studio (see features/workspaces/historyLabels.ts),
- * as literal RGB triples - the frames carry no Tailwind.
+ * as literal RGB triples - the frames carry no Tailwind. They are the values
+ * of --color-change-added, -removed, -modified and -variant.
  */
 const TONE_COLORS: Record<CompareStatus, string> = {
-  created: '34, 197, 94',
-  removed: '239, 68, 68',
-  moved: '59, 130, 246',
-  changed: '59, 130, 246',
-  variant: '168, 85, 247',
+  created: '0, 163, 56',
+  removed: '255, 70, 13',
+  moved: '0, 173, 238',
+  changed: '0, 173, 238',
+  variant: '123, 95, 243',
 }
 
 function post(message: CompareGuestToHostMessage): void {

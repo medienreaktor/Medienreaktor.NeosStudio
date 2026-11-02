@@ -36,6 +36,9 @@ import { hideToolbars, updateToolbars } from './toolbar'
 const PROPERTY_ATTRIBUTE = 'data-__neos-property'
 const PLACEHOLDER_ATTRIBUTE = 'data-__neos-studio-placeholder'
 const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
+/** On TipTap's editable when the property is not autoparagraphed: its sole
+ * paragraph is stored bare (see the editor styles). */
+const BARE_ATTRIBUTE = 'data-__neos-studio-bare'
 const EMPTY_CLASS = 'neos-studio-empty'
 
 /** Commit cadence, mirroring Neos.Neos.Ui's CKEditor binding (1500/5000). */
@@ -171,6 +174,24 @@ function injectEditorStyles(): void {
     [${PROPERTY_ATTRIBUTE}] .tiptap.resize-cursor {
       cursor: col-resize;
     }
+    /* The paragraphs serializedHtml() unwraps (see serialize.ts) exist only
+       in the editor: the site renders that text bare inside its own markup
+       (<li>text</li>, <span class="h1">text</span>), so its CSS for <p> -
+       font, color, a block box that pushes the text below an inside list
+       marker - must not reach them. They take the host's styling instead,
+       exactly as the stored text does. Same conditions as the unwrap: an
+       attribute-less leading paragraph, followed by nothing but sublists. */
+    [${PROPERTY_ATTRIBUTE}] .tiptap li > p:first-child:not([class], [style]):not(:has(~ :not(ul, ol))),
+    [${PROPERTY_ATTRIBUTE}] .tiptap :is(td, th) > p:only-child:not([class], [style]),
+    [${PROPERTY_ATTRIBUTE}] .tiptap[${BARE_ATTRIBUTE}] > p:only-child:not([class], [style]) {
+      display: inline;
+      margin: 0;
+      padding: 0;
+      font: inherit;
+      color: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+    }
   `
   document.head.appendChild(style)
 }
@@ -219,7 +240,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
   let applyingRemote = false
 
   const commitIfChanged = () => {
-    const html = serializedHtml(editor)
+    const html = serializedHtml(editor, config)
     if (html === committedHtml) return
     committedHtml = html
     hooks.commit(element, html)
@@ -230,7 +251,11 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     COMMIT_MAX_WAIT_MS,
   )
   const emitLiveUpdate = throttle(() => {
-    hooks.liveUpdate?.(element, serializedHtml(editor), editor.state.selection.head)
+    hooks.liveUpdate?.(
+      element,
+      serializedHtml(editor, config),
+      editor.state.selection.head,
+    )
   }, LIVE_UPDATE_THROTTLE_MS)
 
   const editor = new Editor({
@@ -238,6 +263,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     content: initialContent,
     extensions: extensionsFor(config),
     editorProps: {
+      attributes: config.autoparagraph ? {} : { [BARE_ATTRIBUTE]: 'true' },
       // Neos node drags (from the element handle or the creation panel) must
       // never drop into a rich-text editor. Returning true (without
       // preventDefault) keeps the editor from becoming a drop target, so the
@@ -261,7 +287,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       },
     },
     onCreate: ({ editor }) => {
-      committedHtml = serializedHtml(editor)
+      committedHtml = serializedHtml(editor, config)
       refreshEmptyState(element, editor)
     },
     onFocus: ({ editor }) => {
@@ -296,8 +322,23 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     },
     onDestroy: () => {
       commit.cancel()
+      element.removeEventListener('mousedown', focusFromHost)
     },
   })
+  // A press on the property element itself, outside TipTap's editable, would
+  // otherwise land nowhere: the placeholder (::before) belongs to the host
+  // element, not to the editable, and an empty inline editable is only as
+  // wide as its trailing <br> - so empty inline properties (block = false)
+  // could be selected but never typed into. Hand such presses to the editor.
+  // preventDefault keeps the browser from moving focus/selection to the
+  // non-editable host; the click still fires, so element selection follows.
+  function focusFromHost(event: MouseEvent): void {
+    if (event.button !== 0 || event.target !== element) return
+    if (!editor.isEditable) return
+    event.preventDefault()
+    editor.commands.focus('start')
+  }
+  element.addEventListener('mousedown', focusFromHost)
   setEditorFormatting(editor, config)
   editorsByElement.set(element, {
     editor,
@@ -317,7 +358,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       }
       // The stream shows what the peer will commit - adopt it as the
       // baseline so a later local edit diffs against current reality.
-      committedHtml = serializedHtml(editor)
+      committedHtml = serializedHtml(editor, config)
       refreshEmptyState(element, editor)
     },
     eject() {

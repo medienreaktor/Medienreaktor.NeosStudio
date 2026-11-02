@@ -33,21 +33,12 @@ import {
   decorationsFor,
   useWorkspaceDecorators,
 } from '@/features/workspaces/decorators'
+import {
+  PublishTargetBadge,
+  usePublishTarget,
+} from '@/features/workspaces/PublishTargetBadge'
 import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
-
-/**
- * The faintest ramp shade of a tint (950 in dark mode, 50 in light - via the
- * color-scheme-driven light-dark() function), used as the trigger background:
- * theme variables like 'var(--color-blue-500)' map onto their ramp's edge
- * shade, arbitrary decoration colors approximate it by mixing into the
- * theme's near-black/near-white.
- */
-function darkestShade(tint: string): string {
-  const ramp = tint.match(/^var\(--color-([a-z]+)-\d{2,3}\)$/)
-  return ramp
-    ? `light-dark(var(--color-${ramp[1]}-50), var(--color-${ramp[1]}-950))`
-    : `color-mix(in srgb, ${tint} 20%, light-dark(var(--color-neutral-50), var(--color-neutral-950)))`
-}
+import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
 
 /**
  * Topbar dropdown for the editing context - a menu (not a select) so the
@@ -108,7 +99,9 @@ export function WorkspaceSwitcher({
    * resolves here too, because then the active workspace IS the branch.
    */
   const taskWorkspace = collaborative
-    ? (taskOf(activeWorkspace) !== null ? activeWorkspace : null)
+    ? taskOf(activeWorkspace) !== null
+      ? activeWorkspace
+      : null
     : (targets.find(
         (workspace) => workspace.name === personalWorkspace.baseWorkspace,
       ) ?? null)
@@ -120,7 +113,12 @@ export function WorkspaceSwitcher({
     }: {
       target: TaskStatus
       comment?: string
-    }) => transitionTask(taskWorkspace?.name ?? activeWorkspace.name, target, comment),
+    }) =>
+      transitionTask(
+        taskWorkspace?.name ?? activeWorkspace.name,
+        target,
+        comment,
+      ),
     onSuccess: (_response, { target }) => {
       if (target === 'IN_REVIEW') setSubmittingReview(false)
       if (target === 'OPEN') setSendingBack(false)
@@ -227,28 +225,13 @@ export function WorkspaceSwitcher({
     ])
   }
 
-  // Tint the whole trigger by what is being worked on: purple for a plain
-  // collaborative workspace (matching the multiplayer icon), a decorated
-  // workspace's own color (e.g. the task status color) when it brings one -
-  // whether that workspace is being edited in or published into.
-  const decoratedWorkspace = collaborative ? activeWorkspace : taskWorkspace
-  const activeDecoration = decoratedWorkspace
-    ? (decorationsFor(decoratedWorkspace, decorators)[0] ?? null)
-    : null
-  const tint = collaborative
-    ? (activeDecoration?.color ??
-      'light-dark(var(--color-purple-600), var(--color-purple-400))')
-    : (activeDecoration?.color ?? null)
-
-  const currentLabel = collaborative
+  // The trigger names both ends of the editing context explicitly: the
+  // checked-out workspace (personal, collaborative or a task branch) and its
+  // base - where a publish from it goes (the PublishTargetBadge).
+  const sourceLabel = collaborative
     ? workspaceLabel(activeWorkspace)
-    : personalWorkspace.baseWorkspace
-      ? workspaceLabel(
-          targets.find(
-            (workspace) => workspace.name === personalWorkspace.baseWorkspace,
-          ) ?? personalWorkspace,
-        )
-      : t('workspace.selectPlaceholder', 'Select workspace…')
+    : t('workspace.myWorkspace', 'My workspace')
+  const { label: targetLabel } = usePublishTarget(activeWorkspace)
 
   const pick = (picked: string) => {
     if (picked === value) return
@@ -270,52 +253,35 @@ export function WorkspaceSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger
           disabled={switchBase.isPending}
-          title={
-            activeDecoration?.label ??
-            (collaborative
-              ? t(
-                  'workspace.collaborativeContext',
-                  'Editing together in a shared workspace',
-                )
-              : t('workspace.publishTarget', 'Workspace to publish to'))
-          }
-          style={
-            tint
-              ? {
-                  borderColor: tint,
-                  color: tint,
-                  backgroundColor: darkestShade(tint),
-                }
-              : undefined
-          }
-          className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+          title={t(
+            'workspace.contextTooltip',
+            'Editing in {0}, publishing to {1}',
+            [sourceLabel, targetLabel],
+          )}
+          className="flex h-8.5 w-fit items-center justify-between gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex items-center gap-2">
-            <i
-              className={`fa fa-fw text-[0.7rem] ${
-                switchBase.isPending
-                  ? 'fa-spinner fa-spin text-neutral-600 dark:text-neutral-400'
-                  : activeDecoration
-                    ? `fa-${activeDecoration.icon ?? 'code-branch'}`
-                    : collaborative
-                      ? 'fa-users'
-                      : 'fa-layer-group text-neutral-600 dark:text-neutral-400'
-              }`}
-              style={
-                tint && !switchBase.isPending ? { color: tint } : undefined
-              }
-              aria-hidden
-            />
-            <span className="hidden @[56rem]:inline max-w-48 truncate">
-              {currentLabel}
+            {/* Only the icon carries the workspace's color (a task's status
+                color, purple for shared) - text and button stay neutral. */}
+            {switchBase.isPending ? (
+              <i
+                className="fa fa-fw fa-spinner fa-spin type-icon-s text-muted-foreground"
+                aria-hidden
+              />
+            ) : (
+              <WorkspaceIcon workspace={activeWorkspace} />
+            )}
+            <span className="hidden @[52.5rem]:inline max-w-37.5 truncate">
+              {sourceLabel}
             </span>
           </span>
+          <PublishTargetBadge workspace={activeWorkspace} />
           <i
-            className="fas fa-chevron-down text-[1rem] text-neutral-950/50 dark:text-white/50"
+            className="fas fa-chevron-down type-icon-xl text-placeholder"
             aria-hidden
           />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-64">
+        <DropdownMenuContent align="start" className="min-w-60">
           <DropdownMenuGroup>
             <DropdownMenuLabel>
               {t('workspace.publishTargetGroup', 'My workspace, publishing to')}
@@ -343,7 +309,7 @@ export function WorkspaceSwitcher({
                       for reviewing, but flagged. */}
                   {!rebaseBlocked && !workspace.permissions.write && (
                     <span
-                      className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400"
+                      className="ml-1.5 type-small text-muted-foreground"
                       title={t(
                         'workspace.cannotPublishHere',
                         'You cannot publish to this workspace',
@@ -377,12 +343,12 @@ export function WorkspaceSwitcher({
                     onClick={() => pick(`edit:${workspace.name}`)}
                   >
                     <i
-                      className="fas fa-users text-[0.7rem] text-purple-500"
+                      className="fas fa-users type-icon-s text-workspace-shared-text"
                       aria-hidden
                     />
                     {workspaceLabel(workspace)}
                     {!workspace.permissions.write && (
-                      <span className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                      <span className="ml-1.5 type-small text-muted-foreground">
                         <i className="fas fa-lock" aria-hidden />{' '}
                         {t('workspace.readOnly', 'read-only')}
                       </span>
@@ -402,7 +368,7 @@ export function WorkspaceSwitcher({
                     decorationsFor(workspace, decorators)[0] ?? null
                   const icon = (
                     <i
-                      className={`fas fa-${decoration?.icon ?? 'code-branch'} text-[0.7rem]`}
+                      className={`fas fa-${decoration?.icon ?? 'code-branch'} type-icon-s`}
                       style={
                         decoration?.color
                           ? { color: decoration.color }
@@ -412,16 +378,17 @@ export function WorkspaceSwitcher({
                     />
                   )
                   const isActiveTask =
-                    activeTask !== null && workspace.name === taskWorkspace?.name
+                    activeTask !== null &&
+                    workspace.name === taskWorkspace?.name
                   // The checked-out task nests its workflow actions as a
                   // submenu; the other entries check the workspace out.
                   if (isActiveTask) {
                     return (
                       <DropdownMenuSub key={`base:${workspace.name}`}>
-                        <DropdownMenuSubTrigger className="pl-8">
+                        <DropdownMenuSubTrigger className="pl-7.5">
                           <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
                             <i
-                              className="fas fa-check text-[0.65rem]"
+                              className="fas fa-check type-icon-s"
                               aria-hidden
                             />
                           </span>
@@ -436,7 +403,7 @@ export function WorkspaceSwitcher({
                                 onClick={() => setSubmittingReview(true)}
                               >
                                 <i
-                                  className="fas fa-paper-plane w-4 text-center"
+                                  className="fas fa-paper-plane w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.sendToReview', 'Send to review')}
@@ -447,7 +414,7 @@ export function WorkspaceSwitcher({
                             activeWorkspace.permissions.publish && (
                               <DropdownMenuItem onClick={completeTask}>
                                 <i
-                                  className="fas fa-check w-4 text-center"
+                                  className="fas fa-check w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.completeTask', 'Complete task')}
@@ -459,7 +426,7 @@ export function WorkspaceSwitcher({
                                 onClick={() => setSendingBack(true)}
                               >
                                 <i
-                                  className="fas fa-rotate-left w-4 text-center"
+                                  className="fas fa-rotate-left w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.reopenTask', 'Reopen task')}
@@ -483,7 +450,7 @@ export function WorkspaceSwitcher({
                       {workspaceLabel(workspace)}
                       <WorkspaceDecorationBadges workspace={workspace} />
                       {!workspace.permissions.write && (
-                        <span className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                        <span className="ml-1.5 type-small text-muted-foreground">
                           <i className="fas fa-lock" aria-hidden />{' '}
                           {t('workspace.readOnly', 'read-only')}
                         </span>
@@ -497,7 +464,7 @@ export function WorkspaceSwitcher({
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => setCreatingTask(true)}>
-              <i className="fas fa-plus text-[0.7rem]" aria-hidden />
+              <i className="fas fa-plus type-icon-s" aria-hidden />
               {t('tasks.addTaskWorkspace', 'Add task workspace')}
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -540,7 +507,8 @@ export function WorkspaceSwitcher({
           // Completing is the review dialog's own decision now (it knows
           // whether EVERYTHING was approved); this just closes up.
           onPublished={(sourceWorkspaceName) => {
-            if (sourceWorkspaceName === activeWorkspace.name) setReviewing(false)
+            if (sourceWorkspaceName === activeWorkspace.name)
+              setReviewing(false)
           }}
         />
       )}

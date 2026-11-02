@@ -57,7 +57,7 @@ export function RequestChangesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-3.5">
           <Field
             label={t('review.requestChangesReason', 'What needs to change?')}
             htmlFor="review-request-changes-reason"

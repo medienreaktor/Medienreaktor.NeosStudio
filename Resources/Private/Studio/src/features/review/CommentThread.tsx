@@ -118,7 +118,7 @@ export function CommentThread({
     <div className={className}>
       <div className={cn('flex flex-col gap-3', listClassName)}>
         {comments.length === 0 && (
-          <div className="text-xs text-neutral-500">
+          <div className="type-small text-muted-foreground">
             {emptyLabel ?? t('review.noComments', 'No comments yet.')}
           </div>
         )}
@@ -190,13 +190,15 @@ function CommentItem({
 }) {
   const resolved = comment.resolvedAt !== null
   return (
-    <div className={cn('group flex items-start gap-2', resolved && 'opacity-60')}>
+    <div
+      className={cn('group flex items-start gap-2', resolved && 'opacity-60')}
+    >
       <span
-        className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.6rem] font-semibold text-white select-none"
+        className="mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full type-count text-presence-foreground select-none"
         style={{
           backgroundColor: comment.author
             ? presenceColor(comment.author)
-            : 'var(--color-neutral-700)',
+            : 'var(--color-presence-unknown)',
         }}
         aria-hidden
       >
@@ -206,24 +208,22 @@ function CommentItem({
         <div
           className={cn(
             'w-fit max-w-full rounded-lg rounded-tl-none px-3 py-1.5',
-            resolved
-              ? 'bg-neutral-100 dark:bg-neutral-900'
-              : 'bg-neutral-200 dark:bg-neutral-800',
+            resolved ? 'bg-card' : 'bg-muted',
           )}
         >
-          <div className="text-xs font-semibold text-neutral-950 dark:text-white">
+          <div className="type-small-strong text-foreground">
             {comment.authorLabel ?? comment.author}
           </div>
-          <div className="text-sm wrap-break-word whitespace-pre-line text-neutral-800 dark:text-neutral-200">
+          <div className="type-body wrap-break-word whitespace-pre-line text-foreground">
             {comment.text}
           </div>
         </div>
-        <div className="mt-0.5 flex items-center gap-2 text-[0.65rem] text-neutral-500">
+        <div className="mt-0.5 flex items-center gap-2 type-caption text-muted-foreground">
           <span title={new Date(comment.createdAt).toLocaleString()}>
             {timeAgo(comment.createdAt)}
           </span>
           {resolved && (
-            <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+            <span className="flex items-center gap-1 text-success-text">
               <i className="fas fa-check" aria-hidden />
               {t('review.resolved', 'Done')}
             </span>
@@ -234,7 +234,7 @@ function CommentItem({
             {canResolve && (
               <button
                 type="button"
-                className="cursor-pointer hover:text-neutral-950 dark:hover:text-white"
+                className="cursor-pointer hover:text-foreground"
                 disabled={busy}
                 onClick={() => onResolve(!resolved)}
               >
@@ -246,7 +246,7 @@ function CommentItem({
             {canDelete && (
               <button
                 type="button"
-                className="cursor-pointer hover:text-red-600 dark:hover:text-red-400"
+                className="cursor-pointer hover:text-destructive-text"
                 disabled={busy}
                 onClick={onDelete}
               >

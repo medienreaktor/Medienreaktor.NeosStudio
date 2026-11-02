@@ -58,6 +58,14 @@ const SHINE_THROUGH_ATTRIBUTE = 'data-__neos-studio-shine-through'
 
 const HOVER_CLASS = 'neos-studio-hover'
 const SELECTED_CLASS = 'neos-studio-selected'
+const FLASH_CLASS = 'neos-studio-flash'
+/** Long enough for two blinks to register, short enough not to nag. */
+const FLASH_DURATION_MS = 1800
+/**
+ * Fallback for waiting out the selection's smooth scroll: browsers without `scrollend`, and the
+ * case where the element is already in view so nothing scrolls and no event ever arrives.
+ */
+const SCROLL_SETTLE_MS = 700
 const DROPPABLE_CLASS = 'neos-studio-droppable'
 const DROP_TARGET_CLASS = 'neos-studio-drop-target'
 const EMPTY_CLASS = 'neos-studio-empty'
@@ -103,6 +111,33 @@ function injectStyles(): void {
     [${WRAPPER_ATTRIBUTE}].${SELECTED_CLASS} {
       outline: 2px solid rgba(0, 173, 238, 1.0);
       outline-offset: 5px;
+    }
+    /* Arriving from a deep link, the editor did not do the selecting and has
+       no reason to look at the outline. Two distinct blinks say "this one" and
+       then leave the selection outline to speak for itself. Backdrop rather
+       than outline: the selection already owns the outline, and two of them
+       would fight over the same pixels.
+
+       Two blinks, not a single fade: one gentle swell is easy to miss on a
+       page the editor is still taking in, and reads as a rendering artifact
+       rather than as a pointer. */
+    [${WRAPPER_ATTRIBUTE}].${FLASH_CLASS} {
+      animation: neos-studio-flash ${FLASH_DURATION_MS}ms ease-out 1;
+    }
+    @keyframes neos-studio-flash {
+      0%   { background-color: rgba(0, 173, 238, 0); }
+      8%   { background-color: rgba(0, 173, 238, 0.45); }
+      32%  { background-color: rgba(0, 173, 238, 0.04); }
+      52%  { background-color: rgba(0, 173, 238, 0.40); }
+      100% { background-color: rgba(0, 173, 238, 0); }
+    }
+    /* Editors who set prefers-reduced-motion still get the emphasis, just
+       without the pulsing. */
+    @media (prefers-reduced-motion: reduce) {
+      [${WRAPPER_ATTRIBUTE}].${FLASH_CLASS} {
+        animation: none;
+        background-color: rgba(0, 173, 238, 0.18);
+      }
     }
     /* Explicitly hidden elements stay editable but read as invisible-to-
        visitors; the opacity dims their whole subtree. */
@@ -224,6 +259,17 @@ function injectStyles(): void {
       float: left;
       height: 0;
     }
+    /* On an inline editable the placeholder would sit in the line before the
+       editor, pushing the caret behind its text. Ordered after the (empty)
+       editor instead, the caret shows at the start of the line, and the
+       placeholder still sizes the host - so its outline and press target
+       stay as wide as the text. */
+    [${PLACEHOLDER_ATTRIBUTE}][${INLINE_ATTRIBUTE}].${EMPTY_CLASS} {
+      display: inline-flex;
+    }
+    [${PLACEHOLDER_ATTRIBUTE}][${INLINE_ATTRIBUTE}].${EMPTY_CLASS}::before {
+      order: 1;
+    }
     /* While a node type is dragged from the creation panel, collections that
        allow it light up; a minimum height keeps empty collections targetable.
        Specificity beats the collection "outline: none" rules above. */
@@ -309,10 +355,13 @@ function injectStyles(): void {
     /* In-place image picker: hovering a rendered image (whose content element
        or ImageTag declares its image property) washes it blue and offers a
        "Select image" button. Sits above the image but below the richtext
-       toolbars and the element handle. */
+       toolbars and the element handle. Only the button takes the pointer:
+       content laid over the image (hero headings) stays hoverable,
+       clickable and editable through the wash. */
     #${IMAGE_OVERLAY_ID} {
       position: fixed;
       z-index: 2147483645;
+      pointer-events: none;
       display: none;
       align-items: center;
       justify-content: center;
@@ -332,6 +381,7 @@ function injectStyles(): void {
       border-radius: 4px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       cursor: pointer;
+      pointer-events: auto;
     }
   `
   document.head.appendChild(style)
@@ -404,6 +454,52 @@ function select(
     const contextPath = element.getAttribute(WRAPPER_ATTRIBUTE)
     if (contextPath) post({ type: 'neos-studio/node-selected', contextPath })
   }
+}
+
+/** The element currently pulsing, and the timer that ends it. */
+let flashedElement: HTMLElement | null = null
+let flashTimer: number | undefined
+
+/**
+ * Pulse an element once, after the page has come to rest.
+ *
+ * Selecting the node starts a smooth scroll towards it, and the pulse arrives in the same breath.
+ * Playing it immediately wastes it: it runs while the page is still travelling and is over by the
+ * time the element is in front of the editor - which is exactly how it went unnoticed in practice.
+ * So wait for the scrolling to settle first. `scrollend` is the precise signal; the timeout covers
+ * browsers without it and the case where nothing scrolls at all (element already in view), where no
+ * event is ever fired.
+ *
+ * Restarting on an already-pulsing element is deliberate: a second deep link to the same node
+ * should visibly answer, and re-adding the class after a reflow restarts the animation.
+ */
+function flash(element: HTMLElement | null): void {
+  if (flashTimer !== undefined) {
+    window.clearTimeout(flashTimer)
+    flashTimer = undefined
+  }
+  flashedElement?.classList.remove(FLASH_CLASS)
+  flashedElement = element?.isConnected ? element : null
+  if (flashedElement === null) return
+
+  const target = flashedElement
+  let started = false
+  const start = () => {
+    if (started || !target.isConnected) return
+    started = true
+    window.removeEventListener('scrollend', start)
+    // Force a reflow so the class re-add restarts the animation rather than continuing the old one.
+    void target.offsetWidth
+    target.classList.add(FLASH_CLASS)
+    flashTimer = window.setTimeout(() => {
+      target.classList.remove(FLASH_CLASS)
+      if (flashedElement === target) flashedElement = null
+      flashTimer = undefined
+    }, FLASH_DURATION_MS)
+  }
+
+  window.addEventListener('scrollend', start)
+  window.setTimeout(start, SCROLL_SETTLE_MS)
 }
 
 /**
@@ -598,15 +694,11 @@ function imageOverlay(): HTMLElement {
       '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' +
       '<path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L6 20"/></svg>Select image'
     overlay.appendChild(button)
-    // Only the button opens the picker. A click on the washed-blue background
-    // still selects the node behind it (so it shows in the inspector) - the
-    // overlay covers the image, so the click would otherwise be swallowed. The
-    // button's onImageSelect stops propagation, so this never runs for it.
+    // Only the button opens the picker. The rest of the overlay lets the
+    // pointer through: clicks on the washed-blue background reach the image
+    // (selecting its node), and hovering content laid over the image hides
+    // the overlay via the document mouseover handler.
     button.addEventListener('click', onImageSelect)
-    overlay.addEventListener('click', onImageOverlayClick)
-    // Leaving the overlay (which sits on top of the image) hides it; re-entering
-    // another image re-shows it via the document mouseover handler.
-    overlay.addEventListener('mouseleave', hideImageOverlay)
     document.body.appendChild(overlay)
   }
   return overlay
@@ -640,14 +732,6 @@ function scheduleImageOverlayUpdate(): void {
     if (hoveredImage.isConnected) showImageOverlay(hoveredImage)
     else hideImageOverlay()
   })
-}
-
-/** Background click over an image: select its content element, as if the image
- *  itself had been clicked (the overlay intercepts the native click). */
-function onImageOverlayClick(): void {
-  if (hoveredImage === null) return
-  const wrapper = hoveredImage.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
-  if (wrapper) select(wrapper, { notifyHost: true })
 }
 
 function onImageSelect(event: MouseEvent): void {
@@ -876,7 +960,8 @@ function onMouseOver(event: MouseEvent): void {
   // Over the "..." handle or its "+" companion (they sit inside their
   // element): keep the hover state, so they do not vanish under the pointer.
   if (target?.closest?.(`#${HANDLE_ID}, #${ADD_BUTTON_ID}`)) return
-  // Over the image overlay itself (it sits on top of the image): keep it shown.
+  // Over the image overlay's button (the only part taking the pointer): keep
+  // the overlay shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
   // Over the "Create variant" button (it floats over its element): keep it.
   if (target?.closest?.(`#${SHINE_BUTTON_ID}`)) return
@@ -1604,7 +1689,10 @@ function onHostMessage(event: MessageEvent): void {
         : (elementsByAggregateId.get(message.aggregateId) ?? null)
     // An element replaced out-of-band can leave stale index entries behind.
     const element = indexed?.isConnected ? indexed : null
-    select(element, { notifyHost: false, reveal: true })
+    select(element, { notifyHost: false, reveal: message.reveal !== false })
+  }
+  if (message?.type === 'neos-studio/flash-node') {
+    flash(elementsByAggregateId.get(message.aggregateId) ?? null)
   }
   if (message?.type === 'neos-studio/element-info-request') {
     const element = elementsByAggregateId.get(message.aggregateId)
@@ -1678,6 +1766,9 @@ function init(): void {
   // image through scrolling and layout changes.
   window.addEventListener('scroll', scheduleImageOverlayUpdate, true)
   window.addEventListener('resize', scheduleImageOverlayUpdate)
+  // The overlay lets the pointer through, so no mouseover follows when the
+  // pointer leaves the frame straight from an image - hide it then.
+  document.documentElement.addEventListener('mouseleave', hideImageOverlay)
   // ... as does the shine-through "Create variant" button.
   window.addEventListener('scroll', scheduleShineButtonUpdate, true)
   window.addEventListener('resize', scheduleShineButtonUpdate)

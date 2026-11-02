@@ -1,0 +1,157 @@
+import { useEffect, useState } from 'react'
+import {
+  countChangedNodes,
+  useWorkspaceChanges,
+  type Workspace,
+} from '@/api/workspaces'
+import { useStudio } from '@/app/StudioContext'
+import { Button } from '@/components/ui/button'
+import { CountBadge } from '@/components/ui/count-badge'
+import {
+  consumeReviewFocus,
+  usePendingReviewFocus,
+} from '@/features/review/focus'
+import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
+import { translate as t } from '@/lib/i18n'
+import { ReviewChangesDialog } from './ReviewChangesDialog'
+import { useCanPublish } from './useWorkspacePublishing'
+
+/**
+ * The topbar's single publish entry point: opens the Review changes dialog -
+ * publishing always goes through the review, never straight from the topbar.
+ * Always enabled, since every editor may review (the dialog also covers any
+ * other source/target pair the account can see); publishing itself is gated
+ * inside the dialog by useCanPublish (Neos.Neos:LivePublisher for live).
+ *
+ * Colored while the active workspace has changes the account may publish -
+ * blue into live, purple into a shared workspace - neutral otherwise. Carries
+ * the pending-changes bubble for the active workspace, scoped to the active
+ * site (plus changes whose site could not be resolved - never silently hide a
+ * pending change), matching the review list.
+ */
+export function PublishReviewButton({
+  workspaces,
+  activeWorkspace,
+  onNavigate,
+}: {
+  workspaces: Workspace[]
+  activeWorkspace: Workspace
+  /** See ReviewChangesDialog: show a document, switching the context first. */
+  onNavigate: (address: string, workspaceName: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  /**
+   * Where an incoming request wants the review pointed (a clicked remark
+   * notification). Cleared when the button itself is used - that means "review
+   * what I am working on", not "the thing somebody linked me to".
+   */
+  const [focus, setFocus] = useState<{
+    workspaceName: string
+    documentAggregateId?: string
+  } | null>(null)
+
+  const pendingFocus = usePendingReviewFocus()
+  useEffect(() => {
+    if (pendingFocus === null) return
+    setFocus(pendingFocus)
+    setOpen(true)
+    consumeReviewFocus()
+  }, [pendingFocus])
+  // Same query the trees' dirty markers use, so the bubble always agrees.
+  const { data: changesResponse } = useWorkspaceChanges(activeWorkspace.name)
+  const { site } = useStudio()
+  const siteId = site?.aggregateId ?? null
+  const allChanges = changesResponse?.changes ?? []
+  const changeCount = countChangedNodes(
+    siteId
+      ? allChanges.filter(
+          (c) => c.siteAggregateId === siteId || c.siteAggregateId === null,
+        )
+      : allChanges,
+  )
+  const canPublish = useCanPublish(activeWorkspace, workspaces)
+  const hasChanges = changeCount > 0
+
+  const baseWorkspace = workspaces.find(
+    (w) => w.name === activeWorkspace.baseWorkspace,
+  )
+  const targetLabel =
+    baseWorkspace?.classification === 'ROOT'
+      ? t('workspace.live', 'Live')
+      : baseWorkspace?.title ||
+        activeWorkspace.baseWorkspace ||
+        t('workspace.baseWorkspaceFallback', 'the base workspace')
+
+  // Active (changes the account may publish): colored like the switcher's
+  // target badge - primary blue into live, purple into anything else.
+  const active = hasChanges && canPublish
+  const activeClasses =
+    baseWorkspace?.classification === 'ROOT'
+      ? undefined
+      : 'bg-workspace-shared text-workspace-shared-foreground hover:bg-workspace-shared/90'
+
+  // The former "publish all" shortcut now opens the review as well.
+  useKeyboardShortcut({
+    id: 'workspace.publish',
+    key: 'p',
+    title: t('workspace.reviewAndPublish', 'Review and publish'),
+    category: t('shortcuts.category.workspace', 'Workspace'),
+    handler: () => {
+      if (open) return false
+      setFocus(null)
+      setOpen(true)
+    },
+  })
+
+  return (
+    <>
+      <div className="relative">
+        <Button
+          variant={active ? 'default' : 'secondary'}
+          className={active ? activeClasses : undefined}
+          onClick={() => {
+            setFocus(null)
+            setOpen(true)
+          }}
+          title={
+            canPublish
+              ? t(
+                  'workspace.review.buttonHint',
+                  'Review pending changes between workspaces',
+                )
+              : t(
+                  'workspace.publishDenied',
+                  'You are not allowed to publish to "{0}"',
+                  [targetLabel],
+                )
+          }
+        >
+          <i className="fas fa-fw fa-check" aria-hidden />
+          <span className="hidden @[52.5rem]:inline">
+            {t('workspace.reviewAndPublish', 'Review and publish')}
+          </span>
+        </Button>
+        {hasChanges && (
+          <CountBadge
+            count={changeCount}
+            className="absolute -top-2 -right-1"
+            aria-label={t('workspace.pendingBadge', '{0} pending changes', [
+              changeCount,
+            ])}
+          />
+        )}
+      </div>
+
+      <ReviewChangesDialog
+        workspaces={workspaces}
+        activeWorkspace={activeWorkspace}
+        initialSourceName={focus?.workspaceName}
+        initialCompareDocumentId={focus?.documentAggregateId}
+        open={open}
+        onOpenChange={setOpen}
+        onNavigate={onNavigate}
+        preselectAll
+      />
+    </>
+  )
+}

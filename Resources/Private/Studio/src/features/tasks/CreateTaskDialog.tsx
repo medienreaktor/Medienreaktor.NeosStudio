@@ -5,7 +5,7 @@ import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { createTask, useTasks, type Task } from '@/api/tasks'
 import { useUsers } from '@/api/users'
-import { useWorkspaces } from '@/api/workspaces'
+import { useWorkspaces, type Workspace } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+import { WorkspaceDecorationBadges } from '@/features/workspaces/WorkspaceDecorationBadges'
+import { WorkspaceIcon } from '@/features/workspaces/WorkspaceIcon'
 
 /**
  * Create a task branch: a shared workspace restricted to the involved
@@ -84,7 +86,11 @@ export function CreateTaskDialog({
 
   // Base candidates: live and shared workspaces (incl. other task branches -
   // stacking a task on a feature branch is legitimate).
-  const baseItems = (workspacesData?.workspaces ?? [])
+  const baseItems: {
+    value: string
+    label: string
+    workspace?: Workspace
+  }[] = (workspacesData?.workspaces ?? [])
     .filter(
       (workspace) =>
         workspace.classification === 'ROOT' ||
@@ -92,6 +98,7 @@ export function CreateTaskDialog({
     )
     .map((workspace) => ({
       value: workspace.name,
+      workspace,
       label:
         workspace.classification === 'ROOT'
           ? t('workspace.live', 'Live')
@@ -159,7 +166,7 @@ export function CreateTaskDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field label={t('tasks.title', 'Title')} htmlFor="task-create-title">
             <Input
               id="task-create-title"
@@ -182,7 +189,7 @@ export function CreateTaskDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('tasks.baseWorkspace', 'Based on')}
               htmlFor="task-create-base"
@@ -193,12 +200,17 @@ export function CreateTaskDialog({
                 items={baseItems}
               >
                 <SelectTrigger id="task-create-base" className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value: string | null) => {
+                      const item = baseItems.find((i) => i.value === value)
+                      return item ? <BaseOption {...item} /> : null
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {baseItems.map((item) => (
                     <SelectItem key={item.value} value={item.value}>
-                      {item.label}
+                      <BaseOption {...item} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -207,7 +219,7 @@ export function CreateTaskDialog({
                   moment the branch is created, because that is the only
                   moment the choice is being made - afterwards it is invisible
                   and every publish silently follows it. */}
-              <span className="mt-1 block text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="mt-1 block type-small text-muted-foreground">
                 {t(
                   'tasks.baseWorkspaceHint',
                   'Publishing this task later goes to "{0}".',
@@ -230,7 +242,7 @@ export function CreateTaskDialog({
                 <SelectTrigger id="task-create-assignee" className="w-full">
                   <SelectValue
                     placeholder={t('tasks.selectUser', 'Select user')}
-                    className="data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-400"
+                    className="data-placeholder:text-muted-foreground"
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,5 +277,35 @@ export function CreateTaskDialog({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * A base-workspace option: the shared workspace icon (globe live, users
+ * shared, a task's own icon and color) plus a task's status badge - the same
+ * look as the workspace switcher and the review dialog.
+ */
+function BaseOption({
+  label,
+  workspace,
+}: {
+  label: string
+  workspace?: Workspace
+}) {
+  return (
+    <span className="flex items-center gap-2">
+      {workspace ? (
+        <WorkspaceIcon workspace={workspace} />
+      ) : (
+        // Only the fallback item (list not loaded yet) lacks a workspace -
+        // and that one is live.
+        <i
+          className="fas fa-fw fa-earth-americas type-icon-s text-workspace-live-text"
+          aria-hidden
+        />
+      )}
+      {label}
+      {workspace && <WorkspaceDecorationBadges workspace={workspace} />}
+    </span>
   )
 }

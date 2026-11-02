@@ -490,6 +490,10 @@
         <source>References can be set after creation</source>
         <target xml:lang="lv">Atsauces var iestatīt pēc izveides</target>
       </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
+        <target xml:lang="lv">Doties uz lapu</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="lv">Ievadiet vismaz {0} rakstzīmes, lai meklētu</target>
@@ -1422,10 +1426,6 @@
         <source>Workspaces</source>
         <target xml:lang="lv">Darba virsmas</target>
       </trans-unit>
-      <trans-unit id="preview.button" xml:space="preserve">
-        <source>Preview</source>
-        <target xml:lang="lv">Priekšskatījums</target>
-      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
         <target xml:lang="lv">Šī lapa ir dzēsta. Tā atgriežas, kad to atjaunojat, - vai pazūd pavisam, tiklīdz dzēšana tiek publicēta.</target>
@@ -1441,10 +1441,6 @@
       <trans-unit id="preview.reload" xml:space="preserve">
         <source>Reload preview</source>
         <target xml:lang="lv">Pārlādēt priekšskatījumu</target>
-      </trans-unit>
-      <trans-unit id="preview.selectDocument" xml:space="preserve">
-        <source>Select a document to preview it.</source>
-        <target xml:lang="lv">Izvēlieties dokumentu, lai to priekšskatītu.</target>
       </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
@@ -1561,10 +1557,6 @@
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
         <target xml:lang="lv">Jūsu aktīvās saites</target>
-      </trans-unit>
-      <trans-unit id="share.button" xml:space="preserve">
-        <source>Share</source>
-        <target xml:lang="lv">Kopīgot</target>
       </trans-unit>
       <trans-unit id="share.buttonHint" xml:space="preserve">
         <source>Share a preview link to this page with people without a login</source>
@@ -2326,10 +2318,6 @@
         <source>Loading the outline failed</source>
         <target xml:lang="lv">Struktūras ielāde neizdevās</target>
       </trans-unit>
-      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
-        <source>Select a document to outline its content.</source>
-        <target xml:lang="lv">Izvēlieties dokumentu, lai parādītu tā satura struktūru.</target>
-      </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>
         <target xml:lang="lv">Satura struktūra</target>
@@ -2874,9 +2862,21 @@
         <source>Workspace to publish to</source>
         <target xml:lang="lv">Darba virsma, kurā publicēt</target>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+        <target xml:lang="lv">Pārskatīt un publicēt</target>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
         <target xml:lang="lv">Mana darba virsma, publicē uz</target>
+      </trans-unit>
+      <trans-unit id="workspace.myWorkspace" xml:space="preserve">
+        <source>My workspace</source>
+        <target xml:lang="lv">Mana darba vide</target>
+      </trans-unit>
+      <trans-unit id="workspace.contextTooltip" xml:space="preserve">
+        <source>Editing in {0}, publishing to {1}</source>
+        <target xml:lang="lv">Rediģē {0}, publicē uz {1}</target>
       </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>
@@ -2962,13 +2962,9 @@
         <source>Publish selected</source>
         <target xml:lang="lv">Publicēt izvēlētos</target>
       </trans-unit>
-      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
-        <source>Publish selected ({0})</source>
-        <target xml:lang="lv">Publicēt izvēlētos ({0})</target>
-      </trans-unit>
       <trans-unit id="workspace.review.selectAll" xml:space="preserve">
-        <source>Select all ({0})</source>
-        <target xml:lang="lv">Izvēlēties visus ({0})</target>
+        <source>Select all</source>
+        <target xml:lang="lv">Izvēlēties visus</target>
       </trans-unit>
       <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
         <source>Select documents to publish or discard.</source>
@@ -2985,10 +2981,6 @@
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
         <target xml:lang="lv">Publicēt uz</target>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
-        <target xml:lang="lv">Pārskatīt izmaiņas</target>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

@@ -23,10 +23,10 @@ export function taskStatusLabel(status: TaskStatus): string {
 export function taskStatusColor(status: TaskStatus): string {
   switch (status) {
     case 'DONE':
-      return 'light-dark(var(--color-green-600), var(--color-green-400))'
+      return 'var(--color-task-done-text)'
     case 'IN_REVIEW':
-      return 'light-dark(var(--color-orange-600), var(--color-orange-400))'
+      return 'var(--color-task-in-review-text)'
     default:
-      return 'var(--color-blue-500)'
+      return 'var(--color-task-open-text)'
   }
 }

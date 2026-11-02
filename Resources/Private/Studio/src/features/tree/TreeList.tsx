@@ -26,6 +26,7 @@ export function TreeList<T>({
   loadingText,
   decorate,
   onItemContextMenu,
+  selectOnContextMenu = false,
   rootless = false,
 }: {
   tree: TreeInstance<T>
@@ -46,6 +47,14 @@ export function TreeList<T>({
   decorate?: (data: T) => TreeRowDecor | null
   /** Right-click on a row; when set, the browser menu is suppressed. */
   onItemContextMenu?: (item: ItemInstance<T>, event: React.MouseEvent) => void
+  /**
+   * Right-clicking a row outside the current selection first makes it the
+   * selection (and the shift anchor), file-manager style - for trees whose
+   * context menu acts on the selected rows. Off by default: a tree whose
+   * selection mirrors outside state (e.g. the media tree's active filter)
+   * must not have a right-click desync the highlight.
+   */
+  selectOnContextMenu?: boolean
   /**
    * For forests (many top-level items) rather than a single visible root:
    * level-0 rows keep their expand arrow and indent from level 0, instead of
@@ -77,7 +86,7 @@ export function TreeList<T>({
         // Reorder indicator between rows; getDragLineStyle hides it (display:
         // none) when the current drop target is "into" a folder instead.
         <div
-          className="pointer-events-none z-10 h-0.5 rounded-full bg-blue-500"
+          className="pointer-events-none z-10 h-0.5 rounded-full bg-primary"
           style={dnd.getDragLineStyle()}
         />
       )}
@@ -126,24 +135,32 @@ export function TreeList<T>({
               onItemContextMenu &&
               ((e) => {
                 e.preventDefault()
+                // File-manager semantics: right-clicking a row outside the
+                // current selection makes it the selection (and the shift
+                // anchor), right-clicking inside it keeps the selection - so
+                // the menu always acts on the highlighted rows.
+                if (selectOnContextMenu && !item.isSelected()) {
+                  tree.setSelectedItems([item.getId()])
+                  tree.getDataRef<{
+                    selectUpToAnchorId?: string
+                  }>().current.selectUpToAnchorId = item.getId()
+                }
                 onItemContextMenu(item, e)
               })
             }
             className={cn(
-              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 motion-safe:animate-tree-row-in',
-              item.isSelected() &&
-                'border-blue-500 bg-neutral-100 dark:bg-neutral-800',
+              'flex w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-sm border border-transparent py-0.5 pr-1.5 text-left type-body transition-colors hover:bg-accent motion-safe:animate-tree-row-in',
+              item.isSelected() && 'border-primary bg-accent',
               item.isFocused() && 'outline-0',
-              isDropTarget && 'border-blue-500 bg-blue-500/10',
+              isDropTarget && 'border-primary bg-primary-tint',
             )}
-            style={{ paddingLeft: `${indentLevel * 14 + 2}px` }}
+            style={{ paddingLeft: `${indentLevel * 0.875 + 0.125}rem` }}
           >
             {!isRoot && (
               <span
                 className={cn(
-                  'flex size-5 shrink-0 items-center justify-center rounded-sm text-xs text-neutral-600 dark:text-neutral-400',
-                  item.isFolder() &&
-                    'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white',
+                  'flex size-4.5 shrink-0 items-center justify-center rounded-sm type-small text-muted-foreground',
+                  item.isFolder() && 'hover:bg-accent hover:text-foreground',
                 )}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -158,7 +175,7 @@ export function TreeList<T>({
                 {item.isFolder() ? (
                   <i
                     className={cn(
-                      'fas fa-caret-right fa-fw text-[0.75rem] transition-transform duration-150',
+                      'fas fa-caret-right fa-fw type-icon-m transition-transform duration-150',
                       item.isExpanded() && 'rotate-90',
                     )}
                     aria-hidden
@@ -169,9 +186,7 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.icon && (
-              <span className="shrink-0 text-neutral-950 dark:text-white">
-                {decor.icon}
-              </span>
+              <span className="shrink-0 text-foreground">{decor.icon}</span>
             )}
             {/* Not isLoading(): that also covers children-loading, which
                 would swap an expanding folder's own label out for a skeleton
@@ -193,7 +208,7 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.markers && (
-              <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-neutral-600 dark:text-neutral-400">
+              <span className="ml-auto flex shrink-0 items-center gap-1 pl-2 text-muted-foreground">
                 {decor.markers}
               </span>
             )}
@@ -221,12 +236,12 @@ function skeletonWidth(id: string) {
  * without a layout jump.
  */
 const SKELETON_ROWS = [
-  { level: 0, width: 96 },
-  { level: 1, width: 128 },
-  { level: 2, width: 88 },
-  { level: 2, width: 112 },
-  { level: 1, width: 72 },
-  { level: 1, width: 104 },
+  { level: 0, width: '6rem' },
+  { level: 1, width: '8rem' },
+  { level: 2, width: '5.5rem' },
+  { level: 2, width: '7rem' },
+  { level: 1, width: '4.5rem' },
+  { level: 1, width: '6.5rem' },
 ]
 
 function TreeListSkeleton({ label }: { label?: string }) {
@@ -236,14 +251,14 @@ function TreeListSkeleton({ label }: { label?: string }) {
       {SKELETON_ROWS.map((row, index) => (
         <div
           key={index}
-          className="flex h-6 items-center gap-1.5"
+          className="flex h-5.5 items-center gap-1.5"
           style={{
-            paddingLeft: `${row.level * 14 + 4}px`,
+            paddingLeft: `${row.level * 0.875 + 0.25}rem`,
             opacity: 1 - index * 0.13,
           }}
         >
-          <Skeleton className="size-4 shrink-0" />
-          <Skeleton className="h-3" style={{ width: `${row.width}px` }} />
+          <Skeleton className="size-3.5 shrink-0" />
+          <Skeleton className="h-3" style={{ width: row.width }} />
         </div>
       ))}
     </div>

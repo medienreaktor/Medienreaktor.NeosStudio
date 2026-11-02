@@ -14,7 +14,7 @@
  * wherever the two disagree, because it describes the markup the value is
  * rendered into, not what an editor would like to allow.
  */
-import { Editor, type Extensions } from '@tiptap/core'
+import { Editor, Extension, type Extensions } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Document } from '@tiptap/extension-document'
 import { Text } from '@tiptap/extension-text'
@@ -30,6 +30,7 @@ import { Superscript } from '@tiptap/extension-superscript'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
 import { resolveStyles, styleExtensions, type ResolvedStyle } from './styles'
+import { ParagraphWithFiller } from './serialize'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
 const INLINE_ATTRIBUTE = 'data-__neos-studio-inline'
@@ -80,6 +81,15 @@ export interface Formatting {
    * individual elements (see styles.ts).
    */
   styles: ResolvedStyle[]
+  /**
+   * Whether text is wrapped in paragraphs. False - the NodeType's
+   * `autoparagraph: false` (for inline editing also when unset), or a
+   * property rendered as a <span> or heading (see parseFormatting) - stores
+   * a plain top-level paragraph as its bare inline content (see
+   * serialize.ts) and makes Enter insert a line break, as the classic Neos
+   * UI does.
+   */
+  autoparagraph: boolean
   // Derived
   /** Whether the schema has block nodes (vs. a single inline-only line). */
   block: boolean
@@ -108,6 +118,7 @@ export const DEFAULT_FORMATTING: Formatting = {
   removeFormat: true,
   horizontalRule: true,
   styles: [],
+  autoparagraph: true,
   block: true,
   multiline: true,
 }
@@ -144,12 +155,29 @@ export interface RawFormattingConfig {
   autoparagraph?: unknown
 }
 
+/**
+ * Property elements the classic Neos UI never autoparagraphs, whatever the
+ * NodeType's `autoparagraph` says (its DisabledAutoparagraphMode): text
+ * rendered into a <span> or a heading cannot hold paragraphs.
+ */
+const NO_AUTOPARAGRAPH_TAG = /^(SPAN|H[1-6])$/
+
 /** Read and normalize a property element's formatting config. */
 export function parseFormatting(element: HTMLElement): Formatting {
+  const inline = element.hasAttribute(INLINE_ATTRIBUTE)
+  const formatting = formattingFromAttribute(element, inline)
+  return inline || NO_AUTOPARAGRAPH_TAG.test(element.tagName)
+    ? { ...formatting, autoparagraph: false, multiline: false }
+    : formatting
+}
+
+function formattingFromAttribute(
+  element: HTMLElement,
+  inline: boolean,
+): Formatting {
   // An inline editable is inline whatever its formatting config says - and
   // notably also when it has none at all, where the permissive default would
   // otherwise hand a <span> property paragraphs, headings and lists.
-  const inline = element.hasAttribute(INLINE_ATTRIBUTE)
   const fallback = inline
     ? withoutBlocks(DEFAULT_FORMATTING)
     : DEFAULT_FORMATTING
@@ -161,7 +189,14 @@ export function parseFormatting(element: HTMLElement): Formatting {
   } catch {
     return fallback
   }
-  return normalizeFormatting(config, inline)
+  // The classic Neos UI merges a property's inline editorOptions over
+  // defaults that include `autoparagraph: false`, so an inline property that
+  // does not set it is not autoparagraphed. The markup carries an unset value
+  // as null (see StudioHelper.inlineFormatting).
+  return normalizeFormatting(
+    { ...config, autoparagraph: config.autoparagraph ?? false },
+    inline,
+  )
 }
 
 /**
@@ -209,9 +244,11 @@ export function normalizeFormatting(
     horizontalRule: block,
     // Resolved below, once the enclosing markup has had its say.
     styles: [],
+    autoparagraph: config.autoparagraph !== false,
     block,
-    // autoparagraph false (or a single-line title with p:false) stays one block.
-    multiline: config.autoparagraph !== false && paragraph,
+    // Like CKEditor, `p: false` only hides the paragraph button; Enter still
+    // adds paragraphs unless autoparagraph is off.
+    multiline: config.autoparagraph !== false,
   }
 
   // Style definitions are resolved last, against the *final* capability set:
@@ -221,6 +258,30 @@ export function normalizeFormatting(
   return { ...resolved, styles: resolveStyles(f.styleDefinitions, resolved) }
 }
 
+/**
+ * Enter on a property without autoparagraph (see Formatting.autoparagraph)
+ * inserts a line break, as in the classic Neos UI. Its document holds a
+ * single block or bare inline content, so Enter has nothing to split into
+ * and would otherwise do nothing at all. Applies only in a top-level
+ * textblock (or the inline-only document): list items, table cells and code
+ * blocks keep their own Enter handling.
+ */
+const ENTER_INSERTS_LINE_BREAK = Extension.create({
+  name: 'enterInsertsLineBreak',
+  // Ahead of the core keymap's Enter (default priority 100).
+  priority: 101,
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        const { $from } = this.editor.state.selection
+        if ($from.depth > 1 || !$from.parent.isTextblock) return false
+        if ($from.parent.type.spec.code) return false
+        return this.editor.commands.setHardBreak()
+      },
+    }
+  },
+})
+
 /** The TipTap extension set (schema) for a resolved config. */
 export function extensionsFor(config: Formatting): Extensions {
   const marks: Extensions = []
@@ -229,6 +290,10 @@ export function extensionsFor(config: Formatting): Extensions {
   // The `class` attribute the property's style definitions need to survive a
   // round trip, plus a mark per inline element that had none (see styles.ts).
   const styles: Extensions = styleExtensions(config.styles)
+  // Key handling that depends on the config, identical in both schemas.
+  const keys: Extensions = config.autoparagraph
+    ? []
+    : [ENTER_INSERTS_LINE_BREAK]
 
   if (!config.block) {
     // Inline-only: a single line of text with marks, no block nodes, so the
@@ -245,6 +310,7 @@ export function extensionsFor(config: Formatting): Extensions {
       ...(config.link ? [Link.configure(LINK_CONFIGURATION)] : []),
       ...marks,
       ...styles,
+      ...keys,
     ]
   }
 
@@ -262,6 +328,8 @@ export function extensionsFor(config: Formatting): Extensions {
       // Disable StarterKit's document for single-line properties; a custom
       // single-block Document is added below. undefined keeps the default.
       document: config.multiline ? undefined : false,
+      // Replaced by ParagraphWithFiller below (CKEditor's blank-line filler).
+      paragraph: false,
       heading: config.headingLevels.length
         ? { levels: config.headingLevels as (1 | 2 | 3 | 4 | 5 | 6)[] }
         : false,
@@ -276,6 +344,7 @@ export function extensionsFor(config: Formatting): Extensions {
       orderedList: config.orderedList ? {} : false,
       link: config.link ? LINK_CONFIGURATION : false,
     }),
+    ParagraphWithFiller,
     ...(config.multiline ? [] : [Document.extend({ content: 'block' })]),
     ...(config.alignment
       ? [TextAlign.configure({ types: ['heading', 'paragraph'] })]
@@ -285,6 +354,7 @@ export function extensionsFor(config: Formatting): Extensions {
       : []),
     ...marks,
     ...styles,
+    ...keys,
   ]
 }
 

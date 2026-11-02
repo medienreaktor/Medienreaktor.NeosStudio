@@ -31,7 +31,7 @@ function TabsList({
         // on mount by walking offsetParents up to this list — if the list is
         // position: static the walk overshoots to the page and scrollTo gets
         // a huge offset, pinning the list to the end.
-        'scrollbar-none relative inline-flex h-9 w-fit max-w-full items-center justify-start overflow-x-auto text-neutral-600 dark:text-neutral-400',
+        'scrollbar-none relative inline-flex h-8.5 w-fit max-w-full items-center justify-start overflow-x-auto text-muted-foreground',
         className,
       )}
       {...props}
@@ -47,7 +47,7 @@ function TabsTrigger({
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex h-full flex-1 items-center border-t border-transparent justify-center gap-1.5 px-3 py-1 text-sm font-medium whitespace-nowrap text-neutral-600 dark:text-neutral-400 transition-[color] focus-visible:border-blue-500 focus-visible:outline-1 focus-visible:outline-blue-500 disabled:pointer-events-none disabled:opacity-50 data-active:bg-neutral-50 data-active:border-neutral-300 dark:data-active:bg-neutral-900 dark:data-active:border-neutral-600 data-active:text-blue-500 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "inline-flex h-full flex-1 items-center border-t border-transparent justify-center gap-1.5 px-3 py-1 type-body-strong whitespace-nowrap text-muted-foreground transition-[color] focus-visible:border-primary focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 data-active:bg-card data-active:border-primary data-active:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className,
       )}
       {...props}
@@ -62,10 +62,7 @@ function TabsContent({
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn(
-        'flex-1 outline-none bg-neutral-50 dark:bg-neutral-900',
-        className,
-      )}
+      className={cn('flex-1 outline-none bg-card', className)}
       {...props}
     />
   )

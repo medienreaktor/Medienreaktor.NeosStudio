@@ -112,7 +112,7 @@ export function NodeTreeRuleEditor({
           'accessRoles.treeNoSites',
           'No site to browse — every site is excluded by the Sites tab.',
         )}
-        className="py-10"
+        className="py-9.5"
       />
     )
   }
@@ -124,7 +124,7 @@ export function NodeTreeRuleEditor({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="type-body text-muted-foreground">
         {t(
           'accessRoles.treeHint',
           'Without a rule the whole page tree is open. Add an allow rule and everything outside it closes; add deny rules to cut single pages out of a branch. The nearest rule to a page wins.',
@@ -140,7 +140,7 @@ export function NodeTreeRuleEditor({
           }}
           items={siteItems}
         >
-          <SelectTrigger className="w-full max-w-xs">
+          <SelectTrigger className="w-full max-w-75">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -170,23 +170,23 @@ export function NodeTreeRuleEditor({
             'accessRoles.treeSiteUnavailable',
             'This site has no node in the live workspace.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-3">
-        <span className="min-w-0 flex-1 truncate text-sm">
+        <span className="min-w-0 flex-1 truncate type-body">
           {selection ? (
             <>
-              <span className="text-neutral-500">
+              <span className="text-muted-foreground">
                 {t('accessRoles.treeSelected', 'Selected:')}{' '}
               </span>
-              <span className="font-medium text-neutral-950 dark:text-white">
+              <span className="font-medium text-foreground">
                 {selection.path}
               </span>
             </>
           ) : (
-            <span className="text-neutral-500">
+            <span className="text-muted-foreground">
               {t(
                 'accessRoles.treeSelectFirst',
                 'Select a page above to allow or deny it.',
@@ -195,7 +195,7 @@ export function NodeTreeRuleEditor({
           )}
         </span>
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+        <label className="flex cursor-pointer items-center gap-2 type-body text-muted-foreground">
           <Checkbox
             checked={includeDescendants}
             onCheckedChange={(checked) =>
@@ -238,19 +238,19 @@ export function NodeTreeRuleEditor({
           {rules.map((rule) => (
             <li
               key={rule.nodeAggregateId}
-              className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm"
+              className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 type-body"
             >
               <span className="flex min-w-0 items-center gap-2">
                 <i
                   className={cn(
-                    'fas text-xs',
+                    'fas type-icon-m',
                     rule.mode === 'ALLOW'
-                      ? 'fa-check text-green-600 dark:text-green-500'
-                      : 'fa-ban text-red-600 dark:text-red-500',
+                      ? 'fa-check text-access-allow-text'
+                      : 'fa-ban text-access-deny-text',
                   )}
                   aria-hidden
                 />
-                <span className="truncate text-neutral-800 dark:text-neutral-200">
+                <span className="truncate text-foreground">
                   {rule.path || rule.label || rule.nodeAggregateId}
                 </span>
                 {!rule.includeDescendants && (
@@ -347,10 +347,10 @@ function SiteDocumentTree({
     rules.find((rule) => rule.nodeAggregateId === aggregateId) ?? null
 
   return (
-    <div className="h-64 min-h-0 overflow-y-auto rounded-md border bg-white p-1 dark:bg-neutral-950">
+    <div className="h-60 min-h-0 overflow-y-auto rounded-md border bg-background p-1">
       <TreeList
         tree={tree}
-        label={t('accessRoles.treeLabel', 'Page tree')}
+        label={t('accessRoles.treeLabel', 'Documents')}
         loading={!rootLoaded}
         loadingText={t('accessRoles.treeLoading', 'Loading pages…')}
         emptyText={t('accessRoles.treeEmpty', 'This site has no pages yet.')}
@@ -368,10 +368,10 @@ function SiteDocumentTree({
             markers: rule && (
               <i
                 className={cn(
-                  'fas text-[0.7rem]',
+                  'fas type-icon-s',
                   rule.mode === 'ALLOW'
-                    ? 'fa-check text-green-600 dark:text-green-500'
-                    : 'fa-ban text-red-600 dark:text-red-500',
+                    ? 'fa-check text-access-allow-text'
+                    : 'fa-ban text-access-deny-text',
                 )}
                 title={
                   rule.includeDescendants

@@ -124,7 +124,7 @@ export function CreateWorkspaceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field
             label={t('workspacesAdmin.title2', 'Title')}
             htmlFor="workspace-create-title"
@@ -150,7 +150,7 @@ export function CreateWorkspaceDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('workspacesAdmin.baseWorkspace', 'Base workspace')}
               htmlFor="workspace-create-base"

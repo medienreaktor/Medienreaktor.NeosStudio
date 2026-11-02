@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { groupComments, useReviewComments } from '@/api/reviewComments'
 import {
   useWorkspaceDocumentChanges,
@@ -13,6 +13,7 @@ import { useTaskVerdict } from '@/features/review/useTaskVerdict'
 import { taskStatusColor, taskStatusLabel } from '@/features/tasks/status'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { CountBadge } from '@/components/ui/count-badge'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
@@ -32,12 +33,15 @@ import {
 } from '@/components/ui/select'
 import { CompareDialog } from '@/features/compare/CompareDialog'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import { ChangeBadges, workspaceLabel } from './changeDisplay'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import { NodeDiff } from './StepDiff'
-import { useWorkspacePublishing } from './useWorkspacePublishing'
+import { useCanPublish, useWorkspacePublishing } from './useWorkspacePublishing'
+import { WorkspaceDecorationBadges } from './WorkspaceDecorationBadges'
+import { WorkspaceIcon } from './WorkspaceIcon'
 
 /**
  * The expanded body of a document row: the document's NET diff against the
@@ -58,14 +62,14 @@ function DocumentDiff({
     documentId,
   )
   return (
-    <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 text-[11px]">
+    <div className="mt-1 mb-2 ml-13 flex flex-col gap-2 type-small">
       {isLoading && (
-        <div className="py-1 text-neutral-500">
+        <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.loadingDiff', 'Loading changes…')}
         </div>
       )}
       {isError && (
-        <div className="py-1 text-neutral-500">
+        <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.diffFailed', 'The changes could not be loaded.')}
         </div>
       )}
@@ -76,7 +80,7 @@ function DocumentDiff({
         />
       ))}
       {data !== undefined && data.nodes.length === 0 && (
-        <div className="text-neutral-500">
+        <div className="text-muted-foreground">
           {t('workspaceHistory.noDetails', 'No details available.')}
         </div>
       )}
@@ -107,6 +111,7 @@ export function ReviewChangesDialog({
   workspaces,
   activeWorkspace,
   initialSourceName,
+  preselectAll = false,
   initialCompareDocumentId,
   open,
   onOpenChange,
@@ -123,6 +128,11 @@ export function ReviewChangesDialog({
    * re-pick any pair inside the dialog.
    */
   initialSourceName?: string
+  /**
+   * Open with every document of the initial source selected, so publishing
+   * everything is a single click (the topbar's Review and publish button).
+   */
+  preselectAll?: boolean
   /**
    * Open the side-by-side comparison on this page right away - what a remark
    * notification leads to, since the remark is about a change on that page.
@@ -165,17 +175,29 @@ export function ReviewChangesDialog({
   /** Handing the task back, with the reason the reviewer is about to write. */
   const [requestingChanges, setRequestingChanges] = useState(false)
 
+  // Armed on open when preselecting; fired once the initial source's list has
+  // (re)loaded, so a fresh fetch rather than a stale cache decides what is
+  // selected. Re-picking a source inside the dialog does not re-arm it.
+  const pendingPreselect = useRef(false)
+
   // Every open starts fresh on the requested (or active) workspace - the
   // closed dialog does not carry a stale review over to the next one.
   useEffect(() => {
     if (open) {
+      pendingPreselect.current = preselectAll
       setSourceName(initialSourceName ?? activeWorkspace.name)
       setSelectedIds(new Set())
       setExpandedIds(new Set())
       setCompareDocumentId(initialCompareDocumentId ?? null)
       setRequestingChanges(false)
     }
-  }, [open, activeWorkspace.name, initialSourceName, initialCompareDocumentId])
+  }, [
+    open,
+    activeWorkspace.name,
+    initialSourceName,
+    preselectAll,
+    initialCompareDocumentId,
+  ])
 
   const source =
     sources.find((w) => w.name === sourceName) ??
@@ -211,6 +233,7 @@ export function ReviewChangesDialog({
 
   const pickSource = (name: string) => {
     if (name === source?.name) return
+    pendingPreselect.current = false
     setSourceName(name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
@@ -232,7 +255,7 @@ export function ReviewChangesDialog({
   const { site, navigateToNode } = useStudio()
   // Fetch only while open; the query refreshes on publish/discard via the
   // workspaces invalidation the shared hook performs.
-  const { data, isLoading } = useWorkspaceDocumentChanges(
+  const { data, isLoading, isFetching } = useWorkspaceDocumentChanges(
     source?.name ?? null,
     open,
   )
@@ -260,7 +283,6 @@ export function ReviewChangesDialog({
     if (open) setShowComments(hasComments)
   }, [open, source?.name, hasComments])
 
-
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev)
@@ -282,6 +304,12 @@ export function ReviewChangesDialog({
         )
       : all
   }, [data, siteId])
+
+  useEffect(() => {
+    if (!open || !pendingPreselect.current || isFetching || !data) return
+    pendingPreselect.current = false
+    setSelectedIds(new Set(documents.map((d) => d.documentAggregateId)))
+  }, [open, isFetching, data, documents])
 
   // A discard waiting for confirmation; the confirm dialog is open while true.
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -311,6 +339,9 @@ export function ReviewChangesDialog({
         : new Set(),
     )
   }
+
+  // Anchor for the confetti burst a successful publish celebrates with.
+  const publishButtonRef = useRef<HTMLButtonElement>(null)
 
   /**
    * Whether this publish will also complete the task - and it is the CONTENT
@@ -344,11 +375,19 @@ export function ReviewChangesDialog({
       {
         onSuccess: () => {
           setSelectedIds(new Set())
-          if (kind !== 'publish') return
-          onPublished?.(sourceWorkspaceName)
-          if (completesTask) {
-            toast.success(t('tasks.completed', 'The task has been completed.'))
+          if (kind === 'publish') {
+            // Up and to the left from the footer's right edge - measured
+            // before the dialog closes and the button unmounts.
+            celebrateAround(publishButtonRef.current, 120)
+            onPublished?.(sourceWorkspaceName)
+            if (completesTask) {
+              toast.success(
+                t('tasks.completed', 'The task has been completed.'),
+              )
+            }
           }
+          // The review is done once its selection went out (or away).
+          onOpenChange(false)
         },
       },
     )
@@ -370,7 +409,7 @@ export function ReviewChangesDialog({
 
   const busy = operation.isPending || verdict.isPending
   const reviewingActive = source?.name === activeWorkspace.name
-  const canPublish = source?.permissions.publish ?? false
+  const canPublish = useCanPublish(source, workspaces)
   // Discarding rewrites the reviewed workspace - needs write access on it (a
   // given for the active workspace, not for e.g. a draft reviewed as VIEWER).
   const canDiscard = source?.permissions.write ?? false
@@ -428,7 +467,7 @@ export function ReviewChangesDialog({
         >
           <DialogHeader>
             <DialogTitle>
-              {t('workspace.reviewChanges', 'Review changes')}
+              {t('workspace.reviewAndPublish', 'Review and publish')}
             </DialogTitle>
             <DialogDescription>
               {task
@@ -447,23 +486,23 @@ export function ReviewChangesDialog({
               from a notification or a board card and would otherwise be
               looking at a bare list of pages. */}
           {task && (
-            <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-3 text-sm dark:border-neutral-800">
+            <div className="flex flex-wrap items-center gap-2 border-b border-divider pb-3 type-body">
               <i
-                className="fas fa-code-branch text-xs"
+                className="fas fa-code-branch type-icon-m"
                 style={{ color: taskStatusColor(task.status) }}
                 aria-hidden
               />
-              <span className="truncate font-medium text-neutral-950 dark:text-white">
+              <span className="truncate font-medium text-foreground">
                 {sourceLabel}
               </span>
               <span
-                className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none"
+                className="inline-flex items-center rounded-sm border border-current px-1 py-px type-overline select-none"
                 style={{ color: taskStatusColor(task.status) }}
               >
                 {taskStatusLabel(task.status)}
               </span>
               {task.assigneeLabel && (
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                <span className="type-small text-muted-foreground">
                   {t('tasks.assignedTo', 'Assigned to {0}', [
                     task.assigneeLabel,
                   ])}
@@ -474,7 +513,7 @@ export function ReviewChangesDialog({
 
           <div className="flex flex-wrap items-center gap-3 pb-3">
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="type-small text-muted-foreground">
                 {t('workspace.review.sourceLabel', 'Changes in')}
               </span>
               <Select
@@ -483,16 +522,29 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={sourceItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
-                  <SelectValue />
+                <SelectTrigger size="sm" className="min-w-37.5">
+                  <SelectValue>
+                    {(name: string | null) => {
+                      const w = workspaces.find((c) => c.name === name)
+                      return (
+                        <span className="flex items-center gap-2">
+                          <WorkspaceIcon workspace={w} />
+                          {workspaceLabel(w, name ?? '')}
+                          {w && <WorkspaceDecorationBadges workspace={w} />}
+                        </span>
+                      )
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {sourcesForTarget.map((w) => (
                     <SelectItem key={w.name} value={w.name}>
+                      <WorkspaceIcon workspace={w} />
                       {workspaceLabel(w, w.name)}
+                      <WorkspaceDecorationBadges workspace={w} />
                       {w.hasPublishableChanges && (
                         <span
-                          className="size-1.5 rounded-full bg-amber-500"
+                          className="size-1.5 rounded-full bg-node-modified"
                           title={t(
                             'workspace.review.hasChanges',
                             'Has pending changes',
@@ -505,11 +557,11 @@ export function ReviewChangesDialog({
               </Select>
             </div>
             <i
-              className="fas fa-arrow-right mt-4 text-xs text-neutral-500"
+              className="fas fa-arrow-right mt-3.5 type-icon-m text-muted-foreground"
               aria-hidden
             />
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="type-small text-muted-foreground">
                 {t('workspace.review.targetLabel', 'Publishing to')}
               </span>
               <Select
@@ -518,15 +570,31 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={targetItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
-                  <SelectValue />
+                <SelectTrigger size="sm" className="min-w-37.5">
+                  <SelectValue>
+                    {(name: string | null) => {
+                      const w = workspaces.find((c) => c.name === name)
+                      return (
+                        <span className="flex items-center gap-2">
+                          <WorkspaceIcon workspace={w} />
+                          {workspaceLabel(w, name ?? '')}
+                          {w && <WorkspaceDecorationBadges workspace={w} />}
+                        </span>
+                      )
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {targetItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  {targetItems.map((item) => {
+                    const w = workspaces.find((c) => c.name === item.value)
+                    return (
+                      <SelectItem key={item.value} value={item.value}>
+                        <WorkspaceIcon workspace={w} />
+                        {item.label}
+                        {w && <WorkspaceDecorationBadges workspace={w} />}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -537,7 +605,7 @@ export function ReviewChangesDialog({
             <Button
               size="sm"
               variant={showComments ? 'secondary' : 'ghost'}
-              className="mt-4 ml-auto"
+              className="mt-3.5 ml-auto"
               title={t(
                 'review.commentsHint',
                 'Discuss these changes with everyone involved',
@@ -547,244 +615,255 @@ export function ReviewChangesDialog({
               <i className="fas fa-fw fa-comments" aria-hidden />
               {t('review.comments', 'Comments')}
               {hasComments && (
-                <span className="ml-1 tabular-nums text-neutral-600 dark:text-neutral-400">
+                <span className="ml-1 tabular-nums text-muted-foreground">
                   {commentsData?.comments.length}
                 </span>
               )}
             </Button>
           </div>
 
-          <div className="flex min-h-0 flex-1 gap-4">
+          <div className="flex min-h-0 flex-1 gap-3.5">
             <div className="flex min-w-0 flex-1 flex-col">
-          {documents.length > 0 && (
-            <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 text-sm text-neutral-700 dark:text-neutral-300">
-              <Checkbox
-                checked={allSelected}
-                indeterminate={selectedCount > 0 && !allSelected}
-                onCheckedChange={toggleAll}
-              />
-              {selectedCount > 0
-                ? t('workspace.review.selectedOf', '{0} of {1} selected', [
-                    selectedCount,
-                    documents.length,
-                  ])
-                : t('workspace.review.selectAll', 'Select all ({0})', [
-                    documents.length,
-                  ])}
-            </label>
-          )}
+              {documents.length > 0 && (
+                <label className="flex cursor-pointer items-center gap-2 border-b border-divider pb-2 type-body text-muted-foreground">
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={selectedCount > 0 && !allSelected}
+                    onCheckedChange={toggleAll}
+                  />
+                  {selectedCount > 0 ? (
+                    t('workspace.review.selectedOf', '{0} of {1} selected', [
+                      selectedCount,
+                      documents.length,
+                    ])
+                  ) : (
+                    <>
+                      {t('workspace.review.selectAll', 'Select all')}
+                      <CountBadge variant="neutral" count={documents.length} />
+                    </>
+                  )}
+                </label>
+              )}
 
-          <div className="-mx-1 flex-1 overflow-y-auto px-1">
-            {isLoading ? (
-              <LoadingState
-                label={t('workspace.review.loading', 'Loading changes…')}
-                className="py-8"
-              />
-            ) : documents.length === 0 ? (
-              <Placeholder
-                icon="fa-check"
-                title={
-                  readyToComplete
-                    ? t(
-                        'review.allPublished',
-                        'Nothing left to publish — the task can be completed.',
-                      )
-                    : t('workspace.review.empty', 'No pending changes.')
-                }
-                className="py-8"
-              />
-            ) : (
-              <ul className="flex flex-col gap-px">
-                {documents.map((document) => {
-                  const id = document.documentAggregateId
-                  const isSelected = selectedIds.has(id)
-                  const isExpanded = expandedIds.has(id)
-                  const breadcrumb = document.breadcrumb.slice(0, -1)
-                  return (
-                    // The selected look of every other list in the Studio
-                    // (trees, trash, clipboard): blue border on the lifted
-                    // surface, transparent border at rest so nothing shifts.
-                    // It sits on the whole item, so an unfolded document holds
-                    // its node changes inside its own selection.
-                    <li
-                      key={id}
-                      className={cn(
-                        // Hovering the document row lifts the whole item, its
-                        // unfolded changes included (has-, so reading the diff
-                        // itself does not light the item up).
-                        'rounded-sm border border-transparent transition-colors',
-                        isSelected
-                          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
-                          : 'has-[>label:hover]:bg-neutral-200 dark:has-[>label:hover]:bg-neutral-800',
-                      )}
-                    >
-                      <label className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5">
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={isSelected}
-                          onCheckedChange={(checked) => toggle(id, checked)}
-                        />
-                        <FaIcon
-                          icon={document.icon ?? 'fa-file'}
+              <div className="-mx-1 flex-1 overflow-y-auto px-1">
+                {isLoading ? (
+                  <LoadingState
+                    label={t('workspace.review.loading', 'Loading changes…')}
+                    className="py-7.5"
+                  />
+                ) : documents.length === 0 ? (
+                  <Placeholder
+                    icon="fa-check"
+                    title={
+                      readyToComplete
+                        ? t(
+                            'review.allPublished',
+                            'Nothing left to publish — the task can be completed.',
+                          )
+                        : t('workspace.review.empty', 'No pending changes.')
+                    }
+                    className="py-7.5"
+                  />
+                ) : (
+                  <ul className="flex flex-col gap-px">
+                    {documents.map((document) => {
+                      const id = document.documentAggregateId
+                      const isSelected = selectedIds.has(id)
+                      const isExpanded = expandedIds.has(id)
+                      const breadcrumb = document.breadcrumb.slice(0, -1)
+                      return (
+                        // The selected look of every other list in the Studio
+                        // (trees, trash, clipboard): blue border on the lifted
+                        // surface, transparent border at rest so nothing shifts.
+                        // It sits on the whole item, so an unfolded document holds
+                        // its node changes inside its own selection.
+                        <li
+                          key={id}
                           className={cn(
-                            // The icon's own line box is shorter than the
-                            // title's (12px glyph, 14px text), so it needs the
-                            // difference to sit on the title's baseline.
-                            'mt-1 shrink-0 text-neutral-950 dark:text-white',
-                            document.hidden && 'opacity-50',
+                            // Hovering the document row lifts the whole item, its
+                            // unfolded changes included (has-, so reading the diff
+                            // itself does not light the item up).
+                            'rounded-sm border border-transparent transition-colors',
+                            isSelected
+                              ? 'border-primary bg-accent'
+                              : 'has-[>label:hover]:bg-muted',
                           )}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span
+                        >
+                          <label className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5">
+                            <Checkbox
+                              className="mt-0.5"
+                              checked={isSelected}
+                              onCheckedChange={(checked) => toggle(id, checked)}
+                            />
+                            <FaIcon
+                              icon={document.icon ?? 'fa-file'}
                               className={cn(
-                                'truncate text-sm',
+                                // The icon's own line box is shorter than the
+                                // title's (12px glyph, 14px text), so it needs the
+                                // difference to sit on the title's baseline.
+                                'mt-1 shrink-0 text-foreground',
                                 document.hidden && 'opacity-50',
                               )}
-                            >
-                              {document.label}
-                            </span>
-                            {document.hidden && (
-                              <i
-                                className="fas fa-eye-slash text-xs text-neutral-500"
-                                title={t('workspace.review.hidden', 'Hidden')}
-                                aria-hidden
-                              />
-                            )}
-                          </div>
-                          {breadcrumb.length > 0 && (
-                            <div className="truncate text-xs text-neutral-600 dark:text-neutral-400">
-                              {breadcrumb.join(' › ')}
-                            </div>
-                          )}
-                          <div className="mt-1 flex items-center gap-2">
-                            <ChangeBadges document={document} />
-                            <span className="text-xs text-neutral-500">
-                              {document.changeCount === 1
-                                ? t('workspace.oneChange', '1 change')
-                                : t('workspace.manyChanges', '{0} changes', [
-                                    document.changeCount,
-                                  ])}
-                            </span>
-                            {/* Remarks still waiting on somebody. The page
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    'truncate type-body',
+                                    document.hidden && 'opacity-50',
+                                  )}
+                                >
+                                  {document.label}
+                                </span>
+                                {document.hidden && (
+                                  <i
+                                    className="fas fa-eye-slash type-icon-m text-muted-foreground"
+                                    title={t(
+                                      'workspace.review.hidden',
+                                      'Hidden',
+                                    )}
+                                    aria-hidden
+                                  />
+                                )}
+                              </div>
+                              {breadcrumb.length > 0 && (
+                                <div className="truncate type-small text-muted-foreground">
+                                  {breadcrumb.join(' › ')}
+                                </div>
+                              )}
+                              <div className="mt-1 flex items-center gap-2">
+                                <ChangeBadges document={document} />
+                                <span className="type-small text-muted-foreground">
+                                  {document.changeCount === 1
+                                    ? t('workspace.oneChange', '1 change')
+                                    : t(
+                                        'workspace.manyChanges',
+                                        '{0} changes',
+                                        [document.changeCount],
+                                      )}
+                                </span>
+                                {/* Remarks still waiting on somebody. The page
                                 cannot show WHICH change they sit on - that is
                                 the comparison's job - but it must show that
                                 there are some, or they are only found by
                                 opening every page. */}
-                            {(openByDocument.get(id) ?? 0) > 0 && (
-                              <span
-                                className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
-                                title={t(
-                                  'review.openRemarksHint',
-                                  'Open remarks on changes of this page',
+                                {(openByDocument.get(id) ?? 0) > 0 && (
+                                  <span
+                                    className="flex items-center gap-1 type-small text-warning-text"
+                                    title={t(
+                                      'review.openRemarksHint',
+                                      'Open remarks on changes of this page',
+                                    )}
+                                  >
+                                    <i
+                                      className="fas fa-comment-dots"
+                                      aria-hidden
+                                    />
+                                    {openByDocument.get(id)}
+                                  </span>
                                 )}
-                              >
-                                <i
-                                  className="fas fa-comment-dots"
-                                  aria-hidden
-                                />
-                                {openByDocument.get(id)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {/* Comparing is the main thing to DO with a row, so
+                              </div>
+                            </div>
+                            {/* Comparing is the main thing to DO with a row, so
                             it reads as a button with a word on it, not as one
                             more glyph among the row's small affordances. */}
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="shrink-0"
-                          title={t(
-                            'compare.openHint',
-                            'Compare this page side by side',
-                          )}
-                          onClick={(event) => {
-                            // Don't toggle the row's checkbox.
-                            event.preventDefault()
-                            setCompareDocumentId(id)
-                          }}
-                        >
-                          <i
-                            className="fas fa-fw fa-code-compare"
-                            aria-hidden
-                          />
-                          {t('compare.openButton', 'Compare')}
-                        </Button>
-                        {document.documentAddress && canNavigate && (
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            className="shrink-0 text-blue-600 dark:text-blue-400"
-                            title={
-                              reviewingActive
-                                ? t('workspace.review.goToPage', 'Go to page')
-                                : t(
-                                    'workspace.review.goToPageSwitches',
-                                    'Go to page (switches the edited workspace)',
-                                  )
-                            }
-                            onClick={(event) => {
-                              // Don't toggle the row's checkbox.
-                              event.preventDefault()
-                              goToDocument(document.documentAddress!)
-                            }}
-                          >
-                            <i
-                              className="fas fa-fw fa-arrow-up-right-from-square"
-                              aria-hidden
-                            />
-                          </Button>
-                        )}
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          className="shrink-0"
-                          title={
-                            isExpanded
-                              ? t(
-                                  'workspace.review.hideChanges',
-                                  'Hide changes',
-                                )
-                              : t(
-                                  'workspace.review.showChanges',
-                                  'Show changes',
-                                )
-                          }
-                          onClick={(event) => {
-                            // Don't toggle the row's checkbox.
-                            event.preventDefault()
-                            toggleExpanded(id)
-                          }}
-                        >
-                          {/* The chevron of the inspector groups and the
-                              history rows: same glyph, same rotation. */}
-                          <i
-                            className={cn(
-                              'fas fa-chevron-right transition-transform',
-                              isExpanded && 'rotate-90',
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="shrink-0"
+                              title={t(
+                                'compare.openHint',
+                                'Compare this page side by side',
+                              )}
+                              onClick={(event) => {
+                                // Don't toggle the row's checkbox.
+                                event.preventDefault()
+                                setCompareDocumentId(id)
+                              }}
+                            >
+                              <i
+                                className="fas fa-fw fa-code-compare"
+                                aria-hidden
+                              />
+                              {t('compare.openButton', 'Compare')}
+                            </Button>
+                            {document.documentAddress && canNavigate && (
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                className="shrink-0 text-primary-text"
+                                title={
+                                  reviewingActive
+                                    ? t(
+                                        'workspace.review.goToPage',
+                                        'Go to page',
+                                      )
+                                    : t(
+                                        'workspace.review.goToPageSwitches',
+                                        'Go to page (switches the edited workspace)',
+                                      )
+                                }
+                                onClick={(event) => {
+                                  // Don't toggle the row's checkbox.
+                                  event.preventDefault()
+                                  goToDocument(document.documentAddress!)
+                                }}
+                              >
+                                <i
+                                  className="fas fa-fw fa-arrow-up-right-from-square"
+                                  aria-hidden
+                                />
+                              </Button>
                             )}
-                            aria-hidden
-                          />
-                        </Button>
-                      </label>
-                      {isExpanded && source && (
-                        <DocumentDiff
-                          workspaceName={source.name}
-                          documentId={id}
-                        />
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </div>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              className="shrink-0"
+                              title={
+                                isExpanded
+                                  ? t(
+                                      'workspace.review.hideChanges',
+                                      'Hide changes',
+                                    )
+                                  : t(
+                                      'workspace.review.showChanges',
+                                      'Show changes',
+                                    )
+                              }
+                              onClick={(event) => {
+                                // Don't toggle the row's checkbox.
+                                event.preventDefault()
+                                toggleExpanded(id)
+                              }}
+                            >
+                              {/* The chevron of the inspector groups and the
+                              history rows: same glyph, same rotation. */}
+                              <i
+                                className={cn(
+                                  'fas fa-chevron-right transition-transform',
+                                  isExpanded && 'rotate-90',
+                                )}
+                                aria-hidden
+                              />
+                            </Button>
+                          </label>
+                          {isExpanded && source && (
+                            <DocumentDiff
+                              workspaceName={source.name}
+                              documentId={id}
+                            />
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
             </div>
 
             {showComments && source && (
-              <aside className="flex w-80 shrink-0 flex-col border-l border-neutral-200 pl-4 dark:border-neutral-800">
-                <div className="shrink-0 text-xs text-neutral-600 dark:text-neutral-400">
+              <aside className="flex w-75 shrink-0 flex-col border-l border-divider pl-3.5">
+                <div className="shrink-0 type-small text-muted-foreground">
                   {t('review.comments', 'Comments')}
                 </div>
                 <CommentThread
@@ -809,11 +888,8 @@ export function ReviewChangesDialog({
               side of the footer, away from the verdict. */}
           {/* Said before the click, not discovered after it. */}
           {publishCompletesTask && (
-            <div className="flex items-center gap-2 pt-3 text-xs text-neutral-600 dark:text-neutral-400">
-              <i
-                className="fas fa-circle-info text-blue-600 dark:text-blue-400"
-                aria-hidden
-              />
+            <div className="flex items-center gap-2 pt-3 type-small text-muted-foreground">
+              <i className="fas fa-circle-info text-primary-text" aria-hidden />
               {t(
                 'review.publishCompletesTask',
                 'This publishes everything the branch has — which completes the task.',
@@ -821,7 +897,7 @@ export function ReviewChangesDialog({
             </div>
           )}
 
-          <DialogFooter className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
+          <DialogFooter className="border-t border-divider pt-3.5">
             <Button
               variant="destructive"
               className="mr-auto"
@@ -842,7 +918,7 @@ export function ReviewChangesDialog({
             {task !== null && task.status !== 'DONE' && (
               <Button
                 variant="secondary"
-                className="text-amber-700 dark:text-amber-400"
+                className="text-warning-text"
                 disabled={!canDiscard || busy}
                 title={
                   canDiscard
@@ -864,7 +940,7 @@ export function ReviewChangesDialog({
             {readyToComplete ? (
               <Button
                 disabled={busy}
-                className="bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600"
+                className="bg-success text-success-foreground hover:bg-success"
                 onClick={() => verdict.complete()}
               >
                 <i
@@ -875,26 +951,22 @@ export function ReviewChangesDialog({
               </Button>
             ) : (
               <Button
+                ref={publishButtonRef}
                 disabled={selectedCount === 0 || !canPublish || busy}
                 title={canPublish ? undefined : publishDeniedHint}
-                className={
-                  selectedCount > 0 && canPublish
-                    ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
-                    : undefined
-                }
+                // Always green; the disabled state (nothing selected, no
+                // permission) dims it instead of switching colors.
+                className="bg-success text-success-foreground hover:bg-success"
                 onClick={() => run('publish')}
               >
                 <i
-                  className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
+                  className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-check'}`}
                   aria-hidden
                 />
-                {selectedCount > 0
-                  ? t(
-                      'workspace.review.publishSelectedCount',
-                      'Publish selected ({0})',
-                      [selectedCount],
-                    )
-                  : t('workspace.review.publishSelected', 'Publish selected')}
+                {t('workspace.review.publishSelected', 'Publish selected')}
+                {selectedCount > 0 && (
+                  <CountBadge variant="neutral" count={selectedCount} />
+                )}
               </Button>
             )}
           </DialogFooter>
@@ -985,8 +1057,16 @@ export function ReviewChangesDialog({
         }
         busy={resolve.isPending}
         onCancel={() => setPendingConflict(null)}
-        onForce={() => resolve.mutate('force')}
-        onDiscardAll={() => resolve.mutate('discardAll')}
+        // A resolved conflict finishes the publish/discard - close the
+        // review with it, as a direct success does.
+        onForce={() =>
+          resolve.mutate('force', { onSuccess: () => onOpenChange(false) })
+        }
+        onDiscardAll={() =>
+          resolve.mutate('discardAll', {
+            onSuccess: () => onOpenChange(false),
+          })
+        }
         onNavigate={(address) => {
           setPendingConflict(null)
           goToDocument(address)

@@ -693,11 +693,11 @@ export function CompareDialog({
           size="full"
           className="flex flex-col gap-0 overflow-hidden p-0"
         >
-          <DialogHeader className="shrink-0 border-b border-neutral-200 px-4 py-3 pr-12 dark:border-neutral-800">
-            <DialogTitle className="text-base">
+          <DialogHeader className="shrink-0 border-b border-divider px-3.5 py-3 pr-11">
+            <DialogTitle className="type-default">
               {t('compare.title', 'Compare changes')}
             </DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="type-small">
               {t(
                 'compare.description',
                 '"{0}" as it is now, next to how "{1}" would publish it.',
@@ -709,8 +709,8 @@ export function CompareDialog({
           <div className="flex min-h-0 flex-1">
             {/* The pages to walk through - reviewing is a sequence, not a
                 single lookup, so the list stays in reach the whole time. */}
-            <aside className="flex w-64 shrink-0 flex-col border-r border-neutral-200 dark:border-neutral-800">
-              <div className="shrink-0 border-b border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+            <aside className="flex w-60 shrink-0 flex-col border-r border-divider">
+              <div className="shrink-0 border-b border-divider px-3 py-2 type-small-strong text-muted-foreground">
                 {documents.length === 1
                   ? t('compare.oneDocument', '1 changed page')
                   : t('compare.manyDocuments', '{0} changed pages', [
@@ -730,28 +730,28 @@ export function CompareDialog({
                         className={cn(
                           'flex w-full cursor-pointer items-start gap-2 rounded-sm border border-transparent px-2 py-1.5 text-left transition-colors',
                           isActive
-                            ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
-                            : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
+                            ? 'border-primary bg-muted'
+                            : 'hover:bg-accent',
                         )}
                       >
                         <FaIcon
                           icon={entry.icon ?? 'fa-file'}
                           className={cn(
-                            'mt-0.5 shrink-0 text-neutral-950 dark:text-white',
+                            'mt-0.5 shrink-0 text-foreground',
                             entry.hidden && 'opacity-50',
                           )}
                         />
                         <span className="min-w-0 flex-1">
                           <span
                             className={cn(
-                              'block truncate text-sm',
+                              'block truncate type-body',
                               entry.hidden && 'opacity-50',
                             )}
                           >
                             {entry.label}
                           </span>
                           {breadcrumb.length > 0 && (
-                            <span className="block truncate text-[11px] text-neutral-600 dark:text-neutral-400">
+                            <span className="block truncate type-small text-muted-foreground">
                               {breadcrumb.join(' › ')}
                             </span>
                           )}
@@ -759,7 +759,7 @@ export function CompareDialog({
                             <ChangeBadges document={entry} />
                             {(openRemarks.get(id) ?? 0) > 0 && (
                               <span
-                                className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400"
+                                className="flex items-center gap-1 type-small text-warning-text"
                                 title={t(
                                   'review.openRemarksHint',
                                   'Open remarks on changes of this page',
@@ -783,7 +783,7 @@ export function CompareDialog({
 
             <div className="flex min-w-0 flex-1 flex-col">
               {/* Change navigation, legend and the way out into the editor. */}
-              <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
+              <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-divider px-3 py-2">
                 <Button
                   size="icon-sm"
                   variant="secondary"
@@ -806,9 +806,9 @@ export function CompareDialog({
                 >
                   <i className="fas fa-chevron-down" aria-hidden />
                 </Button>
-                <span className="text-xs tabular-nums text-neutral-600 dark:text-neutral-400">
+                <span className="type-small tabular-nums text-muted-foreground">
                   {diffLoading ? (
-                    <Spinner className="text-xs" />
+                    <Spinner className="type-small" />
                   ) : changeCount === 0 ? (
                     t('compare.noChanges', 'No marked changes')
                   ) : (
@@ -825,7 +825,7 @@ export function CompareDialog({
                 {activeGroup !== null && (
                   <span className="ml-2 flex items-center gap-1.5">
                     <i
-                      className="fas fa-globe text-xs text-neutral-500"
+                      className="fas fa-globe type-icon-m text-muted-foreground"
                       aria-hidden
                     />
                     {dimensionGroups.length > 1 ? (
@@ -844,7 +844,7 @@ export function CompareDialog({
                       >
                         <SelectTrigger
                           size="sm"
-                          className="min-w-40"
+                          className="min-w-37.5"
                           title={t(
                             'compare.dimensionHint',
                             'This page exists once per dimension and is edited once per dimension — pick the version to review',
@@ -859,7 +859,7 @@ export function CompareDialog({
                                 group.point,
                                 dimensions,
                               )}
-                              <span className="text-xs text-neutral-500 tabular-nums">
+                              <span className="type-small text-muted-foreground tabular-nums">
                                 {group.nodes.length}
                               </span>
                             </SelectItem>
@@ -867,7 +867,7 @@ export function CompareDialog({
                         </SelectContent>
                       </Select>
                     ) : (
-                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                      <span className="type-small text-muted-foreground">
                         {dimensionSpacePointLabel(
                           activeGroup.point,
                           dimensions,
@@ -880,7 +880,7 @@ export function CompareDialog({
                         activeDimension,
                       ) && (
                         <span
-                          className="text-[11px] text-amber-600 dark:text-amber-400"
+                          className="type-small text-warning-text"
                           title={t(
                             'compare.otherDimensionHint',
                             'You are editing another dimension — this page has no changes there.',
@@ -903,7 +903,7 @@ export function CompareDialog({
                   ).map((status) => (
                     <span
                       key={status}
-                      className="flex items-center gap-1 text-[11px] text-neutral-600 dark:text-neutral-400"
+                      className="flex items-center gap-1 type-small text-muted-foreground"
                     >
                       <span
                         className={cn(
@@ -929,7 +929,7 @@ export function CompareDialog({
                     <i className="fas fa-fw fa-comment-dots" aria-hidden />
                     {t('review.comments', 'Comments')}
                     {openRemarksHere > 0 && (
-                      <span className="ml-1 tabular-nums text-amber-600 dark:text-amber-400">
+                      <span className="ml-1 tabular-nums text-warning-text">
                         {openRemarksHere}
                       </span>
                     )}
@@ -988,7 +988,7 @@ export function CompareDialog({
                 />
               ) : (
                 <div className="grid min-h-0 flex-1 grid-cols-2">
-                  <div className="flex min-h-0 flex-col border-r border-neutral-200 dark:border-neutral-800">
+                  <div className="flex min-h-0 flex-col border-r border-divider">
                     <PaneHeader
                       caption={t('compare.beforeCaption', 'Before')}
                       workspace={baseLabel}
@@ -1047,8 +1047,8 @@ export function CompareDialog({
             {/* The remarks on the change under review - pinned to it, so
                 stepping to the next change swaps the conversation with it. */}
             {showComments && document !== null && (
-              <aside className="flex w-80 shrink-0 flex-col border-l border-neutral-200 dark:border-neutral-800">
-                <div className="shrink-0 border-b border-neutral-200 px-3 py-2 text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+              <aside className="flex w-75 shrink-0 flex-col border-l border-divider">
+                <div className="shrink-0 border-b border-divider px-3 py-2 type-small text-muted-foreground">
                   {activeAnchor
                     ? t('compare.commentsOnChange', 'Remarks on this change')
                     : t('review.comments', 'Comments')}
@@ -1071,7 +1071,7 @@ export function CompareDialog({
                     )}
                   />
                 ) : (
-                  <div className="p-3 text-xs text-neutral-500">
+                  <div className="p-3 type-small text-muted-foreground">
                     {t(
                       'compare.selectChangeToComment',
                       'Step to a change to comment on it.',
@@ -1082,8 +1082,8 @@ export function CompareDialog({
             )}
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
-            <span className="mr-auto truncate text-xs text-neutral-600 dark:text-neutral-400">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-divider px-3.5 py-3">
+            <span className="mr-auto truncate type-small text-muted-foreground">
               {document?.label}
             </span>
             {/* Discarding throws the author's work away - it belongs on the
@@ -1107,7 +1107,7 @@ export function CompareDialog({
             {verdict.task !== null && verdict.task.status !== 'DONE' && (
               <Button
                 variant="secondary"
-                className="text-amber-700 dark:text-amber-400"
+                className="text-warning-text"
                 disabled={!canDiscard || busy}
                 title={t(
                   'review.requestChangesButtonHint',
@@ -1123,7 +1123,7 @@ export function CompareDialog({
               disabled={documentId === null || !canPublish || busy}
               className={
                 documentId !== null && canPublish
-                  ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
+                  ? 'bg-success text-success-foreground hover:bg-success'
                   : undefined
               }
               onClick={() => run('publish')}
@@ -1236,7 +1236,7 @@ function ChangeDetails({
 }) {
   if (stop === null) {
     return (
-      <div className="shrink-0 border-t border-neutral-200 px-4 py-3 text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+      <div className="shrink-0 border-t border-divider px-3.5 py-3 type-small text-muted-foreground">
         {t(
           'compare.selectChange',
           'Step through the changes to read what each one replaced.',
@@ -1252,21 +1252,19 @@ function ChangeDetails({
       ? t('compare.pageProperties', 'Page properties')
       : (node.nodeLabel ?? node.nodeType ?? stop.aggregateId)
   return (
-    <div className="flex max-h-[28vh] shrink-0 flex-col gap-2 overflow-y-auto border-t border-neutral-200 px-4 py-3 text-[11px] dark:border-neutral-800">
+    <div className="flex max-h-[28vh] shrink-0 flex-col gap-2 overflow-y-auto border-t border-divider px-3.5 py-3 type-small">
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-neutral-950 dark:text-white',
+            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 type-small-strong text-foreground',
             TONE_BG_CLASSES[STATUS_TONES[node.status]],
           )}
         >
           {statusLabel(node.status)}
         </span>
-        <span className="truncate text-xs text-neutral-950 dark:text-white">
-          {label}
-        </span>
+        <span className="truncate type-small text-foreground">{label}</span>
         {stop.order === null && (
-          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+          <span className="flex items-center gap-1 text-warning-text">
             <i className="fas fa-eye-slash" aria-hidden />
             {t(
               'compare.noVisibleCounterpart',
@@ -1279,7 +1277,7 @@ function ChangeDetails({
         <ChangeRow key={index} change={change} />
       ))}
       {node.changes.length === 0 && (
-        <div className="text-neutral-600 dark:text-neutral-400">
+        <div className="text-muted-foreground">
           {node.status === 'removed'
             ? t('compare.removedDetail', 'This element will be removed.')
             : t('workspaceHistory.noDetails', 'No details available.')}
@@ -1300,18 +1298,18 @@ function PaneHeader({
   tone?: ChangeTone
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-neutral-200 bg-neutral-100 px-3 py-1.5 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="flex shrink-0 items-center gap-2 border-b border-divider bg-card px-3 py-1.5">
       <span
         className={cn(
-          'rounded-full px-2 py-0.5 text-[11px] font-medium',
+          'rounded-full px-2 py-0.5 type-small-strong',
           tone
-            ? `${TONE_BG_CLASSES[tone]} text-neutral-950 dark:text-white`
-            : 'bg-neutral-300 text-neutral-950 dark:bg-neutral-700 dark:text-white',
+            ? `${TONE_BG_CLASSES[tone]} text-foreground`
+            : 'bg-border text-foreground',
         )}
       >
         {caption}
       </span>
-      <span className="truncate text-xs text-neutral-600 dark:text-neutral-400">
+      <span className="truncate type-small text-muted-foreground">
         {workspace}
       </span>
     </div>

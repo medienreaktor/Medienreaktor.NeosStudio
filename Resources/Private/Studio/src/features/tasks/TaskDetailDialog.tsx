@@ -157,7 +157,7 @@ export function TaskDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field label={t('tasks.title', 'Title')} htmlFor="task-detail-title">
             <Input
               id="task-detail-title"
@@ -230,7 +230,7 @@ export function TaskDetailDialog({
                 ))}
               </SelectContent>
             </Select>
-            <span className="mt-1 block text-xs text-neutral-600 dark:text-neutral-400">
+            <span className="mt-1 block type-small text-muted-foreground">
               {hasPendingChanges
                 ? t(
                     'tasks.baseWorkspaceLocked',
