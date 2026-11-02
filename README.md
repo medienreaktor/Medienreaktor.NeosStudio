@@ -83,7 +83,7 @@ Full parity with the classic inspector — and then some:
 - **Trash panel**: deleting a node is a soft removal, so every deleted page waits in the trash until the deletion is published — with who deleted it and when, and one click to restore it (deleted parent pages come back with it).
 - **User & profile management**: administer users, and every editor gets self-service profile settings (name, email, password, interface language).
 - **Localized UI** in English and German via Neos' own XLIFF infrastructure (450+ keys) — translated the Neos way, extendable the Neos way.
-- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, themed with the official Neos UI palette. Dark, focused, familiar.
+- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, on semantic design tokens from Figma, with light and dark themes. Focused, familiar.
 
 ### 🔌 Extensible by design — registries all the way down
 
@@ -199,7 +199,47 @@ src/
   lib/, hooks/          shared utilities
 ```
 
-Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) mapped onto the shadcn token contract with the official Neos palette; primitives are Base UI (`@base-ui/react`), not Radix.
+Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) on semantic tokens; primitives are Base UI (`@base-ui/react`), not Radix.
+
+### Design tokens
+
+Colours, radii and text styles come from the [Neos Studio Figma file](https://www.figma.com/design/ks1Uf9OdtvGCA9zjDsSYCu/) through `medienreaktor/figma-tools`, configured by `figma-tools.json`. The Figma dumps (`figma-variables.json`, `figma-text-styles.json`) are checked in, so the export is reproducible without Figma access. From a project that installs figma-tools:
+
+```bash
+composer exec -- figma-download --base-path <path to this package>   # refresh the dumps; needs FIGMA_MCP_TOKEN
+composer exec -- figma-import --base-path <path to this package>     # regenerate src/styles/*.css
+```
+
+`src/styles/{primitives,semantics,sizes,texts}.css` are generated: never hand-edit them, change Figma and re-export. Components use semantic utilities only (`bg-card`, `text-muted-foreground`, `border-divider`, `type-body`, `type-icon-s`), never palette shades or `dark:` variants; Tailwind's own font-size scale is switched off (`src/text-scale.css`). The theme axis is `data-theme="light|dark"` on `<html>`, and any subtree can set its own `data-theme` to render in the other mode. The root font size is left at the browser default, and every length, text sizes included, is in rem, so Studio follows the reader's default font size - also when it changes while Studio is open. That includes lengths JavaScript computes with: graph geometry and panel rects are plain numbers meaning rem, rendered as `${value}rem`. Pixels only exist where code reads the screen - pointer positions, scroll offsets, element and window sizes - and `lib/rem.ts` converts them there, reading the root font size fresh each time.
+
+Sizes are designed for a 16px root on Tailwind's spacing scale, where one step is 4px: `h-8.5` is 34px, `p-3.5` is 14px. Pick the step for the pixel size the design asks for, in half steps at most. Up to 1.18 Studio was laid out at a 15px root; its sizes were carried over by mapping every step to the half step nearest its old pixel size, which is why many of them are half steps (`h-8.5` where the 15px layout had `h-9`). The text styles bring their own line heights from Figma (`type-body` is 18.75px), so a component sets `leading-*` only where it deliberately departs from its style.
+
+### Styling plugins
+
+A plugin's markup is not part of Studio's Tailwind build, so it ships its own CSS. To look like Studio it needs no build of its own and no figma-tools: the shell declares its design tokens as CSS custom properties at runtime, switched with the theme, and plain CSS reads them.
+
+```css
+.my-plugin-field {
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-input) 30%, transparent);
+  color: var(--color-foreground);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+}
+```
+
+The variables a plugin may rely on are listed in [`src/plugin-api/css-variables.json`](Resources/Private/Studio/src/plugin-api/css-variables.json):
+
+- **Colours:** the UI set, `--color-background`, `-foreground`, `-card`, `-popover`, `-muted`, `-accent`, `-border`, `-divider`, `-input`, `-ring`, `-placeholder`, `-link`, `-scrim`, and the roles `primary`, `secondary`, `destructive`, `warning`, `success`, `variant`. A role is its fill (`--color-primary`), the text on that fill (`-foreground`), the role as a text colour on a surface (`-text`), and a translucent background (`-tint`).
+- **Radii:** `--radius-sm`, `-md`, `-lg`, `-xl`.
+- **Text:** one `--text-{style}` per Studio text style with its `--text-{style}--line-height`: `default`, `body`, `body-strong`, `small`, `small-strong`, `caption`, `count`, `count-small`, `overline`, `heading-s`/`-m`/`-l`, `code`, `code-small`, and the icon sizes `icon-xs` to `icon-3xl`. Weights are not variables: the `-strong` styles are 500, `count`, `count-small`, `overline` and the headings 600, the rest 400; `overline` is also upper case with `letter-spacing: 0.025em`.
+- **Fonts and spacing:** `--font-sans`, `--font-mono`, `--font-icon`, and Tailwind's spacing unit `--spacing` (4px at the default root).
+
+Sizes in a plugin follow the same rule as Studio's own: lengths in rem, also where JavaScript computes them, and pixels only where the plugin reads the screen, converted with the root font size read at that moment (`parseFloat(getComputedStyle(document.documentElement).fontSize)`). Then a reader's larger default font size scales the plugin with the shell, even while Studio is open.
+
+Everything else in the build is internal. The build fails when a listed variable goes missing, so a rename in Figma is caught in Studio rather than in a plugin; an intended rename keeps the old name alive through `extraNames` in `figma-tools.json` until the known plugins have moved. Larger plugin UIs should use Studio's components rather than restyle them; exposing those through the plugin API is planned.
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 

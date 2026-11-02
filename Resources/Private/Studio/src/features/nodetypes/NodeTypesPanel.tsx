@@ -32,23 +32,31 @@ import {
  * a card simply has several incoming edges.
  *
  * Card geometry is computed, not measured: the layout and the card markup
- * share the pixel constants below, so edges anchor exactly without a
- * measure-then-layout round trip.
+ * share the constants below, in rem like everything else (see lib/rem.ts), so
+ * edges anchor exactly without a measure-then-layout round trip, and the whole
+ * graph scales with the root font size.
  */
 
-const HEADER_HEIGHT = 54
-/** The CollapsibleGroup summary: py-2 + one text-xs line, plus the border-t. */
-const SECTION_HEADER_HEIGHT = 33
-const ROW_HEIGHT = 18
+const HEADER_HEIGHT = 3.375
+/**
+ * The CollapsibleGroup summary: py-2 + one type-overline line, plus its 1px
+ * border-t. The borders here are the only lengths that are not rem; counted as
+ * 1/16rem they are exact at the default root and off by a fraction of a pixel
+ * at others, which the card's overflow absorbs.
+ */
+const SECTION_HEADER_HEIGHT = 1.625 + 1 / 16
+const ROW_HEIGHT = 1.125
+/** The card's border-2, top and bottom: its height is the border box. */
+const CARD_BORDERS = (2 * 2) / 16
 /** Edges attach at the header's vertical center. */
 const EDGE_ANCHOR_Y = HEADER_HEIGHT / 2
 
 /** The kind color carries the whole card (outline + surface tint). */
 const KIND_COLOR: Record<CardKind, string> = {
-  document: 'var(--color-blue-500)',
-  collection: 'var(--color-amber-500)',
-  content: 'var(--color-emerald-500)',
-  other: 'var(--color-neutral-500)',
+  document: 'var(--color-node-type-document)',
+  collection: 'var(--color-node-type-collection)',
+  content: 'var(--color-node-type-content)',
+  other: 'var(--color-node-type-other)',
 }
 
 /** Which of a card's two sections are expanded. */
@@ -70,7 +78,7 @@ function cardHeight(model: CardModel, open: SectionOpenState): number {
       ? SECTION_HEADER_HEIGHT +
         (open.inherited ? model.inheritedRows.length * ROW_HEIGHT : 0)
       : 0)
-  return HEADER_HEIGHT + sections
+  return HEADER_HEIGHT + sections + CARD_BORDERS
 }
 
 /** What a selection emphasizes: the inheritance chain and the direct subtypes. */
@@ -87,7 +95,7 @@ function edgePath(from: PositionedCard, to: PositionedCard): string {
   const y1 = from.y + EDGE_ANCHOR_Y
   const x2 = to.x
   const y2 = to.y + EDGE_ANCHOR_Y
-  const bend = Math.max(40, (x2 - x1) / 2)
+  const bend = Math.max(2.5, (x2 - x1) / 2)
   return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`
 }
 
@@ -104,7 +112,7 @@ function CardSection({
   onToggle: () => void
 }) {
   return (
-    <div className="border-t border-neutral-950/10 dark:border-white/10 px-3">
+    <div className="border-t border-border px-3">
       <CollapsibleGroup
         label={<span className="truncate">{title}</span>}
         open={open}
@@ -115,9 +123,9 @@ function CardSection({
           <div
             key={(row.isReference ? 'ref:' : 'prop:') + row.name}
             className={cn(
-              'flex items-center gap-1 text-[10px] text-neutral-950 dark:text-white',
+              'flex items-center gap-1 type-caption text-foreground',
             )}
-            style={{ height: ROW_HEIGHT }}
+            style={{ height: `${ROW_HEIGHT}rem` }}
             title={
               row.inheritedFrom
                 ? t('nodeTypes.inheritedFrom', 'Inherited from {0}', [
@@ -128,12 +136,12 @@ function CardSection({
           >
             {row.isReference && (
               <i
-                className="fas fa-link fa-fw shrink-0 text-[7px] text-neutral-950/50 dark:text-white/50"
+                className="fas fa-link fa-fw shrink-0 type-icon-xs text-placeholder"
                 aria-hidden
               />
             )}
             <span className="truncate">{row.name}</span>
-            <span className="ml-auto shrink-0 pl-2 font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
+            <span className="ml-auto shrink-0 pl-2 type-code-small text-placeholder">
               {row.type}
             </span>
           </div>
@@ -168,10 +176,13 @@ const GraphSurface = memo(function GraphSurface({
     highlight.children.has(name)
   return (
     <>
+      {/* Sized in rem with a viewBox in the same units, so the path
+          coordinates are the layout's rem values. */}
       <svg
         className="pointer-events-none absolute top-0 left-0 overflow-visible"
-        width={layout.width}
-        height={layout.height}
+        width={`${layout.width}rem`}
+        height={`${layout.height}rem`}
+        viewBox={`0 0 ${layout.width} ${layout.height}`}
         aria-hidden
       >
         {layout.edges.map((edge) => {
@@ -192,10 +203,10 @@ const GraphSurface = memo(function GraphSurface({
               fill="none"
               stroke={
                 active
-                  ? 'var(--color-blue-500)'
-                  : 'light-dark(var(--color-neutral-400), var(--color-neutral-600))'
+                  ? 'var(--color-node-type-edge-active)'
+                  : 'var(--color-node-type-edge)'
               }
-              strokeWidth={active ? 2 : 1}
+              strokeWidth={(active ? 2 : 1) / 16}
               opacity={highlight !== null && !active ? 0.25 : 1}
             />
           )
@@ -212,27 +223,27 @@ const GraphSurface = memo(function GraphSurface({
             className={cn(
               'absolute cursor-pointer overflow-hidden rounded-md border-2 shadow-md',
               model.abstract && 'border-dashed',
-              matches.has(card.name) && 'ring-2 ring-blue-500/60',
+              matches.has(card.name) && 'ring-2 ring-ring/60',
               highlight?.selected === card.name && SELECTED_RING,
               !emphasized(card.name) && 'opacity-30',
             )}
             style={{
-              left: card.x,
-              top: card.y,
-              width: CARD_WIDTH,
-              height: card.height,
+              left: `${card.x}rem`,
+              top: `${card.y}rem`,
+              width: `${CARD_WIDTH}rem`,
+              height: `${card.height}rem`,
               ...cardSurface(KIND_COLOR[model.kind]),
             }}
           >
             <div
               className="flex flex-col justify-center gap-0.5 px-3"
-              style={{ height: HEADER_HEIGHT }}
+              style={{ height: `${HEADER_HEIGHT}rem` }}
             >
-              <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-neutral-950 dark:text-white">
+              <div className="flex min-w-0 items-center gap-1.5 type-small-strong text-foreground">
                 <i
                   className={cn(
                     model.icon ? faClassName(model.icon) : 'fas fa-cube',
-                    'fa-fw shrink-0 text-[0.7rem] text-neutral-950 dark:text-white',
+                    'fa-fw shrink-0 type-icon-s text-foreground',
                   )}
                   aria-hidden
                 />
@@ -240,12 +251,12 @@ const GraphSurface = memo(function GraphSurface({
                   {model.label}
                 </span>
                 {model.abstract && (
-                  <span className="ml-auto shrink-0 rounded-sm bg-neutral-200 dark:bg-neutral-800 px-1 text-[8px] tracking-wide text-neutral-950/50 dark:text-white/50 uppercase">
+                  <span className="ml-auto shrink-0 rounded-sm bg-muted px-1 type-overline text-placeholder">
                     {t('nodeTypes.abstract', 'Abstract')}
                   </span>
                 )}
               </div>
-              <div className="truncate font-mono text-[9px] text-neutral-950/50 dark:text-white/50">
+              <div className="truncate type-code-small text-placeholder">
                 {model.name}
               </div>
             </div>
@@ -285,7 +296,7 @@ function Legend() {
     { kind: 'other', label: t('nodeTypes.legend.other', 'Mixin / other') },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-col gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-2 text-[10px] text-neutral-950/50 dark:text-white/50 backdrop-blur-xs">
+    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-col gap-1 rounded-md bg-card/80 p-2 type-caption text-placeholder backdrop-blur-xs">
       {entries.map((entry) => (
         <div key={entry.kind} className="flex items-center gap-1.5">
           <span
@@ -296,7 +307,7 @@ function Legend() {
         </div>
       ))}
       <div className="flex items-center gap-1.5">
-        <span className="size-2 rounded-sm border border-dashed border-neutral-500" />
+        <span className="size-2 rounded-sm border border-dashed border-node-type-other" />
         {t('nodeTypes.legend.abstract', 'Abstract type')}
       </div>
     </div>
@@ -412,9 +423,9 @@ export function NodeTypesPanel() {
       onPick={setSelected}
       overlay={
         <>
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3 pr-32">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3 pr-30">
             <SearchInput
-              wrapperClassName="pointer-events-auto max-w-64"
+              wrapperClassName="pointer-events-auto max-w-60"
               className={floatingControl}
               value={term}
               onChange={(event) => {
@@ -434,7 +445,7 @@ export function NodeTypesPanel() {
               )}
             />
             {term.trim() !== '' && (
-              <span className="shrink-0 text-xs text-neutral-950/50 dark:text-white/50">
+              <span className="shrink-0 type-small text-placeholder">
                 {t('nodeTypes.matches', '{0} matches', [matches.length])}
               </span>
             )}
@@ -447,7 +458,7 @@ export function NodeTypesPanel() {
             />
           )}
           {isError && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-950/50 dark:text-white/50">
+            <div className="absolute inset-0 flex items-center justify-center type-body text-placeholder">
               {t('nodeTypes.loadFailed', 'The node types could not be loaded.')}
             </div>
           )}

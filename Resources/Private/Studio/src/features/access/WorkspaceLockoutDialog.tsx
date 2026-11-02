@@ -131,7 +131,7 @@ export function WorkspaceLockoutDialog({
         </DialogHeader>
 
         {targets.length === 0 ? (
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="type-body text-muted-foreground">
             {t(
               'access.lockoutNoTarget',
               'Your access role currently covers no workspace you could switch to. An administrator has to widen it.',
@@ -165,7 +165,9 @@ export function WorkspaceLockoutDialog({
           </div>
         )}
 
-        {error !== null && <p className="text-sm text-red-500">{error}</p>}
+        {error !== null && (
+          <p className="type-body text-destructive-text">{error}</p>
+        )}
       </DialogContent>
     </Dialog>
   )

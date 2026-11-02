@@ -67,7 +67,7 @@ export function PublishReviewButton({
   const activeClasses =
     baseWorkspace?.classification === 'ROOT'
       ? undefined
-      : 'bg-purple-500 hover:bg-purple-500/90'
+      : 'bg-workspace-shared text-workspace-shared-foreground hover:bg-workspace-shared/90'
 
   // The former "publish all" shortcut now opens the review as well.
   useKeyboardShortcut({
@@ -102,7 +102,7 @@ export function PublishReviewButton({
           }
         >
           <i className="fas fa-fw fa-check" aria-hidden />
-          <span className="hidden @[56rem]:inline">
+          <span className="hidden @[52.5rem]:inline">
             {t('workspace.reviewAndPublish', 'Review and publish')}
           </span>
         </Button>

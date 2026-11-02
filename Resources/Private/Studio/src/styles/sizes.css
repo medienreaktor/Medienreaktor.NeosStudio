@@ -1,0 +1,50 @@
+/*
+ * GENERATED — do not edit.
+ * Produced by medienreaktor/figma-tools from figma-text-styles.json.
+ * Change it in Figma, then run `composer exec figma-download` followed by
+ * `composer exec figma-import`.
+ */
+@theme static {
+  --text-body: 0.8125rem;
+  --text-body--line-height: 1.171875rem;
+  --text-body-strong: 0.8125rem;
+  --text-body-strong--line-height: 1.171875rem;
+  --text-small: 0.6875rem;
+  --text-small--line-height: 0.9375rem;
+  --text-small-strong: 0.6875rem;
+  --text-small-strong--line-height: 0.9375rem;
+  --text-caption: 0.625rem;
+  --text-caption--line-height: 0.875rem;
+  --text-count: 0.625rem;
+  --text-count--line-height: 0.625rem;
+  --text-overline: 0.625rem;
+  --text-overline--line-height: 0.625rem;
+  --text-heading-s: 0.9375rem;
+  --text-heading-s--line-height: 1.40625rem;
+  --text-heading-m: 1.0625rem;
+  --text-heading-m--line-height: 1.640625rem;
+  --text-heading-l: 1.375rem;
+  --text-heading-l--line-height: 1.875rem;
+  --text-code: 0.8125rem;
+  --text-code--line-height: 1.171875rem;
+  --text-code-small: 0.6875rem;
+  --text-code-small--line-height: 0.9375rem;
+  --text-icon-xs: 0.5625rem;
+  --text-icon-xs--line-height: 0.5625rem;
+  --text-icon-s: 0.625rem;
+  --text-icon-s--line-height: 0.625rem;
+  --text-icon-m: 0.6875rem;
+  --text-icon-m--line-height: 0.6875rem;
+  --text-icon-l: 0.8125rem;
+  --text-icon-l--line-height: 0.8125rem;
+  --text-icon-xl: 0.9375rem;
+  --text-icon-xl--line-height: 0.9375rem;
+  --text-icon-2xl: 1.1875rem;
+  --text-icon-2xl--line-height: 1.1875rem;
+  --text-icon-3xl: 1.5rem;
+  --text-icon-3xl--line-height: 1.5rem;
+  --text-count-small: 0.5rem;
+  --text-count-small--line-height: 0.5rem;
+  --text-default: 0.9375rem;
+  --text-default--line-height: 1.40625rem;
+}

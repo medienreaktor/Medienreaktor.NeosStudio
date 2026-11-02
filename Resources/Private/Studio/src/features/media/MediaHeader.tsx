@@ -151,7 +151,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         onChange={(e) => state.setSearch(e.target.value)}
         placeholder={t('media.searchAssets', 'Search assets…')}
         aria-label={t('media.searchAssetsAria', 'Search assets')}
-        wrapperClassName="min-w-40"
+        wrapperClassName="min-w-37.5"
         className={floatingControl}
       />
 
@@ -163,7 +163,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
           label: type === 'All' ? t('media.allTypes', 'All types') : type,
         }))}
       >
-        <SelectTrigger className={cn('h-8 w-32', floatingControl)} size="sm">
+        <SelectTrigger className={cn('h-7.5 w-30', floatingControl)} size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -176,14 +176,12 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       </Select>
 
       {hasSources && (
-        <div className="hidden @[64rem]:flex">
+        <div className="hidden @[60rem]:flex">
           <FilterButton
-            icon={
-              <i className="fas fa-layer-group text-[0.875rem]" aria-hidden />
-            }
+            icon={<i className="fas fa-layer-group type-icon-l" aria-hidden />}
             label={activeSource?.label ?? t('media.source', 'Source')}
           >
-            <ul className="min-w-48 space-y-0.5">
+            <ul className="min-w-45 space-y-0.5">
               {sources.data!.map((source) => (
                 <SourceButton
                   key={source.identifier}
@@ -198,18 +196,16 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       )}
 
       {supportsCollections && (
-        <div className="hidden @[48rem]:flex">
+        <div className="hidden @[45rem]:flex">
           <FilterButton
-            icon={<i className="fas fa-folder text-[0.875rem]" aria-hidden />}
+            icon={<i className="fas fa-folder type-icon-l" aria-hidden />}
             label={collectionLabel}
             active={filter.collection !== null}
             action={<AddCollection />}
           >
-            <div className="min-w-56">
+            <div className="min-w-52.5">
               <RailButton
-                icon={
-                  <i className="fas fa-folder text-[0.875rem]" aria-hidden />
-                }
+                icon={<i className="fas fa-folder type-icon-l" aria-hidden />}
                 label={t('media.allCollections', 'All collections')}
                 active={filter.collection === null}
                 onClick={() => state.selectCollection(null)}
@@ -225,7 +221,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                   state.selectCollection(filter.collection === id ? null : id)
                 }
                 icon={() => (
-                  <i className="fas fa-folder text-[0.875rem]" aria-hidden />
+                  <i className="fas fa-folder type-icon-l" aria-hidden />
                 )}
                 onItemContextMenu={(node, e) =>
                   openMenu(
@@ -240,22 +236,22 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       )}
 
       {supportsTagging && (
-        <div className="hidden @[48rem]:flex">
+        <div className="hidden @[45rem]:flex">
           <FilterButton
-            icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
+            icon={<i className="fas fa-tag type-icon-l" aria-hidden />}
             label={tagLabel}
             active={filter.tagMode === 'none' || filter.tag !== null}
             action={<AddTag />}
           >
-            <div className="min-w-56">
+            <div className="min-w-52.5">
               <RailButton
-                icon={<i className="fas fa-tag text-[0.875rem]" aria-hidden />}
+                icon={<i className="fas fa-tag type-icon-l" aria-hidden />}
                 label={t('media.allTags', 'All tags')}
                 active={filter.tagMode === 'given' && filter.tag === null}
                 onClick={() => state.selectTag(null)}
               />
               <RailButton
-                icon={<i className="fas fa-ban text-[0.875rem]" aria-hidden />}
+                icon={<i className="fas fa-ban type-icon-l" aria-hidden />}
                 label={t('media.untagged', 'Untagged')}
                 active={filter.tagMode === 'none'}
                 onClick={() => state.showUntagged()}
@@ -273,7 +269,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
                   )
                 }
                 icon={() => (
-                  <i className="fas fa-tag text-[0.875rem]" aria-hidden />
+                  <i className="fas fa-tag type-icon-l" aria-hidden />
                 )}
                 onItemContextMenu={(node, e) =>
                   openMenu({ kind: 'tag', id: node.id, label: node.label }, e)
@@ -288,7 +284,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         </div>
       )}
 
-      <div className="hidden @[48rem]:flex">
+      <div className="hidden @[45rem]:flex">
         <Select
           value={sortValue}
           onValueChange={(v) => {
@@ -300,7 +296,10 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             label: t(sort.labelKey, sort.label),
           }))}
         >
-          <SelectTrigger className={cn('h-8 w-36', floatingControl)} size="sm">
+          <SelectTrigger
+            className={cn('h-7.5 w-33.5', floatingControl)}
+            size="sm"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -343,24 +342,22 @@ function FilterButton({
     <Popover>
       <PopoverTrigger
         className={cn(
-          'flex h-8 items-center gap-1.5 rounded-md border px-2 text-sm hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50',
+          'flex h-7.5 items-center gap-1.5 rounded-md border px-2 type-body hover:bg-input/50',
           floatingControl,
-          active
-            ? 'text-neutral-950 dark:text-white'
-            : 'border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 ',
+          active ? 'text-foreground' : 'border-border text-muted-foreground',
         )}
       >
         <span
           className={cn(
             'shrink-0',
-            active ? 'text-neutral-950 dark:text-white' : 'text-neutral-500',
+            active ? 'text-foreground' : 'text-muted-foreground',
           )}
         >
           {icon}
         </span>
-        <span className="max-w-40 truncate">{label}</span>
+        <span className="max-w-37.5 truncate">{label}</span>
         <i
-          className="fas fa-chevron-down text-[0.875rem] shrink-0 text-neutral-950/50 dark:text-white/50"
+          className="fas fa-chevron-down type-icon-l shrink-0 text-placeholder"
           aria-hidden
         />
       </PopoverTrigger>
@@ -390,23 +387,23 @@ function SourceButton({
         onClick={onSelect}
         title={source.description}
         className={cn(
-          'flex w-full items-center gap-2 rounded px-1.5 py-1 text-left text-sm',
+          'flex w-full items-center gap-2 rounded px-1.5 py-1 text-left type-body',
           active
-            ? 'bg-blue-500/20 text-white'
-            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800',
+            ? 'bg-primary-tint text-foreground'
+            : 'text-muted-foreground hover:bg-accent',
         )}
       >
         {source.iconUri ? (
-          <img src={source.iconUri} alt="" className="size-4 shrink-0" />
+          <img src={source.iconUri} alt="" className="size-3.5 shrink-0" />
         ) : (
           <i
-            className="fas fa-layer-group text-[1rem] shrink-0 text-neutral-500"
+            className="fas fa-layer-group type-icon-xl shrink-0 text-muted-foreground"
             aria-hidden
           />
         )}
         <span className="truncate">{source.label}</span>
         {source.isReadOnly && (
-          <span className="ml-auto text-xs text-neutral-500">
+          <span className="ml-auto type-small text-muted-foreground">
             {t('media.readOnlyBadge', 'read-only')}
           </span>
         )}
@@ -431,10 +428,10 @@ function RailButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-1.5 border rounded-sm px-1.5 py-1 text-left text-sm',
+        'flex w-full items-center gap-1.5 border rounded-sm px-1.5 py-1 text-left type-body',
         active
-          ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white border-blue-500'
-          : 'hover:bg-neutral-200 dark:hover:bg-neutral-800 border-transparent',
+          ? 'bg-muted text-foreground border-primary'
+          : 'hover:bg-accent border-transparent',
       )}
     >
       <span className="shrink-0">{icon}</span>
@@ -489,7 +486,7 @@ function InlineCreate({
         }}
         title={placeholder}
       >
-        <i className="fas fa-plus text-[0.875rem]" aria-hidden />
+        <i className="fas fa-plus type-icon-l" aria-hidden />
       </Button>
     )
   }
@@ -510,7 +507,7 @@ function InlineCreate({
         }
       }}
       onBlur={() => (value.trim() ? void submit() : setOpen(false))}
-      className="h-6 w-40 text-xs"
+      className="h-5.5 w-37.5 type-small"
     />
   )
 }

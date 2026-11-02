@@ -14,7 +14,7 @@ export function ModalLauncher() {
       <Button
         variant="ghost"
         size="icon"
-        className="size-7"
+        className="size-6.5"
         aria-label={t('modal.settings', 'Settings')}
         onClick={() => openSettings()}
       >

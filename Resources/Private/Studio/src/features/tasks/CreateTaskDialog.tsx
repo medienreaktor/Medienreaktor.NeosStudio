@@ -146,7 +146,7 @@ export function CreateTaskDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field label={t('tasks.title', 'Title')} htmlFor="task-create-title">
             <Input
               id="task-create-title"
@@ -169,7 +169,7 @@ export function CreateTaskDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('tasks.baseWorkspace', 'Based on')}
               htmlFor="task-create-base"
@@ -208,7 +208,7 @@ export function CreateTaskDialog({
                 <SelectTrigger id="task-create-assignee" className="w-full">
                   <SelectValue
                     placeholder={t('tasks.selectUser', 'Select user')}
-                    className="data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-400"
+                    className="data-placeholder:text-muted-foreground"
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,7 +266,7 @@ function BaseOption({
         // Only the fallback item (list not loaded yet) lacks a workspace -
         // and that one is live.
         <i
-          className="fas fa-fw fa-earth-americas text-[0.7rem] text-blue-500"
+          className="fas fa-fw fa-earth-americas type-icon-s text-workspace-live-text"
           aria-hidden
         />
       )}

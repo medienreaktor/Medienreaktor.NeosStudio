@@ -90,11 +90,11 @@ export const RangeEditor: PropertyEditorComponent = ({
   return (
     <div
       className={cn(
-        'flex items-start gap-4',
+        'flex items-start gap-3.5',
         opts.disabled && 'pointer-events-none opacity-50',
       )}
     >
-      <span className="flex h-9 w-1/3 shrink-0 items-center gap-1.5">
+      <span className="flex h-8.5 w-1/3 shrink-0 items-center gap-1.5">
         <Input
           type="text"
           inputMode="decimal"
@@ -118,11 +118,13 @@ export const RangeEditor: PropertyEditorComponent = ({
           title={t('editor.range.currentValue', 'Current value')}
         />
         {opts.unit && (
-          <span className="text-xs pr-2 text-neutral-600 dark:text-neutral-400">{opts.unit}</span>
+          <span className="type-small pr-2 text-muted-foreground">
+            {opts.unit}
+          </span>
         )}
       </span>
       <div className="min-w-0 flex-1 pr-2">
-        <div className="flex h-9 items-center">
+        <div className="flex h-8.5 items-center">
           <Slider
             min={opts.min}
             max={opts.max}
@@ -139,7 +141,7 @@ export const RangeEditor: PropertyEditorComponent = ({
             }
           />
         </div>
-        <div className="flex items-center justify-between gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+        <div className="flex items-center justify-between gap-2 type-small text-muted-foreground">
           <span title={t('editor.range.minimum', 'Minimum')}>
             {opts.minLabel ?? `${opts.min}${opts.unit}`}
           </span>

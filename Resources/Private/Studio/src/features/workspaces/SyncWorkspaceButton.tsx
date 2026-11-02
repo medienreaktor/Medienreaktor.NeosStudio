@@ -33,7 +33,7 @@ export function SyncWorkspaceButton({
         size="icon"
         // Only shown while the workspace is outdated - that deserves
         // attention, so it is always orange.
-        className="bg-orange-500 text-white hover:bg-orange-500/90"
+        className="bg-workspace-outdated text-workspace-outdated-foreground hover:bg-workspace-outdated/90"
         disabled={rebase.isPending}
         onClick={() => rebase.mutate({ workspaceName })}
         title={t(

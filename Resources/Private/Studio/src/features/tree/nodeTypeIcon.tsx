@@ -28,7 +28,7 @@ export function FaIcon({
 }) {
   return (
     <i
-      className={cn(faClassName(icon), 'fa-fw text-[0.75rem]', className)}
+      className={cn(faClassName(icon), 'fa-fw type-icon-m', className)}
       aria-hidden
     />
   )
@@ -60,7 +60,7 @@ export function NodeTypeIcon({
     <i
       className={cn(
         resolveNodeTypeIconClass(nodeTypes, nodeTypeName),
-        'fa-fw text-[0.75rem]',
+        'fa-fw type-icon-m',
         className,
       )}
       aria-hidden

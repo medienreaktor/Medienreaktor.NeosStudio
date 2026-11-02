@@ -92,7 +92,7 @@ function changeLabel(change: WorkspacePendingDiffChange): string {
 function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
   if (change.kind === 'position') {
     return (
-      <div className="text-neutral-600 dark:text-neutral-400">
+      <div className="text-muted-foreground">
         {t('workspaceHistory.change.reordered', 'Reordered among its siblings')}
       </div>
     )
@@ -100,21 +100,21 @@ function ChangeRow({ change }: { change: WorkspacePendingDiffChange }) {
   const oldText = formatValue(change.old)
   const newText = formatValue(change.new)
   const empty = (
-    <span className="text-neutral-500 italic">
+    <span className="text-muted-foreground italic">
       {t('workspaceHistory.value.empty', 'empty')}
     </span>
   )
   return (
     <div className="min-w-0">
-      <div className="truncate text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
+      <div className="truncate type-caption text-muted-foreground">
         {changeLabel(change)}
       </div>
       {oldText !== newText && (
-        <div className="wrap-break-word text-red-600/90 dark:text-red-400/90 line-through">
+        <div className="wrap-break-word text-change-removed-text/90 line-through">
           {oldText ?? empty}
         </div>
       )}
-      <div className="wrap-break-word text-green-600/90 dark:text-green-400/90">
+      <div className="wrap-break-word text-change-added-text/90">
         {newText ?? empty}
       </div>
     </div>
@@ -139,7 +139,7 @@ function DiffEvent({
         <div className="flex min-w-0 items-center gap-1.5">
           <i
             className={cn(
-              'fas fa-fw shrink-0 text-[0.65rem]',
+              'fas fa-fw shrink-0 type-icon-s',
               eventIcon(event.type, event.tag),
               TONE_TEXT_CLASSES[eventTone(event.type, event.tag)],
             )}
@@ -153,7 +153,7 @@ function DiffEvent({
           >
             {eventTypeLabel(event.type, event.tag)}
           </span>
-          <span className="truncate text-neutral-950 dark:text-white">
+          <span className="truncate text-foreground">
             {event.nodeLabel ??
               event.nodeAggregateId ??
               t('workspaceGraph.unknownNode', 'Unknown node')}
@@ -225,7 +225,7 @@ export function NodeDiff({ node }: { node: WorkspaceDocumentDiffNode }) {
       <div className="flex min-w-0 items-center gap-1.5">
         <i
           className={cn(
-            'fas fa-fw shrink-0 text-[0.65rem]',
+            'fas fa-fw shrink-0 type-icon-s',
             kind?.icon ?? status.icon,
             TONE_TEXT_CLASSES[status.tone],
           )}
@@ -234,7 +234,7 @@ export function NodeDiff({ node }: { node: WorkspaceDocumentDiffNode }) {
         <span className={cn('shrink-0', TONE_TEXT_CLASSES[status.tone])}>
           {kind?.label ?? status.label()}
         </span>
-        <span className="truncate text-neutral-950 dark:text-white">
+        <span className="truncate text-foreground">
           {node.nodeLabel ??
             node.nodeAggregateId ??
             t('workspaceGraph.unknownNode', 'Unknown node')}
@@ -266,7 +266,7 @@ export function StepDiff({
   )
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-1 text-neutral-500">
+      <div className="flex items-center gap-2 py-1 text-muted-foreground">
         <Spinner className="size-3" />
         {t('workspaceHistory.loadingDiff', 'Loading changes…')}
       </div>
@@ -274,7 +274,7 @@ export function StepDiff({
   }
   if (isError || !data) {
     return (
-      <div className="py-1 text-neutral-500">
+      <div className="py-1 text-muted-foreground">
         {t('workspaceHistory.diffFailed', 'The changes could not be loaded.')}
       </div>
     )
@@ -296,7 +296,7 @@ export function StepDiff({
         />
       ))}
       {events.length === 0 && (
-        <div className="text-neutral-500">
+        <div className="text-muted-foreground">
           {t('workspaceHistory.noDetails', 'No details available.')}
         </div>
       )}

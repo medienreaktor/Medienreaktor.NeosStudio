@@ -129,14 +129,14 @@ export function AccessRoleDialog({
           strip would scroll by a few dozen pixels - which reads as a
           cut-off tab, not as something scrollable. The page-tree picker
           inside earns the extra room anyway. */}
-      <DialogContent size="xl" className="max-w-5xl">
+      <DialogContent size="xl" className="max-w-240">
         <DialogHeader>
           <DialogTitle>
             {role === null
               ? t('accessRoles.newRole', 'New role')
               : t('accessRoles.editRole', 'Edit role')}
             {role !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {role.label}
               </span>
             )}
@@ -186,9 +186,9 @@ export function AccessRoleDialog({
               expanded page tree and push the dialog past the viewport. */}
           <TabsContent
             value="general"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <Field
                 label={t('accessRoles.label', 'Name')}
                 htmlFor="access-role-label"
@@ -221,7 +221,7 @@ export function AccessRoleDialog({
                 />
               </Field>
               {role !== null && (
-                <p className="text-xs text-neutral-500">
+                <p className="type-small text-muted-foreground">
                   {t('accessRoles.identifierHint', 'Identifier: {0}', [
                     role.identifier,
                   ])}
@@ -232,7 +232,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="sites"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <SitesTab
               selected={constraints.siteNodeNames}
@@ -242,7 +242,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="tree"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <TreeTab
               allowedSiteNodeNames={constraints.siteNodeNames}
@@ -253,7 +253,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="dimensions"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <DimensionsTab
               selected={constraints.dimensionValues}
@@ -263,14 +263,14 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="workspaces"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <WorkspacesTab constraints={constraints} onChange={patch} />
           </TabsContent>
 
           <TabsContent
             value="capabilities"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <CapabilitiesTab
               capabilities={constraints.capabilities}
@@ -281,7 +281,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="members"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <MembersTab
               selected={memberUserIds}
@@ -324,11 +324,7 @@ export function AccessRoleDialog({
  * a bug.
  */
 function TabIntro({ children }: { children: ReactNode }) {
-  return (
-    <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-      {children}
-    </p>
-  )
+  return <p className="mb-3 type-body text-muted-foreground">{children}</p>
 }
 
 function CheckboxRow({
@@ -343,7 +339,7 @@ function CheckboxRow({
   children: ReactNode
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 rounded-sm px-1 py-1 text-sm text-neutral-800 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800 has-[[disabled]]:cursor-not-allowed has-[[disabled]]:opacity-60">
+    <label className="flex cursor-pointer items-start gap-2.5 rounded-sm px-1 py-1 type-body text-foreground hover:bg-accent has-[[disabled]]:cursor-not-allowed has-[[disabled]]:opacity-60">
       <Checkbox
         className="mt-0.5"
         checked={checked}
@@ -393,7 +389,7 @@ function SitesTab({
               }
             >
               {site.name}
-              <span className="ml-2 text-xs text-neutral-500">
+              <span className="ml-2 type-small text-muted-foreground">
                 {site.nodeName}
               </span>
               {site.state === 'offline' && (
@@ -469,15 +465,15 @@ function DimensionsTab({
           'Tick the dimension values this role may edit. A dimension with nothing ticked stays fully open.',
         )}
       </TabIntro>
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         {dimensions.map((dimension) => {
           const values = selected[dimension.id] ?? []
           return (
             <div key={dimension.id}>
-              <div className="mb-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">
+              <div className="mb-1 type-body-strong text-foreground">
                 {dimension.label}
                 {values.length === 0 && (
-                  <span className="ml-2 text-xs font-normal text-neutral-500">
+                  <span className="ml-2 type-small text-muted-foreground">
                     {t('accessRoles.dimensionAll', 'all values')}
                   </span>
                 )}
@@ -496,7 +492,7 @@ function DimensionsTab({
                   >
                     <span
                       style={{
-                        paddingLeft: `${value.specializationDepth * 12}px`,
+                        paddingLeft: `${value.specializationDepth * 0.75}rem`,
                       }}
                     >
                       {value.label}
@@ -545,7 +541,7 @@ function WorkspacesTab({
             'accessRoles.workspacesNone',
             'There are no shared workspaces yet.',
           )}
-          className="py-6"
+          className="py-5.5"
         />
       ) : (
         <div className="space-y-0.5">
@@ -564,7 +560,7 @@ function WorkspacesTab({
               }
             >
               {workspace.title || workspace.name}
-              <span className="ml-2 text-xs text-neutral-500">
+              <span className="ml-2 type-small text-muted-foreground">
                 {workspace.name}
               </span>
               {workspace.classification === 'ROOT' && (
@@ -577,7 +573,7 @@ function WorkspacesTab({
         </div>
       )}
 
-      <div className="mt-5 space-y-0.5 border-t pt-4">
+      <div className="mt-4.5 space-y-0.5 border-t pt-3.5">
         <CheckboxRow
           checked={constraints.allowPersonalWorkspace}
           onCheckedChange={(checked) =>
@@ -585,7 +581,7 @@ function WorkspacesTab({
           }
         >
           {t('accessRoles.allowPersonal', 'May use their personal workspace')}
-          <span className="block text-xs text-neutral-500">
+          <span className="block type-small text-muted-foreground">
             {t(
               'accessRoles.allowPersonalHint',
               'Off forces this role to edit directly in a shared workspace.',
@@ -599,7 +595,7 @@ function WorkspacesTab({
           }
         >
           {t('accessRoles.allowPublish', 'May publish to live')}
-          <span className="block text-xs text-neutral-500">
+          <span className="block type-small text-muted-foreground">
             {t(
               'accessRoles.allowPublishHint',
               'Off means changes can only be handed on for review.',
@@ -714,7 +710,7 @@ function CapabilitiesTab({
           >
             {labels.label}
             {labels.hint !== '' && (
-              <span className="block text-xs text-neutral-500">
+              <span className="block type-small text-muted-foreground">
                 {labels.hint}
               </span>
             )}
@@ -761,7 +757,7 @@ function MembersTab({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('users.search', 'Search users…')}
-        className="mb-3 max-w-xs"
+        className="mb-3 max-w-75"
         autoComplete="off"
       />
       <div className="space-y-0.5">

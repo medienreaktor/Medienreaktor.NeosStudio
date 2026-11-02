@@ -1,18 +1,13 @@
 /**
  * Stable per-user colors and initials for presence indicators (avatars, tree
- * markers, guest outlines). The palette avoids the shell's selection blue
- * (#00adee) and the dirty-marker orange so presence never reads as selection
- * or pending changes; every entry carries white text at small sizes.
+ * markers, guest outlines). The palette is the Presence/1-7 tokens of the
+ * Studio design file; it avoids the selection blue and the dirty-marker
+ * orange so presence never reads as selection or pending changes, and every
+ * entry carries text-presence-foreground.
  */
-const PRESENCE_PALETTE = [
-  '#7161c0', // purple
-  '#e04b64', // raspberry
-  '#00a338', // green
-  '#c2571c', // rust
-  '#12939e', // teal
-  '#b44bd3', // orchid
-  '#5c7cfa', // indigo
-]
+const PRESENCE_PALETTE = [1, 2, 3, 4, 5, 6, 7].map(
+  (n) => `var(--color-presence-${n})`,
+)
 
 /** Deterministic palette pick per user id - the same user gets the same
  * color on every client without any coordination. */
@@ -22,6 +17,18 @@ export function presenceColor(userId: string): string {
     hash = (hash * 31 + userId.charCodeAt(i)) | 0
   }
   return PRESENCE_PALETTE[Math.abs(hash) % PRESENCE_PALETTE.length]
+}
+
+/**
+ * The same color as a concrete value, for consumers outside the shell's
+ * stylesheet - the guest frame renders the site, where Studio's custom
+ * properties do not exist.
+ */
+export function presenceColorValue(userId: string): string {
+  const token = presenceColor(userId).slice(4, -1)
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(token)
+    .trim()
 }
 
 /** "Jane Doe" -> "JD"; single names give one letter, empty names "?". */

@@ -14,7 +14,7 @@ import { startPollingTransport } from './pollingTransport'
 import { startWebsocketTransport } from './websocketTransport'
 import type { CollaborationTransport, TransportCallbacks } from './transport'
 import type { PresencePeer } from './PresenceContext'
-import { presenceColor, presenceInitials } from './presenceColors'
+import { presenceColorValue, presenceInitials } from './presenceColors'
 
 /**
  * How long the realtime connection may be down before the polling fallback
@@ -115,7 +115,7 @@ export function CollaborationBridge({
           // responses do not have the field at all (locks are not an API
           // concept) - normalize so consumers can rely on null.
           editingElement: user.editingElement ?? null,
-          color: presenceColor(user.userId),
+          color: presenceColorValue(user.userId),
           initials: presenceInitials(user.name),
         }))
       const serialized = JSON.stringify({ peers, you: self })
@@ -203,13 +203,18 @@ export function CollaborationBridge({
     const realtimeUrl = config.realtime?.url ?? null
     if (realtimeUrl) {
       transports.push(
-        startWebsocketTransport(realtimeUrl, workspaceName, positionRef.current, {
-          ...transportCallbacks,
-          onStatus: (connected) => {
-            if (connected) stopFallback()
-            else startFallback()
+        startWebsocketTransport(
+          realtimeUrl,
+          workspaceName,
+          positionRef.current,
+          {
+            ...transportCallbacks,
+            onStatus: (connected) => {
+              if (connected) stopFallback()
+              else startFallback()
+            },
           },
-        }),
+        ),
       )
       // The session starts unconnected: arm the fallback now, the socket's
       // first onConnect disarms it.

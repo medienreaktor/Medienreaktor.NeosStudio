@@ -235,30 +235,30 @@ export function WorkspaceSwitcher({
             'Editing in {0}, publishing to {1}',
             [sourceLabel, targetLabel],
           )}
-          className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-8.5 w-fit items-center justify-between gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex items-center gap-2">
             {/* Only the icon carries the workspace's color (a task's status
                 color, purple for shared) - text and button stay neutral. */}
             {switchBase.isPending ? (
               <i
-                className="fa fa-fw fa-spinner fa-spin text-[0.7rem] text-neutral-600 dark:text-neutral-400"
+                className="fa fa-fw fa-spinner fa-spin type-icon-s text-muted-foreground"
                 aria-hidden
               />
             ) : (
               <WorkspaceIcon workspace={activeWorkspace} />
             )}
-            <span className="hidden @[56rem]:inline max-w-40 truncate">
+            <span className="hidden @[52.5rem]:inline max-w-37.5 truncate">
               {sourceLabel}
             </span>
           </span>
           <PublishTargetBadge workspace={activeWorkspace} />
           <i
-            className="fas fa-chevron-down text-[1rem] text-neutral-950/50 dark:text-white/50"
+            className="fas fa-chevron-down type-icon-xl text-placeholder"
             aria-hidden
           />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-64">
+        <DropdownMenuContent align="start" className="min-w-60">
           <DropdownMenuGroup>
             <DropdownMenuLabel>
               {t('workspace.publishTargetGroup', 'My workspace, publishing to')}
@@ -286,7 +286,7 @@ export function WorkspaceSwitcher({
                       for reviewing, but flagged. */}
                   {!rebaseBlocked && !workspace.permissions.write && (
                     <span
-                      className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400"
+                      className="ml-1.5 type-small text-muted-foreground"
                       title={t(
                         'workspace.cannotPublishHere',
                         'You cannot publish to this workspace',
@@ -320,12 +320,12 @@ export function WorkspaceSwitcher({
                     onClick={() => pick(`edit:${workspace.name}`)}
                   >
                     <i
-                      className="fas fa-users text-[0.7rem] text-purple-500"
+                      className="fas fa-users type-icon-s text-workspace-shared-text"
                       aria-hidden
                     />
                     {workspaceLabel(workspace)}
                     {!workspace.permissions.write && (
-                      <span className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                      <span className="ml-1.5 type-small text-muted-foreground">
                         <i className="fas fa-lock" aria-hidden />{' '}
                         {t('workspace.readOnly', 'read-only')}
                       </span>
@@ -345,7 +345,7 @@ export function WorkspaceSwitcher({
                     decorationsFor(workspace, decorators)[0] ?? null
                   const icon = (
                     <i
-                      className={`fas fa-${decoration?.icon ?? 'code-branch'} text-[0.7rem]`}
+                      className={`fas fa-${decoration?.icon ?? 'code-branch'} type-icon-s`}
                       style={
                         decoration?.color
                           ? { color: decoration.color }
@@ -362,10 +362,10 @@ export function WorkspaceSwitcher({
                   if (isActiveTask) {
                     return (
                       <DropdownMenuSub key={`edit:${workspace.name}`}>
-                        <DropdownMenuSubTrigger className="pl-8">
+                        <DropdownMenuSubTrigger className="pl-7.5">
                           <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
                             <i
-                              className="fas fa-check text-[0.65rem]"
+                              className="fas fa-check type-icon-s"
                               aria-hidden
                             />
                           </span>
@@ -380,7 +380,7 @@ export function WorkspaceSwitcher({
                                 onClick={() => setSubmittingReview(true)}
                               >
                                 <i
-                                  className="fas fa-paper-plane w-4 text-center"
+                                  className="fas fa-paper-plane w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.sendToReview', 'Send to review')}
@@ -391,7 +391,7 @@ export function WorkspaceSwitcher({
                             activeWorkspace.permissions.publish && (
                               <DropdownMenuItem onClick={completeTask}>
                                 <i
-                                  className="fas fa-check w-4 text-center"
+                                  className="fas fa-check w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.completeTask', 'Complete task')}
@@ -405,7 +405,7 @@ export function WorkspaceSwitcher({
                                 }
                               >
                                 <i
-                                  className="fas fa-rotate-left w-4 text-center"
+                                  className="fas fa-rotate-left w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.reopenTask', 'Reopen task')}
@@ -429,7 +429,7 @@ export function WorkspaceSwitcher({
                       {workspaceLabel(workspace)}
                       <WorkspaceDecorationBadges workspace={workspace} />
                       {!workspace.permissions.write && (
-                        <span className="ml-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                        <span className="ml-1.5 type-small text-muted-foreground">
                           <i className="fas fa-lock" aria-hidden />{' '}
                           {t('workspace.readOnly', 'read-only')}
                         </span>
@@ -443,7 +443,7 @@ export function WorkspaceSwitcher({
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => setCreatingTask(true)}>
-              <i className="fas fa-plus text-[0.7rem]" aria-hidden />
+              <i className="fas fa-plus type-icon-s" aria-hidden />
               {t('tasks.addTaskWorkspace', 'Add task workspace')}
             </DropdownMenuItem>
           </DropdownMenuGroup>

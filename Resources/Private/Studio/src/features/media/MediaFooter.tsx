@@ -17,33 +17,33 @@ export function MediaFooter({
   onUpload: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-2">
+    <div className="flex items-center gap-2 border-t border-divider bg-card px-3 py-2">
       <Button size="sm" onClick={onUpload}>
-        <i className="fas fa-upload text-[1rem]" aria-hidden />
+        <i className="fas fa-upload type-icon-xl" aria-hidden />
         {t('media.upload', 'Upload')}
       </Button>
 
-      <span className="flex-1 text-center text-xs text-neutral-500">
+      <span className="flex-1 text-center type-small text-muted-foreground">
         {total !== undefined &&
           (total === 1
             ? t('media.assetCountOne', '{0} asset', [total])
             : t('media.assetCountOther', '{0} assets', [total]))}
       </span>
 
-      <div className="flex rounded-md border border-neutral-300 dark:border-neutral-700">
+      <div className="flex rounded-md border border-border">
         <ViewToggle
           active={state.view === 'grid'}
           onClick={() => state.setView('grid')}
           label={t('media.gridView', 'Grid view')}
         >
-          <i className="fas fa-table-cells-large text-[1rem]" aria-hidden />
+          <i className="fas fa-table-cells-large type-icon-xl" aria-hidden />
         </ViewToggle>
         <ViewToggle
           active={state.view === 'list'}
           onClick={() => state.setView('list')}
           label={t('media.listView', 'List view')}
         >
-          <i className="fas fa-list text-[1rem]" aria-hidden />
+          <i className="fas fa-list type-icon-xl" aria-hidden />
         </ViewToggle>
       </div>
     </div>
@@ -68,10 +68,10 @@ function ViewToggle({
       title={label}
       aria-label={label}
       className={cn(
-        'grid size-8 place-items-center first:rounded-l-md last:rounded-r-md',
+        'grid size-7.5 place-items-center first:rounded-l-md last:rounded-r-md',
         active
-          ? 'bg-neutral-300 dark:bg-neutral-700 text-neutral-950 dark:text-white'
-          : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800',
+          ? 'bg-border text-foreground'
+          : 'text-muted-foreground hover:bg-accent',
       )}
     >
       {children}

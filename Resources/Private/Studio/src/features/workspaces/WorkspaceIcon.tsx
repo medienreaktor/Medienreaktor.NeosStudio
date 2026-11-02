@@ -14,8 +14,8 @@ const CLASSIFICATION_ICONS: Record<string, string> = {
 
 /** Colors matching the publish-target badge: blue live, purple shared. */
 const CLASSIFICATION_COLORS: Record<string, string> = {
-  ROOT: 'text-blue-500',
-  SHARED: 'text-purple-500',
+  ROOT: 'text-workspace-live-text',
+  SHARED: 'text-workspace-shared-text',
 }
 
 /** The classification's icon; a branch for anything unknown or unresolved. */
@@ -33,7 +33,7 @@ export function workspaceIconName(workspace: Workspace | undefined): string {
  */
 export function WorkspaceIcon({
   workspace,
-  className = 'text-[0.7rem]',
+  className = 'type-caption',
 }: {
   workspace: Workspace | undefined
   className?: string
@@ -45,7 +45,7 @@ export function WorkspaceIcon({
   const color = decoration?.color
     ? undefined
     : ((workspace && CLASSIFICATION_COLORS[workspace.classification]) ??
-      'text-neutral-600 dark:text-neutral-400')
+      'text-muted-foreground')
   return (
     <i
       className={`fas fa-fw ${
