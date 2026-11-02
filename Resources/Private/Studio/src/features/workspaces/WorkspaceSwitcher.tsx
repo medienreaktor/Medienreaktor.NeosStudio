@@ -77,7 +77,11 @@ export function WorkspaceSwitcher({
   /** Move the editing context to a shared workspace, or null = personal. */
   onSwitchEditingContext: (workspaceName: string | null) => void
 }) {
-  const { workspaceContentChanged, navigateToNodeInWorkspace } = useStudio()
+  const {
+    workspaceContentChanged,
+    navigateToNodeInWorkspace,
+    workOnWorkspace,
+  } = useStudio()
   const collaborative = activeWorkspace.name !== personalWorkspace.name
   const [creatingTask, setCreatingTask] = React.useState(false)
   const [reviewing, setReviewing] = React.useState(false)
@@ -397,8 +401,11 @@ export function WorkspaceSwitcher({
                           <WorkspaceDecorationBadges workspace={workspace} />
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
+                          {/* The task's permissions, not the personal
+                              workspace's - whoever works on a task holds
+                              every right on their own workspace. */}
                           {activeTask.status === 'OPEN' &&
-                            activeWorkspace.permissions.write && (
+                            workspace.permissions.write && (
                               <DropdownMenuItem
                                 onClick={() => setSubmittingReview(true)}
                               >
@@ -410,8 +417,8 @@ export function WorkspaceSwitcher({
                               </DropdownMenuItem>
                             )}
                           {activeTask.status !== 'DONE' &&
-                            activeWorkspace.permissions.manage &&
-                            activeWorkspace.permissions.publish && (
+                            workspace.permissions.manage &&
+                            workspace.permissions.publish && (
                               <DropdownMenuItem onClick={completeTask}>
                                 <i
                                   className="fas fa-check w-3.5 text-center"
@@ -421,7 +428,7 @@ export function WorkspaceSwitcher({
                               </DropdownMenuItem>
                             )}
                           {activeTask.status !== 'OPEN' &&
-                            activeWorkspace.permissions.write && (
+                            workspace.permissions.write && (
                               <DropdownMenuItem
                                 onClick={() => setSendingBack(true)}
                               >
@@ -473,9 +480,10 @@ export function WorkspaceSwitcher({
       <CreateTaskDialog
         open={creatingTask}
         onOpenChange={setCreatingTask}
-        // Check the fresh branch out right away - creating a task from the
-        // switcher means "I want to work in it now".
-        onCreated={(task) => onSwitchEditingContext(task.workspaceName)}
+        // Work on the fresh branch right away - creating a task from the
+        // switcher means "I want to work on it now", the same as the board's
+        // "Work on this task".
+        onCreated={(task) => void workOnWorkspace(task.workspaceName)}
       />
       <RequestChangesDialog
         open={sendingBack}
@@ -496,19 +504,20 @@ export function WorkspaceSwitcher({
           })
         }
       />
-      {reviewing && workspacesData && (
+      {reviewing && workspacesData && taskWorkspace && (
         <ReviewChangesDialog
           workspaces={workspacesData.workspaces}
           activeWorkspace={activeWorkspace}
-          initialSourceName={activeWorkspace.name}
+          // The task branch is what gets reviewed - the personal workspace
+          // only publishes into it.
+          initialSourceName={taskWorkspace.name}
           open={reviewing}
           onOpenChange={(open) => !open && setReviewing(false)}
           onNavigate={navigateToNodeInWorkspace}
           // Completing is the review dialog's own decision now (it knows
           // whether EVERYTHING was approved); this just closes up.
           onPublished={(sourceWorkspaceName) => {
-            if (sourceWorkspaceName === activeWorkspace.name)
-              setReviewing(false)
+            if (sourceWorkspaceName === taskWorkspace.name) setReviewing(false)
           }}
         />
       )}

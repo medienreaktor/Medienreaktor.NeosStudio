@@ -73,6 +73,10 @@ export function useWorkspacePublishing(workspaceName: string) {
     // are stale either way, and every loaded tree item needs a re-read
     // (per-item caches in the trees never expire on their own).
     void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    // A publish that empties a task branch completes the task (the content
+    // repository's full publish, see TaskWorkspaceLifecycleHook) - the board
+    // and the task badges must not wait for their next poll to show it.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
     workspaceContentChanged()
   }
 

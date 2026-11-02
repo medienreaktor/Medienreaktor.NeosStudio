@@ -1,10 +1,31 @@
 import { useMutation } from '@tanstack/react-query'
+import { apiFetch } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { taskOf, transitionTask, type TaskExtension } from '@/api/tasks'
 import type { Workspace } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
+
+/**
+ * Confirms a task completed by a publish - when the server says so. A publish
+ * that covers everything a branch has is a full one, and the content
+ * repository completes the task on it (see TaskWorkspaceLifecycleHook); the
+ * review can predict that, but only the task's status after the publish
+ * knows, so the toast asks it rather than repeating the prediction.
+ */
+export function announceTaskCompletion(workspaceName: string): void {
+  void apiFetch<{ workspaces: Workspace[] }>('/workspaces')
+    .then(({ workspaces }) => {
+      const workspace = workspaces.find((w) => w.name === workspaceName)
+      if (workspace && taskOf(workspace)?.status === 'DONE') {
+        toast.success(t('tasks.completed', 'The task has been completed.'))
+      }
+    })
+    .catch(() => {
+      // Only a confirmation - the publish itself already succeeded.
+    })
+}
 
 /**
  * The verdict a review can hand down on a task branch: approve it (complete
@@ -28,8 +49,13 @@ export function useTaskVerdict(workspace: Workspace | null): {
   const task = workspace ? taskOf(workspace) : null
 
   const mutation = useMutation({
-    mutationFn: ({ target, note }: { target: 'OPEN' | 'DONE'; note?: string }) =>
-      transitionTask(workspaceName, target, note),
+    mutationFn: ({
+      target,
+      note,
+    }: {
+      target: 'OPEN' | 'DONE'
+      note?: string
+    }) => transitionTask(workspaceName, target, note),
     onSuccess: (_response, { target }) =>
       toast.success(
         target === 'DONE'

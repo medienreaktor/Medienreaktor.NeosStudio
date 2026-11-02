@@ -150,7 +150,10 @@ export function PublishReviewButton({
         open={open}
         onOpenChange={setOpen}
         onNavigate={onNavigate}
-        preselectAll
+        // Everything selected is the topbar's "publish what I did" - not
+        // what a remark notification opens on, which is somebody else's
+        // review to read first.
+        preselectAll={focus === null}
       />
     </>
   )

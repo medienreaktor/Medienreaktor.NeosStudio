@@ -80,6 +80,18 @@ export function TasksBoard() {
   const activeWorkspace =
     workspaces.find((workspace) => workspace.name === studio.workspaceName) ??
     null
+  /**
+   * The task being worked on: the one the personal workspace publishes into
+   * (see checkout), or the one edited directly in collaborative mode.
+   */
+  const personalBase =
+    workspaces.find(
+      (workspace) => workspace.name === studio.personalWorkspaceName,
+    )?.baseWorkspace ?? null
+  const isWorkedOn = (task: Task) =>
+    task.workspaceName === studio.workspaceName ||
+    (studio.workspaceName === studio.personalWorkspaceName &&
+      task.workspaceName === personalBase)
 
   // The tasks response embeds a workspace snapshot that only refreshes with
   // the board's 30s poll. Content edits invalidate the workspaces query
@@ -189,6 +201,7 @@ export function TasksBoard() {
   const checkout = (task: Task) => {
     setViewing(null)
     setEditing(null)
+    if (isWorkedOn(task)) return
     void studio.workOnWorkspace(task.workspaceName).then((switched) => {
       if (switched)
         toast.success(t('workspace.switched', 'Workspace switched.'))
@@ -270,7 +283,7 @@ export function TasksBoard() {
                   <TaskCard
                     key={task.workspaceName}
                     task={task}
-                    active={task.workspaceName === studio.workspaceName}
+                    active={isWorkedOn(task)}
                     assigneeLabel={userLabel(task.assignee)}
                     draggable={
                       allowedTargets(task).length > 0 && !move.isPending

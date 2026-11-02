@@ -43,7 +43,10 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { CommentThread } from '@/features/review/CommentThread'
 import { RequestChangesDialog } from '@/features/review/RequestChangesDialog'
-import { useTaskVerdict } from '@/features/review/useTaskVerdict'
+import {
+  announceTaskCompletion,
+  useTaskVerdict,
+} from '@/features/review/useTaskVerdict'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { ConflictResolutionDialog } from '@/features/workspaces/ConflictResolutionDialog'
 import {
@@ -150,6 +153,7 @@ export function CompareDialog({
   canNavigate,
   onOpenPage,
   onPublished,
+  allDocumentCount,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -167,6 +171,12 @@ export function CompareDialog({
   onOpenPage: (address: string) => void
   /** A publish went out for this workspace (the tasks board completes tasks). */
   onPublished?: (sourceWorkspaceName: string) => void
+  /**
+   * Every changed document of `source`, across sites - `documents` is the
+   * review's site-scoped list. Publishing the last of them is a full publish,
+   * which completes a task.
+   */
+  allDocumentCount?: number
 }) {
   const targetWorkspaceName = source.baseWorkspace
   const sourceLabel = workspaceLabel(source, source.name)
@@ -585,11 +595,21 @@ export function CompareDialog({
     documentId === null ? 0 : (openRemarks.get(documentId) ?? 0)
 
   // A page somebody left remarks on opens with them showing - they are what
-  // the reviewer is meant to act on. Closing the panel by hand stands until
-  // the page changes.
+  // the reviewer is meant to act on. Decided once per page, as soon as the
+  // remarks are in: settling the last one, by hand or by someone else, must
+  // not fold the panel away under the cursor, and closing it by hand stands
+  // until the page changes.
+  const remarksPanelDecidedFor = useRef<string | null>(null)
   useEffect(() => {
-    if (open) setShowComments(openRemarksHere > 0)
-  }, [open, documentId, openRemarksHere > 0])
+    if (!open) {
+      remarksPanelDecidedFor.current = null
+      return
+    }
+    if (commentsData === undefined || documentId === null) return
+    if (remarksPanelDecidedFor.current === documentId) return
+    remarksPanelDecidedFor.current = documentId
+    setShowComments(openRemarksHere > 0)
+  }, [open, documentId, commentsData, openRemarksHere])
   const activeChangeRef = useRef(activeChange)
   activeChangeRef.current = activeChange
 
@@ -715,6 +735,18 @@ export function CompareDialog({
 
   // The document has no pending changes anymore - move on to the next one, or
   // leave when that was the last.
+  /**
+   * Publishing this page is publishing everything the branch has left - a
+   * full publish, which completes the task. Said before the click, as the
+   * review dialog does.
+   */
+  const publishCompletesTask =
+    verdict.task !== null &&
+    verdict.task.status !== 'DONE' &&
+    documentId !== null &&
+    documents.length === 1 &&
+    (allDocumentCount ?? documents.length) === 1
+
   const moveOn = (published: boolean) => {
     if (published) onPublished?.(source.name)
     const remaining = documents.filter(
@@ -728,7 +760,14 @@ export function CompareDialog({
     if (documentId === null) return
     operation.mutate(
       { kind, filter: { documents: [documentId] } },
-      { onSuccess: () => moveOn(kind === 'publish') },
+      {
+        onSuccess: () => {
+          if (kind === 'publish' && publishCompletesTask) {
+            announceTaskCompletion(source.name)
+          }
+          moveOn(kind === 'publish')
+        },
+      },
     )
   }
 
@@ -1103,12 +1142,23 @@ export function CompareDialog({
                 </div>
                 {activeAnchor ? (
                   <CommentThread
+                    // One thread per change: a draft typed on one change must
+                    // not be sent pinned to the next one.
+                    key={
+                      activeAnchor
+                        ? commentAnchorKey(
+                            activeAnchor.nodeAggregateId,
+                            activeAnchor.dimensions,
+                          )
+                        : 'none'
+                    }
                     className="flex min-h-0 flex-1 flex-col p-3"
                     listClassName="min-h-0 flex-1 overflow-y-auto"
                     workspaceName={source.name}
                     comments={activeComments}
                     anchor={activeAnchor}
                     canManage={source.permissions.manage}
+                    canWrite={source.permissions.write}
                     placeholder={t(
                       'compare.commentPlaceholder',
                       'What should happen with this change?',
@@ -1143,6 +1193,19 @@ export function CompareDialog({
                   )}
                 </>
               )}
+              {publishCompletesTask && (
+                <>
+                  {' · '}
+                  <i
+                    className="fas fa-circle-info mr-1 text-primary-text"
+                    aria-hidden
+                  />
+                  {t(
+                    'review.publishCompletesTask',
+                    'This publishes everything the branch has — which completes the task.',
+                  )}
+                </>
+              )}
             </span>
             {/* Discarding throws the author's work away - it belongs on the
                 far side of the footer, not next to the verdict (see the
@@ -1163,7 +1226,9 @@ export function CompareDialog({
             >
               {t('action.close', 'Close')}
             </Button>
-            {verdict.task !== null && verdict.task.status !== 'DONE' && (
+            {/* Handing back is an answer to a review request - an open task
+                has nothing to hand back. */}
+            {verdict.task?.status === 'IN_REVIEW' && (
               <Button
                 variant="secondary"
                 className="text-warning-text"

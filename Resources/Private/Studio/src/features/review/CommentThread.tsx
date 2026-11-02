@@ -41,6 +41,7 @@ export function CommentThread({
   comments,
   anchor,
   canManage = false,
+  canWrite = false,
   placeholder,
   emptyLabel,
   className,
@@ -57,6 +58,8 @@ export function CommentThread({
   }
   /** Manage permission on the workspace - allows removing others' comments. */
   canManage?: boolean
+  /** Write permission on the workspace - allows settling others' remarks. */
+  canWrite?: boolean
   placeholder?: string
   emptyLabel?: string
   className?: string
@@ -126,7 +129,11 @@ export function CommentThread({
           <CommentItem
             key={comment.id}
             comment={comment}
-            canResolve={comment.nodeAggregateId !== null}
+            canResolve={
+              comment.nodeAggregateId !== null &&
+              (canWrite ||
+                (me?.user?.id != null && me.user.id === comment.author))
+            }
             canDelete={
               canManage ||
               (me?.user?.id != null && me.user.id === comment.author)
@@ -151,6 +158,9 @@ export function CommentThread({
             }
           }}
           placeholder={
+            placeholder ?? t('review.commentPlaceholder', 'Write a comment…')
+          }
+          aria-label={
             placeholder ?? t('review.commentPlaceholder', 'Write a comment…')
           }
           rows={anchor ? 2 : 3}

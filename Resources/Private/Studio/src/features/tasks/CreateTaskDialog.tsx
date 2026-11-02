@@ -72,6 +72,8 @@ export function CreateTaskDialog({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [baseWorkspace, setBaseWorkspace] = useState(defaultBase)
+  /** The base was picked by hand - a late default must not overwrite it. */
+  const [basePicked, setBasePicked] = useState(false)
   // null = unassigned; the trigger then shows the "Select user" placeholder.
   const [assignee, setAssignee] = useState<string | null>(null)
 
@@ -79,10 +81,17 @@ export function CreateTaskDialog({
     if (open) {
       setTitle('')
       setDescription('')
-      setBaseWorkspace(defaultBase)
+      setBasePicked(false)
       setAssignee(null)
     }
-  }, [open, defaultBase])
+  }, [open])
+
+  // The server's default arrives with the tasks list, possibly after the
+  // dialog opened on the local fallback: it follows until the user picks,
+  // without touching anything else they typed meanwhile.
+  useEffect(() => {
+    if (open && !basePicked) setBaseWorkspace(defaultBase)
+  }, [open, defaultBase, basePicked])
 
   // Base candidates: live and shared workspaces (incl. other task branches -
   // stacking a task on a feature branch is legitimate).
@@ -196,7 +205,10 @@ export function CreateTaskDialog({
             >
               <Select
                 value={baseWorkspace}
-                onValueChange={(value) => setBaseWorkspace(value as string)}
+                onValueChange={(value) => {
+                  setBaseWorkspace(value as string)
+                  setBasePicked(true)
+                }}
                 items={baseItems}
               >
                 <SelectTrigger id="task-create-base" className="w-full">

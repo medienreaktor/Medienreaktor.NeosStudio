@@ -6,10 +6,12 @@ import {
   type Workspace,
 } from '@/api/workspaces'
 import { useStudio } from '@/app/StudioContext'
-import { toast } from '@/components/ui/toast'
 import { CommentThread } from '@/features/review/CommentThread'
 import { RequestChangesDialog } from '@/features/review/RequestChangesDialog'
-import { useTaskVerdict } from '@/features/review/useTaskVerdict'
+import {
+  announceTaskCompletion,
+  useTaskVerdict,
+} from '@/features/review/useTaskVerdict'
 import { taskStatusColor, taskStatusLabel } from '@/features/tasks/status'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -277,11 +279,20 @@ export function ReviewChangesDialog({
   const hasComments = (commentsData?.comments.length ?? 0) > 0
 
   // A review that was asked something shows the conversation; silence stays
-  // out of the way. Only on open and when switching workspaces - closing the
-  // panel by hand must not be undone by the next poll.
+  // out of the way. Decided once per open and workspace, as soon as the
+  // thread is in - closing the panel by hand must not be undone by the next
+  // poll, nor deleting the last comment fold it away.
+  const commentsPanelDecidedFor = useRef<string | null>(null)
   useEffect(() => {
-    if (open) setShowComments(hasComments)
-  }, [open, source?.name, hasComments])
+    if (!open) {
+      commentsPanelDecidedFor.current = null
+      return
+    }
+    if (commentsData === undefined || !source) return
+    if (commentsPanelDecidedFor.current === source.name) return
+    commentsPanelDecidedFor.current = source.name
+    setShowComments(hasComments)
+  }, [open, source, commentsData, hasComments])
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
@@ -380,11 +391,7 @@ export function ReviewChangesDialog({
             // before the dialog closes and the button unmounts.
             celebrateAround(publishButtonRef.current, 120)
             onPublished?.(sourceWorkspaceName)
-            if (completesTask) {
-              toast.success(
-                t('tasks.completed', 'The task has been completed.'),
-              )
-            }
+            if (completesTask) announceTaskCompletion(sourceWorkspaceName)
           }
           // The review is done once its selection went out (or away).
           onOpenChange(false)
@@ -915,7 +922,9 @@ export function ReviewChangesDialog({
             >
               {t('action.close', 'Close')}
             </Button>
-            {task !== null && task.status !== 'DONE' && (
+            {/* Handing back is an answer to a review request - an open task
+                has nothing to hand back. */}
+            {task?.status === 'IN_REVIEW' && (
               <Button
                 variant="secondary"
                 className="text-warning-text"
@@ -1037,6 +1046,7 @@ export function ReviewChangesDialog({
             goToDocument(address)
           }}
           onPublished={onPublished}
+          allDocumentCount={data?.documents.length ?? documents.length}
         />
       )}
 

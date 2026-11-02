@@ -117,9 +117,13 @@ export function TaskDetailDialog({
         await changeBaseWorkspace(task.workspaceName, baseWorkspace)
       }
     },
-    onSuccess: () => {
+    // Also after a failure: the title and assignee may already be saved when
+    // the re-base is refused, and the board must show them.
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
       void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    },
+    onSuccess: () => {
       toast.success(t('tasks.updated', 'The task has been updated.'))
       onOpenChange(false)
     },

@@ -374,11 +374,6 @@ export function App() {
   ) => followDocumentTo(addressInDimension(previousAddress, point))
 
   /**
-   * Move the editing context to a shared workspace (name) or back to the
-   * personal one (null). Client-side only; the selected document follows
-   * into the target workspace's subgraph.
-   */
-  /**
    * Work TOWARDS a workspace: the personal workspace is re-based onto it, so
    * ordinary editing continues where it always happens and "publish" hands the
    * work up into that workspace.
@@ -425,6 +420,11 @@ export function App() {
     return true
   }
 
+  /**
+   * Move the editing context to a shared workspace (name) or back to the
+   * personal one (null). Client-side only; the selected document follows
+   * into the target workspace's subgraph.
+   */
   const switchEditingContext = (name: string | null) => {
     const targetName = name ?? personalWorkspace?.name ?? null
     if (targetName === null || targetName === activeWorkspace?.name) return
