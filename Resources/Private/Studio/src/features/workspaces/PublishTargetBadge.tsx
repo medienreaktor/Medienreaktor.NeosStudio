@@ -40,10 +40,9 @@ export function usePublishTarget(workspace: Workspace): {
  * resolved yet). Fixed in both color schemes - the pill sits on a neutral
  * trigger either way.
  */
-const LIVE_TARGET_STYLE =
-  'bg-blue-500 text-white dark:bg-blue-500 dark:text-white'
+const LIVE_TARGET_STYLE = 'bg-workspace-live text-workspace-live-foreground'
 const OTHER_TARGET_STYLE =
-  'bg-purple-500 text-white dark:bg-purple-500 dark:text-white'
+  'bg-workspace-shared text-workspace-shared-foreground'
 
 /**
  * "→ target" pill naming the publish target of a workspace. The label
@@ -55,12 +54,11 @@ export function PublishTargetBadge({ workspace }: { workspace: Workspace }) {
     classification === 'root' ? LIVE_TARGET_STYLE : OTHER_TARGET_STYLE
   return (
     <Badge variant="secondary" className={`gap-1.5 font-normal ${style}`}>
-      <i className="fas fa-arrow-right text-[0.6rem] text-white" aria-hidden />
-      <i
-        className={`fas fa-fw ${icon} text-[0.65rem] text-white`}
-        aria-hidden
-      />
-      <span className="hidden @[56rem]:inline max-w-40 truncate">{label}</span>
+      <i className="fas fa-arrow-right type-icon-xs text-current" aria-hidden />
+      <i className={`fas fa-fw ${icon} type-icon-s text-current`} aria-hidden />
+      <span className="hidden @[52.5rem]:inline max-w-37.5 truncate">
+        {label}
+      </span>
     </Badge>
   )
 }

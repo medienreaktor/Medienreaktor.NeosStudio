@@ -147,7 +147,7 @@ function EditSiteForm({ site }: { site: Site }) {
       <DialogHeader>
         <DialogTitle>
           {t('sites.editSite', 'Edit site')}
-          <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+          <span className="ml-2 font-normal text-muted-foreground">
             {site.name}
           </span>
         </DialogTitle>
@@ -185,7 +185,7 @@ function EditSiteForm({ site }: { site: Site }) {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
+          <h3 className="type-body-strong text-foreground">
             {t('sites.domains', 'Domains')}
           </h3>
           {domainForm === null && (
@@ -201,7 +201,7 @@ function EditSiteForm({ site }: { site: Site }) {
         </div>
 
         {site.domains.length === 0 && domainForm === null && (
-          <p className="text-sm text-neutral-500">
+          <p className="type-body text-muted-foreground">
             {t(
               'sites.noDomains',
               'No domains configured. The site is reachable under any host pointing at this installation.',
@@ -279,13 +279,13 @@ function DomainRow({
   onDelete: () => void
 }) {
   return (
-    <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm">
+    <li className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 type-body">
       <span className="flex min-w-0 items-center gap-2">
         <span
           className={
             domain.active
-              ? 'truncate text-neutral-800 dark:text-neutral-200'
-              : 'truncate text-neutral-500'
+              ? 'truncate text-foreground'
+              : 'truncate text-muted-foreground'
           }
         >
           {domain.url}

@@ -40,16 +40,16 @@ export function UserMenu() {
       <DropdownMenuTrigger
         aria-label={t('userMenu.label', 'User menu')}
         title={name}
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-[0.65rem] font-semibold text-white select-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+        className="flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full type-count text-presence-foreground select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
         style={{ backgroundColor: presenceColor(colorKey) }}
       >
         {presenceInitials(name)}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-48">
+      <DropdownMenuContent align="end" className="min-w-45">
         {/* GroupLabel must live inside a Group (Base UI error 31 otherwise). */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            <span className="block truncate font-medium text-neutral-950 dark:text-white">
+            <span className="block truncate font-medium text-foreground">
               {name}
             </span>
             {me.account.identifier !== name && (
@@ -58,12 +58,12 @@ export function UserMenu() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => openSettings(PROFILE_SETTINGS)}>
-            <i className="fas fa-user w-4 text-center" aria-hidden />
+            <i className="fas fa-user w-3.5 text-center" aria-hidden />
             {t('userMenu.profile', 'Profile')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void logoutEverywhere()}>
             <i
-              className="fas fa-arrow-right-from-bracket w-4 text-center"
+              className="fas fa-arrow-right-from-bracket w-3.5 text-center"
               aria-hidden
             />
             {t('userMenu.logout', 'Logout')}

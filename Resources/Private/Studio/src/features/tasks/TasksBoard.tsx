@@ -138,7 +138,7 @@ export function TasksBoard() {
 
   if (error) {
     return (
-      <div className="p-6 text-sm text-neutral-500">
+      <div className="p-5.5 type-body text-muted-foreground">
         {t('tasks.loadFailed', 'Loading the tasks failed.')}{' '}
         {apiErrorDescription(error, '')}
       </div>
@@ -166,10 +166,8 @@ export function TasksBoard() {
           return (
             <div
               key={column.status}
-              className={`flex min-w-56 flex-1 flex-col border transition-colors ${
-                droppable
-                  ? 'bg-neutral-50 dark:bg-neutral-900'
-                  : 'bg-neutral-50/50 dark:bg-neutral-900/50'
+              className={`flex min-w-52.5 flex-1 flex-col border transition-colors ${
+                droppable ? 'bg-card' : 'bg-card/50'
               }`}
               onDragOver={(event) => {
                 if (droppable) event.preventDefault()
@@ -184,7 +182,7 @@ export function TasksBoard() {
                 className="flex items-center gap-2 px-3 py-2"
                 style={{ color: taskStatusColor(column.status) }}
               >
-                <span className="inline-flex items-center rounded-sm border border-current px-1 py-px text-[0.6rem] leading-none font-semibold tracking-wide uppercase select-none">
+                <span className="inline-flex items-center rounded-sm border border-current px-1 py-px type-overline select-none">
                   {column.title()}
                 </span>
                 <Badge
@@ -205,7 +203,7 @@ export function TasksBoard() {
                   </>
                 )}
                 {!isLoading && columnTasks.length === 0 && (
-                  <div className="rounded-md border border-dashed border-neutral-200 dark:border-neutral-800 py-4 text-center text-xs text-neutral-400 dark:text-neutral-600">
+                  <div className="rounded-md border border-dashed border-divider py-3.5 text-center type-small text-placeholder">
                     {t('tasks.columnEmpty', 'No tasks')}
                   </div>
                 )}
@@ -288,10 +286,10 @@ export function TasksBoard() {
 /** Placeholder card mirroring TaskCard's frame: title, description, avatar. */
 function TaskCardSkeleton() {
   return (
-    <div className="flex flex-col gap-1.5 rounded-md border border-transparent bg-neutral-200 dark:bg-neutral-800 px-2.5 py-2">
-      <Skeleton className="h-3.5 w-2/3 bg-neutral-300/60 dark:bg-neutral-700/60" />
+    <div className="flex flex-col gap-1.5 rounded-md border border-transparent bg-muted px-2.5 py-2">
+      <Skeleton className="h-3.5 w-2/3 bg-border/60" />
       <div className="mt-0.5 flex items-center">
-        <Skeleton className="size-5 rounded-full bg-neutral-300/60 dark:bg-neutral-700/60" />
+        <Skeleton className="size-4.5 rounded-full bg-border/60" />
       </div>
     </div>
   )
@@ -329,8 +327,8 @@ function TaskCard({
       <ContextMenuTrigger
         render={
           <div
-            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-2 text-[0.78rem] text-neutral-800 dark:text-neutral-200 ${
-              active ? 'border-blue-500' : 'border-transparent'
+            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-card hover:bg-accent px-2.5 py-2 type-small leading-[1.096875rem] text-foreground ${
+              active ? 'border-primary bg-accent' : 'border-transparent'
             } ${draggable ? 'active:cursor-grabbing' : ''}`}
             title={
               active
@@ -355,7 +353,7 @@ function TaskCard({
           />
         }
       >
-        <span className="font-semibold text-neutral-950 dark:text-white">
+        <span className="font-semibold text-foreground">
           {task.workspace?.title || task.workspaceName}
         </span>
 
@@ -363,7 +361,7 @@ function TaskCard({
           <span className="flex items-center gap-2">
             {task.assignee ? (
               <span
-                className="flex size-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white select-none"
+                className="flex size-4.5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
                 style={{ backgroundColor: presenceColor(task.assignee) }}
                 title={
                   assigneeLabel
@@ -375,7 +373,7 @@ function TaskCard({
               </span>
             ) : (
               <span
-                className="flex size-5 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-700 text-[0.55rem] text-neutral-600 dark:text-neutral-400 select-none"
+                className="flex size-4.5 items-center justify-center rounded-full bg-border type-caption text-muted-foreground select-none"
                 title={t('tasks.unassignedHint', 'Unassigned')}
               >
                 ?
@@ -385,34 +383,34 @@ function TaskCard({
           <span className="flex items-center gap-2">
             {task.commentCount > 0 && (
               <span
-                className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400"
+                className="flex items-center gap-1 type-small text-muted-foreground"
                 title={t('tasks.comments', 'Comments')}
               >
-                <i className="fas fa-comment text-[0.65rem]" aria-hidden />
+                <i className="fas fa-comment type-icon-s" aria-hidden />
                 {task.commentCount}
               </span>
             )}
             {task.workspace?.hasPublishableChanges && (
               <span
-                className="size-1.5 rounded-full bg-orange-600 dark:bg-orange-400"
+                className="size-1.5 rounded-full bg-node-modified"
                 title={t('tasks.hasChanges', 'Has unpublished changes')}
               />
             )}
           </span>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="min-w-44">
+      <ContextMenuContent className="min-w-41">
         <ContextMenuGroup>
           <ContextMenuItem onClick={onView}>
-            <i className="fas fa-eye w-4 text-center" aria-hidden />
+            <i className="fas fa-eye w-3.5 text-center" aria-hidden />
             {t('tasks.viewTask', 'View task')}
           </ContextMenuItem>
           <ContextMenuItem disabled={!canManage} onClick={onEdit}>
-            <i className="fas fa-pen w-4 text-center" aria-hidden />
+            <i className="fas fa-pen w-3.5 text-center" aria-hidden />
             {t('tasks.editTask', 'Edit task')}
           </ContextMenuItem>
           <ContextMenuItem disabled={!canWrite || active} onClick={onCheckout}>
-            <i className="fas fa-code-branch w-4 text-center" aria-hidden />
+            <i className="fas fa-code-branch w-3.5 text-center" aria-hidden />
             {t('tasks.checkoutWorkspace', 'Checkout workspace')}
           </ContextMenuItem>
           <ContextMenuSeparator />
@@ -421,7 +419,7 @@ function TaskCard({
             disabled={!canManage}
             onClick={onDelete}
           >
-            <i className="fas fa-trash-can w-4 text-center" aria-hidden />
+            <i className="fas fa-trash-can w-3.5 text-center" aria-hidden />
             {t('tasks.delete', 'Delete task')}
           </ContextMenuItem>
         </ContextMenuGroup>

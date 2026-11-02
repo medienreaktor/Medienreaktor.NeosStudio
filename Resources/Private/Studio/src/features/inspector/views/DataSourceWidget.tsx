@@ -41,9 +41,7 @@ export function DataSourceWidget({
   return (
     <div className="space-y-2">
       {subtitle && (
-        <p className="text-xs text-neutral-600 dark:text-neutral-400">
-          {subtitle}
-        </p>
+        <p className="type-small text-muted-foreground">{subtitle}</p>
       )}
       {identifier === null ? (
         <WidgetNotice
@@ -65,8 +63,8 @@ export function DataSourceWidget({
         />
       ) : isLoading ? (
         <div className="space-y-1.5">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-3.5 w-3/4" />
+          <Skeleton className="h-3.5 w-1/2" />
         </div>
       ) : (
         children(data)
@@ -77,9 +75,9 @@ export function DataSourceWidget({
 
 function WidgetNotice({ message }: { message: string }) {
   return (
-    <p className="flex items-start gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+    <p className="flex items-start gap-1.5 type-small text-muted-foreground">
       <i
-        className="fas fa-triangle-exclamation mt-0.5 text-[0.75rem] shrink-0 text-red-500"
+        className="fas fa-triangle-exclamation mt-0.5 type-icon-m shrink-0 text-destructive-text"
         aria-hidden
       />
       {message}

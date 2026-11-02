@@ -17,8 +17,7 @@ function Field({
   children: ReactNode
 }) {
   const labelId = useId()
-  const labelClassName =
-    'block text-sm font-medium text-neutral-800 dark:text-neutral-200'
+  const labelClassName = 'block type-body-strong text-foreground'
 
   if (htmlFor === undefined) {
     return (

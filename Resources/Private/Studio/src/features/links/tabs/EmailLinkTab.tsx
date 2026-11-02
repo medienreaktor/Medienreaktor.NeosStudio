@@ -13,10 +13,7 @@ export function EmailLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex flex-col gap-1.5 p-3">
-      <label
-        className="text-xs text-neutral-600 dark:text-neutral-400"
-        htmlFor={id}
-      >
+      <label className="type-small text-muted-foreground" htmlFor={id}>
         {t('link.emailAddress', 'E-Mail address')}
       </label>
       <Input
@@ -32,7 +29,7 @@ export function EmailLinkTab({ href, onChange }: LinkTypeTabProps) {
         }}
         placeholder={t('link.emailPlaceholder', 'mail@example.com')}
       />
-      <p className="text-xs text-neutral-500">
+      <p className="type-small text-muted-foreground">
         {t(
           'link.emailHelp',
           "The link opens the visitor's mail client (mailto:).",

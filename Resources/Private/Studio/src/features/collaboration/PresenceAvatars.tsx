@@ -27,7 +27,7 @@ export function PresenceAvatars() {
 
   return (
     <div
-      className="hidden @[64rem]:flex items-center -space-x-1.5"
+      className="hidden @[60rem]:flex items-center -space-x-1.5"
       data-slot="presence-avatars"
     >
       {shown.map((peer) => (
@@ -36,7 +36,7 @@ export function PresenceAvatars() {
               by keyboard and announced - a bare span takes no focus. */}
           <TooltipTrigger
             aria-label={peer.name}
-            className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 text-[0.65rem] font-semibold text-white select-none outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex size-6.5 items-center justify-center rounded-full border-2 border-card type-count text-presence-foreground select-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
             style={{ backgroundColor: peer.color }}
           >
             <span aria-hidden>{peer.initials}</span>
@@ -46,7 +46,7 @@ export function PresenceAvatars() {
       ))}
       {overflow > 0 && (
         <Tooltip>
-          <TooltipTrigger className="flex size-7 items-center justify-center rounded-full border-2 border-neutral-100 dark:border-neutral-900 bg-neutral-300 dark:bg-neutral-700 text-[0.65rem] font-semibold text-neutral-950 dark:text-white select-none outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+          <TooltipTrigger className="flex size-6.5 items-center justify-center rounded-full border-2 border-card bg-border type-count text-foreground select-none outline-none focus-visible:ring-2 focus-visible:ring-ring">
             +{overflow}
           </TooltipTrigger>
           <TooltipContent>

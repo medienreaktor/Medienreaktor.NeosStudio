@@ -316,21 +316,18 @@ function ReferencePicker({
       <ComboboxContent>
         <div className="relative">
           <i
-            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 text-[1rem] -translate-y-1/2 text-neutral-600 dark:text-neutral-400"
+            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 type-icon-xl -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <ComboboxInput
             placeholder={translate('editor.searchPlaceholder', 'Search…')}
-            className="h-8 pl-8"
+            className="h-7.5 pl-7.5"
           />
         </div>
         <ComboboxStatus>
           {loading ? (
             <>
-              <i
-                className="fas fa-spinner fa-spin text-[0.875rem]"
-                aria-hidden
-              />
+              <i className="fas fa-spinner fa-spin type-icon-l" aria-hidden />
               {translate('editor.searching', 'Searching…')}
             </>
           ) : options.length === 0 && hint !== null ? (
@@ -359,7 +356,7 @@ function ReferencePicker({
                       <i
                         className={cn(
                           option.iconClass,
-                          'fa-fw mt-0.5 text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                          'fa-fw mt-0.5 type-icon-m text-muted-foreground',
                         )}
                         aria-hidden
                       />
@@ -367,7 +364,7 @@ function ReferencePicker({
                     <span className="min-w-0">
                       <span className="block truncate">{option.label}</span>
                       {option.secondary && (
-                        <span className="block truncate text-xs text-neutral-600 dark:text-neutral-400">
+                        <span className="block truncate type-small text-muted-foreground">
                           {option.secondary}
                         </span>
                       )}
@@ -520,7 +517,7 @@ function ReferenceEditorBase({
                     <i
                       className={cn(
                         display.iconClass,
-                        'fa-fw text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                        'fa-fw type-icon-m text-muted-foreground',
                       )}
                       aria-hidden
                     />
@@ -528,9 +525,7 @@ function ReferenceEditorBase({
                   <span className="truncate">{display.label}</span>
                 </>
               ) : (
-                <span className="text-neutral-600 dark:text-neutral-400">
-                  {placeholder}
-                </span>
+                <span className="text-muted-foreground">{placeholder}</span>
               )
             }
           />
@@ -598,13 +593,13 @@ function ReferenceEditorBase({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 text-sm',
+              'flex h-8.5 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
               dragIndex === index && 'opacity-50',
             )}
           >
             {draggable && (
               <i
-                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-400 dark:text-neutral-600"
+                className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
                 aria-hidden
               />
             )}
@@ -612,7 +607,7 @@ function ReferenceEditorBase({
               <i
                 className={cn(
                   display.iconClass,
-                  'fa-fw text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                  'fa-fw type-icon-m text-muted-foreground',
                 )}
                 aria-hidden
               />
@@ -622,7 +617,7 @@ function ReferenceEditorBase({
                 type="button"
                 title={goToPageLabel}
                 onClick={() => navigateToNode(display.documentAddress!)}
-                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-blue-500/50"
+                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {display.label}
               </button>
@@ -643,9 +638,7 @@ function ReferenceEditorBase({
       <ReferencePicker
         {...pickerProps}
         triggerContent={
-          <span className="text-neutral-600 dark:text-neutral-400">
-            {placeholder}
-          </span>
+          <span className="text-muted-foreground">{placeholder}</span>
         }
       />
     </div>

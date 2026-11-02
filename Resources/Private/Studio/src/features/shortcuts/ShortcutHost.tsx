@@ -101,17 +101,17 @@ function ShortcutOverviewDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-5">
+        <div className="grid gap-4.5">
           {[...groups.entries()].map(([category, entries]) => (
             <section key={category}>
-              <h3 className="mb-2 text-xs font-semibold tracking-wide text-neutral-600 dark:text-neutral-400 uppercase">
+              <h3 className="mb-2 type-overline text-muted-foreground">
                 {category}
               </h3>
-              <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
+              <ul className="divide-y divide-divider">
                 {entries.map((shortcut) => (
                   <li
                     key={shortcut.id}
-                    className="flex items-center justify-between gap-4 py-1.5 text-sm"
+                    className="flex items-center justify-between gap-3.5 py-1.5 type-body"
                   >
                     <span>{shortcut.title}</span>
                     <span className="flex shrink-0 items-center gap-2">
@@ -139,7 +139,7 @@ function ShortcutKeys({ combo }: { combo: string }) {
       {formatCombo(combo).map((part, index) => (
         <span
           key={index}
-          className="min-w-6 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-1.5 py-0.5 text-center font-sans text-xs text-neutral-700 dark:text-neutral-300"
+          className="min-w-5.5 rounded border border-border bg-card px-1.5 py-0.5 text-center font-sans type-small text-muted-foreground"
         >
           {part}
         </span>

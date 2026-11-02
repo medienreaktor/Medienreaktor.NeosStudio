@@ -55,7 +55,7 @@ export function AssetThumb({
       className={cn(
         'fas',
         iconClass,
-        'text-[2.5rem] text-neutral-400 dark:text-neutral-600',
+        'type-heading-l text-placeholder',
         className,
       )}
       aria-hidden

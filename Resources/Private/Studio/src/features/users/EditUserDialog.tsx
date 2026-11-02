@@ -127,7 +127,7 @@ function EditUserForm({
       <DialogHeader>
         <DialogTitle>
           {t('users.editUser', 'Edit user')}
-          <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+          <span className="ml-2 font-normal text-muted-foreground">
             {user.label}
           </span>
         </DialogTitle>
@@ -136,8 +136,8 @@ function EditUserForm({
         </DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={onSubmit} className="space-y-3.5">
+        <div className="grid grid-cols-2 gap-3.5">
           <Field
             label={t('users.firstName', 'First name')}
             htmlFor="user-edit-first-name"
@@ -180,7 +180,7 @@ function EditUserForm({
           lockedRoles={isCurrentUser ? [ADMINISTRATOR_ROLE] : []}
         />
         {isCurrentUser && (
-          <p className="text-xs text-neutral-500">
+          <p className="type-small text-muted-foreground">
             {t(
               'users.ownAdminLocked',
               'You cannot remove your own Administrator role.',

@@ -54,7 +54,7 @@ export function SendToReviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-3.5">
           <Field
             label={t('tasks.reviewComment', 'Comment (optional)')}
             htmlFor="task-review-comment"

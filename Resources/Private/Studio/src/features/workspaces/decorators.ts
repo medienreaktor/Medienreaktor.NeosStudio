@@ -26,7 +26,7 @@ import { ObservableRegistry, useRegistry } from '@/lib/registry'
 export interface WorkspaceDecoration {
   /** Short badge text, e.g. "TASK". Keep it to one word - it renders inline. */
   badge: string
-  /** Badge color (any CSS color, preferably a styles.css theme variable like 'var(--color-blue-500)'); defaults to a neutral tone. */
+  /** Badge color (any CSS color, preferably a styles.css theme variable like 'var(--color-primary)'); defaults to a neutral tone. */
   color?: string
   /** Tooltip / accessible description, e.g. "Task branch, assigned to …". */
   label?: string

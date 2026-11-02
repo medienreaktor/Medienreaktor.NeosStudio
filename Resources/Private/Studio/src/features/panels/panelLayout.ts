@@ -1,4 +1,5 @@
-import { clampToViewport, type PanelRect } from './geometry'
+import { pxToRem } from '@/lib/rem'
+import { clampToViewport, rectFromPx, type PanelRect } from './geometry'
 import type { PanelDefinition } from './registry'
 
 /**
@@ -63,12 +64,13 @@ export type TabDrop = {
   panel: PanelId
   fromGroupId: string
   target: DropTarget
+  /** Screen position of the pointer, in px. */
   pointer: { x: number; y: number }
   /** Source group's rect when it floated with only this panel - preserved on re-float. */
   sourceRect: PanelRect | null
 }
 
-const DEFAULT_FLOAT_SIZE = { width: 340, height: 440 }
+const DEFAULT_FLOAT_SIZE = { width: 21.25, height: 27.5 }
 
 /**
  * A fresh group id. crypto.randomUUID only exists in secure contexts - a
@@ -102,11 +104,39 @@ export function loadLayout(
   } catch {
     /* nothing stored or unparsable - the default layout applies */
   }
-  return normalizeLayout(stored, definitions)
+  return normalizeLayout(migratePxRects(stored), definitions)
+}
+
+/**
+ * Stored layouts mark their rects as rem. One without the mark was saved when
+ * rects were px; dividing by 16 keeps each panel's size at the default root.
+ */
+function migratePxRects(stored: unknown): unknown {
+  const s = stored as { rectUnit?: unknown; floating?: unknown } | null
+  if (!s || s.rectUnit === 'rem' || !Array.isArray(s.floating)) return stored
+  return {
+    ...s,
+    floating: s.floating.map((group: { rect?: Partial<PanelRect> }) =>
+      group?.rect
+        ? {
+            ...group,
+            rect: Object.fromEntries(
+              Object.entries(group.rect).map(([key, value]) => [
+                key,
+                typeof value === 'number' ? value / 16 : value,
+              ]),
+            ),
+          }
+        : group,
+    ),
+  }
 }
 
 export function saveLayout(storageKey: string, layout: PanelLayout): void {
-  localStorage.setItem(storageKey, JSON.stringify(layout))
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify({ ...layout, rectUnit: 'rem' }),
+  )
 }
 
 function emptyDocks(): Record<DockRegion, PanelGroup[]> {
@@ -224,7 +254,7 @@ export function normalizeLayout(
       ...group,
       rect: valid
         ? clampToViewport(rect as PanelRect)
-        : clampToViewport({ x: 80, y: 80, ...DEFAULT_FLOAT_SIZE }),
+        : clampToViewport({ x: 5, y: 5, ...DEFAULT_FLOAT_SIZE }),
     })
   }
 
@@ -277,7 +307,9 @@ export function normalizeLayout(
     } else {
       floating.push({
         ...newGroup(definition.id),
-        rect: clampToViewport(placement.rect()),
+        // The placement callback is plugin API and measures the live viewport,
+        // so it answers in px.
+        rect: clampToViewport(rectFromPx(placement.rect())),
       })
     }
   }
@@ -455,8 +487,8 @@ export function applyDrop(layout: PanelLayout, drop: TabDrop): PanelLayout {
   const size = sourceRect ?? DEFAULT_FLOAT_SIZE
   const rect = clampToViewport({
     ...size,
-    x: pointer.x - 48,
-    y: pointer.y - 18,
+    x: pxToRem(pointer.x) - 3,
+    y: pxToRem(pointer.y) - 1.125,
   })
   return coalesceLayout({
     docks,

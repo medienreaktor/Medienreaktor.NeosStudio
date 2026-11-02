@@ -37,7 +37,7 @@ export function ClipboardPanel() {
   return (
     <div className="flex flex-col gap-1 p-3">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+        <span className="type-small text-muted-foreground">
           {t('clipboard.pasteHint', 'Paste inserts the highlighted entry.')}
         </span>
         <Button variant="ghost" size="xs" onClick={clipboardClear}>
@@ -74,9 +74,7 @@ function ClipboardRow({
     <div
       className={cn(
         'group flex items-center gap-1 rounded-sm border border-transparent pr-1',
-        active
-          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
-          : 'hover:bg-neutral-200 dark:hover:bg-neutral-800',
+        active ? 'border-primary bg-muted' : 'hover:bg-accent',
       )}
     >
       <button
@@ -93,7 +91,7 @@ function ClipboardRow({
         onClick={() => clipboardActivate(entry.id)}
       >
         <span
-          className="shrink-0 text-neutral-600 dark:text-neutral-400"
+          className="shrink-0 text-muted-foreground"
           title={
             entry.mode === 'cut'
               ? t('clipboard.cutHint', 'Cut - pasting moves it')
@@ -102,13 +100,13 @@ function ClipboardRow({
         >
           <i
             className={cn(
-              'fas fa-fw text-[0.7rem]',
+              'fas fa-fw type-icon-s',
               entry.mode === 'cut' ? 'fa-scissors' : 'fa-copy',
             )}
             aria-hidden
           />
         </span>
-        <span className="shrink-0 text-neutral-950 dark:text-white">
+        <span className="shrink-0 text-foreground">
           <NodeTypeIcon
             nodeTypes={nodeTypes}
             nodeTypeName={firstNode.nodeType}
@@ -116,7 +114,7 @@ function ClipboardRow({
         </span>
         <span className="min-w-0 flex-1">
           <span
-            className="block overflow-hidden text-sm text-ellipsis whitespace-nowrap"
+            className="block overflow-hidden type-body text-ellipsis whitespace-nowrap"
             title={
               entry.nodes.length > 1
                 ? entry.nodes.map((node) => node.label).join(', ')
@@ -125,13 +123,13 @@ function ClipboardRow({
           >
             {firstNode.label}
             {entry.nodes.length > 1 && (
-              <span className="text-neutral-600 dark:text-neutral-400">
+              <span className="text-muted-foreground">
                 {' '}
                 +{entry.nodes.length - 1}
               </span>
             )}
           </span>
-          <span className="block text-xs text-neutral-600 dark:text-neutral-400 capitalize">
+          <span className="block type-small text-muted-foreground capitalize">
             {entry.mode === 'cut'
               ? t('clipboard.statusCut', 'Cut')
               : t('clipboard.copied', 'Copied')}{' '}

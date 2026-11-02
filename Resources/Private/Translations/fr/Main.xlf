@@ -58,10 +58,6 @@
         <source>Off means changes can only be handed on for review.</source>
         <target xml:lang="fr">Désactivé, les modifications peuvent seulement être transmises pour relecture.</target>
       </trans-unit>
-      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
-        <source>May create workspaces</source>
-        <target xml:lang="fr">Peut créer des espaces de travail</target>
-      </trans-unit>
       <group id="accessRoles.badgeBranches" restype="x-gettext-plurals">
         <trans-unit id="accessRoles.badgeBranches[0]" xml:space="preserve">
           <source>{0} branch</source>

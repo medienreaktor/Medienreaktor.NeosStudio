@@ -93,7 +93,7 @@ export function EditWorkspaceDialog({
           <DialogTitle>
             {t('workspacesAdmin.editWorkspace', 'Edit workspace')}
             {workspace !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {workspace.name}
               </span>
             )}
@@ -103,7 +103,7 @@ export function EditWorkspaceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field
             label={t('workspacesAdmin.title2', 'Title')}
             htmlFor="workspace-edit-title"

@@ -60,12 +60,12 @@ export function HistoryStepRow({
         // Expanded reads as selected, exactly like a selected page in the
         // trees: blue border on the same rounded, slightly lifted surface.
         'rounded-sm border border-transparent',
-        expanded && 'border-blue-500 bg-neutral-200 dark:bg-neutral-800',
+        expanded && 'border-primary bg-accent',
       )}
     >
       <button
         type="button"
-        className="flex w-full cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-neutral-200 dark:hover:bg-neutral-800"
+        className="flex w-full cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-accent"
         onClick={onToggle}
       >
         {/* Icon and label carry the change colors: additions green,
@@ -75,7 +75,7 @@ export function HistoryStepRow({
           className={cn(
             'fas fa-fw',
             stepIcon(step),
-            'mt-0.5 shrink-0 text-[0.65rem]',
+            'mt-0.5 shrink-0 type-caption',
             TONE_TEXT_CLASSES[tone],
           )}
           aria-hidden
@@ -86,19 +86,17 @@ export function HistoryStepRow({
             {subject !== null && (
               <>
                 {' '}
-                <span className="text-neutral-950 dark:text-white">
-                  {subject}
-                </span>
+                <span className="text-foreground">{subject}</span>
               </>
             )}
           </div>
-          <div className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-neutral-500">
+          <div className="mt-0.5 flex min-w-0 items-center gap-1 type-caption text-muted-foreground">
             {step.initiatingUserLabel !== null && (
               <>
                 <UserAvatar
                   name={step.initiatingUserLabel}
                   userId={step.initiatingUserId}
-                  className="size-4 text-[0.5rem]"
+                  className="size-3.5 type-caption"
                 />
                 <span className="truncate">{step.initiatingUserLabel}</span>
               </>
@@ -109,7 +107,7 @@ export function HistoryStepRow({
             </span>
             {documentId === undefined && document?.label != null && (
               <span className="min-w-0 truncate">
-                · <i className="fas fa-file fa-fw text-[0.6rem]" aria-hidden />{' '}
+                · <i className="fas fa-file fa-fw type-icon-xs" aria-hidden />{' '}
                 {document.label}
               </span>
             )}
@@ -128,7 +126,7 @@ export function HistoryStepRow({
         )}
       </button>
       {expanded && hasDetails && (
-        <div className="border-t border-neutral-200 dark:border-neutral-800 px-2 py-1.5 text-[11px]">
+        <div className="border-t border-divider px-2 py-1.5 type-small">
           <StepDiff
             workspaceName={workspaceName}
             step={step}

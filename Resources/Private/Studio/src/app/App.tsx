@@ -371,7 +371,7 @@ function Shell() {
 
   return (
     <SidebarProvider
-      style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+      style={{ '--sidebar-width': `${sidebarWidth}rem` } as React.CSSProperties}
       // The shell fills the viewport exactly and never scrolls as a whole: this
       // bounds the height so every flex-1/min-h-0 chain below resolves against
       // it, and scrolling happens inside the panels (and the preview iframe),
@@ -418,7 +418,7 @@ function Shell() {
                   {/* Fixed to the main header's height (h-14, plus an
                     invisible border matching its border-b) so the row does
                     not shift when the avatar mounts after /me resolves. */}
-                  <SidebarHeader className="h-12 shrink-0 justify-center border-b border-transparent">
+                  <SidebarHeader className="h-11 shrink-0 justify-center border-b border-transparent">
                     <div className="flex items-center justify-between gap-2.5 px-2 pt-2">
                       <div className="flex items-center gap-1.5">
                         {/* The classic backend modules - hidden when

@@ -20,20 +20,21 @@ import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
  *
  * Pure geometry, like the node type layout: each workspace occupies one
  * horizontal lane, x grows with branch depth and commit count, and the
- * rendering shares these pixel constants so lines anchor exactly.
+ * rendering shares these constants so lines anchor exactly. All lengths are
+ * rem (see lib/rem.ts).
  */
 
-export const WS_CARD_WIDTH = 240
-export const WS_CARD_HEIGHT = 64
-const LANE_HEIGHT = 100
+export const WS_CARD_WIDTH = 15
+export const WS_CARD_HEIGHT = 4
+const LANE_HEIGHT = 6.25
 /** Distance between two commit dots on a branch line. */
-export const DOT_SPACING = 36
+export const DOT_SPACING = 2.25
 /** Horizontal room the branch-off curve gets before the first commit. */
-export const BRANCH_BEND = 90
+export const BRANCH_BEND = 5.625
 /** Gap between the last commit dot and the head card. */
-const LINE_END_GAP = 28
+const LINE_END_GAP = 1.75
 /** Minimum branch line length, so an empty branch is still visibly a branch. */
-const MIN_LINE_LENGTH = 60
+const MIN_LINE_LENGTH = 3.75
 /** Most dots a root (live) line shows - published history is long, only the
  * stretch since the earliest child fork tells a story. */
 const ROOT_MAX_DOTS = 25
@@ -43,17 +44,16 @@ const ROOT_MAX_DOTS = 25
  * stay neutral; the palette starts with the Neos brand hues, then falls back
  * to default Tailwind hues (which the Studio theme extends, not replaces).
  */
-const ROOT_COLOR =
-  'light-dark(var(--color-neutral-600), var(--color-neutral-400))'
+const ROOT_COLOR = 'var(--color-graph-trunk)'
 const BRANCH_COLORS = [
-  'var(--color-blue-500)',
-  'var(--color-orange-500)',
-  'var(--color-green-500)',
-  'light-dark(var(--color-purple-600), var(--color-purple-400))',
-  'var(--color-pink-500)',
-  'var(--color-cyan-500)',
-  'var(--color-red-500)',
-  'var(--color-teal-500)',
+  'var(--color-graph-branch-1)',
+  'var(--color-graph-branch-2)',
+  'var(--color-graph-branch-3)',
+  'var(--color-graph-branch-4)',
+  'var(--color-graph-branch-5)',
+  'var(--color-graph-branch-6)',
+  'var(--color-graph-branch-7)',
+  'var(--color-graph-branch-8)',
 ]
 
 interface CommitDot {

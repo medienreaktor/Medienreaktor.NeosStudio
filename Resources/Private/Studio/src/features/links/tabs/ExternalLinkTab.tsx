@@ -33,10 +33,7 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
 
   return (
     <div className="flex flex-col gap-1.5 p-3">
-      <label
-        className="text-xs text-neutral-600 dark:text-neutral-400"
-        htmlFor={id}
-      >
+      <label className="type-small text-muted-foreground" htmlFor={id}>
         {t('link.url', 'URL')}
       </label>
       <Input
@@ -60,14 +57,14 @@ export function ExternalLinkTab({ href, onChange }: LinkTypeTabProps) {
         placeholder={t('link.urlPlaceholder', 'https://example.com')}
       />
       {refused ? (
-        <p id={`${id}-hint`} className="text-xs text-red-500">
+        <p id={`${id}-hint`} className="type-small text-destructive-text">
           {t(
             'link.schemeNotAllowed',
             'This kind of link is not allowed - use http(s), mailto, tel or a relative link.',
           )}
         </p>
       ) : (
-        <p id={`${id}-hint`} className="text-xs text-neutral-500">
+        <p id={`${id}-hint`} className="type-small text-muted-foreground">
           {t(
             'link.externalHelp',
             'A full web address; https:// is added when no scheme is given.',

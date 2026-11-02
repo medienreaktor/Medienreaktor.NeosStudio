@@ -83,14 +83,11 @@ function ChangeBadges({ document }: { document: WorkspaceDocumentChange }) {
         <span
           key={badge.key}
           className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-neutral-950 dark:text-white',
+            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 type-small-strong text-foreground',
             TONE_BG_CLASSES[badge.tone],
           )}
         >
-          <i
-            className={`fas fa-fw ${badge.icon} text-[0.625rem]`}
-            aria-hidden
-          />
+          <i className={`fas fa-fw ${badge.icon} type-icon-xs`} aria-hidden />
           {t(badge.labelKey, badge.label)}
         </span>
       ))}
@@ -117,14 +114,14 @@ function DocumentDiff({
     documentId,
   )
   return (
-    <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 text-[11px]">
+    <div className="mt-1 mb-2 ml-13 flex flex-col gap-2 type-small">
       {isLoading && (
-        <div className="py-1 text-neutral-500">
+        <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.loadingDiff', 'Loading changes…')}
         </div>
       )}
       {isError && (
-        <div className="py-1 text-neutral-500">
+        <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.diffFailed', 'The changes could not be loaded.')}
         </div>
       )}
@@ -135,7 +132,7 @@ function DocumentDiff({
         />
       ))}
       {data !== undefined && data.nodes.length === 0 && (
-        <div className="text-neutral-500">
+        <div className="text-muted-foreground">
           {t('workspaceHistory.noDetails', 'No details available.')}
         </div>
       )}
@@ -445,7 +442,7 @@ export function ReviewChangesDialog({
 
           <div className="flex flex-wrap items-center gap-3 pb-3">
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="type-small text-muted-foreground">
                 {t('workspace.review.sourceLabel', 'Changes in')}
               </span>
               <Select
@@ -454,7 +451,7 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={sourceItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
+                <SelectTrigger size="sm" className="min-w-37.5">
                   <SelectValue>
                     {(name: string | null) => {
                       const w = workspaces.find((c) => c.name === name)
@@ -476,7 +473,7 @@ export function ReviewChangesDialog({
                       <WorkspaceDecorationBadges workspace={w} />
                       {w.hasPublishableChanges && (
                         <span
-                          className="size-1.5 rounded-full bg-amber-500"
+                          className="size-1.5 rounded-full bg-node-modified"
                           title={t(
                             'workspace.review.hasChanges',
                             'Has pending changes',
@@ -489,11 +486,11 @@ export function ReviewChangesDialog({
               </Select>
             </div>
             <i
-              className="fas fa-arrow-right mt-4 text-xs text-neutral-500"
+              className="fas fa-arrow-right mt-3.5 type-icon-m text-muted-foreground"
               aria-hidden
             />
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="type-small text-muted-foreground">
                 {t('workspace.review.targetLabel', 'Publishing to')}
               </span>
               <Select
@@ -502,7 +499,7 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={targetItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
+                <SelectTrigger size="sm" className="min-w-37.5">
                   <SelectValue>
                     {(name: string | null) => {
                       const w = workspaces.find((c) => c.name === name)
@@ -533,7 +530,7 @@ export function ReviewChangesDialog({
           </div>
 
           {documents.length > 0 && (
-            <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 text-sm text-neutral-700 dark:text-neutral-300">
+            <label className="flex cursor-pointer items-center gap-2 border-b border-divider pb-2 type-body text-muted-foreground">
               <Checkbox
                 checked={allSelected}
                 indeterminate={selectedCount > 0 && !allSelected}
@@ -557,7 +554,7 @@ export function ReviewChangesDialog({
             {isLoading ? (
               <LoadingState
                 label={t('workspace.review.loading', 'Loading changes…')}
-                className="py-8"
+                className="py-7.5"
               />
             ) : error && !data ? (
               // Not "no changes": the review could not be loaded at all.
@@ -570,13 +567,13 @@ export function ReviewChangesDialog({
                     'The changes could not be loaded.',
                   ),
                 )}
-                className="py-8"
+                className="py-7.5"
               />
             ) : documents.length === 0 ? (
               <Placeholder
                 icon="fa-check"
                 title={t('workspace.review.empty', 'No pending changes.')}
-                className="py-8"
+                className="py-7.5"
               />
             ) : (
               <ul className="flex flex-col gap-px">
@@ -599,8 +596,8 @@ export function ReviewChangesDialog({
                         // itself does not light the item up).
                         'rounded-sm border border-transparent transition-colors',
                         isSelected
-                          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
-                          : 'has-[>label:hover]:bg-neutral-200 dark:has-[>label:hover]:bg-neutral-800',
+                          ? 'border-primary bg-accent'
+                          : 'has-[>label:hover]:bg-muted',
                       )}
                     >
                       <label className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5">
@@ -615,7 +612,7 @@ export function ReviewChangesDialog({
                             // The icon's own line box is shorter than the
                             // title's (12px glyph, 14px text), so it needs the
                             // difference to sit on the title's baseline.
-                            'mt-1 shrink-0 text-neutral-950 dark:text-white',
+                            'mt-1 shrink-0 text-foreground',
                             document.hidden && 'opacity-50',
                           )}
                         />
@@ -623,7 +620,7 @@ export function ReviewChangesDialog({
                           <div className="flex items-center gap-2">
                             <span
                               className={cn(
-                                'truncate text-sm',
+                                'truncate type-body',
                                 document.hidden && 'opacity-50',
                               )}
                             >
@@ -631,20 +628,20 @@ export function ReviewChangesDialog({
                             </span>
                             {document.hidden && (
                               <i
-                                className="fas fa-eye-slash text-xs text-neutral-500"
+                                className="fas fa-eye-slash type-icon-m text-muted-foreground"
                                 title={t('workspace.review.hidden', 'Hidden')}
                                 aria-hidden
                               />
                             )}
                           </div>
                           {breadcrumb.length > 0 && (
-                            <div className="truncate text-xs text-neutral-600 dark:text-neutral-400">
+                            <div className="truncate type-small text-muted-foreground">
                               {breadcrumb.join(' › ')}
                             </div>
                           )}
                           <div className="mt-1 flex items-center gap-2">
                             <ChangeBadges document={document} />
-                            <span className="text-xs text-neutral-500">
+                            <span className="type-small text-muted-foreground">
                               {document.changeCount === 1
                                 ? t('workspace.oneChange', '1 change')
                                 : t('workspace.manyChanges', '{0} changes', [
@@ -656,7 +653,7 @@ export function ReviewChangesDialog({
                         {document.documentAddress && canNavigate && (
                           <button
                             type="button"
-                            className="mt-0.5 shrink-0 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                            className="mt-0.5 shrink-0 type-small text-primary-text hover:underline"
                             title={
                               reviewingActive
                                 ? t('workspace.review.goToPage', 'Go to page')
@@ -679,7 +676,7 @@ export function ReviewChangesDialog({
                         )}
                         <button
                           type="button"
-                          className="mt-0.5 shrink-0 cursor-pointer text-xs"
+                          className="mt-0.5 shrink-0 cursor-pointer type-small"
                           title={
                             isExpanded
                               ? t(
@@ -721,7 +718,7 @@ export function ReviewChangesDialog({
             )}
           </div>
 
-          <DialogFooter className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
+          <DialogFooter className="border-t border-divider pt-3.5">
             <Button
               variant="secondary"
               onClick={() => onOpenChange(false)}
@@ -744,7 +741,7 @@ export function ReviewChangesDialog({
               title={canPublish ? undefined : publishDeniedHint}
               // Always green; the disabled state (nothing selected, no
               // permission) dims it instead of switching colors.
-              className="bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600"
+              className="bg-success text-success-foreground hover:bg-success"
               onClick={() => run('publish')}
             >
               <i

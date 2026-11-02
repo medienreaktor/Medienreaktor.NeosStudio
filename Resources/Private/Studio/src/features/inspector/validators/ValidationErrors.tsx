@@ -6,7 +6,10 @@
 export function ValidationErrors({ errors }: { errors?: string[] }) {
   if (!errors || errors.length === 0) return null
   return (
-    <div role="alert" className="mt-1 space-y-0.5 text-xs text-red-500">
+    <div
+      role="alert"
+      className="mt-1 space-y-0.5 type-small text-destructive-text"
+    >
       {errors.map((error, index) => (
         <p key={index}>{error}</p>
       ))}

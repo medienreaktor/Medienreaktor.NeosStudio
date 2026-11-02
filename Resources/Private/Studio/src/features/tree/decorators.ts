@@ -26,7 +26,7 @@ import { ObservableRegistry, useRegistry } from '@/lib/registry'
 export interface NodeDecorationOverlay {
   /** Font Awesome icon name, any syntax `ui.icon` accepts (e.g. "circle-xmark"). */
   icon: string
-  /** Badge color (any CSS color, preferably a theme variable like 'var(--color-red-500)'); defaults to red. */
+  /** Badge color (any CSS color, preferably a theme variable like 'var(--color-node-deleted)'); defaults to red. */
   color?: string
   /** Tooltip / accessible description, e.g. "Deleted". */
   label?: string

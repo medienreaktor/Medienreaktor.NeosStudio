@@ -4,20 +4,18 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 aria-invalid:border-red-500 aria-invalid:ring-red-500/20 dark:aria-invalid:ring-red-500/40 [&>svg]:pointer-events-none [&>svg]:size-3',
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 type-small-strong whitespace-nowrap transition-[color,box-shadow] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/30 [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {
-        default: 'bg-blue-500 text-white [a&]:hover:bg-blue-500/90',
-        secondary:
-          'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white [a&]:hover:bg-neutral-200/90 dark:[a&]:hover:bg-neutral-800/90',
+        default: 'bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
+        secondary: 'bg-secondary text-foreground [a&]:hover:bg-accent/90',
         destructive:
-          'bg-red-500 text-white focus-visible:ring-red-500/20 dark:bg-red-500/60 dark:focus-visible:ring-red-500/40 [a&]:hover:bg-red-500/90',
+          'bg-destructive text-destructive-foreground focus-visible:ring-destructive/20 [a&]:hover:bg-destructive/90',
         outline:
-          'border-neutral-300 dark:border-neutral-700 text-neutral-950 dark:text-white [a&]:hover:bg-neutral-200 dark:[a&]:hover:bg-neutral-800 [a&]:hover:text-neutral-950 dark:[a&]:hover:text-white',
-        ghost:
-          '[a&]:hover:bg-neutral-200 dark:[a&]:hover:bg-neutral-800 [a&]:hover:text-neutral-950 dark:[a&]:hover:text-white',
-        link: 'text-blue-500 underline-offset-4 [a&]:hover:underline',
+          'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-foreground',
+        ghost: '[a&]:hover:bg-accent [a&]:hover:text-foreground',
+        link: 'text-primary-text underline-offset-4 [a&]:hover:underline',
       },
     },
     defaultVariants: {

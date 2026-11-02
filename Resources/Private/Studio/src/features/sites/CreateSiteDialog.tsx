@@ -60,7 +60,7 @@ export function CreateSiteDialog({
         {optionsLoading && (
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton key={i} className="h-9.5 w-full" />
             ))}
           </div>
         )}
@@ -143,7 +143,7 @@ function CreateSiteForm({
   }))
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-3.5">
       <Field label={t('sites.name', 'Name')} htmlFor="site-create-name">
         <Input
           id="site-create-name"
@@ -218,7 +218,7 @@ function CreateSiteForm({
         />
       </Field>
 
-      <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-800 dark:text-neutral-200">
+      <label className="flex cursor-pointer items-center gap-2.5 type-body text-foreground">
         <Checkbox
           checked={startOffline}
           onCheckedChange={(checked) => setStartOffline(checked === true)}

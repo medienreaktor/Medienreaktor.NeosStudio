@@ -51,7 +51,7 @@ export function ProfileSettings() {
   )
 
   return (
-    <div className="max-w-xl p-6 pt-3">
+    <div className="max-w-135 p-5.5 pt-3">
       <SettingsHeader
         title={t('profile.title', 'Profile')}
         subtitle={t('profile.subtitle', 'Your personal account settings.')}
@@ -64,14 +64,14 @@ export function ProfileSettings() {
             'profile.unavailable',
             'Your profile is currently unavailable.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -79,7 +79,7 @@ export function ProfileSettings() {
       {data && (
         <>
           <ProfileForm profile={data} />
-          <Separator className="my-8" />
+          <Separator className="my-7.5" />
           <PasswordForm />
         </>
       )}
@@ -106,9 +106,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
         <span>
           {native}
           {english && (
-            <span className="ml-2 text-neutral-600 dark:text-neutral-400">
-              {english}
-            </span>
+            <span className="ml-2 text-muted-foreground">{english}</span>
           )}
         </span>
       ),
@@ -168,8 +166,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={onSubmit} className="space-y-3.5">
+      <div className="grid grid-cols-2 gap-3.5">
         <Field
           label={t('profile.firstName', 'First name')}
           htmlFor="profile-first-name"
@@ -236,7 +234,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
       <div className="space-y-1.5">
         <div
           id="profile-ui-mode-label"
-          className="block text-sm font-medium text-neutral-800 dark:text-neutral-200"
+          className="block type-body-strong text-foreground"
         >
           {t('profile.uiMode', 'Appearance')}
         </div>
@@ -296,12 +294,12 @@ function PasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-3.5">
       <header>
-        <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
+        <h3 className="type-body-strong text-foreground">
           {t('profile.changePassword', 'Change password')}
         </h3>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="type-body text-muted-foreground">
           {t(
             'profile.changePasswordHint',
             'Enter your current password to set a new one.',
@@ -323,7 +321,7 @@ function PasswordForm() {
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3.5">
         <Field
           label={t('profile.newPassword', 'New password')}
           htmlFor="profile-new-password"
@@ -356,7 +354,10 @@ function PasswordForm() {
         </Field>
       </div>
       {mismatch && (
-        <p id="profile-password-mismatch" className="text-sm text-red-500">
+        <p
+          id="profile-password-mismatch"
+          className="type-body text-destructive-text"
+        >
           {t('profile.passwordMismatch', 'The new passwords do not match.')}
         </p>
       )}

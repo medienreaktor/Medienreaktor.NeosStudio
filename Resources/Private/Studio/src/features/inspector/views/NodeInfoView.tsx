@@ -43,7 +43,7 @@ export const NodeInfoView: InspectorViewComponent = ({ node }) => {
   }
 
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 type-small">
       <InfoRow label={t('view.created', 'Created')}>
         {dateText(node.timestamps.created)}
       </InfoRow>
@@ -88,9 +88,9 @@ function InfoRow({
 }) {
   return (
     <>
-      <dt className="text-neutral-600 dark:text-neutral-400">{label}</dt>
+      <dt className="text-muted-foreground">{label}</dt>
       <dd
-        className="min-w-0 cursor-pointer break-all text-neutral-950 dark:text-white select-all"
+        className="min-w-0 cursor-pointer break-all text-foreground select-all"
         title={t('view.clickToSelect', 'Click to select')}
       >
         {children}

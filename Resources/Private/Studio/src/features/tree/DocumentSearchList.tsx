@@ -143,13 +143,13 @@ export function DocumentSearchList({
             role="listitem"
             onClick={() => onSelect?.(node)}
             className={cn(
-              'flex w-full items-start gap-1.5 overflow-hidden rounded-sm border border-transparent px-1.5 py-1 text-left text-sm hover:bg-neutral-200 dark:hover:bg-neutral-800',
+              'flex w-full items-start gap-1.5 overflow-hidden rounded-sm border border-transparent px-1.5 py-1 text-left type-body hover:bg-accent',
               sameNodeAddress(node, selectedAddress) &&
-                'border-blue-500 bg-neutral-200 dark:bg-neutral-800',
+                'border-primary bg-muted',
             )}
           >
             {decor.icon && (
-              <span className="mt-0.5 shrink-0 text-neutral-950 dark:text-white">
+              <span className="mt-0.5 shrink-0 text-foreground">
                 {decor.icon}
               </span>
             )}
@@ -161,13 +161,13 @@ export function DocumentSearchList({
                 {node.label || node.nodeAggregateId}
               </span>
               {breadcrumb.length > 0 && (
-                <span className="block truncate text-xs text-neutral-600 dark:text-neutral-400">
+                <span className="block truncate type-small text-muted-foreground">
                   {breadcrumb.join(' › ')}
                 </span>
               )}
             </span>
             {decor.markers && (
-              <span className="ml-auto flex shrink-0 items-center gap-1 self-center pl-2 text-neutral-600 dark:text-neutral-400">
+              <span className="ml-auto flex shrink-0 items-center gap-1 self-center pl-2 text-muted-foreground">
                 {decor.markers}
               </span>
             )}

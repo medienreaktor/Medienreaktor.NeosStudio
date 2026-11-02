@@ -141,7 +141,7 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
   if (!nodeAddress || fixedType || (allowedTypes && optionCount <= 1)) {
     const nodeType = nodeTypes?.get(currentType)
     return (
-      <div className="flex min-h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="flex min-h-8.5 items-center gap-2 rounded-md border border-border px-3 py-2 type-body text-muted-foreground">
         {nodeTypes && (
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={currentType} />
         )}

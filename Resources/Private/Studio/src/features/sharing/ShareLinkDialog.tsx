@@ -120,7 +120,7 @@ export function ShareLinkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-120">
         <DialogHeader>
           <DialogTitle>{t('share.title', 'Share preview link')}</DialogTitle>
           <DialogDescription>
@@ -132,7 +132,7 @@ export function ShareLinkDialog({
         </DialogHeader>
 
         {createdUrl === null ? (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <Field label={t('share.label', 'Label')} htmlFor="share-label">
               <Input
                 id="share-label"
@@ -181,14 +181,14 @@ export function ShareLinkDialog({
                 readOnly
                 value={createdUrl}
                 onFocus={(event) => event.target.select()}
-                className="font-mono text-xs"
+                className="type-code-small"
               />
               <Button onClick={() => copy(createdUrl)}>
                 <i className="fas fa-fw fa-copy" aria-hidden />
                 {t('share.copy', 'Copy')}
               </Button>
             </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="type-small text-muted-foreground">
               {t(
                 'share.copyOnceHint',
                 'Copy the link now — for security it is shown only this once.',
@@ -208,14 +208,14 @@ export function ShareLinkDialog({
           <>
             <Separator />
             <div className="space-y-1">
-              <p className="text-sm font-medium">
+              <p className="type-body-strong">
                 {t('share.activeLinks', 'Your active links')}
               </p>
-              <ul className="max-h-48 space-y-1 overflow-y-auto">
+              <ul className="max-h-45 space-y-1 overflow-y-auto">
                 {links.map((link) => (
                   <li
                     key={link.id}
-                    className="flex items-center gap-2 rounded px-1 py-0.5 pl-2 text-sm hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                    className="flex items-center gap-2 rounded px-1 py-0.5 pl-2 type-body hover:bg-accent"
                   >
                     <span
                       className="min-w-0 flex-1 truncate"
@@ -224,7 +224,7 @@ export function ShareLinkDialog({
                       {link.label}
                     </span>
                     <span
-                      className="shrink-0 text-xs text-neutral-600 dark:text-neutral-400"
+                      className="shrink-0 type-small text-muted-foreground"
                       title={new Date(link.expiresAt).toLocaleString()}
                     >
                       {t('share.expires', 'expires {0}', [

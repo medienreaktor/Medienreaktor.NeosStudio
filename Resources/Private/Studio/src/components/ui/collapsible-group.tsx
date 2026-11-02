@@ -36,7 +36,7 @@ export function CollapsibleGroup({
   return (
     <details open={isOpen} className={cn('group/collapsible m-0', className)}>
       <summary
-        className="flex py-2 cursor-pointer list-none items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-neutral-950 dark:text-white select-none [&::-webkit-details-marker]:hidden"
+        className="flex py-2 cursor-pointer list-none items-center gap-1.5 type-overline leading-[0.9375rem] text-foreground select-none [&::-webkit-details-marker]:hidden"
         onClick={(event) => {
           event.preventDefault()
           setUncontrolledOpen(!isOpen)

@@ -14,14 +14,14 @@
  */
 
 const COLOR = {
-  punct: 'text-neutral-500',
-  tag: 'text-blue-600 dark:text-blue-400',
-  attr: 'text-orange-700 dark:text-orange-300',
-  string: 'text-green-600 dark:text-green-400',
-  comment: 'text-neutral-500 italic',
-  entity: 'text-orange-600 dark:text-orange-400',
-  number: 'text-orange-600 dark:text-orange-400',
-  keyword: 'text-blue-600 dark:text-blue-400',
+  punct: 'text-muted-foreground',
+  tag: 'text-syntax-tag',
+  attr: 'text-syntax-attr',
+  string: 'text-syntax-string',
+  comment: 'text-muted-foreground italic',
+  entity: 'text-syntax-entity',
+  number: 'text-syntax-number',
+  keyword: 'text-syntax-keyword',
 } as const
 
 /** Highlighting mode; markup is the default since the editor is HTML-first. */

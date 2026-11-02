@@ -66,24 +66,24 @@ export function NotificationBell() {
         title={t('notifications.unreadCount', `${unreadCount} unread`, {
           count: unreadCount,
         })}
-        className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-950 dark:text-white select-none hover:text-neutral-950 dark:hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+        className="relative flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
-        <i className="fas fa-bell text-[0.8rem]" aria-hidden />
-        <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-0.5 text-[0.55rem] leading-none font-semibold text-white">
+        <i className="fas fa-bell type-icon-l" aria-hidden />
+        <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 type-count-small text-destructive-foreground">
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-75">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center justify-between">
-            <span className="font-medium text-neutral-950 dark:text-white">
+            <span className="font-medium text-foreground">
               {t('notifications.label', 'Notifications')}
             </span>
             {/* Marking everything read hides the bell (and this menu) - the
                 notifications had their moment, there is no archive view. */}
             <button
               type="button"
-              className="cursor-pointer text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+              className="cursor-pointer type-small text-muted-foreground hover:text-foreground"
               onClick={() => markAllRead.mutate()}
               disabled={markAllRead.isPending}
             >
@@ -92,11 +92,11 @@ export function NotificationBell() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {notifications.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-neutral-500">
+            <div className="px-3 py-5.5 text-center type-body text-muted-foreground">
               {t('notifications.empty', 'No notifications.')}
             </div>
           ) : (
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-90 overflow-y-auto">
               {notifications.map((notification) => (
                 <NotificationRow
                   key={notification.id}
@@ -149,20 +149,20 @@ function NotificationRow({
     >
       <span
         className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
-          unread ? 'bg-blue-500' : 'bg-transparent'
+          unread ? 'bg-primary' : 'bg-transparent'
         }`}
         aria-hidden
       />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-neutral-950 dark:text-white">
+        <span className="block truncate type-body-strong text-foreground">
           {notification.title}
         </span>
         {notification.message && (
-          <span className="mt-0.5 line-clamp-3 block text-xs text-neutral-600 dark:text-neutral-400">
+          <span className="mt-0.5 line-clamp-3 block type-small text-muted-foreground">
             {notification.message}
           </span>
         )}
-        <span className="mt-0.5 block text-[0.65rem] text-neutral-500">
+        <span className="mt-0.5 block type-caption text-muted-foreground">
           {new Date(notification.createdAt).toLocaleString()}
         </span>
       </span>

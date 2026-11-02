@@ -28,8 +28,6 @@ import {
 } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
-import { allowsWorkspaceCreation } from '@/features/access/rules'
-import { useAccess } from '@/features/access/useAccess'
 import { SettingsHeader } from '@/features/modals/SettingsHeader'
 import { invalidateWorkspaceQueries } from '@/features/workspaces/invalidate'
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog'
@@ -65,10 +63,6 @@ export function WorkspacesAdministration() {
   const contentRepositoryId = useActiveContentRepositoryId()
   const users = useUsers().data
   const { workspaceName: activeWorkspaceName } = useStudio()
-  // An access role may forbid creating workspaces; offered only once the
-  // access is known (the server refuses the create either way).
-  const access = useAccess()
-  const canCreate = access !== undefined && allowsWorkspaceCreation(access)
 
   const [creating, setCreating] = useState(false)
   // Tracked by name and resolved from live query data, so edits refresh.
@@ -93,7 +87,7 @@ export function WorkspacesAdministration() {
   const userLabels = new Map((users ?? []).map((user) => [user.id, user.label]))
 
   return (
-    <div className="p-6 pt-3">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('workspacesAdmin.title', 'Workspaces')}
         subtitle={t(
@@ -101,12 +95,10 @@ export function WorkspacesAdministration() {
           'Where changes live until they are published.',
         )}
       >
-        {canCreate && (
-          <Button onClick={() => setCreating(true)}>
-            <i className="fas fa-plus" aria-hidden />
-            {t('workspacesAdmin.newWorkspace', 'New workspace')}
-          </Button>
-        )}
+        <Button onClick={() => setCreating(true)}>
+          <i className="fas fa-plus" aria-hidden />
+          {t('workspacesAdmin.newWorkspace', 'New workspace')}
+        </Button>
       </SettingsHeader>
 
       {error && (
@@ -116,14 +108,14 @@ export function WorkspacesAdministration() {
             'workspacesAdmin.unavailable',
             'Workspaces are currently unavailable.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -262,21 +254,23 @@ function WorkspaceRow({
     !isActive
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
+        <span className="font-medium text-foreground">
           {workspace.title || workspace.name}
         </span>
-        <span className="ml-2 text-xs text-neutral-500">{workspace.name}</span>
+        <span className="ml-2 type-small text-muted-foreground">
+          {workspace.name}
+        </span>
         {isActive && (
           <Badge variant="outline" className="ml-2 align-middle">
             {t('workspacesAdmin.active', 'Active')}
           </Badge>
         )}
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
+      <TableCell className="text-muted-foreground">
         {workspace.baseWorkspaceName ?? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         )}
       </TableCell>
       <TableCell>
@@ -287,22 +281,22 @@ function WorkspaceRow({
           <WorkspaceDecorationBadges workspace={workspace} />
         </span>
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
-        {ownerLabel ?? <span className="text-neutral-500">—</span>}
+      <TableCell className="text-muted-foreground">
+        {ownerLabel ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell>
         {workspace.hasPublishableChanges ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-amber-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-node-modified" />
             {t('workspacesAdmin.pending', 'Pending')}
           </span>
         ) : (
-          <span className="text-neutral-500">
+          <span className="text-muted-foreground">
             {t('workspacesAdmin.none2', 'None')}
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         {workspace.permissions.manage && (
           <DropdownMenu>
             <DropdownMenuTrigger

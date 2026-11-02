@@ -58,10 +58,6 @@
         <source>Off means changes can only be handed on for review.</source>
         <target xml:lang="ru">Если выключено, изменения можно только передать на проверку.</target>
       </trans-unit>
-      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
-        <source>May create workspaces</source>
-        <target xml:lang="ru">Может создавать рабочие области</target>
-      </trans-unit>
       <group id="accessRoles.badgeBranches" restype="x-gettext-plurals">
         <trans-unit id="accessRoles.badgeBranches[0]" xml:space="preserve">
           <source>{0} branch</source>

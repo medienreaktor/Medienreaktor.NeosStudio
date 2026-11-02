@@ -93,7 +93,7 @@ export function PropertyEditor({
         <div
           className={cn(
             'flex items-center gap-1.5',
-            property.scope !== 'node' && 'text-purple-700 dark:text-purple-300',
+            property.scope !== 'node' && 'text-variant-text',
           )}
         >
           {editor}
@@ -131,11 +131,9 @@ export function Labeled({
     <>
       <div
         className={cn(
-          'mb-1 flex items-center gap-1.5 text-xs',
+          'mb-1 flex items-center gap-1.5 type-small',
           // Purple marks dimension-spanning edits, matching the dimension UI.
-          spansVariants
-            ? 'text-purple-700 dark:text-purple-300'
-            : 'text-neutral-950 dark:text-white',
+          spansVariants ? 'text-variant-text' : 'text-foreground',
         )}
       >
         {/* The hint icons sit OUTSIDE the label element: a label forwards
@@ -175,9 +173,9 @@ function HintPopover({
         aria-label={label}
         className={cn('cursor-help', className)}
       >
-        <i className={cn('fas text-[0.75rem]', icon)} aria-hidden />
+        <i className={cn('fas type-icon-m', icon)} aria-hidden />
       </PopoverTrigger>
-      <PopoverContent className="max-w-72 py-2 px-3 text-xs leading-relaxed">
+      <PopoverContent className="max-w-67.5 py-2 px-3 type-small leading-relaxed">
         {children}
       </PopoverContent>
     </Popover>
@@ -194,7 +192,7 @@ function HelpHint({ help }: { help: InspectorPropertyHelp }) {
     <HintPopover
       icon="fa-circle-question"
       label={t('inspector.help', 'Help')}
-      className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+      className="text-muted-foreground hover:text-muted-foreground"
     >
       {help.thumbnail && (
         <img
@@ -232,7 +230,7 @@ function ScopeHint({ scope }: { scope: Exclude<PropertyScope, 'node'> }) {
     <HintPopover
       icon="fa-right-left"
       label={hint}
-      className="text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200"
+      className="text-variant-text hover:text-variant"
     >
       {hint}
     </HintPopover>
@@ -249,7 +247,7 @@ function ReadOnlyValue({
 }) {
   return (
     <div
-      className="min-h-9 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm wrap-break-word whitespace-pre-wrap text-neutral-600 dark:text-neutral-400"
+      className="min-h-8.5 rounded-md border border-dashed border-border px-3 py-2 type-body wrap-break-word whitespace-pre-wrap text-muted-foreground"
       title={t(
         'inspector.editorNotSupported',
         'Editor not supported yet: {0}',

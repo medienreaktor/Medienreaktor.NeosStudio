@@ -21,7 +21,10 @@ export type PanelPlacement =
    * a new group of its own.
    */
   | { kind: 'dock'; region: DockRegion; group?: string }
-  /** Floating; `rect` is evaluated lazily against the live viewport. */
+  /**
+   * Floating; `rect` is evaluated lazily against the live viewport and
+   * answers in px, which the panel system converts to its rem rects.
+   */
   | { kind: 'floating'; rect: () => PanelRect }
 
 export type PanelDefinition = {

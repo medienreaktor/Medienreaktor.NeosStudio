@@ -54,7 +54,7 @@ export function AssetLinkTab({ href, onChange }: LinkTypeTabProps) {
           'absolute inset-x-0 -top-px z-10 flex items-center p-3',
           // Not the shared toolbarFade: inside the dialog the tab panel is
           // neutral-50/900 (see TabsContent), not the panels' white/950.
-          'bg-gradient-to-t from-transparent to-neutral-50 dark:to-neutral-900',
+          'bg-gradient-to-t from-transparent to-card',
         )}
       >
         <SearchInput

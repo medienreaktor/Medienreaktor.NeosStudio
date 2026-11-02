@@ -27,7 +27,6 @@ export function unrestrictedConstraints(): AccessRoleConstraints {
     workspaceNames: [],
     allowPersonalWorkspace: true,
     allowPublishToLive: true,
-    allowWorkspaceCreation: true,
     capabilities: {},
   }
 }
@@ -220,12 +219,6 @@ export function allowsPublishToLive(
   access: EffectiveAccess | undefined,
 ): boolean {
   return anyRole(access, (c) => c.allowPublishToLive)
-}
-
-export function allowsWorkspaceCreation(
-  access: EffectiveAccess | undefined,
-): boolean {
-  return anyRole(access, (c) => c.allowWorkspaceCreation)
 }
 
 /**

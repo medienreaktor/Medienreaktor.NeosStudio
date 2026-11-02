@@ -1,17 +1,19 @@
 import * as React from 'react'
 
-const MOBILE_BREAKPOINT = 768
-
-const query = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+/**
+ * Tailwind's md breakpoint, in rem like Tailwind's own: a media query's rem is
+ * the browser's default font size, so the breakpoint moves with it.
+ */
+const MOBILE_QUERY = '(width < 48rem)'
 
 function subscribe(onChange: () => void): () => void {
-  const mql = window.matchMedia(query)
+  const mql = window.matchMedia(MOBILE_QUERY)
   mql.addEventListener('change', onChange)
   return () => mql.removeEventListener('change', onChange)
 }
 
 function isMobileNow(): boolean {
-  return window.matchMedia(query).matches
+  return window.matchMedia(MOBILE_QUERY).matches
 }
 
 /** Whether the viewport is below the mobile breakpoint - live. */

@@ -16,7 +16,7 @@ import { startPollingTransport } from './pollingTransport'
 import { startWebsocketTransport } from './websocketTransport'
 import type { CollaborationTransport, TransportCallbacks } from './transport'
 import type { PresencePeer } from './PresenceContext'
-import { presenceColor, presenceInitials } from './presenceColors'
+import { presenceColorValue, presenceInitials } from './presenceColors'
 
 /**
  * How long the realtime connection may be down before the polling fallback
@@ -117,7 +117,7 @@ export function CollaborationBridge({
           // Edit-lock claims are optional on the wire - normalize so
           // consumers can rely on null.
           editingElement: user.editingElement ?? null,
-          color: presenceColor(user.userId),
+          color: presenceColorValue(user.userId),
           initials: presenceInitials(user.name),
         }))
       const serialized = JSON.stringify({ peers, you: self })

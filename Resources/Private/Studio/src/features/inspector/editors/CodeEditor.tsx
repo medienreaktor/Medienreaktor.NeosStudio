@@ -83,16 +83,15 @@ function CodeArea({
     })
   }
 
-  const shared =
-    'm-0 border-0 p-3 font-mono text-sm leading-5 whitespace-pre [tab-size:2]'
+  const shared = 'm-0 border-0 p-3 type-code whitespace-pre [tab-size:2]'
 
   return (
-    <div className="relative h-[60vh] overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-mono text-sm leading-5">
+    <div className="relative h-[60vh] overflow-hidden rounded-md border border-border bg-background type-code">
       <div className="flex h-full">
         <div
           ref={gutterRef}
           aria-hidden
-          className="shrink-0 overflow-hidden border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 py-3 pr-2 pl-3 text-right text-neutral-400 dark:text-neutral-600 select-none"
+          className="shrink-0 overflow-hidden border-r border-divider bg-card/60 py-3 pr-2 pl-3 text-right text-placeholder select-none"
         >
           {Array.from({ length: lineCount }, (_, i) => (
             <div key={i}>{i + 1}</div>
@@ -102,10 +101,7 @@ function CodeArea({
           <pre
             ref={preRef}
             aria-hidden
-            className={cn(
-              shared,
-              'h-full overflow-auto text-neutral-800 dark:text-neutral-200',
-            )}
+            className={cn(shared, 'h-full overflow-auto text-foreground')}
           >
             <code dangerouslySetInnerHTML={{ __html: html }} />
           </pre>
@@ -124,7 +120,7 @@ function CodeArea({
               shared,
               // Overlaid exactly on the <pre>; text is transparent so only the
               // highlighted layer shows, but the caret stays visible.
-              'absolute inset-0 h-full w-full resize-none overflow-auto bg-transparent text-transparent caret-neutral-950 dark:caret-white outline-none',
+              'absolute inset-0 h-full w-full resize-none overflow-auto bg-transparent text-transparent caret-foreground outline-none',
             )}
           />
         </div>
@@ -187,28 +183,28 @@ export const CodeEditor: PropertyEditorComponent = ({
         type="button"
         onClick={openDialog}
         autoFocus={autoFocus}
-        className="group flex w-full flex-col gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 dark:bg-neutral-700/30 p-2 text-left transition-colors hover:border-neutral-400 dark:hover:border-neutral-600 focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 focus-visible:outline-none"
+        className="group flex w-full flex-col gap-2 rounded-md border border-border bg-input/30 p-2 text-left transition-colors hover:border-placeholder focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {current ? (
-          <pre className="max-h-24 overflow-hidden font-mono text-xs leading-5 whitespace-pre-wrap text-neutral-800 dark:text-neutral-200">
+          <pre className="max-h-22.5 overflow-hidden type-code-small leading-[1.171875rem] whitespace-pre-wrap text-foreground">
             <code dangerouslySetInnerHTML={{ __html: preview }} />
           </pre>
         ) : (
-          <span className="py-1 text-sm text-neutral-500">
+          <span className="py-1 type-body text-muted-foreground">
             {t('editor.code.empty', 'No content yet')}
           </span>
         )}
-        <span className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-950 dark:group-hover:text-white">
-          <i className="fas fa-code text-[0.875rem]" aria-hidden />
+        <span className="flex items-center gap-1.5 type-small-strong text-muted-foreground group-hover:text-foreground">
+          <i className="fas fa-code type-icon-l" aria-hidden />
           {buttonLabel}
         </span>
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent size="lg" className="max-w-3xl">
+        <DialogContent size="lg" className="max-w-180">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <i className="fas fa-code text-[1rem]" aria-hidden />
+              <i className="fas fa-code type-icon-xl" aria-hidden />
               {subject.label}
             </DialogTitle>
           </DialogHeader>

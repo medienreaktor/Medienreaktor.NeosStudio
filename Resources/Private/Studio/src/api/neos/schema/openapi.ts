@@ -1680,8 +1680,6 @@ export interface components {
       allowPersonalWorkspace: boolean
       /** @description Whether they may publish to live */
       allowPublishToLive: boolean
-      /** @description Whether they may create shared workspaces */
-      allowWorkspaceCreation: boolean
       /**
        * @description The capabilities withheld from them (false), a capability left out is granted. The capabilities are listed by listAccessRoles and getMyAccess
        * @example {
@@ -1746,8 +1744,6 @@ export interface components {
         allowPersonalWorkspace: boolean
         /** @description Whether they may publish to live */
         allowPublishToLive: boolean
-        /** @description Whether they may create shared workspaces */
-        allowWorkspaceCreation: boolean
         /**
          * @description The capabilities withheld from them (false), a capability left out is granted. The capabilities are listed by listAccessRoles and getMyAccess
          * @example {
@@ -1844,8 +1840,6 @@ export interface components {
         allowPersonalWorkspace: boolean
         /** @description Whether they may publish to live */
         allowPublishToLive: boolean
-        /** @description Whether they may create shared workspaces */
-        allowWorkspaceCreation: boolean
         /**
          * @description The capabilities withheld from them (false), a capability left out is granted. The capabilities are listed by listAccessRoles and getMyAccess
          * @example {

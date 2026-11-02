@@ -133,7 +133,7 @@ export function MultiAssetFieldEditor({
         onClick={add}
         className="justify-center"
       >
-        <i className="fas fa-plus text-[1rem]" aria-hidden />
+        <i className="fas fa-plus type-icon-xl" aria-hidden />
         {kind === 'image'
           ? t('editor.addImage', 'Add image…')
           : t('editor.addAsset', 'Add asset…')}
@@ -187,31 +187,31 @@ function AssetRow({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        'flex items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 p-2',
+        'flex items-center gap-2 rounded-md border border-border bg-background p-2',
         dragging && 'opacity-50',
       )}
     >
       <i
-        className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-400 dark:text-neutral-600"
+        className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
         aria-hidden
       />
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-neutral-50 dark:bg-neutral-900">
+      <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded bg-card">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (
           <i
-            className="fas fa-spinner fa-spin text-[1rem] text-neutral-500"
+            className="fas fa-spinner fa-spin type-icon-xl text-muted-foreground"
             aria-hidden
           />
         ) : (
           <i
-            className="fas fa-paperclip text-[1.25rem] text-neutral-400 dark:text-neutral-600"
+            className="fas fa-paperclip type-icon-2xl text-placeholder"
             aria-hidden
           />
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm" title={asset?.label}>
+        <div className="truncate type-body" title={asset?.label}>
           {asset
             ? asset.label
             : missing

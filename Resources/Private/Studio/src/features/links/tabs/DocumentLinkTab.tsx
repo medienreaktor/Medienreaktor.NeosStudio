@@ -141,7 +141,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
     // TabsContent carries no padding (the media tab is edge-to-edge), so
     // every tab brings its own p-3.
     <div className="flex h-full min-h-0 flex-col gap-2 p-3">
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-1">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-divider bg-background p-1">
         <TreeList
           tree={tree}
           label={t('link.targetDocument', 'Link target document')}
@@ -156,7 +156,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
           }
         />
       </div>
-      <label className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+      <label className="flex items-center gap-2 type-small text-muted-foreground">
         <span className="shrink-0">{t('link.anchor', 'Anchor')}</span>
         <Input
           value={anchor}
@@ -168,7 +168,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
             'link.anchorPlaceholder',
             'Optional #anchor on the target page',
           )}
-          className="h-7 text-sm"
+          className="h-6.5 type-body"
         />
       </label>
     </div>

@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useLatestRef } from '@/hooks/use-latest-ref'
 import { translate as t } from '@/lib/i18n'
+import { rootFontSize } from '@/lib/rem'
 
 /**
  * A pannable/zoomable graph viewport - the shared canvas behind the Node
@@ -35,11 +36,15 @@ import { translate as t } from '@/lib/i18n'
  *   once per animation frame - panning never re-renders the (possibly large)
  *   graph. Only the zoom readout is React state, updated when the scale
  *   actually changes.
+ * - Content geometry is in rem (see lib/rem.ts), so the drawing scales with
+ *   the root font size on its own. The view transform is screen state and
+ *   stays in px; content lengths are converted when fitting and centering.
  */
 
 export interface GraphCanvasHandle {
   fitToView(): void
   /** Center the view on a content rect, zooming in to at least `minScale`. */
+  /** `rect` is in content units, rem. */
   centerOnRect(
     rect: { x: number; y: number; width: number; height: number },
     minScale?: number,
@@ -59,7 +64,7 @@ function cssTransform({ x, y, scale }: ViewTransform): string {
 }
 
 export interface GraphCanvasProps {
-  /** Content extents, for fit-to-view. */
+  /** Content extents in rem, for fit-to-view. */
   contentWidth: number
   contentHeight: number
   minScale?: number
@@ -154,18 +159,21 @@ export function GraphCanvas({
   const fitToView = () => {
     const element = viewportRef.current
     if (!element || contentWidth === 0 || element.clientWidth === 0) return
-    const padding = 40
+    const root = rootFontSize()
+    const width = contentWidth * root
+    const height = contentHeight * root
+    const padding = 2.5 * root
     const scale = clampScale(
       Math.min(
-        (element.clientWidth - padding * 2) / contentWidth,
-        (element.clientHeight - padding * 2) / contentHeight,
+        (element.clientWidth - padding * 2) / width,
+        (element.clientHeight - padding * 2) / height,
         1,
       ),
     )
     setView({
       scale,
-      x: (element.clientWidth - contentWidth * scale) / 2,
-      y: (element.clientHeight - contentHeight * scale) / 2,
+      x: (element.clientWidth - width * scale) / 2,
+      y: (element.clientHeight - height * scale) / 2,
     })
   }
 
@@ -231,13 +239,14 @@ export function GraphCanvas({
   ) => {
     const element = viewportRef.current
     if (!element) return
+    const root = rootFontSize()
     setView((current) => {
       // Zoom in at least far enough that the centered rect is readable.
       const scale = clampScale(Math.max(current.scale, centerMinScale))
       return {
         scale,
-        x: element.clientWidth / 2 - (rect.x + rect.width / 2) * scale,
-        y: element.clientHeight / 2 - (rect.y + rect.height / 2) * scale,
+        x: element.clientWidth / 2 - (rect.x + rect.width / 2) * root * scale,
+        y: element.clientHeight / 2 - (rect.y + rect.height / 2) * root * scale,
       }
     })
   }
@@ -300,7 +309,7 @@ export function GraphCanvas({
     <div className="relative h-full min-h-0 overflow-hidden">
       {overlay}
       <div className="pointer-events-none absolute top-0 right-0 z-10 p-3">
-        <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-neutral-50/80 dark:bg-neutral-900/80 p-1 backdrop-blur-xs">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-md bg-card/80 p-1 backdrop-blur-xs">
           <Button
             variant="ghost"
             size="icon-xs"
@@ -309,7 +318,7 @@ export function GraphCanvas({
           >
             <i className="fas fa-minus" aria-hidden />
           </Button>
-          <span className="w-10 text-center text-[10px] text-neutral-600 dark:text-neutral-400 tabular-nums">
+          <span className="w-9.5 text-center type-caption text-muted-foreground tabular-nums">
             {Math.round(displayScale * 100)}%
           </span>
           <Button
@@ -338,7 +347,7 @@ export function GraphCanvas({
         style={{
           backgroundImage:
             'radial-gradient(circle, var(--graph-dot) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
+          backgroundSize: '1.5rem 1.5rem',
         }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

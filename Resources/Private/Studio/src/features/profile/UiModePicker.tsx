@@ -59,7 +59,7 @@ export function UiModePicker({
       aria-label={
         labelledBy === undefined ? t('profile.uiMode', 'Appearance') : undefined
       }
-      className="flex gap-4"
+      className="flex gap-3.5"
       onKeyDown={onKeyDown}
     >
       {options.map(({ mode, label }) => {
@@ -79,19 +79,19 @@ export function UiModePicker({
               className={cn(
                 'rounded-lg border-2 p-0.5 transition-colors',
                 selected
-                  ? 'border-blue-500'
-                  : 'border-transparent group-hover:border-neutral-300 dark:group-hover:border-neutral-700',
-                'group-focus-visible:ring-2 group-focus-visible:ring-blue-500/50',
+                  ? 'border-primary'
+                  : 'border-transparent group-hover:border-border',
+                'group-focus-visible:ring-2 group-focus-visible:ring-ring/50',
               )}
             >
               <ModeThumbnail mode={mode} />
             </span>
             <span
               className={cn(
-                'text-xs',
+                'type-small-strong',
                 selected
-                  ? 'font-semibold text-neutral-950 dark:text-white'
-                  : 'text-neutral-600 dark:text-neutral-400',
+                  ? 'font-semibold text-foreground'
+                  : 'text-muted-foreground',
               )}
             >
               {label}
@@ -122,45 +122,30 @@ function ModeThumbnail({ mode }: { mode: UiMode }) {
 }
 
 function HalfThumbnail({ appearance }: { appearance: 'light' | 'dark' }) {
-  const dark = appearance === 'dark'
+  // A themed island: data-theme switches the semantic tokens for everything
+  // inside, so the miniature is drawn with the real light / dark values.
   return (
-    <span
-      className={cn(
-        'relative block h-16 w-24 overflow-hidden rounded-md',
-        // "Wallpaper" behind the mini UI - a blue sweep echoing the brand.
-        dark
-          ? 'bg-gradient-to-br from-blue-950 via-blue-900 to-purple-950'
-          : 'bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400',
-      )}
-      aria-hidden
-    >
-      {/* Menu bar */}
+    <span data-theme={appearance} className="block" aria-hidden>
       <span
         className={cn(
-          'absolute inset-x-0 top-0 block h-2',
-          dark ? 'bg-neutral-800/90' : 'bg-white/80',
+          'relative block h-15 w-22.5 overflow-hidden rounded-md bg-background',
+          // "Wallpaper" behind the mini UI - a blue sweep echoing the brand.
+          'bg-gradient-to-br from-primary/30 via-primary/50 to-variant/50',
         )}
       >
-        <span
-          className={cn(
-            'absolute top-0.5 left-1 block size-1 rounded-full',
-            dark ? 'bg-neutral-500' : 'bg-neutral-400',
-          )}
-        />
-      </span>
-      {/* Selection pill */}
-      <span className="absolute top-3.5 left-2 block h-2 w-14 rounded-[3px] border border-white/40 bg-blue-500" />
-      {/* Window with traffic lights */}
-      <span
-        className={cn(
-          'absolute -bottom-1 left-4 block h-6 w-16 rounded-t-md',
-          dark ? 'bg-neutral-900' : 'bg-white',
-        )}
-      >
-        <span className="absolute top-1.5 left-1.5 flex gap-1">
-          <span className="size-1.5 rounded-full bg-red-400" />
-          <span className="size-1.5 rounded-full bg-orange-300" />
-          <span className="size-1.5 rounded-full bg-green-400" />
+        {/* Menu bar */}
+        <span className="absolute inset-x-0 top-0 block h-2 bg-card/80">
+          <span className="absolute top-0.5 left-1 block size-1 rounded-full bg-placeholder" />
+        </span>
+        {/* Selection pill */}
+        <span className="absolute top-3.5 left-2 block h-2 w-13 rounded-[3px] border border-scrim-foreground/40 bg-primary" />
+        {/* Window with traffic lights */}
+        <span className="absolute -bottom-1 left-3.5 block h-5.5 w-15 rounded-t-md bg-background">
+          <span className="absolute top-1.5 left-1.5 flex gap-1">
+            <span className="size-1.5 rounded-full bg-destructive" />
+            <span className="size-1.5 rounded-full bg-warning" />
+            <span className="size-1.5 rounded-full bg-success" />
+          </span>
         </span>
       </span>
     </span>

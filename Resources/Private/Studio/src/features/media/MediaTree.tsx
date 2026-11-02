@@ -205,7 +205,9 @@ export function MediaTree({
     return {
       icon: icon?.(data) ?? null,
       markers:
-        data.count > 0 ? <span className="text-xs">{data.count}</span> : null,
+        data.count > 0 ? (
+          <span className="type-small">{data.count}</span>
+        ) : null,
     }
   }
 

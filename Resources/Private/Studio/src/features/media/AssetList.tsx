@@ -73,9 +73,9 @@ export function AssetList({
   }
 
   return (
-    <div className="min-h-0 flex-1 pt-14 overflow-y-auto @container">
+    <div className="min-h-0 flex-1 pt-13 overflow-y-auto @container">
       {view === 'grid' ? (
-        <div className="grid grid-cols-2 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6 @[56rem]:grid-cols-7 @[64rem]:grid-cols-8 @[72rem]:grid-cols-9 @[80rem]:grid-cols-10 gap-2 p-3 pt-0">
+        <div className="grid grid-cols-2 @[22.5rem]:grid-cols-3 @[30rem]:grid-cols-4 @[37.5rem]:grid-cols-5 @[45rem]:grid-cols-6 @[52.5rem]:grid-cols-7 @[60rem]:grid-cols-8 @[67.5rem]:grid-cols-9 @[75rem]:grid-cols-10 gap-2 p-3 pt-0">
           {assets.map((asset) => (
             <GridCard
               key={assetKey(asset)}
@@ -90,8 +90,8 @@ export function AssetList({
           ))}
         </div>
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm text-left text-xs text-neutral-500">
+        <table className="w-full border-collapse type-body">
+          <thead className="sticky top-0 z-10 bg-card/50 backdrop-blur-sm text-left type-small text-muted-foreground">
             <tr>
               <th className="px-3 py-1 font-medium">
                 {t('media.name', 'Name')}
@@ -126,8 +126,8 @@ export function AssetList({
 
       <div ref={sentinelRef} />
       {isFetchingNextPage && (
-        <div className="flex items-center justify-center gap-2 p-4 text-xs text-neutral-500">
-          <Spinner className="text-[0.875rem]" />
+        <div className="flex items-center justify-center gap-2 p-3.5 type-small text-muted-foreground">
+          <Spinner className="type-body" />
           {t('media.loadingMore', 'Loading more…')}
         </div>
       )}
@@ -167,18 +167,14 @@ function GridCard({
       title={asset.label}
       className={cn(
         'group flex flex-col overflow-hidden border rounded-md  text-left transition-colors motion-safe:animate-media-item-in',
-        active
-          ? 'border-blue-500 bg-neutral-50 dark:bg-neutral-900'
-          : 'border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-900',
+        active ? 'border-primary bg-card' : 'border-transparent hover:bg-card',
       )}
     >
       <div className="grid aspect-square place-items-center overflow-hidden p-2">
         <AssetThumb asset={asset} />
       </div>
       <div className="px-2 py-1">
-        <p className="truncate text-xs text-neutral-800 dark:text-neutral-200">
-          {asset.label}
-        </p>
+        <p className="truncate type-small text-foreground">{asset.label}</p>
       </div>
     </button>
   )
@@ -211,29 +207,25 @@ function ListRow({
       }
       className={cn(
         // Fade only - translating table rows breaks their layout.
-        'cursor-pointer border-b border-neutral-200/60 dark:border-neutral-800/60 motion-safe:animate-fade-in',
-        active
-          ? 'bg-blue-500'
-          : 'hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50',
+        'cursor-pointer border-b border-divider motion-safe:animate-fade-in',
+        active ? 'bg-primary' : 'hover:bg-accent/50',
       )}
     >
       <td className="px-3 py-1">
         <div className="flex items-center gap-2">
-          <div className="grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-white/50 dark:bg-neutral-950/50">
-            <AssetThumb asset={asset} className="size-5" />
+          <div className="grid size-7.5 shrink-0 place-items-center overflow-hidden rounded bg-background/50">
+            <AssetThumb asset={asset} className="size-4.5" />
           </div>
-          <span className="truncate text-neutral-800 dark:text-neutral-200">
-            {asset.label}
-          </span>
+          <span className="truncate text-foreground">{asset.label}</span>
         </div>
       </td>
-      <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
+      <td className="px-3 py-1 text-placeholder">
         {assetTypeLabel(asset.assetType)}
       </td>
-      <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
+      <td className="px-3 py-1 text-placeholder">
         {formatBytes(asset.fileSize)}
       </td>
-      <td className="px-3 py-1 text-neutral-950/50 dark:text-white/50">
+      <td className="px-3 py-1 text-placeholder">
         {formatDate(asset.lastModified)}
       </td>
     </tr>

@@ -111,7 +111,7 @@ function TaskSwitcherActions({ workspace }: { workspace: Workspace }) {
     <>
       {task.status === 'OPEN' && workspace.permissions.write && (
         <DropdownMenuItem onClick={actions.submit}>
-          <i className="fas fa-paper-plane w-4 text-center" aria-hidden />
+          <i className="fas fa-paper-plane w-3.5 text-center" aria-hidden />
           {t('tasks.sendToReview', 'Send to review')}
         </DropdownMenuItem>
       )}
@@ -119,13 +119,13 @@ function TaskSwitcherActions({ workspace }: { workspace: Workspace }) {
         workspace.permissions.manage &&
         canPublish(workspace, workspaces ?? []) && (
           <DropdownMenuItem onClick={() => actions.complete(workspace)}>
-            <i className="fas fa-check w-4 text-center" aria-hidden />
+            <i className="fas fa-check w-3.5 text-center" aria-hidden />
             {t('tasks.completeTask', 'Complete task')}
           </DropdownMenuItem>
         )}
       {task.status !== 'OPEN' && workspace.permissions.write && (
         <DropdownMenuItem onClick={() => actions.reopen(workspace)}>
-          <i className="fas fa-rotate-left w-4 text-center" aria-hidden />
+          <i className="fas fa-rotate-left w-3.5 text-center" aria-hidden />
           {t('tasks.reopenTask', 'Reopen task')}
         </DropdownMenuItem>
       )}
@@ -137,7 +137,7 @@ function TaskSwitcherMenuItems() {
   const actions = useTaskSwitcher()
   return (
     <DropdownMenuItem onClick={actions.create}>
-      <i className="fas fa-plus text-[0.7rem]" aria-hidden />
+      <i className="fas fa-plus type-icon-s" aria-hidden />
       {t('tasks.addTaskWorkspace', 'Add task workspace')}
     </DropdownMenuItem>
   )

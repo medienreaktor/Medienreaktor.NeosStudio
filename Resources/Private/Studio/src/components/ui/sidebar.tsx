@@ -116,7 +116,7 @@ function SidebarProvider({
             } as React.CSSProperties
           }
           className={cn(
-            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-neutral-50 dark:has-data-[variant=inset]:bg-neutral-900',
+            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-card',
             className,
           )}
           {...props}
@@ -147,7 +147,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          'flex h-full w-(--sidebar-width) flex-col bg-neutral-50 dark:bg-neutral-900 text-neutral-950 dark:text-white',
+          'flex h-full w-(--sidebar-width) flex-col bg-card text-foreground',
           className,
         )}
         {...props}
@@ -164,7 +164,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-neutral-50 dark:bg-neutral-900 p-0 text-neutral-950 dark:text-white [&>button]:hidden"
+          className="w-(--sidebar-width) bg-card p-0 text-foreground [&>button]:hidden"
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -189,7 +189,7 @@ function Sidebar({
 
   return (
     <div
-      className="group peer hidden text-neutral-950 dark:text-white md:block"
+      className="group peer hidden text-foreground md:block"
       data-state={state}
       data-collapsible={state === 'collapsed' ? collapsible : ''}
       data-variant={variant}
@@ -226,7 +226,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex h-full w-full flex-col bg-neutral-50 dark:bg-neutral-900 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-neutral-300 dark:group-data-[variant=floating]:border-neutral-700 group-data-[variant=floating]:shadow-sm"
+          className="flex h-full w-full flex-col bg-card group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-border group-data-[variant=floating]:shadow-sm"
         >
           {children}
         </div>
@@ -248,7 +248,7 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn('size-7', className)}
+      className={cn('size-6.5', className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -281,7 +281,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        'relative flex w-full flex-1 flex-col bg-white dark:bg-neutral-950',
+        'relative flex w-full flex-1 flex-col bg-background',
         'md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
         className,
       )}

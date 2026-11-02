@@ -83,7 +83,7 @@ export function HistoryPanel() {
     )
   }
   return (
-    <div className="flex flex-col gap-0.5 p-2.5 text-xs">
+    <div className="flex flex-col gap-0.5 p-2.5 type-small">
       {steps.map((step) => (
         <HistoryStepRow
           key={step.id}
@@ -99,7 +99,7 @@ export function HistoryPanel() {
         />
       ))}
       {history?.truncated === true && (
-        <p className="px-2 py-2 text-center text-[10px] text-neutral-400 dark:text-neutral-600">
+        <p className="px-2 py-2 text-center type-caption text-placeholder">
           {t('history.older', 'Older changes on this page are not shown.')}
         </p>
       )}

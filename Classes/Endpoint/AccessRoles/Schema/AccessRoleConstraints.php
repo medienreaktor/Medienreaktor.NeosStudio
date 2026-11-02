@@ -37,7 +37,6 @@ final readonly class AccessRoleConstraints implements ProvidesSchema
         public array $workspaceNames,
         public bool $allowPersonalWorkspace,
         public bool $allowPublishToLive,
-        public bool $allowWorkspaceCreation,
         public array|\stdClass $capabilities,
     ) {
     }
@@ -51,7 +50,6 @@ final readonly class AccessRoleConstraints implements ProvidesSchema
             array_values($constraints->workspaceNames),
             $constraints->allowPersonalWorkspace,
             $constraints->allowPublishToLive,
-            $constraints->allowWorkspaceCreation,
             $constraints->capabilities === [] ? new \stdClass() : $constraints->capabilities,
         );
     }
@@ -92,7 +90,6 @@ final readonly class AccessRoleConstraints implements ProvidesSchema
                 ),
                 allowPersonalWorkspace: BooleanSchema::create(description: 'Whether they may use their personal workspace'),
                 allowPublishToLive: BooleanSchema::create(description: 'Whether they may publish to live'),
-                allowWorkspaceCreation: BooleanSchema::create(description: 'Whether they may create shared workspaces'),
                 capabilities: ObjectSchema::create(
                     description: 'The capabilities withheld from them (false), a capability left out is granted. The capabilities are listed by listAccessRoles and getMyAccess',
                     examples: [['deleteNodes' => false]],
@@ -100,7 +97,7 @@ final readonly class AccessRoleConstraints implements ProvidesSchema
                 ),
             ),
             additionalProperties: false,
-            required: ['siteNodeNames', 'nodeTreeRules', 'dimensionValues', 'workspaceNames', 'allowPersonalWorkspace', 'allowPublishToLive', 'allowWorkspaceCreation', 'capabilities'],
+            required: ['siteNodeNames', 'nodeTreeRules', 'dimensionValues', 'workspaceNames', 'allowPersonalWorkspace', 'allowPublishToLive', 'capabilities'],
         );
     }
 }

@@ -81,7 +81,7 @@ export function UserAdministration() {
   }, [data, search])
 
   return (
-    <div className="p-6 pt-3">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('users.title', 'Users')}
         subtitle={t('users.subtitle', 'Backend user accounts.')}
@@ -96,7 +96,7 @@ export function UserAdministration() {
         <Placeholder
           icon="fa-triangle-exclamation"
           title={t('users.unavailable', 'Users are currently unavailable.')}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
@@ -109,7 +109,7 @@ export function UserAdministration() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.search', 'Search users…')}
             aria-label={t('users.search', 'Search users…')}
-            wrapperClassName="mb-3 max-w-xs"
+            wrapperClassName="mb-3 max-w-75"
           />
 
           {users.length === 0 ? (
@@ -120,7 +120,7 @@ export function UserAdministration() {
                   ? t('users.noMatches', 'No users match your search.')
                   : t('users.none', 'No users found.')
               }
-              className="py-10"
+              className="py-9.5"
             />
           ) : (
             <div className="rounded-md border">
@@ -235,9 +235,9 @@ function UserRow({
   })
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
+        <span className="font-medium text-foreground">
           {fullName(user) || user.label}
         </span>
         {isCurrentUser && (
@@ -248,25 +248,22 @@ function UserRow({
       </TableCell>
       <TableCell>
         {user.accounts.length === 0 ? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         ) : (
           user.accounts.map((account) => (
-            <div
-              key={account.identifier}
-              className="text-neutral-700 dark:text-neutral-300"
-            >
+            <div key={account.identifier} className="text-muted-foreground">
               {account.identifier}
             </div>
           ))
         )}
       </TableCell>
       <TableCell>
-        {user.email ?? <span className="text-neutral-500">—</span>}
+        {user.email ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {roles.length === 0 ? (
-            <span className="text-neutral-500">—</span>
+            <span className="text-muted-foreground">—</span>
           ) : (
             roles.map((role) => (
               <Badge key={role} variant="secondary">
@@ -278,18 +275,18 @@ function UserRow({
       </TableCell>
       <TableCell>
         {user.active ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-green-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-success" />
             {t('users.active', 'Active')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-neutral-500">
-            <span className="size-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-placeholder" />
             {t('users.inactive', 'Inactive')}
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -349,7 +346,7 @@ function UserTableSkeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-10 w-full" />
+        <Skeleton key={i} className="h-9.5 w-full" />
       ))}
     </div>
   )

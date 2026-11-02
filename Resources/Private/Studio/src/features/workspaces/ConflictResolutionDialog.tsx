@@ -178,7 +178,7 @@ export function ConflictResolutionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ul className="flex max-h-64 flex-col gap-px overflow-y-auto">
+        <ul className="flex max-h-60 flex-col gap-px overflow-y-auto">
           {conflicts.map((conflict, index) => {
             const kind = changeKind(conflict.typeOfChange)
             const meta = kind ? TYPE_META[kind] : undefined
@@ -194,29 +194,29 @@ export function ConflictResolutionDialog({
             return (
               <li
                 key={conflict.nodeAggregateId ?? index}
-                className="flex items-start gap-3 rounded-sm bg-neutral-200 dark:bg-neutral-800 px-3 py-2"
+                className="flex items-start gap-3 rounded-sm bg-muted px-3 py-2"
               >
                 <i
-                  className={`fas fa-fw ${meta?.icon ?? 'fa-circle-exclamation'} mt-0.5 text-neutral-600 dark:text-neutral-400`}
+                  className={`fas fa-fw ${meta?.icon ?? 'fa-circle-exclamation'} mt-0.5 text-muted-foreground`}
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm text-neutral-900 dark:text-neutral-100">
+                  <div className="truncate type-body text-foreground">
                     {title}
                     {meta ? (
-                      <span className="text-neutral-600 dark:text-neutral-400">
+                      <span className="text-muted-foreground">
                         {' '}
                         — {t(meta.verbKey, meta.verb)}
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                  <div className="type-small text-muted-foreground">
                     {reasonText(conflict)}
                   </div>
                   {canNavigate ? (
                     <button
                       type="button"
-                      className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      className="mt-1 type-small text-primary-text hover:underline"
                       onClick={() => onNavigate!(conflict.documentAddress!)}
                     >
                       <i

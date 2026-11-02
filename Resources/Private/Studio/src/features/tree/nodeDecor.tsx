@@ -72,7 +72,7 @@ export function nodeDecor(
       <span
         key={`presence-${peer.userId}`}
         title={t('tree.decor.editingHere', '{0} is here', [peer.name])}
-        className="flex size-4 items-center justify-center rounded-full text-[0.5rem] font-semibold text-white select-none"
+        className="flex size-3.5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
         style={{ backgroundColor: peer.color }}
       >
         {peer.initials}
@@ -86,7 +86,7 @@ export function nodeDecor(
         title={t('tree.decor.modified', 'Modified in workspace "{0}"', [
           changed.workspace,
         ])}
-        className="size-1.5 rounded-full bg-orange-500"
+        className="size-1.5 rounded-full bg-node-modified"
       />,
     )
   }
@@ -99,7 +99,7 @@ export function nodeDecor(
           'Contains changes in workspace "{0}"',
           [changed.workspace],
         )}
-        className="size-1.5 rounded-full border border-orange-500"
+        className="size-1.5 rounded-full border border-node-modified"
       />,
     )
   }
@@ -117,7 +117,7 @@ export function nodeDecor(
         <i
           className={cn(
             faClassName(decoration.icon ?? 'cube'),
-            'fa-fw text-[0.75rem]',
+            'fa-fw type-icon-m',
           )}
           style={{ color: decoration.color, opacity: decoration.opacity }}
           aria-hidden
@@ -128,10 +128,10 @@ export function nodeDecor(
             title={overlay.label}
             className={cn(
               faClassName(overlay.icon),
-              'absolute rounded-full bg-neutral-50 dark:bg-neutral-900 text-[0.6rem]',
+              'absolute rounded-full bg-card type-caption',
               OVERLAY_POSITION[overlay.position ?? 'bottom-right'],
             )}
-            style={{ color: overlay.color ?? 'var(--color-red-500)' }}
+            style={{ color: overlay.color ?? 'var(--color-node-deleted)' }}
             aria-hidden
           />
         ))}

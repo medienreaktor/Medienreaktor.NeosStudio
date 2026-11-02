@@ -112,7 +112,7 @@ function CreateUserForm({
         </DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-3.5">
         <Field
           label={t('users.username', 'Username')}
           htmlFor="user-create-username"
@@ -126,7 +126,7 @@ function CreateUserForm({
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3.5">
           <Field
             label={t('users.firstName', 'First name')}
             htmlFor="user-create-first-name"
@@ -163,7 +163,7 @@ function CreateUserForm({
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3.5">
           <Field
             label={t('users.password', 'Password')}
             htmlFor="user-create-password"
@@ -198,7 +198,7 @@ function CreateUserForm({
         {mismatch && (
           <p
             id="user-create-password-mismatch"
-            className="text-sm text-red-500"
+            className="type-body text-destructive-text"
           >
             {t('users.passwordMismatch', 'The passwords do not match.')}
           </p>

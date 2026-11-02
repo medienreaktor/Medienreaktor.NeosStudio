@@ -125,7 +125,7 @@ export function WorkspaceRolesDialog({
           <DialogTitle>
             {t('workspacesAdmin.manageAccess', 'Manage access')}
             {workspace !== null && (
-              <span className="ml-2 font-normal text-neutral-600 dark:text-neutral-400">
+              <span className="ml-2 font-normal text-muted-foreground">
                 {workspace.title || workspace.name}
               </span>
             )}
@@ -141,7 +141,7 @@ export function WorkspaceRolesDialog({
         {isLoading && (
           <div className="space-y-2">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-9 w-full" />
+              <Skeleton key={i} className="h-8.5 w-full" />
             ))}
           </div>
         )}
@@ -155,21 +155,21 @@ export function WorkspaceRolesDialog({
                   'workspacesAdmin.noAssignments',
                   'No access assigned yet.',
                 )}
-                className="py-6"
+                className="py-5.5"
               />
             ) : (
               <ul className="space-y-1">
                 {data.map((assignment) => (
                   <li
                     key={`${assignment.subject.type}:${assignment.subject.id}`}
-                    className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm"
+                    className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 type-body"
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <i
-                        className={`fas ${assignment.subject.type === 'user' ? 'fa-user' : 'fa-users'} text-xs text-neutral-500`}
+                        className={`fas ${assignment.subject.type === 'user' ? 'fa-user' : 'fa-users'} type-icon-m text-muted-foreground`}
                         aria-hidden
                       />
-                      <span className="truncate text-neutral-800 dark:text-neutral-200">
+                      <span className="truncate text-foreground">
                         {subjectLabel(assignment.subject)}
                       </span>
                       <Badge variant="secondary">

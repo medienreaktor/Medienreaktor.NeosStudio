@@ -31,7 +31,7 @@ export const BooleanEditor: PropertyEditorComponent = ({
   return (
     <label
       className={cn(
-        'flex items-center gap-2 text-sm',
+        'flex items-center gap-2 type-body',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
       )}
     >
