@@ -23,6 +23,12 @@ use Neos\Neos\Domain\Model\UserId;
  */
 final readonly class ReviewComment
 {
+    /**
+     * Characters a comment, a review note or a reason for handing a task back
+     * may have - a remark, not a document. Well inside the TEXT column.
+     */
+    public const MAX_TEXT_LENGTH = 10000;
+
     public function __construct(
         /** Database id; null until persisted. */
         public ?int $id,

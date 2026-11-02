@@ -8,6 +8,7 @@ use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
 use Medienreaktor\NeosStudio\Domain\Model\ReviewComment;
 use Medienreaktor\NeosStudio\Domain\Model\ReviewCommentAnchor;
+use Medienreaktor\NeosStudio\Service\AccessControlService;
 use Medienreaktor\NeosStudio\Service\ReviewCommentService;
 use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
@@ -36,6 +37,9 @@ class ReviewCommentsController extends AbstractApiController
 
     #[Flow\Inject]
     protected UserService $userService;
+
+    #[Flow\Inject]
+    protected AccessControlService $accessControlService;
 
     /**
      * GET /api/workspaces/{workspaceName}/comments - the whole conversation,
@@ -84,6 +88,9 @@ class ReviewCommentsController extends AbstractApiController
         $this->requireReadable($name);
         if (trim($text) === '') {
             $this->throwJsonStatus(400, 'invalid_comment', 'The comment must not be empty.');
+        }
+        if (mb_strlen(trim($text)) > ReviewComment::MAX_TEXT_LENGTH) {
+            $this->throwJsonStatus(400, 'comment_too_long', sprintf('A comment may have at most %d characters.', ReviewComment::MAX_TEXT_LENGTH));
         }
 
         $comment = $this->reviewCommentService->comment(
@@ -174,6 +181,11 @@ class ReviewCommentsController extends AbstractApiController
         if ($documentAggregateId === null || $documentAggregateId === '') {
             $this->throwJsonStatus(400, 'invalid_anchor', 'A comment pinned to a change must name the document it is on.');
         }
+        // A dimension space point names a handful of dimensions; anything
+        // beyond is not one, and would only bloat the stored anchor.
+        if (count($dimensions) > 32) {
+            $this->throwJsonStatus(400, 'invalid_anchor', 'Too many dimensions.');
+        }
 
         try {
             return new ReviewCommentAnchor(
@@ -196,9 +208,14 @@ class ReviewCommentsController extends AbstractApiController
         return $user;
     }
 
+    /**
+     * Readable by the core's workspace roles AND the account's access roles: a
+     * thread names changed nodes and quotes what was said about them, which is
+     * as much workspace content as the nodes themselves.
+     */
     private function requireReadable(WorkspaceName $workspaceName): void
     {
-        if (!$this->workspaceSerializer->canRead($this->getContentRepositoryId(), $workspaceName)) {
+        if (!$this->accessControlService->canReadWorkspace($this->getContentRepositoryId(), $workspaceName)) {
             $this->throwJsonStatus(403, 'insufficient_workspace_permissions', sprintf('You lack the required permission on workspace "%s".', $workspaceName->value));
         }
     }

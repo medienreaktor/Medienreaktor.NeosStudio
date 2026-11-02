@@ -43,6 +43,9 @@ final class ReviewCommentService
     #[Flow\Inject]
     protected UserService $userService;
 
+    #[Flow\Inject]
+    protected AccessControlService $accessControlService;
+
     /**
      * The workspace's comments, oldest first - anchored and general together.
      *
@@ -155,6 +158,10 @@ final class ReviewCommentService
      * editorial team on every remark, and the one group that genuinely needs
      * telling - the reviewers - is told by the review request itself.
      *
+     * Only who may still read the workspace: someone reassigned away, or
+     * whose access roles no longer cover it, has left the conversation - an
+     * excerpt is workspace content too. Each user is told once.
+     *
      * @return array<UserId>
      */
     private function recipients(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $authorUserId): array
@@ -176,10 +183,17 @@ final class ReviewCommentService
             // nobody to name - the thread's own participants remain.
         }
 
-        return array_values(array_filter(
-            $candidates,
-            static fn (?UserId $id) => $id !== null && !$id->equals($authorUserId)
-        ));
+        $recipients = [];
+        foreach ($candidates as $candidate) {
+            if ($candidate === null || $candidate->equals($authorUserId) || isset($recipients[$candidate->value])) {
+                continue;
+            }
+            if ($this->accessControlService->canReadWorkspace($contentRepositoryId, $workspaceName, $candidate)) {
+                $recipients[$candidate->value] = $candidate;
+            }
+        }
+
+        return array_values($recipients);
     }
 
     private function workspaceTitle(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): string
