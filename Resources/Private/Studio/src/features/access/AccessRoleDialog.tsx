@@ -492,7 +492,7 @@ function DimensionsTab({
                   >
                     <span
                       style={{
-                        paddingLeft: `${value.specializationDepth * 12}px`,
+                        paddingLeft: `${value.specializationDepth * 0.75}rem`,
                       }}
                     >
                       {value.label}

@@ -1,3 +1,5 @@
+import { rem } from '@/lib/rem'
+
 /**
  * Layered layout for the node type graph. Node type inheritance is a DAG
  * (multi-inheritance through mixins), so the classic tree layouts don't
@@ -14,9 +16,9 @@
  * each card's precomputed pixel height.
  */
 
-export const CARD_WIDTH = 280
-const COLUMN_GAP = 110
-const ROW_GAP = 28
+export const CARD_WIDTH = rem(17.5)
+const COLUMN_GAP = rem(6.875)
+const ROW_GAP = rem(1.75)
 
 export interface LayoutInput {
   name: string

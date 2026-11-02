@@ -4,6 +4,7 @@ import {
   type WorkspacePendingEvents,
   type WorkspacePendingStep,
 } from '@/api/workspaces'
+import { rem } from '@/lib/rem'
 
 /**
  * Layout for the Workspaces graph: workspaces as git-style branches. Live (a
@@ -26,17 +27,17 @@ import {
  * rendering shares these pixel constants so lines anchor exactly.
  */
 
-export const WS_CARD_WIDTH = 240
-export const WS_CARD_HEIGHT = 64
-export const LANE_HEIGHT = 100
+export const WS_CARD_WIDTH = rem(15)
+export const WS_CARD_HEIGHT = rem(4)
+export const LANE_HEIGHT = rem(6.25)
 /** Distance between two commit dots on a branch line. */
-export const DOT_SPACING = 36
+export const DOT_SPACING = rem(2.25)
 /** Horizontal room the branch-off curve gets before the first commit. */
-export const BRANCH_BEND = 90
+export const BRANCH_BEND = rem(5.625)
 /** Gap between the last commit dot and the head card. */
-export const LINE_END_GAP = 28
+export const LINE_END_GAP = rem(1.75)
 /** Minimum branch line length, so an empty branch is still visibly a branch. */
-const MIN_LINE_LENGTH = 60
+const MIN_LINE_LENGTH = rem(3.75)
 /** Most dots a root (live) line shows - published history is long, only the
  * stretch since the earliest child fork tells a story. */
 const ROOT_MAX_DOTS = 25

@@ -1,3 +1,4 @@
+import { rem } from '@/lib/rem'
 import { clampToViewport, type PanelRect } from './geometry'
 import type { PanelDefinition } from './registry'
 
@@ -68,7 +69,7 @@ export type TabDrop = {
   sourceRect: PanelRect | null
 }
 
-const DEFAULT_FLOAT_SIZE = { width: 340, height: 440 }
+const DEFAULT_FLOAT_SIZE = { width: rem(21.25), height: rem(27.5) }
 
 function newGroup(panel: PanelId): PanelGroup {
   return {
@@ -212,7 +213,7 @@ export function normalizeLayout(
       ...group,
       rect: valid
         ? clampToViewport(rect as PanelRect)
-        : clampToViewport({ x: 80, y: 80, ...DEFAULT_FLOAT_SIZE }),
+        : clampToViewport({ x: rem(5), y: rem(5), ...DEFAULT_FLOAT_SIZE }),
     })
   }
 

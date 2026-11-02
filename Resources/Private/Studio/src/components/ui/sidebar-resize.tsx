@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react'
 
 import { translate as t } from '@/lib/i18n'
+import { rem } from '@/lib/rem'
 import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'neos-studio.sidebar_width'
-const MIN_WIDTH = 200
-const MAX_WIDTH = 560
-const DEFAULT_WIDTH = 300
+const MIN_WIDTH = rem(12.5)
+const MAX_WIDTH = rem(35)
+const DEFAULT_WIDTH = rem(18.75)
 
 function clamp(width: number): number {
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, width))

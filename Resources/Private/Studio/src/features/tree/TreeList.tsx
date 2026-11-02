@@ -154,7 +154,7 @@ export function TreeList<T>({
               item.isFocused() && 'outline-0',
               isDropTarget && 'border-primary bg-primary-tint',
             )}
-            style={{ paddingLeft: `${indentLevel * 14 + 2}px` }}
+            style={{ paddingLeft: `${indentLevel * 0.875 + 0.125}rem` }}
           >
             {!isRoot && (
               <span
@@ -236,12 +236,12 @@ function skeletonWidth(id: string) {
  * without a layout jump.
  */
 const SKELETON_ROWS = [
-  { level: 0, width: 96 },
-  { level: 1, width: 128 },
-  { level: 2, width: 88 },
-  { level: 2, width: 112 },
-  { level: 1, width: 72 },
-  { level: 1, width: 104 },
+  { level: 0, width: '6rem' },
+  { level: 1, width: '8rem' },
+  { level: 2, width: '5.5rem' },
+  { level: 2, width: '7rem' },
+  { level: 1, width: '4.5rem' },
+  { level: 1, width: '6.5rem' },
 ]
 
 function TreeListSkeleton({ label }: { label?: string }) {
@@ -253,12 +253,12 @@ function TreeListSkeleton({ label }: { label?: string }) {
           key={index}
           className="flex h-6 items-center gap-1.5"
           style={{
-            paddingLeft: `${row.level * 14 + 4}px`,
+            paddingLeft: `${row.level * 0.875 + 0.25}rem`,
             opacity: 1 - index * 0.13,
           }}
         >
           <Skeleton className="size-4 shrink-0" />
-          <Skeleton className="h-3" style={{ width: `${row.width}px` }} />
+          <Skeleton className="h-3" style={{ width: row.width }} />
         </div>
       ))}
     </div>

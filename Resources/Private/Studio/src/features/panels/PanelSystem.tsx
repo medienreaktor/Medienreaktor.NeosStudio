@@ -14,6 +14,7 @@ import {
   useResizableSidebar,
 } from '@/components/ui/sidebar-resize'
 import { translate as t } from '@/lib/i18n'
+import { rem } from '@/lib/rem'
 import { cn } from '@/lib/utils'
 import {
   clampToViewport,
@@ -65,7 +66,7 @@ import { type PanelDefinition, panelRegistry } from './registry'
 const STORAGE_KEY = 'neos-studio.panel_layout'
 const SECONDARY_COLLAPSED_KEY = 'neos-studio.secondary_collapsed'
 const SECONDARY_WIDTH_KEY = 'neos-studio.secondary_width'
-const SECONDARY_DEFAULT_WIDTH = 320
+const SECONDARY_DEFAULT_WIDTH = rem(20)
 const DRAG_THRESHOLD = 5
 
 /** A boolean flag persisted to localStorage under `key`. */

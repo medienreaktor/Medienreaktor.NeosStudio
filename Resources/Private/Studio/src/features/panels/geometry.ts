@@ -1,3 +1,5 @@
+import { rem } from '@/lib/rem'
+
 /**
  * Shared geometry for floating panel groups: viewport clamping and
  * edge/corner resizing.
@@ -5,9 +7,9 @@
 
 export type PanelRect = { x: number; y: number; width: number; height: number }
 
-export const MIN_WIDTH = 240
-export const MIN_HEIGHT = 160
-export const VIEWPORT_MARGIN = 8
+export const MIN_WIDTH = rem(15)
+export const MIN_HEIGHT = rem(10)
+export const VIEWPORT_MARGIN = rem(0.5)
 
 export function clampToViewport(rect: PanelRect): PanelRect {
   const width = Math.min(

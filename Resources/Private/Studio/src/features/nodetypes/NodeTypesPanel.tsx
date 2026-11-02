@@ -10,6 +10,7 @@ import { SearchInput } from '@/components/ui/search-input'
 import { LoadingState } from '@/components/ui/spinner'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
+import { rem } from '@/lib/rem'
 import { cn, floatingControl } from '@/lib/utils'
 import {
   buildCardModels,
@@ -36,10 +37,10 @@ import {
  * measure-then-layout round trip.
  */
 
-const HEADER_HEIGHT = 54
-/** The CollapsibleGroup summary: py-2 + one type-overline line, plus the border-t. */
-const SECTION_HEADER_HEIGHT = 27
-const ROW_HEIGHT = 18
+const HEADER_HEIGHT = rem(3.375)
+/** The CollapsibleGroup summary: py-2 + one type-overline line, plus the 1px border-t. */
+const SECTION_HEADER_HEIGHT = rem(1.625) + 1
+const ROW_HEIGHT = rem(1.125)
 /** Edges attach at the header's vertical center. */
 const EDGE_ANCHOR_Y = HEADER_HEIGHT / 2
 

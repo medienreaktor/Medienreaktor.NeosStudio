@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
+import { rem } from '@/lib/rem'
 import { cn } from '@/lib/utils'
 import { BranchHistoryPanel } from './BranchHistoryPanel'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
@@ -46,7 +47,7 @@ import {
 
 /** Poll cadence while the panel is actually visible. */
 const REFRESH_INTERVAL = 30_000
-const DOT_RADIUS = 6
+const DOT_RADIUS = rem(0.375)
 
 const CLASSIFICATION_ICONS: Record<string, string> = {
   ROOT: 'fas fa-earth-americas text-foreground',
@@ -152,7 +153,7 @@ const GraphSurface = memo(function GraphSurface({
             <text
               key={`${branch.workspace.name}:truncated`}
               x={branch.startX + DOT_SPACING * 0.5}
-              y={branch.y + 4}
+              y={branch.y + rem(0.25)}
               textAnchor="middle"
               className="fill-muted-foreground type-small-strong tracking-widest"
               opacity={dimmed(branch.workspace.name) ? 0.2 : 1}
@@ -280,7 +281,7 @@ const GraphSurface = memo(function GraphSurface({
                   dimmed(workspace.name) && 'opacity-30',
                 )}
                 style={{
-                  left: branch.cardX + 10,
+                  left: branch.cardX + rem(0.625),
                   // The tab's bottom overlaps the card's 2px top border, so
                   // the (opaque) surfaces merge seamlessly.
                   top: branch.cardY + 2,
