@@ -6,7 +6,9 @@ namespace Medienreaktor\NeosStudio\Controller\Api;
 
 use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
+use Medienreaktor\NeosStudio\Domain\Model\ReviewComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
+use Medienreaktor\NeosStudio\Service\TaskWorkspaceInUseException;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
@@ -136,6 +138,7 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, write: true);
 
+        $this->requireTextLength($comment);
         $this->taskWorkspaceService->submitForReview($this->getContentRepositoryId(), $name, $user->getId(), trim($comment));
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
@@ -203,6 +206,7 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, write: true);
 
+        $this->requireTextLength($reason);
         $this->taskWorkspaceService->reopenTask($this->getContentRepositoryId(), $name, $user->getId(), trim($reason));
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
@@ -221,12 +225,24 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, manage: true);
 
-        $this->taskWorkspaceService->deleteTaskWorkspace($this->getContentRepositoryId(), $name);
+        try {
+            $this->taskWorkspaceService->deleteTaskWorkspace($this->getContentRepositoryId(), $name);
+        } catch (TaskWorkspaceInUseException $e) {
+            $this->throwJsonStatus(409, 'task_in_use', $e->getMessage());
+        }
 
         return $this->json(['deleted' => $workspaceName]);
     }
 
     // ------------------
+
+    /** Review notes and reasons join the thread - the comments' limit applies. */
+    private function requireTextLength(string $text): void
+    {
+        if (mb_strlen(trim($text)) > ReviewComment::MAX_TEXT_LENGTH) {
+            $this->throwJsonStatus(400, 'comment_too_long', sprintf('A comment may have at most %d characters.', ReviewComment::MAX_TEXT_LENGTH));
+        }
+    }
 
     private function parseWorkspaceName(string $workspaceName): WorkspaceName
     {

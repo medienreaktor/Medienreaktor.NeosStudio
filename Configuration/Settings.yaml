@@ -88,7 +88,9 @@ Medienreaktor:
 
       # Where a new task branch hangs, and therefore where publishing OUT of a
       # task lands. null = derive it from the creator's own personal workspace
-      # base, which is the workspace they publish into anyway.
+      # base, which is the workspace they publish into anyway (below the task
+      # they are working on, if any). A configured workspace the creator may
+      # not read is passed over the same way.
       #
       # Set this wherever the editorial flow runs through a shared draft: a
       # task based on live bypasses that draft entirely, so publishing a task
@@ -96,7 +98,9 @@ Medienreaktor:
       # publishing means anywhere else in the UI. Deriving it per creator is
       # not enough there either, because personal workspaces are often based
       # on live themselves.
-      # defaultBaseWorkspace: 'entwurf'
+      #
+      # Example: defaultBaseWorkspace: 'entwurf'
+      defaultBaseWorkspace: null
 
   # Contribute the task metadata to the NeosApi workspace JSON: appears as
   # workspace.extensions['Medienreaktor.NeosStudio:task'] and drives the task

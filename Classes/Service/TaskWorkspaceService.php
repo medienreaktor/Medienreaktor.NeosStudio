@@ -10,10 +10,13 @@ use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
 use Medienreaktor\NeosStudio\Domain\Repository\ReviewCommentRepository;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
+use Neos\ContentRepository\Core\Feature\WorkspaceModification\Command\ChangeBaseWorkspace;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\Workspace;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Domain\Model\UserId;
 use Neos\Neos\Domain\Model\WorkspaceDescription;
 use Neos\Neos\Domain\Model\WorkspaceRole;
@@ -78,6 +81,12 @@ final class TaskWorkspaceService
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
 
+    #[Flow\Inject]
+    protected AccessControlService $accessControlService;
+
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
+
     public function getTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): ?TaskWorkspace
     {
         return $this->taskWorkspaceRepository->findByWorkspaceName($contentRepositoryId, $workspaceName);
@@ -103,6 +112,13 @@ final class TaskWorkspaceService
      * "derive it from the creator" reproduce exactly the setup it is meant to
      * avoid. Live remains the last resort - it is the one workspace that is
      * always there.
+     *
+     * The configured workspace only counts when the creator may read it -
+     * creating a branch on a base they cannot read is refused by the content
+     * repository. Derived from the creator, it is the first workspace below
+     * their personal one that is not a task: working on a task re-bases the
+     * personal workspace onto that task, and a new task must not silently
+     * stack on top of the one they happen to be on.
      */
     public function defaultBaseWorkspaceName(ContentRepositoryId $contentRepositoryId, UserId $creatorUserId): WorkspaceName
     {
@@ -110,7 +126,9 @@ final class TaskWorkspaceService
         if ($this->defaultBaseWorkspace !== null && $this->defaultBaseWorkspace !== '') {
             try {
                 $configured = WorkspaceName::fromString($this->defaultBaseWorkspace);
-                if ($contentRepository->findWorkspaceByName($configured) !== null) {
+                if ($contentRepository->findWorkspaceByName($configured) !== null
+                    && $this->accessControlService->canReadWorkspace($contentRepositoryId, $configured, $creatorUserId)
+                ) {
                     return $configured;
                 }
             } catch (\InvalidArgumentException) {
@@ -121,11 +139,20 @@ final class TaskWorkspaceService
 
         try {
             $personal = $this->workspaceService->getPersonalWorkspaceForUser($contentRepositoryId, $creatorUserId);
-
-            return $personal->baseWorkspaceName ?? WorkspaceName::forLive();
         } catch (\Exception) {
             return WorkspaceName::forLive();
         }
+        $base = $personal->baseWorkspaceName;
+        // Bounded: a base chain is short, and a cycle would be a corrupt
+        // repository - not a reason to hang the request.
+        for ($depth = 0; $base !== null && $depth < 16; $depth++) {
+            if ($this->taskWorkspaceRepository->findByWorkspaceName($contentRepositoryId, $base) === null) {
+                return $base;
+            }
+            $base = $contentRepository->findWorkspaceByName($base)?->baseWorkspaceName;
+        }
+
+        return WorkspaceName::forLive();
     }
 
     public function createTaskWorkspace(
@@ -347,10 +374,43 @@ final class TaskWorkspaceService
      * Delete the task workspace (content repository workspace + sidecar).
      * The lifecycle hook also removes the sidecar when the workspace is
      * deleted through other channels.
+     *
+     * Working on a task re-bases the worker's personal workspace onto it, and
+     * the content repository deletes a workspace without asking who builds on
+     * it - a workspace left on a deleted base can neither publish, discard nor
+     * be re-based again. So the workspaces based on the task move down to the
+     * task's own base first. That is a system action of the delete, which the
+     * caller was already allowed: it runs whatever the workers' own workspaces
+     * would let the caller do. A workspace still holding changes cannot move;
+     * the task stays until its worker has published or discarded them.
+     *
+     * @throws TaskWorkspaceInUseException
      */
     public function deleteTaskWorkspace(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
     {
         $this->requireTask($contentRepositoryId, $workspaceName);
+        $contentRepository = $this->contentRepositoryRegistry->get($contentRepositoryId);
+        $dependents = array_values(array_filter(
+            iterator_to_array($contentRepository->findWorkspaces()),
+            static fn (Workspace $workspace) => $workspace->baseWorkspaceName?->equals($workspaceName) ?? false,
+        ));
+        $busy = array_filter($dependents, static fn (Workspace $workspace) => $workspace->hasPublishableChanges());
+        if ($busy !== []) {
+            throw new TaskWorkspaceInUseException(
+                sprintf(
+                    'The task is still worked on with unpublished changes in %s. Those changes have to be published or discarded first.',
+                    implode(', ', array_map(fn (Workspace $workspace) => sprintf('"%s"', $this->workspaceTitle($contentRepositoryId, $workspace->workspaceName)), $busy)),
+                ),
+                1762099200,
+            );
+        }
+        $newBase = $contentRepository->findWorkspaceByName($workspaceName)->baseWorkspaceName ?? WorkspaceName::forLive();
+        $this->securityContext->withoutAuthorizationChecks(function () use ($contentRepository, $dependents, $newBase): void {
+            foreach ($dependents as $dependent) {
+                $contentRepository->handle(ChangeBaseWorkspace::create($dependent->workspaceName, $newBase));
+            }
+        });
+
         $this->workspaceService->deleteWorkspace($contentRepositoryId, $workspaceName);
         $this->taskWorkspaceRepository->remove($contentRepositoryId, $workspaceName);
         $this->reviewCommentRepository->removeForWorkspace($contentRepositoryId, $workspaceName);
