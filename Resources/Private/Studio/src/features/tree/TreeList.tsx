@@ -159,7 +159,7 @@ export function TreeList<T>({
             {!isRoot && (
               <span
                 className={cn(
-                  'flex size-5 shrink-0 items-center justify-center rounded-sm type-small text-muted-foreground',
+                  'flex size-4.5 shrink-0 items-center justify-center rounded-sm type-small text-muted-foreground',
                   item.isFolder() && 'hover:bg-accent hover:text-foreground',
                 )}
                 onClick={(e) => {
@@ -251,13 +251,13 @@ function TreeListSkeleton({ label }: { label?: string }) {
       {SKELETON_ROWS.map((row, index) => (
         <div
           key={index}
-          className="flex h-6 items-center gap-1.5"
+          className="flex h-5.5 items-center gap-1.5"
           style={{
             paddingLeft: `${row.level * 0.875 + 0.25}rem`,
             opacity: 1 - index * 0.13,
           }}
         >
-          <Skeleton className="size-4 shrink-0" />
+          <Skeleton className="size-3.5 shrink-0" />
           <Skeleton className="h-3" style={{ width: row.width }} />
         </div>
       ))}

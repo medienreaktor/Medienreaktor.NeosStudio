@@ -97,7 +97,7 @@ export function EditWorkspaceDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field
             label={t('workspacesAdmin.title2', 'Title')}
             htmlFor="workspace-edit-title"

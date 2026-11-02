@@ -93,7 +93,7 @@ export function WorkspacesAdministration() {
   )
 
   return (
-    <div className="p-6 pt-3">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('workspacesAdmin.title', 'Workspaces')}
         subtitle={t(
@@ -114,14 +114,14 @@ export function WorkspacesAdministration() {
             'workspacesAdmin.unavailable',
             'Workspaces are currently unavailable.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -301,7 +301,7 @@ function WorkspaceRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         {workspace.permissions.manage && (
           <DropdownMenu>
             <DropdownMenuTrigger

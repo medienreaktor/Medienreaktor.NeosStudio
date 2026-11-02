@@ -91,7 +91,7 @@ export function ResetPasswordDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field
             label={t('users.newPassword', 'New password')}
             htmlFor="user-reset-password"

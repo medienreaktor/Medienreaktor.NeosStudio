@@ -187,7 +187,7 @@ function AssetRow({
         className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
         aria-hidden
       />
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-card">
+      <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded bg-card">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (

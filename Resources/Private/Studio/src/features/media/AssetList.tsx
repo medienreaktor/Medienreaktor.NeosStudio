@@ -65,9 +65,9 @@ export function AssetList({
   }
 
   return (
-    <div className="min-h-0 flex-1 pt-14 overflow-y-auto @container">
+    <div className="min-h-0 flex-1 pt-13 overflow-y-auto @container">
       {view === 'grid' ? (
-        <div className="grid grid-cols-2 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6 @[56rem]:grid-cols-7 @[64rem]:grid-cols-8 @[72rem]:grid-cols-9 @[80rem]:grid-cols-10 gap-2 p-3 pt-0">
+        <div className="grid grid-cols-2 @[22.5rem]:grid-cols-3 @[30rem]:grid-cols-4 @[37.5rem]:grid-cols-5 @[45rem]:grid-cols-6 @[52.5rem]:grid-cols-7 @[60rem]:grid-cols-8 @[67.5rem]:grid-cols-9 @[75rem]:grid-cols-10 gap-2 p-3 pt-0">
           {assets.map((asset) => (
             <GridCard
               key={assetKey(asset)}
@@ -118,7 +118,7 @@ export function AssetList({
 
       <div ref={sentinelRef} />
       {isFetchingNextPage && (
-        <div className="flex items-center justify-center gap-2 p-4 type-small text-muted-foreground">
+        <div className="flex items-center justify-center gap-2 p-3.5 type-small text-muted-foreground">
           <Spinner className="type-body" />
           {t('media.loadingMore', 'Loading more…')}
         </div>
@@ -205,8 +205,8 @@ function ListRow({
     >
       <td className="px-3 py-1">
         <div className="flex items-center gap-2">
-          <div className="grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-background/50">
-            <AssetThumb asset={asset} className="size-5" />
+          <div className="grid size-7.5 shrink-0 place-items-center overflow-hidden rounded bg-background/50">
+            <AssetThumb asset={asset} className="size-4.5" />
           </div>
           <span className="truncate text-foreground">{asset.label}</span>
         </div>

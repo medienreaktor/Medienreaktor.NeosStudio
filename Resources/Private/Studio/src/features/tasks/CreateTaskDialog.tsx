@@ -146,7 +146,7 @@ export function CreateTaskDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field label={t('tasks.title', 'Title')} htmlFor="task-create-title">
             <Input
               id="task-create-title"
@@ -169,7 +169,7 @@ export function CreateTaskDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('tasks.baseWorkspace', 'Based on')}
               htmlFor="task-create-base"

@@ -69,7 +69,7 @@ export function NotificationBell() {
               })
             : t('notifications.label', 'Notifications')
         }
-        className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+        className="relative flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
         <i className="fas fa-bell type-icon-l" aria-hidden />
         {unreadCount > 0 && (
@@ -78,7 +78,7 @@ export function NotificationBell() {
           </span>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-75">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center justify-between">
             <span className="font-medium text-foreground">
@@ -97,11 +97,11 @@ export function NotificationBell() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {notifications.length === 0 ? (
-            <div className="px-3 py-6 text-center type-body text-muted-foreground">
+            <div className="px-3 py-5.5 text-center type-body text-muted-foreground">
               {t('notifications.empty', 'No notifications.')}
             </div>
           ) : (
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-90 overflow-y-auto">
               {notifications.map((notification) => (
                 <NotificationRow
                   key={notification.id}

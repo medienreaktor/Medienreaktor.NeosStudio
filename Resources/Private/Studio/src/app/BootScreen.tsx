@@ -34,7 +34,7 @@ export function BootScreen({ done = false }: { done?: boolean }) {
       )}
     >
       <div
-        className="size-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
+        className="size-15 animate-spin rounded-full border-4 border-primary border-t-transparent"
         style={{ animationDelay }}
       />
     </div>

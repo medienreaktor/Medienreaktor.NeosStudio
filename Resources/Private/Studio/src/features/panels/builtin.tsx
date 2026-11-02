@@ -165,7 +165,7 @@ function DocumentsPanel() {
       />
       {/* pt-14 clears the absolute toolbar (56px) so content starts below it
           and scrolls underneath its gradient. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 pt-14">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 pt-13">
         {filtering && (
           <DocumentSearchList
             site={site}

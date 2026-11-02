@@ -102,7 +102,7 @@ export function PublishReviewButton({
           }
         >
           <i className="fas fa-fw fa-check" aria-hidden />
-          <span className="hidden @[56rem]:inline">
+          <span className="hidden @[52.5rem]:inline">
             {t('workspace.reviewAndPublish', 'Review and publish')}
           </span>
         </Button>

@@ -85,8 +85,8 @@ export function TaskViewDialog({
         {/* The header carries everything about the task itself - title +
             status, description, assignee, actions; the body below is the
             conversation. The dialog's built-in X closes it. */}
-        <DialogHeader className="gap-3 border-b border-divider pb-4">
-          <div className="min-w-0 pr-8">
+        <DialogHeader className="gap-3 border-b border-divider pb-3.5">
+          <div className="min-w-0 pr-7.5">
             <DialogTitle className="flex items-center gap-2">
               {task?.workspace?.title || task?.workspaceName}
               {task && (
@@ -113,7 +113,7 @@ export function TaskViewDialog({
               {task?.assignee ? (
                 <>
                   <span
-                    className="flex size-5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
+                    className="flex size-4.5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
                     style={{ backgroundColor: presenceColor(task.assignee) }}
                   >
                     {presenceInitials(assigneeLabel ?? '?')}
@@ -122,7 +122,7 @@ export function TaskViewDialog({
                 </>
               ) : (
                 <>
-                  <span className="flex size-5 items-center justify-center rounded-full bg-border type-caption text-muted-foreground select-none">
+                  <span className="flex size-4.5 items-center justify-center rounded-full bg-border type-caption text-muted-foreground select-none">
                     ?
                   </span>
                   <span className="text-muted-foreground">
@@ -201,7 +201,7 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
         {t('tasks.comments', 'Comments')}
       </div>
 
-      <div className="mt-2 flex max-h-64 flex-col gap-3 overflow-y-auto">
+      <div className="mt-2 flex max-h-60 flex-col gap-3 overflow-y-auto">
         {comments.length === 0 && (
           <div className="type-small text-muted-foreground">
             {t('tasks.noComments', 'No comments yet.')}
@@ -210,7 +210,7 @@ function TaskComments({ workspaceName }: { workspaceName: string | null }) {
         {comments.map((comment) => (
           <div key={comment.id} className="flex items-start gap-2">
             <span
-              className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full type-count text-presence-foreground select-none"
+              className="mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full type-count text-presence-foreground select-none"
               style={{
                 backgroundColor: comment.author
                   ? presenceColor(comment.author)

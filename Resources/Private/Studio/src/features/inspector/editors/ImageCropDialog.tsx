@@ -254,7 +254,7 @@ export function ImageCropDialog({
               aria-hidden
             />
           ) : !dimsKnown || !original.previewUri ? (
-            <span className="py-12 type-body text-muted-foreground">
+            <span className="py-11 type-body text-muted-foreground">
               {t('editor.crop.cannotCrop', 'This image cannot be cropped.')}
             </span>
           ) : (

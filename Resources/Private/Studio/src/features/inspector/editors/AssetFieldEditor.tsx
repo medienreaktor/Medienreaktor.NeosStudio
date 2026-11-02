@@ -113,7 +113,7 @@ export function AssetFieldEditor({
       <button
         type="button"
         onClick={select}
-        className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-4 type-body text-muted-foreground hover:border-placeholder hover:text-foreground"
+        className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-3.5 type-body text-muted-foreground hover:border-placeholder hover:text-foreground"
       >
         <i className={`fas ${iconClass} type-icon-xl`} aria-hidden />
         {kind === 'image'
@@ -132,16 +132,16 @@ export function AssetFieldEditor({
     return (
       <div>
         <div className="group relative overflow-hidden rounded-md border border-border bg-background">
-          <div className="flex min-h-24 items-center justify-center p-2">
+          <div className="flex min-h-22.5 items-center justify-center p-2">
             {asset ? (
-              <AssetThumb asset={asset} preview className="max-h-48" />
+              <AssetThumb asset={asset} preview className="max-h-45" />
             ) : loading ? (
               <i
                 className="fas fa-spinner fa-spin type-icon-2xl text-muted-foreground"
                 aria-hidden
               />
             ) : (
-              <span className="py-6 type-small text-muted-foreground">
+              <span className="py-5.5 type-small text-muted-foreground">
                 {t('editor.assetNotFound', 'Asset not found')}
               </span>
             )}
@@ -202,7 +202,7 @@ export function AssetFieldEditor({
 
   return (
     <div className="flex items-center gap-3 rounded-md border border-border bg-background p-2">
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-card">
+      <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded bg-card">
         {asset ? (
           <AssetThumb asset={asset} />
         ) : loading ? (

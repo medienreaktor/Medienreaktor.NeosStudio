@@ -297,7 +297,7 @@ const GraphSurface = memo(function GraphSurface({
                 }}
                 title={t('workspaceGraph.youAreHere', 'You are here')}
               >
-                <span className="type-small-strong tracking-widest text-graph-foreground">
+                <span className="type-small-strong leading-none tracking-widest text-graph-foreground">
                   HEAD
                 </span>
               </div>

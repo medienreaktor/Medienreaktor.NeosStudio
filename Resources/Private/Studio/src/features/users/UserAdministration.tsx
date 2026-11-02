@@ -78,7 +78,7 @@ export function UserAdministration() {
   }, [data, search])
 
   return (
-    <div className="p-6 pt-3">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('users.title', 'Users')}
         subtitle={t('users.subtitle', 'Backend user accounts.')}
@@ -93,7 +93,7 @@ export function UserAdministration() {
         <Placeholder
           icon="fa-triangle-exclamation"
           title={t('users.unavailable', 'Users are currently unavailable.')}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
@@ -105,7 +105,7 @@ export function UserAdministration() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.search', 'Search users…')}
-            wrapperClassName="mb-3 max-w-xs"
+            wrapperClassName="mb-3 max-w-75"
           />
 
           {users.length === 0 ? (
@@ -116,7 +116,7 @@ export function UserAdministration() {
                   ? t('users.noMatches', 'No users match your search.')
                   : t('users.none', 'No users found.')
               }
-              className="py-10"
+              className="py-9.5"
             />
           ) : (
             <div className="rounded-md border">
@@ -283,7 +283,7 @@ function UserRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -345,7 +345,7 @@ function UserTableSkeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-10 w-full" />
+        <Skeleton key={i} className="h-9.5 w-full" />
       ))}
     </div>
   )

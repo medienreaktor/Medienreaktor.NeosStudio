@@ -78,7 +78,7 @@ function DrawerContent({
           data-slot="drawer-content"
           className={cn(
             // mr-4 keeps the drawer clear of the page's scrollbar.
-            'pointer-events-auto mt-2 mr-4 mb-2 flex w-96 max-w-[calc(100vw-3rem)] flex-col overflow-y-auto overscroll-contain rounded-lg border bg-card text-foreground shadow-lg outline-none',
+            'pointer-events-auto mt-2 mr-3.5 mb-2 flex w-90 max-w-[calc(100vw-3rem)] flex-col overflow-y-auto overscroll-contain rounded-lg border bg-card text-foreground shadow-lg outline-none',
             // Swipe follows the pointer; open/close slide via the
             // starting/ending styles, close duration scaled by swipe strength.
             // The extra 1rem clears the right margin so the closed drawer
@@ -102,7 +102,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn('flex flex-col gap-0.5 p-4', className)}
+      className={cn('flex flex-col gap-0.5 p-3.5', className)}
       {...props}
     />
   )
@@ -112,7 +112,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn('mt-auto flex flex-col gap-2 p-4', className)}
+      className={cn('mt-auto flex flex-col gap-2 p-3.5', className)}
       {...props}
     />
   )

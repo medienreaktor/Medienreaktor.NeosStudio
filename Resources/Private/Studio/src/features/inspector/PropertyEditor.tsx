@@ -175,7 +175,7 @@ function HintPopover({
       >
         <i className={cn('fas type-icon-m', icon)} aria-hidden />
       </PopoverTrigger>
-      <PopoverContent className="max-w-72 py-2 px-3 type-small">
+      <PopoverContent className="max-w-67.5 py-2 px-3 type-small leading-relaxed">
         {children}
       </PopoverContent>
     </Popover>
@@ -243,7 +243,7 @@ function ReadOnlyValue({
 }) {
   return (
     <div
-      className="min-h-9 rounded-md border border-dashed border-border px-3 py-2 type-body wrap-break-word whitespace-pre-wrap text-muted-foreground"
+      className="min-h-8.5 rounded-md border border-dashed border-border px-3 py-2 type-body wrap-break-word whitespace-pre-wrap text-muted-foreground"
       title={t(
         'inspector.editorNotSupported',
         'Editor not supported yet: {0}',

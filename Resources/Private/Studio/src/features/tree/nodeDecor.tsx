@@ -70,7 +70,7 @@ export function nodeDecor(
       <span
         key={`presence-${peer.userId}`}
         title={t('tree.decor.editingHere', '{0} is here', [peer.name])}
-        className="flex size-4 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
+        className="flex size-3.5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
         style={{ backgroundColor: peer.color }}
       >
         {peer.initials}

@@ -110,8 +110,8 @@ export const DateTimeEditor: PropertyEditorComponent = ({
             <Button
               variant="outline"
               className={cn(
-                'h-9 w-full justify-start px-3 font-normal',
-                date ? 'pr-8' : undefined,
+                'h-8.5 w-full justify-start px-3 font-normal',
+                date ? 'pr-7.5' : undefined,
               )}
             />
           }
@@ -210,7 +210,7 @@ function MonthCalendar({
   )
 
   return (
-    <div className="w-64">
+    <div className="w-60">
       <div className="mb-2 flex items-center justify-between">
         <Button
           variant="ghost"
@@ -246,7 +246,7 @@ function MonthCalendar({
               type="button"
               onClick={() => onSelect(day)}
               className={cn(
-                'flex h-8 items-center justify-center rounded-md type-body',
+                'flex h-7.5 items-center justify-center rounded-md type-body',
                 outside ? 'text-placeholder' : 'text-foreground',
                 isSelected
                   ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -301,7 +301,7 @@ function TimePicker({
           value={String(hours)}
           onValueChange={(next) => onChange(Number(next), minutes)}
         >
-          <SelectTrigger size="sm" className="w-16">
+          <SelectTrigger size="sm" className="w-15">
             <SelectValue>{() => pad(hours)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -317,7 +317,7 @@ function TimePicker({
           value={String(minutes)}
           onValueChange={(next) => onChange(hours, Number(next))}
         >
-          <SelectTrigger size="sm" className="w-16">
+          <SelectTrigger size="sm" className="w-15">
             <SelectValue>{() => pad(minutes)}</SelectValue>
           </SelectTrigger>
           <SelectContent>

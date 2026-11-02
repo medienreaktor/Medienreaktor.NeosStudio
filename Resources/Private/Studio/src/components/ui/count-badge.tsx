@@ -29,7 +29,7 @@ function CountBadge({
     <span
       data-slot="count-badge"
       className={cn(
-        'flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1 type-small-strong tabular-nums',
+        'flex h-4.5 min-w-4.5 shrink-0 items-center justify-center rounded-full px-1 type-small-strong tabular-nums',
         VARIANTS[variant],
         className,
       )}

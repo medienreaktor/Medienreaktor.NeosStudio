@@ -238,7 +238,7 @@ export function CreateNodeFlow({
         </DialogHeader>
 
         <form
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3.5"
           onSubmit={(event) => {
             event.preventDefault()
             if (!creating && !hasErrors) void submit(values)

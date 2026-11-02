@@ -136,7 +136,7 @@ export function LinkEditorDialog({
                 // blow the dialog past the viewport instead of honoring h-80.
                 // No padding here - each tab owns its own (p-3), so the media
                 // tab can scroll edge-to-edge under its overlay header.
-                className="h-80 max-h-[50vh] min-h-0 flex-none"
+                className="h-75 max-h-[50vh] min-h-0 flex-none"
               >
                 <type.component
                   href={drafts[type.id] ?? null}
@@ -150,7 +150,7 @@ export function LinkEditorDialog({
         )}
 
         {withOptions && (
-          <fieldset className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <fieldset className="grid grid-cols-2 gap-x-3.5 gap-y-3">
             <legend className="sr-only">
               {t('link.options', 'Link options')}
             </legend>
@@ -174,7 +174,7 @@ export function LinkEditorDialog({
                 value={cssClass}
                 onChange={(event) => setCssClass(event.target.value)}
                 placeholder={t('link.cssClassPlaceholder', 'e.g. button')}
-                className="h-8 type-body"
+                className="h-7.5 type-body"
               />
             </label>
             <label className="flex flex-col gap-1 type-small text-muted-foreground">
@@ -183,7 +183,7 @@ export function LinkEditorDialog({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={t('link.titlePlaceholder', 'Shown as tooltip')}
-                className="h-8 type-body"
+                className="h-7.5 type-body"
               />
             </label>
           </fieldset>

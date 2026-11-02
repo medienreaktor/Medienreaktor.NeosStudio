@@ -313,7 +313,7 @@ export function InspectorPanel({
   if (isDeleted(node)) {
     return (
       <div className="type-body">
-        <div className="px-3 py-4">
+        <div className="px-3 py-3.5">
           <h2 className="flex items-center gap-2 font-semibold">
             <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
             {nodeLabel(node)}
@@ -332,7 +332,7 @@ export function InspectorPanel({
 
   return (
     <div className="type-body">
-      <div className="py-4 px-3">
+      <div className="py-3.5 px-3">
         <h2 className="flex items-center gap-2 font-semibold">
           <NodeTypeIcon nodeTypes={nodeTypes} nodeTypeName={node.nodeType} />
           {nodeLabel(node)}
@@ -398,7 +398,7 @@ export function InspectorPanel({
                         // the same footprint the icon button and the toggle
                         // use for an icon-only control; min-w rather than a
                         // square so a tab showing an error badge can grow.
-                        className="h-9 min-w-9 flex-none px-2"
+                        className="h-8.5 min-w-8.5 flex-none px-2"
                       >
                         {tab.icon && <FaIcon icon={tab.icon} />}
                         {/* Hidden, never dropped: the title attribute is not
@@ -409,7 +409,7 @@ export function InspectorPanel({
                         </span>
                         {errorCount > 0 && (
                           <span
-                            className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 type-count text-destructive-foreground"
+                            className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-1 type-count text-destructive-foreground"
                             title={
                               errorCount === 1
                                 ? t(
@@ -435,7 +435,7 @@ export function InspectorPanel({
                   <TabsContent
                     key={tab.id}
                     value={tab.id}
-                    className="space-y-4"
+                    className="space-y-3.5"
                   >
                     {tab.groups.map((group) => (
                       <PropertyGroup
@@ -568,7 +568,7 @@ function PropertyGroup({
           {group.label}
         </>
       }
-      bodyClassName="space-y-4"
+      bodyClassName="space-y-3.5"
     >
       {group.items.map((item) =>
         item.kind === 'property' ? (

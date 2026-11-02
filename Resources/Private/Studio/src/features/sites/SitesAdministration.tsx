@@ -62,7 +62,7 @@ export function SitesAdministration() {
   const deleting = sites.find((s) => s.nodeName === deletingNodeName) ?? null
 
   return (
-    <div className="p-6 pt-3">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('sites.title', 'Sites')}
         subtitle={t('sites.subtitle', 'Websites served by this installation.')}
@@ -77,14 +77,14 @@ export function SitesAdministration() {
         <Placeholder
           icon="fa-triangle-exclamation"
           title={t('sites.unavailable', 'Sites are currently unavailable.')}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -93,7 +93,7 @@ export function SitesAdministration() {
         <Placeholder
           icon="fa-globe"
           title={t('sites.none', 'No sites found.')}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
@@ -237,7 +237,7 @@ function SiteRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

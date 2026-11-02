@@ -112,8 +112,8 @@ export function EditUserDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('users.firstName', 'First name')}
               htmlFor="user-edit-first-name"

@@ -109,7 +109,7 @@ export function MediaBrowser({
             <Button variant="ghost" size="xs" onClick={onCancel}>
               {t('media.cancel', 'Cancel')}
               {/* Escape cancels too (see AssetPickerPanelBridge) - say so. */}
-              <kbd className="rounded border border-scrim-foreground/40 px-1 font-sans type-caption text-scrim-foreground/90">
+              <kbd className="rounded border border-scrim-foreground/40 px-1 font-sans type-caption leading-[0.9375rem] text-scrim-foreground/90">
                 Esc
               </kbd>
             </Button>

@@ -52,7 +52,7 @@ export function UiModePicker({
       ref={groupRef}
       role="radiogroup"
       aria-label={t('profile.uiMode', 'Appearance')}
-      className="flex gap-4"
+      className="flex gap-3.5"
       onKeyDown={onKeyDown}
     >
       {options.map(({ mode, label }) => {
@@ -121,7 +121,7 @@ function HalfThumbnail({ appearance }: { appearance: 'light' | 'dark' }) {
     <span data-theme={appearance} className="block" aria-hidden>
       <span
         className={cn(
-          'relative block h-16 w-24 overflow-hidden rounded-md bg-background',
+          'relative block h-15 w-22.5 overflow-hidden rounded-md bg-background',
           // "Wallpaper" behind the mini UI - a blue sweep echoing the brand.
           'bg-gradient-to-br from-primary/30 via-primary/50 to-variant/50',
         )}
@@ -131,9 +131,9 @@ function HalfThumbnail({ appearance }: { appearance: 'light' | 'dark' }) {
           <span className="absolute top-0.5 left-1 block size-1 rounded-full bg-placeholder" />
         </span>
         {/* Selection pill */}
-        <span className="absolute top-3.5 left-2 block h-2 w-14 rounded-[3px] border border-scrim-foreground/40 bg-primary" />
+        <span className="absolute top-3.5 left-2 block h-2 w-13 rounded-[3px] border border-scrim-foreground/40 bg-primary" />
         {/* Window with traffic lights */}
-        <span className="absolute -bottom-1 left-4 block h-6 w-16 rounded-t-md bg-background">
+        <span className="absolute -bottom-1 left-3.5 block h-5.5 w-15 rounded-t-md bg-background">
           <span className="absolute top-1.5 left-1.5 flex gap-1">
             <span className="size-1.5 rounded-full bg-destructive" />
             <span className="size-1.5 rounded-full bg-warning" />

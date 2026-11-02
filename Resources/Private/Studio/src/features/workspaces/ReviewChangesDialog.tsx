@@ -112,7 +112,7 @@ function DocumentDiff({
     documentId,
   )
   return (
-    <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 type-small">
+    <div className="mt-1 mb-2 ml-13 flex flex-col gap-2 type-small">
       {isLoading && (
         <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.loadingDiff', 'Loading changes…')}
@@ -453,7 +453,7 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={sourceItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
+                <SelectTrigger size="sm" className="min-w-37.5">
                   <SelectValue>
                     {(name: string | null) => {
                       const w = workspaces.find((c) => c.name === name)
@@ -488,7 +488,7 @@ export function ReviewChangesDialog({
               </Select>
             </div>
             <i
-              className="fas fa-arrow-right mt-4 type-icon-m text-muted-foreground"
+              className="fas fa-arrow-right mt-3.5 type-icon-m text-muted-foreground"
               aria-hidden
             />
             <div className="flex flex-col gap-1">
@@ -501,7 +501,7 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={targetItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
+                <SelectTrigger size="sm" className="min-w-37.5">
                   <SelectValue>
                     {(name: string | null) => {
                       const w = workspaces.find((c) => c.name === name)
@@ -556,13 +556,13 @@ export function ReviewChangesDialog({
             {isLoading ? (
               <LoadingState
                 label={t('workspace.review.loading', 'Loading changes…')}
-                className="py-8"
+                className="py-7.5"
               />
             ) : documents.length === 0 ? (
               <Placeholder
                 icon="fa-check"
                 title={t('workspace.review.empty', 'No pending changes.')}
-                className="py-8"
+                className="py-7.5"
               />
             ) : (
               <ul className="flex flex-col gap-px">
@@ -707,7 +707,7 @@ export function ReviewChangesDialog({
             )}
           </div>
 
-          <DialogFooter className="border-t border-divider pt-4">
+          <DialogFooter className="border-t border-divider pt-3.5">
             <Button
               variant="secondary"
               onClick={() => onOpenChange(false)}

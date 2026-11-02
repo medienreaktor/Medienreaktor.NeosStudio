@@ -311,7 +311,7 @@ function ReferencePicker({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         disabled={disabled}
-        className="flex h-9 w-full items-center gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body shadow-xs outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-8.5 w-full items-center gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body shadow-xs outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {triggerContent}
       </PopoverTrigger>
@@ -369,14 +369,14 @@ function ReferencePicker({
               }
             }}
             placeholder={translate('editor.searchPlaceholder', 'Search…')}
-            className="h-8 pl-8"
+            className="h-7.5 pl-7.5"
           />
         </div>
         <div
           ref={listRef}
           id={listboxId}
           role="listbox"
-          className="mt-1 max-h-64 overflow-y-auto"
+          className="mt-1 max-h-60 overflow-y-auto"
         >
           {loading ? (
             <div className="flex items-center gap-2 px-2 py-2 type-small text-muted-foreground">
@@ -502,7 +502,7 @@ function ReferenceEditorBase({
     // The creation dialog: the node does not exist yet, and references cannot
     // ride along in CreateNodeAggregateWithNode's property values.
     return (
-      <div className="flex min-h-9 items-center rounded-md border border-dashed border-border px-3 py-2 type-body text-muted-foreground">
+      <div className="flex min-h-8.5 items-center rounded-md border border-dashed border-border px-3 py-2 type-body text-muted-foreground">
         {translate(
           'editor.reference.afterCreation',
           'References can be set after creation',
@@ -624,7 +624,7 @@ function ReferenceEditorBase({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
+              'flex h-8.5 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
               dragIndex === index && 'opacity-50',
             )}
           >

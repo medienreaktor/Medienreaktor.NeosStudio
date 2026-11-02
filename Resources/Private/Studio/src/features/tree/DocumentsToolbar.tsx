@@ -85,7 +85,7 @@ export function DocumentsToolbar({
         >
           <i className="fas fa-filter" aria-hidden />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="max-h-80 w-64">
+        <DropdownMenuContent align="end" className="max-h-75 w-60">
           {/* GroupLabel must live inside a Group (Base UI error 31 otherwise). */}
           <DropdownMenuGroup>
             <DropdownMenuLabel>

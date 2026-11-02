@@ -31,11 +31,11 @@ export function LegacyModulesMenu() {
       <DropdownMenuTrigger
         aria-label={t('app.legacyModules', 'Backend modules')}
         title={t('app.legacyModules', 'Backend modules')}
-        className="flex size-9 type-default mt-1.5 -ml-2 mr-2 shrink-0 cursor-pointer items-center justify-center rounded-md text-foreground select-none hover:bg-transparent hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+        className="flex size-8.5 type-default mt-1.5 -ml-2 mr-2 shrink-0 cursor-pointer items-center justify-center rounded-md text-foreground select-none hover:bg-transparent hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
       >
         <i className="fas fa-bars" aria-hidden />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-56">
+      <DropdownMenuContent align="start" className="min-w-52.5">
         {modules.map((module, index) => (
           <DropdownMenuGroup key={module.uri}>
             {index > 0 && <DropdownMenuSeparator />}
@@ -44,7 +44,7 @@ export function LegacyModulesMenu() {
                 onClick={() => window.location.assign(module.uri)}
               >
                 <i
-                  className={`${module.icon || 'fas fa-puzzle-piece'} w-4 text-center`}
+                  className={`${module.icon || 'fas fa-puzzle-piece'} w-3.5 text-center`}
                   aria-hidden
                 />
                 {module.label}
@@ -58,7 +58,7 @@ export function LegacyModulesMenu() {
                     onClick={() => window.location.assign(submodule.uri)}
                   >
                     <i
-                      className={`${submodule.icon || 'fas fa-puzzle-piece'} w-4 text-center`}
+                      className={`${submodule.icon || 'fas fa-puzzle-piece'} w-3.5 text-center`}
                       aria-hidden
                     />
                     {submodule.label}

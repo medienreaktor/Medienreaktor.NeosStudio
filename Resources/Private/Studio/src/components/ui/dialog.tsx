@@ -75,11 +75,11 @@ const stackedDialogClassName =
 
 const dialogSizes = {
   /** Compact dialogs: confirmations, renames, short decision prompts */
-  sm: 'max-w-md',
+  sm: 'max-w-105',
   /** Working dialogs: node creation, pickers, editors */
-  lg: 'max-w-2xl',
+  lg: 'max-w-157.5',
   /** Reading dialogs: review changes with inline diffs */
-  xl: 'max-w-4xl',
+  xl: 'max-w-210',
 } as const
 
 function DialogContent({
@@ -106,7 +106,7 @@ function DialogContent({
           // to the right of the dialog's box, visibly so for anything with a
           // background or border. Capping the track at 1fr keeps it inside
           // the padding box, so those children scroll or wrap instead.
-          'fixed top-1/2 left-1/2 z-200 grid w-full grid-cols-[minmax(0,1fr)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-background p-6 shadow-lg data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
+          'fixed top-1/2 left-1/2 z-200 grid w-full grid-cols-[minmax(0,1fr)] -translate-x-1/2 -translate-y-1/2 gap-3.5 rounded-lg border border-border bg-background p-5.5 shadow-lg data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0',
           stackedDialogClassName,
           'data-nested-dialog-open:translate-y-[calc(-50%-0.5rem)] data-nested-dialog-open:scale-[0.97]',
           dialogSizes[size],
@@ -116,7 +116,7 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+          <DialogPrimitive.Close className="absolute top-3.5 right-3.5 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
             <i className="fas fa-xmark type-icon-xl" aria-hidden />
             <span className="sr-only">{t('common.close', 'Close')}</span>
           </DialogPrimitive.Close>

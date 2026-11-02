@@ -260,7 +260,7 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn('size-7', className)}
+      className={cn('size-6.5', className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -300,7 +300,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
       onClick={toggleSidebar}
       title={t('common.toggleSidebar', 'Toggle Sidebar')}
       className={cn(
-        'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-border sm:flex',
+        'absolute inset-y-0 z-20 hidden w-3.5 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-3.5 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-border sm:flex',
         'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
         '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
         'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-card',
@@ -335,7 +335,7 @@ function SidebarInput({
     <Input
       data-slot="sidebar-input"
       data-sidebar="input"
-      className={cn('h-8 w-full bg-background shadow-none', className)}
+      className={cn('h-7.5 w-full bg-background shadow-none', className)}
       {...props}
     />
   )
@@ -414,8 +414,8 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        'flex h-8 shrink-0 items-center rounded-md px-2 type-small-strong text-muted-foreground ring-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
-        'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0',
+        'flex h-7.5 shrink-0 items-center rounded-md px-2 type-small-strong text-muted-foreground ring-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-3.5 [&>svg]:shrink-0',
+        'group-data-[collapsible=icon]:-mt-7.5 group-data-[collapsible=icon]:opacity-0',
         className,
       )}
       {...props}
@@ -435,7 +435,7 @@ function SidebarGroupAction({
       data-slot="sidebar-group-action"
       data-sidebar="group-action"
       className={cn(
-        'absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-foreground ring-ring outline-hidden transition-transform hover:bg-accent hover:text-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+        'absolute top-3.5 right-3 flex aspect-square w-4.5 items-center justify-center rounded-md p-0 text-foreground ring-ring outline-hidden transition-transform hover:bg-accent hover:text-foreground focus-visible:ring-2 [&>svg]:size-3.5 [&>svg]:shrink-0',
         // Increases the hit area of the button on mobile.
         'after:absolute after:-inset-2 md:after:hidden',
         'group-data-[collapsible=icon]:hidden',
@@ -483,7 +483,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left type-body ring-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-accent hover:text-foreground focus-visible:ring-2 active:bg-accent active:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-foreground data-[state=open]:hover:bg-accent data-[state=open]:hover:text-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left type-body ring-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-7.5 group-data-[collapsible=icon]:size-7.5! group-data-[collapsible=icon]:p-2! hover:bg-accent hover:text-foreground focus-visible:ring-2 active:bg-accent active:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-foreground data-[state=open]:hover:bg-accent data-[state=open]:hover:text-foreground [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -492,9 +492,9 @@ const sidebarMenuButtonVariants = cva(
           'bg-background shadow-[0_0_0_1px_var(--color-border)] hover:bg-accent hover:text-foreground hover:shadow-[0_0_0_1px_var(--color-divider)]',
       },
       size: {
-        default: 'h-8 type-body',
-        sm: 'h-7 type-small',
-        lg: 'h-12 type-body group-data-[collapsible=icon]:p-0!',
+        default: 'h-7.5 type-body',
+        sm: 'h-6.5 type-small',
+        lg: 'h-11 type-body group-data-[collapsible=icon]:p-0!',
       },
     },
     defaultVariants: {
@@ -570,7 +570,7 @@ function SidebarMenuAction({
       data-slot="sidebar-menu-action"
       data-sidebar="menu-action"
       className={cn(
-        'absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-foreground ring-ring outline-hidden transition-transform peer-hover/menu-button:text-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+        'absolute top-1.5 right-1 flex aspect-square w-4.5 items-center justify-center rounded-md p-0 text-foreground ring-ring outline-hidden transition-transform peer-hover/menu-button:text-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 [&>svg]:size-3.5 [&>svg]:shrink-0',
         // Increases the hit area of the button on mobile.
         'after:absolute after:-inset-2 md:after:hidden',
         'peer-data-[size=sm]/menu-button:top-1',
@@ -595,7 +595,7 @@ function SidebarMenuBadge({
       data-slot="sidebar-menu-badge"
       data-sidebar="menu-badge"
       className={cn(
-        'pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-md px-1 type-small-strong text-foreground tabular-nums select-none',
+        'pointer-events-none absolute right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-md px-1 type-small-strong text-foreground tabular-nums select-none',
         'peer-hover/menu-button:text-foreground peer-data-[active=true]/menu-button:text-foreground',
         'peer-data-[size=sm]/menu-button:top-1',
         'peer-data-[size=default]/menu-button:top-1.5',
@@ -624,17 +624,17 @@ function SidebarMenuSkeleton({
     <div
       data-slot="sidebar-menu-skeleton"
       data-sidebar="menu-skeleton"
-      className={cn('flex h-8 items-center gap-2 rounded-md px-2', className)}
+      className={cn('flex h-7.5 items-center gap-2 rounded-md px-2', className)}
       {...props}
     >
       {showIcon && (
         <Skeleton
-          className="size-4 rounded-md"
+          className="size-3.5 rounded-md"
           data-sidebar="menu-skeleton-icon"
         />
       )}
       <Skeleton
-        className="h-4 max-w-(--skeleton-width) flex-1"
+        className="h-3.5 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
         style={
           {
@@ -695,7 +695,7 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        'flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-foreground ring-ring outline-hidden hover:bg-accent hover:text-foreground focus-visible:ring-2 active:bg-accent active:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-foreground',
+        'flex h-6.5 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-foreground ring-ring outline-hidden hover:bg-accent hover:text-foreground focus-visible:ring-2 active:bg-accent active:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0 [&>svg]:text-foreground',
         'data-[active=true]:bg-accent data-[active=true]:text-foreground',
         size === 'sm' && 'type-small',
         size === 'md' && 'type-body',

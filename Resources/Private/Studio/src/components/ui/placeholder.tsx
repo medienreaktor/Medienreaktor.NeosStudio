@@ -19,7 +19,7 @@ function Placeholder({
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground',
+        'flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-5.5 text-center text-muted-foreground',
         className,
       )}
       {...props}
@@ -30,7 +30,7 @@ function Placeholder({
           aria-hidden
         />
       )}
-      <p className="max-w-[24rem] type-small">{title}</p>
+      <p className="max-w-90 type-small leading-relaxed">{title}</p>
       {children}
     </div>
   )

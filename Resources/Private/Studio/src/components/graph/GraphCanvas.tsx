@@ -269,7 +269,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
             >
               <i className="fas fa-minus" aria-hidden />
             </Button>
-            <span className="w-10 text-center type-caption text-muted-foreground tabular-nums">
+            <span className="w-9.5 text-center type-caption text-muted-foreground tabular-nums">
               {Math.round(view.scale * 100)}%
             </span>
             <Button

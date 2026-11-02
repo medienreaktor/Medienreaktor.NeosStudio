@@ -55,7 +55,9 @@ export function PublishTargetBadge({ workspace }: { workspace: Workspace }) {
     <Badge variant="secondary" className={`gap-1.5 font-normal ${style}`}>
       <i className="fas fa-arrow-right type-icon-xs text-current" aria-hidden />
       <i className={`fas fa-fw ${icon} type-icon-s text-current`} aria-hidden />
-      <span className="hidden @[56rem]:inline max-w-40 truncate">{label}</span>
+      <span className="hidden @[52.5rem]:inline max-w-37.5 truncate">
+        {label}
+      </span>
     </Badge>
   )
 }

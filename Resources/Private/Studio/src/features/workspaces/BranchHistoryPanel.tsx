@@ -39,7 +39,7 @@ export function BranchHistoryPanel({
   return (
     // top-12 keeps the panel below the canvas' zoom control cluster, which
     // sits in the top-right corner above it.
-    <div className="absolute top-12 right-2 bottom-2 z-10 flex w-80 flex-col rounded-md border border-border bg-card/95 type-small shadow-lg backdrop-blur-xs">
+    <div className="absolute top-11 right-2 bottom-2 z-10 flex w-75 flex-col rounded-md border border-border bg-card/95 type-small shadow-lg backdrop-blur-xs">
       {/* Which branch this is, is said by the card the pick came from - the
           heading only names what the pane lists. */}
       <div className="flex items-center gap-2 border-b border-divider px-3 py-2">

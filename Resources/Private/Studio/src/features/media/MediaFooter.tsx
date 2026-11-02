@@ -68,7 +68,7 @@ function ViewToggle({
       title={label}
       aria-label={label}
       className={cn(
-        'grid size-8 place-items-center first:rounded-l-md last:rounded-r-md',
+        'grid size-7.5 place-items-center first:rounded-l-md last:rounded-r-md',
         active
           ? 'bg-border text-foreground'
           : 'text-muted-foreground hover:bg-accent',

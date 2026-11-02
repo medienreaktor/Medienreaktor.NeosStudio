@@ -86,7 +86,7 @@ function ModalHost({
         <DialogPrimitive.Popup
           data-slot="modal-content"
           className={cn(
-            'fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-lg data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0',
+            'fixed inset-7.5 md:inset-30 z-200 flex flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-lg data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0',
             // Sections open their own dialogs (edit a role, a site, a user...)
             // on top of this modal; while one is open the modal steps back
             // behind a veil, see stackedDialogClassName.
@@ -117,7 +117,7 @@ function ModalHeader({
   children?: React.ReactNode
 }) {
   return (
-    <header className="flex shrink-0 items-center gap-3 px-4 py-2.5">
+    <header className="flex shrink-0 items-center gap-3 px-3.5 py-2.5">
       <DialogPrimitive.Title className="type-heading-m text-foreground">
         {title}
       </DialogPrimitive.Title>
@@ -156,7 +156,7 @@ function SettingsModal({
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label={t('modal.settingsSections', 'Settings sections')}
-          className="w-56 shrink-0 overflow-y-auto p-2"
+          className="w-52.5 shrink-0 overflow-y-auto p-2"
         >
           {sections.length === 0 && (
             <p className="px-2 py-1.5 type-small text-muted-foreground">
@@ -244,7 +244,7 @@ function SettingsSectionBody({
   const enabled = section.useEnabled ? section.useEnabled() : true
   if (!enabled) {
     return (
-      <div className="grid h-full place-items-center p-8 text-center type-body text-muted-foreground">
+      <div className="grid h-full place-items-center p-7.5 text-center type-body text-muted-foreground">
         {section.disabledReason ??
           t('modal.noAccess', 'You do not have access to this section.')}
       </div>

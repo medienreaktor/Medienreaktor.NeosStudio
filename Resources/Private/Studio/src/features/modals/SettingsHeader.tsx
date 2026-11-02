@@ -16,7 +16,7 @@ export function SettingsHeader({
   children?: ReactNode
 }) {
   return (
-    <header className="mb-4 flex items-start justify-between gap-4">
+    <header className="mb-3.5 flex items-start justify-between gap-3.5">
       <div>
         <h2 className="type-heading-s text-foreground">{title}</h2>
         {subtitle && (

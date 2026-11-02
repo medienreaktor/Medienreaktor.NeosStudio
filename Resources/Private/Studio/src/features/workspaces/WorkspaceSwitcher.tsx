@@ -235,7 +235,7 @@ export function WorkspaceSwitcher({
             'Editing in {0}, publishing to {1}',
             [sourceLabel, targetLabel],
           )}
-          className="flex h-9 w-fit items-center justify-between gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-8.5 w-fit items-center justify-between gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex items-center gap-2">
             {/* Only the icon carries the workspace's color (a task's status
@@ -248,7 +248,7 @@ export function WorkspaceSwitcher({
             ) : (
               <WorkspaceIcon workspace={activeWorkspace} />
             )}
-            <span className="hidden @[56rem]:inline max-w-40 truncate">
+            <span className="hidden @[52.5rem]:inline max-w-37.5 truncate">
               {sourceLabel}
             </span>
           </span>
@@ -258,7 +258,7 @@ export function WorkspaceSwitcher({
             aria-hidden
           />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-64">
+        <DropdownMenuContent align="start" className="min-w-60">
           <DropdownMenuGroup>
             <DropdownMenuLabel>
               {t('workspace.publishTargetGroup', 'My workspace, publishing to')}
@@ -362,7 +362,7 @@ export function WorkspaceSwitcher({
                   if (isActiveTask) {
                     return (
                       <DropdownMenuSub key={`edit:${workspace.name}`}>
-                        <DropdownMenuSubTrigger className="pl-8">
+                        <DropdownMenuSubTrigger className="pl-7.5">
                           <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
                             <i
                               className="fas fa-check type-icon-s"
@@ -380,7 +380,7 @@ export function WorkspaceSwitcher({
                                 onClick={() => setSubmittingReview(true)}
                               >
                                 <i
-                                  className="fas fa-paper-plane w-4 text-center"
+                                  className="fas fa-paper-plane w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.sendToReview', 'Send to review')}
@@ -391,7 +391,7 @@ export function WorkspaceSwitcher({
                             activeWorkspace.permissions.publish && (
                               <DropdownMenuItem onClick={completeTask}>
                                 <i
-                                  className="fas fa-check w-4 text-center"
+                                  className="fas fa-check w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.completeTask', 'Complete task')}
@@ -405,7 +405,7 @@ export function WorkspaceSwitcher({
                                 }
                               >
                                 <i
-                                  className="fas fa-rotate-left w-4 text-center"
+                                  className="fas fa-rotate-left w-3.5 text-center"
                                   aria-hidden
                                 />
                                 {t('tasks.reopenTask', 'Reopen task')}

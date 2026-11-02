@@ -129,7 +129,7 @@ export function AccessRoleDialog({
           strip would scroll by a few dozen pixels - which reads as a
           cut-off tab, not as something scrollable. The page-tree picker
           inside earns the extra room anyway. */}
-      <DialogContent size="xl" className="max-w-5xl">
+      <DialogContent size="xl" className="max-w-240">
         <DialogHeader>
           <DialogTitle>
             {role === null
@@ -186,9 +186,9 @@ export function AccessRoleDialog({
               expanded page tree and push the dialog past the viewport. */}
           <TabsContent
             value="general"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <Field
                 label={t('accessRoles.label', 'Name')}
                 htmlFor="access-role-label"
@@ -232,7 +232,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="sites"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <SitesTab
               selected={constraints.siteNodeNames}
@@ -242,7 +242,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="tree"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <TreeTab
               allowedSiteNodeNames={constraints.siteNodeNames}
@@ -253,7 +253,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="dimensions"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <DimensionsTab
               selected={constraints.dimensionValues}
@@ -263,14 +263,14 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="workspaces"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <WorkspacesTab constraints={constraints} onChange={patch} />
           </TabsContent>
 
           <TabsContent
             value="capabilities"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <CapabilitiesTab
               capabilities={constraints.capabilities}
@@ -281,7 +281,7 @@ export function AccessRoleDialog({
 
           <TabsContent
             value="members"
-            className="h-[26rem] max-h-[55vh] min-h-0 flex-none overflow-y-auto p-4"
+            className="h-97.5 max-h-[55vh] min-h-0 flex-none overflow-y-auto p-3.5"
           >
             <MembersTab
               selected={memberUserIds}
@@ -465,7 +465,7 @@ function DimensionsTab({
           'Tick the dimension values this role may edit. A dimension with nothing ticked stays fully open.',
         )}
       </TabIntro>
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         {dimensions.map((dimension) => {
           const values = selected[dimension.id] ?? []
           return (
@@ -541,7 +541,7 @@ function WorkspacesTab({
             'accessRoles.workspacesNone',
             'There are no shared workspaces yet.',
           )}
-          className="py-6"
+          className="py-5.5"
         />
       ) : (
         <div className="space-y-0.5">
@@ -573,7 +573,7 @@ function WorkspacesTab({
         </div>
       )}
 
-      <div className="mt-5 space-y-0.5 border-t pt-4">
+      <div className="mt-4.5 space-y-0.5 border-t pt-3.5">
         <CheckboxRow
           checked={constraints.allowPersonalWorkspace}
           onCheckedChange={(checked) =>
@@ -757,7 +757,7 @@ function MembersTab({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('users.search', 'Search users…')}
-        className="mb-3 max-w-xs"
+        className="mb-3 max-w-75"
         autoComplete="off"
       />
       <div className="space-y-0.5">

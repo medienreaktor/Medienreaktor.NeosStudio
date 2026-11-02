@@ -112,7 +112,7 @@ export function NodeTreeRuleEditor({
           'accessRoles.treeNoSites',
           'No site to browse — every site is excluded by the Sites tab.',
         )}
-        className="py-10"
+        className="py-9.5"
       />
     )
   }
@@ -140,7 +140,7 @@ export function NodeTreeRuleEditor({
           }}
           items={siteItems}
         >
-          <SelectTrigger className="w-full max-w-xs">
+          <SelectTrigger className="w-full max-w-75">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -170,7 +170,7 @@ export function NodeTreeRuleEditor({
             'accessRoles.treeSiteUnavailable',
             'This site has no node in the live workspace.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
@@ -347,7 +347,7 @@ function SiteDocumentTree({
     rules.find((rule) => rule.nodeAggregateId === aggregateId) ?? null
 
   return (
-    <div className="h-64 min-h-0 overflow-y-auto rounded-md border bg-background p-1">
+    <div className="h-60 min-h-0 overflow-y-auto rounded-md border bg-background p-1">
       <TreeList
         tree={tree}
         label={t('accessRoles.treeLabel', 'Documents')}

@@ -34,12 +34,12 @@ export function RolesField({
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-5 w-48" />
+            <Skeleton key={i} className="h-4.5 w-45" />
           ))}
         </div>
       )}
       {data && (
-        <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-3">
+        <div className="max-h-45 space-y-1 overflow-y-auto rounded-md border p-3">
           {data.roles.map((role) => {
             const locked = lockedRoles.includes(role.identifier)
             return (

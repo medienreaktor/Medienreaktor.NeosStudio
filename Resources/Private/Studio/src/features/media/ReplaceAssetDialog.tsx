@@ -126,10 +126,10 @@ export function ReplaceAssetDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           {/* The file being replaced, so it is clear what is about to change. */}
           <div className="flex items-center gap-3 rounded-md bg-card p-2">
-            <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded bg-muted">
+            <div className="grid size-11 shrink-0 place-items-center overflow-hidden rounded bg-muted">
               <AssetThumb asset={asset} className="type-heading-l" />
             </div>
             <div className="min-w-0 type-small">
@@ -143,7 +143,7 @@ export function ReplaceAssetDialog({
           <div
             {...getRootProps()}
             className={cn(
-              'grid place-items-center rounded-md border-2 border-dashed p-6 text-center transition-colors',
+              'grid place-items-center rounded-md border-2 border-dashed p-5.5 text-center transition-colors',
               isDragActive ? 'border-primary bg-primary-tint' : 'border-border',
             )}
           >

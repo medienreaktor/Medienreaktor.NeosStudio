@@ -5,7 +5,7 @@ import { Toggle as TogglePrimitive } from '@base-ui/react/toggle'
 import { cn } from '@/lib/utils'
 
 const toggleVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded type-body whitespace-nowrap text-muted-foreground outline-none focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:text-placeholder not-data-pressed:hover:bg-accent data-pressed:bg-primary data-pressed:text-primary-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex items-center justify-center gap-2 rounded type-body whitespace-nowrap text-muted-foreground outline-none focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:text-placeholder not-data-pressed:hover:bg-accent data-pressed:bg-primary data-pressed:text-primary-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
   {
     variants: {
       variant: {
@@ -14,9 +14,9 @@ const toggleVariants = cva(
           'border border-border bg-transparent not-data-pressed:hover:bg-accent',
       },
       size: {
-        default: 'h-9 min-w-9 px-2',
-        sm: 'h-8 min-w-8 px-1.5',
-        lg: 'h-10 min-w-10 px-2.5',
+        default: 'h-8.5 min-w-8.5 px-2',
+        sm: 'h-7.5 min-w-7.5 px-1.5',
+        lg: 'h-9.5 min-w-9.5 px-2.5',
       },
     },
     defaultVariants: {

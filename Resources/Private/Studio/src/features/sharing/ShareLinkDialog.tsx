@@ -123,7 +123,7 @@ export function ShareLinkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-120">
         <DialogHeader>
           <DialogTitle>{t('share.title', 'Share preview link')}</DialogTitle>
           <DialogDescription>
@@ -135,7 +135,7 @@ export function ShareLinkDialog({
         </DialogHeader>
 
         {createdUrl === null ? (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <Field label={t('share.label', 'Label')} htmlFor="share-label">
               <Input
                 id="share-label"
@@ -214,7 +214,7 @@ export function ShareLinkDialog({
               <p className="type-body-strong">
                 {t('share.activeLinks', 'Your active links')}
               </p>
-              <ul className="max-h-48 space-y-1 overflow-y-auto">
+              <ul className="max-h-45 space-y-1 overflow-y-auto">
                 {links.map((link) => (
                   <li
                     key={link.id}

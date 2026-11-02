@@ -423,9 +423,9 @@ export function NodeTypesPanel() {
       onPick={setSelected}
       overlay={
         <>
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3 pr-32">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 p-3 pr-30">
             <SearchInput
-              wrapperClassName="pointer-events-auto max-w-64"
+              wrapperClassName="pointer-events-auto max-w-60"
               className={floatingControl}
               value={term}
               onChange={(event) => {

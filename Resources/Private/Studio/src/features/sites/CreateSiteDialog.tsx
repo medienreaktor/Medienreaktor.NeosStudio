@@ -139,13 +139,13 @@ export function CreateSiteDialog({
         {optionsLoading && (
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton key={i} className="h-9.5 w-full" />
             ))}
           </div>
         )}
 
         {options && (
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-3.5">
             <Field label={t('sites.name', 'Name')} htmlFor="site-create-name">
               <Input
                 id="site-create-name"

@@ -122,7 +122,7 @@ export function WorkspaceRolesDialog({
         {isLoading && (
           <div className="space-y-2">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-9 w-full" />
+              <Skeleton key={i} className="h-8.5 w-full" />
             ))}
           </div>
         )}
@@ -136,7 +136,7 @@ export function WorkspaceRolesDialog({
                   'workspacesAdmin.noAssignments',
                   'No access assigned yet.',
                 )}
-                className="py-6"
+                className="py-5.5"
               />
             ) : (
               <ul className="space-y-1">

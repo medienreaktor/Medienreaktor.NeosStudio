@@ -186,7 +186,7 @@ export const CodeEditor: PropertyEditorComponent = ({
         className="group flex w-full flex-col gap-2 rounded-md border border-border bg-input/30 p-2 text-left transition-colors hover:border-placeholder focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {current ? (
-          <pre className="max-h-24 overflow-hidden type-code-small whitespace-pre-wrap text-foreground">
+          <pre className="max-h-22.5 overflow-hidden type-code-small leading-[1.171875rem] whitespace-pre-wrap text-foreground">
             <code dangerouslySetInnerHTML={{ __html: preview }} />
           </pre>
         ) : (
@@ -201,7 +201,7 @@ export const CodeEditor: PropertyEditorComponent = ({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent size="lg" className="max-w-3xl">
+        <DialogContent size="lg" className="max-w-180">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <i className="fas fa-code type-icon-xl" aria-hidden />

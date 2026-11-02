@@ -110,7 +110,7 @@ function ShortcutOverviewDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-5">
+        <div className="grid gap-4.5">
           {[...groups.entries()].map(([category, entries]) => (
             <section key={category}>
               <h3 className="mb-2 type-overline text-muted-foreground">
@@ -120,7 +120,7 @@ function ShortcutOverviewDialog({
                 {entries.map((shortcut) => (
                   <li
                     key={shortcut.id}
-                    className="flex items-center justify-between gap-4 py-1.5 type-body"
+                    className="flex items-center justify-between gap-3.5 py-1.5 type-body"
                   >
                     <span>{shortcut.title}</span>
                     <span className="flex shrink-0 items-center gap-2">
@@ -148,7 +148,7 @@ function ShortcutKeys({ combo }: { combo: string }) {
       {formatCombo(combo).map((part, index) => (
         <span
           key={index}
-          className="min-w-6 rounded border border-border bg-card px-1.5 py-0.5 text-center font-sans type-small text-muted-foreground"
+          className="min-w-5.5 rounded border border-border bg-card px-1.5 py-0.5 text-center font-sans type-small text-muted-foreground"
         >
           {part}
         </span>

@@ -101,7 +101,7 @@ export function ConflictResolutionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ul className="flex max-h-64 flex-col gap-px overflow-y-auto">
+        <ul className="flex max-h-60 flex-col gap-px overflow-y-auto">
           {conflicts.map((conflict, index) => {
             const meta = conflict.typeOfChange
               ? TYPE_META[conflict.typeOfChange]

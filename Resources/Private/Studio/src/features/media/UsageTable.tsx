@@ -13,7 +13,7 @@ export function UsageTable({
   const usage = useAssetUsage(assetSource, identifier)
 
   if (usage.isLoading) {
-    return <Skeleton className="h-16 w-full" />
+    return <Skeleton className="h-15 w-full" />
   }
   if (usage.error || !usage.data) {
     return (

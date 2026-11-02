@@ -31,7 +31,7 @@ export const TableView: InspectorViewComponent = ({ node, options }) => {
             <Placeholder
               icon="fa-table"
               title={t('view.noData', 'No data.')}
-              className="py-6"
+              className="py-5.5"
             />
           )
         }

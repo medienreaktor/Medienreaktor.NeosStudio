@@ -602,9 +602,9 @@ export function App() {
   if (auth === 'anonymous') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <div className="rounded-lg border bg-card px-12 py-10 text-center">
+        <div className="rounded-lg border bg-card px-11 py-9.5 text-center">
           <h1 className="mb-1 type-heading-l">Neos Studio</h1>
-          <p className="mb-6 text-muted-foreground">
+          <p className="mb-5.5 text-muted-foreground">
             {t('app.tagline', 'Editing environment for Neos')}
           </p>
           <Button onClick={() => beginLogin()}>
@@ -830,7 +830,7 @@ export function App() {
                   {/* Fixed to the main header's height (h-14, plus an
                     invisible border matching its border-b) so the row does
                     not shift when the avatar mounts after /me resolves. */}
-                  <SidebarHeader className="h-12 shrink-0 justify-center border-b border-transparent">
+                  <SidebarHeader className="h-11 shrink-0 justify-center border-b border-transparent">
                     <div className="flex items-center justify-between gap-2.5 px-2 pt-2">
                       <div className="flex items-center gap-1.5">
                         {/* The classic backend modules - hidden when
@@ -838,7 +838,7 @@ export function App() {
                         <LegacyModulesMenu />
                         <svg
                           viewBox="0 0 254 98"
-                          className="-mt-1 h-8 w-auto shrink-0"
+                          className="-mt-1 h-7.5 w-auto shrink-0"
                           role="img"
                           aria-label="Neos"
                         >
@@ -896,7 +896,7 @@ export function App() {
                 <SidebarInset>
                   {/* Fixed height so the bar does not jump as the switchers and
                     workspace buttons resolve and render after load. */}
-                  <header className="@container flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4">
+                  <header className="@container flex h-13 shrink-0 items-center justify-between gap-3.5 border-b px-3.5">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
                         <SidebarTrigger />

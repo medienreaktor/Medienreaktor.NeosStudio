@@ -31,7 +31,7 @@ function TabsList({
         // on mount by walking offsetParents up to this list — if the list is
         // position: static the walk overshoots to the page and scrollTo gets
         // a huge offset, pinning the list to the end.
-        'scrollbar-none relative inline-flex h-9 w-fit max-w-full items-center justify-start overflow-x-auto text-muted-foreground',
+        'scrollbar-none relative inline-flex h-8.5 w-fit max-w-full items-center justify-start overflow-x-auto text-muted-foreground',
         className,
       )}
       {...props}
@@ -47,7 +47,7 @@ function TabsTrigger({
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex h-full flex-1 items-center border-t border-transparent justify-center gap-1.5 px-3 py-1 type-body-strong whitespace-nowrap text-muted-foreground transition-[color] focus-visible:border-primary focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 data-active:bg-card data-active:border-primary data-active:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "inline-flex h-full flex-1 items-center border-t border-transparent justify-center gap-1.5 px-3 py-1 type-body-strong whitespace-nowrap text-muted-foreground transition-[color] focus-visible:border-primary focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 data-active:bg-card data-active:border-primary data-active:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className,
       )}
       {...props}

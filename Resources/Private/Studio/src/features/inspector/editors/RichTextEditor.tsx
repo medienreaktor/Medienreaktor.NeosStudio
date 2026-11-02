@@ -143,7 +143,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
           ref={containerRef}
           className={cn(
             'px-3 py-2 type-body',
-            '[&_.tiptap]:min-h-20 [&_.tiptap]:outline-none',
+            '[&_.tiptap]:min-h-18.5 [&_.tiptap]:outline-none',
             // Tailwind's preflight strips list and heading styling; restore a
             // compact editing rendition scoped to the editor content.
             '[&_.tiptap_h1]:type-default [&_.tiptap_h1]:font-bold',
@@ -151,7 +151,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
             '[&_.tiptap_h3]:type-default [&_.tiptap_h3]:font-bold',
             '[&_.tiptap_:is(h4,h5,h6)]:font-bold',
             '[&_.tiptap_ul]:list-disc [&_.tiptap_ol]:list-decimal',
-            '[&_.tiptap_:is(ul,ol)]:pl-5',
+            '[&_.tiptap_:is(ul,ol)]:pl-4.5',
             '[&_.tiptap_blockquote]:border-l-2 [&_.tiptap_blockquote]:border-border [&_.tiptap_blockquote]:pl-3 [&_.tiptap_blockquote]:text-muted-foreground',
             '[&_.tiptap_pre]:rounded [&_.tiptap_pre]:bg-muted [&_.tiptap_pre]:p-2 [&_.tiptap_pre]:font-mono [&_.tiptap_pre]:type-small',
             '[&_.tiptap_hr]:my-2 [&_.tiptap_hr]:border-border',
@@ -322,7 +322,7 @@ function Toolbar({
           <SelectTrigger
             size="sm"
             aria-label={t('editor.rte.blockFormat', 'Block format')}
-            className="h-6 w-28 border-none bg-transparent type-small shadow-none"
+            className="h-5.5 w-26 border-none bg-transparent type-small shadow-none"
           >
             <SelectValue />
           </SelectTrigger>

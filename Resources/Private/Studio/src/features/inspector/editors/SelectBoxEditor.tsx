@@ -132,7 +132,7 @@ function DataSourceSelectBox({
   if (identifier === null) {
     return (
       <div
-        className="flex min-h-9 items-center rounded-md border border-dashed border-border px-3 py-2 type-body text-muted-foreground"
+        className="flex min-h-8.5 items-center rounded-md border border-dashed border-border px-3 py-2 type-body text-muted-foreground"
         title={t(
           'editor.selectBox.dataSourceUriHint',
           'editorOptions.dataSourceUri is not supported in Studio - use dataSourceIdentifier',
@@ -398,7 +398,7 @@ function MultiSelectList({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
+              'flex h-8.5 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
               dragIndex === index && 'opacity-50',
             )}
           >

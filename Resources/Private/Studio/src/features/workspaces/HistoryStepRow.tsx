@@ -96,7 +96,7 @@ export function HistoryStepRow({
                 <UserAvatar
                   name={step.initiatingUserLabel}
                   userId={step.initiatingUserId}
-                  className="size-4 type-caption"
+                  className="size-3.5 type-caption"
                 />
                 <span className="truncate">{step.initiatingUserLabel}</span>
               </>

@@ -151,7 +151,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         onChange={(e) => state.setSearch(e.target.value)}
         placeholder={t('media.searchAssets', 'Search assets…')}
         aria-label={t('media.searchAssetsAria', 'Search assets')}
-        wrapperClassName="min-w-40"
+        wrapperClassName="min-w-37.5"
         className={floatingControl}
       />
 
@@ -163,7 +163,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
           label: type === 'All' ? t('media.allTypes', 'All types') : type,
         }))}
       >
-        <SelectTrigger className={cn('h-8 w-32', floatingControl)} size="sm">
+        <SelectTrigger className={cn('h-7.5 w-30', floatingControl)} size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -176,12 +176,12 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       </Select>
 
       {hasSources && (
-        <div className="hidden @[64rem]:flex">
+        <div className="hidden @[60rem]:flex">
           <FilterButton
             icon={<i className="fas fa-layer-group type-icon-l" aria-hidden />}
             label={activeSource?.label ?? t('media.source', 'Source')}
           >
-            <ul className="min-w-48 space-y-0.5">
+            <ul className="min-w-45 space-y-0.5">
               {sources.data!.map((source) => (
                 <SourceButton
                   key={source.identifier}
@@ -196,14 +196,14 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       )}
 
       {supportsCollections && (
-        <div className="hidden @[48rem]:flex">
+        <div className="hidden @[45rem]:flex">
           <FilterButton
             icon={<i className="fas fa-folder type-icon-l" aria-hidden />}
             label={collectionLabel}
             active={filter.collection !== null}
             action={<AddCollection />}
           >
-            <div className="min-w-56">
+            <div className="min-w-52.5">
               <RailButton
                 icon={<i className="fas fa-folder type-icon-l" aria-hidden />}
                 label={t('media.allCollections', 'All collections')}
@@ -236,14 +236,14 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
       )}
 
       {supportsTagging && (
-        <div className="hidden @[48rem]:flex">
+        <div className="hidden @[45rem]:flex">
           <FilterButton
             icon={<i className="fas fa-tag type-icon-l" aria-hidden />}
             label={tagLabel}
             active={filter.tagMode === 'none' || filter.tag !== null}
             action={<AddTag />}
           >
-            <div className="min-w-56">
+            <div className="min-w-52.5">
               <RailButton
                 icon={<i className="fas fa-tag type-icon-l" aria-hidden />}
                 label={t('media.allTags', 'All tags')}
@@ -284,7 +284,7 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
         </div>
       )}
 
-      <div className="hidden @[48rem]:flex">
+      <div className="hidden @[45rem]:flex">
         <Select
           value={sortValue}
           onValueChange={(v) => {
@@ -296,7 +296,10 @@ export function MediaHeader({ state }: { state: MediaBrowserController }) {
             label: t(sort.labelKey, sort.label),
           }))}
         >
-          <SelectTrigger className={cn('h-8 w-36', floatingControl)} size="sm">
+          <SelectTrigger
+            className={cn('h-7.5 w-33.5', floatingControl)}
+            size="sm"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -339,7 +342,7 @@ function FilterButton({
     <Popover>
       <PopoverTrigger
         className={cn(
-          'flex h-8 items-center gap-1.5 rounded-md border px-2 type-body hover:bg-input/50',
+          'flex h-7.5 items-center gap-1.5 rounded-md border px-2 type-body hover:bg-input/50',
           floatingControl,
           active ? 'text-foreground' : 'border-border text-muted-foreground',
         )}
@@ -352,7 +355,7 @@ function FilterButton({
         >
           {icon}
         </span>
-        <span className="max-w-40 truncate">{label}</span>
+        <span className="max-w-37.5 truncate">{label}</span>
         <i
           className="fas fa-chevron-down type-icon-l shrink-0 text-placeholder"
           aria-hidden
@@ -391,7 +394,7 @@ function SourceButton({
         )}
       >
         {source.iconUri ? (
-          <img src={source.iconUri} alt="" className="size-4 shrink-0" />
+          <img src={source.iconUri} alt="" className="size-3.5 shrink-0" />
         ) : (
           <i
             className="fas fa-layer-group type-icon-xl shrink-0 text-muted-foreground"
@@ -504,7 +507,7 @@ function InlineCreate({
         }
       }}
       onBlur={() => (value.trim() ? void submit() : setOpen(false))}
-      className="h-6 w-40 type-small"
+      className="h-5.5 w-37.5 type-small"
     />
   )
 }

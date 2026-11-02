@@ -749,7 +749,7 @@ export function SecondaryDock({
           type="button"
           aria-label={t('panel.expand', 'Expand panel')}
           onClick={() => setCollapsed(false)}
-          className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-muted-foreground hover:text-foreground"
+          className="absolute top-0 right-0 z-10 grid w-7.5 h-6.5 place-items-center text-muted-foreground hover:text-foreground"
         >
           <i className="fas fa-angles-left type-icon-m" aria-hidden />
         </button>
@@ -764,7 +764,7 @@ export function SecondaryDock({
               type="button"
               aria-label={t('panel.collapse', 'Collapse panel')}
               onClick={() => setCollapsed(true)}
-              className="absolute top-0 right-0 z-10 grid w-8 h-7 place-items-center text-muted-foreground hover:text-foreground"
+              className="absolute top-0 right-0 z-10 grid w-7.5 h-6.5 place-items-center text-muted-foreground hover:text-foreground"
             >
               <i className="fas fa-angles-right type-icon-m" aria-hidden />
             </button>
@@ -878,7 +878,7 @@ function GroupTabBar({
       {/* The spare bar area drags the whole floating group, Adobe-style. */}
       <div
         className={cn(
-          'h-full min-w-4 flex-1',
+          'h-full min-w-3.5 flex-1',
           floating && 'cursor-grab touch-none',
         )}
         onPointerDown={
@@ -962,11 +962,11 @@ function DragGhost({ drag, title }: { drag: TabDrop; title: string }) {
 // Negative margins cancel the marker's own footprint (its box plus the extra
 // flex gap), so showing it does not shift the layout being hit-tested.
 const TabDropMarker = () => (
-  <div className="-mx-0.25 h-5 w-0.5 shrink-0 rounded bg-primary" />
+  <div className="-mx-0.25 h-4.5 w-0.5 shrink-0 rounded bg-primary" />
 )
 const DockGapMarker = ({ horizontal = false }: { horizontal?: boolean }) =>
   horizontal ? (
-    <div className="-mx-1.25 w-0.5 shrink-0 self-stretch rounded bg-primary" />
+    <div className="-mx-1 w-0.5 shrink-0 self-stretch rounded bg-primary" />
   ) : (
-    <div className="-my-1.25 h-0.5 shrink-0 rounded bg-primary" />
+    <div className="-my-1 h-0.5 shrink-0 rounded bg-primary" />
   )

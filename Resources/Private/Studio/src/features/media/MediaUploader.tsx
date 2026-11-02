@@ -85,9 +85,9 @@ export function MediaUploader({
     items.length > 0 && items.every((item) => item.status !== 'uploading')
 
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center bg-background/80 p-8">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-divider px-4 py-3">
+    <div className="absolute inset-0 z-20 grid place-items-center bg-background/80 p-7.5">
+      <div className="w-full max-w-105 rounded-lg border border-border bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-divider px-3.5 py-3">
           <h2 className="type-body-strong text-foreground">
             {t('media.uploadAssets', 'Upload assets')}
           </h2>
@@ -101,11 +101,11 @@ export function MediaUploader({
           </Button>
         </div>
 
-        <div className="p-4">
+        <div className="p-3.5">
           <div
             {...getRootProps()}
             className={cn(
-              'grid place-items-center rounded-md border-2 border-dashed p-8 text-center transition-colors',
+              'grid place-items-center rounded-md border-2 border-dashed p-7.5 text-center transition-colors',
               isDragActive ? 'border-primary bg-primary-tint' : 'border-border',
             )}
           >
@@ -126,7 +126,7 @@ export function MediaUploader({
           </div>
 
           {items.length > 0 && (
-            <ul className="mt-4 max-h-48 space-y-2 overflow-y-auto">
+            <ul className="mt-3.5 max-h-45 space-y-2 overflow-y-auto">
               {items.map((item) => (
                 <li key={item.id} className="type-small">
                   <div className="mb-1 flex justify-between">
@@ -166,7 +166,7 @@ export function MediaUploader({
         </div>
 
         {allDone && (
-          <div className="border-t border-divider px-4 py-3 text-right">
+          <div className="border-t border-divider px-3.5 py-3 text-right">
             <Button size="sm" onClick={onClose}>
               {t('media.done', 'Done')}
             </Button>

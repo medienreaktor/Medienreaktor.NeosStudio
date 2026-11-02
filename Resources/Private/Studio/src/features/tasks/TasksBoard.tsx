@@ -169,7 +169,7 @@ export function TasksBoard() {
 
   if (error) {
     return (
-      <div className="p-6 type-body text-muted-foreground">
+      <div className="p-5.5 type-body text-muted-foreground">
         {t('tasks.loadFailed', 'Loading the tasks failed.')}{' '}
         {apiErrorDescription(error, '')}
       </div>
@@ -197,7 +197,7 @@ export function TasksBoard() {
           return (
             <div
               key={column.status}
-              className={`flex min-w-56 flex-1 flex-col border transition-colors ${
+              className={`flex min-w-52.5 flex-1 flex-col border transition-colors ${
                 droppable ? 'bg-card' : 'bg-card/50'
               }`}
               onDragOver={(event) => {
@@ -234,7 +234,7 @@ export function TasksBoard() {
                   </>
                 )}
                 {!isLoading && columnTasks.length === 0 && (
-                  <div className="rounded-md border border-dashed border-divider py-4 text-center type-small text-placeholder">
+                  <div className="rounded-md border border-dashed border-divider py-3.5 text-center type-small text-placeholder">
                     {t('tasks.columnEmpty', 'No tasks')}
                   </div>
                 )}
@@ -320,7 +320,7 @@ function TaskCardSkeleton() {
     <div className="flex flex-col gap-1.5 rounded-md border border-transparent bg-muted px-2.5 py-2">
       <Skeleton className="h-3.5 w-2/3 bg-border/60" />
       <div className="mt-0.5 flex items-center">
-        <Skeleton className="size-5 rounded-full bg-border/60" />
+        <Skeleton className="size-4.5 rounded-full bg-border/60" />
       </div>
     </div>
   )
@@ -358,7 +358,7 @@ function TaskCard({
       <ContextMenuTrigger
         render={
           <div
-            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-card hover:bg-accent px-2.5 py-2 type-small text-foreground ${
+            className={`flex cursor-pointer flex-col gap-1.5 rounded-md border bg-card hover:bg-accent px-2.5 py-2 type-small leading-[1.096875rem] text-foreground ${
               active ? 'border-primary bg-accent' : 'border-transparent'
             } ${draggable ? 'active:cursor-grabbing' : ''}`}
             title={
@@ -392,7 +392,7 @@ function TaskCard({
           <span className="flex items-center gap-2">
             {task.assignee ? (
               <span
-                className="flex size-5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
+                className="flex size-4.5 items-center justify-center rounded-full type-count-small text-presence-foreground select-none"
                 style={{ backgroundColor: presenceColor(task.assignee) }}
                 title={
                   assigneeLabel
@@ -404,7 +404,7 @@ function TaskCard({
               </span>
             ) : (
               <span
-                className="flex size-5 items-center justify-center rounded-full bg-border type-caption text-muted-foreground select-none"
+                className="flex size-4.5 items-center justify-center rounded-full bg-border type-caption text-muted-foreground select-none"
                 title={t('tasks.unassignedHint', 'Unassigned')}
               >
                 ?
@@ -430,18 +430,18 @@ function TaskCard({
           </span>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="min-w-44">
+      <ContextMenuContent className="min-w-41">
         <ContextMenuGroup>
           <ContextMenuItem onClick={onView}>
-            <i className="fas fa-eye w-4 text-center" aria-hidden />
+            <i className="fas fa-eye w-3.5 text-center" aria-hidden />
             {t('tasks.viewTask', 'View task')}
           </ContextMenuItem>
           <ContextMenuItem disabled={!canManage} onClick={onEdit}>
-            <i className="fas fa-pen w-4 text-center" aria-hidden />
+            <i className="fas fa-pen w-3.5 text-center" aria-hidden />
             {t('tasks.editTask', 'Edit task')}
           </ContextMenuItem>
           <ContextMenuItem disabled={!canWrite || active} onClick={onCheckout}>
-            <i className="fas fa-code-branch w-4 text-center" aria-hidden />
+            <i className="fas fa-code-branch w-3.5 text-center" aria-hidden />
             {t('tasks.checkoutWorkspace', 'Checkout workspace')}
           </ContextMenuItem>
           <ContextMenuSeparator />
@@ -450,7 +450,7 @@ function TaskCard({
             disabled={!canManage}
             onClick={onDelete}
           >
-            <i className="fas fa-trash-can w-4 text-center" aria-hidden />
+            <i className="fas fa-trash-can w-3.5 text-center" aria-hidden />
             {t('tasks.delete', 'Delete task')}
           </ContextMenuItem>
         </ContextMenuGroup>

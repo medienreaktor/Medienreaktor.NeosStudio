@@ -156,7 +156,7 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
             'link.anchorPlaceholder',
             'Optional #anchor on the target page',
           )}
-          className="h-7 type-body"
+          className="h-6.5 type-body"
         />
       </label>
     </div>
