@@ -62,7 +62,7 @@ export function SitesAdministration() {
   const deleting = sites.find((s) => s.nodeName === deletingNodeName) ?? null
 
   return (
-    <div className="p-6">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('sites.title', 'Sites')}
         subtitle={t('sites.subtitle', 'Websites served by this installation.')}
@@ -77,14 +77,14 @@ export function SitesAdministration() {
         <Placeholder
           icon="fa-triangle-exclamation"
           title={t('sites.unavailable', 'Sites are currently unavailable.')}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -93,7 +93,7 @@ export function SitesAdministration() {
         <Placeholder
           icon="fa-globe"
           title={t('sites.none', 'No sites found.')}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
@@ -197,17 +197,19 @@ function SiteRow({
   })
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">{site.name}</span>
-        <span className="ml-2 text-xs text-neutral-500">{site.nodeName}</span>
+        <span className="font-medium text-foreground">{site.name}</span>
+        <span className="ml-2 type-small text-muted-foreground">
+          {site.nodeName}
+        </span>
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
+      <TableCell className="text-muted-foreground">
         {site.siteResourcesPackageKey}
       </TableCell>
       <TableCell>
         {site.domains.length === 0 ? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         ) : (
           <div className="flex flex-wrap gap-1">
             {site.domains.map((domain) => (
@@ -224,18 +226,18 @@ function SiteRow({
       </TableCell>
       <TableCell>
         {site.state === 'online' ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-green-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-site-online" />
             {t('sites.online', 'Online')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-neutral-500">
-            <span className="size-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-site-offline" />
             {t('sites.offline', 'Offline')}
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

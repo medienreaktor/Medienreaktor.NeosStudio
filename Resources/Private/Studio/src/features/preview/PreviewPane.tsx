@@ -3,9 +3,14 @@ import { addressFromContextPath, decodeNodeAddress } from '@/api/nodeAddress'
 import { isDeleted, renderNodeElement, type NodeDto } from '@/api/nodes'
 import { useNodeTypes } from '@/api/nodeTypes'
 import { toast } from '@/components/ui/toast'
-import { Placeholder } from '@/components/ui/placeholder'
 import { config } from '@/config'
 import { translate as t } from '@/lib/i18n'
+import { reportPreviewLoaded } from '@/app/boot'
+import {
+  peekPendingFlash,
+  subscribeFlashRequest,
+  takePendingFlash,
+} from '@/app/flash'
 import { useNodeEditable } from '@/features/access/useAccess'
 import type { CreateNodeRequest } from '@/features/creation/createNode'
 import {
@@ -288,6 +293,8 @@ export function PreviewPane({
     const top = layers[layers.length - 1]
     if (!top?.ready) return
     activeFrameRef.current = framesRef.current.get(top.id) ?? null
+    // The shell's boot screen waits for the first painted page.
+    reportPreviewLoaded()
     // A page rendered without the guest (deleted, or outside the account's
     // access roles) leaves the bridge down: every guest-facing feature
     // (selection sync, drop targets, inline editing) would be posting into a
@@ -588,14 +595,50 @@ export function PreviewPane({
     if (!guestReady) return
     const frame = activeFrameRef.current?.contentWindow
     if (!frame) return
+    const aggregateId =
+      selectedAddress === null
+        ? null
+        : decodeNodeAddress(selectedAddress).aggregateId
+    // Opening a page selects its document node, which sites wrap around the whole page body.
+    // Revealing that element centers the body, so every page switch (and every reload) would land
+    // somewhat below the top. The document is the page itself - there is nothing to reveal.
+    const documentAddress = documentAddressRef.current
+    const isDocument =
+      aggregateId !== null &&
+      documentAddress !== null &&
+      decodeNodeAddress(documentAddress).aggregateId === aggregateId
     const message: HostToGuestMessage = {
       type: 'neos-studio/select-node',
-      aggregateId:
-        selectedAddress === null
-          ? null
-          : decodeNodeAddress(selectedAddress).aggregateId,
+      aggregateId,
+      reveal: !isDocument,
     }
     frame.postMessage(message, window.location.origin)
+  }, [guestReady, selectedAddress])
+
+  // A pending "pulse this element" request, held until the guest showing *that* element is ready.
+  //
+  // Waiting on guestReady alone is not enough, and quietly loses the pulse: the shell boots on the
+  // previously selected document, whose guest reports ready first. Draining there would post into
+  // the wrong page and consume the request before the linked document has even loaded. Matching the
+  // selection makes the drain wait for the right guest - the request comes from a deep link, which
+  // selects the node it names, so the two line up by the time it can be shown.
+  useEffect(() => {
+    if (!guestReady || selectedAddress === null) return
+    const drain = () => {
+      const pending = peekPendingFlash()
+      if (pending === null) return
+      if (pending !== decodeNodeAddress(selectedAddress).aggregateId) return
+      const frame = activeFrameRef.current?.contentWindow
+      if (!frame) return
+      takePendingFlash()
+      const message: HostToGuestMessage = {
+        type: 'neos-studio/flash-node',
+        aggregateId: pending,
+      }
+      frame.postMessage(message, window.location.origin)
+    }
+    drain()
+    return subscribeFlashRequest(drain)
   }, [guestReady, selectedAddress])
 
   // Out-of-band element update: re-render one node's element on the server
@@ -688,14 +731,10 @@ export function PreviewPane({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guestReady])
 
-  if (!document || !src) {
-    return (
-      <Placeholder
-        icon="fa-file-lines"
-        title={t('preview.selectDocument', 'Select a document to preview it.')}
-      />
-    )
-  }
+  // No document is a transient state only: one is selected automatically on
+  // boot and after every site or dimension switch, so there is nothing to
+  // tell the user - the pane simply stays empty for the moment.
+  if (!document || !src) return null
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -720,7 +759,7 @@ export function PreviewPane({
               opacity: layer.ready ? 1 : 0,
               pointerEvents: layer.ready ? 'auto' : 'none',
             }}
-            className="absolute inset-0 h-full w-full border-0 bg-neutral-950 dark:bg-white transition-opacity duration-50 ease-out"
+            className="absolute inset-0 h-full w-full border-0 bg-foreground transition-opacity duration-50 ease-out"
           />
         ))}
       </div>
@@ -742,7 +781,11 @@ export function PreviewPane({
             defaultMode: 'after',
           })
         }
-        onDone={(action, target) => {
+        onDone={(action, targets) => {
+          // The preview's element menu is always single-target (the guest
+          // selects one element at a time).
+          const target = targets[0]
+          if (target === undefined) return
           if (action === 'delete') {
             // The element disappears only after a reload; the inspection
             // moves to the enclosing collection - the deleted node has no

@@ -123,20 +123,25 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
      */
     private function denialFor(CommandInterface $command, EffectiveAccess $access): ?Privilege
     {
+        // The same question the core asks: may the base workspace be read?
+        // Nothing stricter fits here - the command cannot tell a personal
+        // workspace from a shared one (Neos records that only afterwards), so
+        // any further rule also blocks the personal workspace Neos creates on
+        // a user's first login, and without it no UI can load any content.
+        if ($command instanceof CreateWorkspace) {
+            $base = $command->baseWorkspaceName;
+            if (!$access->allowsWorkspaceRead($base->value, $this->classificationOf($base))) {
+                return Privilege::denied(sprintf('Base workspace "%s" is not part of your access role(s)', $base->value));
+            }
+
+            return null;
+        }
+
         // Every command carrying a workspace is bound by the workspace rules -
         // the EDITING ones, which unlike reading give live no exemption.
         $workspaceName = $this->workspaceNameOf($command);
         if ($workspaceName !== null && !$this->allowsEditingIn($access, $workspaceName)) {
             return Privilege::denied(sprintf('Workspace "%s" is not part of your access role(s)', $workspaceName->value));
-        }
-
-        if ($command instanceof CreateWorkspace) {
-            if (!$access->allowsWorkspaceCreation()) {
-                return Privilege::denied('Your access role(s) do not allow creating workspaces');
-            }
-            if (!$this->allowsEditingIn($access, $command->baseWorkspaceName)) {
-                return Privilege::denied(sprintf('Base workspace "%s" is not part of your access role(s)', $command->baseWorkspaceName->value));
-            }
         }
 
         // Retargeting where a publish goes is how the Studio's switcher

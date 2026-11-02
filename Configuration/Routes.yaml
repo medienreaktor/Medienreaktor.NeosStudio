@@ -253,6 +253,19 @@
   httpMethods: ['GET']
 
 -
+  # The topbar's "open in new tab": redirects a live document to its public
+  # url, anything else renders like the preview below.
+  name: 'Studio: open document under its public url'
+  uriPattern: 'neos/studio/preview/live'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Preview'
+    '@action': 'live'
+    '@format': 'html'
+  appendExceedingArguments: true
+  httpMethods: ['GET']
+
+-
   name: 'Studio: document preview (iframe)'
   uriPattern: 'neos/studio/preview'
   defaults:

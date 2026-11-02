@@ -44,9 +44,6 @@
       <trans-unit id="accessRoles.allowPublishHint" xml:space="preserve">
         <source>Off means changes can only be handed on for review.</source>
       </trans-unit>
-      <trans-unit id="accessRoles.allowWorkspaceCreation" xml:space="preserve">
-        <source>May create workspaces</source>
-      </trans-unit>
       <trans-unit id="accessRoles.badgeBranches" xml:space="preserve">
         <source>{0} branch(es)</source>
       </trans-unit>
@@ -240,7 +237,7 @@
         <source>Sites</source>
       </trans-unit>
       <trans-unit id="accessRoles.tabTree" xml:space="preserve">
-        <source>Page tree</source>
+        <source>Documents</source>
       </trans-unit>
       <trans-unit id="accessRoles.tabWorkspaces" xml:space="preserve">
         <source>Workspaces</source>
@@ -267,7 +264,7 @@
         <source>Include sub-pages</source>
       </trans-unit>
       <trans-unit id="accessRoles.treeLabel" xml:space="preserve">
-        <source>Page tree</source>
+        <source>Documents</source>
       </trans-unit>
       <trans-unit id="accessRoles.treeLoading" xml:space="preserve">
         <source>Loading pages…</source>
@@ -647,8 +644,14 @@
       <trans-unit id="editing.deleteConfirm.description" xml:space="preserve">
         <source>The {0} and everything inside it will be removed. This is undone by discarding the change from the workspace.</source>
       </trans-unit>
+      <trans-unit id="editing.deleteConfirm.descriptionMany" xml:space="preserve">
+        <source>The selected {0} and everything inside them will be removed. This is undone by discarding the changes from the workspace.</source>
+      </trans-unit>
       <trans-unit id="editing.deleteConfirm.title" xml:space="preserve">
         <source>Delete this {0}?</source>
+      </trans-unit>
+      <trans-unit id="editing.deleteConfirm.titleMany" xml:space="preserve">
+        <source>Delete {0} {1}?</source>
       </trans-unit>
       <trans-unit id="editing.deleteFailed" xml:space="preserve">
         <source>Deleting failed</source>
@@ -656,8 +659,14 @@
       <trans-unit id="editing.entity.document" xml:space="preserve">
         <source>document</source>
       </trans-unit>
+      <trans-unit id="editing.entity.documents" xml:space="preserve">
+        <source>documents</source>
+      </trans-unit>
       <trans-unit id="editing.entity.element" xml:space="preserve">
         <source>element</source>
+      </trans-unit>
+      <trans-unit id="editing.entity.elements" xml:space="preserve">
+        <source>elements</source>
       </trans-unit>
       <trans-unit id="editing.hide" xml:space="preserve">
         <source>Hide</source>
@@ -796,6 +805,9 @@
       </trans-unit>
       <trans-unit id="editor.reference.afterCreation" xml:space="preserve">
         <source>References can be set after creation</source>
+      </trans-unit>
+      <trans-unit id="editor.reference.goToPage" xml:space="preserve">
+        <source>Go to page</source>
       </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
@@ -1505,9 +1517,6 @@
       <trans-unit id="panel.title.workspaces" xml:space="preserve">
         <source>Workspaces</source>
       </trans-unit>
-      <trans-unit id="preview.button" xml:space="preserve">
-        <source>Preview</source>
-      </trans-unit>
       <trans-unit id="preview.documentDeleted" xml:space="preserve">
         <source>This page is deleted. It comes back when you restore it - or is gone for good once the deletion is published.</source>
       </trans-unit>
@@ -1519,9 +1528,6 @@
       </trans-unit>
       <trans-unit id="preview.reload" xml:space="preserve">
         <source>Reload preview</source>
-      </trans-unit>
-      <trans-unit id="preview.selectDocument" xml:space="preserve">
-        <source>Select a document to preview it.</source>
       </trans-unit>
       <trans-unit id="profile.changePassword" xml:space="preserve">
         <source>Change password</source>
@@ -1609,9 +1615,6 @@
       </trans-unit>
       <trans-unit id="share.activeLinks" xml:space="preserve">
         <source>Your active links</source>
-      </trans-unit>
-      <trans-unit id="share.button" xml:space="preserve">
-        <source>Share</source>
       </trans-unit>
       <trans-unit id="share.buttonHint" xml:space="preserve">
         <source>Share a preview link to this page with people without a login</source>
@@ -2183,9 +2186,6 @@
       <trans-unit id="tree.outlineLoadFailed" xml:space="preserve">
         <source>Loading the outline failed</source>
       </trans-unit>
-      <trans-unit id="tree.outlinerEmptyDocument" xml:space="preserve">
-        <source>Select a document to outline its content.</source>
-      </trans-unit>
       <trans-unit id="tree.outlinerLabel" xml:space="preserve">
         <source>Content outliner</source>
       </trans-unit>
@@ -2594,8 +2594,17 @@
       <trans-unit id="workspace.publishTarget" xml:space="preserve">
         <source>Workspace to publish to</source>
       </trans-unit>
+      <trans-unit id="workspace.reviewAndPublish" xml:space="preserve">
+        <source>Review and publish</source>
+      </trans-unit>
       <trans-unit id="workspace.publishTargetGroup" xml:space="preserve">
         <source>My workspace, publishing to</source>
+      </trans-unit>
+      <trans-unit id="workspace.myWorkspace" xml:space="preserve">
+        <source>My workspace</source>
+      </trans-unit>
+      <trans-unit id="workspace.contextTooltip" xml:space="preserve">
+        <source>Editing in {0}, publishing to {1}</source>
       </trans-unit>
       <trans-unit id="workspace.publishThisPage" xml:space="preserve">
         <source>Publish this page</source>
@@ -2657,11 +2666,8 @@
       <trans-unit id="workspace.review.publishSelected" xml:space="preserve">
         <source>Publish selected</source>
       </trans-unit>
-      <trans-unit id="workspace.review.publishSelectedCount" xml:space="preserve">
-        <source>Publish selected ({0})</source>
-      </trans-unit>
       <trans-unit id="workspace.review.selectAll" xml:space="preserve">
-        <source>Select all ({0})</source>
+        <source>Select all</source>
       </trans-unit>
       <trans-unit id="workspace.review.selectDescription" xml:space="preserve">
         <source>Select documents to publish or discard.</source>
@@ -2677,9 +2683,6 @@
       </trans-unit>
       <trans-unit id="workspace.review.targetLabel" xml:space="preserve">
         <source>Publishing to</source>
-      </trans-unit>
-      <trans-unit id="workspace.reviewChanges" xml:space="preserve">
-        <source>Review changes</source>
       </trans-unit>
       <trans-unit id="workspace.selectPlaceholder" xml:space="preserve">
         <source>Select workspace…</source>

@@ -71,14 +71,11 @@ export function ChangeBadges({
         <span
           key={badge.key}
           className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-neutral-950 dark:text-white',
+            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 type-small-strong text-foreground',
             TONE_BG_CLASSES[badge.tone],
           )}
         >
-          <i
-            className={`fas fa-fw ${badge.icon} text-[0.625rem]`}
-            aria-hidden
-          />
+          <i className={`fas fa-fw ${badge.icon} type-icon-xs`} aria-hidden />
           {t(badge.labelKey, badge.label)}
         </span>
       ))}

@@ -203,6 +203,17 @@ class AccessRoleConstraintsTest extends UnitTestCase
     /**
      * @test
      */
+    public function theRemovedWorkspaceCreationFlagIsIgnoredInStoredRoles(): void
+    {
+        $constraints = AccessRoleConstraints::fromJsonString('{"allowWorkspaceCreation":false}');
+
+        self::assertFalse($constraints->isRestricting());
+        self::assertArrayNotHasKey('allowWorkspaceCreation', $constraints->jsonSerialize());
+    }
+
+    /**
+     * @test
+     */
     public function rolesAreAdditiveButEvaluatedPerRole(): void
     {
         $first = $this->role(AccessRoleConstraints::create(

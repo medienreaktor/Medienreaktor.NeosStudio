@@ -1,0 +1,86 @@
+/*
+ * GENERATED — do not edit.
+ * Produced by medienreaktor/figma-tools from figma-variables.json.
+ * Change it in Figma, then run `composer exec figma-download` followed by
+ * `composer exec figma-import`.
+ */
+@theme {
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-neutral-50: #f7f7f7;
+  --color-neutral-100: #ededed;
+  --color-neutral-200: #dddddd;
+  --color-neutral-300: #c2c2c2;
+  --color-neutral-400: #999999;
+  --color-neutral-500: #707070;
+  --color-neutral-600: #545454;
+  --color-neutral-700: #3f3f3f;
+  --color-neutral-800: #323232;
+  --color-neutral-900: #222222;
+  --color-neutral-950: #141414;
+  --color-blue-50: #ecf8fe;
+  --color-blue-100: #d0f0fd;
+  --color-blue-200: #a6e4fb;
+  --color-blue-300: #6dd4fa;
+  --color-blue-400: #35c3f8;
+  --color-blue-500: #00adee;
+  --color-blue-600: #008cc4;
+  --color-blue-700: #006e9c;
+  --color-blue-800: #005879;
+  --color-blue-900: #073f56;
+  --color-blue-950: #052838;
+  --color-orange-50: #fff5e8;
+  --color-orange-100: #ffe6c4;
+  --color-orange-200: #ffce8a;
+  --color-orange-300: #ffb04d;
+  --color-orange-400: #ff9a24;
+  --color-orange-500: #ff8700;
+  --color-orange-600: #db6c00;
+  --color-orange-700: #b35400;
+  --color-orange-800: #8a4100;
+  --color-orange-900: #703600;
+  --color-orange-950: #401e00;
+  --color-green-50: #e8faee;
+  --color-green-100: #c4f2d2;
+  --color-green-200: #8ce4a8;
+  --color-green-300: #4dd07e;
+  --color-green-400: #1fbb5e;
+  --color-green-500: #00a338;
+  --color-green-600: #00852d;
+  --color-green-700: #006a24;
+  --color-green-800: #00541d;
+  --color-green-900: #08421a;
+  --color-green-950: #04260e;
+  --color-purple-50: #f4f3ff;
+  --color-purple-100: #ebe9fe;
+  --color-purple-200: #d9d7fd;
+  --color-purple-300: #bcb6fc;
+  --color-purple-400: #9b8df8;
+  --color-purple-500: #7b5ff3;
+  --color-purple-600: #7047eb;
+  --color-purple-700: #592bd6;
+  --color-purple-800: #4b24b3;
+  --color-purple-900: #3f1f93;
+  --color-purple-950: #261b4a;
+  --color-red-50: #fff1ec;
+  --color-red-100: #ffdccf;
+  --color-red-200: #ffbba3;
+  --color-red-300: #ff8f6b;
+  --color-red-400: #ff6a3c;
+  --color-red-500: #ff460d;
+  --color-red-600: #db3400;
+  --color-red-700: #b32900;
+  --color-red-800: #8a2100;
+  --color-red-900: #701c00;
+  --color-red-950: #400f00;
+  --color-presence-purple: #7161c0;
+  --color-presence-raspberry: #e04b64;
+  --color-presence-green: #00a338;
+  --color-presence-rust: #c2571c;
+  --color-presence-teal: #12939e;
+  --color-presence-orchid: #b44bd3;
+  --color-presence-indigo: #5c7cfa;
+  --color-pink-500: #f6339a;
+  --color-cyan-500: #00b8db;
+  --color-teal-500: #00bba7;
+}

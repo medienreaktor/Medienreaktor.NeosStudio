@@ -71,8 +71,7 @@ class PreviewLinksController extends AbstractApiController
             $this->throwJsonStatus(403, 'insufficient_workspace_permissions', sprintf('You lack read access on workspace "%s".', $address->workspaceName->value));
         }
         // The link pins a document; a dangling address would only ever 404.
-        // Frontend visibility deliberately NOT required: a currently disabled
-        // page may well be shared to be seen once it is enabled.
+        // A disabled page may be shared: the link shows hidden content.
         $node = $this->getSubgraph($address)->findNodeById($address->aggregateId);
         if ($node === null) {
             $this->throwJsonStatus(404, 'node_not_found', 'The node does not exist in this workspace and dimension.');

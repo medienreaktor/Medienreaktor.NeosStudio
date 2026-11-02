@@ -34,18 +34,18 @@ export function RolesField({
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-5 w-48" />
+            <Skeleton key={i} className="h-4.5 w-45" />
           ))}
         </div>
       )}
       {data && (
-        <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-3">
+        <div className="max-h-45 space-y-1 overflow-y-auto rounded-md border p-3">
           {data.roles.map((role) => {
             const locked = lockedRoles.includes(role.identifier)
             return (
               <label
                 key={role.identifier}
-                className="flex cursor-pointer items-center gap-2.5 py-0.5 text-sm text-neutral-800 dark:text-neutral-200 has-[[disabled]]:cursor-not-allowed"
+                className="flex cursor-pointer items-center gap-2.5 py-0.5 type-body text-foreground has-[[disabled]]:cursor-not-allowed"
               >
                 <Checkbox
                   checked={value.includes(role.identifier)}
@@ -56,7 +56,7 @@ export function RolesField({
                 />
                 <span className="min-w-0">
                   {role.label}
-                  <span className="ml-2 text-xs text-neutral-500">
+                  <span className="ml-2 type-small text-muted-foreground">
                     {role.identifier}
                   </span>
                 </span>

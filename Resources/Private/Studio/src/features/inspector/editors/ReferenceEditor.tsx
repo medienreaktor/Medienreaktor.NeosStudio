@@ -3,8 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { dataSourceSelectOptions, useDataSource } from '@/api/dataSources'
 import { queryKeys } from '@/api/keys'
 import { addressWithAggregateId } from '@/api/nodeAddress'
-import { nodeLabel, searchNodes, useNodeReferences } from '@/api/nodes'
-import { useNodeTypes } from '@/api/nodeTypes'
+import {
+  DOCUMENT_NODE_TYPE,
+  nodeLabel,
+  searchNodes,
+  useNodeReferences,
+} from '@/api/nodes'
+import { isOfType, useNodeTypes } from '@/api/nodeTypes'
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -277,15 +282,15 @@ function ReferencePicker({
           if (index !== highlighted) setHighlighted(index)
         }}
         className={cn(
-          'flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50',
-          index === highlighted && 'bg-neutral-200 dark:bg-neutral-800',
+          'flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left type-body disabled:pointer-events-none disabled:opacity-50',
+          index === highlighted && 'bg-muted',
         )}
       >
         {option.iconClass && (
           <i
             className={cn(
               option.iconClass,
-              'fa-fw mt-0.5 text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+              'fa-fw mt-0.5 type-icon-m text-muted-foreground',
             )}
             aria-hidden
           />
@@ -293,7 +298,7 @@ function ReferencePicker({
         <span className="min-w-0">
           <span className="block truncate">{option.label}</span>
           {option.secondary && (
-            <span className="block truncate text-xs text-neutral-600 dark:text-neutral-400">
+            <span className="block truncate type-small text-muted-foreground">
               {option.secondary}
             </span>
           )}
@@ -306,14 +311,14 @@ function ReferencePicker({
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         disabled={disabled}
-        className="flex h-9 w-full items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 hover:bg-neutral-300/50 dark:bg-neutral-700/30 dark:hover:bg-neutral-700/50 px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-blue-500 focus-visible:ring-[3px] focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-8.5 w-full items-center gap-2 rounded-md border border-border bg-input/30 hover:bg-input/50 px-3 py-2 type-body shadow-xs outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {triggerContent}
       </PopoverTrigger>
       <PopoverContent className="w-(--anchor-width) p-1">
         <div className="relative">
           <i
-            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 text-[1rem] -translate-y-1/2 text-neutral-600 dark:text-neutral-400"
+            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 type-icon-xl -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
@@ -364,25 +369,22 @@ function ReferencePicker({
               }
             }}
             placeholder={translate('editor.searchPlaceholder', 'Search…')}
-            className="h-8 pl-8"
+            className="h-7.5 pl-7.5"
           />
         </div>
         <div
           ref={listRef}
           id={listboxId}
           role="listbox"
-          className="mt-1 max-h-64 overflow-y-auto"
+          className="mt-1 max-h-60 overflow-y-auto"
         >
           {loading ? (
-            <div className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-600 dark:text-neutral-400">
-              <i
-                className="fas fa-spinner fa-spin text-[0.875rem]"
-                aria-hidden
-              />{' '}
+            <div className="flex items-center gap-2 px-2 py-2 type-small text-muted-foreground">
+              <i className="fas fa-spinner fa-spin type-icon-l" aria-hidden />{' '}
               {translate('editor.searching', 'Searching…')}
             </div>
           ) : options.length === 0 ? (
-            <p className="px-2 py-2 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="px-2 py-2 type-small text-muted-foreground">
               {hint ?? translate('editor.noMatches', 'No matches')}
             </p>
           ) : (
@@ -390,7 +392,7 @@ function ReferencePicker({
               {ungrouped.map(renderOption)}
               {[...groups.entries()].map(([group, groupOptions]) => (
                 <div key={group}>
-                  <p className="px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                  <p className="px-2 py-1.5 type-small text-muted-foreground">
                     {group}
                   </p>
                   {groupOptions.map(renderOption)}
@@ -418,6 +420,9 @@ function ReferencePicker({
  * display from a local cache until the refetch lands. Selection state is
  * server-derived until the first local edit, then owned here - the inspector
  * remounts the editor when the edited subject changes.
+ *
+ * A referenced document opens in the preview from its label (multi) or the
+ * go-to button (single), like the old UI's reference link.
  */
 function ReferenceEditorBase({
   subject,
@@ -427,6 +432,7 @@ function ReferenceEditorBase({
   multiple,
 }: PropertyEditorProps & { multiple: boolean }) {
   const { data: nodeTypes } = useNodeTypes()
+  const { navigateToNode } = useStudio()
   const { data: references } = useNodeReferences(nodeAddress ?? null)
   const serverTargets = useMemo(
     () =>
@@ -459,18 +465,33 @@ function ReferenceEditorBase({
 
   const displayFor = (
     id: string,
-  ): { label: string; iconClass: string | null } => {
+  ): {
+    label: string
+    iconClass: string | null
+    /** Set for a document target - the address to open in the preview. */
+    documentAddress: string | null
+  } => {
     const node = serverTargets.find((target) => target.aggregateId === id)
     if (node) {
       return {
         label: nodeLabel(node),
         iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
+        documentAddress:
+          nodeTypes && isOfType(nodeTypes, node.nodeType, DOCUMENT_NODE_TYPE)
+            ? node.address
+            : null,
       }
     }
     // A fresh pick, shown from the picked option until the refetch lands - or
-    // a target not visible in this subgraph, shown as its bare id.
-    return pickedById[id] ?? { label: id, iconClass: null }
+    // a target not visible in this subgraph, shown as its bare id. Neither has
+    // an address to open yet.
+    const picked = pickedById[id]
+    return picked
+      ? { ...picked, documentAddress: null }
+      : { label: id, iconClass: null, documentAddress: null }
   }
+
+  const goToPageLabel = translate('editor.reference.goToPage', 'Go to page')
 
   const pick = (option: ReferenceOption) => {
     setPickedById((cache) => ({ ...cache, [option.id]: option }))
@@ -481,7 +502,7 @@ function ReferenceEditorBase({
     // The creation dialog: the node does not exist yet, and references cannot
     // ride along in CreateNodeAggregateWithNode's property values.
     return (
-      <div className="flex min-h-9 items-center rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="flex min-h-8.5 items-center rounded-md border border-dashed border-border px-3 py-2 type-body text-muted-foreground">
         {translate(
           'editor.reference.afterCreation',
           'References can be set after creation',
@@ -526,7 +547,7 @@ function ReferenceEditorBase({
                     <i
                       className={cn(
                         display.iconClass,
-                        'fa-fw text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                        'fa-fw type-icon-m text-muted-foreground',
                       )}
                       aria-hidden
                     />
@@ -534,13 +555,22 @@ function ReferenceEditorBase({
                   <span className="truncate">{display.label}</span>
                 </>
               ) : (
-                <span className="text-neutral-600 dark:text-neutral-400">
-                  {placeholder}
-                </span>
+                <span className="text-muted-foreground">{placeholder}</span>
               )
             }
           />
         </div>
+        {display?.documentAddress && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title={goToPageLabel}
+            aria-label={goToPageLabel}
+            onClick={() => navigateToNode(display.documentAddress!)}
+          >
+            <i className="fas fa-arrow-up-right-from-square" aria-hidden />
+          </Button>
+        )}
         {current !== null && (
           <Button
             variant="ghost"
@@ -594,13 +624,13 @@ function ReferenceEditorBase({
             }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 text-sm',
+              'flex h-8.5 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
               dragIndex === index && 'opacity-50',
             )}
           >
             {draggable && (
               <i
-                className="fas fa-grip-vertical text-[1rem] shrink-0 cursor-grab text-neutral-400 dark:text-neutral-600"
+                className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
                 aria-hidden
               />
             )}
@@ -608,16 +638,27 @@ function ReferenceEditorBase({
               <i
                 className={cn(
                   display.iconClass,
-                  'fa-fw text-[0.75rem] text-neutral-600 dark:text-neutral-400',
+                  'fa-fw type-icon-m text-muted-foreground',
                 )}
                 aria-hidden
               />
             )}
-            <span className="min-w-0 flex-1 truncate">{display.label}</span>
+            {display.documentAddress ? (
+              <button
+                type="button"
+                title={goToPageLabel}
+                onClick={() => navigateToNode(display.documentAddress!)}
+                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                {display.label}
+              </button>
+            ) : (
+              <span className="min-w-0 flex-1 truncate">{display.label}</span>
+            )}
             <Button
               variant="ghost"
               size="icon-sm"
-              title="Remove"
+              title={translate('editor.remove', 'Remove')}
               onClick={() => commit(selected.filter((other) => other !== id))}
             >
               <i className="fas fa-xmark" aria-hidden />
@@ -628,9 +669,7 @@ function ReferenceEditorBase({
       <ReferencePicker
         {...pickerProps}
         triggerContent={
-          <span className="text-neutral-600 dark:text-neutral-400">
-            {placeholder}
-          </span>
+          <span className="text-muted-foreground">{placeholder}</span>
         }
       />
     </div>

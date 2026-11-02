@@ -18,7 +18,8 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * The anonymous consumption side of shareable preview links: renders the one
- * document a validated link pins, exactly as a site visitor would see it.
+ * document a validated link pins, including hidden content but never
+ * deleted content.
  *
  * Access control is the token alone. The action is granted to
  * Neos.Flow:Everybody (see Policy.yaml - required, since the core's
@@ -28,8 +29,9 @@ use Psr\Http\Message\ResponseInterface;
  * Because the visitor has no account, the content
  * repository's structural read check on the workspace is bypassed for
  * exactly this one subgraph read - inside a security context that pins the
- * frontend visibility constraints (no disabled, no removed content), and
- * only after the token proved that an editor with read access to that
+ * visibility constraints (no removed content; disabled content is shown, as
+ * in the editor's preview, so a hidden page can be shared before it goes
+ * live), and only after the token proved that an editor with read access to that
  * workspace created the link (enforced at minting, PreviewLinksController).
  *
  * Rendering is strictly frontend mode: no edit metadata, no guest script,
@@ -72,11 +74,10 @@ class ShareController extends ActionController
         $nodeAddress = $link->nodeAddress();
         $contentRepository = $this->contentRepositoryRegistry->get($nodeAddress->contentRepositoryId);
 
-        // What a visitor would see if this workspace were the live site:
-        // disabled ("hidden") and removed (soft-deleted) content excluded,
-        // stated explicitly rather than derived from the (absent) account.
-        $visibilityConstraints = NeosVisibilityConstraints::excludeRemoved()
-            ->merge(NeosVisibilityConstraints::excludeDisabled());
+        // The page as the editor previews it: removed (soft-deleted) content
+        // excluded, disabled ("hidden") content shown, stated explicitly
+        // rather than derived from the (absent) account.
+        $visibilityConstraints = NeosVisibilityConstraints::excludeRemoved();
 
         // The bypass wraps the subgraph read AND the render: Fusion (menus,
         // content collections) reads through the constrained subgraph, so the
@@ -88,8 +89,8 @@ class ShareController extends ActionController
 
             $nodeInstance = $subgraph->findNodeById($nodeAddress->aggregateId);
             if ($nodeInstance === null) {
-                // The document has meanwhile been deleted or hidden in this
-                // workspace; the link is intact but there is nothing to show.
+                // The document has meanwhile been deleted in this workspace;
+                // the link is intact but there is nothing to show.
                 $this->throwStatus(404, 'The shared page is no longer available.');
             }
 

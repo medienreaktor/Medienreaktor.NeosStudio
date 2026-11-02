@@ -75,7 +75,7 @@ export function NodeCreationPanel() {
       </div>
       {/* pt-14 clears the absolute toolbar (56px) so content starts below it
           and scrolls underneath its gradient. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 pt-14">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 pt-13">
         {visibleGroups.length === 0 && (
           <Placeholder
             icon={groups.length === 0 ? 'fa-cube' : 'fa-magnifying-glass'}
@@ -90,7 +90,7 @@ export function NodeCreationPanel() {
                     'No node types match the filter.',
                   )
             }
-            className="py-10"
+            className="py-9.5"
           />
         )}
         {visibleGroups.map((group) => (
@@ -104,7 +104,7 @@ export function NodeCreationPanel() {
               setToggled((previous) => ({ ...previous, [group.name]: !open }))
             }
           >
-            <ul className="grid grid-cols-2 gap-1 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6">
+            <ul className="grid grid-cols-2 gap-1 @[22.5rem]:grid-cols-3 @[30rem]:grid-cols-4 @[37.5rem]:grid-cols-5 @[45rem]:grid-cols-6">
               {group.nodeTypes.map((nodeType) => (
                 <li key={nodeType.name}>
                   <div
@@ -114,7 +114,7 @@ export function NodeCreationPanel() {
                       '{0} ({1}) - drag into the preview',
                       [nodeType.label, nodeType.name],
                     )}
-                    className="flex h-20 cursor-grab flex-col items-center justify-center gap-2 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-200/40 dark:bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-200 dark:hover:bg-neutral-800 active:cursor-grabbing"
+                    className="flex h-18.5 cursor-grab flex-col items-center justify-center gap-2 rounded border border-border bg-muted/40 px-2 pt-2 pb-1 text-center hover:bg-accent active:cursor-grabbing"
                     onDragStart={(event) => {
                       event.dataTransfer.effectAllowed = 'copy'
                       event.dataTransfer.setData(
@@ -128,9 +128,9 @@ export function NodeCreationPanel() {
                     <NodeTypeIcon
                       nodeTypes={nodeTypes}
                       nodeTypeName={nodeType.name}
-                      className="text-base"
+                      className="type-default"
                     />
-                    <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                    <span className="line-clamp-2 w-full wrap-break-word type-small leading-tight">
                       {nodeType.label}
                     </span>
                   </div>

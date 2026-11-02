@@ -120,7 +120,7 @@ export function TaskDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <Field label={t('tasks.title', 'Title')} htmlFor="task-detail-title">
             <Input
               id="task-detail-title"

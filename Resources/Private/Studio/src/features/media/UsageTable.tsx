@@ -13,18 +13,18 @@ export function UsageTable({
   const usage = useAssetUsage(assetSource, identifier)
 
   if (usage.isLoading) {
-    return <Skeleton className="h-16 w-full" />
+    return <Skeleton className="h-15 w-full" />
   }
   if (usage.error || !usage.data) {
     return (
-      <p className="text-xs text-neutral-500">
+      <p className="type-small text-muted-foreground">
         {t('media.usageUnavailable', 'Usage information is unavailable.')}
       </p>
     )
   }
   if (usage.data.total === 0) {
     return (
-      <p className="text-xs text-neutral-500">
+      <p className="type-small text-muted-foreground">
         {t('media.usageNone', 'Not used anywhere. Safe to delete.')}
       </p>
     )
@@ -35,28 +35,30 @@ export function UsageTable({
       {usage.data.usages.map((entry, index) => (
         <div
           key={index}
-          className="flex items-center gap-2 rounded bg-neutral-200/50 dark:bg-neutral-800/50 px-2 py-1.5 text-xs"
+          className="flex items-center gap-2 rounded bg-muted/50 px-2 py-1.5 type-small"
         >
           <i
-            className="fas fa-file text-[0.875rem] shrink-0 text-neutral-500"
+            className="fas fa-file type-icon-l shrink-0 text-muted-foreground"
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-neutral-800 dark:text-neutral-200">
+            <p className="truncate text-foreground">
               {entry.documentNode?.label ?? entry.node.label}
             </p>
             {entry.documentNode &&
               entry.documentNode.label !== entry.node.label && (
-                <p className="truncate text-neutral-500">{entry.node.label}</p>
+                <p className="truncate text-muted-foreground">
+                  {entry.node.label}
+                </p>
               )}
           </div>
-          <span className="shrink-0 text-neutral-500">
+          <span className="shrink-0 text-muted-foreground">
             {entry.workspaceName}
           </span>
         </div>
       ))}
       {usage.data.inaccessibleCount > 0 && (
-        <p className="text-xs text-neutral-500">
+        <p className="type-small text-muted-foreground">
           {t('media.usageInaccessible', '+ {0} usage(s) you cannot access', [
             usage.data.inaccessibleCount,
           ])}

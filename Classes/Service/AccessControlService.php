@@ -298,7 +298,6 @@ class AccessControlService
                 workspaceNames: ['\0-none'],
                 allowPersonalWorkspace: false,
                 allowPublishToLive: false,
-                allowWorkspaceCreation: false,
                 capabilities: array_fill_keys(AccessRoleConstraints::CAPABILITIES, false),
             ),
             true,

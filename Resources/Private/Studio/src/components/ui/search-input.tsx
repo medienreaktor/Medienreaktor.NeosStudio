@@ -16,10 +16,14 @@ function SearchInput({
   return (
     <div className={cn('relative min-w-0 flex-1', wrapperClassName)}>
       <i
-        className="fas fa-magnifying-glass pointer-events-none absolute z-10 top-1/2 left-2.5 -translate-y-1/2 text-xs text-neutral-600 dark:text-neutral-400"
+        className="fas fa-magnifying-glass pointer-events-none absolute z-10 top-1/2 left-2.5 -translate-y-1/2 type-icon-m text-muted-foreground"
         aria-hidden
       />
-      <Input type="search" className={cn('h-8 pl-8', className)} {...props} />
+      <Input
+        type="search"
+        className={cn('h-7.5 pl-7.5', className)}
+        {...props}
+      />
     </div>
   )
 }

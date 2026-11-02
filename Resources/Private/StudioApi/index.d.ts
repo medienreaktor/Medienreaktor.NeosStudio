@@ -16,6 +16,29 @@ export declare function apiFetch<T>(path: string, init?: {
 	method?: string;
 	body?: unknown;
 }): Promise<T>;
+/** One Server-Sent Event as received by apiStream. */
+export interface StreamEvent {
+	/** The event's `data:` lines, joined with newlines. */
+	data: string;
+	/** The `event:` field; `message` when the server sent none. */
+	event: string;
+	/** The last `id:` field seen on the stream, or null. */
+	id: string | null;
+}
+/**
+ * Streaming request for endpoints that answer with Server-Sent Events, e.g. a
+ * long-running job that reports progress. Same bearer auth, token refresh and
+ * base URL as apiFetch, but the body is read incrementally: onEvent runs for
+ * every event as it arrives. Resolves when the server closes the stream (or
+ * `signal` aborts it, which rejects with the AbortError); a non-2xx response
+ * rejects with ApiError before any event is delivered.
+ */
+export declare function apiStream(path: string, init: {
+	method?: string;
+	body?: unknown;
+	signal?: AbortSignal;
+	onEvent: (event: StreamEvent) => void;
+}): Promise<void>;
 export interface SerializedPropertyValue {
 	value: unknown;
 	type: string;
@@ -973,6 +996,7 @@ export interface NeosStudioPluginApi {
 	useKeyboardShortcut: typeof useKeyboardShortcut;
 	toast: typeof toast;
 	apiFetch: typeof apiFetch;
+	apiStream: typeof apiStream;
 	ApiError: typeof ApiError;
 	presenceColor: typeof presenceColor;
 	presenceInitials: typeof presenceInitials;

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 
+import { stackedDialogClassName } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { cn } from '@/lib/utils'
@@ -80,11 +81,18 @@ function ModalHost({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
           data-slot="modal-overlay"
-          className="fixed inset-0 z-200 bg-white/90 dark:bg-neutral-950/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
+          className="fixed inset-0 z-200 bg-background/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0"
         />
         <DialogPrimitive.Popup
           data-slot="modal-content"
-          className="fixed inset-8 md:inset-32 z-200 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-lg transition-[opacity,transform] duration-200 data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0"
+          className={cn(
+            'fixed inset-7.5 md:inset-30 z-200 flex flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-lg data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-ending-style:scale-[0.98] data-ending-style:opacity-0',
+            // Sections open their own dialogs (edit a role, a site, a user...)
+            // on top of this modal; while one is open the modal steps back
+            // behind a veil, see stackedDialogClassName.
+            stackedDialogClassName,
+            'data-nested-dialog-open:-translate-y-2 data-nested-dialog-open:scale-[0.98]',
+          )}
         >
           {open.kind === 'settings' && (
             <SettingsModal
@@ -109,17 +117,17 @@ function ModalHeader({
   children?: React.ReactNode
 }) {
   return (
-    <header className="flex shrink-0 items-center gap-3 px-4 py-2.5">
-      <DialogPrimitive.Title className="text-lg font-semibold text-neutral-950 dark:text-white">
+    <header className="flex shrink-0 items-center gap-3 px-3.5 py-2.5">
+      <DialogPrimitive.Title className="type-heading-m text-foreground">
         {title}
       </DialogPrimitive.Title>
       <div className="ml-auto flex items-center gap-2">
         {children}
         <DialogPrimitive.Close
-          className="rounded-md p-1.5 text-neutral-600 dark:text-neutral-400 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
           aria-label={t('action.close', 'Close')}
         >
-          <i className="fas fa-xmark text-[1rem]" aria-hidden />
+          <i className="fas fa-xmark type-icon-xl" aria-hidden />
         </DialogPrimitive.Close>
       </div>
     </header>
@@ -148,10 +156,10 @@ function SettingsModal({
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label={t('modal.settingsSections', 'Settings sections')}
-          className="w-56 shrink-0 overflow-y-auto p-2"
+          className="w-52.5 shrink-0 overflow-y-auto p-2"
         >
           {sections.length === 0 && (
-            <p className="px-2 py-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="px-2 py-1.5 type-small text-muted-foreground">
               {t('modal.noSettings', 'No settings available')}
             </p>
           )}
@@ -203,17 +211,17 @@ function SettingsNavItem({
       title={!enabled ? section.disabledReason : undefined}
       onClick={() => onSelect(section.id)}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors',
+        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left type-body transition-colors',
         !enabled
-          ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600'
+          ? 'cursor-not-allowed text-placeholder'
           : isActive
-            ? 'bg-neutral-100 dark:bg-neutral-800 text-blue-500'
-            : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 hover:text-neutral-950 dark:hover:text-white',
+            ? 'bg-accent text-primary-text'
+            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
       )}
     >
       {section.icon && (
         <i
-          className={cn(faClassName(section.icon), 'shrink-0 text-[1rem]')}
+          className={cn(faClassName(section.icon), 'shrink-0 type-default')}
           aria-hidden
         />
       )}
@@ -236,7 +244,7 @@ function SettingsSectionBody({
   const enabled = section.useEnabled ? section.useEnabled() : true
   if (!enabled) {
     return (
-      <div className="grid h-full place-items-center p-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="grid h-full place-items-center p-7.5 text-center type-body text-muted-foreground">
         {section.disabledReason ??
           t('modal.noAccess', 'You do not have access to this section.')}
       </div>

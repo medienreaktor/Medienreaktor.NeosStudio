@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useWorkspaceDocumentChanges,
   useWorkspaceDocumentDiff,
@@ -7,6 +7,7 @@ import {
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { CountBadge } from '@/components/ui/count-badge'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
 import {
@@ -26,12 +27,15 @@ import {
 } from '@/components/ui/select'
 import { CompareDialog } from '@/features/compare/CompareDialog'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import { ChangeBadges, workspaceLabel } from './changeDisplay'
 import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import { NodeDiff } from './StepDiff'
-import { useWorkspacePublishing } from './useWorkspacePublishing'
+import { useCanPublish, useWorkspacePublishing } from './useWorkspacePublishing'
+import { WorkspaceDecorationBadges } from './WorkspaceDecorationBadges'
+import { WorkspaceIcon } from './WorkspaceIcon'
 
 /**
  * The expanded body of a document row: the document's NET diff against the
@@ -52,14 +56,14 @@ function DocumentDiff({
     documentId,
   )
   return (
-    <div className="mt-1 mb-2 ml-14 flex flex-col gap-2 text-[11px]">
+    <div className="mt-1 mb-2 ml-13 flex flex-col gap-2 type-small">
       {isLoading && (
-        <div className="py-1 text-neutral-500">
+        <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.loadingDiff', 'Loading changes…')}
         </div>
       )}
       {isError && (
-        <div className="py-1 text-neutral-500">
+        <div className="py-1 text-muted-foreground">
           {t('workspaceHistory.diffFailed', 'The changes could not be loaded.')}
         </div>
       )}
@@ -70,7 +74,7 @@ function DocumentDiff({
         />
       ))}
       {data !== undefined && data.nodes.length === 0 && (
-        <div className="text-neutral-500">
+        <div className="text-muted-foreground">
           {t('workspaceHistory.noDetails', 'No details available.')}
         </div>
       )}
@@ -101,6 +105,7 @@ export function ReviewChangesDialog({
   workspaces,
   activeWorkspace,
   initialSourceName,
+  preselectAll = false,
   open,
   onOpenChange,
   onNavigate,
@@ -116,6 +121,11 @@ export function ReviewChangesDialog({
    * re-pick any pair inside the dialog.
    */
   initialSourceName?: string
+  /**
+   * Open with every document of the initial source selected, so publishing
+   * everything is a single click (the topbar's Review and publish button).
+   */
+  preselectAll?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -149,16 +159,22 @@ export function ReviewChangesDialog({
     null,
   )
 
+  // Armed on open when preselecting; fired once the initial source's list has
+  // (re)loaded, so a fresh fetch rather than a stale cache decides what is
+  // selected. Re-picking a source inside the dialog does not re-arm it.
+  const pendingPreselect = useRef(false)
+
   // Every open starts fresh on the requested (or active) workspace - the
   // closed dialog does not carry a stale review over to the next one.
   useEffect(() => {
     if (open) {
+      pendingPreselect.current = preselectAll
       setSourceName(initialSourceName ?? activeWorkspace.name)
       setSelectedIds(new Set())
       setExpandedIds(new Set())
       setCompareDocumentId(null)
     }
-  }, [open, activeWorkspace.name, initialSourceName])
+  }, [open, activeWorkspace.name, initialSourceName, preselectAll])
 
   const source =
     sources.find((w) => w.name === sourceName) ??
@@ -194,6 +210,7 @@ export function ReviewChangesDialog({
 
   const pickSource = (name: string) => {
     if (name === source?.name) return
+    pendingPreselect.current = false
     setSourceName(name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
@@ -215,7 +232,7 @@ export function ReviewChangesDialog({
   const { site, navigateToNode } = useStudio()
   // Fetch only while open; the query refreshes on publish/discard via the
   // workspaces invalidation the shared hook performs.
-  const { data, isLoading } = useWorkspaceDocumentChanges(
+  const { data, isLoading, isFetching } = useWorkspaceDocumentChanges(
     source?.name ?? null,
     open,
   )
@@ -243,6 +260,12 @@ export function ReviewChangesDialog({
         )
       : all
   }, [data, siteId])
+
+  useEffect(() => {
+    if (!open || !pendingPreselect.current || isFetching || !data) return
+    pendingPreselect.current = false
+    setSelectedIds(new Set(documents.map((d) => d.documentAggregateId)))
+  }, [open, isFetching, data, documents])
 
   // A discard waiting for confirmation; the confirm dialog is open while true.
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -273,6 +296,9 @@ export function ReviewChangesDialog({
     )
   }
 
+  // Anchor for the confetti burst a successful publish celebrates with.
+  const publishButtonRef = useRef<HTMLButtonElement>(null)
+
   const run = (kind: 'publish' | 'discard') => {
     const ids = selected.map((d) => d.documentAggregateId)
     if (ids.length === 0 || !source) return
@@ -282,7 +308,14 @@ export function ReviewChangesDialog({
       {
         onSuccess: () => {
           setSelectedIds(new Set())
-          if (kind === 'publish') onPublished?.(sourceWorkspaceName)
+          if (kind === 'publish') {
+            // Up and to the left from the footer's right edge - measured
+            // before the dialog closes and the button unmounts.
+            celebrateAround(publishButtonRef.current, 120)
+            onPublished?.(sourceWorkspaceName)
+          }
+          // The review is done once its selection went out (or away).
+          onOpenChange(false)
         },
       },
     )
@@ -290,7 +323,7 @@ export function ReviewChangesDialog({
 
   const busy = operation.isPending
   const reviewingActive = source?.name === activeWorkspace.name
-  const canPublish = source?.permissions.publish ?? false
+  const canPublish = useCanPublish(source, workspaces)
   // Discarding rewrites the reviewed workspace - needs write access on it (a
   // given for the active workspace, not for e.g. a draft reviewed as VIEWER).
   const canDiscard = source?.permissions.write ?? false
@@ -345,7 +378,7 @@ export function ReviewChangesDialog({
         <DialogContent size="xl" className="flex max-h-[90vh] flex-col">
           <DialogHeader>
             <DialogTitle>
-              {t('workspace.reviewChanges', 'Review changes')}
+              {t('workspace.reviewAndPublish', 'Review and publish')}
             </DialogTitle>
             <DialogDescription>
               {t(
@@ -357,7 +390,7 @@ export function ReviewChangesDialog({
 
           <div className="flex flex-wrap items-center gap-3 pb-3">
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="type-small text-muted-foreground">
                 {t('workspace.review.sourceLabel', 'Changes in')}
               </span>
               <Select
@@ -366,16 +399,29 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={sourceItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
-                  <SelectValue />
+                <SelectTrigger size="sm" className="min-w-37.5">
+                  <SelectValue>
+                    {(name: string | null) => {
+                      const w = workspaces.find((c) => c.name === name)
+                      return (
+                        <span className="flex items-center gap-2">
+                          <WorkspaceIcon workspace={w} />
+                          {workspaceLabel(w, name ?? '')}
+                          {w && <WorkspaceDecorationBadges workspace={w} />}
+                        </span>
+                      )
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {sourcesForTarget.map((w) => (
                     <SelectItem key={w.name} value={w.name}>
+                      <WorkspaceIcon workspace={w} />
                       {workspaceLabel(w, w.name)}
+                      <WorkspaceDecorationBadges workspace={w} />
                       {w.hasPublishableChanges && (
                         <span
-                          className="size-1.5 rounded-full bg-amber-500"
+                          className="size-1.5 rounded-full bg-node-modified"
                           title={t(
                             'workspace.review.hasChanges',
                             'Has pending changes',
@@ -388,11 +434,11 @@ export function ReviewChangesDialog({
               </Select>
             </div>
             <i
-              className="fas fa-arrow-right mt-4 text-xs text-neutral-500"
+              className="fas fa-arrow-right mt-3.5 type-icon-m text-muted-foreground"
               aria-hidden
             />
             <div className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="type-small text-muted-foreground">
                 {t('workspace.review.targetLabel', 'Publishing to')}
               </span>
               <Select
@@ -401,35 +447,54 @@ export function ReviewChangesDialog({
                 disabled={busy}
                 items={targetItems}
               >
-                <SelectTrigger size="sm" className="min-w-40">
-                  <SelectValue />
+                <SelectTrigger size="sm" className="min-w-37.5">
+                  <SelectValue>
+                    {(name: string | null) => {
+                      const w = workspaces.find((c) => c.name === name)
+                      return (
+                        <span className="flex items-center gap-2">
+                          <WorkspaceIcon workspace={w} />
+                          {workspaceLabel(w, name ?? '')}
+                          {w && <WorkspaceDecorationBadges workspace={w} />}
+                        </span>
+                      )
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {targetItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  {targetItems.map((item) => {
+                    const w = workspaces.find((c) => c.name === item.value)
+                    return (
+                      <SelectItem key={item.value} value={item.value}>
+                        <WorkspaceIcon workspace={w} />
+                        {item.label}
+                        {w && <WorkspaceDecorationBadges workspace={w} />}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {documents.length > 0 && (
-            <label className="flex cursor-pointer items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 text-sm text-neutral-700 dark:text-neutral-300">
+            <label className="flex cursor-pointer items-center gap-2 border-b border-divider pb-2 type-body text-muted-foreground">
               <Checkbox
                 checked={allSelected}
                 indeterminate={selectedCount > 0 && !allSelected}
                 onCheckedChange={toggleAll}
               />
-              {selectedCount > 0
-                ? t('workspace.review.selectedOf', '{0} of {1} selected', [
-                    selectedCount,
-                    documents.length,
-                  ])
-                : t('workspace.review.selectAll', 'Select all ({0})', [
-                    documents.length,
-                  ])}
+              {selectedCount > 0 ? (
+                t('workspace.review.selectedOf', '{0} of {1} selected', [
+                  selectedCount,
+                  documents.length,
+                ])
+              ) : (
+                <>
+                  {t('workspace.review.selectAll', 'Select all')}
+                  <CountBadge variant="neutral" count={documents.length} />
+                </>
+              )}
             </label>
           )}
 
@@ -437,13 +502,13 @@ export function ReviewChangesDialog({
             {isLoading ? (
               <LoadingState
                 label={t('workspace.review.loading', 'Loading changes…')}
-                className="py-8"
+                className="py-7.5"
               />
             ) : documents.length === 0 ? (
               <Placeholder
                 icon="fa-check"
                 title={t('workspace.review.empty', 'No pending changes.')}
-                className="py-8"
+                className="py-7.5"
               />
             ) : (
               <ul className="flex flex-col gap-px">
@@ -466,8 +531,8 @@ export function ReviewChangesDialog({
                         // itself does not light the item up).
                         'rounded-sm border border-transparent transition-colors',
                         isSelected
-                          ? 'border-blue-500 bg-neutral-200 dark:bg-neutral-800'
-                          : 'has-[>label:hover]:bg-neutral-200 dark:has-[>label:hover]:bg-neutral-800',
+                          ? 'border-primary bg-accent'
+                          : 'has-[>label:hover]:bg-muted',
                       )}
                     >
                       <label className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5">
@@ -482,7 +547,7 @@ export function ReviewChangesDialog({
                             // The icon's own line box is shorter than the
                             // title's (12px glyph, 14px text), so it needs the
                             // difference to sit on the title's baseline.
-                            'mt-1 shrink-0 text-neutral-950 dark:text-white',
+                            'mt-1 shrink-0 text-foreground',
                             document.hidden && 'opacity-50',
                           )}
                         />
@@ -490,7 +555,7 @@ export function ReviewChangesDialog({
                           <div className="flex items-center gap-2">
                             <span
                               className={cn(
-                                'truncate text-sm',
+                                'truncate type-body',
                                 document.hidden && 'opacity-50',
                               )}
                             >
@@ -498,20 +563,20 @@ export function ReviewChangesDialog({
                             </span>
                             {document.hidden && (
                               <i
-                                className="fas fa-eye-slash text-xs text-neutral-500"
+                                className="fas fa-eye-slash type-icon-m text-muted-foreground"
                                 title={t('workspace.review.hidden', 'Hidden')}
                                 aria-hidden
                               />
                             )}
                           </div>
                           {breadcrumb.length > 0 && (
-                            <div className="truncate text-xs text-neutral-600 dark:text-neutral-400">
+                            <div className="truncate type-small text-muted-foreground">
                               {breadcrumb.join(' › ')}
                             </div>
                           )}
                           <div className="mt-1 flex items-center gap-2">
                             <ChangeBadges document={document} />
-                            <span className="text-xs text-neutral-500">
+                            <span className="type-small text-muted-foreground">
                               {document.changeCount === 1
                                 ? t('workspace.oneChange', '1 change')
                                 : t('workspace.manyChanges', '{0} changes', [
@@ -547,7 +612,7 @@ export function ReviewChangesDialog({
                           <Button
                             size="icon-sm"
                             variant="ghost"
-                            className="shrink-0 text-blue-600 dark:text-blue-400"
+                            className="shrink-0 text-primary-text"
                             title={
                               reviewingActive
                                 ? t('workspace.review.goToPage', 'Go to page')
@@ -613,7 +678,7 @@ export function ReviewChangesDialog({
             )}
           </div>
 
-          <DialogFooter className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
+          <DialogFooter className="border-t border-divider pt-3.5">
             <Button
               variant="secondary"
               onClick={() => onOpenChange(false)}
@@ -631,26 +696,22 @@ export function ReviewChangesDialog({
               {t('workspace.review.discardSelected', 'Discard selected')}
             </Button>
             <Button
+              ref={publishButtonRef}
               disabled={selectedCount === 0 || !canPublish || busy}
               title={canPublish ? undefined : publishDeniedHint}
-              className={
-                selectedCount > 0 && canPublish
-                  ? 'bg-green-500 text-white hover:bg-green-400 dark:hover:bg-green-600'
-                  : undefined
-              }
+              // Always green; the disabled state (nothing selected, no
+              // permission) dims it instead of switching colors.
+              className="bg-success text-success-foreground hover:bg-success"
               onClick={() => run('publish')}
             >
               <i
-                className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-arrow-up-from-bracket'}`}
+                className={`fas fa-fw ${busy && operation.variables?.kind === 'publish' ? 'fa-spinner fa-spin' : 'fa-check'}`}
                 aria-hidden
               />
-              {selectedCount > 0
-                ? t(
-                    'workspace.review.publishSelectedCount',
-                    'Publish selected ({0})',
-                    [selectedCount],
-                  )
-                : t('workspace.review.publishSelected', 'Publish selected')}
+              {t('workspace.review.publishSelected', 'Publish selected')}
+              {selectedCount > 0 && (
+                <CountBadge variant="neutral" count={selectedCount} />
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -731,8 +792,16 @@ export function ReviewChangesDialog({
         }
         busy={resolve.isPending}
         onCancel={() => setPendingConflict(null)}
-        onForce={() => resolve.mutate('force')}
-        onDiscardAll={() => resolve.mutate('discardAll')}
+        // A resolved conflict finishes the publish/discard - close the
+        // review with it, as a direct success does.
+        onForce={() =>
+          resolve.mutate('force', { onSuccess: () => onOpenChange(false) })
+        }
+        onDiscardAll={() =>
+          resolve.mutate('discardAll', {
+            onSuccess: () => onOpenChange(false),
+          })
+        }
         onNavigate={(address) => {
           setPendingConflict(null)
           goToDocument(address)

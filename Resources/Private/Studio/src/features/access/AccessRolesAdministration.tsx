@@ -88,7 +88,7 @@ export function AccessRolesAdministration() {
   )
 
   return (
-    <div className="p-6">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('accessRoles.title', 'Access roles')}
         subtitle={t(
@@ -103,7 +103,7 @@ export function AccessRolesAdministration() {
       </SettingsHeader>
 
       {data && !data.enforcedInContentRepository && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+        <div className="mb-3.5 flex items-start gap-2.5 rounded-md border border-warning bg-warning-tint px-3 py-2 type-body text-warning-text">
           <i className="fas fa-triangle-exclamation mt-0.5" aria-hidden />
           <span>
             {t(
@@ -121,14 +121,14 @@ export function AccessRolesAdministration() {
             'accessRoles.unavailable',
             'Access roles are currently unavailable.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -139,7 +139,7 @@ export function AccessRolesAdministration() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('accessRoles.search', 'Search roles…')}
-            wrapperClassName="mb-3 max-w-xs"
+            wrapperClassName="mb-3 max-w-75"
           />
 
           {roles.length === 0 ? (
@@ -153,7 +153,7 @@ export function AccessRolesAdministration() {
                       'No access roles yet. Everyone works unrestricted until you create one.',
                     )
               }
-              className="py-10"
+              className="py-9.5"
             />
           ) : (
             <div className="rounded-md border">
@@ -280,16 +280,16 @@ function RoleRow({
     .filter((label): label is string => label !== undefined)
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
-          {role.label}
-        </span>
-        <div className="text-xs text-neutral-500">{role.identifier}</div>
+        <span className="font-medium text-foreground">{role.label}</span>
+        <div className="type-small text-muted-foreground">
+          {role.identifier}
+        </div>
       </TableCell>
       <TableCell>
         {summary.length === 0 ? (
-          <span className="text-neutral-500">
+          <span className="text-muted-foreground">
             {t('accessRoles.unrestricted', 'Unrestricted')}
           </span>
         ) : (
@@ -305,7 +305,7 @@ function RoleRow({
       </TableCell>
       <TableCell>
         {role.memberUserIds.length === 0 ? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         ) : (
           <span title={memberNames.join(', ')}>
             {t('accessRoles.memberCount', '{0} member(s)', [
@@ -316,18 +316,18 @@ function RoleRow({
       </TableCell>
       <TableCell>
         {role.active ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-green-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-success" />
             {t('accessRoles.active', 'Active')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-neutral-500">
-            <span className="size-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-placeholder" />
             {t('accessRoles.paused', 'Paused')}
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

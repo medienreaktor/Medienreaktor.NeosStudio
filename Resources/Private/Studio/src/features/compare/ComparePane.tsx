@@ -157,14 +157,14 @@ export const ComparePane = forwardRef<
 
   if (src === null) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+      <div className="flex min-h-0 flex-1 items-center justify-center bg-card">
         <Placeholder icon={emptyState.icon} title={emptyState.title} />
       </div>
     )
   }
 
   return (
-    <div className="relative min-h-0 flex-1 bg-white">
+    <div className="relative min-h-0 flex-1 bg-background">
       <iframe
         ref={frameRef}
         src={src}
@@ -175,7 +175,7 @@ export const ComparePane = forwardRef<
         )}
       />
       {!ready && (
-        <div className="absolute inset-0 flex bg-neutral-100 dark:bg-neutral-900">
+        <div className="absolute inset-0 flex bg-card">
           {failed ? (
             <Placeholder
               icon="fa-triangle-exclamation"

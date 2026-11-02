@@ -79,19 +79,19 @@ export function AssetDetailsDialog({
       onOpenChange={setOpen}
       onOpenChangeComplete={(nextOpen) => !nextOpen && onOpenChange(false)}
     >
-      <DialogContent size="lg" className="max-w-4xl">
+      <DialogContent size="lg" className="max-w-210">
         <DialogHeader>
-          <DialogTitle className="truncate pr-6">{asset.label}</DialogTitle>
+          <DialogTitle className="truncate pr-5.5">{asset.label}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-5.5 md:grid-cols-2">
           {/* Left: preview + read-only metadata. */}
-          <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
-            <div className="grid place-items-center overflow-hidden rounded-md bg-neutral-50 dark:bg-neutral-900 p-2">
+          <div className="space-y-3.5 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
+            <div className="grid place-items-center overflow-hidden rounded-md bg-card p-2">
               <AssetThumb asset={asset} preview />
             </div>
 
-            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 type-small">
               <Meta label={t('media.type', 'Type')}>{asset.assetType}</Meta>
               <Meta label={t('media.format', 'Format')}>{asset.mediaType}</Meta>
               <Meta label={t('media.size', 'Size')}>
@@ -112,7 +112,7 @@ export function AssetDetailsDialog({
           </div>
 
           {/* Right: editable metadata, tags, collections and usage. */}
-          <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
+          <div className="space-y-3.5 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
             {!asset.isImported && asset.isRemote && (
               <RemoteImport asset={asset} />
             )}
@@ -121,7 +121,7 @@ export function AssetDetailsDialog({
               <MetadataForm key={localId} asset={asset} localId={localId} />
             ) : (
               !asset.isRemote && (
-                <p className="text-xs text-neutral-500">
+                <p className="type-small text-muted-foreground">
                   {t('media.readOnly', 'This asset is read-only.')}
                 </p>
               )
@@ -196,7 +196,7 @@ function MetadataForm({
   return (
     // Fields mirror the inspector's property layout (Labeled + plain
     // Input/Textarea) so metadata editing looks the same everywhere.
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       <div>
         <Labeled label={t('media.title', 'Title')}>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -254,7 +254,7 @@ function TagAssignment({
           />
         ))}
         {assigned.length === 0 && (
-          <span className="text-xs text-neutral-500">
+          <span className="type-small text-muted-foreground">
             {t('media.none', 'None')}
           </span>
         )}
@@ -316,7 +316,7 @@ function CollectionAssignment({
           />
         ))}
         {assigned.length === 0 && (
-          <span className="text-xs text-neutral-500">
+          <span className="type-small text-muted-foreground">
             {t('media.none', 'None')}
           </span>
         )}
@@ -368,7 +368,7 @@ function RemoteImport({ asset }: { asset: MediaAsset }) {
         }
       }}
     >
-      <i className="fas fa-download text-[1rem]" aria-hidden />
+      <i className="fas fa-download type-icon-xl" aria-hidden />
       {busy
         ? t('media.importing', 'Importing…')
         : t('media.importToNeos', 'Import to Neos')}
@@ -388,7 +388,7 @@ function ReplaceButton({
   return (
     <>
       <Button variant="secondary" size="sm" onClick={() => setReplacing(true)}>
-        <i className="fas fa-arrow-up-from-bracket text-[1rem]" aria-hidden />
+        <i className="fas fa-arrow-up-from-bracket type-icon-xl" aria-hidden />
         {t('media.replaceAsset', 'Replace file')}
       </Button>
       {replacing && (
@@ -423,7 +423,7 @@ function DeleteButton({
         size="sm"
         onClick={() => setConfirming(true)}
       >
-        <i className="fas fa-trash-can text-[1rem]" aria-hidden />
+        <i className="fas fa-trash-can type-icon-xl" aria-hidden />
         {t('media.deleteAsset', 'Delete asset')}
       </Button>
       <ConfirmDialog
@@ -471,15 +471,15 @@ function AssignTree({
 }) {
   return (
     <Popover>
-      <PopoverTrigger className="mt-1 flex h-7 w-full items-center gap-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-300/30 dark:bg-neutral-700/30 px-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50">
+      <PopoverTrigger className="mt-1 flex h-6.5 w-full items-center gap-1.5 rounded-md border border-border bg-input/30 px-2 type-small text-muted-foreground hover:bg-input/50">
         <span className="truncate">{placeholder}</span>
         <i
-          className="fas fa-chevron-down ml-auto shrink-0 text-[0.75rem] text-neutral-950/50 dark:text-white/50"
+          className="fas fa-chevron-down ml-auto shrink-0 type-icon-m text-placeholder"
           aria-hidden
         />
       </PopoverTrigger>
       <PopoverContent>
-        <div className="min-w-56">
+        <div className="min-w-52.5">
           <MediaTree
             label={treeLabel}
             emptyText={emptyText}
@@ -491,11 +491,11 @@ function AssignTree({
             icon={(node) =>
               assignedIds.has(node.id) ? (
                 <i
-                  className="fas fa-check text-[0.875rem] text-blue-500"
+                  className="fas fa-check type-icon-l text-primary-text"
                   aria-hidden
                 />
               ) : (
-                <i className={cn('fas text-[0.875rem]', icon)} aria-hidden />
+                <i className={cn('fas type-icon-l', icon)} aria-hidden />
               )
             }
           />
@@ -507,15 +507,15 @@ function AssignTree({
 
 function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="flex items-center gap-1 rounded bg-neutral-200 dark:bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-800 dark:text-neutral-200">
+    <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 type-small text-foreground">
       {label}
       <button
         type="button"
         onClick={onRemove}
-        className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+        className="text-muted-foreground hover:text-foreground"
         aria-label={t('media.removeLabel', 'Remove {0}', [label])}
       >
-        <i className="fas fa-xmark text-[0.75rem]" aria-hidden />
+        <i className="fas fa-xmark type-icon-m" aria-hidden />
       </button>
     </span>
   )
@@ -530,7 +530,7 @@ function Field({
 }) {
   return (
     <div>
-      <h3 className="mb-1 flex items-center gap-1.5 text-xs text-neutral-950 dark:text-white">
+      <h3 className="mb-1 flex items-center gap-1.5 type-small text-foreground">
         {label}
       </h3>
       {children}
@@ -547,12 +547,8 @@ function Meta({
 }) {
   return (
     <>
-      <dt className="text-neutral-500">{label}</dt>
-      <dd
-        className={cn(
-          'truncate text-right text-neutral-700 dark:text-neutral-300',
-        )}
-      >
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className={cn('truncate text-right text-muted-foreground')}>
         {children}
       </dd>
     </>

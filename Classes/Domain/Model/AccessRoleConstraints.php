@@ -56,8 +56,6 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
         public bool $allowPersonalWorkspace,
         /** Publishing into a workspace's base - in practice "may go live". */
         public bool $allowPublishToLive,
-        /** Create new shared workspaces (the workspace administration's "New"). */
-        public bool $allowWorkspaceCreation,
         public array $capabilities,
     ) {
     }
@@ -65,7 +63,7 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
     /** A role that restricts nothing - the starting point of every new role. */
     public static function unrestricted(): self
     {
-        return new self([], [], [], [], true, true, true, []);
+        return new self([], [], [], [], true, true, []);
     }
 
     /**
@@ -82,7 +80,6 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
         array $workspaceNames = [],
         bool $allowPersonalWorkspace = true,
         bool $allowPublishToLive = true,
-        bool $allowWorkspaceCreation = true,
         array $capabilities = [],
     ): self {
         return new self(
@@ -92,7 +89,6 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
             array_values(array_unique(array_filter(array_map('strval', $workspaceNames)))),
             $allowPersonalWorkspace,
             $allowPublishToLive,
-            $allowWorkspaceCreation,
             self::normalizeCapabilities($capabilities),
         );
     }
@@ -116,7 +112,6 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
             is_array($array['workspaceNames'] ?? null) ? $array['workspaceNames'] : [],
             (bool)($array['allowPersonalWorkspace'] ?? true),
             (bool)($array['allowPublishToLive'] ?? true),
-            (bool)($array['allowWorkspaceCreation'] ?? true),
             is_array($array['capabilities'] ?? null) ? $array['capabilities'] : [],
         );
     }
@@ -336,7 +331,6 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
             || $this->workspaceNames !== []
             || !$this->allowPersonalWorkspace
             || !$this->allowPublishToLive
-            || !$this->allowWorkspaceCreation
             || in_array(false, $this->capabilities, true);
     }
 
@@ -352,7 +346,6 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
             'workspaceNames' => $this->workspaceNames,
             'allowPersonalWorkspace' => $this->allowPersonalWorkspace,
             'allowPublishToLive' => $this->allowPublishToLive,
-            'allowWorkspaceCreation' => $this->allowWorkspaceCreation,
             'capabilities' => (object)$this->capabilities,
         ];
     }

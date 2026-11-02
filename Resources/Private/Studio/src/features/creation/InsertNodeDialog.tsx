@@ -263,7 +263,7 @@ function OpenInsertNodeDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-row gap-4">
+          <div className="flex flex-row gap-3.5">
             <ToggleGroup
               size="sm"
               value={[activeMode]}
@@ -319,7 +319,7 @@ function OpenInsertNodeDialog({
                         [noun],
                       )
                 }
-                className="py-10"
+                className="py-9.5"
               />
             ) : (
               visibleGroups.map((group) => (
@@ -338,22 +338,22 @@ function OpenInsertNodeDialog({
                     }))
                   }
                 >
-                  <ul className="grid grid-cols-2 gap-1 @[24rem]:grid-cols-3 @[32rem]:grid-cols-4 @[40rem]:grid-cols-5 @[48rem]:grid-cols-6">
+                  <ul className="grid grid-cols-2 gap-1 @[22.5rem]:grid-cols-3 @[30rem]:grid-cols-4 @[37.5rem]:grid-cols-5 @[45rem]:grid-cols-6">
                     {group.nodeTypes.map((nodeType) => (
                       <li key={nodeType.name}>
                         <button
                           type="button"
                           disabled={resolving}
                           title={`${nodeType.label} (${nodeType.name})`}
-                          className="flex h-20 w-full flex-col items-center justify-center gap-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-200/40 dark:bg-neutral-800/40 px-2 pt-2 pb-1 text-center hover:bg-neutral-200 dark:hover:bg-neutral-800 disabled:opacity-50"
+                          className="flex h-18.5 w-full flex-col items-center justify-center gap-1.5 rounded border border-border bg-muted/40 px-2 pt-2 pb-1 text-center hover:bg-accent disabled:opacity-50"
                           onClick={() => void pick(nodeType.name)}
                         >
                           <NodeTypeIcon
                             nodeTypes={creatable?.nodeTypes}
                             nodeTypeName={nodeType.name}
-                            className="text-base"
+                            className="type-default"
                           />
-                          <span className="line-clamp-2 w-full wrap-break-word text-xs leading-tight">
+                          <span className="line-clamp-2 w-full wrap-break-word type-small leading-tight">
                             {nodeType.label}
                           </span>
                         </button>

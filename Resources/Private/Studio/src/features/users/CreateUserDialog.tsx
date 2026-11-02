@@ -110,8 +110,11 @@ export function CreateUserDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <Field label={t('users.username', 'Username')} htmlFor="user-create-username">
+        <form onSubmit={onSubmit} className="space-y-3.5">
+          <Field
+            label={t('users.username', 'Username')}
+            htmlFor="user-create-username"
+          >
             <Input
               id="user-create-username"
               value={username}
@@ -121,7 +124,7 @@ export function CreateUserDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('users.firstName', 'First name')}
               htmlFor="user-create-first-name"
@@ -158,7 +161,7 @@ export function CreateUserDialog({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field
               label={t('users.password', 'Password')}
               htmlFor="user-create-password"
@@ -188,7 +191,7 @@ export function CreateUserDialog({
             </Field>
           </div>
           {mismatch && (
-            <p className="text-sm text-red-500">
+            <p className="type-body text-destructive-text">
               {t('users.passwordMismatch', 'The passwords do not match.')}
             </p>
           )}

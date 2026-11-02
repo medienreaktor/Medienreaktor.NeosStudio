@@ -1,14 +1,14 @@
 {
   "name": "@medienreaktor/neos-studio",
   "private": true,
-  "version": "1.13.0",
+  "version": "1.18.1",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && vite build --config vite.guest.config.ts && vite build --config vite.compare.config.ts",
+    "build": "tsc && vite build && vite build --config vite.guest.config.ts && vite build --config vite.compare.config.ts && node scripts/check-css-variables.mjs",
     "preview": "vite preview",
     "format": "prettier --write src",
     "format:check": "prettier --check src"
@@ -29,6 +29,7 @@
     "@tiptap/extension-hard-break": "^3.27.4",
     "@tiptap/extension-italic": "^3.27.4",
     "@tiptap/extension-link": "^3.27.4",
+    "@tiptap/extension-paragraph": "^3.27.4",
     "@tiptap/extension-strike": "^3.27.4",
     "@tiptap/extension-subscript": "^3.27.4",
     "@tiptap/extension-superscript": "^3.27.4",

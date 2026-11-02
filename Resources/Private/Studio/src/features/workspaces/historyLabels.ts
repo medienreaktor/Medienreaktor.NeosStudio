@@ -19,10 +19,10 @@ export type ChangeTone = 'add' | 'change' | 'remove' | 'variant'
 
 /** Text color per tone - the 400 tier for legibility on the dark surface. */
 export const TONE_TEXT_CLASSES: Record<ChangeTone, string> = {
-  add: 'text-green-600 dark:text-green-400',
-  change: 'text-blue-600 dark:text-blue-400',
-  remove: 'text-red-600 dark:text-red-400',
-  variant: 'text-purple-600 dark:text-purple-400',
+  add: 'text-change-added-text',
+  change: 'text-change-modified-text',
+  remove: 'text-change-removed-text',
+  variant: 'text-change-variant-text',
 }
 
 /**
@@ -31,10 +31,10 @@ export const TONE_TEXT_CLASSES: Record<ChangeTone, string> = {
  * surfaces. One source for both so the two can never drift apart again.
  */
 export const TONE_BG_CLASSES: Record<ChangeTone, string> = {
-  add: 'bg-green-500',
-  change: 'bg-blue-500',
-  remove: 'bg-red-500',
-  variant: 'bg-purple-500',
+  add: 'bg-change-added text-change-added-foreground',
+  change: 'bg-change-modified text-change-modified-foreground',
+  remove: 'bg-change-removed text-change-removed-foreground',
+  variant: 'bg-change-variant text-change-variant-foreground',
 }
 
 const EVENT_TYPE_TONES: Record<string, ChangeTone> = {

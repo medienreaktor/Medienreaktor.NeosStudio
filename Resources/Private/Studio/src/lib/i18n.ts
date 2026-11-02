@@ -35,7 +35,11 @@ let bundle: XliffBundle | null = null
 export async function loadTranslations(): Promise<void> {
   try {
     const response = await fetch(
-      `${config.xliffEndpoint}?locale=${encodeURIComponent(config.interfaceLanguage)}`,
+      `${config.xliffEndpoint}?locale=${encodeURIComponent(config.interfaceLanguage)}${
+        config.xliffVersion
+          ? `&version=${encodeURIComponent(config.xliffVersion)}`
+          : ''
+      }`,
       { credentials: 'include' },
     )
     if (response.ok) bundle = (await response.json()) as XliffBundle

@@ -6,7 +6,7 @@ privilegeTargets:
     # user may actually see is enforced by the CR's structural authorization
     # inside the subgraph, this target only gates the endpoint as such.
     'Medienreaktor.NeosStudio:Preview':
-      matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->showAction())'
+      matcher: 'method(Medienreaktor\NeosStudio\Controller\PreviewController->(show|live)Action())'
 
     # The authenticated user's own notifications (list + mark read). Strictly
     # per-user - the controller resolves the recipient from the account, so

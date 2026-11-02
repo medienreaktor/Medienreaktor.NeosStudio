@@ -1,0 +1,270 @@
+From 93c867d2554831f35d1be8af00072513514e889a Mon Sep 17 00:00:00 2001
+From: Robin Roloff <robinroloff04@googlemail.com>
+Date: Tue, 29 Sep 2026 13:52:05 +0200
+Subject: [PATCH] Execute RemoveNodeAggregate as a soft removal in Neos 9.2
+ workspaces
+
+Neos 9.2 dropped the removal attachment point, so a hard removal in a
+workspace can no longer be scoped to a site or document when publishing.
+Dispatch TagSubtree(removed) instead, as the Neos UI does; root workspaces
+and Neos 9.1 keep the hard removal. Not merged: pending discussion, see
+Medienreaktor.NeosStudio Documentation.
+---
+ Classes/Controller/Api/CommandsController.php | 66 +++++++++++++++++--
+ .../Service/LegacyRemovalAttachmentPoint.php  | 31 +++++++++
+ Classes/Service/WorkspaceReadContext.php      | 21 +++---
+ README.md                                     |  6 +-
+ Resources/Private/OpenApi/openapi.yaml        | 15 +++--
+ 5 files changed, 121 insertions(+), 18 deletions(-)
+ create mode 100644 Classes/Service/LegacyRemovalAttachmentPoint.php
+
+diff --git a/Classes/Controller/Api/CommandsController.php b/Classes/Controller/Api/CommandsController.php
+index ac7664f..2689ff7 100644
+--- a/Classes/Controller/Api/CommandsController.php
++++ b/Classes/Controller/Api/CommandsController.php
+@@ -5,14 +5,18 @@ declare(strict_types=1);
+ namespace Medienreaktor\NeosApi\Controller\Api;
+ 
+ use Medienreaktor\NeosApi\Service\CommandRegistry;
++use Medienreaktor\NeosApi\Service\LegacyRemovalAttachmentPoint;
+ use Medienreaktor\NeosApi\Service\NodeCreationHandlerRunner;
+ use Medienreaktor\NeosApi\Service\PropertyTypeCoercer;
+ use Medienreaktor\NeosApi\Service\PropertyValueHydrator;
++use Neos\ContentRepository\Core\CommandHandler\CommandInterface;
+ use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
+ use Neos\ContentRepository\Core\DimensionSpace\OriginDimensionSpacePoint;
+ use Neos\ContentRepository\Core\Feature\NodeCreation\Command\CreateNodeAggregateWithNode;
+ use Neos\ContentRepository\Core\Feature\NodeReferencing\Dto\NodeReferencesForName;
++use Neos\ContentRepository\Core\Feature\NodeRemoval\Command\RemoveNodeAggregate;
+ use Neos\ContentRepository\Core\Feature\Security\Exception\AccessDenied;
++use Neos\ContentRepository\Core\Feature\SubtreeTagging\Command\TagSubtree;
+ use Neos\ContentRepository\Core\NodeType\NodeType;
+ use Neos\ContentRepository\Core\NodeType\NodeTypeName;
+ use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
+@@ -23,6 +27,7 @@ use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
+ use Neos\Flow\Annotations as Flow;
+ use Neos\Neos\Domain\Service\NodeDuplication\NodeAggregateIdMapping;
+ use Neos\Neos\Domain\Service\NodeDuplicationService;
++use Neos\Neos\Domain\SubtreeTagging\NeosSubtreeTag;
+ 
+ /**
+  * The write API: execute whitelisted content repository commands.
+@@ -41,7 +46,9 @@ use Neos\Neos\Domain\Service\NodeDuplicationService;
+  * One command type is synthetic: CopyNodesRecursively (removed from the CR
+  * core in Neos 9) dispatches to the NodeDuplicationService instead of the
+  * command bus - see handleCopyNodesRecursively(). Same envelope, same
+- * batching, same central authorization of every derived command.
++ * batching, same central authorization of every derived command. And one is
++ * version-dependent: RemoveNodeAggregate dispatches as the soft removal on
++ * the Neos that cannot scope hard removals any more - see removalCommand().
+  */
+ class CommandsController extends AbstractApiController
+ {
+@@ -179,9 +186,14 @@ class CommandsController extends AbstractApiController
+         }
+ 
+         // Record where a removed node lived, so a deletion can still be scoped
+-        // to its document/site when publishing individual changes. See
+-        // resolveRemovalAttachmentPoint().
+-        if ($type === 'RemoveNodeAggregate' && !isset($payload['removalAttachmentPoint'])) {
++        // to its document/site when publishing individual changes - on the
++        // Neos that keeps this record; see resolveRemovalAttachmentPoint() and,
++        // for the Neos that dropped it, removalCommand().
++        if (
++            $type === 'RemoveNodeAggregate'
++            && LegacyRemovalAttachmentPoint::isSupported()
++            && !isset($payload['removalAttachmentPoint'])
++        ) {
+             $attachmentPoint = $this->resolveRemovalAttachmentPoint($payload);
+             if ($attachmentPoint !== null) {
+                 $payload['removalAttachmentPoint'] = $attachmentPoint;
+@@ -199,6 +211,10 @@ class CommandsController extends AbstractApiController
+             return ['error' => 'invalid_payload', 'message' => $exception->getMessage(), 'statusCode' => 400];
+         }
+ 
++        if ($command instanceof RemoveNodeAggregate) {
++            $command = $this->removalCommand($command);
++        }
++
+         // A creation runs through the node type's nodeCreationHandlers (the
+         // seam the classic UI's Create change offers, used by e.g.
+         // Flowpack.NodeTemplates) and may expand into a command chain - see
+@@ -395,6 +411,45 @@ class CommandsController extends AbstractApiController
+         }
+     }
+ 
++    /**
++     * The command a client's RemoveNodeAggregate actually dispatches.
++     *
++     * A HARD removal where Neos still records the removal attachment point
++     * (9.1 - filled in handleCommand(), it keeps the deletion publishable per
++     * site/document). Neos 9.2 dropped that record, and its publishing service
++     * scopes every change by walking up from the changed node itself - a
++     * hard-removed node is gone from the workspace graph, so the deletion
++     * matches no site and no document and can only ever be published or
++     * discarded with the whole workspace (see LegacyRemovalAttachmentPoint).
++     * Neos 9.2 itself never hard-removes inside a workspace for exactly that
++     * reason (the Neos UI tags the subtree "removed", see
++     * NeosSubtreeTag::removed()), so neither does the API: the removal becomes
++     * the soft removal this package documents as the deletion anyway -
++     * reviewable, scopable, restorable from the trash, and erased in live by
++     * the soft-removal garbage collector once published. Root workspaces keep
++     * the hard removal: nothing is published from them, and the garbage
++     * collector only sweeps live.
++     */
++    private function removalCommand(RemoveNodeAggregate $command): CommandInterface
++    {
++        if (LegacyRemovalAttachmentPoint::isSupported()) {
++            return $command;
++        }
++        $workspace = $this->getContentRepository()->findWorkspaceByName($command->workspaceName);
++        // An unknown workspace fails downstream with the core's own error, as before.
++        if ($workspace === null || $workspace->isRootWorkspace()) {
++            return $command;
++        }
++
++        return TagSubtree::create(
++            $command->workspaceName,
++            $command->nodeAggregateId,
++            $command->coveredDimensionSpacePoint,
++            $command->nodeVariantSelectionStrategy,
++            NeosSubtreeTag::removed()
++        );
++    }
++
+     /**
+      * Resolve the "removal attachment point" for a RemoveNodeAggregate: the
+      * closest document of the node being removed, captured while the node still
+@@ -405,7 +460,8 @@ class CommandsController extends AbstractApiController
+      * this optional and Neos leaves it unset otherwise, which makes deletions
+      * impossible to publish per site/document. Filling it here keeps every
+      * removal (from any client) scopable. Best-effort: on any failure we return
+-     * null and let the command run without it, as before.
++     * null and let the command run without it, as before. Only meaningful on
++     * the Neos that records the attachment point (see removalCommand()).
+      *
+      * @param array<string, mixed> $payload
+      */
+diff --git a/Classes/Service/LegacyRemovalAttachmentPoint.php b/Classes/Service/LegacyRemovalAttachmentPoint.php
+new file mode 100644
+index 0000000..2995003
+--- /dev/null
++++ b/Classes/Service/LegacyRemovalAttachmentPoint.php
+@@ -0,0 +1,31 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Medienreaktor\NeosApi\Service;
++
++use Neos\Neos\PendingChangesProjection\Change;
++
++/**
++ * Whether this Neos still knows the "removal attachment point" of a hard
++ * removal - the one thing that makes a RemoveNodeAggregate attributable to a
++ * document once the removed node is gone from the workspace graph.
++ *
++ * Neos 9.1 carries it from the command through the event into the
++ * pending-changes projection (Change::getLegacyRemovalAttachmentPoint()), and
++ * WorkspacePublishingService::isChangePublishableWithinAncestorScope() walks
++ * up from it when a publish or discard is scoped to a site or document.
++ * Neos 9.2 dropped it from command, event and projection (soft removals made
++ * it obsolete): a scoped publish there resolves every change from the changed
++ * node itself, so a hard removal in a workspace can only be published with the
++ * whole workspace. The API adapts on both ends of that - what a
++ * RemoveNodeAggregate dispatches (CommandsController) and which node a
++ * deletion is grouped by (WorkspaceReadContext) - so the gate lives here once.
++ */
++final class LegacyRemovalAttachmentPoint
++{
++    public static function isSupported(): bool
++    {
++        return method_exists(Change::class, 'getLegacyRemovalAttachmentPoint');
++    }
++}
+diff --git a/Classes/Service/WorkspaceReadContext.php b/Classes/Service/WorkspaceReadContext.php
+index cd6646b..0d27d1d 100644
+--- a/Classes/Service/WorkspaceReadContext.php
++++ b/Classes/Service/WorkspaceReadContext.php
+@@ -222,21 +222,26 @@ final class WorkspaceReadContext
+      *
+      * Resolved from the same anchor the content repository uses when it scopes
+      * a publish (see WorkspacePublishingService::isChangePublishableWithinAncestorScope):
+-     * the legacy removal attachment point when the change carries one,
+-     * the changed node otherwise. Only hard removals (RemoveNodeAggregate)
++     * on Neos 9.1 the legacy removal attachment point when the change carries
++     * one, the changed node otherwise. Only hard removals (RemoveNodeAggregate)
+      * carry an attachment point, and it names a SURVIVING ancestor precisely
+      * because the removed node itself is gone - so a hard removal is attributed
+-     * to the document that outlived it. Anything else, soft removals included,
+-     * resolves through the node itself. Grouping by anything else would list
+-     * changes under a document that publishing them does not accept.
++     * to the document that outlived it. Neos 9.2 dropped the attachment point
++     * and always walks up from the changed node (see
++     * LegacyRemovalAttachmentPoint) - which resolves every deletion the API
++     * issues there, because those are soft removals that stay in the graph
++     * (see CommandsController::removalCommand()). Grouping by anything else
++     * would list changes under a document that publishing them does not
++     * accept. A hard removal reaching a 9.2 workspace from elsewhere is gone
++     * from the graph, and closestDocumentAndSite()'s base fallback names the
++     * document it had in the base - display-only, since the content
++     * repository cannot scope such a deletion at all.
+      *
+      * @return array{document: ?Node, site: ?Node, inWorkspace: bool}
+      */
+     public function changeDocumentAndSite(Change $change, DimensionSpacePoint $dimensionSpacePoint): array
+     {
+-        // Neos 9.2 keeps removed nodes in the graph (tagged "removed") and dropped
+-        // the removal attachment point; 9.1 still needs it for deleted nodes.
+-        $anchor = method_exists($change, 'getLegacyRemovalAttachmentPoint')
++        $anchor = LegacyRemovalAttachmentPoint::isSupported()
+             ? ($change->getLegacyRemovalAttachmentPoint() ?? $change->nodeAggregateId)
+             : $change->nodeAggregateId;
+ 
+diff --git a/README.md b/README.md
+index 7c1c8c0..e1d69ee 100644
+--- a/README.md
++++ b/README.md
+@@ -159,7 +159,11 @@ The conventions behind the endpoint reference:
+   live erases it once the deletion is published. Deleted nodes are invisible
+   to reads unless a client opts in with `?includeDeleted=1`; the per-workspace
+   **trash bin** (`GET /api/workspaces/{name}/trash` + `/restore`) lists and
+-  undoes deletions.
++  undoes deletions. On Neos 9.2 a `RemoveNodeAggregate` in a workspace is
++  executed as this soft removal as well - the content repository there can no
++  longer publish or discard a hard removal per site or document (on 9.1 it
++  stays a hard removal, kept scopable through its auto-filled
++  `removalAttachmentPoint`).
+ - **Two views of "what changed".** `document-diff` compares *state* against
+   the base workspace (what publishing would apply, squashed old → new);
+   `pending-events` replays *history* since the workspace forked off its base,
+diff --git a/Resources/Private/OpenApi/openapi.yaml b/Resources/Private/OpenApi/openapi.yaml
+index 7822503..41048d0 100644
+--- a/Resources/Private/OpenApi/openapi.yaml
++++ b/Resources/Private/OpenApi/openapi.yaml
+@@ -4080,11 +4080,18 @@ components:
+         removalAttachmentPoint:
+           allOf: [{ $ref: '#/components/schemas/NodeAggregateIdValue' }]
+           description: >
+-            Do not send - auto-filled with the closest document ancestor so
+-            the deletion stays publishable per document.
++            Do not send - auto-filled on Neos 9.1 with the closest document
++            ancestor so the deletion stays publishable per document; ignored
++            on Neos 9.2.
+       description: >
+-        HARD removal. Prefer a soft delete via TagSubtree with
+-        `{"tag": "removed"}`, which is restorable from the workspace trash.
++        HARD removal on Neos 9.1 (kept publishable per site/document through
++        the auto-filled removalAttachmentPoint). On Neos 9.2 the content
++        repository cannot scope a hard removal to a site or document any more,
++        so in every workspace that publishes to a base the command is executed
++        as a soft removal - TagSubtree with `{"tag": "removed"}`: restorable
++        from the workspace trash, erased in live once the deletion is
++        published; root workspaces keep the hard removal. Prefer TagSubtree
++        directly.
+ 
+     SubtreeVisibilityPayload:
+       type: object
+-- 
+2.50.1 (Apple Git-155)
+

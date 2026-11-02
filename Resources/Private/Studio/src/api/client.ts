@@ -139,3 +139,105 @@ export async function apiUpload<T>(
   if (result.status >= 200 && result.status < 300) return result.parsed as T
   throw new ApiError(result.status, result.parsed)
 }
+
+/** One Server-Sent Event as received by apiStream. */
+export interface StreamEvent {
+  /** The event's `data:` lines, joined with newlines. */
+  data: string
+  /** The `event:` field; `message` when the server sent none. */
+  event: string
+  /** The last `id:` field seen on the stream, or null. */
+  id: string | null
+}
+
+/**
+ * Streaming request for endpoints that answer with Server-Sent Events, e.g. a
+ * long-running job that reports progress. Same bearer auth, token refresh and
+ * base URL as apiFetch, but the body is read incrementally: onEvent runs for
+ * every event as it arrives. Resolves when the server closes the stream (or
+ * `signal` aborts it, which rejects with the AbortError); a non-2xx response
+ * rejects with ApiError before any event is delivered.
+ */
+export async function apiStream(
+  path: string,
+  init: {
+    method?: string
+    body?: unknown
+    signal?: AbortSignal
+    onEvent: (event: StreamEvent) => void
+  },
+): Promise<void> {
+  const method = init.method ?? 'GET'
+  const body = init.body !== undefined ? JSON.stringify(init.body) : undefined
+
+  const send = (token: string | null): Promise<Response> => {
+    const headers: Record<string, string> = { Accept: 'text/event-stream' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    return fetch(config.apiBase + path, {
+      method,
+      headers,
+      body,
+      cache: 'no-store',
+      signal: init.signal,
+    })
+  }
+
+  const token = await getValidAccessToken()
+  let response = await send(token)
+  // Refresh once and retry on rejection, mirroring apiFetch.
+  if (response.status === 401 && token) {
+    const refreshed = await forceRefreshAccessToken()
+    if (refreshed) response = await send(refreshed)
+  }
+
+  if (!response.ok || !response.body) {
+    const raw = await response.text()
+    let parsed: unknown = raw
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      /* keep raw text */
+    }
+    throw new ApiError(response.status, parsed)
+  }
+
+  // Minimal SSE parser (WHATWG event stream format): events are separated by
+  // a blank line; `data:` lines accumulate, `event:`/`id:` set fields, lines
+  // starting with `:` are comments.
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buffer = ''
+  let data: string[] = []
+  let event = ''
+  let id: string | null = null
+
+  const processLine = (line: string) => {
+    if (line === '') {
+      if (data.length > 0) {
+        init.onEvent({ data: data.join('\n'), event: event || 'message', id })
+      }
+      data = []
+      event = ''
+      return
+    }
+    if (line.startsWith(':')) return
+    const colon = line.indexOf(':')
+    const field = colon === -1 ? line : line.slice(0, colon)
+    let value = colon === -1 ? '' : line.slice(colon + 1)
+    if (value.startsWith(' ')) value = value.slice(1)
+    if (field === 'data') data.push(value)
+    else if (field === 'event') event = value
+    else if (field === 'id') id = value
+  }
+
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += value
+    const lines = buffer.split('\n').map((line) => line.replace(/\r$/, ''))
+    buffer = lines.pop() ?? ''
+    lines.forEach(processLine)
+  }
+  if (buffer !== '') processLine(buffer)
+  processLine('')
+}

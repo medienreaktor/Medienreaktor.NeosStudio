@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 import { apiErrorDescription } from '@/api/client'
 import { queryKeys } from '@/api/keys'
 import { useUsers } from '@/api/users'
-import { deleteWorkspace, useWorkspaces, type Workspace } from '@/api/workspaces'
+import {
+  deleteWorkspace,
+  useWorkspaces,
+  type Workspace,
+} from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { useStudio } from '@/app/StudioContext'
 import { Badge } from '@/components/ui/badge'
@@ -82,11 +86,14 @@ export function WorkspacesAdministration() {
 
   // Owner user ids -> readable names, from the user roster every editor may read.
   const userLabels = new Map(
-    (usersData?.users ?? []).map((user) => [user.id, user.fullName || user.label]),
+    (usersData?.users ?? []).map((user) => [
+      user.id,
+      user.fullName || user.label,
+    ]),
   )
 
   return (
-    <div className="p-6">
+    <div className="p-5.5 pt-3">
       <SettingsHeader
         title={t('workspacesAdmin.title', 'Workspaces')}
         subtitle={t(
@@ -107,14 +114,14 @@ export function WorkspacesAdministration() {
             'workspacesAdmin.unavailable',
             'Workspaces are currently unavailable.',
           )}
-          className="py-10"
+          className="py-9.5"
         />
       )}
 
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={i} className="h-9.5 w-full" />
           ))}
         </div>
       )}
@@ -124,10 +131,14 @@ export function WorkspacesAdministration() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>{t('workspacesAdmin.columnTitle', 'Title')}</TableHead>
+                <TableHead>
+                  {t('workspacesAdmin.columnTitle', 'Title')}
+                </TableHead>
                 <TableHead>{t('workspacesAdmin.columnBase', 'Base')}</TableHead>
                 <TableHead>{t('workspacesAdmin.columnType', 'Type')}</TableHead>
-                <TableHead>{t('workspacesAdmin.columnOwner', 'Owner')}</TableHead>
+                <TableHead>
+                  {t('workspacesAdmin.columnOwner', 'Owner')}
+                </TableHead>
                 <TableHead>
                   {t('workspacesAdmin.columnChanges', 'Changes')}
                 </TableHead>
@@ -214,9 +225,11 @@ export function WorkspacesAdministration() {
           }
           queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
           toast.success(
-            t('workspacesAdmin.deleted', 'The workspace "{0}" has been deleted.', [
-              workspace.title || workspace.name,
-            ]),
+            t(
+              'workspacesAdmin.deleted',
+              'The workspace "{0}" has been deleted.',
+              [workspace.title || workspace.name],
+            ),
           )
         }}
       />
@@ -246,21 +259,23 @@ function WorkspaceRow({
     !isActive
 
   return (
-    <TableRow className="text-neutral-800 dark:text-neutral-200">
+    <TableRow className="text-foreground">
       <TableCell>
-        <span className="font-medium text-neutral-950 dark:text-white">
+        <span className="font-medium text-foreground">
           {workspace.title || workspace.name}
         </span>
-        <span className="ml-2 text-xs text-neutral-500">{workspace.name}</span>
+        <span className="ml-2 type-small text-muted-foreground">
+          {workspace.name}
+        </span>
         {isActive && (
           <Badge variant="outline" className="ml-2 align-middle">
             {t('workspacesAdmin.active', 'Active')}
           </Badge>
         )}
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
+      <TableCell className="text-muted-foreground">
         {workspace.baseWorkspace ?? (
-          <span className="text-neutral-500">—</span>
+          <span className="text-muted-foreground">—</span>
         )}
       </TableCell>
       <TableCell>
@@ -271,22 +286,22 @@ function WorkspaceRow({
           <WorkspaceDecorationBadges workspace={workspace} />
         </span>
       </TableCell>
-      <TableCell className="text-neutral-600 dark:text-neutral-400">
-        {ownerLabel ?? <span className="text-neutral-500">—</span>}
+      <TableCell className="text-muted-foreground">
+        {ownerLabel ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell>
         {workspace.hasPublishableChanges ? (
-          <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
-            <span className="size-1.5 rounded-full bg-amber-500" />
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-node-modified" />
             {t('workspacesAdmin.pending', 'Pending')}
           </span>
         ) : (
-          <span className="text-neutral-500">
+          <span className="text-muted-foreground">
             {t('workspacesAdmin.none2', 'None')}
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
+      <TableCell className="w-9.5 text-right">
         {workspace.permissions.manage && (
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -294,7 +309,10 @@ function WorkspaceRow({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={t('workspacesAdmin.rowActions', 'Workspace actions')}
+                  aria-label={t(
+                    'workspacesAdmin.rowActions',
+                    'Workspace actions',
+                  )}
                 />
               }
             >

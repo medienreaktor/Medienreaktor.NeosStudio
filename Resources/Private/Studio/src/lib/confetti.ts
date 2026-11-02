@@ -1,16 +1,26 @@
 import confetti from 'canvas-confetti'
 
+import { config } from '@/config'
+
 /**
  * Celebratory confetti burst centered on an element. canvas-confetti draws
  * on its own fixed full-screen canvas, so the origin has to be the element's
  * center in viewport-relative coordinates. The anchor sits in the top-right
  * corner, so instead of the library's straight-up default (which would leave
  * the viewport immediately) the burst is angled leftward across the screen
- * and rains down from there. Skips itself entirely for users who prefer
- * reduced motion.
+ * and rains down from there. Skips itself entirely where the operator turned
+ * the celebration off (the publishCelebration setting, mirrored into the boot
+ * config) and for users who prefer reduced motion.
  */
-export function celebrateAround(anchor: HTMLElement | null) {
-  if (!anchor) return
+export function celebrateAround(
+  anchor: HTMLElement | null,
+  /**
+   * Launch direction in degrees (90 = up, 180 = left). The default suits the
+   * top-right corner; an anchor lower on screen (a dialog footer) aims up.
+   */
+  angle = 190,
+) {
+  if (!anchor || !config.publishCelebration) return
   const rect = anchor.getBoundingClientRect()
   const origin = {
     x: (rect.left + rect.width / 2) / window.innerWidth,
@@ -20,7 +30,7 @@ export function celebrateAround(anchor: HTMLElement | null) {
   void confetti({
     origin,
     particleCount: 120,
-    angle: 190,
+    angle,
     spread: 70,
     startVelocity: 55,
     disableForReducedMotion: true,

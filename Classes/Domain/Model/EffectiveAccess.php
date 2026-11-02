@@ -124,11 +124,6 @@ final readonly class EffectiveAccess
         return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowPublishToLive);
     }
 
-    public function allowsWorkspaceCreation(): bool
-    {
-        return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowWorkspaceCreation);
-    }
-
     public function allowsCapability(string $capability): bool
     {
         return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowsCapability($capability));

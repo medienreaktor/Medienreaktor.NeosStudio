@@ -55,11 +55,12 @@ Purely additive: without it the change simply reads out in the detail panel inst
 
 Dynamic, editable **access roles**: name a set of restrictions and assign editors to it, in the UI, without touching `Policy.yaml` or deploying anything. What the classic distributions solved with Sandstorm.NeosAcl, rebuilt for Neos 9 — where the node-level privilege targets that approach relied on no longer exist.
 
-- **Four axes, one role**: which **sites**, which branches of the **page tree**, which **dimensions**, which **workspaces** — plus the coarse capabilities (edit, create, delete, move) a role may exercise inside them.
-- **Pick branches from the tree**: the page-tree tab browses the real document tree; select a page, then allow or deny it, with or without its sub-pages. Allow rules turn the tree into a whitelist, deny rules cut single pages back out — the rule nearest a page wins, so "the whole section except this one page" is two clicks.
+- **Four axes, one role**: which **sites**, which branches of the **document tree**, which **dimensions**, which **workspaces** (live included — "may edit the draft but not publish to live" is one unticked box) — plus the coarse capabilities (edit, create, delete, move) a role may exercise inside them.
+- **Pick branches from the tree**: the Documents tab browses the real document tree; select a page, then allow or deny it, with or without its sub-pages. Allow rules turn the tree into a whitelist, deny rules cut single pages back out — the rule nearest a page wins, so "the whole section except this one page" is two clicks.
 - **Permissive by default, at every turn**: a fresh role restricts nothing, an empty list means "all", and a user with **no role assigned is unrestricted** — installing this changes nothing until an administrator hands a role out. Administrators are exempt by design, so a role can never lock the last admin out.
-- **Additive**: assign someone two roles and they may do what either allows. Never the intersection, never a surprise.
-- **Enforced, not just drawn**: the roles narrow the Studio's UI *and* the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. It only ever *narrows* Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
+- **Additive, but never a mash-up**: assign someone two roles and they may do what either allows — evaluated *per role*, so one role must cover the whole operation. "May edit the draft" plus "may read live" never combines into writing on live. Never the intersection, never a surprise.
+- **Doomed gestures never start**: every surface asks *before* offering. A page outside the roles renders as a plain read-only preview with the inspector disarmed (and a notice naming who can widen the role); a withheld capability greys out exactly its actions — context menus, drag & drop, the creation palette and the New-page button, action by action; a dimension value the roles block shows a lock and a tooltip instead of posing as a configuration gap. And if a role change mid-session drops the workspace someone is standing in, a blocking dialog moves them to a permitted one instead of letting the saves fail one by one.
+- **Enforced, not just drawn**: the roles narrow the Studio's UI *and* the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. Creating a workspace is the one write asked exactly as Neos asks it — may the base workspace be read — because the command cannot tell the personal workspace Neos sets up on a user's first login from a new shared one. Node listings and document search are filtered **server-side** as well, so a hidden page never leaks through a search hit — while unrestricted accounts (which is nearly everyone) skip the filter entirely and pay nothing. It only ever *narrows* Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
 - **The tree shows the role, not the site**: only the granted branches and the path down to them appear. The ancestors on that path render dimmed with a lock badge — signposts, not workspaces — and everything else is gone from the tree entirely. The path is resolved server-side per request, so moving a page never strands the branch below it.
 
 ### ⚡ Blazingly fast, everywhere
@@ -101,7 +102,7 @@ Full parity with the classic inspector — and then some:
 - **Trash panel**: deleting a node is a soft removal, so every deleted page waits in the trash until the deletion is published — with who deleted it and when, and one click to restore it (deleted parent pages come back with it).
 - **User & profile management**: administer users, and every editor gets self-service profile settings (name, email, password, interface language).
 - **Localized UI** in English and German via Neos' own XLIFF infrastructure (450+ keys) — translated the Neos way, extendable the Neos way.
-- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, themed with the official Neos UI palette. Dark, focused, familiar.
+- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, on semantic design tokens from Figma, with light and dark themes. Focused, familiar.
 
 ### 🔌 Extensible by design — registries all the way down
 
@@ -217,7 +218,47 @@ src/
   lib/, hooks/          shared utilities
 ```
 
-Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) mapped onto the shadcn token contract with the official Neos palette; primitives are Base UI (`@base-ui/react`), not Radix.
+Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) on semantic tokens; primitives are Base UI (`@base-ui/react`), not Radix.
+
+### Design tokens
+
+Colours, radii and text styles come from the [Neos Studio Figma file](https://www.figma.com/design/ks1Uf9OdtvGCA9zjDsSYCu/) through `medienreaktor/figma-tools`, configured by `figma-tools.json`. The Figma dumps (`figma-variables.json`, `figma-text-styles.json`) are checked in, so the export is reproducible without Figma access. From a project that installs figma-tools:
+
+```bash
+composer exec -- figma-download --base-path <path to this package>   # refresh the dumps; needs FIGMA_MCP_TOKEN
+composer exec -- figma-import --base-path <path to this package>     # regenerate src/styles/*.css
+```
+
+`src/styles/{primitives,semantics,sizes,texts}.css` are generated: never hand-edit them, change Figma and re-export. Components use semantic utilities only (`bg-card`, `text-muted-foreground`, `border-divider`, `type-body`, `type-icon-s`), never palette shades or `dark:` variants; Tailwind's own font-size scale is switched off (`src/text-scale.css`). The theme axis is `data-theme="light|dark"` on `<html>`, and any subtree can set its own `data-theme` to render in the other mode. The root font size is left at the browser default, and every length, text sizes included, is in rem, so Studio follows the reader's default font size - also when it changes while Studio is open. That includes lengths JavaScript computes with: graph geometry and panel rects are plain numbers meaning rem, rendered as `${value}rem`. Pixels only exist where code reads the screen - pointer positions, scroll offsets, element and window sizes - and `lib/rem.ts` converts them there, reading the root font size fresh each time.
+
+Sizes are designed for a 16px root on Tailwind's spacing scale, where one step is 4px: `h-8.5` is 34px, `p-3.5` is 14px. Pick the step for the pixel size the design asks for, in half steps at most. Up to 1.18 Studio was laid out at a 15px root; its sizes were carried over by mapping every step to the half step nearest its old pixel size, which is why many of them are half steps (`h-8.5` where the 15px layout had `h-9`). The text styles bring their own line heights from Figma (`type-body` is 18.75px), so a component sets `leading-*` only where it deliberately departs from its style.
+
+### Styling plugins
+
+A plugin's markup is not part of Studio's Tailwind build, so it ships its own CSS. To look like Studio it needs no build of its own and no figma-tools: the shell declares its design tokens as CSS custom properties at runtime, switched with the theme, and plain CSS reads them.
+
+```css
+.my-plugin-field {
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-input) 30%, transparent);
+  color: var(--color-foreground);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+}
+```
+
+The variables a plugin may rely on are listed in [`src/plugin-api/css-variables.json`](Resources/Private/Studio/src/plugin-api/css-variables.json):
+
+- **Colours:** the UI set, `--color-background`, `-foreground`, `-card`, `-popover`, `-muted`, `-accent`, `-border`, `-divider`, `-input`, `-ring`, `-placeholder`, `-link`, `-scrim`, and the roles `primary`, `secondary`, `destructive`, `warning`, `success`, `variant`. A role is its fill (`--color-primary`), the text on that fill (`-foreground`), the role as a text colour on a surface (`-text`), and a translucent background (`-tint`).
+- **Radii:** `--radius-sm`, `-md`, `-lg`, `-xl`.
+- **Text:** one `--text-{style}` per Studio text style with its `--text-{style}--line-height`: `default`, `body`, `body-strong`, `small`, `small-strong`, `caption`, `count`, `count-small`, `overline`, `heading-s`/`-m`/`-l`, `code`, `code-small`, and the icon sizes `icon-xs` to `icon-3xl`. Weights are not variables: the `-strong` styles are 500, `count`, `count-small`, `overline` and the headings 600, the rest 400; `overline` is also upper case with `letter-spacing: 0.025em`.
+- **Fonts and spacing:** `--font-sans`, `--font-mono`, `--font-icon`, and Tailwind's spacing unit `--spacing` (4px at the default root).
+
+Sizes in a plugin follow the same rule as Studio's own: lengths in rem, also where JavaScript computes them, and pixels only where the plugin reads the screen, converted with the root font size read at that moment (`parseFloat(getComputedStyle(document.documentElement).fontSize)`). Then a reader's larger default font size scales the plugin with the shell, even while Studio is open.
+
+Everything else in the build is internal. The build fails when a listed variable goes missing, so a rename in Figma is caught in Studio rather than in a plugin; an intended rename keeps the old name alive through `extraNames` in `figma-tools.json` until the known plugins have moved. Larger plugin UIs should use Studio's components rather than restyle them; exposing those through the plugin API is planned.
 
 `npm run dev` starts the Vite dev server for fast iteration; end-to-end auth is tested against the built-and-served shell at `/neos/studio` (the OAuth redirect URIs are bound to that origin).
 
