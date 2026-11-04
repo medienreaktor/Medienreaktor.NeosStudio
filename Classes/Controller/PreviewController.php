@@ -83,7 +83,7 @@ class PreviewController extends ActionController
         if ($nodeAddress->workspaceName->isLive()) {
             try {
                 $uri = $this->nodeUriBuilderFactory->forActionRequest($this->request)->uriFor($nodeAddress);
-            } catch (\Neos\Flow\Mvc\Routing\Exception\NoMatchingRouteException) {
+            } catch (\Neos\Flow\Mvc\Exception\NoMatchingRouteException) {
                 $uri = null;
             }
             if ($uri !== null) {
