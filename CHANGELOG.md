@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The Composer package leaves out what only developing Studio needs: the Figma
+  token exports and their configuration, the tests with their CI and tool
+  configuration, and internal decision records.
+
+### Fixed
+
+- "Open page in a new tab" on a live page without a public URL (hidden, or
+  below a hidden page) opens the Studio preview again, as intended since
+  1.17.15; it failed instead.
+
 ## [1.19.0] - 2026-11-04
 
 ### Added
@@ -42,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `src/plugin-api/css-variables.json` lists the ones plugins may rely on, and
   the build fails when one of them goes missing. The README's "Styling
   plugins" section describes them.
+- **Soft hyphens and non-breaking spaces in inline editing.** Properties with
+  the `hyphens` or `nbsp` editor option, which the classic UI serves through
+  `Shel.Neos.Hyphens`, get a block toolbar button for the character. Both are
+  stored as plain characters (U+00AD, U+00A0), as that package stores them,
+  and marked while editing, since neither is visible otherwise: a soft hyphen
+  as a dash, a non-breaking space as a tinted box.
 
 ### Changed
 
@@ -63,6 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the text styles keep their 1.18 line heights.
 - The mobile breakpoint is `48rem` instead of `768px`, so it moves with the
   default font size like Tailwind's `md`.
+- The code editor opens full-size, with the code area filling the dialog,
+  instead of a fixed 720px dialog.
+- The block toolbar also shows in inline-only properties, where the caret sits
+  in no block, so their caret actions are reachable.
 
 ### Deprecated
 
@@ -76,6 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text inputs carried two text styles at once.
 - The last row of a node type card in the node type graph was clipped by the
   card's border.
+- Long lines in the code editor, as embed snippets have, can be scrolled
+  sideways; they used to stretch the code column past the dialog's edge.
 
 ## [1.18.1] - 2026-10-22
 
