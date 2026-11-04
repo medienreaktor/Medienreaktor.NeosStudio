@@ -8,7 +8,8 @@ use Medienreaktor\NeosStudio\Domain\Model\AccessRole;
 use Medienreaktor\NeosStudio\Domain\Model\AccessRoleConstraints;
 use Medienreaktor\NeosStudio\Domain\Model\EffectiveAccess;
 use Medienreaktor\NeosStudio\Domain\Model\NodeTreeRule;
-use Neos\Flow\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
 
 /**
  * The access-role rule semantics. Pure logic with no Flow dependencies, and
@@ -20,11 +21,9 @@ use Neos\Flow\Tests\UnitTestCase;
  * Resources/Private/Studio/src/api/accessRoles.ts); changes here need to land
  * there too.
  */
-class AccessRoleConstraintsTest extends UnitTestCase
+final class AccessRoleConstraintsTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function emptyConstraintsRestrictNothing(): void
     {
         $constraints = AccessRoleConstraints::unrestricted();
@@ -36,9 +35,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertFalse($constraints->isRestricting());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function allowRulesTurnThePageTreeIntoAWhitelist(): void
     {
         $constraints = AccessRoleConstraints::create(nodeTreeRules: [
@@ -50,9 +47,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertFalse($constraints->allowsNodePath(['elsewhere', 'site']));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function withoutAllowRulesTheRestOfTheTreeStaysOpen(): void
     {
         $constraints = AccessRoleConstraints::create(nodeTreeRules: [
@@ -67,9 +62,8 @@ class AccessRoleConstraintsTest extends UnitTestCase
     /**
      * The combination the page-tree editor is built around: grant a branch,
      * cut one page out of it.
-     *
-     * @test
      */
+    #[Test]
     public function theNearestRuleWins(): void
     {
         $constraints = AccessRoleConstraints::create(nodeTreeRules: [
@@ -82,9 +76,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertFalse($constraints->allowsNodePath(['below', 'secret', 'branch', 'site']));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function aRuleWithoutDescendantsCoversOnlyItsOwnNode(): void
     {
         $constraints = AccessRoleConstraints::create(nodeTreeRules: [
@@ -95,9 +87,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertTrue($constraints->allowsNodePath(['child', 'page', 'site']));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function dimensionsNotMentionedByAPointCannotViolateItsRestriction(): void
     {
         $constraints = AccessRoleConstraints::create(dimensionValues: ['language' => ['de']]);
@@ -107,9 +97,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertTrue($constraints->allowsDimensionSpacePoint(['market' => 'b2b']));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function anEmptyValueListIsNoRestrictionAtAll(): void
     {
         $constraints = AccessRoleConstraints::create(dimensionValues: ['language' => []]);
@@ -118,9 +106,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertFalse($constraints->isRestricting());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function rootWorkspacesStayReadableEvenForNarrowRoles(): void
     {
         $constraints = AccessRoleConstraints::create(
@@ -138,9 +124,8 @@ class AccessRoleConstraintsTest extends UnitTestCase
     /**
      * The distinction the whole workspace restriction rests on: being able to
      * SEE live is not being allowed to WORK in it.
-     *
-     * @test
      */
+    #[Test]
     public function aNarrowedListExcludesLiveFromEditingEvenThoughItStaysReadable(): void
     {
         $constraints = AccessRoleConstraints::create(workspaceNames: ['review']);
@@ -151,9 +136,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertFalse($constraints->allowsWorkspaceEditing('campaign', 'SHARED'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function anEmptyWorkspaceListLeavesEvenLiveEditable(): void
     {
         $constraints = AccessRoleConstraints::unrestricted();
@@ -162,9 +145,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertTrue($constraints->allowsWorkspaceEditing('anything', 'SHARED'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function onlyWithheldCapabilitiesArePersisted(): void
     {
         $constraints = AccessRoleConstraints::create(capabilities: [
@@ -180,9 +161,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertEquals((object)['deleteNodes' => false], $constraints->jsonSerialize()['capabilities']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constraintsSurviveAJsonRoundTrip(): void
     {
         $constraints = AccessRoleConstraints::create(
@@ -200,9 +179,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function theRemovedWorkspaceCreationFlagIsIgnoredInStoredRoles(): void
     {
         $constraints = AccessRoleConstraints::fromJsonString('{"allowWorkspaceCreation":false}');
@@ -211,9 +188,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertArrayNotHasKey('allowWorkspaceCreation', $constraints->jsonSerialize());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function rolesAreAdditiveButEvaluatedPerRole(): void
     {
         $first = $this->role(AccessRoleConstraints::create(
@@ -242,9 +217,8 @@ class AccessRoleConstraintsTest extends UnitTestCase
      * axes separately says yes to writing in live (the workspace via the
      * second role, the capability via the first), which is something neither
      * role allows.
-     *
-     * @test
      */
+    #[Test]
     public function everyAxisMustBeSatisfiedByTheSameRole(): void
     {
         $draft = $this->role(AccessRoleConstraints::create(workspaceNames: ['entwurf']));
@@ -274,9 +248,7 @@ class AccessRoleConstraintsTest extends UnitTestCase
         self::assertTrue($access->allowsWorkspaceRead('live', 'ROOT'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function permitsSkipsAxesTheOperationDoesNotTouch(): void
     {
         $access = EffectiveAccess::restrictedBy([
@@ -298,17 +270,13 @@ class AccessRoleConstraintsTest extends UnitTestCase
         ));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function noAssignedRoleMeansUnrestricted(): void
     {
         self::assertTrue(EffectiveAccess::restrictedBy([])->unrestricted);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function identifiersAreDerivedFromTheLabel(): void
     {
         self::assertSame('editors-north', AccessRole::identifierFromLabel('Editors North!'));
