@@ -86,7 +86,7 @@ function CodeArea({
   const shared = 'm-0 border-0 p-3 type-code whitespace-pre [tab-size:2]'
 
   return (
-    <div className="relative h-[60vh] overflow-hidden rounded-md border border-border bg-background type-code">
+    <div className="relative h-full overflow-hidden rounded-md border border-border bg-background type-code">
       <div className="flex h-full">
         <div
           ref={gutterRef}
@@ -97,7 +97,9 @@ function CodeArea({
             <div key={i}>{i + 1}</div>
           ))}
         </div>
-        <div className="relative flex-1">
+        {/* min-w-0: a flex item grows to its longest line otherwise, and the
+            box clips the scrollbars along with it. */}
+        <div className="relative min-w-0 flex-1">
           <pre
             ref={preRef}
             aria-hidden
@@ -201,7 +203,10 @@ export const CodeEditor: PropertyEditorComponent = ({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent size="lg" className="max-w-180">
+        <DialogContent
+          size="full"
+          className="grid-rows-[auto_minmax(0,1fr)_auto]"
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <i className="fas fa-code type-icon-xl" aria-hidden />
