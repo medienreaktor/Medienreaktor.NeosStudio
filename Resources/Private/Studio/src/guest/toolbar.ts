@@ -416,10 +416,14 @@ function positionInline(element: HTMLElement): void {
   element.style.top = `${top}px`
 }
 
-/** The viewport rect of the top-level block the caret sits in. */
+/**
+ * The viewport rect of the top-level block the caret sits in - or of the
+ * editor itself in an inline-only property, whose text sits directly in the
+ * document with no block around it.
+ */
 function currentBlockRect(editor: Editor): DOMRect | null {
   const { $from } = editor.state.selection
-  if ($from.depth === 0) return null
+  if ($from.depth === 0) return editor.view.dom.getBoundingClientRect()
   const dom = editor.view.nodeDOM($from.before(1))
   return dom instanceof HTMLElement ? dom.getBoundingClientRect() : null
 }
@@ -644,6 +648,29 @@ registerToolbarItem({
   isAvailable: (editor) => editorFormatting(editor).horizontalRule,
   isActive: () => false,
   run: (editor) => editor.chain().focus().setHorizontalRule().run(),
+})
+
+// Soft hyphen and non-breaking space, inserted at the caret. The faces are
+// the marks word processors show for the two characters.
+registerToolbarItem({
+  id: 'softHyphen',
+  kind: 'block',
+  group: 'insert',
+  label: 'Soft hyphen',
+  icon: '¬',
+  isAvailable: (editor) => editorFormatting(editor).softHyphen,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().insertSoftHyphen().run(),
+})
+registerToolbarItem({
+  id: 'nonBreakingSpace',
+  kind: 'block',
+  group: 'insert',
+  label: 'Non-breaking space',
+  icon: '°',
+  isAvailable: (editor) => editorFormatting(editor).nonBreakingSpace,
+  isActive: () => false,
+  run: (editor) => editor.chain().focus().insertNonBreakingSpace().run(),
 })
 
 // Tables. Insert is offered outside a table; the row/column/merge/header
