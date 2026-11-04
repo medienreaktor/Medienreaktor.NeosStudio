@@ -10,6 +10,9 @@
 # Unit tests run from a source checkout.
 /Tests export-ignore
 
+# Internal decision records; nothing in the package links to them.
+/Documentation/Decisions export-ignore
+
 # Repository tooling.
 /.editorconfig export-ignore
 /.gitattributes export-ignore
