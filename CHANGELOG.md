@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configuration, and internal decision records.
 - The realtime sidecar requires `@hocuspocus/server` ^4.8.0 (was ^4.5.0); run
   `npm install` in `Resources/Private/Realtime/` when updating it.
+- The frontend is built on updated dependencies, among them React 19.3, Base
+  UI 1.9, TipTap 3.32, TanStack Query 5.105, Vite 8.3 and react-dropzone 20.
+  Its realtime client, `@hocuspocus/provider` 4.8, matches the sidecar's
+  server.
 
 ### Fixed
 
