@@ -7,6 +7,9 @@
 /figma-variables.json export-ignore
 /figma-text-styles.json export-ignore
 
+# Unit tests run from a source checkout.
+/Tests export-ignore
+
 # Repository tooling.
 /.editorconfig export-ignore
 /.gitattributes export-ignore
