@@ -32,6 +32,25 @@ Content work, organized like code: every task is a **feature branch**. Creating 
 - **Notifications built in**: a bell in the top bar collects assignments, review requests, reopens, comments and completions — clicking one jumps straight to the task.
 - **Ordinary Neos underneath**: task branches are plain `SHARED` workspaces plus task metadata, with access through standard workspace roles — the creator and reviewers manage, the assignee collaborates, and uninvolved editors never see task branches at all. Publishing, syncing and conflict resolution work like on any workspace.
 
+### 🔎 Side-by-side review — the pull request, for pages
+
+Reviewing a workspace should not mean reading property values. **Compare changes** opens a full-screen view of one changed page in two rendered versions: live on the left, the reviewed workspace on the right.
+
+- **The change is marked in the page itself**, in the Studio's change colors — edited elements outlined blue on both sides, an added one green on the right, a removed one red on the left, each with a badge naming what happened.
+- **Both sides scroll to the same content**, not to the same pixel: the frames report where their content elements sit, and the shell pairs them by node aggregate id into a map between the two scroll positions — so an addition halfway down never drifts the two versions apart.
+- **Step through the changes**: next/previous jumps both frames to the element under review and highlights it, starting on the first change when the page opens.
+- **Decide right there**: publish or discard the page on screen, page by page, with the same conflict resolution the review dialog uses.
+- **Every change reads out, marked or not**: a rendered page can only show what it renders. An alt text, a link target, an SEO title, a page setting — all of them go live with the rest and none of them are visible in a picture of the page. The detail panel below the frames lists the before/after values of the change under review, and changes with nothing to point at stay in the walkthrough, labelled as invisible instead of dropped.
+- **Read-only by construction**: the frames render the ordinary edit-mode markup but carry a compare script instead of the editing guest — there is no inline editor to open, and no click that could reach one.
+
+Sites can widen what gets marked. Neos' editing markup only annotates the properties it renders as inline-editable text, so anything a site renders into something else — an image, a background, an aria-label — has nothing to attach a mark to. Naming the properties on the element solves it:
+
+```html
+<img data-__neos-studio-properties="heroImage,heroImageAlternativeText" />
+```
+
+Purely additive: without it the change simply reads out in the detail panel instead of being marked on the page.
+
 ### 🔐 Access roles — restrict who reaches what
 
 Dynamic, editable **access roles**: name a set of restrictions and assign editors to it, in the UI, without touching `Policy.yaml` or deploying anything. What the classic distributions solved with Sandstorm.NeosAcl, rebuilt for Neos 9 — where the node-level privilege targets that approach relied on no longer exist.

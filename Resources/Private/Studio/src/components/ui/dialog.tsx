@@ -80,6 +80,12 @@ const dialogSizes = {
   lg: 'max-w-157.5',
   /** Reading dialogs: review changes with inline diffs */
   xl: 'max-w-210',
+  /**
+   * Working surfaces that need the screen: the side-by-side compare view,
+   * where two rendered pages sit next to each other. A margin is left around
+   * it so it still reads as a dialog over the shell, not as a new window.
+   */
+  full: 'max-w-none w-[calc(100vw-2rem)] h-[calc(100vh-2rem)]',
 } as const
 
 function DialogContent({
