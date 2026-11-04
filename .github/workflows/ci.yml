@@ -96,9 +96,10 @@ jobs:
         #     actually end up with.
         #   - `highest` walks up to the newest Neos 9.x release.
         #
-        # PHPUnit sits outside that span on purpose: require-dev allows 11.5 alone,
-        # so every cell runs the same runner. 11 is also the ceiling: PHPUnit 13
-        # wants PHP 8.4.1 and could not run the 8.2 and 8.3 cells.
+        # PHPUnit follows the interpreter rather than the dependency set:
+        # require-dev allows ^11.5 || ^13.0, and PHPUnit 13 needs PHP 8.4.1, so the
+        # 8.2 and 8.3 cells run 11.5 and the 8.4 and 8.5 cells run 13. The tests use
+        # only what both versions support.
         #
         # 8.4 and 8.5 pair with `highest` only: the oldest set is proven on the
         # floor interpreter, the newest interpreters on the newest set.
