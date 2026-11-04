@@ -91,14 +91,12 @@ export function layoutGraph(inputs: LayoutInput[]): GraphLayout {
       const barycenter =
         parentCenters.length === 0
           ? Number.POSITIVE_INFINITY
-          : parentCenters.reduce((sum, y) => sum + y, 0) /
-            parentCenters.length
+          : parentCenters.reduce((sum, y) => sum + y, 0) / parentCenters.length
       return { input, barycenter }
     })
     keyed.sort(
       (a, b) =>
-        a.barycenter - b.barycenter ||
-        a.input.name.localeCompare(b.input.name),
+        a.barycenter - b.barycenter || a.input.name.localeCompare(b.input.name),
     )
 
     const x = depth * (CARD_WIDTH + COLUMN_GAP)
@@ -125,8 +123,7 @@ export function layoutGraph(inputs: LayoutInput[]): GraphLayout {
   const edges: LayoutEdge[] = []
   for (const input of inputs) {
     for (const superType of input.superTypes) {
-      if (byName.has(superType))
-        edges.push({ from: superType, to: input.name })
+      if (byName.has(superType)) edges.push({ from: superType, to: input.name })
     }
   }
 

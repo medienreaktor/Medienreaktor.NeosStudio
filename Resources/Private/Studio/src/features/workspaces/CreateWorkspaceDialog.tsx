@@ -78,7 +78,9 @@ export function CreateWorkspaceDialog({
     mutationFn: () =>
       createWorkspace({
         title: title.trim(),
-        ...(description.trim() !== '' ? { description: description.trim() } : {}),
+        ...(description.trim() !== ''
+          ? { description: description.trim() }
+          : {}),
         baseWorkspaceName,
         visibility,
       }),
@@ -100,7 +102,12 @@ export function CreateWorkspaceDialog({
             'Creating the workspace failed.',
           ),
         ),
-        { title: t('workspacesAdmin.createFailed', 'Could not create workspace') },
+        {
+          title: t(
+            'workspacesAdmin.createFailed',
+            'Could not create workspace',
+          ),
+        },
       ),
   })
 
