@@ -12,6 +12,6 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@hocuspocus/server": "^4.5.0"
+    "@hocuspocus/server": "^4.8.0"
   }
 }
