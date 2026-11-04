@@ -4,7 +4,8 @@
  *
  * The edit-mode markup carries the config as data-__neos-studio-formatting
  * (see Root.fusion / StudioHelper.inlineFormatting): the NodeType's
- * `formatting` flags (strong, em, h1..h6, ol, ul, a, ...) plus `autoparagraph`.
+ * `formatting` flags (strong, em, h1..h6, ol, ul, a, ...) plus `autoparagraph`,
+ * `hyphens` and `nbsp`.
  * We map those onto TipTap extensions so a property only permits what its
  * NodeType declares - matching how the classic UI constrains CKEditor - and
  * expose the same flags to the toolbar so it shows only the allowed buttons.
@@ -31,6 +32,7 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { TableKit } from '@tiptap/extension-table'
 import { resolveStyles, styleExtensions, type ResolvedStyle } from './styles'
 import { ParagraphWithFiller } from './serialize'
+import { SpecialCharacters } from './specialCharacters'
 
 const FORMATTING_ATTRIBUTE = 'data-__neos-studio-formatting'
 const INLINE_ATTRIBUTE = 'data-__neos-studio-inline'
@@ -75,6 +77,9 @@ export interface Formatting {
   // Actions
   removeFormat: boolean
   horizontalRule: boolean
+  /** The `hyphens` and `nbsp` editor options (see specialCharacters.ts). */
+  softHyphen: boolean
+  nonBreakingSpace: boolean
   /**
    * The NodeType's `styleDefinitions`, validated and resolved against the
    * flags above - the CSS classes this property lets an editor assign to
@@ -117,6 +122,8 @@ export const DEFAULT_FORMATTING: Formatting = {
   alignment: false,
   removeFormat: true,
   horizontalRule: true,
+  softHyphen: false,
+  nonBreakingSpace: false,
   styles: [],
   autoparagraph: true,
   block: true,
@@ -153,6 +160,8 @@ function withoutBlocks(config: Formatting): Formatting {
 export interface RawFormattingConfig {
   formatting?: Record<string, unknown>
   autoparagraph?: unknown
+  hyphens?: unknown
+  nbsp?: unknown
 }
 
 /**
@@ -242,6 +251,8 @@ export function normalizeFormatting(
     removeFormat: on('removeFormat'),
     // Neos has no dedicated hr flag; offer it wherever the schema has blocks.
     horizontalRule: block,
+    softHyphen: config.hyphens === true,
+    nonBreakingSpace: config.nbsp === true,
     // Resolved below, once the enclosing markup has had its say.
     styles: [],
     autoparagraph: config.autoparagraph !== false,
@@ -294,6 +305,8 @@ export function extensionsFor(config: Formatting): Extensions {
   const keys: Extensions = config.autoparagraph
     ? []
     : [ENTER_INSERTS_LINE_BREAK]
+  const characters: Extensions =
+    config.softHyphen || config.nonBreakingSpace ? [SpecialCharacters] : []
 
   if (!config.block) {
     // Inline-only: a single line of text with marks, no block nodes, so the
@@ -311,6 +324,7 @@ export function extensionsFor(config: Formatting): Extensions {
       ...marks,
       ...styles,
       ...keys,
+      ...characters,
     ]
   }
 
@@ -355,6 +369,7 @@ export function extensionsFor(config: Formatting): Extensions {
     ...marks,
     ...styles,
     ...keys,
+    ...characters,
   ]
 }
 
