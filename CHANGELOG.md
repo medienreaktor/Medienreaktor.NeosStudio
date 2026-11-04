@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.1] - 2026-11-04
+
+### Added
+
+- This changelog, covering every release since 1.0.
+
 ### Changed
 
 - The Composer package leaves out what only developing Studio needs: the Figma
   token exports and their configuration, the tests with their CI and tool
   configuration, and internal decision records.
+- The realtime sidecar requires `@hocuspocus/server` ^4.8.0 (was ^4.5.0); run
+  `npm install` in `Resources/Private/Realtime/` when updating it.
 
 ### Fixed
 
@@ -1274,7 +1282,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...HEAD
+[1.19.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.0...1.19.1
 [1.19.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.1...1.19.0
 [1.18.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.0...1.18.1
 [1.18.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.17.15...1.18.0
