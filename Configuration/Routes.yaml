@@ -97,26 +97,6 @@
   httpMethods: ['POST']
 
 -
-  name: 'Studio API: task comments'
-  uriPattern: 'api/tasks/{workspaceName}/comments'
-  defaults:
-    '@package': 'Medienreaktor.NeosStudio'
-    '@controller': 'Api\Tasks'
-    '@action': 'comments'
-    '@format': 'json'
-  httpMethods: ['GET']
-
--
-  name: 'Studio API: add task comment'
-  uriPattern: 'api/tasks/{workspaceName}/comments'
-  defaults:
-    '@package': 'Medienreaktor.NeosStudio'
-    '@controller': 'Api\Tasks'
-    '@action': 'addComment'
-    '@format': 'json'
-  httpMethods: ['POST']
-
--
   name: 'Studio API: submit task for review'
   uriPattern: 'api/tasks/{workspaceName}/submit'
   defaults:
@@ -162,6 +142,51 @@
   defaults:
     '@package': 'Medienreaktor.NeosStudio'
     '@controller': 'Api\Tasks'
+    '@action': 'delete'
+    '@format': 'json'
+  httpMethods: ['DELETE']
+
+# --- Review comments -----------------------------------------------------
+# The conversation about a workspace's pending changes. On the WORKSPACE, not
+# on the task: the common review is a shared draft against live, which is no
+# task branch (see ReviewCommentService). The more specific /resolve route
+# comes before the {commentId} one, so the longer pattern wins.
+-
+  name: 'Studio API: review comments'
+  uriPattern: 'api/workspaces/{workspaceName}/comments'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\ReviewComments'
+    '@action': 'index'
+    '@format': 'json'
+  httpMethods: ['GET']
+
+-
+  name: 'Studio API: add review comment'
+  uriPattern: 'api/workspaces/{workspaceName}/comments'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\ReviewComments'
+    '@action': 'create'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: resolve review comment'
+  uriPattern: 'api/workspaces/{workspaceName}/comments/{commentId}/resolve'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\ReviewComments'
+    '@action': 'resolve'
+    '@format': 'json'
+  httpMethods: ['POST']
+
+-
+  name: 'Studio API: delete review comment'
+  uriPattern: 'api/workspaces/{workspaceName}/comments/{commentId}'
+  defaults:
+    '@package': 'Medienreaktor.NeosStudio'
+    '@controller': 'Api\ReviewComments'
     '@action': 'delete'
     '@format': 'json'
   httpMethods: ['DELETE']

@@ -34,7 +34,7 @@ import {
   aggregateIdOf,
 } from '@/api/nodeAddress'
 import { useSites } from '@/api/sites'
-import { useWorkspaces } from '@/api/workspaces'
+import { changeBaseWorkspace, useWorkspaces } from '@/api/workspaces'
 import { queryClient } from '@/app/queryClient'
 import { loadTranslations, translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -372,6 +372,53 @@ export function App() {
     previousAddress: string,
     point: DimensionSpacePoint,
   ) => followDocumentTo(addressInDimension(previousAddress, point))
+
+  /**
+   * Work TOWARDS a workspace: the personal workspace is re-based onto it, so
+   * ordinary editing continues where it always happens and "publish" hands the
+   * work up into that workspace.
+   *
+   * This is what checking out a task branch means - the branch is the target,
+   * not the desk. Editing directly inside a shared workspace is the other mode
+   * (switchEditingContext), which the Workspaces graph still offers: several
+   * people on one branch, seeing each other type.
+   *
+   * The content repository refuses to re-base a workspace that still holds
+   * unpublished changes - there would be nothing left to replay them onto - so
+   * that case gets its own message rather than a raw error.
+   */
+  const workOnWorkspace = async (name: string): Promise<boolean> => {
+    if (personalWorkspace === undefined || personalWorkspace === null) {
+      return false
+    }
+    // Editing inside another workspace first: come back to the own desk.
+    if (editingWorkspaceName !== null) switchEditingContext(null)
+    if (personalWorkspace.baseWorkspace === name) return true
+    try {
+      await changeBaseWorkspace(personalWorkspace.name, name)
+    } catch (error) {
+      const notEmpty =
+        error instanceof ApiError &&
+        (error.body as { error?: string } | null)?.error ===
+          'workspace_not_empty'
+      toast.error(
+        notEmpty
+          ? t(
+              'workspace.publishOrDiscardFirst',
+              'Publish or discard your changes first.',
+            )
+          : error,
+        {
+          title: t('workspace.switchFailed', 'Switching the workspace failed'),
+        },
+      )
+      return false
+    }
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.nodes.all })
+    refreshWorkspaceContent()
+    return true
+  }
 
   /**
    * Move the editing context to a shared workspace (name) or back to the
@@ -719,6 +766,7 @@ export function App() {
     navigateToNodeInWorkspace,
     checkoutWorkspace: (name) =>
       switchEditingContext(name === personalWorkspace?.name ? null : name),
+    workOnWorkspace,
     reportInlineEdit: (addresses) => {
       setLastEdit((prev) => ({
         addresses,

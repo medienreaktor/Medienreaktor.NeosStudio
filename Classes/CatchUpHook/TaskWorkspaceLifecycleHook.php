@@ -7,7 +7,7 @@ namespace Medienreaktor\NeosStudio\CatchUpHook;
 
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
 use Medienreaktor\NeosStudio\Service\NotificationService;
-use Medienreaktor\NeosStudio\Domain\Repository\TaskCommentRepository;
+use Medienreaktor\NeosStudio\Domain\Repository\ReviewCommentRepository;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
 use Neos\ContentRepository\Core\EventStore\EventInterface;
@@ -44,7 +44,7 @@ final class TaskWorkspaceLifecycleHook implements CatchUpHookInterface
     public function __construct(
         private readonly ContentRepositoryId $contentRepositoryId,
         private readonly TaskWorkspaceRepository $taskWorkspaceRepository,
-        private readonly TaskCommentRepository $taskCommentRepository,
+        private readonly ReviewCommentRepository $reviewCommentRepository,
         private readonly NotificationService $notificationService,
         private readonly WorkspaceService $workspaceService,
     ) {
@@ -83,7 +83,7 @@ final class TaskWorkspaceLifecycleHook implements CatchUpHookInterface
         foreach ($pending as ['event' => $event, 'initiatingUserId' => $initiatingUserId]) {
             if ($event instanceof WorkspaceWasRemoved) {
                 $this->taskWorkspaceRepository->remove($this->contentRepositoryId, $event->workspaceName);
-                $this->taskCommentRepository->removeForWorkspace($this->contentRepositoryId, $event->workspaceName);
+                $this->reviewCommentRepository->removeForWorkspace($this->contentRepositoryId, $event->workspaceName);
                 continue;
             }
 

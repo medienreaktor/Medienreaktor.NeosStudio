@@ -81,6 +81,12 @@ const dialogSizes = {
   /** Reading dialogs: review changes with inline diffs */
   xl: 'max-w-210',
   /**
+   * The same, with a second column beside it: the review's conversation next
+   * to its changes. Widening rather than splitting the existing width keeps
+   * the change list as readable as it is without the panel.
+   */
+  '2xl': 'max-w-270',
+  /**
    * Working surfaces that need the screen: the side-by-side compare view,
    * where two rendered pages sit next to each other. A margin is left around
    * it so it still reads as a dialog over the shell, not as a new window.

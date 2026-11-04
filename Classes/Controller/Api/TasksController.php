@@ -6,8 +6,9 @@ namespace Medienreaktor\NeosStudio\Controller\Api;
 
 use Medienreaktor\NeosApi\Controller\Api\AbstractApiController;
 use Medienreaktor\NeosApi\Service\WorkspaceSerializer;
-use Medienreaktor\NeosStudio\Domain\Model\TaskComment;
+use Medienreaktor\NeosStudio\Domain\Model\ReviewComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
+use Medienreaktor\NeosStudio\Service\TaskWorkspaceInUseException;
 use Medienreaktor\NeosStudio\Service\TaskWorkspaceService;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
@@ -51,7 +52,17 @@ class TasksController extends AbstractApiController
             $tasks[] = $this->serializeTask($task, $commentCounts[$task->workspaceName->value] ?? 0);
         }
 
-        return $this->json(['tasks' => $tasks]);
+        // Where a new task would hang - the creation dialog preselects it and
+        // names it, so "publishing this task goes to X" is decided in the open
+        // rather than discovered at the first publish.
+        $user = $this->userService->getCurrentUser();
+
+        return $this->json([
+            'tasks' => $tasks,
+            'defaultBaseWorkspace' => $user === null
+                ? null
+                : $this->taskWorkspaceService->defaultBaseWorkspaceName($this->getContentRepositoryId(), $user->getId())->value,
+        ]);
     }
 
     /**
@@ -65,7 +76,7 @@ class TasksController extends AbstractApiController
     public function createAction(
         string $title,
         string $description = '',
-        string $baseWorkspace = 'live',
+        ?string $baseWorkspace = null,
         ?string $assignee = null,
     ): string {
         $this->requireScope('neos.write');
@@ -79,7 +90,10 @@ class TasksController extends AbstractApiController
             $this->getContentRepositoryId(),
             WorkspaceTitle::fromString(trim($title)),
             WorkspaceDescription::fromString(trim($description)),
-            $this->parseWorkspaceName($baseWorkspace),
+            // Not "live" by default - see defaultBaseWorkspaceName().
+            $baseWorkspace === null || $baseWorkspace === ''
+                ? $this->taskWorkspaceService->defaultBaseWorkspaceName($this->getContentRepositoryId(), $user->getId())
+                : $this->parseWorkspaceName($baseWorkspace),
             $user->getId(),
             $assignee !== null && $assignee !== '' ? $this->parseUserId($assignee, 'invalid_assignee') : null,
         );
@@ -124,50 +138,10 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, write: true);
 
+        $this->requireTextLength($comment);
         $this->taskWorkspaceService->submitForReview($this->getContentRepositoryId(), $name, $user->getId(), trim($comment));
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
-    }
-
-    /**
-     * GET /api/tasks/{workspaceName}/comments - the task's comment thread,
-     * oldest first. Read access to the task workspace is enough - whoever
-     * sees the task sees (and joins) its conversation.
-     */
-    public function commentsAction(string $workspaceName): string
-    {
-        $this->requireScope('neos.read');
-        $this->requireUser();
-        $name = $this->parseWorkspaceName($workspaceName);
-        $this->requireTask($name);
-        $this->requireReadable($name);
-
-        return $this->json([
-            'comments' => array_map(
-                $this->serializeComment(...),
-                $this->taskWorkspaceService->getComments($this->getContentRepositoryId(), $name)
-            ),
-        ]);
-    }
-
-    /**
-     * POST /api/tasks/{workspaceName}/comments - body: {"text": "..."}
-     */
-    #[Flow\SkipCsrfProtection]
-    public function addCommentAction(string $workspaceName, string $text = ''): string
-    {
-        $this->requireScope('neos.write');
-        $user = $this->requireUser();
-        $name = $this->parseWorkspaceName($workspaceName);
-        $this->requireTask($name);
-        $this->requireReadable($name);
-        if (trim($text) === '') {
-            $this->throwJsonStatus(400, 'invalid_comment', 'The comment must not be empty.');
-        }
-
-        $comment = $this->taskWorkspaceService->commentOnTask($this->getContentRepositoryId(), $name, $user->getId(), trim($text));
-
-        return $this->json(['comment' => $this->serializeComment($comment)], 201);
     }
 
     /**
@@ -232,6 +206,7 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, write: true);
 
+        $this->requireTextLength($reason);
         $this->taskWorkspaceService->reopenTask($this->getContentRepositoryId(), $name, $user->getId(), trim($reason));
 
         return $this->json(['task' => $this->serializeTask($this->taskWorkspaceService->getTask($this->getContentRepositoryId(), $name))]);
@@ -250,12 +225,24 @@ class TasksController extends AbstractApiController
         $this->requireTask($name);
         $this->requirePermission($name, manage: true);
 
-        $this->taskWorkspaceService->deleteTaskWorkspace($this->getContentRepositoryId(), $name);
+        try {
+            $this->taskWorkspaceService->deleteTaskWorkspace($this->getContentRepositoryId(), $name);
+        } catch (TaskWorkspaceInUseException $e) {
+            $this->throwJsonStatus(409, 'task_in_use', $e->getMessage());
+        }
 
         return $this->json(['deleted' => $workspaceName]);
     }
 
     // ------------------
+
+    /** Review notes and reasons join the thread - the comments' limit applies. */
+    private function requireTextLength(string $text): void
+    {
+        if (mb_strlen(trim($text)) > ReviewComment::MAX_TEXT_LENGTH) {
+            $this->throwJsonStatus(400, 'comment_too_long', sprintf('A comment may have at most %d characters.', ReviewComment::MAX_TEXT_LENGTH));
+        }
+    }
 
     private function parseWorkspaceName(string $workspaceName): WorkspaceName
     {
@@ -295,13 +282,6 @@ class TasksController extends AbstractApiController
         return $task;
     }
 
-    private function requireReadable(WorkspaceName $workspaceName): void
-    {
-        if (!$this->workspaceSerializer->canRead($this->getContentRepositoryId(), $workspaceName)) {
-            $this->throwJsonStatus(403, 'insufficient_workspace_permissions', sprintf('You lack the required permission on workspace "%s".', $workspaceName->value));
-        }
-    }
-
     private function requirePermission(WorkspaceName $workspaceName, bool $write = false, bool $manage = false): WorkspacePermissions
     {
         $permissions = $this->workspaceSerializer->permissions($this->getContentRepositoryId(), $workspaceName);
@@ -310,24 +290,6 @@ class TasksController extends AbstractApiController
         }
 
         return $permissions;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function serializeComment(TaskComment $comment): array
-    {
-        return [
-            'id' => $comment->id,
-            'author' => $comment->authorUserId?->value,
-            // Labelled server-side (like the enricher's assigneeLabel), so the
-            // client never depends on being allowed to list all users.
-            'authorLabel' => $comment->authorUserId !== null
-                ? $this->userService->findUserById($comment->authorUserId)?->getLabel()
-                : null,
-            'text' => $comment->text,
-            'createdAt' => $comment->createdAt->format(\DateTimeInterface::ATOM),
-        ];
     }
 
     /**

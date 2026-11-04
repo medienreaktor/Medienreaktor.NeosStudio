@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Medienreaktor\NeosStudio\Service;
 
 
-use Medienreaktor\NeosStudio\Domain\Model\TaskComment;
+use Medienreaktor\NeosStudio\Domain\Model\ReviewComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
-use Medienreaktor\NeosStudio\Domain\Repository\TaskCommentRepository;
+use Medienreaktor\NeosStudio\Domain\Repository\ReviewCommentRepository;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskWorkspaceRepository;
+use Neos\ContentRepository\Core\Feature\WorkspaceModification\Command\ChangeBaseWorkspace;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\Workspace;
+use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Neos\Domain\Model\UserId;
 use Neos\Neos\Domain\Model\WorkspaceDescription;
 use Neos\Neos\Domain\Model\WorkspaceRole;
@@ -52,7 +56,7 @@ final class TaskWorkspaceService
     protected TaskWorkspaceRepository $taskWorkspaceRepository;
 
     #[Flow\Inject]
-    protected TaskCommentRepository $taskCommentRepository;
+    protected ReviewCommentRepository $reviewCommentRepository;
 
     #[Flow\Inject]
     protected NotificationService $notificationService;
@@ -67,6 +71,22 @@ final class TaskWorkspaceService
     #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosStudio', path: 'taskWorkflow.reviewerRole')]
     protected string $reviewerRole;
 
+    /**
+     * Workspace new task branches are based on; null = derive it (see
+     * defaultBaseWorkspaceName).
+     */
+    #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosStudio', path: 'taskWorkflow.defaultBaseWorkspace')]
+    protected ?string $defaultBaseWorkspace = null;
+
+    #[Flow\Inject]
+    protected ContentRepositoryRegistry $contentRepositoryRegistry;
+
+    #[Flow\Inject]
+    protected AccessControlService $accessControlService;
+
+    #[Flow\Inject]
+    protected SecurityContext $securityContext;
+
     public function getTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): ?TaskWorkspace
     {
         return $this->taskWorkspaceRepository->findByWorkspaceName($contentRepositoryId, $workspaceName);
@@ -78,6 +98,61 @@ final class TaskWorkspaceService
     public function findAllTasks(ContentRepositoryId $contentRepositoryId): array
     {
         return $this->taskWorkspaceRepository->findAll($contentRepositoryId);
+    }
+
+    /**
+     * Where a new task branch hangs when the caller does not say - and
+     * therefore where publishing OUT of a task lands.
+     *
+     * Deliberately not live by default. A task is a side branch of ordinary
+     * editorial work; basing it on live means publishing a task puts content
+     * on the public site in one step, bypassing whatever review workspace the
+     * rest of the editorial flow runs through. Configuration wins, because
+     * personal workspaces are frequently based on live themselves, which makes
+     * "derive it from the creator" reproduce exactly the setup it is meant to
+     * avoid. Live remains the last resort - it is the one workspace that is
+     * always there.
+     *
+     * The configured workspace only counts when the creator may read it -
+     * creating a branch on a base they cannot read is refused by the content
+     * repository. Derived from the creator, it is the first workspace below
+     * their personal one that is not a task: working on a task re-bases the
+     * personal workspace onto that task, and a new task must not silently
+     * stack on top of the one they happen to be on.
+     */
+    public function defaultBaseWorkspaceName(ContentRepositoryId $contentRepositoryId, UserId $creatorUserId): WorkspaceName
+    {
+        $contentRepository = $this->contentRepositoryRegistry->get($contentRepositoryId);
+        if ($this->defaultBaseWorkspace !== null && $this->defaultBaseWorkspace !== '') {
+            try {
+                $configured = WorkspaceName::fromString($this->defaultBaseWorkspace);
+                if ($contentRepository->findWorkspaceByName($configured) !== null
+                    && $this->accessControlService->canReadWorkspace($contentRepositoryId, $configured, $creatorUserId)
+                ) {
+                    return $configured;
+                }
+            } catch (\InvalidArgumentException) {
+                // A misconfigured name must not stop task creation; the
+                // fallbacks below still produce a usable branch.
+            }
+        }
+
+        try {
+            $personal = $this->workspaceService->getPersonalWorkspaceForUser($contentRepositoryId, $creatorUserId);
+        } catch (\Exception) {
+            return WorkspaceName::forLive();
+        }
+        $base = $personal->baseWorkspaceName;
+        // Bounded: a base chain is short, and a cycle would be a corrupt
+        // repository - not a reason to hang the request.
+        for ($depth = 0; $base !== null && $depth < 16; $depth++) {
+            if ($this->taskWorkspaceRepository->findByWorkspaceName($contentRepositoryId, $base) === null) {
+                return $base;
+            }
+            $base = $contentRepository->findWorkspaceByName($base)?->baseWorkspaceName;
+        }
+
+        return WorkspaceName::forLive();
     }
 
     public function createTaskWorkspace(
@@ -187,7 +262,7 @@ final class TaskWorkspaceService
         $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::IN_REVIEW);
 
         if ($comment !== '') {
-            $this->taskCommentRepository->add($contentRepositoryId, new TaskComment(
+            $this->reviewCommentRepository->add($contentRepositoryId, new ReviewComment(
                 null,
                 $workspaceName,
                 $actingUserId,
@@ -211,18 +286,6 @@ final class TaskWorkspaceService
     }
 
     /**
-     * The task's comment thread, oldest first.
-     *
-     * @return array<TaskComment>
-     */
-    public function getComments(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): array
-    {
-        $this->requireTask($contentRepositoryId, $workspaceName);
-
-        return $this->taskCommentRepository->findByWorkspaceName($contentRepositoryId, $workspaceName);
-    }
-
-    /**
      * Comment counts for all task workspaces at once, keyed by workspace
      * name (workspaces without comments are absent) - for the task listing.
      *
@@ -230,62 +293,36 @@ final class TaskWorkspaceService
      */
     public function getCommentCounts(ContentRepositoryId $contentRepositoryId): array
     {
-        return $this->taskCommentRepository->countsByWorkspaceName($contentRepositoryId);
+        return $this->reviewCommentRepository->countsByWorkspaceName($contentRepositoryId);
     }
 
     public function countComments(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): int
     {
-        return $this->taskCommentRepository->countForWorkspaceName($contentRepositoryId, $workspaceName);
+        return $this->reviewCommentRepository->countForWorkspaceName($contentRepositoryId, $workspaceName);
     }
 
     /**
-     * Comment on the task. Everyone involved in the conversation - creator,
-     * assignee and everyone who commented before - gets notified, except the
-     * author themselves.
-     */
-    public function commentOnTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $authorUserId, string $text): TaskComment
-    {
-        $task = $this->requireTask($contentRepositoryId, $workspaceName);
-
-        $previousAuthors = array_map(
-            static fn (TaskComment $comment) => $comment->authorUserId,
-            $this->taskCommentRepository->findByWorkspaceName($contentRepositoryId, $workspaceName)
-        );
-
-        $comment = $this->taskCommentRepository->add($contentRepositoryId, new TaskComment(
-            null,
-            $workspaceName,
-            $authorUserId,
-            $text,
-            new \DateTimeImmutable(),
-        ));
-
-        $title = $this->workspaceTitle($contentRepositoryId, $workspaceName);
-        $recipients = array_filter(
-            [$task->createdByUserId, $task->assigneeUserId, ...$previousAuthors],
-            static fn (?UserId $id) => $id !== null && !$id->equals($authorUserId)
-        );
-        // notifyUsers dedupes; the payload's workspaceName lets the bell jump
-        // straight to the task.
-        $this->notificationService->notifyUsers(
-            $recipients,
-            self::NOTIFICATION_SOURCE,
-            'taskWorkflow.commented',
-            sprintf('New comment: %s', $title),
-            sprintf('%s commented on the task "%s": %s', $this->userLabel($authorUserId), $title, $this->excerpt($text)),
-            $this->payload($task),
-        );
-
-        return $comment;
-    }
-
-    /**
-     * Take the task back into work (e.g. a reviewer requesting changes).
+     * Take the task back into work - a reviewer handing it back with what
+     * needs doing.
+     *
+     * The reason joins the task's comment thread, exactly as the submit
+     * comment does. A notification is read once and gone; what a review asked
+     * for has to still be there tomorrow, next to the change it is about.
      */
     public function reopenTask(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, UserId $actingUserId, string $reason = ''): void
     {
         $task = $this->requireTask($contentRepositoryId, $workspaceName);
         $this->taskWorkspaceRepository->updateStatus($contentRepositoryId, $workspaceName, TaskStatus::OPEN);
+
+        if ($reason !== '') {
+            $this->reviewCommentRepository->add($contentRepositoryId, new ReviewComment(
+                null,
+                $workspaceName,
+                $actingUserId,
+                $reason,
+                new \DateTimeImmutable(),
+            ));
+        }
 
         $title = $this->workspaceTitle($contentRepositoryId, $workspaceName);
         $recipients = array_filter(
@@ -298,7 +335,7 @@ final class TaskWorkspaceService
             'taskWorkflow.reopened',
             sprintf('Reopened: %s', $title),
             $reason !== ''
-                ? sprintf('%s reopened the task "%s": %s', $this->userLabel($actingUserId), $title, $reason)
+                ? sprintf('%s reopened the task "%s": %s', $this->userLabel($actingUserId), $title, $this->excerpt($reason))
                 : sprintf('%s reopened the task "%s".', $this->userLabel($actingUserId), $title),
             $this->payload($task),
         );
@@ -337,13 +374,46 @@ final class TaskWorkspaceService
      * Delete the task workspace (content repository workspace + sidecar).
      * The lifecycle hook also removes the sidecar when the workspace is
      * deleted through other channels.
+     *
+     * Working on a task re-bases the worker's personal workspace onto it, and
+     * the content repository deletes a workspace without asking who builds on
+     * it - a workspace left on a deleted base can neither publish, discard nor
+     * be re-based again. So the workspaces based on the task move down to the
+     * task's own base first. That is a system action of the delete, which the
+     * caller was already allowed: it runs whatever the workers' own workspaces
+     * would let the caller do. A workspace still holding changes cannot move;
+     * the task stays until its worker has published or discarded them.
+     *
+     * @throws TaskWorkspaceInUseException
      */
     public function deleteTaskWorkspace(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): void
     {
         $this->requireTask($contentRepositoryId, $workspaceName);
+        $contentRepository = $this->contentRepositoryRegistry->get($contentRepositoryId);
+        $dependents = array_values(array_filter(
+            iterator_to_array($contentRepository->findWorkspaces()),
+            static fn (Workspace $workspace) => $workspace->baseWorkspaceName?->equals($workspaceName) ?? false,
+        ));
+        $busy = array_filter($dependents, static fn (Workspace $workspace) => $workspace->hasPublishableChanges());
+        if ($busy !== []) {
+            throw new TaskWorkspaceInUseException(
+                sprintf(
+                    'The task is still worked on with unpublished changes in %s. Those changes have to be published or discarded first.',
+                    implode(', ', array_map(fn (Workspace $workspace) => sprintf('"%s"', $this->workspaceTitle($contentRepositoryId, $workspace->workspaceName)), $busy)),
+                ),
+                1762099200,
+            );
+        }
+        $newBase = $contentRepository->findWorkspaceByName($workspaceName)->baseWorkspaceName ?? WorkspaceName::forLive();
+        $this->securityContext->withoutAuthorizationChecks(function () use ($contentRepository, $dependents, $newBase): void {
+            foreach ($dependents as $dependent) {
+                $contentRepository->handle(ChangeBaseWorkspace::create($dependent->workspaceName, $newBase));
+            }
+        });
+
         $this->workspaceService->deleteWorkspace($contentRepositoryId, $workspaceName);
         $this->taskWorkspaceRepository->remove($contentRepositoryId, $workspaceName);
-        $this->taskCommentRepository->removeForWorkspace($contentRepositoryId, $workspaceName);
+        $this->reviewCommentRepository->removeForWorkspace($contentRepositoryId, $workspaceName);
     }
 
     // ------------------

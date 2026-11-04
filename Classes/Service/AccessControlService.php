@@ -12,12 +12,16 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindAncestorNodesFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateClassification;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Flow\Security\Policy\Role;
 use Neos\Neos\Domain\Model\UserId;
 use Neos\Neos\Domain\Service\UserService;
+use Neos\Neos\Domain\Service\WorkspaceService;
+use Neos\Neos\Security\Authorization\ContentRepositoryAuthorizationService;
 
 /**
  * Resolves what the acting user may reach, from the dynamic access roles
@@ -53,6 +57,12 @@ class AccessControlService
 
     #[Flow\Inject]
     protected SecurityContext $securityContext;
+
+    #[Flow\Inject]
+    protected WorkspaceService $workspaceService;
+
+    #[Flow\Inject]
+    protected ContentRepositoryAuthorizationService $contentRepositoryAuthorizationService;
 
     /**
      * @var array{bypassRoles: array<int, string>, restrictUnassignedUsers: bool, enforceContentRepository: bool}
@@ -242,6 +252,45 @@ class AccessControlService
         }
 
         return $this->pathAnchorCache[$cacheKey] = array_keys($anchors);
+    }
+
+    /**
+     * Whether a user may read a workspace by every measure the Studio applies:
+     * the core's workspace roles and the user's access roles. Null asks for
+     * the acting user. Anything that hands workspace content to someone - a
+     * comment thread, a notification excerpt - asks this, not the core alone.
+     */
+    public function canReadWorkspace(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName, ?UserId $userId = null): bool
+    {
+        if ($userId === null) {
+            $roles = $this->securityContext->getRoles();
+            $userId = $this->currentUserId();
+            $access = $this->effectiveAccessForCurrentUser();
+        } else {
+            $user = $this->userService->findUserById($userId);
+            if ($user === null) {
+                return false;
+            }
+            $roles = $this->userService->getAllRoles($user);
+            $access = array_intersect(array_keys($roles), $this->bypassRoles()) !== []
+                ? EffectiveAccess::unrestricted('Account holds an access-control bypass role')
+                : $this->effectiveAccessForUser($userId);
+        }
+
+        $permissions = $this->contentRepositoryAuthorizationService->getWorkspacePermissions($contentRepositoryId, $workspaceName, $roles, $userId);
+        if (!$permissions->read) {
+            return false;
+        }
+        if ($access->unrestricted) {
+            return true;
+        }
+        try {
+            $classification = $this->workspaceService->getWorkspaceMetadata($contentRepositoryId, $workspaceName)->classification->value;
+        } catch (\Throwable) {
+            $classification = 'UNKNOWN';
+        }
+
+        return $access->allowsWorkspaceRead($workspaceName->value, $classification);
     }
 
     /**

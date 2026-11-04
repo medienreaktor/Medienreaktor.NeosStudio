@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   countChangedNodes,
   useWorkspaceChanges,
@@ -7,6 +7,10 @@ import {
 import { useStudio } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
 import { CountBadge } from '@/components/ui/count-badge'
+import {
+  consumeReviewFocus,
+  usePendingReviewFocus,
+} from '@/features/review/focus'
 import { useKeyboardShortcut } from '@/features/shortcuts/useKeyboardShortcut'
 import { translate as t } from '@/lib/i18n'
 import { ReviewChangesDialog } from './ReviewChangesDialog'
@@ -36,6 +40,23 @@ export function PublishReviewButton({
   onNavigate: (address: string, workspaceName: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  /**
+   * Where an incoming request wants the review pointed (a clicked remark
+   * notification). Cleared when the button itself is used - that means "review
+   * what I am working on", not "the thing somebody linked me to".
+   */
+  const [focus, setFocus] = useState<{
+    workspaceName: string
+    documentAggregateId?: string
+  } | null>(null)
+
+  const pendingFocus = usePendingReviewFocus()
+  useEffect(() => {
+    if (pendingFocus === null) return
+    setFocus(pendingFocus)
+    setOpen(true)
+    consumeReviewFocus()
+  }, [pendingFocus])
   // Same query the trees' dirty markers use, so the bubble always agrees.
   const { data: changesResponse } = useWorkspaceChanges(activeWorkspace.name)
   const { site } = useStudio()
@@ -77,6 +98,7 @@ export function PublishReviewButton({
     category: t('shortcuts.category.workspace', 'Workspace'),
     handler: () => {
       if (open) return false
+      setFocus(null)
       setOpen(true)
     },
   })
@@ -87,7 +109,10 @@ export function PublishReviewButton({
         <Button
           variant={active ? 'default' : 'secondary'}
           className={active ? activeClasses : undefined}
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setFocus(null)
+            setOpen(true)
+          }}
           title={
             canPublish
               ? t(
@@ -120,10 +145,15 @@ export function PublishReviewButton({
       <ReviewChangesDialog
         workspaces={workspaces}
         activeWorkspace={activeWorkspace}
+        initialSourceName={focus?.workspaceName}
+        initialCompareDocumentId={focus?.documentAggregateId}
         open={open}
         onOpenChange={setOpen}
         onNavigate={onNavigate}
-        preselectAll
+        // Everything selected is the topbar's "publish what I did" - not
+        // what a remark notification opens on, which is somebody else's
+        // review to read first.
+        preselectAll={focus === null}
       />
     </>
   )

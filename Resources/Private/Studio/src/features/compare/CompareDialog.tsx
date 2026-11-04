@@ -7,10 +7,16 @@ import {
 } from '@/api/nodeAddress'
 import {
   dimensionSpacePointEquals,
+  dimensionSpacePointKey,
   dimensionSpacePointLabel,
   useDimensions,
   type DimensionSpacePoint,
 } from '@/api/dimensions'
+import {
+  commentAnchorKey,
+  groupComments,
+  useReviewComments,
+} from '@/api/reviewComments'
 import {
   useWorkspaceDocumentDiff,
   type Workspace,
@@ -35,6 +41,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { CommentThread } from '@/features/review/CommentThread'
+import { RequestChangesDialog } from '@/features/review/RequestChangesDialog'
+import {
+  announceTaskCompletion,
+  useTaskVerdict,
+} from '@/features/review/useTaskVerdict'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { ConflictResolutionDialog } from '@/features/workspaces/ConflictResolutionDialog'
 import {
@@ -131,19 +143,6 @@ const LOCK_RELEASE_PX = 60
 
 type Side = 'base' | 'target'
 
-/**
- * Stable identity of a dimension space point, for grouping and selection.
- * Sorted, so the same coordinates always produce the same key regardless of
- * how many dimensions a content repository configures or in which order the
- * projection happened to hand them over.
- */
-function dimensionKey(point: DimensionSpacePoint): string {
-  return Object.keys(point)
-    .sort()
-    .map((name) => `${name}=${point[name]}`)
-    .join('&')
-}
-
 export function CompareDialog({
   open,
   onOpenChange,
@@ -154,6 +153,7 @@ export function CompareDialog({
   canNavigate,
   onOpenPage,
   onPublished,
+  allDocumentCount,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -171,6 +171,12 @@ export function CompareDialog({
   onOpenPage: (address: string) => void
   /** A publish went out for this workspace (the tasks board completes tasks). */
   onPublished?: (sourceWorkspaceName: string) => void
+  /**
+   * Every changed document of `source`, across sites - `documents` is the
+   * review's site-scoped list. Publishing the last of them is a full publish,
+   * which completes a task.
+   */
+  allDocumentCount?: number
 }) {
   const targetWorkspaceName = source.baseWorkspace
   const sourceLabel = workspaceLabel(source, source.name)
@@ -191,6 +197,16 @@ export function CompareDialog({
    * at unless the values are there to read.
    */
   const [showDetails, setShowDetails] = useState(true)
+  /**
+   * The conversation about the change under review, beside the two versions of
+   * it. This is where a remark belongs: "this headline is too long" is about
+   * one element, in one dimension, on one page - a review that can only
+   * comment on the workspace as a whole leaves the reader matching prose to
+   * pages by hand.
+   */
+  const [showComments, setShowComments] = useState(false)
+  /** Handing the task back, with the reason the reviewer is about to write. */
+  const [requestingChanges, setRequestingChanges] = useState(false)
 
   // Every open starts on the requested document; a closed dialog carries no
   // stale comparison into the next one.
@@ -240,6 +256,14 @@ export function CompareDialog({
   const { data: dimensionsData } = useDimensions(open)
   const dimensions = dimensionsData?.dimensions ?? []
 
+  // One query for the whole review (shared with the change list through the
+  // query cache), grouped by the change each remark sits on.
+  const { data: commentsData } = useReviewComments(source.name, open)
+  const { byAnchor: commentsByAnchor, openByDocument: openRemarks } = useMemo(
+    () => groupComments(commentsData?.comments ?? []),
+    [commentsData],
+  )
+
   /**
    * The document's changes, grouped by the dimension they were made in.
    *
@@ -265,7 +289,7 @@ export function CompareDialog({
       }
     >()
     for (const node of diff?.nodes ?? []) {
-      const key = dimensionKey(node.dimensions)
+      const key = dimensionSpacePointKey(node.dimensions)
       const group = groups.get(key)
       if (group) group.nodes.push(node)
       else groups.set(key, { key, point: node.dimensions, nodes: [node] })
@@ -546,6 +570,46 @@ export function CompareDialog({
   // and timers that outlive it.
   const stopsRef = useRef(stops)
   stopsRef.current = stops
+
+  /**
+   * The change under review and its conversation. The anchor is the node AND
+   * the dimension: the same element is edited independently per dimension, so
+   * a remark on the German headline must not show up on the English one.
+   */
+  const activeStop = activeChange >= 0 ? (stops[activeChange] ?? null) : null
+  const activeAnchor =
+    activeStop && activeGroup
+      ? {
+          documentAggregateId: documentId ?? '',
+          nodeAggregateId: activeStop.aggregateId,
+          dimensions: activeGroup.point,
+        }
+      : null
+  const activeComments = activeAnchor
+    ? (commentsByAnchor.get(
+        commentAnchorKey(activeAnchor.nodeAggregateId, activeAnchor.dimensions),
+      ) ?? [])
+    : []
+  /** Open remarks anywhere on the page currently compared. */
+  const openRemarksHere =
+    documentId === null ? 0 : (openRemarks.get(documentId) ?? 0)
+
+  // A page somebody left remarks on opens with them showing - they are what
+  // the reviewer is meant to act on. Decided once per page, as soon as the
+  // remarks are in: settling the last one, by hand or by someone else, must
+  // not fold the panel away under the cursor, and closing it by hand stands
+  // until the page changes.
+  const remarksPanelDecidedFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (!open) {
+      remarksPanelDecidedFor.current = null
+      return
+    }
+    if (commentsData === undefined || documentId === null) return
+    if (remarksPanelDecidedFor.current === documentId) return
+    remarksPanelDecidedFor.current = documentId
+    setShowComments(openRemarksHere > 0)
+  }, [open, documentId, commentsData, openRemarksHere])
   const activeChangeRef = useRef(activeChange)
   activeChangeRef.current = activeChange
 
@@ -645,7 +709,8 @@ export function CompareDialog({
 
   const { operation, resolve, pendingConflict, setPendingConflict } =
     useWorkspacePublishing(source.name)
-  const busy = operation.isPending
+  const verdict = useTaskVerdict(source)
+  const busy = operation.isPending || verdict.isPending
   // The same rule the review dialog applies: the workspace permission, and
   // the access role's say on publishing to live.
   const canPublish = useCanPublish(source, workspaces)
@@ -670,6 +735,18 @@ export function CompareDialog({
 
   // The document has no pending changes anymore - move on to the next one, or
   // leave when that was the last.
+  /**
+   * Publishing this page is publishing everything the branch has left - a
+   * full publish, which completes the task. Said before the click, as the
+   * review dialog does.
+   */
+  const publishCompletesTask =
+    verdict.task !== null &&
+    verdict.task.status !== 'DONE' &&
+    documentId !== null &&
+    documents.length === 1 &&
+    (allDocumentCount ?? documents.length) === 1
+
   const moveOn = (published: boolean) => {
     if (published) onPublished?.(source.name)
     const remaining = documents.filter(
@@ -683,7 +760,14 @@ export function CompareDialog({
     if (documentId === null) return
     operation.mutate(
       { kind, filter: { documents: [documentId] } },
-      { onSuccess: () => moveOn(kind === 'publish') },
+      {
+        onSuccess: () => {
+          if (kind === 'publish' && publishCompletesTask) {
+            announceTaskCompletion(source.name)
+          }
+          moveOn(kind === 'publish')
+        },
+      },
     )
   }
 
@@ -758,7 +842,24 @@ export function CompareDialog({
                               {breadcrumb.join(' › ')}
                             </span>
                           )}
-                          <ChangeBadges document={entry} className="mt-1" />
+                          <span className="mt-1 flex items-center gap-2">
+                            <ChangeBadges document={entry} />
+                            {(openRemarks.get(id) ?? 0) > 0 && (
+                              <span
+                                className="flex items-center gap-1 type-small text-warning-text"
+                                title={t(
+                                  'review.openRemarksHint',
+                                  'Open remarks on changes of this page',
+                                )}
+                              >
+                                <i
+                                  className="fas fa-comment-dots"
+                                  aria-hidden
+                                />
+                                {openRemarks.get(id)}
+                              </span>
+                            )}
+                          </span>
                         </span>
                       </button>
                     </li>
@@ -905,6 +1006,23 @@ export function CompareDialog({
                 <span className="ml-auto flex items-center gap-2">
                   <Button
                     size="sm"
+                    variant={showComments ? 'secondary' : 'ghost'}
+                    title={t(
+                      'compare.commentsHint',
+                      'Leave a remark on the change under review',
+                    )}
+                    onClick={() => setShowComments((value) => !value)}
+                  >
+                    <i className="fas fa-fw fa-comment-dots" aria-hidden />
+                    {t('review.comments', 'Comments')}
+                    {openRemarksHere > 0 && (
+                      <span className="ml-1 tabular-nums text-warning-text">
+                        {openRemarksHere}
+                      </span>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
                     variant={showDetails ? 'secondary' : 'ghost'}
                     title={t(
                       'compare.detailsHint',
@@ -1007,13 +1125,59 @@ export function CompareDialog({
 
               {document !== null && showDetails && (
                 <ChangeDetails
-                  stop={
-                    activeChange >= 0 ? (stops[activeChange] ?? null) : null
-                  }
+                  stop={activeStop}
                   documentAggregateId={document.documentAggregateId}
                 />
               )}
             </div>
+
+            {/* The remarks on the change under review - pinned to it, so
+                stepping to the next change swaps the conversation with it. */}
+            {showComments && document !== null && (
+              <aside className="flex w-75 shrink-0 flex-col border-l border-divider">
+                <div className="shrink-0 border-b border-divider px-3 py-2 type-small text-muted-foreground">
+                  {activeAnchor
+                    ? t('compare.commentsOnChange', 'Remarks on this change')
+                    : t('review.comments', 'Comments')}
+                </div>
+                {activeAnchor ? (
+                  <CommentThread
+                    // One thread per change: a draft typed on one change must
+                    // not be sent pinned to the next one.
+                    key={
+                      activeAnchor
+                        ? commentAnchorKey(
+                            activeAnchor.nodeAggregateId,
+                            activeAnchor.dimensions,
+                          )
+                        : 'none'
+                    }
+                    className="flex min-h-0 flex-1 flex-col p-3"
+                    listClassName="min-h-0 flex-1 overflow-y-auto"
+                    workspaceName={source.name}
+                    comments={activeComments}
+                    anchor={activeAnchor}
+                    canManage={source.permissions.manage}
+                    canWrite={source.permissions.write}
+                    placeholder={t(
+                      'compare.commentPlaceholder',
+                      'What should happen with this change?',
+                    )}
+                    emptyLabel={t(
+                      'compare.noCommentsOnChange',
+                      'Nothing said about this change yet.',
+                    )}
+                  />
+                ) : (
+                  <div className="p-3 type-small text-muted-foreground">
+                    {t(
+                      'compare.selectChangeToComment',
+                      'Step to a change to comment on it.',
+                    )}
+                  </div>
+                )}
+              </aside>
+            )}
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-divider px-3.5 py-3">
@@ -1029,14 +1193,23 @@ export function CompareDialog({
                   )}
                 </>
               )}
+              {publishCompletesTask && (
+                <>
+                  {' · '}
+                  <i
+                    className="fas fa-circle-info mr-1 text-primary-text"
+                    aria-hidden
+                  />
+                  {t(
+                    'review.publishCompletesTask',
+                    'This publishes everything the branch has — which completes the task.',
+                  )}
+                </>
+              )}
             </span>
-            <Button
-              variant="secondary"
-              disabled={busy}
-              onClick={() => onOpenChange(false)}
-            >
-              {t('action.close', 'Close')}
-            </Button>
+            {/* Discarding throws the author's work away - it belongs on the
+                far side of the footer, not next to the verdict (see the
+                review dialog's footer for the same reasoning). */}
             <Button
               variant="destructive"
               disabled={documentId === null || !canDiscard || busy}
@@ -1046,6 +1219,30 @@ export function CompareDialog({
               <i className="fas fa-fw fa-trash-can" aria-hidden />
               {t('compare.discardDocument', 'Discard this page')}
             </Button>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => onOpenChange(false)}
+            >
+              {t('action.close', 'Close')}
+            </Button>
+            {/* Handing back is an answer to a review request - an open task
+                has nothing to hand back. */}
+            {verdict.task?.status === 'IN_REVIEW' && (
+              <Button
+                variant="secondary"
+                className="text-warning-text"
+                disabled={!canDiscard || busy}
+                title={t(
+                  'review.requestChangesButtonHint',
+                  'Send the task back with what needs doing — nothing is published or discarded',
+                )}
+                onClick={() => setRequestingChanges(true)}
+              >
+                <i className="fas fa-fw fa-rotate-left" aria-hidden />
+                {t('review.requestChanges', 'Request changes')}
+              </Button>
+            )}
             <Button
               disabled={documentId === null || !canPublish || busy}
               title={canPublish ? undefined : publishDeniedHint}
@@ -1108,6 +1305,18 @@ export function CompareDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      <RequestChangesDialog
+        open={requestingChanges}
+        onOpenChange={(next) => !next && setRequestingChanges(false)}
+        pending={verdict.isPending}
+        onSubmit={(reason) =>
+          verdict.requestChanges(reason, () => {
+            setRequestingChanges(false)
+            onOpenChange(false)
+          })
+        }
+      />
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}
