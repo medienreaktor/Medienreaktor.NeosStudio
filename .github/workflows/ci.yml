@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Lets a release be re-verified without an empty commit.
+  workflow_dispatch:
+
+# Supersede a run when the same pull request branch is pushed again, but never
+# cancel one on main or a manual re-verification — those exist to leave a verdict
+# on a commit, and a cancelled one leaves none.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Nothing here writes to the repository; the token only lifts Composer's
+# unauthenticated GitHub API rate limit when fetching dist archives.
+permissions:
+  contents: read
+
+# Third-party actions are pinned by commit SHA rather than tag, because a tag can
+# be moved onto different code after review. GitHub's own actions/* are pinned to
+# the major, which GitHub controls and repoints deliberately.
+env:
+  # Installing Neos pulls well over a hundred packages as GitHub dist archives,
+  # which exhausts the 60-per-hour unauthenticated API limit. Every dependency,
+  # medienreaktor/neos-api included, resolves from Packagist, so no other
+  # registry needs credentials.
+  COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
+
+  # Everything neos/flow and neos/utility-unicode declare, plus what PHPUnit and
+  # PHP_CodeSniffer need. ctype, filter, json, libxml, openssl, pcre, phar,
+  # reflection and spl are in the default build and need no request.
+  PHP_EXTENSIONS: mbstring, xml, xmlreader, xmlwriter, simplexml, dom, tokenizer, zlib
+
+jobs:
+  # Lint is deliberately not part of the test matrix below. There is no PHPStan
+  # baseline in this package — every reported error is a real one to be fixed, not
+  # recorded — and neither the coding standard nor level 5 analysis varies by
+  # interpreter, so repeating them per matrix cell would only multiply the same
+  # output. One authoritative run against the newest dependencies is enough.
+  lint:
+    name: Lint (PHP 8.2, highest deps)
+    # GitHub-hosted rather than the org's runner scale set: this repository is
+    # public, so its minutes are free, and a self-hosted runner would execute code
+    # from pull requests opened on forks.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # Supplies both the interpreter and Composer, so nothing has to be fetched
+      # from getcomposer.org at job time. The official `composer` image was the
+      # alternative, but it ships exactly one PHP version and so cannot serve the
+      # matrix below.
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.2'
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+        with:
+          dependency-versions: highest
+          composer-options: "--prefer-dist"
+
+      # composer validate --strict runs as part of this, as lint:composer. The
+      # manifest is this package's contract with every consuming distribution, and
+      # a wrong constraint there is exactly the class of bug that reaches projects
+      # silently.
+      - name: Run Linting (composer validate, PHPStan & PHP CodeSniffer)
+        run: composer lint
+
+  test:
+    name: Test (PHP ${{ matrix.php }}, ${{ matrix.deps }} deps)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      # Let every version report rather than killing the rest when the first one
+      # fails.
+      fail-fast: false
+      matrix:
+        # composer.json declares php ^8.2 with neos/neos ^9.1, and both ends of
+        # that are exercised rather than asserted:
+        #
+        #   - `lowest` pins the oldest set Composer will install against the
+        #     constraints, which is the one a consuming distribution could
+        #     actually end up with.
+        #   - `highest` walks up to the newest Neos 9.x release.
+        #
+        # PHPUnit sits outside that span on purpose: require-dev allows 11.5 alone,
+        # so every cell runs the same runner. 11 is also the ceiling: PHPUnit 13
+        # wants PHP 8.4.1 and could not run the 8.2 and 8.3 cells.
+        #
+        # 8.4 and 8.5 pair with `highest` only: the oldest set is proven on the
+        # floor interpreter, the newest interpreters on the newest set.
+        include:
+          - { php: '8.2', deps: 'lowest' }
+          - { php: '8.2', deps: 'highest' }
+          - { php: '8.3', deps: 'highest' }
+          - { php: '8.4', deps: 'highest' }
+          - { php: '8.5', deps: 'highest' }
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          tools: composer:v2
+          coverage: none
+
+      # Resolves from the constraints every time — no composer.lock is committed,
+      # which is what makes the lowest/highest split meaningful. The action caches
+      # the Composer download cache per PHP version and dependency preference.
+      - name: Install dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+        with:
+          dependency-versions: ${{ matrix.deps }}
+          composer-options: "--prefer-dist"
+
+      # Makes the floor claim auditable: the log states which Neos the job actually
+      # ran against, rather than leaving it to be inferred from the matrix name.
+      - name: Show resolved dependency versions
+        run: composer show --direct
+
+      - name: Run Tests (PHPUnit)
+        run: composer test
+
+  # The package ships its frontend prebuilt in Resources/Public/Studio, so what
+  # installations run is whatever was committed there, not what the sources say.
+  # This job builds the sources and fails when the result differs from the
+  # committed build, which also covers the type check, the bundles and the CSS
+  # variable contract that `npm run build` runs.
+  frontend:
+    name: Frontend (build matches the committed assets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: Resources/Private/Studio
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # .nvmrc is the one place the Node version is pinned; the build output
+      # depends on it, so CI reads the same file a developer's toolchain does.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: Resources/Private/Studio/.nvmrc
+          cache: npm
+          cache-dependency-path: Resources/Private/Studio/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      # Untracked files count too: a build that adds a new hashed asset without
+      # it being committed is exactly the drift this guards against.
+      - name: Compare with the committed build
+        working-directory: .
+        run: |
+          git add --intent-to-add --all Resources/Public/Studio
+          git diff --exit-code --stat -- Resources/Public/Studio
+
+      # The realtime sidecar has no build step; a syntax check is what can be
+      # verified without running it.
+      - name: Check the realtime sidecar
+        working-directory: Resources/Private/Realtime
+        run: node --check server.js

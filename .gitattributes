@@ -7,8 +7,12 @@
 /figma-variables.json export-ignore
 /figma-text-styles.json export-ignore
 
-# Unit tests run from a source checkout.
+# Unit tests and the CI that runs them, with the tool configuration they read.
 /Tests export-ignore
+/.github export-ignore
+/phpcs.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
 
 # Internal decision records; nothing in the package links to them.
 /Documentation/Decisions export-ignore

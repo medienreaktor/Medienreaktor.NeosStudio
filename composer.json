@@ -8,9 +8,20 @@
     "neos/neos": "^9.1",
     "medienreaktor/neos-api": "^1.17.5"
   },
+  "require-dev": {
+    "neos/contentgraph-doctrinedbaladapter": "^9.1",
+    "phpunit/phpunit": "^11.5",
+    "phpstan/phpstan": "^2.2",
+    "squizlabs/php_codesniffer": "^4.0"
+  },
   "autoload": {
     "psr-4": {
       "Medienreaktor\\NeosStudio\\": "Classes/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Medienreaktor\\NeosStudio\\Tests\\": "Tests/"
     }
   },
   "extra": {
@@ -20,5 +31,22 @@
     "branch-alias": {
       "dev-main": "1.19.x-dev"
     }
+  },
+  "config": {
+    "allow-plugins": {
+      "neos/composer-plugin": true
+    }
+  },
+  "scripts": {
+    "test": "./vendor/bin/phpunit",
+    "lint:composer": "@composer validate --strict --no-check-lock",
+    "lint:phpstan": "@php vendor/bin/phpstan analyse",
+    "lint:phpcs": "./vendor/bin/phpcs --colors",
+    "lint:phpcs:fix": "./vendor/bin/phpcbf --colors",
+    "lint": [
+      "@lint:composer",
+      "@lint:phpcs",
+      "@lint:phpstan"
+    ]
   }
 }
