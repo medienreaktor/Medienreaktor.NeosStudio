@@ -152,7 +152,8 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
             return Privilege::denied(sprintf('Base workspace "%s" is not part of your access role(s)', $command->baseWorkspaceName->value));
         }
 
-        if (($command instanceof PublishWorkspace || $command instanceof PublishIndividualNodesFromWorkspace)
+        if (
+            ($command instanceof PublishWorkspace || $command instanceof PublishIndividualNodesFromWorkspace)
             && $this->publishesIntoRootWorkspace($command->workspaceName)
             && !$access->allowsPublishToLive()
         ) {

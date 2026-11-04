@@ -55,7 +55,11 @@ class AccessControlService
     protected SecurityContext $securityContext;
 
     /**
-     * @var array{bypassRoles: array<int, string>, restrictUnassignedUsers: bool, enforceContentRepository: bool}
+     * bypassRoles (list of Flow roles), restrictUnassignedUsers and
+     * enforceContentRepository (booleans) - read defensively, since a
+     * distribution may leave any of them out.
+     *
+     * @var array<string, mixed>
      */
     #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosStudio', path: 'accessControl')]
     protected array $settings = [];
@@ -98,7 +102,7 @@ class AccessControlService
 
     public function effectiveAccessForUser(?UserId $userId): EffectiveAccess
     {
-        $cacheKey = $userId?->value ?? '';
+        $cacheKey = $userId->value ?? '';
         if (isset($this->effectiveAccessCache[$cacheKey])) {
             return $this->effectiveAccessCache[$cacheKey];
         }
@@ -173,7 +177,7 @@ class AccessControlService
                 if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {
                     // The child of the sites root IS the site node - and the
                     // node itself when it has no non-root ancestor at all.
-                    $siteNodeName = $previous?->name?->value ?? '';
+                    $siteNodeName = $previous->name->value ?? '';
                     break;
                 }
                 $idPath[] = $ancestor->aggregateId->value;

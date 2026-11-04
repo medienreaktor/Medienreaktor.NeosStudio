@@ -229,8 +229,10 @@ class StudioHelper implements ProtectedContextAwareInterface
             return null;
         }
         foreach ($node->properties as $name => $value) {
-            if (is_object($value)
-                && $this->persistenceManager->getIdentifierByObject($value) === $assetIdentifier) {
+            if (
+                is_object($value)
+                && $this->persistenceManager->getIdentifierByObject($value) === $assetIdentifier
+            ) {
                 return $name;
             }
         }

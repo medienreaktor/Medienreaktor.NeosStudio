@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\CatchUpHook;
 
-
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
 use Medienreaktor\NeosStudio\Service\NotificationService;
 use Medienreaktor\NeosStudio\Domain\Repository\TaskCommentRepository;

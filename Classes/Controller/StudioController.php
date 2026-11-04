@@ -320,7 +320,7 @@ class StudioController extends ActionController
         // change, and newly configured scopes (e.g. neos.media) must propagate
         // to the existing first-party client or the Studio can never request them.
         $redirectUriChanged = !in_array($redirectUri, $client->getRedirectUris(), true);
-        $scopesChanged = array_values($client->getAllowedScopes()) !== array_values($scopes);
+        $scopesChanged = array_values($client->getAllowedScopes()) !== $scopes;
         if ($redirectUriChanged || $scopesChanged) {
             $this->clientRepository->remove($client);
             $this->persistenceManager->persistAll();
