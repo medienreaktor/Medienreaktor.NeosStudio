@@ -1,5 +1,10 @@
 # Medienreaktor.NeosStudio
 
+[![Packagist Version](https://img.shields.io/packagist/v/medienreaktor/neos-studio)](https://packagist.org/packages/medienreaktor/neos-studio)
+[![PHP Version Support](https://img.shields.io/packagist/dependency-v/medienreaktor/neos-studio/php)](https://www.php.net/)
+[![Test Status](https://github.com/medienreaktor/Medienreaktor.NeosStudio/actions/workflows/ci.yml/badge.svg)](https://github.com/medienreaktor/Medienreaktor.NeosStudio/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+
 ![Neos Studio](Documentation/Banner.png)
 
 **A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.** Built from scratch on a clean HTTP API — fully independent of `Neos.Neos.Ui`, free to make its own architectural choices. This is what content editing in Neos can feel like: instant, fluid, together with your team, and open for extension from day one.
