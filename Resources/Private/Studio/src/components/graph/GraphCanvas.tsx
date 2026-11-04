@@ -341,12 +341,12 @@ export function GraphCanvas({
       </div>
       <div
         ref={viewportRef}
-        // The dot grid follows the color scheme: dark dots on the light
-        // canvas, light ones on the dark canvas.
-        className="h-full w-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing [--graph-dot:rgba(0,0,0,0.12)] dark:[--graph-dot:rgba(255,255,255,0.07)]"
+        // The dot grid follows the color scheme through the divider token:
+        // dark dots on the light canvas, light ones on the dark canvas.
+        className="h-full w-full cursor-grab touch-none overflow-hidden select-none active:cursor-grabbing"
         style={{
           backgroundImage:
-            'radial-gradient(circle, var(--graph-dot) 1px, transparent 1px)',
+            'radial-gradient(circle, var(--color-divider) 1px, transparent 1px)',
           backgroundSize: '1.5rem 1.5rem',
         }}
         onPointerDown={onPointerDown}
