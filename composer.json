@@ -6,8 +6,8 @@
     "require": {
         "php": "^8.4",
         "neos/neos": "^9.2",
-        "neos/api": "dev-main",
-        "neos/oauth": "dev-main"
+        "medienreaktor/neos-api": "@dev",
+        "medienreaktor/neos-oauth": "@dev"
     },
     "suggest": {
         "neos/neos-ui": "Runs the node types' nodeCreationHandlers (e.g. Flowpack.NodeTemplates) for nodes created through the Studio's creation dialog"

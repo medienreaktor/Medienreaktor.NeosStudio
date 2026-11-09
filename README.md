@@ -142,7 +142,7 @@ The types ship with the package as one bundled declaration file, `Resources/Publ
 Requires Neos `^9.2`, PHP `^8.4` and Node 22 (pinned via `.nvmrc`) for building the frontend.
 
 ```sh
-composer require neos/api neos/oauth medienreaktor/neos-studio
+composer require medienreaktor/neos-studio
 
 # create the Neos.OAuth tables
 ./flow doctrine:migrate
