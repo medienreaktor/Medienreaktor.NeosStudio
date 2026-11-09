@@ -329,7 +329,8 @@ final readonly class AccessRoleConstraints implements \JsonSerializable
     }
 
     /**
-     * @param array<string, mixed> $dimensionValues
+     * @param array<array-key, mixed> $dimensionValues PHP turns a numeric key
+     *        such as "1" into an integer, so the keys are checked, not assumed
      * @return array<string, array<int, string>>
      */
     private static function normalizeDimensionValues(array $dimensionValues): array

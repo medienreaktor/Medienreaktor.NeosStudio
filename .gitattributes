@@ -1,0 +1,23 @@
+# Development-only files stay out of the Composer package (git archive, and
+# with it the Packagist dist, skips export-ignore paths).
+
+# Design token export: the Figma dumps and the figma-tools configuration that
+# generate src/styles/*.css - the generated CSS is what ships.
+/figma-tools.json export-ignore
+/figma-variables.json export-ignore
+/figma-text-styles.json export-ignore
+
+# Unit tests and the CI that runs them, with the tool configuration they read.
+/Tests export-ignore
+/.github export-ignore
+/phpcs.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
+
+# Internal decision records; nothing in the package links to them.
+/Documentation/Decisions export-ignore
+
+# Repository tooling.
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore

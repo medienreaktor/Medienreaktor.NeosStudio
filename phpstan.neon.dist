@@ -1,0 +1,12 @@
+# No kleisli/flow-phpstan here: every release of it requires neos/flow ^8.0, so
+# it cannot be installed beside Flow 9.
+
+parameters:
+    level: 5
+    paths:
+        - Classes
+        - Tests
+    # The package declares php ^8.2, so analyse against that floor rather than the
+    # interpreter in use - otherwise 8.3-only syntax passes locally and breaks the
+    # oldest supported target.
+    phpVersion: 80200

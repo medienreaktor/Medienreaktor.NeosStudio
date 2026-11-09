@@ -55,7 +55,11 @@ class AccessControlService
     protected SecurityContext $securityContext;
 
     /**
-     * @var array{bypassRoles: array<int, string>, restrictUnassignedUsers: bool, enforceContentRepository: bool}
+     * bypassRoles (list of Flow roles), restrictUnassignedUsers and
+     * enforceContentRepository (booleans) - read defensively, since a
+     * distribution may leave any of them out.
+     *
+     * @var array<string, mixed>
      */
     #[Flow\InjectConfiguration(package: 'Medienreaktor.NeosStudio', path: 'accessControl')]
     protected array $settings = [];
@@ -116,7 +120,7 @@ class AccessControlService
 
     public function effectiveAccessForUser(?UserId $userId): EffectiveAccess
     {
-        $cacheKey = $userId?->value ?? '';
+        $cacheKey = $userId->value ?? '';
         if (isset($this->effectiveAccessCache[$cacheKey])) {
             return $this->effectiveAccessCache[$cacheKey];
         }

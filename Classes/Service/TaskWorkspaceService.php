@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Service;
 
-
 use Medienreaktor\NeosStudio\Domain\Model\TaskComment;
 use Medienreaktor\NeosStudio\Domain\Model\TaskStatus;
 use Medienreaktor\NeosStudio\Domain\Model\TaskWorkspace;
@@ -142,7 +141,8 @@ final class TaskWorkspaceService
 
         // The previous assignee loses their COLLABORATOR grant - unless they
         // hold it for another reason (creator = MANAGER stays untouched).
-        if ($task->assigneeUserId !== null
+        if (
+            $task->assigneeUserId !== null
             && !$task->assigneeUserId->equals($task->createdByUserId)
             && $this->hasUserRoleAssignment($contentRepositoryId, $workspaceName, $task->assigneeUserId)
         ) {
@@ -153,7 +153,8 @@ final class TaskWorkspaceService
             );
         }
 
-        if ($assigneeUserId !== null
+        if (
+            $assigneeUserId !== null
             && !$assigneeUserId->equals($task->createdByUserId)
             && !$this->hasUserRoleAssignment($contentRepositoryId, $workspaceName, $assigneeUserId)
         ) {
@@ -375,9 +376,9 @@ final class TaskWorkspaceService
      */
     private function payload(TaskWorkspace $task): array
     {
-        return array_filter([
+        return [
             'workspaceName' => $task->workspaceName->value,
-        ], static fn ($value) => $value !== null);
+        ];
     }
 
     private function workspaceTitle(ContentRepositoryId $contentRepositoryId, WorkspaceName $workspaceName): string

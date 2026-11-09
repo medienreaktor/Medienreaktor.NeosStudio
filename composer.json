@@ -1,28 +1,56 @@
 {
-    "name": "medienreaktor/neos-studio",
-    "type": "neos-package",
-    "description": "Neos Studio - A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.",
-    "license": "GPL-3.0-or-later",
-    "require": {
-        "php": "^8.4",
-        "neos/neos": "^9.2",
-        "medienreaktor/neos-api": "^2.0",
-        "medienreaktor/neos-oauth": "^0.1"
-    },
-    "suggest": {
-        "neos/neos-ui": "Runs the node types' nodeCreationHandlers (e.g. Flowpack.NodeTemplates) for nodes created through the Studio's creation dialog"
-    },
-    "autoload": {
-        "psr-4": {
-            "Medienreaktor\\NeosStudio\\": "Classes/"
-        }
-    },
-    "extra": {
-        "neos": {
-            "package-key": "Medienreaktor.NeosStudio"
-        },
-        "branch-alias": {
-            "dev-main": "1.19.x-dev"
-        }
+  "name": "medienreaktor/neos-studio",
+  "type": "neos-package",
+  "description": "Neos Studio - A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.",
+  "license": "GPL-3.0-or-later",
+  "require": {
+    "php": "^8.4",
+    "neos/neos": "^9.2",
+    "medienreaktor/neos-api": "^2.0",
+    "medienreaktor/neos-oauth": "^0.1"
+  },
+  "require-dev": {
+    "neos/contentgraph-doctrinedbaladapter": "^9.2",
+    "phpunit/phpunit": "^11.5 || ^13.0",
+    "phpstan/phpstan": "^2.2",
+    "squizlabs/php_codesniffer": "^4.0"
+  },
+  "suggest": {
+    "neos/neos-ui": "Runs the node types' nodeCreationHandlers (e.g. Flowpack.NodeTemplates) for nodes created through the Studio's creation dialog"
+  },
+  "autoload": {
+    "psr-4": {
+      "Medienreaktor\\NeosStudio\\": "Classes/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Medienreaktor\\NeosStudio\\Tests\\": "Tests/"
+    }
+  },
+  "extra": {
+    "neos": {
+      "package-key": "Medienreaktor.NeosStudio"
+    },
+    "branch-alias": {
+      "dev-main": "2.0.x-dev"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "neos/composer-plugin": true
+    }
+  },
+  "scripts": {
+    "test": "./vendor/bin/phpunit",
+    "lint:composer": "@composer validate --strict --no-check-lock",
+    "lint:phpstan": "@php vendor/bin/phpstan analyse",
+    "lint:phpcs": "./vendor/bin/phpcs --colors",
+    "lint:phpcs:fix": "./vendor/bin/phpcbf --colors",
+    "lint": [
+      "@lint:composer",
+      "@lint:phpcs",
+      "@lint:phpstan"
+    ]
+  }
 }

@@ -158,7 +158,9 @@ class StudioHelper implements ProtectedContextAwareInterface
      * (properties.<name>.ui.inline.editorOptions), rendered into the editable
      * markup so the guest can build the rich-text schema and toolbar from the
      * NodeType definition: the `formatting` flags (strong, em, h1..h6, ol, ul,
-     * a, ...) plus `autoparagraph`, which decides single-line vs multi-block.
+     * a, ...) plus `autoparagraph`, which decides single-line vs multi-block,
+     * and `hyphens` and `nbsp`, which offer inserting soft hyphens and
+     * non-breaking spaces.
      * Returns null when the property carries no editor options (the guest then
      * falls back to a permissive default schema).
      *
@@ -180,6 +182,8 @@ class StudioHelper implements ProtectedContextAwareInterface
         return [
             'formatting' => is_array($formatting) ? $formatting : [],
             'autoparagraph' => $editorOptions['autoparagraph'] ?? null,
+            'hyphens' => ($editorOptions['hyphens'] ?? false) === true,
+            'nbsp' => ($editorOptions['nbsp'] ?? false) === true,
         ];
     }
 
@@ -249,8 +253,10 @@ class StudioHelper implements ProtectedContextAwareInterface
             return null;
         }
         foreach ($node->properties as $name => $value) {
-            if (is_object($value)
-                && $this->persistenceManager->getIdentifierByObject($value) === $assetIdentifier) {
+            if (
+                is_object($value)
+                && $this->persistenceManager->getIdentifierByObject($value) === $assetIdentifier
+            ) {
                 return $name;
             }
         }
