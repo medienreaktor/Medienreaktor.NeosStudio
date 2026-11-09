@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-09
+
+### Changed
+
+- **Breaking:** Studio runs on Neos.Api (`medienreaktor/neos-api` ^2.0) and
+  Neos.OAuth (`medienreaktor/neos-oauth` ^0.1) instead of
+  Medienreaktor.NeosApi 1.x, and requires PHP 8.4 and Neos 9.2. Run
+  `./flow doctrine:migrate` for Neos.OAuth's tables. OAuth clients and tokens
+  of Medienreaktor.NeosApi don't carry over: editors log in again, and Studio
+  provisions its own client on first load.
+- **Breaking:** the plugin API is version 2 (`NeosStudio.version` is `2`):
+  nodes, node addresses, workspaces, node types and asset values are
+  Neos.Api's, and `apiFetch` talks to `/api`. See "Plugin API version 2" in
+  the README for what a plugin has to change.
+- The Studio's own operations (tasks, notifications, access roles, preview
+  links, the creation dialog) are part of the Neos API, scoped by content
+  repository under `/api/cr/{contentRepositoryId}/…`, and documented at
+  `/api/docs`.
+- The workspace history is read from Neos.Api's workspace events, and the
+  creation dialog runs the node types' creation handlers before the node is
+  created.
+- The frontend uses TipTap 3.33.
+
+### Removed
+
+- The side-by-side compare view of 1.19.0, for now. It comes back once it runs
+  on Neos.Api.
+
 ## [1.19.1] - 2026-11-04
 
 ### Added
@@ -1286,7 +1314,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...2.0.0
 [1.19.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.0...1.19.1
 [1.19.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.1...1.19.0
 [1.18.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.0...1.18.1
