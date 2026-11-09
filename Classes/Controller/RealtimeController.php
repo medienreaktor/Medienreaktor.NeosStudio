@@ -42,7 +42,7 @@ use Neos\Flow\Mvc\Controller\ActionController;
 class RealtimeController extends ActionController
 {
     /**
-     * @var array<string>
+     * @var array<int,string>
      */
     protected $supportedMediaTypes = ['application/json'];
 

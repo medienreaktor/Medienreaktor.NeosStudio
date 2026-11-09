@@ -172,7 +172,8 @@ final readonly class CreationDialog
                 $contentRepository->handle($command);
             } catch (AccessDenied $exception) {
                 return Forbidden::because(sprintf('The node %s was created, but you may not apply what its node creation handlers add: %s', $node->nodeAggregateId->value, $exception->getMessage()));
-            } catch (\Exception $exception) {
+            // handle() declares no exceptions, but rejects commands at runtime (e.g. a violated constraint)
+            } catch (\Exception $exception) { // @phpstan-ignore catch.neverThrown
                 return UnprocessableContent::because(sprintf('The node %s was created without everything its node creation handlers add: %s', $node->nodeAggregateId->value, $exception->getMessage()));
             }
         }

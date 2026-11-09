@@ -12,7 +12,6 @@ use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 use Neos\Neos\Ui\Domain\NodeCreation\NodeCreationCommands;
 use Neos\Neos\Ui\Domain\NodeCreation\NodeCreationElements;
 use Neos\Neos\Ui\Domain\NodeCreation\NodeCreationHandlerFactoryInterface;
-use Neos\Neos\Ui\Domain\NodeCreation\NodeCreationHandlerInterface;
 use Neos\Utility\PositionalArraySorter;
 
 /**
@@ -67,9 +66,6 @@ final readonly class NodeCreationHandlers
                 throw new \RuntimeException(sprintf('The factory %s of the node creation handler %s doesn\'t implement %s', $factoryClassName, $key, NodeCreationHandlerFactoryInterface::class), 1792000012);
             }
             $handler = $factory->build($contentRepository);
-            if (!$handler instanceof NodeCreationHandlerInterface) {
-                throw new \RuntimeException(sprintf('The factory %s of the node creation handler %s built no %s', $factoryClassName, $key, NodeCreationHandlerInterface::class), 1792000013);
-            }
             $commands = $handler->handle($commands, $creationElements);
         }
         return $commands;

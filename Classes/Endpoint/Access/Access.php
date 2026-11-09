@@ -15,7 +15,6 @@ use Medienreaktor\NeosStudio\Service\AccessControlService;
 use Neos\Api\Security\AccountPrivileges;
 use Neos\Api\Security\ApiAuthContextProvider;
 use Neos\Api\Security\ApiCaller;
-use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
@@ -98,8 +97,9 @@ final readonly class Access
     private function liveSubgraphOf(ContentRepositoryId $contentRepositoryId): ContentSubgraphInterface
     {
         $contentRepository = $this->contentRepositoryRegistry->get($contentRepositoryId);
-        $dimensionSpacePoint = array_values($contentRepository->getVariationGraph()->getRootGeneralizations())[0]
-            ?? DimensionSpacePoint::createWithoutDimensions();
+        // Never empty: without dimensions, the one root generalization is the
+        // empty dimension space point.
+        $dimensionSpacePoint = array_values($contentRepository->getVariationGraph()->getRootGeneralizations())[0];
 
         return $contentRepository
             ->getContentGraph(WorkspaceName::forLive())

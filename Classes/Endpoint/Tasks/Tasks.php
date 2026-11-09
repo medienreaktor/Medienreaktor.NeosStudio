@@ -115,7 +115,8 @@ final readonly class Tasks
             return UnprocessableContent::because('The title must not be empty');
         }
         $baseWorkspaceName = $newTask->baseWorkspaceName?->toWorkspaceName() ?? SharedModel\Workspace\WorkspaceName::forLive();
-        if ($contentRepository->findWorkspaceByName($baseWorkspaceName) === null
+        if (
+            $contentRepository->findWorkspaceByName($baseWorkspaceName) === null
             || !$this->studioCallers->permissionsOf($caller, $contentRepository->id, $baseWorkspaceName)->read
         ) {
             return UnprocessableContent::because(sprintf('There is no workspace %s', $baseWorkspaceName->value));

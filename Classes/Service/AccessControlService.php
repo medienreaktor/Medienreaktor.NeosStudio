@@ -194,7 +194,7 @@ class AccessControlService
             if ($ancestor->classification === NodeAggregateClassification::CLASSIFICATION_ROOT) {
                 // The child of the sites root IS the site node - and the
                 // node itself when it has no non-root ancestor at all.
-                $siteNodeName = $previous?->name?->value ?? '';
+                $siteNodeName = $previous->name->value ?? '';
                 break;
             }
             $idPath[] = $ancestor->aggregateId->value;

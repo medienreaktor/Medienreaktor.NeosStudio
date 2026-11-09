@@ -106,8 +106,7 @@ class PreviewController extends ActionController
         string $nodeAggregateId,
         string $mode = RenderingMode::FRONTEND,
         bool $includeDeleted = false
-    ): ResponseInterface|string
-    {
+    ): ResponseInterface|string {
         try {
             $renderingMode = $this->renderingModeService->findByName($mode);
         } catch (\Neos\Neos\Domain\Exception) {
