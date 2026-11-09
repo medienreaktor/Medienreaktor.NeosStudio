@@ -42,7 +42,7 @@ jobs:
   # interpreter, so repeating them per matrix cell would only multiply the same
   # output. One authoritative run against the newest dependencies is enough.
   lint:
-    name: Lint (PHP 8.2, highest deps)
+    name: Lint (PHP 8.4, highest deps)
     # GitHub-hosted rather than the org's runner scale set: this repository is
     # public, so its minutes are free, and a self-hosted runner would execute code
     # from pull requests opened on forks.
@@ -60,7 +60,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           extensions: ${{ env.PHP_EXTENSIONS }}
           tools: composer:v2
           coverage: none
@@ -88,25 +88,22 @@ jobs:
       # fails.
       fail-fast: false
       matrix:
-        # composer.json declares php ^8.2 with neos/neos ^9.1, and both ends of
-        # that are exercised rather than asserted:
+        # composer.json declares php ^8.4 with neos/neos ^9.2 (what Neos.Api 2.0
+        # requires), and both ends of that are exercised rather than asserted:
         #
         #   - `lowest` pins the oldest set Composer will install against the
         #     constraints, which is the one a consuming distribution could
         #     actually end up with.
         #   - `highest` walks up to the newest Neos 9.x release.
         #
-        # PHPUnit follows the interpreter rather than the dependency set:
-        # require-dev allows ^11.5 || ^13.0, and PHPUnit 13 needs PHP 8.4.1, so the
-        # 8.2 and 8.3 cells run 11.5 and the 8.4 and 8.5 cells run 13. The tests use
-        # only what both versions support.
+        # PHPUnit follows the dependency set: require-dev allows ^11.5 || ^13.0, so
+        # `lowest` runs 11.5 and `highest` runs 13. The tests use only what both
+        # versions support.
         #
-        # 8.4 and 8.5 pair with `highest` only: the oldest set is proven on the
-        # floor interpreter, the newest interpreters on the newest set.
+        # 8.5 pairs with `highest` only: the oldest set is proven on the floor
+        # interpreter, the newest interpreter on the newest set.
         include:
-          - { php: '8.2', deps: 'lowest' }
-          - { php: '8.2', deps: 'highest' }
-          - { php: '8.3', deps: 'highest' }
+          - { php: '8.4', deps: 'lowest' }
           - { php: '8.4', deps: 'highest' }
           - { php: '8.5', deps: 'highest' }
 

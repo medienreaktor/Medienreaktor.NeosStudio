@@ -6,7 +6,7 @@ parameters:
     paths:
         - Classes
         - Tests
-    # The package declares php ^8.2, so analyse against that floor rather than the
-    # interpreter in use - otherwise 8.3-only syntax passes locally and breaks the
+    # The package declares php ^8.4, so analyse against that floor rather than the
+    # interpreter in use - otherwise 8.5-only syntax passes locally and breaks the
     # oldest supported target.
-    phpVersion: 80200
+    phpVersion: 80400
