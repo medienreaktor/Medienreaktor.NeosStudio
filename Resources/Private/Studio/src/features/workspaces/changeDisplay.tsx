@@ -1,7 +1,8 @@
-import type { Workspace, WorkspaceDocumentChange } from '@/api/workspaces'
+import type { Workspace } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { TONE_BG_CLASSES } from './historyLabels'
+import type { WorkspaceDocumentChange } from './historyData'
 
 /**
  * The vocabulary a changed document is presented with, shared by every
@@ -16,7 +17,7 @@ export function workspaceLabel(
   name: string,
 ): string {
   if (!workspace) return name
-  return workspace.classification === 'ROOT'
+  return workspace.classification === 'root'
     ? t('workspace.live', 'Live')
     : workspace.title || workspace.name
 }

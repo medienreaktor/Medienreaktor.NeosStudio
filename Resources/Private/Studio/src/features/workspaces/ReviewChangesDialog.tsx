@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CompareDialog } from '@/features/compare/CompareDialog'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { useValueChange } from '@/hooks/use-value-change'
 import { celebrateAround } from '@/lib/confetti'
@@ -33,7 +32,6 @@ import { ConflictResolutionDialog } from './ConflictResolutionDialog'
 import {
   useWorkspaceDocumentChanges,
   useWorkspaceDocumentDiff,
-  type WorkspaceDocumentChange,
 } from './historyData'
 import { NodeDiff } from './StepDiff'
 import { useCanPublish, useWorkspacePublishing } from './useWorkspacePublishing'
@@ -153,14 +151,6 @@ export function ReviewChangesDialog({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   /** Documents whose change details (diffs) are unfolded. */
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  /**
-   * The document the side-by-side compare view opened on; null while it is
-   * closed. The list here answers "what changed", the compare view answers
-   * "does it look right" - so it opens from a row and takes the whole screen.
-   */
-  const [compareDocumentId, setCompareDocumentId] = useState<string | null>(
-    null,
-  )
 
   // Armed on open when preselecting; fired once the initial source's list has
   // (re)loaded, so a fresh fetch rather than a stale cache decides what is
@@ -179,7 +169,6 @@ export function ReviewChangesDialog({
     setSourceName(initialSourceName ?? activeWorkspace.name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
-    setCompareDocumentId(null)
   })
 
   const source =
@@ -220,7 +209,6 @@ export function ReviewChangesDialog({
     setSourceName(name)
     setSelectedIds(new Set())
     setExpandedIds(new Set())
-    setCompareDocumentId(null)
   }
 
   const pickTarget = (name: string) => {
@@ -597,29 +585,6 @@ export function ReviewChangesDialog({
                             </span>
                           </div>
                         </div>
-                        {/* Comparing is the main thing to DO with a row, so
-                            it reads as a button with a word on it, not as one
-                            more glyph among the row's small affordances. */}
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="shrink-0"
-                          title={t(
-                            'compare.openHint',
-                            'Compare this page side by side',
-                          )}
-                          onClick={(event) => {
-                            // Don't toggle the row's checkbox.
-                            event.preventDefault()
-                            setCompareDocumentId(id)
-                          }}
-                        >
-                          <i
-                            className="fas fa-fw fa-code-compare"
-                            aria-hidden
-                          />
-                          {t('compare.openButton', 'Compare')}
-                        </Button>
                         {document.documentAddress && canNavigate && (
                           <Button
                             size="icon-sm"
@@ -778,23 +743,6 @@ export function ReviewChangesDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {source && (
-        <CompareDialog
-          open={compareDocumentId !== null}
-          onOpenChange={(next) => !next && setCompareDocumentId(null)}
-          source={source}
-          workspaces={workspaces}
-          documents={documents}
-          initialDocumentId={compareDocumentId}
-          canNavigate={canNavigate}
-          onOpenPage={(address) => {
-            setCompareDocumentId(null)
-            goToDocument(address)
-          }}
-          onPublished={onPublished}
-        />
-      )}
 
       <ConflictResolutionDialog
         open={pendingConflict !== null}
