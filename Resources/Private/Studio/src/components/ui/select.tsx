@@ -5,11 +5,13 @@ import { cn } from '@/lib/utils'
 
 /**
  * Pass `items` (array of { value, label }) to the root when item labels
- * differ from their values, so SelectValue can render the label.
+ * differ from their values, so SelectValue can render the label. Generic
+ * like Base UI's root: `Value` is inferred from `value`/`defaultValue`/`items`,
+ * so onValueChange receives it typed.
  */
-function Select({
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+function Select<Value, Multiple extends boolean | undefined = false>(
+  props: SelectPrimitive.Root.Props<Value, Multiple>,
+) {
   return <SelectPrimitive.Root data-slot="select" {...props} />
 }
 

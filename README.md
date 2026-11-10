@@ -105,6 +105,20 @@ TypeScript types ship with the package in one declaration file, `Resources/Publi
 }
 ```
 
+The declaration file is self-contained apart from React: the types of the libraries behind the plugin API (Base UI behind the UI components, ...) are inlined, so a plugin installs none of them.
+
+### UI components
+
+A plugin builds its UI from the shell's own primitives, imported from the plugin API like everything else:
+
+```tsx
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Field, Input } from '@medienreaktor/neos-studio'
+```
+
+They are the shell's instances - same React, same Base UI, same portals and theme - so a plugin's dialog, menu or form looks and behaves like a built-in one and follows design changes without a rebuild. Available: `Badge`, `Button`, `Checkbox`, `CollapsibleGroup`, `Combobox…`, `ConfirmDialog`, `ContextMenu…`, `CountBadge`, `Dialog…`, `DropdownMenu…`, `Field`, `Input`, `Placeholder`, `Popover…`, `SearchInput`, `Select…`, `Separator`, `Sheet…`, `Skeleton`, `Slider`, `Spinner`, `LoadingState`, `Table…`, `Tabs…`, `Textarea`, `Toggle`, `ToggleGroup…` and `Tooltip…` (the full list is [`src/plugin-api/components.ts`](Resources/Private/Studio/src/plugin-api/components.ts)). Most follow Base UI's API, e.g. `Select` takes `items`, `value` and `onValueChange` and infers the value type.
+
+Their names and props are the contract; their markup and class names are not. `className` is merged, but the shell's stylesheet only contains the Tailwind utilities the shell itself uses, so a plugin gives its own class names its own CSS (see [Styling plugins](#styling-plugins)) rather than passing Tailwind utilities.
+
 **Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) registers an example panel, a custom inspector editor (a color picker), a keyboard shortcut and a node decorator from a separate package.
 
 ### Plugin API version 2
@@ -258,7 +272,7 @@ The variables a plugin may rely on are listed in [`src/plugin-api/css-variables.
 
 Sizes in a plugin follow the same rule as Studio's own: lengths in rem, also where JavaScript computes them, and pixels only where the plugin reads the screen, converted with the root font size read at that moment (`parseFloat(getComputedStyle(document.documentElement).fontSize)`). Then a reader's larger default font size scales the plugin with the shell, even while Studio is open.
 
-Everything else in the build is internal. The build fails when a listed variable goes missing, so a rename in Figma is caught in Studio rather than in a plugin; an intended rename keeps the old name alive through `extraNames` in `figma-tools.json` until the known plugins have moved. Larger plugin UIs should use Studio's components rather than restyle them; exposing those through the plugin API is planned.
+Everything else in the build is internal. The build fails when a listed variable goes missing, so a rename in Figma is caught in Studio rather than in a plugin; an intended rename keeps the old name alive through `extraNames` in `figma-tools.json` until the known plugins have moved. Plugin UI should use Studio's [UI components](#ui-components) rather than restyle them; plain CSS on these variables is for the plugin's own layout and the parts no component covers.
 
 ### The Studio API
 

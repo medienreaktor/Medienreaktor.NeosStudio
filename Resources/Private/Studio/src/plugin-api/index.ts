@@ -28,6 +28,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
+import * as components from './components'
 import { ApiError } from '@/api/http/errors'
 import { apiFetch, apiStream } from '@/api/neos/client'
 import { useStudio, useStudioActions } from '@/app/StudioContext'
@@ -209,6 +210,14 @@ export interface ToastApi {
 
 export const toast: ToastApi = toastImpl
 
+/**
+ * The shell's UI primitives - Button, Input, Select, Dialog, DropdownMenu,
+ * Tooltip, ... - for plugin UI that looks and behaves like the shell's own.
+ * Imported by name like everything else here; see ./components.ts for the
+ * list and what of them is contract.
+ */
+export * from './components'
+
 // Re-export the types a plugin needs to write a panel or an editor. These are
 // the contract; keep them stable.
 export type {
@@ -265,8 +274,12 @@ export type * from '@/api/neos/schema'
 export type { NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
 export type { Task, TaskStatus } from '@/api/studio/schema'
 
-/** The shape published at `window.NeosStudio` for plugin bundles to consume. */
-export interface NeosStudioPluginApi {
+/**
+ * The shape published at `window.NeosStudio` for plugin bundles to consume:
+ * the registries, hooks and helpers below plus every UI primitive of
+ * ./components.ts.
+ */
+export interface NeosStudioPluginApi extends PluginComponents {
   version: typeof version
   panels: typeof panels
   editors: typeof editors
@@ -292,6 +305,9 @@ export interface NeosStudioPluginApi {
   presenceInitials: typeof presenceInitials
 }
 
+/** The UI primitives of ./components.ts, as published on `window.NeosStudio`. */
+export type PluginComponents = typeof components
+
 declare global {
   interface Window {
     React?: typeof React
@@ -311,6 +327,7 @@ export function installPluginApiGlobals(): void {
   window.ReactDOM = ReactDOM
   window.ReactJSXRuntime = ReactJSXRuntime
   window.NeosStudio = {
+    ...components,
     version,
     panels,
     editors,

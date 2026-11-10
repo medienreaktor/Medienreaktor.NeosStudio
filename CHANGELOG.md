@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Plugins can use Studio's UI components (Button, Input, Select, Dialog,
+  DropdownMenu, Tooltip, ...) from the plugin API, so plugin UI looks and
+  behaves like the built-in one. The plugin type declarations now include
+  the types of the libraries behind them; plugins only need `@types/react`.
+
 ## [2.0.2] - 2026-11-10
 
 ### Added
