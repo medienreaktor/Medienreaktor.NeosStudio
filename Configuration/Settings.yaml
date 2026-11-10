@@ -9,6 +9,7 @@ Medienreaktor:
     #   'Vendor.Package':
     #     javascript: 'resource://Vendor.Package/Public/Plugin/plugin.js'   # required, IIFE bundle
     #     stylesheet: 'resource://Vendor.Package/Public/Plugin/plugin.css'  # optional
+    #     guestJavascript: 'resource://Vendor.Package/Public/Plugin/guest.js' # optional, rich text extensions for inline editing (loaded into the edit-mode preview)
     #     position: 100                                                     # optional load order
     #
     # Deliberately NOT declared with an empty default here. Flow merges package

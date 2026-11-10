@@ -24,12 +24,13 @@
  * getHTML()), which flattens the paragraphs TipTap's schema puts inside list
  * items and table cells into the markup Neos stores (see serialize.ts).
  */
-import { Editor } from '@tiptap/core'
+import type { Editor } from '@tiptap/core'
+import { parseFormatting, setEditorFormatting } from './formatting'
 import {
-  extensionsFor,
-  parseFormatting,
-  setEditorFormatting,
-} from './formatting'
+  createRichTextEditor,
+  richTextExtensionRegistry,
+  type RichTextEditorOptions,
+} from './richTextExtensions'
 import { serializedHtml } from './serialize'
 import { hideToolbars, updateToolbars } from './toolbar'
 
@@ -209,6 +210,14 @@ function injectEditorStyles(): void {
  */
 interface ManagedEditor {
   editor: Editor
+  hooks: RichTextHooks
+  /**
+   * The property's markup as last stored - as rendered, then as committed or
+   * received from a peer. What a rebuilt editor starts from (see
+   * remountIdleEditors): unlike the editor's own serialization, it still
+   * holds markup the old schema could not represent.
+   */
+  storedHtml(): string
   /** A collaborator holds the edit lock: read-only while true. */
   setLocked(locked: boolean): void
   /** A peer's live-typing content; ignored while the local user is typing. */
@@ -233,6 +242,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
   // and clear the element first - otherwise the original and the editor's
   // render coexist and the content visibly doubles.
   const initialContent = element.innerHTML
+  let storedHtml = initialContent
   element.replaceChildren()
   // The schema and toolbar are constrained to what the property's NodeType
   // declares (data-__neos-studio-formatting); a property without config gets
@@ -251,6 +261,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     const html = serializedHtml(editor, config)
     if (html === committedHtml) return
     committedHtml = html
+    storedHtml = html
     hooks.commit(element, html)
   }
   const commit = debounceWithMaxWait(
@@ -266,10 +277,9 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     )
   }, LIVE_UPDATE_THROTTLE_MS)
 
-  const editor = new Editor({
+  const editorOptions: RichTextEditorOptions = {
     element,
     content: initialContent,
-    extensions: extensionsFor(config),
     editorProps: {
       attributes: {
         ...(config.autoparagraph ? {} : { [BARE_ATTRIBUTE]: 'true' }),
@@ -345,7 +355,10 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       emitLiveUpdate.cancel()
       element.removeEventListener('mousedown', focusFromHost)
     },
-  })
+  }
+  // The property's schema plus the plugin extensions its formatting enables
+  // (see richTextExtensions.ts).
+  const editor = createRichTextEditor(editorOptions, config, 'inline')
   // A press on the property element itself, outside TipTap's editable, would
   // otherwise land nowhere: the placeholder (::before) belongs to the host
   // element, not to the editable, and an empty inline editable is only as
@@ -363,6 +376,8 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
   setEditorFormatting(editor, config)
   editorsByElement.set(element, {
     editor,
+    hooks,
+    storedHtml: () => storedHtml,
     setLocked(locked) {
       // No update event: the lock changes editability, not content.
       editor.setEditable(!locked, false)
@@ -380,6 +395,7 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
       // The stream shows what the peer will commit - adopt it as the
       // baseline so a later local edit diffs against current reality.
       committedHtml = serializedHtml(editor, config)
+      storedHtml = html
       refreshEmptyState(element, editor)
     },
     flush() {
@@ -423,6 +439,30 @@ export function mountRichTextEditors(
     mountEditor(element, hooks)
   }
 }
+
+/**
+ * Rebuild the editors nobody is in when the registered plugin extensions
+ * change, so their schema and toolbar follow - normally a no-op, since plugin
+ * guest bundles register before the editors mount; it covers late
+ * registrations (a bundle registering asynchronously, a console experiment).
+ * An editor being typed in, or locked by a collaborator, keeps its schema
+ * until it is next mounted: rebuilding would drop the caret, the pending
+ * commit or the lock. Rebuilt editors start from the stored markup, so
+ * markup only the new schema can represent comes back too.
+ */
+function remountIdleEditors(): void {
+  for (const [element, managed] of [...editorsByElement]) {
+    const { editor } = managed
+    if (editor.isFocused || !editor.isEditable) continue
+    managed.flush()
+    const html = managed.storedHtml()
+    editor.destroy()
+    editorsByElement.delete(element)
+    element.innerHTML = html
+    mountEditor(element, managed.hooks)
+  }
+}
+richTextExtensionRegistry.subscribe(remountIdleEditors)
 
 /**
  * Destroy the editors mounted under (or on) `root` and forget them - called

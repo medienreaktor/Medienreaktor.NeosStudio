@@ -29,6 +29,7 @@ import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
 import * as components from './components'
+import { version } from './version'
 import { ApiError } from '@/api/http/errors'
 import { apiFetch, apiStream } from '@/api/neos/client'
 import { useStudio, useStudioActions } from '@/app/StudioContext'
@@ -70,19 +71,16 @@ import {
   nodeDecoratorRegistry,
 } from '@/features/tree/decorators'
 import {
+  RichTextExtensionRegistry,
+  richTextExtensionRegistry,
+} from '@/guest/richTextExtensions'
+import { tiptap as tiptapBuildingBlocks } from '@/guest/tiptap'
+import {
   WorkspaceDecoratorRegistry,
   workspaceDecoratorRegistry,
 } from '@/features/workspaces/decorators'
 
-/**
- * The API version a plugin can read to feature-detect. Bump on a
- * breaking change to any exported type or registry contract; plugins that
- * care can compare against it before registering. 2: the shell runs on
- * Neos.Api - its models (Node, Workspace, NodeType, Site, ...) and NodeAddress
- * objects replace the version 1 DTOs and address strings (see the README's
- * "Plugin API version 2").
- */
-export const version = 2 as const
+export { version }
 
 // Each registry is re-exported under a friendly name, annotated with its named
 // class so the public type reads as that class (what an editor's hover and a
@@ -142,6 +140,24 @@ export const workspaceDecorators: WorkspaceDecoratorRegistry =
  * too. See {@link NodeDecoratorDefinition}.
  */
 export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
+/**
+ * Register/unregister rich text extensions - custom marks, nodes and editor
+ * behaviour with their toolbar buttons, enabled per property by a key of its
+ * `editorOptions.formatting`. This registry feeds the inspector's
+ * RichTextEditor; inline editing in the preview runs in the preview's own
+ * window and has a registry of its own there, filled by a plugin's
+ * `guestJavascript` bundle (README "Rich text extensions"). See
+ * {@link RichTextExtensionDefinition}.
+ */
+export const richTextExtensions: RichTextExtensionRegistry =
+  richTextExtensionRegistry
+/**
+ * The editor's TipTap building blocks (Extension, Mark, Node,
+ * mergeAttributes, the input/paste rule helpers, ProseMirror's Plugin and
+ * PluginKey) - build rich text extensions with these, never with a bundled
+ * TipTap: a second copy breaks schema and plugin identity.
+ */
+export const tiptap: typeof tiptapBuildingBlocks = tiptapBuildingBlocks
 
 /**
  * useStudio() reads the shell's state and actions and re-renders on every
@@ -259,6 +275,23 @@ export type {
   ResolvedKeyboardShortcut,
 } from '@/features/shortcuts/registry'
 export type {
+  RichTextExtensionContext,
+  RichTextExtensionDefinition,
+  RichTextSurface,
+  RichTextToolbarItem,
+} from '@/guest/richTextExtensions'
+export type { TiptapBuildingBlocks } from '@/guest/tiptap'
+export type { NeosStudioGuestPluginApi } from '@/guest/pluginApi'
+// TipTap's own types, for typing extensions and toolbar callbacks. The editor
+// is exported as TiptapEditor, next to the Neos models' names.
+export type {
+  AnyExtension,
+  Editor as TiptapEditor,
+  ExtensionConfig,
+  MarkConfig,
+  NodeConfig,
+} from '@tiptap/core'
+export type {
   WorkspaceDecoration,
   WorkspaceDecoratorDefinition,
 } from '@/features/workspaces/decorators'
@@ -292,6 +325,8 @@ export interface NeosStudioPluginApi extends PluginComponents {
   shortcuts: typeof shortcuts
   workspaceDecorators: typeof workspaceDecorators
   nodeDecorators: typeof nodeDecorators
+  richTextExtensions: typeof richTextExtensions
+  tiptap: typeof tiptap
   isMacPlatform: typeof isMacPlatform
   useStudio: typeof useStudio
   useStudioActions: typeof useStudioActions
@@ -339,6 +374,8 @@ export function installPluginApiGlobals(): void {
     shortcuts,
     workspaceDecorators,
     nodeDecorators,
+    richTextExtensions,
+    tiptap,
     isMacPlatform,
     useStudio,
     useStudioActions,

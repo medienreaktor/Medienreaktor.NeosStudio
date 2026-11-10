@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Editor } from '@tiptap/core'
+import type { Editor } from '@tiptap/core'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -26,11 +26,17 @@ import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
 import { linkAttributesFrom, type LinkValue } from '@/features/links/linkValue'
 import {
   DEFAULT_FORMATTING,
-  extensionsFor,
   normalizeFormatting,
   type Formatting,
   type RawFormattingConfig,
 } from '@/guest/formatting'
+import {
+  activeRichTextExtensions,
+  createRichTextEditor,
+  guardedToolbarCall,
+  richTextExtensionRegistry,
+  type RichTextEditorOptions,
+} from '@/guest/richTextExtensions'
 import { serializedHtml } from '@/guest/serialize'
 import {
   isStyleActive,
@@ -38,7 +44,9 @@ import {
   toggleStyle,
   type ResolvedStyle,
 } from '@/guest/styles'
+import { faClassName } from '@/features/tree/nodeTypeIcon'
 import { useLatestRef } from '@/hooks/use-latest-ref'
+import { useRegistry } from '@/lib/registry'
 import { cn } from '@/lib/utils'
 import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
@@ -70,6 +78,10 @@ export const RichTextEditor: PropertyEditorComponent = ({
     return normalizeFormatting(raw)
   }, [options])
 
+  // Plugin extensions are part of the schema: a registration (a plugin
+  // loading after the editor mounted) rebuilds the editor below.
+  const extensionDefinitions = useRegistry(richTextExtensionRegistry)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const [editor, setEditor] = useState<Editor | null>(null)
   // Re-render the toolbar on every editor state change (active marks, block).
@@ -99,10 +111,9 @@ export const RichTextEditor: PropertyEditorComponent = ({
   useEffect(() => {
     const element = containerRef.current
     if (!element) return
-    const instance = new Editor({
+    const editorOptions: RichTextEditorOptions = {
       element,
       content: typeof value === 'string' ? value : '',
-      extensions: extensionsFor(formatting),
       editorProps: {
         handleKeyDown: (_view, event) => {
           if (event.key === 'Escape') {
@@ -127,18 +138,24 @@ export const RichTextEditor: PropertyEditorComponent = ({
         if (holdFocus.current) return
         commitPending(editor)
       },
-    })
+    }
+    const instance = createRichTextEditor(
+      editorOptions,
+      formatting,
+      'inspector',
+    )
     if (autoFocus) instance.commands.focus('end')
     setEditor(instance)
     return () => {
       instance.destroy()
       setEditor(null)
     }
-    // Only a changed schema warrants recreating the editor (commitPending and
+    // Only a changed schema - the formatting config or the registered plugin
+    // extensions - warrants recreating the editor (commitPending and
     // callbacks change with it or never): the value prop is followed by the
     // effect below, and autoFocus only matters when the editor is created.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formatting, commitPending, callbacks])
+  }, [formatting, extensionDefinitions, commitPending, callbacks])
 
   // Follow a value changed elsewhere (a collaborator, an inline edit in the
   // preview) - unless it is being edited: focused, or with uncommitted input.
@@ -521,6 +538,39 @@ function Toolbar({
         >
           <i className="fas fa-eraser type-icon-m" aria-hidden />
         </ToolbarButton>
+      )}
+      {activeRichTextExtensions(editor).flatMap((definition) =>
+        (definition.toolbar ?? []).map((item) => (
+          <ToolbarButton
+            key={`${definition.id}:${item.id}`}
+            label={item.label}
+            active={guardedToolbarCall(
+              definition,
+              item,
+              () => item.isActive?.(editor) ?? false,
+              false,
+            )}
+            disabled={guardedToolbarCall(
+              definition,
+              item,
+              () => item.isDisabled?.(editor) ?? false,
+              false,
+            )}
+            onRun={() =>
+              guardedToolbarCall(
+                definition,
+                item,
+                () => item.run(editor),
+                undefined,
+              )
+            }
+          >
+            <i
+              className={cn(faClassName(item.icon), 'type-icon-m')}
+              aria-hidden
+            />
+          </ToolbarButton>
+        )),
       )}
       {availableStyles.length > 0 && (
         <DropdownMenu>

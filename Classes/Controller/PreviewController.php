@@ -6,6 +6,7 @@ namespace Medienreaktor\NeosStudio\Controller;
 
 use GuzzleHttp\Psr7\Utils;
 use Medienreaktor\NeosStudio\Service\NodeAddresses;
+use Medienreaktor\NeosStudio\Service\PluginBundles;
 use Neos\ContentRepository\Core\ContentRepository;
 use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
@@ -61,6 +62,15 @@ class PreviewController extends ActionController
 
     #[Flow\Inject]
     protected NodeUriBuilderFactory $nodeUriBuilderFactory;
+
+    /**
+     * The configured plugin bundles (see StudioController::$plugins) - their
+     * `guestJavascript` extends inline editing in the preview.
+     *
+     * @var array<string, array{javascript?: string, guestJavascript?: string, stylesheet?: string, position?: int}>|null
+     */
+    #[Flow\InjectConfiguration(path: 'plugins')]
+    protected $plugins;
 
     /**
      * Opens a document of the live workspace under its public url - the one
@@ -221,6 +231,13 @@ class PreviewController extends ActionController
      * Adds the guest script (click-to-select, inline editing, host bridge)
      * to a rendered edit-mode page. The script is built by the Studio
      * frontend build (vite.guest.config.ts) with a stable filename.
+     *
+     * The plugins' guest bundles (`guestJavascript`: rich text extensions for
+     * inline editing, which runs in this page's window, not the shell's)
+     * follow it as module scripts. Those are deferred: they run after the
+     * guest script has published its plugin API and before DOMContentLoaded,
+     * on which it mounts the editors - so their extensions are registered
+     * in time for the first editors.
      */
     private function injectGuestScript(string $html): string
     {
@@ -232,6 +249,11 @@ class PreviewController extends ActionController
         // (see vite.config.ts); mtime busts browser caches across rebuilds.
         $scriptUri = '/_Resources/Static/Packages/Medienreaktor.NeosStudio/Studio/guest.js?v=' . filemtime($scriptFile);
         $scriptTag = '<script src="' . htmlspecialchars($scriptUri, ENT_QUOTES) . '"></script>';
+        foreach (PluginBundles::sorted($this->plugins) as $plugin) {
+            if (($uri = PluginBundles::resourceUri($plugin['guestJavascript'] ?? null)) !== null) {
+                $scriptTag .= '<script type="module" src="' . htmlspecialchars($uri, ENT_QUOTES) . '"></script>';
+            }
+        }
 
         $bodyEnd = strripos($html, '</body>');
         return $bodyEnd === false
