@@ -2,11 +2,13 @@ import {
   changeNodeType as changeNodeTypeRequest,
   deleteNode,
   moveNode as moveNodeRequest,
+  PartialWriteError,
   runSequentially,
   tagNode,
   untagNode,
 } from '@/api/neos/endpoints/nodeCommands'
 import type { NodeAddress } from '@/api/neos/schema'
+import { emitStudioEvent, type StructureChange } from '@/app/events'
 import { afterStructuralEdit } from '@/features/workspaces/invalidate'
 
 /**
@@ -31,14 +33,14 @@ export interface MoveByAddress {
 }
 
 export async function hideNodes(addresses: NodeAddress[]): Promise<void> {
-  await structureChange(addresses, identity, (address) =>
+  await structureChange('hidden', addresses, identity, (address) =>
     tagNode(address, 'disabled'),
   )
 }
 
 /** Removes the "disabled" subtree tag set by hideNodes. */
 export async function unhideNodes(addresses: NodeAddress[]): Promise<void> {
-  await structureChange(addresses, identity, (address) =>
+  await structureChange('unhidden', addresses, identity, (address) =>
     untagNode(address, 'disabled'),
   )
 }
@@ -53,7 +55,7 @@ export async function changeNodeType(
   address: NodeAddress,
   newNodeTypeName: string,
 ): Promise<void> {
-  await structureChange([address], identity, (a) =>
+  await structureChange('typeChanged', [address], identity, (a) =>
     changeNodeTypeRequest(a, newNodeTypeName),
   )
 }
@@ -69,7 +71,7 @@ export async function changeNodeType(
  * deletion is published and no other workspace still needs the node.
  */
 export async function deleteNodes(addresses: NodeAddress[]): Promise<void> {
-  await structureChange(addresses, identity, deleteNode)
+  await structureChange('deleted', addresses, identity, deleteNode)
 }
 
 /**
@@ -82,6 +84,7 @@ export async function moveNodesByAddress(
   moves: MoveByAddress[],
 ): Promise<void> {
   await structureChange(
+    'moved',
     moves,
     // The move happens in the node's workspace (paste moves it into the
     // target's first, see pasteClipboardEntry).
@@ -98,33 +101,52 @@ export async function moveNodesByAddress(
 /**
  * Runs one write per item in order (see runSequentially) and refreshes the
  * workspaces written to afterwards - also after a failure, as earlier writes
- * stay. Resolves (or rejects) once the writes are done: the refresh is not
- * awaited - the node reads are marked stale right away, so what the caller
- * re-reads next (trees, the inspection) is fetched fresh anyway.
+ * stay; those are announced (nodes.structureChanged) too. Resolves (or
+ * rejects) once the writes are done: the refresh is not awaited - the node
+ * reads are marked stale right away, so what the caller re-reads next
+ * (trees, the inspection) is fetched fresh anyway.
  */
 async function structureChange<T>(
+  change: StructureChange,
   items: T[],
   addressOf: (item: T) => NodeAddress,
   write: (item: T) => Promise<unknown>,
 ): Promise<void> {
   if (items.length === 0) return
+  let applied = 0
   try {
     await runSequentially(items, write)
+    applied = items.length
+  } catch (error) {
+    if (error instanceof PartialWriteError) applied = error.applied
+    throw error
   } finally {
     // Usually one workspace; a batch could in principle span several.
-    const workspaces = new Map<string, NodeAddress>()
-    for (const item of items) {
+    const workspaces = new Map<string, NodeAddress[]>()
+    items.forEach((item, index) => {
       const address = addressOf(item)
-      workspaces.set(
-        JSON.stringify([address.contentRepositoryId, address.workspaceName]),
-        address,
-      )
-    }
-    for (const address of workspaces.values()) {
-      void afterStructuralEdit(
+      const key = JSON.stringify([
         address.contentRepositoryId,
         address.workspaceName,
-      )
+      ])
+      const written = workspaces.get(key) ?? []
+      if (index < applied) written.push(address)
+      workspaces.set(key, written)
+    })
+    for (const [key, written] of workspaces) {
+      const [contentRepositoryId, workspaceName] = JSON.parse(key) as [
+        string,
+        string,
+      ]
+      void afterStructuralEdit(contentRepositoryId, workspaceName)
+      if (written.length > 0) {
+        emitStudioEvent('nodes.structureChanged', {
+          contentRepositoryId,
+          workspaceName,
+          change,
+          nodeAggregateIds: written.map((address) => address.nodeAggregateId),
+        })
+      }
     }
   }
 }

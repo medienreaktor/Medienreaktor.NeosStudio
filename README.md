@@ -94,7 +94,7 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 
 A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators and shortcut handlers are logged and skipped. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
 
-A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), and the registries. The shell loads the bundle from one `Settings.yaml` entry.
+A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), the registries, the shell's data layer ([data fetching](#data-fetching)) and its [events](#events). The shell loads the bundle from one `Settings.yaml` entry.
 
 TypeScript types ship with the package in one declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (it resolves to `window.NeosStudio` at runtime). `react` is external as well, so install `@types/react` and map `react` to it, because the declaration file lies outside your package and TypeScript would otherwise look for `react` next to it:
 
@@ -122,6 +122,78 @@ They are the shell's instances - same React, same Base UI, same portals and them
 Their names and props are the contract; their markup and class names are not. `className` is merged, but the shell's stylesheet only contains the Tailwind utilities the shell itself uses, so a plugin gives its own class names its own CSS (see [Styling plugins](#styling-plugins)) rather than passing Tailwind utilities.
 
 **Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) registers an example panel, a custom inspector editor (a color picker), a keyboard shortcut and a node decorator from a separate package.
+
+### Data fetching
+
+A plugin reads and writes through `apiFetch` (Neos.Api, with the shell's session) and caches with the shell's TanStack Query: `useQuery`, `useInfiniteQuery`, `useMutation`, `useQueryClient`, `queryOptions`, `skipToken` and `keepPreviousData` come from the plugin API, bound to the shell's client. Its reads then share the shell's cache and show up in the query devtools. Don't bundle `@tanstack/react-query` yourself: a second copy finds no client above your components ("No QueryClient set"). Its types are part of the declaration file.
+
+Start every query key with your package key, e.g. `['Acme.Seo', ...]`. No shell key contains a dot, so they cannot collide, and the prefix refreshes all of your reads at once. The shell's own keys are internal and change with its reads.
+
+```tsx
+import { apiFetch, invalidate, useMutation, useQuery, useQueryClient, useStudio, useStudioActions } from '@medienreaktor/neos-studio'
+
+function SeoScore() {
+  const { inspectedNode } = useStudio()
+  const { nodeEdited } = useStudioActions()
+  const queryClient = useQueryClient()
+  const score = useQuery({
+    queryKey: ['Acme.Seo', 'score', inspectedNode?.nodeAggregateId],
+    queryFn: () => apiFetch(`/acme/seo/score/${inspectedNode!.nodeAggregateId}`),
+    enabled: inspectedNode !== null,
+  })
+  const fix = useMutation({
+    mutationFn: () => apiFetch(`/acme/seo/fix/${inspectedNode!.nodeAggregateId}`, { method: 'POST' }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['Acme.Seo'] })
+      nodeEdited(inspectedNode!) // the write changed the node's properties
+    },
+  })
+  // ...
+}
+```
+
+When a plugin writes Neos content itself, it tells the shell, so that the shell's views show the change:
+
+- For the workspace being edited, call the Studio actions from `useStudioActions()`. `nodeEdited(address, { reload })` after a node's properties or references changed, `nodesEdited(addresses)` after a structural change (created, moved, deleted), and `workspaceContentChanged()` after a publish, discard or rebase. They refresh the node reads, the dirty markers, the trees and the preview.
+- `invalidate` refreshes the cached data alone, for any workspace and for code outside components: `invalidate.afterContentEdit(addresses)` (properties or references), `afterStructuralEdit(workspace)` (created, copied, moved, deleted, hidden, retyped), `afterPublish(workspace)`, `afterWorkspaceRewrite(workspace)` (discarded, rebased, base changed) and `afterWorkspacesChanged()` (workspaces created, deleted, roles changed). A workspace is `{ contentRepositoryId, workspaceName }`, so a `NodeAddress` or a `Node` will do. None of them needs to be awaited.
+
+The shell doesn't refresh a plugin's reads by itself. Use the [events](#events) to do that: refresh after the edits, publishes and remote changes your data depends on.
+
+### Events
+
+`events.on(name, handler)` listens to what happens in the shell and returns the unsubscriber. In a component, `useStudioEvent(name, handler)` unsubscribes on unmount and always calls the latest handler:
+
+```tsx
+import { events, queryClient, useStudioEvent } from '@medienreaktor/neos-studio'
+
+// Module level: keep the plugin's reads fresh while Studio runs.
+for (const name of ['workspace.published', 'workspace.discarded', 'remote.changed'] as const) {
+  events.on(name, () => void queryClient.invalidateQueries({ queryKey: ['Acme.Seo'] }))
+}
+
+function SeoPanel() {
+  useStudioEvent('node.edited', ({ address, name }) => {
+    if (name === 'title') console.log('Title saved on', address.nodeAggregateId)
+  })
+  // ...
+}
+```
+
+| Event                    | Payload                                                                       | When                                                                                                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node.edited`            | `address`, `kind` (`property`, `references`), `name`                          | The editor saved a property or references (inspector or inline). Inline typing saves in bursts, one event per save.                                                              |
+| `nodes.structureChanged` | `contentRepositoryId`, `workspaceName`, `change`, `nodeAggregateIds`          | The editor created, copied, moved, deleted, hid, unhid, retyped or restored nodes (`change`: `created`, `copied`, `moved`, `deleted`, `hidden`, `unhidden`, `typeChanged`, `restored`). |
+| `workspace.published`    | `contentRepositoryId`, `workspaceName`                                        | The editor published a workspace, or part of it.                                                                                                                                |
+| `workspace.discarded`    | `contentRepositoryId`, `workspaceName`                                        | The editor discarded changes of a workspace.                                                                                                                                    |
+| `workspace.rebased`      | `contentRepositoryId`, `workspaceName`, `newBaseWorkspaceName`                | The editor synchronized a workspace (`newBaseWorkspaceName` null) or moved it onto another base.                                                                                |
+| `workspace.switched`     | `workspaceName`, `previousWorkspaceName`                                      | The workspace being edited changed (personal or shared), or resolved at startup.                                                                                                |
+| `site.switched`          | `site`, `previousSite`                                                        | Another site was opened, or the first one resolved.                                                                                                                             |
+| `dimension.switched`     | `dimensionSpacePoint`, `previousDimensionSpacePoint`                          | The viewed dimension changed.                                                                                                                                                   |
+| `document.selected`      | `node` (or null)                                                              | The selected document changed, also when it follows into another workspace or dimension.                                                                                        |
+| `node.inspected`         | `node` (or null)                                                              | The inspected node changed.                                                                                                                                                     |
+| `remote.changed`         | `contentRepositoryId`, `workspaceName`, `kind`, `nodeAggregateIds`            | Collaborators changed the shared workspace being edited: `content` (properties of `nodeAggregateIds`), `structure`, or `wholesale` (published, discarded, rebased).             |
+
+The payloads are typed (`StudioEventMap`). The edit and workspace events report what this editor did in Studio, after it succeeded. A plugin's own writes don't emit them. `remote.changed` only fires while a shared workspace is being edited, since only shared workspaces have a change feed. Handlers run after the shell's own work is done and are never awaited. A handler that throws (or rejects) is logged with the event name, and the other handlers still run.
 
 ### Plugin API version 2
 

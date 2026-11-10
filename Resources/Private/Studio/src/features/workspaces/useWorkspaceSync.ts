@@ -9,6 +9,7 @@ import {
 } from '@/api/neos/endpoints/workspaces'
 import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import type { WorkspaceConflictProblem } from '@/api/neos/schema'
+import { emitStudioEvent } from '@/app/events'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
@@ -39,12 +40,31 @@ export function useWorkspaceSync() {
   const [conflicts, setConflicts] = useState<SyncConflicts | null>(null)
   const contentRepositoryId = useActiveContentRepositoryId()
 
-  const invalidateWorkspace = (workspaceName: string) => {
+  /**
+   * After a rebase (`rebasedOnto`: the new base, null for a sync with the
+   * current one) or, with `rebasedOnto` undefined, a discard.
+   */
+  const invalidateWorkspace = (
+    workspaceName: string,
+    rebasedOnto?: string | null,
+  ) => {
     // The rebase/discard rewrote the workspace's content stream: the status
     // flag, its pending events and its node reads are stale in any case;
     // trees and the preview only matter for the workspace being edited.
     void afterWorkspaceRewrite(contentRepositoryId!, workspaceName)
     if (workspaceName === activeWorkspaceName) workspaceContentChanged()
+    const workspace = {
+      contentRepositoryId: contentRepositoryId!,
+      workspaceName,
+    }
+    if (rebasedOnto === undefined) {
+      emitStudioEvent('workspace.discarded', workspace)
+    } else {
+      emitStudioEvent('workspace.rebased', {
+        ...workspace,
+        newBaseWorkspaceName: rebasedOnto,
+      })
+    }
   }
 
   const rebase = useMutation({
@@ -56,7 +76,7 @@ export function useWorkspaceSync() {
       strategy?: 'force'
     }) => rebaseWorkspace(contentRepositoryId!, workspaceName, strategy),
     onSuccess: (_, { workspaceName }) => {
-      invalidateWorkspace(workspaceName)
+      invalidateWorkspace(workspaceName, null)
       setConflicts(null)
       toast.success(t('workspace.sync.success', 'Workspace synchronized.'))
     },
@@ -86,8 +106,8 @@ export function useWorkspaceSync() {
       baseWorkspace: string
     }) =>
       changeBaseWorkspace(contentRepositoryId!, workspaceName, baseWorkspace),
-    onSuccess: (_, { workspaceName }) => {
-      invalidateWorkspace(workspaceName)
+    onSuccess: (_, { workspaceName, baseWorkspace }) => {
+      invalidateWorkspace(workspaceName, baseWorkspace)
       toast.success(t('workspace.baseChanged', 'Base workspace changed.'))
     },
     onError: (error) => {

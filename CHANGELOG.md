@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with its registry id, and everything else keeps working. Throwing
   validators and keyboard shortcut handlers are logged and skipped. A crash
   in Studio itself shows a reload screen instead of a blank page.
+- Plugins share Studio's data layer: `useQuery`, `useMutation`,
+  `useQueryClient` and the other TanStack Query hooks come from the plugin
+  API and use Studio's own cache, so a plugin no longer installs
+  @tanstack/react-query. `invalidate` refreshes Studio's views after a
+  plugin's own writes (content edits, structural edits, publishing,
+  discarding).
+- Plugins can react to what happens in Studio: `events.on(...)` and the
+  `useStudioEvent(...)` hook report saved edits, created, moved or deleted
+  nodes, publishing, discarding and rebasing, switching the workspace, site
+  or dimension, the selected document and inspected node, and collaborators'
+  changes. A failing handler is logged and doesn't disturb Studio or other
+  handlers.
 
 ## [2.0.3] - 2026-11-10
 

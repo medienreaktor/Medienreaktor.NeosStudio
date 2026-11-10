@@ -5,6 +5,7 @@ import {
   nodeAddressOf,
   nodeAddressKey,
 } from '@/api/neos/schema'
+import { emitStudioEvent } from '@/app/events'
 import { moveNodesByAddress } from '@/features/editing/nodeActions'
 import { afterStructuralEdit } from '@/features/workspaces/invalidate'
 import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
@@ -98,6 +99,14 @@ async function copyNodes(
         targetSucceedingSiblingAddress?.nodeAggregateId ?? null,
       ),
     )
+    // A batch failing halfway leaves earlier copies unannounced: the error
+    // does not tell which nodes they are.
+    emitStudioEvent('nodes.structureChanged', {
+      contentRepositoryId: targetParentAddress.contentRepositoryId,
+      workspaceName: targetParentAddress.workspaceName,
+      change: 'copied',
+      nodeAggregateIds: copies.map((copy) => copy.nodeAggregateId),
+    })
     return copies.map(nodeAddressOf)
   } finally {
     // The target's children changed - refresh the target workspace's node

@@ -1,6 +1,7 @@
 import { createNode as createNodeRequest } from '@/api/neos/endpoints/nodeCommands'
 import type { Node, NodeAddress } from '@/api/neos/schema'
 import { createNodeFromCreationDialog } from '@/api/studio/endpoints/creationDialog'
+import { emitStudioEvent } from '@/app/events'
 import { afterStructuralEdit } from '@/features/workspaces/invalidate'
 
 export interface CreateNodeRequest {
@@ -64,6 +65,12 @@ export async function createNode(
     request.parentAddress.contentRepositoryId,
     request.parentAddress.workspaceName,
   )
+  emitStudioEvent('nodes.structureChanged', {
+    contentRepositoryId: request.parentAddress.contentRepositoryId,
+    workspaceName: request.parentAddress.workspaceName,
+    change: 'created',
+    nodeAggregateIds: [node.nodeAggregateId],
+  })
 
   return node
 }

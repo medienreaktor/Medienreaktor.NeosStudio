@@ -13,6 +13,7 @@ import type {
   WorkspaceConflictProblem,
   WorkspacePublish,
 } from '@/api/neos/schema'
+import { emitStudioEvent } from '@/app/events'
 import { useStudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { allowsPublishToLive } from '@/features/access/rules'
@@ -87,6 +88,10 @@ export function useWorkspacePublishing(workspaceName: string) {
     if (published) void afterPublish(contentRepositoryId!, workspaceName)
     else void afterWorkspaceRewrite(contentRepositoryId!, workspaceName)
     workspaceContentChanged()
+    emitStudioEvent(published ? 'workspace.published' : 'workspace.discarded', {
+      contentRepositoryId: contentRepositoryId!,
+      workspaceName,
+    })
   }
 
   const operation = useMutation({

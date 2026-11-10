@@ -29,9 +29,11 @@ import {
   type StudioState,
 } from '@/app/StudioContext'
 import { useEditingContext } from '@/app/useEditingContext'
+import { emitStudioEvent } from '@/app/events'
 import { useEditSignals } from '@/app/useEditSignals'
 import { useSelection } from '@/app/useSelection'
 import { useStableCallbacks } from '@/app/useStableCallbacks'
+import { useStudioStateEvents } from '@/app/useStudioStateEvents'
 import {
   SidebarResizeHandle,
   useResizableSidebar,
@@ -346,6 +348,12 @@ function Shell() {
       // below) - the trees re-read the rows, not their children lists.
       signals.reportEdit(addresses, { kind: 'properties' })
       signals.updatePreviewElements(addresses, true)
+      emitStudioEvent('remote.changed', {
+        contentRepositoryId: baseAddress.contentRepositoryId,
+        workspaceName: baseAddress.workspaceName,
+        kind: 'content',
+        nodeAggregateIds: aggregateIds,
+      })
     },
     // A collaborator changed the structure (or published/discarded/rebased the
     // session): incremental updates cannot describe this - drop the shared
@@ -366,12 +374,28 @@ function Shell() {
         )
       }
       refreshWorkspaceContent()
+      if (site && collaborativeWorkspace) {
+        emitStudioEvent('remote.changed', {
+          contentRepositoryId: site.contentRepositoryId,
+          workspaceName: collaborativeWorkspace.name,
+          kind: wholesale ? 'wholesale' : 'structure',
+          nodeAggregateIds: [],
+        })
+      }
     },
   })
 
   const { lastEdit, previewReloadToken, previewElementUpdate } = signals
   const workspaceName = activeWorkspace?.name ?? null
   const personalWorkspaceName = personalWorkspace?.name ?? null
+  // What changed of the editing context and the selection, as events.
+  useStudioStateEvents({
+    site,
+    workspaceName,
+    dimensionSpacePoint,
+    selectedDocument,
+    inspectedNode,
+  })
   const studioState = useMemo<StudioState>(
     () => ({
       site,
