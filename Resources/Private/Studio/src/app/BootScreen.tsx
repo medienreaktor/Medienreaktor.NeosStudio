@@ -11,18 +11,21 @@ import { translate as t } from '@/lib/i18n'
  * static shell in index.html paints the very same ring (inline styles) before
  * the bundle runs, so the handover from static HTML to React is invisible -
  * the FontAwesome webfont is not guaranteed to be loaded that early. Keep the
- * two in sync (size 4rem, 4px ring, blue-500, 1s linear spin).
+ * two in sync (size-15 = 3.75rem, 4px ring, blue-500, 1s linear spin).
  *
  * The ring is mounted more than once while booting (the static one is
- * replaced by React, and this component moves from being the whole app to an
- * overlay inside the shell once authentication resolves) and a freshly
- * mounted element would restart its rotation at zero - a visible jump. So
- * every ring derives its rotation phase from the page's clock instead: a
- * negative animation-delay of "time since navigation, modulo one turn" makes
- * a new ring continue exactly where the previous one was.
+ * replaced by React, this component moves from being the whole app to an
+ * overlay inside the shell once authentication resolves, and the silent OAuth
+ * redirect - tokens live in memory only - loads the whole document a second
+ * time) and a freshly mounted element would restart its rotation at zero - a
+ * visible jump. So every ring derives its rotation phase from the wall clock
+ * instead: a negative animation-delay of "epoch time modulo one turn" makes a
+ * new ring continue exactly where the previous one was. Deliberately not
+ * performance.now(): that restarts at zero with every document, so the ring
+ * would still jump after the redirect.
  */
 export function BootScreen({ done = false }: { done?: boolean }) {
-  const [animationDelay] = useState(() => `-${performance.now() % 1000}ms`)
+  const [animationDelay] = useState(() => `-${Date.now() % 1000}ms`)
   return (
     <div
       role="status"
