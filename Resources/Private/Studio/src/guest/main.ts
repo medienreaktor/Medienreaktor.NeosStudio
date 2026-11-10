@@ -37,6 +37,7 @@ import {
   applyRemotePropertyContent,
   ejectFromProperty,
   flushPendingCommits,
+  focusPropertyNear,
   mountRichTextEditors,
   remoteCaretRect,
   setPropertyLocked,
@@ -516,7 +517,7 @@ function flash(element: HTMLElement | null): void {
 }
 
 /**
- * The "..." handle: a single floating button pinned inside the top right
+ * The "..." handle: a single floating button pinned just below the bottom right
  * corner of the hovered - or, absent a hover, the selected - content element
  * (only Neos.Neos:Content elements - collections are structure,
  * hidden/deleted/moved through their content). Click asks the host to open
@@ -613,16 +614,31 @@ function positionHandle(): void {
     addButton.style.display = 'none'
     return
   }
-  // Inside the element's top right corner, so it reads as part of it and
-  // scrolls away with it; the "+" sits directly left of the "..." handle.
+  // Centered on the bottom line of the hover/selection outline, right-aligned
+  // with the element's right edge: off the element's own content (a small
+  // button's label stays clickable) and clear of the richtext toolbars, which
+  // sit above. Overlapping the element's edge also lets the pointer move onto
+  // the pair without crossing other content, whose hover would move the pair
+  // away from under it.
   const rect = handleTarget.getBoundingClientRect()
-  handle.style.display = 'flex'
-  handle.style.left = `${rect.right - 24 - 4}px`
-  handle.style.top = `${rect.top + 4}px`
+  const pairLeft = Math.max(HANDLE_GAP, rect.right - HANDLE_PAIR_WIDTH)
+  const top = rect.bottom + OUTLINE_CENTER_OFFSET - HANDLE_SIZE / 2
+  // The "+" sits directly left of the "..." handle.
   addButton.style.display = 'flex'
-  addButton.style.left = `${rect.right - 24 - 4 - 24 - 4}px`
-  addButton.style.top = `${rect.top + 4}px`
+  addButton.style.left = `${pairLeft}px`
+  addButton.style.top = `${top}px`
+  handle.style.display = 'flex'
+  handle.style.left = `${pairLeft + HANDLE_SIZE + HANDLE_GAP}px`
+  handle.style.top = `${top}px`
 }
+
+const HANDLE_SIZE = 24
+const HANDLE_GAP = 4
+/** "+" and "..." side by side. */
+const HANDLE_PAIR_WIDTH = HANDLE_SIZE * 2 + HANDLE_GAP
+/** Distance from the element's edge to the middle of its hover/selection
+ * outline: outline-offset 5px + half of the 2px outline (see injectStyles). */
+const OUTLINE_CENTER_OFFSET = 6
 
 function onHandleClick(): void {
   const element = handleTarget
@@ -899,6 +915,49 @@ function isStudioUi(target: HTMLElement): boolean {
   )
 }
 
+/** Presses on these are about themselves, never "edit the text nearby". */
+const OWN_PRESS_SELECTOR =
+  'img, picture, video, audio, iframe, svg, canvas, input, textarea, select, button, label, [contenteditable="true"]'
+
+/**
+ * A press on a content element around its text - a button's padding, the
+ * space beside a short label - edits that text: the caret goes to the
+ * nearest position in it. Small elements are otherwise only typeable where
+ * the glyphs happen to be. Only for elements with exactly one inline
+ * editable of their own (with several, which one is meant is a guess), and
+ * never for presses on media, form controls or the guest's own UI. The click
+ * that follows still selects the element (onClick).
+ */
+function onPressAroundText(event: MouseEvent): void {
+  if (event.button !== 0 || event.detail > 1) return
+  if (event.shiftKey || event.metaKey || event.ctrlKey || event.altKey) return
+  const target = event.target as HTMLElement | null
+  if (!target?.closest) return
+  // Presses inside the text belong to the editor (and its host element's
+  // own focusFromHost); our floating UI and locked elements are not ours.
+  if (target.closest(`[${PROPERTY_ATTRIBUTE}]`)) return
+  if (target.closest(OWN_PRESS_SELECTOR) || isStudioUi(target)) return
+  if (target.closest(`.${LOCKED_CLASS}`)) return
+  const nearest = target.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
+  if (!nearest) return
+  // Double-stamped elements: the node is the outermost wrapper of the stamps.
+  const owner = outermostWrapper(nearest)
+  if (!owner.hasAttribute(CONTENT_ATTRIBUTE)) return
+  // The element's own texts - not those of content nested inside it.
+  const own = [
+    ...owner.querySelectorAll<HTMLElement>(`[${PROPERTY_ATTRIBUTE}]`),
+  ].filter((property) => {
+    const wrapper = property.closest<HTMLElement>(`[${WRAPPER_ATTRIBUTE}]`)
+    return wrapper !== null && outermostWrapper(wrapper) === owner
+  })
+  const [property] = own
+  if (own.length !== 1 || !property) return
+  if (!focusPropertyNear(property, event.clientX, event.clientY)) return
+  // Keep the browser from moving focus/selection to the non-editable press
+  // target (which would blur the editor straight away).
+  event.preventDefault()
+}
+
 function onClick(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
   if (!target?.closest) return
@@ -941,7 +1000,12 @@ function handleLinkClick(
   if (href.startsWith('#')) return false
   // A link inside an inline-editable text is content being edited, not
   // navigation - just place the caret.
-  if (anchor.closest(`[${PROPERTY_ATTRIBUTE}]`)) {
+  // The same for a link around one (a button whose label is editable):
+  // pressing the button edits its label (onPressAroundText).
+  if (
+    anchor.closest(`[${PROPERTY_ATTRIBUTE}]`) ||
+    anchor.querySelector(`[${PROPERTY_ATTRIBUTE}]`)
+  ) {
     event.preventDefault()
     return false
   }
@@ -974,7 +1038,7 @@ function handleLinkClick(
 
 function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
-  // Over the "..." handle or its "+" companion (they sit inside their
+  // Over the "..." handle or its "+" companion (they sit against their
   // element): keep the hover state, so they do not vanish under the pointer.
   if (target?.closest?.(`#${HANDLE_ID}, #${ADD_BUTTON_ID}`)) return
   // Over the image overlay's button (the only part taking the pointer): keep
@@ -1767,6 +1831,7 @@ function init(): void {
   // typing also streams live updates and holds the collaboration edit lock.
   mountRichTextEditors(document, richTextHooks)
   document.addEventListener('click', onClick, true)
+  document.addEventListener('mousedown', onPressAroundText, true)
   document.addEventListener('mouseover', onMouseOver)
   document.addEventListener('dragover', onDragOver)
   document.addEventListener('drop', onDrop)

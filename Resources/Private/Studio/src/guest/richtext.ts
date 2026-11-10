@@ -271,7 +271,18 @@ function mountEditor(element: HTMLElement, hooks: RichTextHooks): void {
     content: initialContent,
     extensions: extensionsFor(config),
     editorProps: {
-      attributes: config.autoparagraph ? {} : { [BARE_ATTRIBUTE]: 'true' },
+      attributes: {
+        ...(config.autoparagraph ? {} : { [BARE_ATTRIBUTE]: 'true' }),
+        // Editors write final copy: no browser autocorrect, auto-capitalize,
+        // spellcheck squiggles or inline writing suggestions (Safari's
+        // predictive text, Chrome's writing help) - all of these silently
+        // alter or overlay what is being typed.
+        spellcheck: 'false',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+        autocomplete: 'off',
+        writingsuggestions: 'false',
+      },
       // Neos node drags (from the element handle or the creation panel) must
       // never drop into a rich-text editor. Returning true (without
       // preventDefault) keeps the editor from becoming a drop target, so the
@@ -435,6 +446,34 @@ export function unmountRichTextEditors(root: HTMLElement): void {
  */
 export function flushPendingCommits(): void {
   for (const managed of editorsByElement.values()) managed.flush()
+}
+
+/**
+ * Focus a property editor with the caret at the text position nearest to the
+ * given viewport point (clamped into the editable) - for presses that landed
+ * on the element around the text (a button's padding) rather than on it.
+ * Returns false when there is no editable editor on the element (unmounted,
+ * locked by a collaborator).
+ */
+export function focusPropertyNear(
+  element: HTMLElement,
+  x: number,
+  y: number,
+): boolean {
+  const managed = editorsByElement.get(element)
+  if (!managed || !managed.editor.isEditable) return false
+  const { editor } = managed
+  const rect = editor.view.dom.getBoundingClientRect()
+  let position: number | 'end' = 'end'
+  if (rect.width > 2 && rect.height > 2) {
+    const hit = editor.view.posAtCoords({
+      left: Math.min(Math.max(x, rect.left + 1), rect.right - 1),
+      top: Math.min(Math.max(y, rect.top + 1), rect.bottom - 1),
+    })
+    if (hit) position = hit.pos
+  }
+  editor.commands.focus(position)
+  return true
 }
 
 /** Lock/unlock a property editor (a collaborator is editing this text). */
