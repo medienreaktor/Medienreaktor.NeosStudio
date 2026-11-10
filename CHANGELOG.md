@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-11-10
+
 ### Added
 
 - Plugins can use Studio's UI components (Button, Input, Select, Dialog,
@@ -1368,7 +1370,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.2...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.3...HEAD
+[2.0.3]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.2...2.0.3
 [2.0.2]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...2.0.0
