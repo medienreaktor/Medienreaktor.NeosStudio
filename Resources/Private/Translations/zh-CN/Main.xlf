@@ -618,10 +618,6 @@
         <source>Creating failed</source>
         <target xml:lang="zh-CN">创建失败</target>
       </trans-unit>
-      <trans-unit id="creation.dragHint" xml:space="preserve">
-        <source>{0} ({1}) - drag into the preview</source>
-        <target xml:lang="zh-CN">{0}（{1}）——拖入预览区</target>
-      </trans-unit>
       <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
         <source>Filter node types</source>
         <target xml:lang="zh-CN">筛选节点类型</target>
@@ -650,10 +646,6 @@
         <source>Inside</source>
         <target xml:lang="zh-CN">内部</target>
       </trans-unit>
-      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
-        <source>No creatable content node types.</source>
-        <target xml:lang="zh-CN">没有可创建的内容节点类型。</target>
-      </trans-unit>
       <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
         <source>No node types match the filter.</source>
         <target xml:lang="zh-CN">没有符合筛选条件的节点类型。</target>
@@ -661,10 +653,6 @@
       <trans-unit id="creation.noTypesHere" xml:space="preserve">
         <source>No {0} types can be created here.</source>
         <target xml:lang="zh-CN">此处无法创建任何{0}类型。</target>
-      </trans-unit>
-      <trans-unit id="creation.notPermitted" xml:space="preserve">
-        <source>Your access role does not let you add content to this page.</source>
-        <target xml:lang="zh-CN">你的访问角色不允许你向此页面添加内容。</target>
       </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
@@ -729,10 +717,6 @@
       <trans-unit id="editing.copyFailed" xml:space="preserve">
         <source>Copying failed</source>
         <target xml:lang="zh-CN">复制失败</target>
-      </trans-unit>
-      <trans-unit id="editing.createFailed" xml:space="preserve">
-        <source>Creating failed</source>
-        <target xml:lang="zh-CN">创建失败</target>
       </trans-unit>
       <trans-unit id="editing.createNew" xml:space="preserve">
         <source>Create new…</source>
@@ -1978,62 +1962,6 @@
         <source>Workspaces</source>
         <target xml:lang="zh-CN">工作区</target>
       </trans-unit>
-      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
-        <source>Abstract</source>
-        <target xml:lang="zh-CN">抽象</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
-        <source>Inherited</source>
-        <target xml:lang="zh-CN">继承的</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
-        <source>Inherited from {0}</source>
-        <target xml:lang="zh-CN">继承自 {0}</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
-        <source>Abstract type</source>
-        <target xml:lang="zh-CN">抽象类型</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
-        <source>Content Collection</source>
-        <target xml:lang="zh-CN">内容集合</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
-        <source>Content</source>
-        <target xml:lang="zh-CN">内容</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
-        <source>Document</source>
-        <target xml:lang="zh-CN">文档</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
-        <source>Mixin / other</source>
-        <target xml:lang="zh-CN">Mixin / 其他</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
-        <source>The node types could not be loaded.</source>
-        <target xml:lang="zh-CN">无法加载节点类型。</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loading" xml:space="preserve">
-        <source>Loading node types…</source>
-        <target xml:lang="zh-CN">正在加载节点类型…</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.matches" xml:space="preserve">
-        <source>{0} matches</source>
-        <target xml:lang="zh-CN">{0} 个匹配项</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.properties" xml:space="preserve">
-        <source>Properties</source>
-        <target xml:lang="zh-CN">属性</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
-        <source>Search node types by name</source>
-        <target xml:lang="zh-CN">按名称搜索节点类型</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
-        <source>Search node types…</source>
-        <target xml:lang="zh-CN">搜索节点类型…</target>
-      </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
         <target xml:lang="zh-CN">没有通知。</target>
@@ -2086,10 +2014,6 @@
         <source>Clipboard</source>
         <target xml:lang="zh-CN">剪贴板</target>
       </trans-unit>
-      <trans-unit id="panel.title.create" xml:space="preserve">
-        <source>Create</source>
-        <target xml:lang="zh-CN">创建</target>
-      </trans-unit>
       <trans-unit id="panel.title.documents" xml:space="preserve">
         <source>Documents</source>
         <target xml:lang="zh-CN">文档</target>
@@ -2105,10 +2029,6 @@
       <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
         <source>Media Library</source>
         <target xml:lang="zh-CN">媒体库</target>
-      </trans-unit>
-      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
-        <source>Node Types</source>
-        <target xml:lang="zh-CN">节点类型</target>
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The Create panel (drag a node type into the preview) and the Node Types
+  panel. New content is added through the insert dialog, from the trees'
+  context menus or the "+" buttons in the preview.
+
 ## [2.0.0] - 2026-11-09
 
 ### Changed

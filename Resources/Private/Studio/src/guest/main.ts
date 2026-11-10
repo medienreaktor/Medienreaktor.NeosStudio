@@ -22,8 +22,8 @@
  * by data-__neos-studio-content) gets a floating "..." handle inside its top
  * right corner: clicking it asks the host to open the element menu
  * (hide/delete, rendered by the host over the iframe), dragging it moves the
- * element - the same drop machinery the creation drag uses, so the
- * server-computed allowed-types lists are respected.
+ * element into any content collection whose server-computed allowed-types
+ * list includes its type.
  */
 import type {
   GuestToHostMessage,
@@ -269,8 +269,8 @@ function injectStyles(): void {
     [${PLACEHOLDER_ATTRIBUTE}][${INLINE_ATTRIBUTE}].${EMPTY_CLASS}::before {
       order: 1;
     }
-    /* While a node type is dragged from the creation panel, collections that
-       allow it light up; a minimum height keeps empty collections targetable.
+    /* While a content element is dragged, collections that allow its type
+       light up; a minimum height keeps empty collections targetable.
        Specificity beats the collection "outline: none" rules above. */
     [${WRAPPER_ATTRIBUTE}][${COLLECTION_ATTRIBUTE}].${DROPPABLE_CLASS} {
       outline: 2px dashed rgba(0, 173, 238, 0.5) !important;
@@ -1026,18 +1026,16 @@ function onMouseOver(event: MouseEvent): void {
 }
 
 /**
- * Drag and drop into content collections, serving two drags with the same
- * drop machinery: node creation (the host announces the dragged node type
- * via creation-drag-start) and moving an existing element (started locally
- * from its "..." handle). Collections whose server-computed allowed-types
- * list includes the dragged type become drop targets, dragover positions an
+ * Moving an existing content element by dragging its "..." handle into a
+ * content collection. Collections whose server-computed allowed-types list
+ * includes the dragged type become drop targets, dragover positions an
  * insertion indicator between the hovered collection's children, and drop
- * reports the insertion point to the host, which runs the command.
+ * reports the insertion point to the host, which runs the move command.
  */
 let activeDrag: {
   nodeTypeName: string
-  /** The element being moved; null for a creation drag. */
-  movingElement: HTMLElement | null
+  /** The element being moved. */
+  movingElement: HTMLElement
 } | null = null
 
 /** The insertion point under the pointer; before === null appends. */
@@ -1060,16 +1058,13 @@ function collectionAllows(
   }
 }
 
-function startDrag(
-  nodeTypeName: string,
-  movingElement: HTMLElement | null = null,
-): void {
+function startDrag(nodeTypeName: string, movingElement: HTMLElement): void {
   activeDrag = { nodeTypeName, movingElement }
   for (const collection of document.querySelectorAll<HTMLElement>(
     `[${COLLECTION_ATTRIBUTE}]`,
   )) {
     // An element cannot be moved into its own subtree.
-    if (movingElement?.contains(collection)) continue
+    if (movingElement.contains(collection)) continue
     if (collectionAllows(collection, nodeTypeName))
       collection.classList.add(DROPPABLE_CLASS)
   }
@@ -1266,8 +1261,7 @@ function onDragOver(event: DragEvent): void {
   }
   // preventDefault marks the spot as a valid drop location.
   event.preventDefault()
-  if (event.dataTransfer)
-    event.dataTransfer.dropEffect = activeDrag.movingElement ? 'move' : 'copy'
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
   setDropTarget({
     collection,
     before: findInsertBefore(collection, event.clientX, event.clientY),
@@ -1283,14 +1277,7 @@ function onDrop(event: DragEvent): void {
   const succeedingSiblingNodeAddress =
     before?.getAttribute(WRAPPER_ATTRIBUTE) ?? null
   let message: GuestToHostMessage | null = null
-  if (parentNodeAddress && drag.movingElement === null) {
-    message = {
-      type: 'neos-studio/create-node-request',
-      nodeTypeName: drag.nodeTypeName,
-      parentNodeAddress,
-      succeedingSiblingNodeAddress,
-    }
-  } else if (parentNodeAddress && drag.movingElement !== null) {
+  if (parentNodeAddress) {
     const nodeAddress = drag.movingElement.getAttribute(WRAPPER_ATTRIBUTE)
     if (nodeAddress && !isNoOpMove(drag.movingElement, collection, before)) {
       message = {
@@ -1304,8 +1291,8 @@ function onDrop(event: DragEvent): void {
       }
     }
   }
-  // The host also sends creation-drag-end (panel dragend), but clear
-  // immediately so the indicator never outlives the drop.
+  // The handle's dragend clears too, but clear immediately so the indicator
+  // never outlives the drop.
   endDrag()
   if (message) post(message)
 }
@@ -1764,9 +1751,6 @@ function onHostMessage(event: MessageEvent): void {
       schedulePresenceUpdate()
     }
   }
-  if (message?.type === 'neos-studio/creation-drag-start')
-    startDrag(message.nodeTypeName)
-  if (message?.type === 'neos-studio/creation-drag-end') endDrag()
   // The Link Editor dialog's answer for a pending rich-text link edit.
   if (message?.type === 'neos-studio/link-apply')
     applyLinkEdit(message.attributes)

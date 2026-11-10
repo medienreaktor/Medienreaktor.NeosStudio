@@ -618,10 +618,6 @@
         <source>Creating failed</source>
         <target xml:lang="km">ការបង្កើតបានបរាជ័យ</target>
       </trans-unit>
-      <trans-unit id="creation.dragHint" xml:space="preserve">
-        <source>{0} ({1}) - drag into the preview</source>
-        <target xml:lang="km">{0} ({1}) - អូសចូលទៅក្នុងការមើលជាមុន</target>
-      </trans-unit>
       <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
         <source>Filter node types</source>
         <target xml:lang="km">ត្រងប្រភេទថ្នាំង</target>
@@ -650,10 +646,6 @@
         <source>Inside</source>
         <target xml:lang="km">ខាងក្នុង</target>
       </trans-unit>
-      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
-        <source>No creatable content node types.</source>
-        <target xml:lang="km">មិនមានប្រភេទថ្នាំងមាតិកាដែលអាចបង្កើតបានទេ។</target>
-      </trans-unit>
       <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
         <source>No node types match the filter.</source>
         <target xml:lang="km">មិនមានប្រភេទថ្នាំងត្រូវនឹងតម្រងទេ។</target>
@@ -661,10 +653,6 @@
       <trans-unit id="creation.noTypesHere" xml:space="preserve">
         <source>No {0} types can be created here.</source>
         <target xml:lang="km">មិនអាចបង្កើតប្រភេទ {0} នៅទីនេះបានទេ។</target>
-      </trans-unit>
-      <trans-unit id="creation.notPermitted" xml:space="preserve">
-        <source>Your access role does not let you add content to this page.</source>
-        <target xml:lang="km">តួនាទីចូលប្រើរបស់អ្នកមិនអនុញ្ញាតឱ្យអ្នកបន្ថែមមាតិកាទៅទំព័រនេះទេ។</target>
       </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
@@ -729,10 +717,6 @@
       <trans-unit id="editing.copyFailed" xml:space="preserve">
         <source>Copying failed</source>
         <target xml:lang="km">ការចម្លងបានបរាជ័យ</target>
-      </trans-unit>
-      <trans-unit id="editing.createFailed" xml:space="preserve">
-        <source>Creating failed</source>
-        <target xml:lang="km">ការបង្កើតបានបរាជ័យ</target>
       </trans-unit>
       <trans-unit id="editing.createNew" xml:space="preserve">
         <source>Create new…</source>
@@ -1978,62 +1962,6 @@
         <source>Workspaces</source>
         <target xml:lang="km">លំហការងារ</target>
       </trans-unit>
-      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
-        <source>Abstract</source>
-        <target xml:lang="km">អរូបី</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
-        <source>Inherited</source>
-        <target xml:lang="km">ទទួលបន្ត</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
-        <source>Inherited from {0}</source>
-        <target xml:lang="km">ទទួលបន្តពី {0}</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
-        <source>Abstract type</source>
-        <target xml:lang="km">ប្រភេទអរូបី</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
-        <source>Content Collection</source>
-        <target xml:lang="km">បណ្ដុំមាតិកា</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
-        <source>Content</source>
-        <target xml:lang="km">មាតិកា</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
-        <source>Document</source>
-        <target xml:lang="km">ឯកសារ</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
-        <source>Mixin / other</source>
-        <target xml:lang="km">Mixin / ផ្សេងទៀត</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
-        <source>The node types could not be loaded.</source>
-        <target xml:lang="km">មិនអាចផ្ទុកប្រភេទថ្នាំងបានទេ។</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loading" xml:space="preserve">
-        <source>Loading node types…</source>
-        <target xml:lang="km">កំពុងផ្ទុកប្រភេទថ្នាំង…</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.matches" xml:space="preserve">
-        <source>{0} matches</source>
-        <target xml:lang="km">លទ្ធផលត្រូវគ្នា {0}</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.properties" xml:space="preserve">
-        <source>Properties</source>
-        <target xml:lang="km">លក្ខណសម្បត្តិ</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
-        <source>Search node types by name</source>
-        <target xml:lang="km">ស្វែងរកប្រភេទថ្នាំងតាមឈ្មោះ</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
-        <source>Search node types…</source>
-        <target xml:lang="km">ស្វែងរកប្រភេទថ្នាំង…</target>
-      </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
         <target xml:lang="km">មិនមានការជូនដំណឹងទេ។</target>
@@ -2086,10 +2014,6 @@
         <source>Clipboard</source>
         <target xml:lang="km">ក្ដារតម្បៀតខ្ទាស់</target>
       </trans-unit>
-      <trans-unit id="panel.title.create" xml:space="preserve">
-        <source>Create</source>
-        <target xml:lang="km">បង្កើត</target>
-      </trans-unit>
       <trans-unit id="panel.title.documents" xml:space="preserve">
         <source>Documents</source>
         <target xml:lang="km">ឯកសារ</target>
@@ -2105,10 +2029,6 @@
       <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
         <source>Media Library</source>
         <target xml:lang="km">បណ្ណាល័យមេឌា</target>
-      </trans-unit>
-      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
-        <source>Node Types</source>
-        <target xml:lang="km">ប្រភេទថ្នាំង</target>
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>

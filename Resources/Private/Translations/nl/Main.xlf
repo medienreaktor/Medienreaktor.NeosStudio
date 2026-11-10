@@ -634,10 +634,6 @@
         <source>Creating failed</source>
         <target xml:lang="nl">Aanmaken mislukt</target>
       </trans-unit>
-      <trans-unit id="creation.dragHint" xml:space="preserve">
-        <source>{0} ({1}) - drag into the preview</source>
-        <target xml:lang="nl">{0} ({1}) - sleep naar het voorbeeld</target>
-      </trans-unit>
       <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
         <source>Filter node types</source>
         <target xml:lang="nl">Node types filteren</target>
@@ -666,10 +662,6 @@
         <source>Inside</source>
         <target xml:lang="nl">Binnen</target>
       </trans-unit>
-      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
-        <source>No creatable content node types.</source>
-        <target xml:lang="nl">Geen aan te maken content node types.</target>
-      </trans-unit>
       <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
         <source>No node types match the filter.</source>
         <target xml:lang="nl">Geen node types komen overeen met het filter.</target>
@@ -677,10 +669,6 @@
       <trans-unit id="creation.noTypesHere" xml:space="preserve">
         <source>No {0} types can be created here.</source>
         <target xml:lang="nl">Hier kunnen geen {0}-types worden aangemaakt.</target>
-      </trans-unit>
-      <trans-unit id="creation.notPermitted" xml:space="preserve">
-        <source>Your access role does not let you add content to this page.</source>
-        <target xml:lang="nl">Je toegangsrol staat niet toe dat je content aan deze pagina toevoegt.</target>
       </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
@@ -745,10 +733,6 @@
       <trans-unit id="editing.copyFailed" xml:space="preserve">
         <source>Copying failed</source>
         <target xml:lang="nl">Kopiëren mislukt</target>
-      </trans-unit>
-      <trans-unit id="editing.createFailed" xml:space="preserve">
-        <source>Creating failed</source>
-        <target xml:lang="nl">Aanmaken mislukt</target>
       </trans-unit>
       <trans-unit id="editing.createNew" xml:space="preserve">
         <source>Create new…</source>
@@ -1994,62 +1978,6 @@
         <source>Workspaces</source>
         <target xml:lang="nl">Workspaces</target>
       </trans-unit>
-      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
-        <source>Abstract</source>
-        <target xml:lang="nl">Abstract</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
-        <source>Inherited</source>
-        <target xml:lang="nl">Overgeërfd</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
-        <source>Inherited from {0}</source>
-        <target xml:lang="nl">Overgeërfd van {0}</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
-        <source>Abstract type</source>
-        <target xml:lang="nl">Abstract type</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
-        <source>Content Collection</source>
-        <target xml:lang="nl">Contentcollectie</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
-        <source>Content</source>
-        <target xml:lang="nl">Content</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
-        <source>Document</source>
-        <target xml:lang="nl">Document</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
-        <source>Mixin / other</source>
-        <target xml:lang="nl">Mixin / overig</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
-        <source>The node types could not be loaded.</source>
-        <target xml:lang="nl">De node types konden niet worden geladen.</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loading" xml:space="preserve">
-        <source>Loading node types…</source>
-        <target xml:lang="nl">Node types laden…</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.matches" xml:space="preserve">
-        <source>{0} matches</source>
-        <target xml:lang="nl">{0} overeenkomsten</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.properties" xml:space="preserve">
-        <source>Properties</source>
-        <target xml:lang="nl">Eigenschappen</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
-        <source>Search node types by name</source>
-        <target xml:lang="nl">Node types zoeken op naam</target>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
-        <source>Search node types…</source>
-        <target xml:lang="nl">Node types zoeken…</target>
-      </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
         <target xml:lang="nl">Geen meldingen.</target>
@@ -2102,10 +2030,6 @@
         <source>Clipboard</source>
         <target xml:lang="nl">Klembord</target>
       </trans-unit>
-      <trans-unit id="panel.title.create" xml:space="preserve">
-        <source>Create</source>
-        <target xml:lang="nl">Aanmaken</target>
-      </trans-unit>
       <trans-unit id="panel.title.documents" xml:space="preserve">
         <source>Documents</source>
         <target xml:lang="nl">Documenten</target>
@@ -2121,10 +2045,6 @@
       <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
         <source>Media Library</source>
         <target xml:lang="nl">Mediabibliotheek</target>
-      </trans-unit>
-      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
-        <source>Node Types</source>
-        <target xml:lang="nl">Node types</target>
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>

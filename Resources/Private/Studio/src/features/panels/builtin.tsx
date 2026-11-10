@@ -19,7 +19,6 @@ import {
   InsertNodeDialog,
   type InsertRequest,
 } from '@/features/creation/InsertNodeDialog'
-import { NodeCreationPanel } from '@/features/creation/NodeCreationPanel'
 import type {
   NodeMenuAction,
   NodeMenuTarget,
@@ -27,7 +26,6 @@ import type {
 import { InspectorPanel } from '@/features/inspector/Inspector'
 import { useAssetPicker } from '@/features/media/AssetPicker'
 import { MediaBrowser } from '@/features/media/MediaBrowser'
-import { NodeTypesPanel } from '@/features/nodetypes/NodeTypesPanel'
 import { HistoryPanel } from '@/features/workspaces/HistoryPanel'
 import { TrashPanel } from '@/features/workspaces/TrashPanel'
 import { useTrashRestore } from '@/features/workspaces/useTrashRestore'
@@ -38,7 +36,6 @@ import { DocumentSearchList } from '@/features/tree/DocumentSearchList'
 import { DocumentsToolbar } from '@/features/tree/DocumentsToolbar'
 import { DocumentTree } from '@/features/tree/DocumentTree'
 import { Button } from '@/components/ui/button'
-import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -50,35 +47,6 @@ import { panelRegistry } from './registry'
  * a propless component reading app state via useStudio(), wrapped around the
  * reusable feature component.
  */
-
-/**
- * The node-type palette, withheld when the access role does not let the
- * account create inside the open document.
- *
- * Worth gating even though the drop happens elsewhere: the palette is where
- * the gesture STARTS. The preview still renders in edit mode (the role may
- * well allow editing, just not creating), so its collections would still light
- * up as drop targets and the refusal would only arrive after the drag - which
- * is the whole failure mode this is meant to avoid.
- */
-function CreatePanel() {
-  const { selectedDocument } = useStudio()
-  const canCreate = useNodeEditable(selectedDocument, 'createNodes')
-
-  if (!canCreate) {
-    return (
-      <Placeholder
-        icon="fa-lock"
-        title={t(
-          'creation.notPermitted',
-          'Your access role does not let you add content to this page.',
-        )}
-      />
-    )
-  }
-
-  return <NodeCreationPanel />
-}
 
 /**
  * Shared refresh semantics after a tree context-menu action: hide/unhide
@@ -492,7 +460,7 @@ function MediaLibraryPanel() {
 /**
  * Call once before the app mounts. Titles are functions, so they translate
  * when rendered rather than when registered. The default layout: the sidebar holds the
- * Documents tree alone on top and an Outline/Create/Clipboard/Trash tab group below
+ * Documents tree alone on top and an Outline/Clipboard/Trash tab group below
  * (stacked groups split the height evenly); the main area tabs the Visual
  * Editor and the Media Library; the Inspector docks in the right-hand
  * secondary sidebar, expanded, with the page's History as its second tab.
@@ -513,17 +481,11 @@ export function registerBuiltinPanels(): void {
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   // Registration order is tab order: Workspaces sits directly to the right
-  // of the Media Library, Node Types after it.
+  // of the Media Library.
   panelRegistry.register({
     id: 'workspaces',
     title: () => t('panel.title.workspaces', 'Workspaces'),
     component: WorkspaceGraphPanel,
-    defaultPlacement: { kind: 'dock', region: 'main' },
-  })
-  panelRegistry.register({
-    id: 'node-types',
-    title: () => t('panel.title.nodeTypes', 'Node Types'),
-    component: NodeTypesPanel,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })
   panelRegistry.register({
@@ -536,12 +498,6 @@ export function registerBuiltinPanels(): void {
     id: 'outline',
     title: () => t('panel.title.outline', 'Outline'),
     component: OutlinePanel,
-    defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
-  })
-  panelRegistry.register({
-    id: 'create',
-    title: () => t('panel.title.create', 'Create'),
-    component: CreatePanel,
     defaultPlacement: { kind: 'dock', region: 'sidebar', group: 'tools' },
   })
   panelRegistry.register({

@@ -1,7 +1,6 @@
 import { useEffect, useEffectEvent, useState } from 'react'
 import { queryString } from '@/api/http/request'
 import { renderNodeElement } from '@/api/neos/endpoints/nodes'
-import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import {
   isRemoved,
   nodeAddressFromContextPath,
@@ -20,17 +19,10 @@ import {
   takePendingFlash,
 } from '@/app/flash'
 import { useNodeEditable } from '@/features/access/useAccess'
-import type { CreateNodeRequest } from '@/features/creation/createNode'
-import {
-  type CreationDrag,
-  getCreationDrag,
-  subscribeCreationDrag,
-} from '@/features/creation/creationDrag'
 import {
   InsertNodeDialog,
   type InsertRequest,
 } from '@/features/creation/InsertNodeDialog'
-import { CreateNodeFlow } from '@/features/creation/NodeCreationDialog'
 import { moveNodesByAddress } from '@/features/editing/nodeActions'
 import {
   NodeContextMenu,
@@ -192,10 +184,6 @@ export function PreviewPane({
   // after edits in the same document); it feeds into a layer's load key.
   const [reloadCount, setReloadCount] = useState(0)
   const reload = () => setReloadCount((count) => count + 1)
-  // A drop from the creation panel landed in the preview - the creation flow
-  // (optional creation dialog + command) runs for this insertion point.
-  const [pendingCreation, setPendingCreation] =
-    useState<CreateNodeRequest | null>(null)
   // The element menu (hide/unhide/delete) requested via the "..." handle in
   // the guest, anchored at the handle's viewport position over the iframe.
   const [elementMenu, setElementMenu] = useState<NodeMenuTarget | null>(null)
@@ -207,7 +195,6 @@ export function PreviewPane({
   const [linkEdit, setLinkEdit] = useState<{
     attributes: LinkAttributes | null
   } | null>(null)
-  const { data: nodeTypes } = useNodeTypes()
   // Opening the Media Library picker for an image clicked in the preview.
   const { requestPick } = useAssetPicker()
 
@@ -223,7 +210,7 @@ export function PreviewPane({
   // A page outside the account's access roles renders the same way: without
   // the editing guest. Withholding "inPlace" is what actually disarms it -
   // the metadata markup the guest needs for inline editing, click-to-select
-  // and creation drop targets is simply never emitted, so there is nothing to
+  // and drop targets is simply never emitted, so there is nothing to
   // disable afterwards and no way to click into an edit the server would
   // refuse. Locking the guest from the shell instead would leave that markup
   // in the page and the ban one message away from being missed.
@@ -321,25 +308,6 @@ export function PreviewPane({
           property: message.property,
           value: message.value,
           cursor: message.cursor,
-        })
-        break
-      }
-      case 'neos-studio/create-node-request': {
-        const parentAddress = addressOf(message.parentNodeAddress)
-        const succeedingSiblingAddress =
-          message.succeedingSiblingNodeAddress === null
-            ? null
-            : addressOf(message.succeedingSiblingNodeAddress)
-        if (
-          !parentAddress ||
-          (message.succeedingSiblingNodeAddress !== null &&
-            !succeedingSiblingAddress)
-        )
-          break
-        setPendingCreation({
-          nodeTypeName: message.nodeTypeName,
-          parentAddress,
-          succeedingSiblingAddress,
         })
         break
       }
@@ -492,25 +460,6 @@ export function PreviewPane({
 
   const bridge = useGuestBridge({ layers, onMessage: handleGuestMessage })
   const { postToGuest } = bridge
-
-  // Announce node-type drags from the creation panel to the guest, which
-  // marks the collections allowing that type as drop targets. A drag can
-  // already be underway when the guest (re)boots - push the current state.
-  useEffect(() => {
-    if (!guestReady) return
-    const send = (drag: CreationDrag) =>
-      postToGuest(
-        drag
-          ? {
-              type: 'neos-studio/creation-drag-start',
-              nodeTypeName: drag.nodeTypeName,
-            }
-          : { type: 'neos-studio/creation-drag-end' },
-      )
-    const current = getCreationDrag()
-    if (current) send(current)
-    return subscribeCreationDrag(send)
-  }, [guestReady, postToGuest])
 
   // The selection by value: callers may pass a new object for the same node.
   const selectedKey = selectedAddress ? nodeAddressKey(selectedAddress) : null
@@ -768,8 +717,7 @@ export function PreviewPane({
         role="content"
         onCreated={(address, creation) => {
           setInsertRequest(null)
-          // Same follow-up as a drop from the creation panel: the new element
-          // renders after a reload, the outliner refreshes below the parent,
+          // The new element renders after a reload, the outliner refreshes below the parent,
           // and the new node is inspected (outlining it in the fresh page).
           reload()
           onNodeEditedRef.current?.(creation.parentAddress)
@@ -777,29 +725,6 @@ export function PreviewPane({
         }}
         onClose={() => setInsertRequest(null)}
       />
-      {pendingCreation && (
-        <CreateNodeFlow
-          request={pendingCreation}
-          nodeTypes={nodeTypes}
-          onCreated={(address) => {
-            const parentAddress = pendingCreation.parentAddress
-            setPendingCreation(null)
-            // The new node only renders after a reload; the shell then
-            // refreshes the outliner below the collection and inspects the
-            // new node (which also outlines it in the reloaded preview).
-            reload()
-            onNodeEditedRef.current?.(parentAddress)
-            onSelectNode(address)
-          }}
-          onCancel={(error) => {
-            setPendingCreation(null)
-            if (error)
-              toast.error(error, {
-                title: t('editing.createFailed', 'Creating failed'),
-              })
-          }}
-        />
-      )}
     </div>
   )
 }

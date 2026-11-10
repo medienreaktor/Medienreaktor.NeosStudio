@@ -72,17 +72,6 @@ export type GuestToHostMessage =
       cursor: number
     }
   /**
-   * A node type dragged from the creation panel was dropped into a content
-   * collection. The new node goes before the succeeding sibling, or to the
-   * end of the collection when the sibling is null.
-   */
-  | {
-      type: 'neos-studio/create-node-request'
-      nodeTypeName: string
-      parentNodeAddress: string
-      succeedingSiblingNodeAddress: string | null
-    }
-  /**
    * The "..." handle of the selected content element was clicked - the host
    * shows the element menu (hide/delete, or unhide for hidden elements)
    * anchored at the handle's position (viewport coordinates within the
@@ -237,13 +226,6 @@ export type HostToGuestMessage =
    */
   | { type: 'neos-studio/presence-update'; users: PresenceHighlight[] }
   /**
-   * A node type drag from the creation panel started - the guest marks the
-   * collections that allow this type as drop targets.
-   */
-  | { type: 'neos-studio/creation-drag-start'; nodeTypeName: string }
-  /** The drag ended (dropped or cancelled anywhere) - clear the drop UI. */
-  | { type: 'neos-studio/creation-drag-end' }
-  /**
    * The Link Editor dialog was confirmed for the pending link-edit-request:
    * apply these attributes to the requesting selection - or remove the link
    * there when attributes is null.
@@ -319,11 +301,6 @@ const GUEST_MESSAGE_FIELDS: {
     property: isString,
     value: isString,
     cursor: isNumber,
-  },
-  'neos-studio/create-node-request': {
-    nodeTypeName: isString,
-    parentNodeAddress: isString,
-    succeedingSiblingNodeAddress: isStringOrNull,
   },
   'neos-studio/element-menu-request': {
     nodeAddress: isString,

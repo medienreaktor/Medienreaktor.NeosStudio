@@ -592,9 +592,6 @@
       <trans-unit id="creation.creatingFailed" xml:space="preserve">
         <source>Creating failed</source>
       </trans-unit>
-      <trans-unit id="creation.dragHint" xml:space="preserve">
-        <source>{0} ({1}) - drag into the preview</source>
-      </trans-unit>
       <trans-unit id="creation.filterNodeTypes" xml:space="preserve">
         <source>Filter node types</source>
       </trans-unit>
@@ -616,17 +613,11 @@
       <trans-unit id="creation.mode.inside" xml:space="preserve">
         <source>Inside</source>
       </trans-unit>
-      <trans-unit id="creation.noCreatableContent" xml:space="preserve">
-        <source>No creatable content node types.</source>
-      </trans-unit>
       <trans-unit id="creation.noNodeTypesMatch" xml:space="preserve">
         <source>No node types match the filter.</source>
       </trans-unit>
       <trans-unit id="creation.noTypesHere" xml:space="preserve">
         <source>No {0} types can be created here.</source>
-      </trans-unit>
-      <trans-unit id="creation.notPermitted" xml:space="preserve">
-        <source>Your access role does not let you add content to this page.</source>
       </trans-unit>
       <trans-unit id="creation.nounDocument" xml:space="preserve">
         <source>document</source>
@@ -675,9 +666,6 @@
       </trans-unit>
       <trans-unit id="editing.copyFailed" xml:space="preserve">
         <source>Copying failed</source>
-      </trans-unit>
-      <trans-unit id="editing.createFailed" xml:space="preserve">
-        <source>Creating failed</source>
       </trans-unit>
       <trans-unit id="editing.createNew" xml:space="preserve">
         <source>Create new…</source>
@@ -1622,48 +1610,6 @@
       <trans-unit id="modal.workspaces" xml:space="preserve">
         <source>Workspaces</source>
       </trans-unit>
-      <trans-unit id="nodeTypes.abstract" xml:space="preserve">
-        <source>Abstract</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inherited" xml:space="preserve">
-        <source>Inherited</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.inheritedFrom" xml:space="preserve">
-        <source>Inherited from {0}</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.abstract" xml:space="preserve">
-        <source>Abstract type</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.collection" xml:space="preserve">
-        <source>Content Collection</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.content" xml:space="preserve">
-        <source>Content</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.document" xml:space="preserve">
-        <source>Document</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.legend.other" xml:space="preserve">
-        <source>Mixin / other</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loadFailed" xml:space="preserve">
-        <source>The node types could not be loaded.</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.loading" xml:space="preserve">
-        <source>Loading node types…</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.matches" xml:space="preserve">
-        <source>{0} matches</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.properties" xml:space="preserve">
-        <source>Properties</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchAriaLabel" xml:space="preserve">
-        <source>Search node types by name</source>
-      </trans-unit>
-      <trans-unit id="nodeTypes.searchPlaceholder" xml:space="preserve">
-        <source>Search node types…</source>
-      </trans-unit>
       <trans-unit id="notifications.empty" xml:space="preserve">
         <source>No notifications.</source>
       </trans-unit>
@@ -1703,9 +1649,6 @@
       <trans-unit id="panel.title.clipboard" xml:space="preserve">
         <source>Clipboard</source>
       </trans-unit>
-      <trans-unit id="panel.title.create" xml:space="preserve">
-        <source>Create</source>
-      </trans-unit>
       <trans-unit id="panel.title.documents" xml:space="preserve">
         <source>Documents</source>
       </trans-unit>
@@ -1717,9 +1660,6 @@
       </trans-unit>
       <trans-unit id="panel.title.mediaLibrary" xml:space="preserve">
         <source>Media Library</source>
-      </trans-unit>
-      <trans-unit id="panel.title.nodeTypes" xml:space="preserve">
-        <source>Node Types</source>
       </trans-unit>
       <trans-unit id="panel.title.outline" xml:space="preserve">
         <source>Outline</source>

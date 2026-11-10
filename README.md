@@ -57,7 +57,7 @@ Dynamic, editable **access roles**: name a set of restrictions and assign editor
 
 ### 🧩 Dockable panel system
 
-The entire workspace is built from **panels**: document tree, content outliner, inspector, media browser, node creation, clipboard, preview — every surface is a panel that can be docked, resized and toggled. Panels live in a `PanelRegistry`, which means third-party packages register their own panels into the same layout system the built-in ones use. Your panel is a first-class citizen, not an iframe in a corner.
+The entire workspace is built from **panels**: document tree, content outliner, inspector, media browser, clipboard, preview — every surface is a panel that can be docked, resized and toggled. Panels live in a `PanelRegistry`, which means third-party packages register their own panels into the same layout system the built-in ones use. Your panel is a first-class citizen, not an iframe in a corner.
 
 ### ✍️ Lightweight inline Rich Text Editing
 
@@ -67,7 +67,7 @@ Inline editing runs on **TipTap 3** — a lean, headless, ProseMirror-based edit
 
 - **Context menus** on every node — in the document tree, the content outliner and the media browser — with copy, cut, paste, delete, hide and more.
 - **Drag & drop node moves** in the trees, constraint-aware.
-- **Drag-to-create**: pick a node type from the creation panel and drop it straight into the live preview, or use the insert dialog (before / inside / after, filtered by node type constraints).
+- **Insert dialog**: add content before, inside or after any node, filtered by node type constraints — from the trees' context menus or the "+" buttons in the live preview.
 - A **node clipboard** that survives navigation, with its own panel and document/content separation.
 
 ### 🔍 A complete, extensible inspector
