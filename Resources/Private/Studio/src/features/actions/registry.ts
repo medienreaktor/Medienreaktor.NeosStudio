@@ -142,6 +142,9 @@ export function useHeaderActions(): HeaderActionDefinition[] {
  * Evaluate a `when` guard: absent means yes, a throw means no - logged, so a
  * plugin's broken condition costs its own action, never the menu.
  */
+/** Definitions whose `when` threw and was logged; a re-registered (fixed) one is a new object and logs afresh. */
+const reportedWhenErrors = new WeakSet<object>()
+
 export function offered<Args extends unknown[]>(
   definition: {
     id: string
@@ -153,10 +156,15 @@ export function offered<Args extends unknown[]>(
   try {
     return definition.when(...args)
   } catch (error) {
-    console.error(
-      `Studio: the "when" of action "${definition.id}" threw; the action is hidden.`,
-      error,
-    )
+    // `when` runs on every render of every menu and toolbar offering the
+    // action, so log a broken one once per definition, not per render.
+    if (!reportedWhenErrors.has(definition)) {
+      reportedWhenErrors.add(definition)
+      console.error(
+        `Studio: the "when" of action "${definition.id}" threw; the action is hidden.`,
+        error,
+      )
+    }
     return false
   }
 }

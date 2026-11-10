@@ -8821,6 +8821,209 @@ type PreviewElementUpdate = {
   remote?: boolean;
 };
 //#endregion
+//#region lib/registry.d.ts
+/**
+ * The shared base of Studio's extension registries (panels, settings
+ * sections, shortcuts, property editors, inspector views, validators, link
+ * types, node and workspace decorators, node and header actions): a small
+ * observable, id-keyed store.
+ *
+ * - Registering an already-known id replaces it, so HMR and plugin reloads
+ *   stay idempotent (the entry keeps its original registration position, as
+ *   Map.set does). Unregistering an unknown id is a no-op.
+ * - The snapshot returned by {@link ObservableRegistry.getAll} is cached: its
+ *   identity changes only on a mutation (or an explicit re-emit by a
+ *   subclass), which is exactly the contract React's useSyncExternalStore
+ *   needs to stay quiet between changes.
+ * - `subscribe` and `getAll` are bound to the instance, so they can be handed
+ *   to useSyncExternalStore as-is without a wrapper closure (a fresh closure
+ *   per render would make React resubscribe every render).
+ *
+ * Feature registries subclass it (adding lookups, dispatch, or a public
+ * `refresh()` on top of {@link ObservableRegistry.emit}) or compose it when
+ * their public signatures diverge from the base.
+ */
+/** The minimum every registered definition provides. */
+interface RegistryEntry {
+  /** Unique id. Third-party entries should namespace ('vendor.package:thing'). */
+  id: string;
+  /**
+   * Sort weight, consulted only by registries created with
+   * `{ sort: 'order' }`. Lower comes first; equal weights keep registration
+   * order. Defaults to {@link DEFAULT_ORDER}.
+   */
+  order?: number;
+}
+interface ObservableRegistryOptions {
+  /**
+   * Snapshot ordering: 'registration' (default) lists entries in registration
+   * order; 'order' sorts by `order` (lower first, default
+   * {@link DEFAULT_ORDER}), keeping registration order among equals - the
+   * sort is stable.
+   */
+  sort?: 'registration' | 'order';
+}
+/**
+ * The read side of a registry as React consumes it - what the hook helpers
+ * below accept, so composed registries (which forward rather than extend)
+ * work with them too.
+ */
+interface ObservableStore<Def> {
+  /** Bound; returns the unsubscriber. */
+  readonly subscribe: (listener: () => void) => () => void;
+  /** Bound; returns the cached snapshot. */
+  readonly getAll: () => Def[];
+}
+declare class ObservableRegistry<Def extends RegistryEntry> implements ObservableStore<Def> {
+  /** id → definition, in registration order. */
+  protected readonly definitions: Map<string, Def>;
+  private readonly listeners;
+  private snapshot;
+  private readonly sort;
+  constructor(options?: ObservableRegistryOptions);
+  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
+  register(definition: Def): void;
+  /** Remove an entry; unknown ids are ignored (and notify nobody). */
+  unregister(id: string): void;
+  /** The definition registered under an id, or undefined (also for a nullish id). */
+  get(id: string | null | undefined): Def | undefined;
+  /** Alias of {@link get}, for registries whose `get` historically returned something else. */
+  getDefinition(id: string | null | undefined): Def | undefined;
+  /**
+   * Stable snapshot (registration or `order` order, see the constructor
+   * options) - changes identity only when the registry emits, so
+   * useSyncExternalStore stays quiet otherwise. Bound to the instance.
+   */
+  readonly getAll: () => Def[];
+  /** Listen for changes; returns the unsubscriber. Bound to the instance. */
+  readonly subscribe: (listener: () => void) => (() => void);
+  /**
+   * Rebuild the snapshot (a new array identity) and notify subscribers.
+   * Called on every mutation; subclasses call it to re-emit without one
+   * (e.g. a decorator's own data changed, so its output did).
+   */
+  protected emit(): void;
+  /**
+   * Hook for subclasses maintaining derived indexes: runs after the snapshot
+   * is rebuilt and before subscribers are notified, so they never observe a
+   * stale index.
+   */
+  protected onSnapshot(_snapshot: readonly Def[]): void;
+}
+//#endregion
+//#region features/actions/registry.d.ts
+/**
+ * The action registries: commands a plugin adds to Studio's own menus and
+ * bars, as data - an id, a label, an icon and a function to run. The shell
+ * renders them (menu items, icon buttons), so a plugin supplies no component
+ * here and needs no error boundary; what it does supply - `when` and `run` -
+ * is called through the guards below, so a broken plugin action is hidden or
+ * reports its failure as a toast, and never takes a menu down with it.
+ *
+ * Two registries, not one with a placement field: a node action is about a
+ * node and shows wherever a node offers commands (the trees' and the
+ * preview's context menus, the documents toolbar), a header action is about
+ * nothing in particular and is always an icon button. One contract for both
+ * would make `node` optional in every signature and leave half the fields
+ * meaningless for each placement.
+ */
+/** Where a node action was offered. */
+type NodeActionSurface =
+/** Right-click on a row of the document tree. */
+'documentTree' |
+/** Right-click on a row of the content outliner. */
+'contentOutliner' |
+/** The "..." handle of a content element in the preview. */
+'preview' |
+/** The documents panel's toolbar menu, acting on the selected document. */
+'documentsToolbar';
+/** What a node action gets besides the node it was invoked on. */
+interface NodeActionContext {
+  /** Where the action was offered - for actions that only fit some places. */
+  surface: NodeActionSurface;
+  /**
+   * Every node the invocation is about, the invoked-on node included: the
+   * whole multi-selection when a tree's menu was opened on one, otherwise
+   * just the node. A node whose ancestor is selected too is left out (the
+   * ancestor's subtree covers it), as for the built-in bulk actions.
+   */
+  selection: Node[];
+  /**
+   * The shell's actions - e.g. `studio.nodeEdited(node)` after changing a
+   * node, so trees, inspector and preview refresh (a Node is a NodeAddress).
+   */
+  studio: StudioActions;
+}
+interface NodeActionDefinition {
+  /** Unique id. Third-party entries should namespace ('vendor.package:lock'). */
+  id: string;
+  /** Menu label, already translated. */
+  label: string;
+  /** Font Awesome icon name, any syntax `ui.icon` accepts (e.g. "lock", "fas fa-lock"). */
+  icon?: string;
+  /** Sort weight; lower comes first. Defaults to 100. */
+  order?: number;
+  /**
+   * Actions sharing a group render together, separated from the other
+   * groups. Groups appear in the order of their first action.
+   */
+  group?: string;
+  /** Rendered in the destructive style (red) - for actions that remove or overwrite. */
+  destructive?: boolean;
+  /**
+   * Whether to offer the action for this node. Called while the menu
+   * renders, so it must be cheap and synchronous (derive from the node:
+   * nodeType, tags, properties). Absent: always offered. A `when` that
+   * throws hides the action and logs the error.
+   */
+  when?: (node: Node, context: NodeActionContext) => boolean;
+  /**
+   * Run the action. A rejected promise or a throw is shown as an error
+   * toast (with the message) and logged with the action id; while a
+   * returned promise is pending the action shows as busy and cannot be run
+   * again for the same node.
+   */
+  run: (node: Node, context: NodeActionContext) => void | Promise<void>;
+}
+/** What a header action gets to look at. */
+interface HeaderActionContext {
+  /** The selected document, or null while none is. */
+  document: Node | null;
+  /** The active workspace's name, or null while workspaces load. */
+  workspaceName: string | null;
+  /** The shell's actions, as for node actions. */
+  studio: StudioActions;
+}
+interface HeaderActionDefinition {
+  /** Unique id. Third-party entries should namespace ('vendor.package:report'). */
+  id: string;
+  /** Tooltip and accessible name, already translated. */
+  label: string;
+  /** Font Awesome icon name, any syntax `ui.icon` accepts. The button shows only the icon. */
+  icon: string;
+  /** Sort weight; lower comes first (further left). Defaults to 100. */
+  order?: number;
+  /**
+   * Whether to show the button now; re-evaluated whenever the header
+   * renders (document, workspace, dimension changes). Must be cheap. A
+   * `when` that throws hides the button and logs the error.
+   */
+  when?: (context: HeaderActionContext) => boolean;
+  /** Run the action; errors and busy state as for node actions. */
+  run: (context: HeaderActionContext) => void | Promise<void>;
+}
+/**
+ * Node actions sorted by `order` then registration order. Plain
+ * ObservableRegistry: register-replaces-by-id, stable snapshot.
+ */
+declare class NodeActionRegistry extends ObservableRegistry<NodeActionDefinition> {
+  constructor();
+}
+/** Header actions sorted by `order` then registration order. */
+declare class HeaderActionRegistry extends ObservableRegistry<HeaderActionDefinition> {
+  constructor();
+}
+//#endregion
 //#region features/tree/useNodeEditRefresh.d.ts
 /**
  * An edit that happened elsewhere (preview, inspector, context menu); token
@@ -8965,95 +9168,6 @@ declare function useStudioActions(): StudioActions;
 declare function presenceColor(userId: string): string;
 /** "Jane Doe" -> "JD"; single names give one letter, empty names "?". */
 declare function presenceInitials(name: string): string;
-//#endregion
-//#region lib/registry.d.ts
-/**
- * The shared base of Studio's extension registries (panels, settings
- * sections, shortcuts, property editors, inspector views, validators, link
- * types, node and workspace decorators): a small observable, id-keyed store.
- *
- * - Registering an already-known id replaces it, so HMR and plugin reloads
- *   stay idempotent (the entry keeps its original registration position, as
- *   Map.set does). Unregistering an unknown id is a no-op.
- * - The snapshot returned by {@link ObservableRegistry.getAll} is cached: its
- *   identity changes only on a mutation (or an explicit re-emit by a
- *   subclass), which is exactly the contract React's useSyncExternalStore
- *   needs to stay quiet between changes.
- * - `subscribe` and `getAll` are bound to the instance, so they can be handed
- *   to useSyncExternalStore as-is without a wrapper closure (a fresh closure
- *   per render would make React resubscribe every render).
- *
- * Feature registries subclass it (adding lookups, dispatch, or a public
- * `refresh()` on top of {@link ObservableRegistry.emit}) or compose it when
- * their public signatures diverge from the base.
- */
-/** The minimum every registered definition provides. */
-interface RegistryEntry {
-  /** Unique id. Third-party entries should namespace ('vendor.package:thing'). */
-  id: string;
-  /**
-   * Sort weight, consulted only by registries created with
-   * `{ sort: 'order' }`. Lower comes first; equal weights keep registration
-   * order. Defaults to {@link DEFAULT_ORDER}.
-   */
-  order?: number;
-}
-interface ObservableRegistryOptions {
-  /**
-   * Snapshot ordering: 'registration' (default) lists entries in registration
-   * order; 'order' sorts by `order` (lower first, default
-   * {@link DEFAULT_ORDER}), keeping registration order among equals - the
-   * sort is stable.
-   */
-  sort?: 'registration' | 'order';
-}
-/**
- * The read side of a registry as React consumes it - what the hook helpers
- * below accept, so composed registries (which forward rather than extend)
- * work with them too.
- */
-interface ObservableStore<Def> {
-  /** Bound; returns the unsubscriber. */
-  readonly subscribe: (listener: () => void) => () => void;
-  /** Bound; returns the cached snapshot. */
-  readonly getAll: () => Def[];
-}
-declare class ObservableRegistry<Def extends RegistryEntry> implements ObservableStore<Def> {
-  /** id → definition, in registration order. */
-  protected readonly definitions: Map<string, Def>;
-  private readonly listeners;
-  private snapshot;
-  private readonly sort;
-  constructor(options?: ObservableRegistryOptions);
-  /** Registering an already-known id replaces it, so HMR and plugin reloads stay idempotent. */
-  register(definition: Def): void;
-  /** Remove an entry; unknown ids are ignored (and notify nobody). */
-  unregister(id: string): void;
-  /** The definition registered under an id, or undefined (also for a nullish id). */
-  get(id: string | null | undefined): Def | undefined;
-  /** Alias of {@link get}, for registries whose `get` historically returned something else. */
-  getDefinition(id: string | null | undefined): Def | undefined;
-  /**
-   * Stable snapshot (registration or `order` order, see the constructor
-   * options) - changes identity only when the registry emits, so
-   * useSyncExternalStore stays quiet otherwise. Bound to the instance.
-   */
-  readonly getAll: () => Def[];
-  /** Listen for changes; returns the unsubscriber. Bound to the instance. */
-  readonly subscribe: (listener: () => void) => (() => void);
-  /**
-   * Rebuild the snapshot (a new array identity) and notify subscribers.
-   * Called on every mutation; subclasses call it to re-emit without one
-   * (e.g. a decorator's own data changed, so its output did).
-   */
-  protected emit(): void;
-  /**
-   * Hook for subclasses maintaining derived indexes: runs after the snapshot
-   * is rebuilt and before subscribers are notified, so they never observe a
-   * stale index.
-   */
-  protected onSnapshot(_snapshot: readonly Def[]): void;
-}
 //#endregion
 //#region features/panels/geometry.d.ts
 /**
@@ -9829,6 +9943,18 @@ declare const workspaceDecorators: WorkspaceDecoratorRegistry;
  */
 declare const nodeDecorators: NodeDecoratorRegistry;
 /**
+ * Register/unregister node actions - commands on a node, offered in the
+ * context menus of the document tree, the content outliner and the
+ * preview's content elements, and in the documents toolbar's "..." menu for
+ * the selected document. See {@link NodeActionDefinition}.
+ */
+declare const nodeActions: NodeActionRegistry;
+/**
+ * Register/unregister header actions - icon buttons in the shell header for
+ * commands about no node in particular. See {@link HeaderActionDefinition}.
+ */
+declare const headerActions: HeaderActionRegistry;
+/**
  * Typed requests sharing the shell's OAuth session (bearer token,
  * single-flighted refresh). Resolve with the parsed JSON body on 2xx and
  * throw {@link ApiError} otherwise.
@@ -9886,6 +10012,8 @@ interface NeosStudioPluginApi extends PluginComponents {
   shortcuts: typeof shortcuts;
   workspaceDecorators: typeof workspaceDecorators;
   nodeDecorators: typeof nodeDecorators;
+  nodeActions: typeof nodeActions;
+  headerActions: typeof headerActions;
   isMacPlatform: typeof isMacPlatform;
   useStudio: typeof useStudio;
   useStudioActions: typeof useStudioActions;
@@ -9915,4 +10043,4 @@ declare global {
  */
 declare function installPluginApiGlobals(): void;
 //#endregion
-export { type Account, type AccountRole, ApiError, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, Badge, type BaseWorkspaceChange, Button, type Change, type ChangeDiff, Checkbox, CollapsibleGroup, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, ConfirmDialog, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, type Event$1 as Event, type EventDiff, Field, Input, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, LoadingState, type ModalIcon, NeosStudioPluginApi, type Node, type NodeAddress, type NodeClassification, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, Placeholder, PluginComponents, Popover, PopoverContent, PopoverTrigger, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type ResolvedKeyboardShortcut, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, type SettingsDialogDefinition, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, Skeleton, Slider, Spinner, type StreamEvent, type StudioActions, type StudioContextValue, type StudioState, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, type Task, type TaskStatus, Textarea, ToastApi, ToastOptions, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UriPathSegment, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, apiFetch, apiStream, editors, installPluginApiGlobals, isMacPlatform, type isRemoved, links, modals, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, nodeDecorators, type nodeTypeConfiguration, panels, type parseDimensionSpacePoint, presenceColor, presenceInitials, type sameDimensionSpacePoint, type sameNodeAddress, settingsSections, shortcuts, studioFetch, toast, useKeyboardShortcut, useStudio, useStudioActions, validators, version, views, workspaceDecorators };
+export { type Account, type AccountRole, ApiError, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, Badge, type BaseWorkspaceChange, Button, type Change, type ChangeDiff, Checkbox, CollapsibleGroup, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, ConfirmDialog, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, type Event$1 as Event, type EventDiff, Field, type HeaderActionContext, type HeaderActionDefinition, Input, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, LoadingState, type ModalIcon, NeosStudioPluginApi, type Node, type NodeActionContext, type NodeActionDefinition, type NodeActionSurface, type NodeAddress, type NodeClassification, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, Placeholder, PluginComponents, Popover, PopoverContent, PopoverTrigger, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type ResolvedKeyboardShortcut, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, type SettingsDialogDefinition, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, Skeleton, Slider, Spinner, type StreamEvent, type StudioActions, type StudioContextValue, type StudioState, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, type Task, type TaskStatus, Textarea, ToastApi, ToastOptions, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UriPathSegment, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, apiFetch, apiStream, editors, headerActions, installPluginApiGlobals, isMacPlatform, type isRemoved, links, modals, nodeActions, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, nodeDecorators, type nodeTypeConfiguration, panels, type parseDimensionSpacePoint, presenceColor, presenceInitials, type sameDimensionSpacePoint, type sameNodeAddress, settingsSections, shortcuts, studioFetch, toast, useKeyboardShortcut, useStudio, useStudioActions, validators, version, views, workspaceDecorators };
