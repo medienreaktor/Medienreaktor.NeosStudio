@@ -26,6 +26,7 @@ import {
   type NodeMenuAction,
   type NodeMenuTarget,
 } from '@/features/editing/NodeContextMenu'
+import type { NodeActionSurface } from '@/features/actions/registry'
 import { useNodeDecorators } from './decorators'
 import { contextMenuItems } from './menuSelection'
 import { nodeDecor, type TreeRowDecor } from './nodeDecor'
@@ -294,6 +295,7 @@ export function useNodeTree({
             ? null
             : addressOf(parentId),
         hidden: node.isHidden,
+        node,
         ...specific,
         anchor,
       }
@@ -322,6 +324,7 @@ export function useNodeTree({
  */
 export function NodeTreeContextMenu({
   nodeTree,
+  surface,
   entityLabel,
   entityLabelPlural,
   clipboardKind,
@@ -330,6 +333,8 @@ export function NodeTreeContextMenu({
   onCreateNew,
 }: {
   nodeTree: Pick<ReturnType<typeof useNodeTree>, 'menu' | 'closeMenu'>
+  /** Which tree this is - offered to the registered node actions. */
+  surface: NodeActionSurface
   entityLabel: string
   entityLabelPlural: string
   clipboardKind: 'document' | 'content'
@@ -341,6 +346,7 @@ export function NodeTreeContextMenu({
     <NodeContextMenu
       target={nodeTree.menu?.target ?? null}
       selection={nodeTree.menu?.selection}
+      surface={surface}
       entityLabel={entityLabel}
       entityLabelPlural={entityLabelPlural}
       clipboardKind={clipboardKind}

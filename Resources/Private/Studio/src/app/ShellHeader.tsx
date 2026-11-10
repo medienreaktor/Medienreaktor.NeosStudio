@@ -4,6 +4,7 @@ import type { Node, NodeAddress } from '@/api/neos/schema'
 import type { EditingContext } from '@/app/useEditingContext'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { PresenceAvatars } from '@/features/collaboration/PresenceAvatars'
+import { HeaderActions } from '@/features/actions/HeaderActions'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
 import { ModalLauncher } from '@/features/modals/ModalLauncher'
@@ -17,8 +18,9 @@ import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 /**
  * The bar over the main area: the site, dimension and workspace switchers,
- * the preview's controls and the publish entry point - plus the dialog for
- * creating a document variant the dimension switcher opens.
+ * the preview's controls, the registered header actions and the publish
+ * entry point - plus the dialog for creating a document variant the
+ * dimension switcher opens.
  */
 export function ShellHeader({
   editing,
@@ -108,6 +110,10 @@ export function ShellHeader({
         <PreviewToolbar document={document} onReload={onReload} />
       </div>
       <div className="flex items-center gap-2">
+        <HeaderActions
+          document={document}
+          workspaceName={activeWorkspace?.name ?? null}
+        />
         <PresenceAvatars />
         {personalWorkspace && activeWorkspace && baseTargets.length > 0 && (
           <WorkspaceSwitcher

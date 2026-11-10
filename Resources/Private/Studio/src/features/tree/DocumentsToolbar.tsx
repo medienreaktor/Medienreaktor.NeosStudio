@@ -1,4 +1,5 @@
 import { DOCUMENT_NODE_TYPE } from '@/api/neos/endpoints/nodes'
+import type { Node } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SearchInput } from '@/components/ui/search-input'
+import { NodeActionsMenuButton } from '@/features/actions/NodeActionMenuItems'
 import { useCreatableNodeTypes } from '@/features/creation/creatableNodeTypes'
 import { translate as t } from '@/lib/i18n'
 import { cn, floatingControl, toolbarFade } from '@/lib/utils'
@@ -21,12 +23,15 @@ const DOCUMENT_SUPER_TYPES = [DOCUMENT_NODE_TYPE]
 
 /**
  * The documents panel's fixed toolbar: title search (grows), the node type
- * filter menu and the "new document" button (both fixed-size). Search term
+ * filter menu, the registered node actions for the selected document (a
+ * "..." menu, only while one is offered) and the "new document" button (all
+ * fixed-size). Search term
  * and filter are owned by the panel - a non-empty term or filter switches the
  * panel from the tree to the flat, depth-independent server-side result list
  * (see DocumentSearchList).
  */
 export function DocumentsToolbar({
+  document,
   searchTerm,
   onSearchTermChange,
   typeFilter,
@@ -35,6 +40,8 @@ export function DocumentsToolbar({
   onCreate,
   onCreateIntent,
 }: {
+  /** The selected document - what the node actions menu acts on. */
+  document: Node | null
   searchTerm: string
   onSearchTermChange: (term: string) => void
   /** Selected document node type names; empty means "no filter". */
@@ -125,6 +132,11 @@ export function DocumentsToolbar({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      <NodeActionsMenuButton
+        node={document}
+        surface="documentsToolbar"
+        className={floatingControl}
+      />
       <Button
         size="icon-sm"
         title={t('tree.newDocument', 'New document…')}

@@ -138,6 +138,7 @@ function DocumentsPanel() {
   return (
     <div className="relative flex h-full flex-col">
       <DocumentsToolbar
+        document={selectedDocument}
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         typeFilter={typeFilter}

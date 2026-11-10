@@ -160,6 +160,7 @@ function OutlinerTree({
       />
       <NodeTreeContextMenu
         nodeTree={nodeTree}
+        surface="contentOutliner"
         entityLabel={t('editing.entity.element', 'element')}
         entityLabelPlural={t('editing.entity.elements', 'elements')}
         clipboardKind="content"

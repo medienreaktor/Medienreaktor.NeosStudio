@@ -39,6 +39,12 @@ import {
 } from '@/features/collaboration/presenceColors'
 import { PanelRegistry, panelRegistry } from '@/features/panels/registry'
 import {
+  HeaderActionRegistry,
+  headerActionRegistry,
+  NodeActionRegistry,
+  nodeActionRegistry,
+} from '@/features/actions/registry'
+import {
   PropertyEditorRegistry,
   propertyEditorRegistry,
 } from '@/features/inspector/editors/registry'
@@ -142,6 +148,18 @@ export const workspaceDecorators: WorkspaceDecoratorRegistry =
  * too. See {@link NodeDecoratorDefinition}.
  */
 export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
+/**
+ * Register/unregister node actions - commands on a node, offered in the
+ * context menus of the document tree, the content outliner and the
+ * preview's content elements, and in the documents toolbar's "..." menu for
+ * the selected document. See {@link NodeActionDefinition}.
+ */
+export const nodeActions: NodeActionRegistry = nodeActionRegistry
+/**
+ * Register/unregister header actions - icon buttons in the shell header for
+ * commands about no node in particular. See {@link HeaderActionDefinition}.
+ */
+export const headerActions: HeaderActionRegistry = headerActionRegistry
 
 /**
  * useStudio() reads the shell's state and actions and re-renders on every
@@ -268,6 +286,13 @@ export type {
   NodeDecorationOverlay,
   NodeDecoratorDefinition,
 } from '@/features/tree/decorators'
+export type {
+  HeaderActionContext,
+  HeaderActionDefinition,
+  NodeActionContext,
+  NodeActionDefinition,
+  NodeActionSurface,
+} from '@/features/actions/registry'
 // Neos.Api's models, as the shell uses them (generated from its OpenAPI
 // document), and the Studio's own.
 export type * from '@/api/neos/schema'
@@ -292,6 +317,8 @@ export interface NeosStudioPluginApi extends PluginComponents {
   shortcuts: typeof shortcuts
   workspaceDecorators: typeof workspaceDecorators
   nodeDecorators: typeof nodeDecorators
+  nodeActions: typeof nodeActions
+  headerActions: typeof headerActions
   isMacPlatform: typeof isMacPlatform
   useStudio: typeof useStudio
   useStudioActions: typeof useStudioActions
@@ -339,6 +366,8 @@ export function installPluginApiGlobals(): void {
     shortcuts,
     workspaceDecorators,
     nodeDecorators,
+    nodeActions,
+    headerActions,
     isMacPlatform,
     useStudio,
     useStudioActions,

@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with its registry id, and everything else keeps working. Throwing
   validators and keyboard shortcut handlers are logged and skipped. A crash
   in Studio itself shows a reload screen instead of a blank page.
+- Plugins can add actions: commands on a node, offered in the context menus
+  of the document tree, the content outliner and the preview's content
+  elements and in a new "…" menu of the documents toolbar, and icon buttons
+  in the header. Each decides by itself when it is offered. A failing
+  action shows an error toast, a running one a busy state, and a broken one
+  never breaks the menu it is in.
 
 ## [2.0.3] - 2026-11-10
 
