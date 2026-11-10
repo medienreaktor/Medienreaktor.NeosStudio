@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,7 +17,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { fetchNode, useAllowedChildNodeTypes } from '@/api/neos/endpoints/nodes'
-import { type NodeAddress, nodeAddressOf } from '@/api/neos/schema'
+import {
+  type NodeAddress,
+  nodeAddressKey,
+  nodeAddressOf,
+} from '@/api/neos/schema'
+import { prefetchInsertion } from '@/features/creation/prefetchInsertion'
 import { translate as t } from '@/lib/i18n'
 import {
   activeClipboardEntry,
@@ -130,6 +135,22 @@ export function NodeContextMenu({
   const [pendingDelete, setPendingDelete] = useState<NodeMenuTarget[] | null>(
     null,
   )
+
+  // A menu offering "Create new…" warms the insertion dialog's data while
+  // it is open, so picking the item opens a finished dialog. Once per opened
+  // target (by value) - not on every re-render of the same menu.
+  const prefetchKey =
+    target !== null &&
+    onCreateNew !== undefined &&
+    target.permitted?.create !== false
+      ? nodeAddressKey(target.address)
+      : null
+  const prefetchForTarget = useEffectEvent(() => {
+    if (target) prefetchInsertion(target.address, target.parentAddress)
+  })
+  useEffect(() => {
+    if (prefetchKey !== null) prefetchForTarget()
+  }, [prefetchKey])
 
   // What the bulk actions (hide/unhide/delete) operate on: the whole
   // multi-selection when there is one, otherwise just the clicked target.

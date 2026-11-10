@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   DOCUMENT_NODE_TYPE,
   fetchChildren,
@@ -34,6 +34,7 @@ import {
 } from './creatableNodeTypes'
 import { CreateNodeFlow } from './NodeCreationDialog'
 import type { CreateNodeRequest } from './createNode'
+import { insertionParentOf } from './prefetchInsertion'
 
 export type InsertMode = 'before' | 'inside' | 'after'
 
@@ -64,6 +65,13 @@ const ROLES: Record<InsertRole, { superTypes: string[]; icon: string }> = {
   },
 }
 
+/**
+ * How long the dialog stays closed while its data loads. Within it, the
+ * dialog opens straight onto the finished picker; only a slower load shows
+ * the loading state first - once, and then the whole picker at once.
+ */
+const OPEN_GRACE_MS = 250
+
 const MODES: { mode: InsertMode; label: string; icon: string }[] = [
   { mode: 'before', label: 'Before', icon: 'fa-arrow-up-long' },
   { mode: 'inside', label: 'Inside', icon: 'fa-arrow-right-long' },
@@ -82,6 +90,8 @@ const MODES: { mode: InsertMode; label: string; icon: string }[] = [
  *
  * Render unconditionally with request null while closed; a non-null request
  * opens it (remounting per reference, so mode/filter state starts fresh).
+ * Its data loads in parallel and is shown only once complete (see
+ * OPEN_GRACE_MS); callers warm it with prefetchInsertion where they can.
  */
 export function InsertNodeDialog({
   request,
@@ -135,7 +145,11 @@ function OpenInsertNodeDialog({
   // An "after" pick is looking up the reference's next sibling.
   const [resolving, setResolving] = useState(false)
 
-  const { data: reference } = useNode(request.referenceAddress)
+  // Only for the description: a failed read leaves it blank, it never holds
+  // up the picker.
+  const { data: reference, isError: referenceFailed } = useNode(
+    request.referenceAddress,
+  )
 
   // The parent, for sibling insertion: as passed by the caller, or resolved
   // through the ancestors relation. A root parent (the sites node) means no
@@ -147,10 +161,8 @@ function OpenInsertNodeDialog({
   const parentAddress: NodeAddress | null | undefined = !needsParentResolution
     ? request.parentAddress
     : ancestors === undefined
-      ? undefined // still resolving - sibling modes show as loading
-      : ancestors[0] && ancestors[0].classification !== 'root'
-        ? nodeAddressOf(ancestors[0])
-        : null
+      ? undefined // still resolving
+      : insertionParentOf(ancestors)
 
   const { data: insideAllowed } = useAllowedChildNodeTypes(
     request.referenceAddress,
@@ -191,7 +203,21 @@ function OpenInsertNodeDialog({
           (mode) => (modeGroups[mode]?.length ?? 0) > 0,
         ) ?? selectedMode)
 
-  const groups = modeGroups[activeMode]
+  // Everything the picker shows, loaded: rendering only then means it
+  // appears in one piece - no description popping in, no spinner swapped
+  // for the grid, no mode switching away once its list turns out empty.
+  const ready =
+    (reference !== undefined || referenceFailed) &&
+    modeGroups.before !== null &&
+    modeGroups.inside !== null &&
+    modeGroups.after !== null
+  const [graceOver, setGraceOver] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setGraceOver(true), OPEN_GRACE_MS)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const groups = ready ? modeGroups[activeMode] : null
   const query = filter.trim().toLowerCase()
   const visibleGroups =
     groups !== null && query !== ''
@@ -246,7 +272,7 @@ function OpenInsertNodeDialog({
   return (
     <>
       <Dialog
-        open={creation === null}
+        open={creation === null && (ready || graceOver)}
         onOpenChange={(open) => !open && onClose()}
       >
         <DialogContent
@@ -258,7 +284,7 @@ function OpenInsertNodeDialog({
               {t('creation.createNewNoun', 'Create new {0}', [noun])}
             </DialogTitle>
             <DialogDescription>
-              {reference
+              {ready && reference
                 ? t('creation.relativeTo', 'Relative to “{0}”.', [
                     reference.label || reference.nodeAggregateId,
                   ])
@@ -276,13 +302,12 @@ function OpenInsertNodeDialog({
               aria-label={t('creation.insertionPosition', 'Insertion position')}
             >
               {MODES.map(({ mode, label, icon }) => {
-                const loading = modeGroups[mode] === null
                 const available = (modeGroups[mode]?.length ?? 0) > 0
                 return (
                   <ToggleGroupItem
                     key={mode}
                     value={mode}
-                    disabled={!available && !loading}
+                    disabled={!ready || !available}
                   >
                     <i className={`fas ${icon}`} aria-hidden />
                     {t(`creation.mode.${mode}`, label)}
@@ -304,8 +329,11 @@ function OpenInsertNodeDialog({
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {visibleGroups === null ? (
+              // Same height as the empty-result placeholder, so the slow path
+              // starts from a sensible size.
               <LoadingState
                 label={t('creation.loadingNodeTypes', 'Loading node types…')}
+                className="py-9.5"
               />
             ) : visibleGroups.length === 0 ? (
               <Placeholder

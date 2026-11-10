@@ -33,6 +33,7 @@ export function DocumentsToolbar({
   onTypeFilterChange,
   createDisabled,
   onCreate,
+  onCreateIntent,
 }: {
   searchTerm: string
   onSearchTermChange: (term: string) => void
@@ -41,6 +42,8 @@ export function DocumentsToolbar({
   onTypeFilterChange: (typeFilter: string[]) => void
   createDisabled: boolean
   onCreate: () => void
+  /** The pointer or focus reached the create button - a click may follow. */
+  onCreateIntent?: () => void
 }) {
   const creatable = useCreatableNodeTypes(DOCUMENT_SUPER_TYPES)
   // Flat, alphabetical - a filter menu wants quick scanning, not the creation
@@ -128,6 +131,8 @@ export function DocumentsToolbar({
         aria-label={t('tree.newDocumentAria', 'New document')}
         disabled={createDisabled}
         onClick={onCreate}
+        onPointerEnter={onCreateIntent}
+        onFocus={onCreateIntent}
       >
         <i className="fas fa-plus" aria-hidden />
       </Button>

@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   panel. New content is added through the insert dialog, from the trees'
   context menus or the "+" buttons in the preview.
 
+### Fixed
+
+- The "Create new" dialog no longer fills in piece by piece: its data is
+  fetched while the context menu is open (or the pointer is on the "New
+  document" button), and the dialog appears once everything is loaded.
+
 ## [2.0.0] - 2026-11-09
 
 ### Changed

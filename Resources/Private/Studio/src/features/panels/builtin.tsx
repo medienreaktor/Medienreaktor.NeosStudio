@@ -19,6 +19,7 @@ import {
   InsertNodeDialog,
   type InsertRequest,
 } from '@/features/creation/InsertNodeDialog'
+import { prefetchInsertion } from '@/features/creation/prefetchInsertion'
 import type {
   NodeMenuAction,
   NodeMenuTarget,
@@ -118,6 +119,15 @@ function DocumentsPanel() {
   // A term or an active node type filter switches from the tree to the flat
   // server-side result list (all matching documents, regardless of depth).
   const filtering = debouncedTerm !== '' || typeFilter.length > 0
+  // "New document" creates inside (or next to) the selected document. The
+  // site node must not get siblings (that would be a new site); any other
+  // document's parent resolves in the dialog.
+  const newDocumentRequest = (document: Node): InsertRequest => ({
+    referenceAddress: nodeAddressOf(document),
+    parentAddress:
+      document.nodeAggregateId === site.nodeAggregateId ? null : undefined,
+    defaultMode: 'inside',
+  })
   return (
     <div className="relative flex h-full flex-col">
       <DocumentsToolbar
@@ -130,17 +140,13 @@ function DocumentsPanel() {
         createDisabled={!selectedDocument || !canCreateDocuments}
         onCreate={() =>
           selectedDocument &&
-          setInsertRequest({
-            referenceAddress: nodeAddressOf(selectedDocument),
-            // The site node must not get siblings (that would be a new
-            // site); any other document's parent resolves in the dialog.
-            parentAddress:
-              selectedDocument.nodeAggregateId === site.nodeAggregateId
-                ? null
-                : undefined,
-            defaultMode: 'inside',
-          })
+          setInsertRequest(newDocumentRequest(selectedDocument))
         }
+        onCreateIntent={() => {
+          if (!selectedDocument || !canCreateDocuments) return
+          const request = newDocumentRequest(selectedDocument)
+          prefetchInsertion(request.referenceAddress, request.parentAddress)
+        }}
       />
       {/* pt-14 clears the absolute toolbar (56px) so content starts below it
           and scrolls underneath its gradient. */}
