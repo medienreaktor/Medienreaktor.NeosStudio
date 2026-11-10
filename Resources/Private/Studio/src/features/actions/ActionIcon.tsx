@@ -1,5 +1,5 @@
 import { Spinner } from '@/components/ui/spinner'
-import { faClassName } from '@/features/tree/nodeTypeIcon'
+import { faClassName } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
 /**
