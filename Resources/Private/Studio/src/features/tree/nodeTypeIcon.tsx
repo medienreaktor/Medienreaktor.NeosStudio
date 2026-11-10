@@ -1,40 +1,7 @@
 import { DOCUMENT_NODE_TYPE } from '@/api/neos/endpoints/nodes'
 import { isOfType, type NodeTypeMap } from '@/api/neos/endpoints/nodeTypes'
+import { faClassName } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
-
-/**
- * Neos configures ui.icon as Font Awesome names; Studio ships the FA free
- * webfonts (solid + regular + v4 shims, imported in main.tsx), so configured
- * names render verbatim - including project-specific node type icons we
- * could never enumerate in a mapping table.
- */
-export function faClassName(configured: string): string {
-  const icon = configured.trim()
-  // Full FA class list ("fas fa-file", "fa-solid fa-file") - use as-is.
-  // Only the standalone "fas" token maps to "fa" - never a substring of
-  // another class ("fa-fast-forward" must stay intact).
-  if (icon.includes(' ')) return icon.replace(/\bfas\b/, 'fa')
-  // Legacy Neos "icon-file" syntax (FA3/4 era) - the v4 shims resolve names.
-  if (icon.startsWith('icon-')) return `fa fa-${icon.slice(5)}`
-  // Bare name with or without fa- prefix.
-  return icon.startsWith('fa-') ? `fa ${icon}` : `fa fa-${icon}`
-}
-
-/** A Font Awesome icon from a configured name (node type, tab, select value...). */
-export function FaIcon({
-  icon,
-  className,
-}: {
-  icon: string
-  className?: string
-}) {
-  return (
-    <i
-      className={cn(faClassName(icon), 'fa-fw type-icon-m', className)}
-      aria-hidden
-    />
-  )
-}
 
 export function resolveNodeTypeIconClass(
   map: NodeTypeMap | undefined,

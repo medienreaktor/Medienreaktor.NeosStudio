@@ -71,6 +71,8 @@ export {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 export { Field } from '@/components/ui/field'
+export { Icon } from '@/components/ui/icon'
+export type { IconProps, IconSize, IconVariant } from '@/components/ui/icon'
 export { Input } from '@/components/ui/input'
 export { Placeholder } from '@/components/ui/placeholder'
 export {

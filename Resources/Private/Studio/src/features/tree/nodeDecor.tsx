@@ -9,7 +9,7 @@ import {
   nodeDecoratorRegistry,
   type NodeDecoratorDefinition,
 } from './decorators'
-import { faClassName } from './nodeTypeIcon'
+import { faClassName } from '@/components/ui/icon'
 import { hasPendingChange, type PendingChanges } from './usePendingChanges'
 
 export interface TreeRowDecor {

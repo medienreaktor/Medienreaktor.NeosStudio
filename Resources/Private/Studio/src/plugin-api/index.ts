@@ -79,6 +79,14 @@ import {
   WorkspaceDecoratorRegistry,
   workspaceDecoratorRegistry,
 } from '@/features/workspaces/decorators'
+import { useAssetPickerActive } from '@/features/media/AssetPicker'
+import {
+  interfaceLanguage,
+  interfaceLocale,
+  translate,
+  translatePlural,
+  translationsLoaded,
+} from '@/lib/i18n'
 
 /**
  * The API version a plugin can read to feature-detect. Bump on a
@@ -202,6 +210,43 @@ export { presenceColor, presenceInitials }
  * different keys (e.g. a combo the Mac browser menu reserves).
  */
 export { isMacPlatform }
+
+/**
+ * The shell's translation helpers, for a plugin's own XLIFF labels (README
+ * "Translations"). A plugin passes fully-qualified ids
+ * ('Vendor.Package:Main:panel.title') of sources it adds to
+ * Neos.Neos.userInterface.translation.autoInclude, plus the English text as
+ * the fallback - shown when the label is missing and before the bundle has
+ * loaded. A bare id resolves against Studio's own catalogue, which is not
+ * part of the contract.
+ *  - translate(id, fallback?, args?): {0}/{name} placeholders from args.
+ *  - translatePlural(id, count, [singular, plural], args?): the form for
+ *    count in the interface language, {0} is the count.
+ *  - translationsLoaded(): resolves once the bundle is in. Translate at render
+ *    time (in components, a panel's title function); a label handed over at
+ *    registration (a settings section's title, a shortcut's) has to wait for
+ *    this, since plugin scripts run before the bundle has loaded.
+ *  - interfaceLanguage: the user's interface language as Neos names it
+ *    ("de", "pt_BR"); interfaceLocale: the same as a BCP 47 tag ("pt-BR")
+ *    for Intl formatters. Both fixed for the page load.
+ */
+export {
+  translate,
+  translatePlural,
+  translationsLoaded,
+  interfaceLanguage,
+  interfaceLocale,
+}
+export type { TranslateArgs } from '@/lib/i18n'
+
+/**
+ * True while a pick from the Media Library is in progress. Built-in asset and
+ * image editors (`editors.get(...)`) pick by switching the main area to the
+ * Media Library, so a plugin dialog hosting one closes while this is true -
+ * `<Dialog open={open && !picking}>`, with the dialog's state kept outside
+ * its content - the way the node creation dialog does.
+ */
+export { useAssetPickerActive }
 
 /** Options accepted by the toast helpers. */
 export interface ToastOptions {
@@ -330,6 +375,12 @@ export interface NeosStudioPluginApi extends PluginComponents {
   ApiError: typeof ApiError
   presenceColor: typeof presenceColor
   presenceInitials: typeof presenceInitials
+  translate: typeof translate
+  translatePlural: typeof translatePlural
+  translationsLoaded: typeof translationsLoaded
+  interfaceLanguage: typeof interfaceLanguage
+  interfaceLocale: typeof interfaceLocale
+  useAssetPickerActive: typeof useAssetPickerActive
 }
 
 /** The UI primitives of ./components.ts, as published on `window.NeosStudio`. */
@@ -379,5 +430,11 @@ export function installPluginApiGlobals(): void {
     ApiError,
     presenceColor,
     presenceInitials,
+    translate,
+    translatePlural,
+    translationsLoaded,
+    interfaceLanguage,
+    interfaceLocale,
+    useAssetPickerActive,
   }
 }
