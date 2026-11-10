@@ -28,7 +28,7 @@ import {
   editorOptionsFor,
   humanizeLabel,
 } from '@/features/inspector/inspectorSchema'
-import { useAssetPicker } from '@/features/media/AssetPicker'
+import { useAssetPickerActive } from '@/features/media/AssetPicker'
 import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors/TextFieldEditor'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { validateValue } from '@/features/inspector/validators'
@@ -140,8 +140,7 @@ export function CreateNodeFlow({
   // <body>), so it must step aside for the pick or it covers the picker. It
   // stays mounted - only visually closed - so the in-progress draft survives,
   // and reopens when the pick resolves or is cancelled.
-  const { session: pickerSession } = useAssetPicker()
-  const picking = pickerSession !== null
+  const picking = useAssetPickerActive()
 
   const elements = useMemo(() => {
     if (!configuration) return null

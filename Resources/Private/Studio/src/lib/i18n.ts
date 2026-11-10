@@ -16,6 +16,10 @@ import { config } from '@/config'
  * source; `translate()` and `translatePlural()` default to that source, so
  * call sites pass just the trans-unit id plus the English source text as a
  * fallback - see Resources/Private/Translations.
+ *
+ * Plugins get the same functions through the plugin API and pass
+ * fully-qualified ids of their own sources, which reach the bundle through
+ * Neos.Neos.userInterface.translation.autoInclude like the Studio's own.
  */
 
 /** Values are plain strings or plural forms (an array, singular first). */
@@ -31,6 +35,33 @@ const STUDIO_SOURCE = 'Main'
 
 let bundle: XliffBundle | null = null
 
+let markLoaded: () => void = () => {}
+const loaded = new Promise<void>((resolve) => {
+  markLoaded = resolve
+})
+
+/**
+ * Resolves once the bundle has loaded (or failed to - labels then stay on
+ * their fallbacks). Plugin scripts run before that: a label resolved at
+ * registration time (a settings section's title, a shortcut's) is the
+ * fallback unless the registration waits for this.
+ */
+export function translationsLoaded(): Promise<void> {
+  return loaded
+}
+
+/**
+ * The backend user's interface language as Neos names it ("de", "pt_BR"),
+ * fixed for the page load - a changed language applies after a reload.
+ */
+export const interfaceLanguage: string = config.interfaceLanguage
+
+/**
+ * The interface language as a BCP 47 tag ("de", "pt-BR") - what Intl
+ * formatters and `lang` attributes take.
+ */
+export const interfaceLocale: string = interfaceLanguage.replace(/_/g, '-')
+
 /** Session-authenticated (same-origin cookie), NOT an API request. */
 export async function loadTranslations(): Promise<void> {
   try {
@@ -45,6 +76,8 @@ export async function loadTranslations(): Promise<void> {
     if (response.ok) bundle = (await response.json()) as XliffBundle
   } catch {
     /* an untranslated UI beats a broken shell */
+  } finally {
+    markLoaded()
   }
 }
 
@@ -155,9 +188,7 @@ let pluralRules: Intl.PluralRules | null = null
 function pluralFormIndex(count: number, formCount: number): number {
   if (pluralRules === null) {
     try {
-      pluralRules = new Intl.PluralRules(
-        config.interfaceLanguage.replace(/_/g, '-'),
-      )
+      pluralRules = new Intl.PluralRules(interfaceLocale)
     } catch {
       pluralRules = new Intl.PluralRules('en')
     }

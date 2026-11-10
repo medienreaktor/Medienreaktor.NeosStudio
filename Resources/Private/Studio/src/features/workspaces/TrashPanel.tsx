@@ -9,7 +9,7 @@ import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { toast } from '@/components/ui/toast'
 import { usePanelVisible } from '@/features/panels/visibility'
-import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { Icon } from '@/components/ui/icon'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { relativeTime } from './historyLabels'
@@ -225,7 +225,7 @@ function TrashRow({
         onClick={onSelect}
       >
         <span className="shrink-0 text-foreground">
-          <FaIcon icon={item.icon ?? 'fa-file'} />
+          <Icon name={item.icon ?? 'fa-file'} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block overflow-hidden type-body text-ellipsis whitespace-nowrap">

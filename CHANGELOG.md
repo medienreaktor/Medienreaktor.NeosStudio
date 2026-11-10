@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with its registry id, and everything else keeps working. Throwing
   validators and keyboard shortcut handlers are logged and skipped. A crash
   in Studio itself shows a reload screen instead of a blank page.
+- Plugins can translate their UI: `translate` and `translatePlural` from
+  the plugin API resolve a plugin package's own XLIFF labels in the user's
+  interface language, with the English text as fallback. The package adds
+  its sources to `Neos.Neos.userInterface.translation.autoInclude`;
+  `translationsLoaded()`, `interfaceLanguage` and `interfaceLocale` cover
+  registration-time labels and `Intl` formatting.
+- An `Icon` component in the plugin API renders Font Awesome icons like the
+  shell does, from any icon name syntax node types accept, with style, size
+  and an accessible label. The Font Awesome free set Studio ships is the icon
+  set plugins can rely on.
+- Plugins can use Studio's built-in property editors (link, asset, image,
+  date, ...) in their own UI via `editors.get(id)`; the README lists the
+  ones that work without a node. `useAssetPickerActive()` lets a plugin
+  dialog step aside while the asset and image editors pick from the Media
+  Library.
 
 ## [2.0.3] - 2026-11-10
 

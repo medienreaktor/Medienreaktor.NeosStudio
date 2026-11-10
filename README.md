@@ -123,6 +123,93 @@ Their names and props are the contract; their markup and class names are not. `c
 
 **Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) registers an example panel, a custom inspector editor (a color picker), a keyboard shortcut and a node decorator from a separate package.
 
+### Icons
+
+Icons are [Font Awesome](https://fontawesome.com/search?ic=free) glyphs. Studio ships the free set of the Font Awesome version in its `package.json` (currently 7): solid, regular and brands, plus the v4 shims for old names. That set is part of the plugin contract - a plugin may use any of its icons and ships no icon font of its own. `Icon` renders one the way the shell does:
+
+```tsx
+import { Icon } from '@medienreaktor/neos-studio'
+
+<Icon name="clock" />                                   // solid, size "m", decorative
+<Icon name="bell" variant="regular" size="l" />
+<Icon name="github" variant="brands" />
+<Icon name="triangle-exclamation" label="Expired" />   // has a meaning of its own: announced
+```
+
+`name` takes every syntax node type `ui.icon` accepts (`clock`, `fa-clock`, `fas fa-clock`, the legacy `icon-clock`), so a name from node type configuration can be passed straight through. `variant` (`solid`, `regular`, `brands`) replaces the style the name carries, solid by default. `size` is one of the shell's icon text styles, `xs`, `s`, `m` (default), `l`, `xl`, `2xl`, `3xl`. Without a `label` the icon is hidden from screen readers, as decoration next to text should be; with one it is announced as an image. Further props (`className`, `title`, `style`, ...) go to the `<i>` element.
+
+### Translations
+
+A plugin translates its UI with the shell's own helpers, from its package's XLIFF files, in the user's interface language. Studio loads its labels from the classic backend's `/neos/xliff.json` endpoint, which bundles the sources listed in `Neos.Neos.userInterface.translation.autoInclude`, so the plugin package adds its own there:
+
+```yaml
+# Vendor.Package/Configuration/Settings.yaml
+Neos:
+  Neos:
+    userInterface:
+      translation:
+        autoInclude:
+          Vendor.Package:
+            - Main # Resources/Private/Translations/<locale>/Main.xlf
+```
+
+```tsx
+import { translate, translatePlural } from '@medienreaktor/neos-studio'
+
+translate('Vendor.Package:Main:panel.title', 'Bookings')
+translate('Vendor.Package:Main:panel.greeting', 'Hello {0}', [name])
+translate('Vendor.Package:Main:panel.range', 'From {from} to {to}', { from, to })
+translatePlural('Vendor.Package:Main:panel.count', count, ['{0} booking', '{0} bookings'])
+```
+
+Ids are fully qualified, `Package:Source:trans-unit-id`. The second argument is the English text, shown when the label is missing (in a locale without a file, say) and before the labels have loaded. Placeholders are `{0}`, `{1}`, ... for an array and `{name}` for an object. `translatePlural` picks the form for the count by the interface language's plural rules, from a `<group restype="x-gettext-plurals">` in the XLIFF file, with `{0}` the count.
+
+- **Translate when rendering.** Plugin scripts run before the labels have loaded, so a `translate()` call at the top level of a plugin returns the English fallback. Call it in components, and give a panel a title function (`title: () => translate(...)`). A label a registration takes as a plain string (a settings section's `title`, a shortcut's) waits for `translationsLoaded()`: `translationsLoaded().then(() => settingsSections.register({...}))`.
+- **The language** is `interfaceLanguage` as Neos names it (`de`, `pt_BR`), and `interfaceLocale` as a BCP 47 tag for `Intl` (`new Intl.DateTimeFormat(interfaceLocale)`). Both are fixed for the page load; a changed language applies after a reload.
+- **Caching:** the bundle is cached on the server and, for a week, in the browser, versioned by the translation cache. In Development a changed `.xlf` file renews both, but a new `autoInclude` entry alone does not: run `./flow flow:cache:flushone Neos_Neos_XliffToJsonTranslations` once after adding it. Production deployments flush caches anyway.
+
+### Using built-in editors
+
+`editors.get(id)` returns a registered property editor - Studio's own included - so a plugin can put Studio's link field, asset picker or date picker in its own UI instead of building them. An editor takes the [`PropertyEditorProps`](Resources/Private/Studio/src/features/inspector/editors/registry.ts): what it edits (`subject`, where `type` is the property type), the initial `value`, `onCommit` for a value worth keeping (on blur, Enter, a pick), optionally `onChange` per keystroke, and its `options` (the `editorOptions` of a node type property):
+
+```tsx
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, editors, translate, useAssetPickerActive } from '@medienreaktor/neos-studio'
+
+const LinkEditor = editors.get('Neos.Neos/Inspector/Editors/LinkEditor')!
+const ImageEditor = editors.get('Neos.Neos/Inspector/Editors/ImageEditor')!
+
+function TeaserDialog({ open, onOpenChange, onSave }) {
+  // Kept outside the dialog content: it unmounts while the Media Library is open.
+  const [link, setLink] = useState<unknown>(null)
+  const [image, setImage] = useState<unknown>(null)
+  const picking = useAssetPickerActive()
+  return (
+    <Dialog open={open && !picking} onOpenChange={(next) => !picking && onOpenChange(next)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{translate('Vendor.Package:Main:teaser.title', 'Teaser')}</DialogTitle></DialogHeader>
+        <LinkEditor subject={{ name: 'link', type: 'string', label: 'Link' }} value={link} onCommit={setLink} options={{}} />
+        <ImageEditor subject={{ name: 'image', type: 'Neos\\Media\\Domain\\Model\\ImageInterface', label: 'Image' }} value={image} onCommit={setImage} options={{}} />
+        <DialogFooter><Button onClick={() => onSave({ link, image })}>Save</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+```
+
+The editor renders no label of its own (except the checkbox), so the plugin places one, e.g. with `Field`. Editors read the shell's state, so they render inside Studio's React tree - a panel, inspector view or settings section, and dialogs opened from them - not in a React root of the plugin's own. Without a `nodeAddress` (no node is being edited) they work like in the node creation dialog: in the active workspace, site and dimensions.
+
+These built-in editors (ids `Neos.Neos/Inspector/Editors/…`) work without a node:
+
+- `TextFieldEditor`, `TextAreaEditor`, `CodeEditor`, `RichTextEditor`, `BooleanEditor`, `RangeEditor`, `DateTimeEditor`, `SelectBoxEditor` (static `values` or a `dataSourceIdentifier`)
+- `LinkEditor` - a Neos link URI (`node://…`, `asset://…`, `https://…`, `mailto:…`)
+- `AssetEditor`, `ImageEditor` - `{id}` of the picked asset; a collection with an `array<…>` type. Picking switches the main area to the Media Library, so a dialog hosting them closes while `useAssetPickerActive()` is true, as above. Not in a settings section, whose modal would cover the Media Library.
+- `UriPathSegmentEditor` - as a text field; generating the segment from the title needs the node.
+
+They need a `nodeAddress`:
+
+- `ReferenceEditor`, `ReferencesEditor` - picking works without one, but the current references are read from the node, not from `value`, so they start empty.
+- `NodeTypeEditor` - without a node it only shows the type in `value`.
+
 ### Plugin API version 2
 
 `NeosStudio.version` is `2` since the Studio runs on Neos.Api instead of Medienreaktor.NeosApi. What a version 1 plugin has to change:

@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { Placeholder } from '@/components/ui/placeholder'
-import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { Icon } from '@/components/ui/icon'
 import { translate as t } from '@/lib/i18n'
 import { DataSourceWidget } from './DataSourceWidget'
 import { dataCollection, dataPath, dataText } from './dataPath'
@@ -51,8 +51,8 @@ export const TableView: InspectorViewComponent = ({ node, options }) => {
                     return (
                       <TableCell key={columnIndex} className="px-1 py-1.5">
                         {typeof icon === 'string' && (
-                          <FaIcon
-                            icon={icon}
+                          <Icon
+                            name={icon}
                             className="mr-1 text-muted-foreground"
                           />
                         )}

@@ -3,7 +3,7 @@ import {
   parseDimensionSpacePoint,
   sameDimensionSpacePoint,
 } from '@/api/neos/schema'
-import { faClassName } from '@/features/tree/nodeTypeIcon'
+import { Icon } from '@/components/ui/icon'
 import { translate as t } from '@/lib/i18n'
 import {
   Select,
@@ -136,9 +136,10 @@ export function DimensionSwitcher({
             <SelectTrigger title={dimensionLabel}>
               <div className="flex items-center gap-2">
                 {dimension.icon && (
-                  <i
-                    className={`${faClassName(dimension.icon)} fa-fw type-icon-s text-muted-foreground`}
-                    aria-hidden
+                  <Icon
+                    name={dimension.icon}
+                    size="s"
+                    className="text-muted-foreground"
                   />
                 )}
                 <SelectValue

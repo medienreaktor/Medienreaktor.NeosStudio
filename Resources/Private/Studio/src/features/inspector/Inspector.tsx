@@ -36,7 +36,8 @@ import {
 } from '@/features/editing/persistProperty'
 import { useNodeEditable } from '@/features/access/useAccess'
 import { usePresence } from '@/features/collaboration/PresenceContext'
-import { FaIcon, NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
+import { Icon } from '@/components/ui/icon'
+import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
@@ -456,7 +457,7 @@ export function InspectorPanel({
                         // square so a tab showing an error badge can grow.
                         className="h-8.5 min-w-8.5 flex-none px-2"
                       >
-                        {tab.icon && <FaIcon icon={tab.icon} />}
+                        {tab.icon && <Icon name={tab.icon} />}
                         {/* Hidden, never dropped: the title attribute is not
                             an accessible name every screen reader announces,
                             so the label stays in the tree either way. */}
@@ -532,7 +533,7 @@ function ShineThroughNotice({ node }: { node: Node }) {
       role="status"
       className="mt-3 flex items-start gap-2 rounded-md border border-variant bg-variant-tint p-2.5 type-small text-variant-text"
     >
-      <FaIcon icon="layer-group" className="mt-0.5 text-variant-text" />
+      <Icon name="layer-group" className="mt-0.5 text-variant-text" />
       <p>
         {t('inspector.shineThroughFrom', 'Shines through from')}{' '}
         <strong className="text-foreground">{origin}</strong>.{' '}
@@ -620,7 +621,7 @@ function PropertyGroup({
       className="border-b border-border p-3"
       label={
         <>
-          {group.icon && <FaIcon icon={group.icon} />}
+          {group.icon && <Icon name={group.icon} />}
           {group.label}
         </>
       }

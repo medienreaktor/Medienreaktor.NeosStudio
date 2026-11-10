@@ -64,6 +64,17 @@ export function useAssetPicker(): AssetPickerContextValue {
   return context
 }
 
+/**
+ * Whether a pick is in progress - the Media Library has taken over the main
+ * area. A modal hosting an asset or image editor (the node creation dialog, a
+ * plugin's dialog) closes while this is true, or it covers the picker; its
+ * state has to live outside the dialog content to survive. False without a
+ * provider, so it is safe anywhere.
+ */
+export function useAssetPickerActive(): boolean {
+  return (useContext(AssetPickerContext)?.session ?? null) !== null
+}
+
 export function AssetPickerProvider({
   children,
 }: {

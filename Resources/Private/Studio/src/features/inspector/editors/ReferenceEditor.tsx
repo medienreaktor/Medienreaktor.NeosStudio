@@ -40,13 +40,11 @@ import {
   ComboboxStatus,
   ComboboxTrigger,
 } from '@/components/ui/combobox'
+import { faClassName } from '@/components/ui/icon'
 import { toast } from '@/components/ui/toast'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { translate } from '@/lib/i18n'
-import {
-  faClassName,
-  resolveNodeTypeIconClass,
-} from '@/features/tree/nodeTypeIcon'
+import { resolveNodeTypeIconClass } from '@/features/tree/nodeTypeIcon'
 import { moveItem } from '@/lib/arrays'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'

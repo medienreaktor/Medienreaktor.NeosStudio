@@ -18,7 +18,7 @@ import {
   humanizeLabel,
   plainEditorOption,
 } from '@/features/inspector/inspectorSchema'
-import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { Icon } from '@/components/ui/icon'
 import { translate as t } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
 import { moveItem } from '@/lib/arrays'
@@ -163,7 +163,7 @@ function DataSourceSelectBox({
 
 const optionItem = (item: SelectBoxItem) => (
   <SelectItem key={item.key} value={item.key} disabled={item.disabled}>
-    {item.icon && <FaIcon icon={item.icon} />}
+    {item.icon && <Icon name={item.icon} />}
     {item.label}
   </SelectItem>
 )
@@ -299,7 +299,7 @@ function SingleSelect({
     const item = items.find((candidate) => candidate.key === key)
     return (
       <span className="flex items-center gap-2">
-        {item?.icon && <FaIcon icon={item.icon} />}
+        {item?.icon && <Icon name={item.icon} />}
         {item?.label ?? key}
       </span>
     )
@@ -436,7 +436,7 @@ function MultiSelectList({
                 aria-hidden
               />
             )}
-            {item?.icon && <FaIcon icon={item.icon} />}
+            {item?.icon && <Icon name={item.icon} />}
             <span className="min-w-0 flex-1 truncate">
               {item?.label ?? key}
             </span>

@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { FaIcon } from '@/features/tree/nodeTypeIcon'
+import { Icon } from '@/components/ui/icon'
 import { useValueChange } from '@/hooks/use-value-change'
 import { celebrateAround } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
@@ -541,8 +541,8 @@ export function ReviewChangesDialog({
                           checked={isSelected}
                           onCheckedChange={(checked) => toggle(id, checked)}
                         />
-                        <FaIcon
-                          icon={document.icon ?? 'fa-file'}
+                        <Icon
+                          name={document.icon ?? 'fa-file'}
                           className={cn(
                             // The icon's own line box is shorter than the
                             // title's (12px glyph, 14px text), so it needs the
