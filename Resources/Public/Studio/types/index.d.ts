@@ -2321,8 +2321,9 @@ interface NodeEdit {
    * each tree re-reads the node and its children list. 'properties': only
    * properties/references of the nodes themselves - their children lists
    * are known to be untouched and are not re-read. Set it only where that is
-   * certain (a remote NodePropertiesWereSet); hiding needs no flag of its own
-   * either way, see useNodeEditRefresh.
+   * certain (a remote NodePropertiesWereSet, an inspector save other than a
+   * node type change); hiding needs no flag of its own either way, see
+   * useNodeEditRefresh.
    */
   kind?: 'properties';
   token: number;
@@ -2417,10 +2418,13 @@ type StudioActions = {
    * mirrors the property's configuration and defaults to 'page' (full iframe
    * reload); 'element' re-renders just the node's element out-of-band
    * (ui.reloadIfChanged); 'none' leaves the preview alone - the change does
-   * not affect the rendered page. Trees and the inspector always refresh.
+   * not affect the rendered page. Trees and the inspector always refresh;
+   * kind 'properties' tells the trees only the node's own properties
+   * changed, so they skip re-reading its children list.
    */
   nodeEdited: (address: NodeAddress, options?: {
     reload?: 'page' | 'element' | 'none';
+    kind?: 'properties';
   }) => void;
   /**
    * Report a structural change (e.g. a drag-and-drop move) affecting several

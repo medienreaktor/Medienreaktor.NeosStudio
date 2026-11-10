@@ -91,11 +91,16 @@ export type StudioActions = {
    * mirrors the property's configuration and defaults to 'page' (full iframe
    * reload); 'element' re-renders just the node's element out-of-band
    * (ui.reloadIfChanged); 'none' leaves the preview alone - the change does
-   * not affect the rendered page. Trees and the inspector always refresh.
+   * not affect the rendered page. Trees and the inspector always refresh;
+   * kind 'properties' tells the trees only the node's own properties
+   * changed, so they skip re-reading its children list.
    */
   nodeEdited: (
     address: NodeAddress,
-    options?: { reload?: 'page' | 'element' | 'none' },
+    options?: {
+      reload?: 'page' | 'element' | 'none'
+      kind?: 'properties'
+    },
   ) => void
   /**
    * Report a structural change (e.g. a drag-and-drop move) affecting several

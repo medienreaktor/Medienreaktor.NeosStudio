@@ -236,7 +236,7 @@ function Shell() {
       switchEditingContext(name === personalWorkspace?.name ? null : name),
     reportInlineEdit: (addresses) => signals.reportEdit(addresses),
     nodeEdited: (address, options) => {
-      signals.reportEdit([address])
+      signals.reportEdit([address], { kind: options?.kind })
       // How the preview refreshes follows the property's configuration:
       // 'page' (ui.reloadPageIfChanged, and the default for anything not an
       // inspector property save) reloads the iframe, 'element'

@@ -117,10 +117,15 @@ export function InspectorPanel({
    * property's configuration: 'page' (ui.reloadPageIfChanged), 'element'
    * (ui.reloadIfChanged - an out-of-band re-render of just this node's
    * element), or 'none' - the change does not affect the rendered page.
+   * kind 'properties': the save changed the node's own properties only, not
+   * its children (every save but a node type change - see NodeEdit).
    */
   onNodeEdited?: (
     address: NodeAddress,
-    options?: { reload?: 'page' | 'element' | 'none' },
+    options?: {
+      reload?: 'page' | 'element' | 'none'
+      kind?: 'properties'
+    },
   ) => void
 }) {
   const { data: nodeTypes } = useNodeTypes()
@@ -324,7 +329,15 @@ export function InspectorPanel({
     persist
       .then(() => {
         clearTransient(address, propertyName, value)
-        onNodeEdited?.(address, { reload })
+        // A type change can add or remove tethered children - the trees
+        // must re-read the node's children then. Every other save (_hidden
+        // included: the trees detect changed tags themselves) leaves them.
+        onNodeEdited?.(address, {
+          reload,
+          ...(propertyName === NODE_TYPE_PROPERTY
+            ? {}
+            : { kind: 'properties' as const }),
+        })
       })
       .catch((e: unknown) => {
         // A refused value keeps its transient overlay, so the inline error

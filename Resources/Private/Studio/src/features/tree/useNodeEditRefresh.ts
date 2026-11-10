@@ -19,8 +19,9 @@ export interface NodeEdit {
    * each tree re-reads the node and its children list. 'properties': only
    * properties/references of the nodes themselves - their children lists
    * are known to be untouched and are not re-read. Set it only where that is
-   * certain (a remote NodePropertiesWereSet); hiding needs no flag of its own
-   * either way, see useNodeEditRefresh.
+   * certain (a remote NodePropertiesWereSet, an inspector save other than a
+   * node type change); hiding needs no flag of its own either way, see
+   * useNodeEditRefresh.
    */
   kind?: 'properties'
   token: number
@@ -106,9 +107,19 @@ export function useNodeEditRefresh<T>({
       // of this tree lives there, and other workspaces' reads (and their
       // observers) are none of this tree's business.
       const { contentRepositoryId, workspaceName } = addressOf(rootId)
-      void queryClient.invalidateQueries({
-        queryKey: neosKeys.nodes.workspace(contentRepositoryId, workspaceName),
-      })
+      // cancelRefetch false: the edit is reported after its write, so a
+      // refetch already running was started by the writer's own
+      // invalidation and reads fresh data - restarting it (once per tree)
+      // only doubled the requests.
+      void queryClient.invalidateQueries(
+        {
+          queryKey: neosKeys.nodes.workspace(
+            contentRepositoryId,
+            workspaceName,
+          ),
+        },
+        { cancelRefetch: false },
+      )
       refreshVisible(scope)
       return
     }
@@ -116,10 +127,13 @@ export function useNodeEditRefresh<T>({
     const parents = visibleParents(tree, rootId)
     for (const address of lastEdit.addresses) {
       if (address === ALL_NODES) continue
-      // The node's reads and its children lists (keyed below the node).
-      void queryClient.invalidateQueries({
-        queryKey: neosKeys.nodes.node(address),
-      })
+      // The node's reads and its children lists (keyed below the node). A
+      // refetch the write's own invalidation started is kept, not restarted
+      // (see the ALL_NODES case above).
+      void queryClient.invalidateQueries(
+        { queryKey: neosKeys.nodes.node(address) },
+        { cancelRefetch: false },
+      )
       // Item ids are aggregate ids: a tree shows one subgraph. An edit of
       // the same node in another one refreshes the row needlessly, harmless.
       const itemId = address.nodeAggregateId
