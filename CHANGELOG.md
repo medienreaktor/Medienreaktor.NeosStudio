@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-11-10
+
+### Added
+
+- Preview links can now be shared for 30 days or 1 year (previously at most
+  7 days).
+
+### Changed
+
+- Clicking a document in the document tree (or its search results) also
+  brings the visual editor on screen if it is hidden, behind another tab or
+  collapsed.
+
+### Fixed
+
+- Preview links can be copied again after creation: the share dialog lists
+  each active link with a copy button. Links created before this release
+  cannot be recovered and say so. Requires `./flow doctrine:migrate`.
+- The Media Library loads more assets on scroll in Safari again.
+
 ## [2.0.1] - 2026-11-10
 
 ### Removed
@@ -1341,7 +1361,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.2...HEAD
+[2.0.2]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...2.0.0
 [1.19.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.0...1.19.1
