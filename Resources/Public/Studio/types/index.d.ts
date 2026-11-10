@@ -20824,258 +20824,226 @@ declare class NodePos {
 }
 //#endregion
 //#region src/commands/blur.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    blur: {
-      /**
-       * Removes focus from the editor.
-       * @example editor.commands.blur()
-       */
-      blur: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  blur: {
+    /**
+     * Removes focus from the editor.
+     * @example editor.commands.blur()
+     */
+    blur: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/clearContent.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    clearContent: {
-      /**
-       * Clear the whole document.
-       * @example editor.commands.clearContent()
-       */
-      clearContent: (
-      /**
-       * Whether to emit an update event.
-       * @default true
-       */
-      emitUpdate?: boolean) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  clearContent: {
+    /**
+     * Clear the whole document.
+     * @example editor.commands.clearContent()
+     */
+    clearContent: (
+    /**
+     * Whether to emit an update event.
+     * @default true
+     */
+    emitUpdate?: boolean) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/clearNodes.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    clearNodes: {
-      /**
-       * Normalize nodes to a simple paragraph.
-       * @example editor.commands.clearNodes()
-       */
-      clearNodes: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  clearNodes: {
+    /**
+     * Normalize nodes to a simple paragraph.
+     * @example editor.commands.clearNodes()
+     */
+    clearNodes: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/command.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    command: {
-      /**
-       * Define a command inline.
-       * @param fn The command function.
-       * @example
-       * editor.commands.command(({ tr, state }) => {
-       *   ...
-       *   return true
-       * })
-       */
-      command: (fn: (props: Parameters<Command>[0]) => boolean) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  command: {
+    /**
+     * Define a command inline.
+     * @param fn The command function.
+     * @example
+     * editor.commands.command(({ tr, state }) => {
+     *   ...
+     *   return true
+     * })
+     */
+    command: (fn: (props: Parameters<Command>[0]) => boolean) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/createParagraphNear.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    createParagraphNear: {
-      /**
-       * Create a paragraph nearby.
-       * @example editor.commands.createParagraphNear()
-       */
-      createParagraphNear: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  createParagraphNear: {
+    /**
+     * Create a paragraph nearby.
+     * @example editor.commands.createParagraphNear()
+     */
+    createParagraphNear: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/cut.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    cut: {
-      /**
-       * Cuts content from a range and inserts it at a given position.
-       * @param range The range to cut.
-       * @param range.from The start position of the range.
-       * @param range.to The end position of the range.
-       * @param targetPos The position to insert the content at.
-       * @example editor.commands.cut({ from: 1, to: 3 }, 5)
-       */
-      cut: ({ from, to }: {
-        from: number;
-        to: number;
-      }, targetPos: number) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  cut: {
+    /**
+     * Cuts content from a range and inserts it at a given position.
+     * @param range The range to cut.
+     * @param range.from The start position of the range.
+     * @param range.to The end position of the range.
+     * @param targetPos The position to insert the content at.
+     * @example editor.commands.cut({ from: 1, to: 3 }, 5)
+     */
+    cut: ({ from, to }: {
+      from: number;
+      to: number;
+    }, targetPos: number) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/deleteCurrentNode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    deleteCurrentNode: {
-      /**
-       * Delete the node that currently has the selection anchor.
-       * @example editor.commands.deleteCurrentNode()
-       */
-      deleteCurrentNode: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  deleteCurrentNode: {
+    /**
+     * Delete the node that currently has the selection anchor.
+     * @example editor.commands.deleteCurrentNode()
+     */
+    deleteCurrentNode: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/deleteNode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    deleteNode: {
-      /**
-       * Delete a node with a given type or name.
-       * @param typeOrName The type or name of the node.
-       * @example editor.commands.deleteNode('paragraph')
-       */
-      deleteNode: (typeOrName: string | NodeType$2) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  deleteNode: {
+    /**
+     * Delete a node with a given type or name.
+     * @param typeOrName The type or name of the node.
+     * @example editor.commands.deleteNode('paragraph')
+     */
+    deleteNode: (typeOrName: string | NodeType$2) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/deleteRange.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    deleteRange: {
-      /**
-       * Delete a given range.
-       * @param range The range to delete.
-       * @example editor.commands.deleteRange({ from: 1, to: 3 })
-       */
-      deleteRange: (range: Range) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  deleteRange: {
+    /**
+     * Delete a given range.
+     * @param range The range to delete.
+     * @example editor.commands.deleteRange({ from: 1, to: 3 })
+     */
+    deleteRange: (range: Range) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/deleteSelection.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    deleteSelection: {
-      /**
-       * Delete the selection, if there is one.
-       * @example editor.commands.deleteSelection()
-       */
-      deleteSelection: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  deleteSelection: {
+    /**
+     * Delete the selection, if there is one.
+     * @example editor.commands.deleteSelection()
+     */
+    deleteSelection: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/enter.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    enter: {
-      /**
-       * Trigger enter.
-       * @example editor.commands.enter()
-       */
-      enter: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  enter: {
+    /**
+     * Trigger enter.
+     * @example editor.commands.enter()
+     */
+    enter: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/exitCode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    exitCode: {
-      /**
-       * Exit from a code block.
-       * @example editor.commands.exitCode()
-       */
-      exitCode: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  exitCode: {
+    /**
+     * Exit from a code block.
+     * @example editor.commands.exitCode()
+     */
+    exitCode: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/extendMarkRange.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    extendMarkRange: {
-      /**
-       * Extends the text selection to the current mark by type or name.
-       * @param typeOrName The type or name of the mark.
-       * @param attributes The attributes to match against.
-       * If not provided, only the first mark at the position will be matched.
-       * @example editor.commands.extendMarkRange('bold')
-       * @example editor.commands.extendMarkRange('mention', { userId: "1" })
-       */
-      extendMarkRange: (
-      /**
-       * The type or name of the mark.
-       */
-      typeOrName: string | MarkType$1,
-      /**
-       * The attributes of the mark.
-       */
-      attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  extendMarkRange: {
+    /**
+     * Extends the text selection to the current mark by type or name.
+     * @param typeOrName The type or name of the mark.
+     * @param attributes The attributes to match against.
+     * If not provided, only the first mark at the position will be matched.
+     * @example editor.commands.extendMarkRange('bold')
+     * @example editor.commands.extendMarkRange('mention', { userId: "1" })
+     */
+    extendMarkRange: (
+    /**
+     * The type or name of the mark.
+     */
+    typeOrName: string | MarkType$1,
+    /**
+     * The attributes of the mark.
+     */
+    attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/first.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    first: {
-      /**
-       * Runs one command after the other and stops at the first which returns true.
-       * @param commands The commands to run.
-       * @example editor.commands.first([command1, command2])
-       */
-      first: (commands: Command[] | ((props: CommandProps) => Command[])) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  first: {
+    /**
+     * Runs one command after the other and stops at the first which returns true.
+     * @param commands The commands to run.
+     * @example editor.commands.first([command1, command2])
+     */
+    first: (commands: Command[] | ((props: CommandProps) => Command[])) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/focus.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    focus: {
-      /**
-       * Focus the editor at the given position.
-       * @param position The position to focus at.
-       * @param options.scrollIntoView Scroll the focused position into view after focusing
-       * @example editor.commands.focus()
-       * @example editor.commands.focus(32, { scrollIntoView: false })
-       */
-      focus: (
-      /**
-       * The position to focus at.
-       */
-      position?: FocusPosition,
-      /**
-       * Optional options
-       * @default { scrollIntoView: true }
-       */
-      options?: {
-        scrollIntoView?: boolean;
-      }) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  focus: {
+    /**
+     * Focus the editor at the given position.
+     * @param position The position to focus at.
+     * @param options.scrollIntoView Scroll the focused position into view after focusing
+     * @example editor.commands.focus()
+     * @example editor.commands.focus(32, { scrollIntoView: false })
+     */
+    focus: (
+    /**
+     * The position to focus at.
+     */
+    position?: FocusPosition,
+    /**
+     * Optional options
+     * @default { scrollIntoView: true }
+     */
+    options?: {
+      scrollIntoView?: boolean;
+    }) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/forEach.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    forEach: {
-      /**
-       * Loop through an array of items.
-       */
-      forEach: <T>(items: T[], fn: (item: T, props: CommandProps & {
-        index: number;
-      }) => boolean) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  forEach: {
+    /**
+     * Loop through an array of items.
+     */
+    forEach: <T>(items: T[], fn: (item: T, props: CommandProps & {
+      index: number;
+    }) => boolean) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/insertContent.d.ts
@@ -21091,25 +21059,23 @@ interface InsertContentOptions {
   applyInputRules?: boolean;
   applyPasteRules?: boolean;
 }
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    insertContent: {
-      /**
-       * Insert a node or string of HTML at the current position.
-       * @example editor.commands.insertContent('<h1>Example</h1>')
-       * @example editor.commands.insertContent('<h1>Example</h1>', { updateSelection: false })
-       */
-      insertContent: (
-      /**
-       * The ProseMirror content to insert.
-       */
-      value: Content | Node$2 | Fragment,
-      /**
-       * Optional options
-       */
-      options?: InsertContentOptions) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  insertContent: {
+    /**
+     * Insert a node or string of HTML at the current position.
+     * @example editor.commands.insertContent('<h1>Example</h1>')
+     * @example editor.commands.insertContent('<h1>Example</h1>', { updateSelection: false })
+     */
+    insertContent: (
+    /**
+     * The ProseMirror content to insert.
+     */
+    value: Content | Node$2 | Fragment,
+    /**
+     * Optional options
+     */
+    options?: InsertContentOptions) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/insertContentAt.d.ts
@@ -21135,28 +21101,26 @@ interface InsertContentAtOptions {
    */
   errorOnInvalidContent?: boolean;
 }
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    insertContentAt: {
-      /**
-       * Insert a node or string of HTML at a specific position.
-       * @example editor.commands.insertContentAt(0, '<h1>Example</h1>')
-       */
-      insertContentAt: (
-      /**
-       * The position to insert the content at.
-       */
-      position: number | Range,
-      /**
-       * The ProseMirror content to insert.
-       */
-      value: Content | Node$2 | Fragment,
-      /**
-       * Optional options
-       */
-      options?: InsertContentAtOptions) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  insertContentAt: {
+    /**
+     * Insert a node or string of HTML at a specific position.
+     * @example editor.commands.insertContentAt(0, '<h1>Example</h1>')
+     */
+    insertContentAt: (
+    /**
+     * The position to insert the content at.
+     */
+    position: number | Range,
+    /**
+     * The ProseMirror content to insert.
+     */
+    value: Content | Node$2 | Fragment,
+    /**
+     * Optional options
+     */
+    options?: InsertContentAtOptions) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/insertDefaultBlock.d.ts
@@ -21183,282 +21147,244 @@ interface InsertDefaultBlockOptions {
    */
   updateSelection?: boolean;
 }
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    insertDefaultBlock: {
-      /**
-       * Insert a default content block at the given position.
-       * Returns false when the default block can't be inserted at that position.
-       * @example editor.commands.insertDefaultBlock()
-       * @example editor.commands.insertDefaultBlock({ pos: 5, content: 'Hello' })
-       */
-      insertDefaultBlock: (options?: InsertDefaultBlockOptions) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  insertDefaultBlock: {
+    /**
+     * Insert a default content block at the given position.
+     * Returns false when the default block can't be inserted at that position.
+     * @example editor.commands.insertDefaultBlock()
+     * @example editor.commands.insertDefaultBlock({ pos: 5, content: 'Hello' })
+     */
+    insertDefaultBlock: (options?: InsertDefaultBlockOptions) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/join.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    joinUp: {
-      /**
-       * Join the selected block or, if there is a text selection, the closest ancestor block of the selection that can be joined, with the sibling above it.
-       * @example editor.commands.joinUp()
-       */
-      joinUp: () => ReturnType;
-    };
-    joinDown: {
-      /**
-       * Join the selected block, or the closest ancestor of the selection that can be joined, with the sibling after it.
-       * @example editor.commands.joinDown()
-       */
-      joinDown: () => ReturnType;
-    };
-    joinBackward: {
-      /**
-       * If the selection is empty and at the start of a textblock, try to reduce the distance between that block and the one before it—if there's a block directly before it that can be joined, join them.
-       * If not, try to move the selected block closer to the next one in the document structure by lifting it out of its
-       * parent or moving it into a parent of the previous block. Will use the view for accurate (bidi-aware) start-of-textblock detection if given.
-       * @example editor.commands.joinBackward()
-       */
-      joinBackward: () => ReturnType;
-    };
-    joinForward: {
-      /**
-       * If the selection is empty and the cursor is at the end of a textblock, try to reduce or remove the boundary between that block and the one after it,
-       * either by joining them or by moving the other block closer to this one in the tree structure.
-       * Will use the view for accurate start-of-textblock detection if given.
-       * @example editor.commands.joinForward()
-       */
-      joinForward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  joinUp: {
+    /**
+     * Join the selected block or, if there is a text selection, the closest ancestor block of the selection that can be joined, with the sibling above it.
+     * @example editor.commands.joinUp()
+     */
+    joinUp: () => ReturnType;
+  };
+  joinDown: {
+    /**
+     * Join the selected block, or the closest ancestor of the selection that can be joined, with the sibling after it.
+     * @example editor.commands.joinDown()
+     */
+    joinDown: () => ReturnType;
+  };
+  joinBackward: {
+    /**
+     * If the selection is empty and at the start of a textblock, try to reduce the distance between that block and the one before it—if there's a block directly before it that can be joined, join them.
+     * If not, try to move the selected block closer to the next one in the document structure by lifting it out of its
+     * parent or moving it into a parent of the previous block. Will use the view for accurate (bidi-aware) start-of-textblock detection if given.
+     * @example editor.commands.joinBackward()
+     */
+    joinBackward: () => ReturnType;
+  };
+  joinForward: {
+    /**
+     * If the selection is empty and the cursor is at the end of a textblock, try to reduce or remove the boundary between that block and the one after it,
+     * either by joining them or by moving the other block closer to this one in the tree structure.
+     * Will use the view for accurate start-of-textblock detection if given.
+     * @example editor.commands.joinForward()
+     */
+    joinForward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/joinItemBackward.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    joinItemBackward: {
-      /**
-       * Join two items backward.
-       * @example editor.commands.joinItemBackward()
-       */
-      joinItemBackward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  joinItemBackward: {
+    /**
+     * Join two items backward.
+     * @example editor.commands.joinItemBackward()
+     */
+    joinItemBackward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/joinItemForward.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    joinItemForward: {
-      /**
-       * Join two items Forwards.
-       * @example editor.commands.joinItemForward()
-       */
-      joinItemForward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  joinItemForward: {
+    /**
+     * Join two items Forwards.
+     * @example editor.commands.joinItemForward()
+     */
+    joinItemForward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/joinTextblockBackward.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    joinTextblockBackward: {
-      /**
-       * A more limited form of joinBackward that only tries to join the current textblock to the one before it, if the cursor is at the start of a textblock.
-       */
-      joinTextblockBackward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  joinTextblockBackward: {
+    /**
+     * A more limited form of joinBackward that only tries to join the current textblock to the one before it, if the cursor is at the start of a textblock.
+     */
+    joinTextblockBackward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/joinTextblockForward.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    joinTextblockForward: {
-      /**
-       * A more limited form of joinForward that only tries to join the current textblock to the one after it, if the cursor is at the end of a textblock.
-       */
-      joinTextblockForward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  joinTextblockForward: {
+    /**
+     * A more limited form of joinForward that only tries to join the current textblock to the one after it, if the cursor is at the end of a textblock.
+     */
+    joinTextblockForward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/keyboardShortcut.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    keyboardShortcut: {
-      /**
-       * Trigger a keyboard shortcut.
-       * @param name The name of the keyboard shortcut.
-       * @example editor.commands.keyboardShortcut('Mod-b')
-       */
-      keyboardShortcut: (name: string) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  keyboardShortcut: {
+    /**
+     * Trigger a keyboard shortcut.
+     * @param name The name of the keyboard shortcut.
+     * @example editor.commands.keyboardShortcut('Mod-b')
+     */
+    keyboardShortcut: (name: string) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/lift.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    lift: {
-      /**
-       * Removes an existing wrap if possible lifting the node out of it
-       * @param typeOrName The type or name of the node.
-       * @param attributes The attributes of the node.
-       * @example editor.commands.lift('paragraph')
-       * @example editor.commands.lift('heading', { level: 1 })
-       */
-      lift: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  lift: {
+    /**
+     * Removes an existing wrap if possible lifting the node out of it
+     * @param typeOrName The type or name of the node.
+     * @param attributes The attributes of the node.
+     * @example editor.commands.lift('paragraph')
+     * @example editor.commands.lift('heading', { level: 1 })
+     */
+    lift: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/liftEmptyBlock.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    liftEmptyBlock: {
-      /**
-       * If the cursor is in an empty textblock that can be lifted, lift the block.
-       * @example editor.commands.liftEmptyBlock()
-       */
-      liftEmptyBlock: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  liftEmptyBlock: {
+    /**
+     * If the cursor is in an empty textblock that can be lifted, lift the block.
+     * @example editor.commands.liftEmptyBlock()
+     */
+    liftEmptyBlock: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/liftListItem.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    liftListItem: {
-      /**
-       * Create a command to lift the list item around the selection up into a wrapping list.
-       * @param typeOrName The type or name of the node.
-       * @example editor.commands.liftListItem('listItem')
-       */
-      liftListItem: (typeOrName: string | NodeType$2) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  liftListItem: {
+    /**
+     * Create a command to lift the list item around the selection up into a wrapping list.
+     * @param typeOrName The type or name of the node.
+     * @example editor.commands.liftListItem('listItem')
+     */
+    liftListItem: (typeOrName: string | NodeType$2) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/newlineInCode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    newlineInCode: {
-      /**
-       * Add a newline character in code.
-       * @example editor.commands.newlineInCode()
-       */
-      newlineInCode: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  newlineInCode: {
+    /**
+     * Add a newline character in code.
+     * @example editor.commands.newlineInCode()
+     */
+    newlineInCode: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/resetAttributes.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    resetAttributes: {
-      /**
-       * Resets some node attributes to the default value.
-       * @param typeOrName The type or name of the node.
-       * @param attributes The attributes of the node to reset.
-       * @example editor.commands.resetAttributes('heading', 'level')
-       */
-      resetAttributes: (typeOrName: string | NodeType$2 | MarkType$1, attributes: string | string[]) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  resetAttributes: {
+    /**
+     * Resets some node attributes to the default value.
+     * @param typeOrName The type or name of the node.
+     * @param attributes The attributes of the node to reset.
+     * @example editor.commands.resetAttributes('heading', 'level')
+     */
+    resetAttributes: (typeOrName: string | NodeType$2 | MarkType$1, attributes: string | string[]) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/scrollIntoView.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    scrollIntoView: {
-      /**
-       * Scroll the selection into view.
-       * @example editor.commands.scrollIntoView()
-       */
-      scrollIntoView: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  scrollIntoView: {
+    /**
+     * Scroll the selection into view.
+     * @example editor.commands.scrollIntoView()
+     */
+    scrollIntoView: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/selectAll.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    selectAll: {
-      /**
-       * Select the whole document.
-       * @example editor.commands.selectAll()
-       */
-      selectAll: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  selectAll: {
+    /**
+     * Select the whole document.
+     * @example editor.commands.selectAll()
+     */
+    selectAll: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/selectNodeBackward.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    selectNodeBackward: {
-      /**
-       * Select a node backward.
-       * @example editor.commands.selectNodeBackward()
-       */
-      selectNodeBackward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  selectNodeBackward: {
+    /**
+     * Select a node backward.
+     * @example editor.commands.selectNodeBackward()
+     */
+    selectNodeBackward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/selectNodeForward.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    selectNodeForward: {
-      /**
-       * Select a node forward.
-       * @example editor.commands.selectNodeForward()
-       */
-      selectNodeForward: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  selectNodeForward: {
+    /**
+     * Select a node forward.
+     * @example editor.commands.selectNodeForward()
+     */
+    selectNodeForward: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/selectParentNode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    selectParentNode: {
-      /**
-       * Select the parent node.
-       * @example editor.commands.selectParentNode()
-       */
-      selectParentNode: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  selectParentNode: {
+    /**
+     * Select the parent node.
+     * @example editor.commands.selectParentNode()
+     */
+    selectParentNode: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/selectTextblockEnd.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    selectTextblockEnd: {
-      /**
-       * Moves the cursor to the end of current text block.
-       * @example editor.commands.selectTextblockEnd()
-       */
-      selectTextblockEnd: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  selectTextblockEnd: {
+    /**
+     * Moves the cursor to the end of current text block.
+     * @example editor.commands.selectTextblockEnd()
+     */
+    selectTextblockEnd: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/selectTextblockStart.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    selectTextblockStart: {
-      /**
-       * Moves the cursor to the start of current text block.
-       * @example editor.commands.selectTextblockStart()
-       */
-      selectTextblockStart: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  selectTextblockStart: {
+    /**
+     * Moves the cursor to the start of current text block.
+     * @example editor.commands.selectTextblockStart()
+     */
+    selectTextblockStart: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setContent.d.ts
@@ -21478,380 +21404,336 @@ interface SetContentOptions {
    */
   emitUpdate?: boolean;
 }
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setContent: {
-      /**
-       * Replace the whole document with new content.
-       * @param content The new content.
-       * @param emitUpdate Whether to emit an update event.
-       * @param parseOptions Options for parsing the content.
-       * @example editor.commands.setContent('<p>Example text</p>')
-       */
-      setContent: (
-      /**
-       * The new content.
-       */
-      content: Content | Fragment | Node$2,
-      /**
-       * Options for `setContent`.
-       */
-      options?: SetContentOptions) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setContent: {
+    /**
+     * Replace the whole document with new content.
+     * @param content The new content.
+     * @param emitUpdate Whether to emit an update event.
+     * @param parseOptions Options for parsing the content.
+     * @example editor.commands.setContent('<p>Example text</p>')
+     */
+    setContent: (
+    /**
+     * The new content.
+     */
+    content: Content | Fragment | Node$2,
+    /**
+     * Options for `setContent`.
+     */
+    options?: SetContentOptions) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setMark.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setMark: {
-      /**
-       * Add a mark with new attributes.
-       * @param typeOrName The mark type or name.
-       * @example editor.commands.setMark('bold', { level: 1 })
-       */
-      setMark: (typeOrName: string | MarkType$1, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setMark: {
+    /**
+     * Add a mark with new attributes.
+     * @param typeOrName The mark type or name.
+     * @example editor.commands.setMark('bold', { level: 1 })
+     */
+    setMark: (typeOrName: string | MarkType$1, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setMeta.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setMeta: {
-      /**
-       * Store a metadata property in the current transaction.
-       * @param key The key of the metadata property.
-       * @param value The value to store.
-       * @example editor.commands.setMeta('foo', 'bar')
-       */
-      setMeta: (key: string | Plugin | PluginKey, value: any) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setMeta: {
+    /**
+     * Store a metadata property in the current transaction.
+     * @param key The key of the metadata property.
+     * @param value The value to store.
+     * @example editor.commands.setMeta('foo', 'bar')
+     */
+    setMeta: (key: string | Plugin | PluginKey, value: any) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setNode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setNode: {
-      /**
-       * Replace a given range with a node.
-       * @param typeOrName The type or name of the node
-       * @param attributes The attributes of the node
-       * @example editor.commands.setNode('paragraph')
-       */
-      setNode: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setNode: {
+    /**
+     * Replace a given range with a node.
+     * @param typeOrName The type or name of the node
+     * @param attributes The attributes of the node
+     * @example editor.commands.setNode('paragraph')
+     */
+    setNode: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setNodeSelection.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setNodeSelection: {
-      /**
-       * Creates a NodeSelection.
-       * @param position - Position of the node.
-       * @example editor.commands.setNodeSelection(10)
-       */
-      setNodeSelection: (position: number) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setNodeSelection: {
+    /**
+     * Creates a NodeSelection.
+     * @param position - Position of the node.
+     * @example editor.commands.setNodeSelection(10)
+     */
+    setNodeSelection: (position: number) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setTextDirection.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setTextDirection: {
-      /**
-       * Set the text direction for nodes.
-       * If no position is provided, it will use the current selection.
-       * @param direction The text direction to set ('ltr', 'rtl', or 'auto')
-       * @param position Optional position or range to apply the direction to
-       * @example editor.commands.setTextDirection('rtl')
-       * @example editor.commands.setTextDirection('ltr', { from: 0, to: 10 })
-       */
-      setTextDirection: (direction: 'ltr' | 'rtl' | 'auto', position?: number | Range) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setTextDirection: {
+    /**
+     * Set the text direction for nodes.
+     * If no position is provided, it will use the current selection.
+     * @param direction The text direction to set ('ltr', 'rtl', or 'auto')
+     * @param position Optional position or range to apply the direction to
+     * @example editor.commands.setTextDirection('rtl')
+     * @example editor.commands.setTextDirection('ltr', { from: 0, to: 10 })
+     */
+    setTextDirection: (direction: 'ltr' | 'rtl' | 'auto', position?: number | Range) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/setTextSelection.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    setTextSelection: {
-      /**
-       * Creates a TextSelection.
-       * @param position The position of the selection.
-       * @example editor.commands.setTextSelection(10)
-       */
-      setTextSelection: (position: number | Range) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  setTextSelection: {
+    /**
+     * Creates a TextSelection.
+     * @param position The position of the selection.
+     * @example editor.commands.setTextSelection(10)
+     */
+    setTextSelection: (position: number | Range) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/sinkListItem.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    sinkListItem: {
-      /**
-       * Sink the list item down into an inner list.
-       * @param typeOrName The type or name of the node.
-       * @example editor.commands.sinkListItem('listItem')
-       */
-      sinkListItem: (typeOrName: string | NodeType$2) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  sinkListItem: {
+    /**
+     * Sink the list item down into an inner list.
+     * @param typeOrName The type or name of the node.
+     * @example editor.commands.sinkListItem('listItem')
+     */
+    sinkListItem: (typeOrName: string | NodeType$2) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/splitBlock.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    splitBlock: {
-      /**
-       * Forks a new node from an existing node.
-       * @param options.keepMarks Keep marks from the previous node.
-       * @example editor.commands.splitBlock()
-       * @example editor.commands.splitBlock({ keepMarks: true })
-       */
-      splitBlock: (options?: {
-        keepMarks?: boolean;
-      }) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  splitBlock: {
+    /**
+     * Forks a new node from an existing node.
+     * @param options.keepMarks Keep marks from the previous node.
+     * @example editor.commands.splitBlock()
+     * @example editor.commands.splitBlock({ keepMarks: true })
+     */
+    splitBlock: (options?: {
+      keepMarks?: boolean;
+    }) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/splitListItem.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    splitListItem: {
-      /**
-       * Splits one list item into two list items.
-       * @param typeOrName The type or name of the node.
-       * @param overrideAttrs The attributes to ensure on the new node.
-       * @example editor.commands.splitListItem('listItem')
-       */
-      splitListItem: (typeOrName: string | NodeType$2, overrideAttrs?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  splitListItem: {
+    /**
+     * Splits one list item into two list items.
+     * @param typeOrName The type or name of the node.
+     * @param overrideAttrs The attributes to ensure on the new node.
+     * @example editor.commands.splitListItem('listItem')
+     */
+    splitListItem: (typeOrName: string | NodeType$2, overrideAttrs?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/toggleList.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    toggleList: {
-      /**
-       * Toggle between different list types.
-       * @param listTypeOrName The type or name of the list.
-       * @param itemTypeOrName The type or name of the list item.
-       * @param keepMarks Keep marks when toggling.
-       * @param attributes Attributes for the new list.
-       * @example editor.commands.toggleList('bulletList', 'listItem')
-       */
-      toggleList: (listTypeOrName: string | NodeType$2, itemTypeOrName: string | NodeType$2, keepMarks?: boolean, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  toggleList: {
+    /**
+     * Toggle between different list types.
+     * @param listTypeOrName The type or name of the list.
+     * @param itemTypeOrName The type or name of the list item.
+     * @param keepMarks Keep marks when toggling.
+     * @param attributes Attributes for the new list.
+     * @example editor.commands.toggleList('bulletList', 'listItem')
+     */
+    toggleList: (listTypeOrName: string | NodeType$2, itemTypeOrName: string | NodeType$2, keepMarks?: boolean, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/toggleMark.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    toggleMark: {
+interface Commands<ReturnType = any> {
+  toggleMark: {
+    /**
+     * Toggle a mark on and off.
+     * @param typeOrName The mark type or name.
+     * @param attributes The attributes of the mark.
+     * @param options.extendEmptyMarkRange Removes the mark even across the current selection. Defaults to `false`.
+     * @example editor.commands.toggleMark('bold')
+     */
+    toggleMark: (
+    /**
+     * The mark type or name.
+     */
+    typeOrName: string | MarkType$1,
+    /**
+     * The attributes of the mark.
+     */
+    attributes?: Record<string, any>, options?: {
       /**
-       * Toggle a mark on and off.
-       * @param typeOrName The mark type or name.
-       * @param attributes The attributes of the mark.
-       * @param options.extendEmptyMarkRange Removes the mark even across the current selection. Defaults to `false`.
-       * @example editor.commands.toggleMark('bold')
+       * Removes the mark even across the current selection. Defaults to `false`.
        */
-      toggleMark: (
-      /**
-       * The mark type or name.
-       */
-      typeOrName: string | MarkType$1,
-      /**
-       * The attributes of the mark.
-       */
-      attributes?: Record<string, any>, options?: {
-        /**
-         * Removes the mark even across the current selection. Defaults to `false`.
-         */
-        extendEmptyMarkRange?: boolean;
-      }) => ReturnType;
-    };
-  }
+      extendEmptyMarkRange?: boolean;
+    }) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/toggleNode.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    toggleNode: {
-      /**
-       * Toggle a node with another node.
-       * @param typeOrName The type or name of the node.
-       * @param toggleTypeOrName The type or name of the node to toggle.
-       * @param attributes The attributes of the node.
-       * @example editor.commands.toggleNode('heading', 'paragraph')
-       */
-      toggleNode: (typeOrName: string | NodeType$2, toggleTypeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  toggleNode: {
+    /**
+     * Toggle a node with another node.
+     * @param typeOrName The type or name of the node.
+     * @param toggleTypeOrName The type or name of the node to toggle.
+     * @param attributes The attributes of the node.
+     * @example editor.commands.toggleNode('heading', 'paragraph')
+     */
+    toggleNode: (typeOrName: string | NodeType$2, toggleTypeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/toggleWrap.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    toggleWrap: {
-      /**
-       * Wraps nodes in another node, or removes an existing wrap.
-       * @param typeOrName The type or name of the node.
-       * @param attributes The attributes of the node.
-       * @example editor.commands.toggleWrap('blockquote')
-       */
-      toggleWrap: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  toggleWrap: {
+    /**
+     * Wraps nodes in another node, or removes an existing wrap.
+     * @param typeOrName The type or name of the node.
+     * @param attributes The attributes of the node.
+     * @example editor.commands.toggleWrap('blockquote')
+     */
+    toggleWrap: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/undoInputRule.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    undoInputRule: {
-      /**
-       * Undo an input rule.
-       * @example editor.commands.undoInputRule()
-       */
-      undoInputRule: () => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  undoInputRule: {
+    /**
+     * Undo an input rule.
+     * @example editor.commands.undoInputRule()
+     */
+    undoInputRule: () => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/unsetAllMarks.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    unsetAllMarks: {
-      /**
-       * Remove all clearable marks in the current selection.
-       * Marks with `clearable: false` are preserved
-       * @param options.ignoreClearable If true, removes all marks regardless of `clearable` setting. Defaults to `false`.
-       * @example editor.commands.unsetAllMarks()
-       * @example editor.commands.unsetAllMarks({ ignoreClearable: true })
-       */
-      unsetAllMarks: (options?: {
-        ignoreClearable?: boolean;
-      }) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  unsetAllMarks: {
+    /**
+     * Remove all clearable marks in the current selection.
+     * Marks with `clearable: false` are preserved
+     * @param options.ignoreClearable If true, removes all marks regardless of `clearable` setting. Defaults to `false`.
+     * @example editor.commands.unsetAllMarks()
+     * @example editor.commands.unsetAllMarks({ ignoreClearable: true })
+     */
+    unsetAllMarks: (options?: {
+      ignoreClearable?: boolean;
+    }) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/unsetMark.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    unsetMark: {
+interface Commands<ReturnType = any> {
+  unsetMark: {
+    /**
+     * Remove all marks in the current selection.
+     * @param typeOrName The mark type or name.
+     * @param options.extendEmptyMarkRange Removes the mark even across the current selection. Defaults to `false`.
+     * @example editor.commands.unsetMark('bold')
+     */
+    unsetMark: (
+    /**
+     * The mark type or name.
+     */
+    typeOrName: string | MarkType$1, options?: {
       /**
-       * Remove all marks in the current selection.
-       * @param typeOrName The mark type or name.
-       * @param options.extendEmptyMarkRange Removes the mark even across the current selection. Defaults to `false`.
-       * @example editor.commands.unsetMark('bold')
+       * Removes the mark even across the current selection. Defaults to `false`.
        */
-      unsetMark: (
-      /**
-       * The mark type or name.
-       */
-      typeOrName: string | MarkType$1, options?: {
-        /**
-         * Removes the mark even across the current selection. Defaults to `false`.
-         */
-        extendEmptyMarkRange?: boolean;
-      }) => ReturnType;
-    };
-  }
+      extendEmptyMarkRange?: boolean;
+    }) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/unsetTextDirection.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    unsetTextDirection: {
-      /**
-       * Remove the text direction attribute from nodes.
-       * If no position is provided, it will use the current selection.
-       * @param position Optional position or range to remove the direction from
-       * @example editor.commands.unsetTextDirection()
-       * @example editor.commands.unsetTextDirection({ from: 0, to: 10 })
-       */
-      unsetTextDirection: (position?: number | Range) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  unsetTextDirection: {
+    /**
+     * Remove the text direction attribute from nodes.
+     * If no position is provided, it will use the current selection.
+     * @param position Optional position or range to remove the direction from
+     * @example editor.commands.unsetTextDirection()
+     * @example editor.commands.unsetTextDirection({ from: 0, to: 10 })
+     */
+    unsetTextDirection: (position?: number | Range) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/updateAttributes.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    updateAttributes: {
-      /**
-       * Update attributes of a node or mark.
-       * @param typeOrName The type or name of the node or mark.
-       * @param attributes The attributes of the node or mark.
-       * @example editor.commands.updateAttributes('mention', { userId: "2" })
-       */
-      updateAttributes: (
-      /**
-       * The type or name of the node or mark.
-       */
-      typeOrName: string | NodeType$2 | MarkType$1,
-      /**
-       * The attributes of the node or mark.
-       */
-      attributes: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  updateAttributes: {
+    /**
+     * Update attributes of a node or mark.
+     * @param typeOrName The type or name of the node or mark.
+     * @param attributes The attributes of the node or mark.
+     * @example editor.commands.updateAttributes('mention', { userId: "2" })
+     */
+    updateAttributes: (
+    /**
+     * The type or name of the node or mark.
+     */
+    typeOrName: string | NodeType$2 | MarkType$1,
+    /**
+     * The attributes of the node or mark.
+     */
+    attributes: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/updateDecorations.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    updateDecorations: {
-      /**
-       * Force declarative decorations to recompute, bypassing each extension's
-       * `shouldUpdate` gate. Pass an extension name to recompute only that
-       * extension's decorations, or omit it to recompute all of them.
-       * @param extensionName The name of the extension to recompute (optional).
-       * @example editor.commands.updateDecorations()
-       * @example editor.commands.updateDecorations('myExtension')
-       */
-      updateDecorations: (extensionName?: string) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  updateDecorations: {
+    /**
+     * Force declarative decorations to recompute, bypassing each extension's
+     * `shouldUpdate` gate. Pass an extension name to recompute only that
+     * extension's decorations, or omit it to recompute all of them.
+     * @param extensionName The name of the extension to recompute (optional).
+     * @example editor.commands.updateDecorations()
+     * @example editor.commands.updateDecorations('myExtension')
+     */
+    updateDecorations: (extensionName?: string) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/wrapIn.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    wrapIn: {
-      /**
-       * Wraps nodes in another node.
-       * @param typeOrName The type or name of the node.
-       * @param attributes The attributes of the node.
-       * @example editor.commands.wrapIn('blockquote')
-       */
-      wrapIn: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  wrapIn: {
+    /**
+     * Wraps nodes in another node.
+     * @param typeOrName The type or name of the node.
+     * @param attributes The attributes of the node.
+     * @example editor.commands.wrapIn('blockquote')
+     */
+    wrapIn: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 //#endregion
 //#region src/commands/wrapInList.d.ts
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    wrapInList: {
-      /**
-       * Wrap a node in a list.
-       * @param typeOrName The type or name of the node.
-       * @param attributes The attributes of the node.
-       * @example editor.commands.wrapInList('bulletList')
-       */
-      wrapInList: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
-    };
-  }
+interface Commands<ReturnType = any> {
+  wrapInList: {
+    /**
+     * Wrap a node in a list.
+     * @param typeOrName The type or name of the node.
+     * @param attributes The attributes of the node.
+     * @example editor.commands.wrapInList('bulletList')
+     */
+    wrapInList: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+  };
 }
 declare class Editor extends EventEmitter<EditorEvents> {
   private commandManager;

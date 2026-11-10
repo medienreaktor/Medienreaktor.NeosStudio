@@ -167,10 +167,46 @@ fs.rmSync(emitted, { recursive: true, force: true })
 const file = path.join(outDir, 'index.d.ts')
 fs.writeFileSync(
   file,
-  fs
-    .readFileSync(file, 'utf8')
-    .replace(/^(\/\/#region )(?:\S*\/node_modules\/|(?:\.\.\/)+)/gm, '$1'),
+  unwrapInlinedAugmentations(
+    fs
+      .readFileSync(file, 'utf8')
+      .replace(/^(\/\/#region )(?:\S*\/node_modules\/|(?:\.\.\/)+)/gm, '$1'),
+  ),
 )
+
+/**
+ * TipTap's extensions add their commands to `Commands` by augmenting the
+ * module: `declare module '@tiptap/core' { interface Commands<ReturnType> {
+ * ... } }`. Inlining turns @tiptap/core's own `interface Commands` into a
+ * declaration of this file, but leaves the augmentations pointing at a module
+ * a plugin doesn't have - they merge into nothing, and `editor.chain()`
+ * offers no commands at all. Unwrapping them into top-level declarations of
+ * this file makes them merge with the inlined interface, as they did with the
+ * package. The type parameter must read exactly as the inlined declaration's
+ * for the declarations to merge.
+ */
+function unwrapInlinedAugmentations(source) {
+  const inlined = ['@tiptap/core']
+  let unwrapped = 0
+  const result = source.replace(
+    /^declare module '([^']+)' \{\n([\s\S]*?)^\}\n/gm,
+    (block, moduleName, body) => {
+      if (!inlined.includes(moduleName)) return block
+      unwrapped++
+      return body
+        .replace(/^ {2}/gm, '')
+        .replace(
+          /^interface Commands<ReturnType> \{/gm,
+          'interface Commands<ReturnType = any> {',
+        )
+    },
+  )
+  if (unwrapped === 0)
+    throw new Error(
+      'build-plugin-types: found no TipTap command augmentations to unwrap - check the TipTap types',
+    )
+  return result
+}
 const kb = (fs.statSync(file).size / 1024).toFixed(0)
 console.log(`plugin API types: ${path.relative(root, file)} (${kb} kB)`)
 
