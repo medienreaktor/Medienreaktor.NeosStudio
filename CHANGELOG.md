@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A panel, editor, inspector view, settings section or link type that
+  crashes - typically a plugin's - no longer takes Studio down with it: it
+  shows a notice with a Try again button in its place, the error is logged
+  with its registry id, and everything else keeps working. Throwing
+  validators and keyboard shortcut handlers are logged and skipped. A crash
+  in Studio itself shows a reload screen instead of a blank page.
+
 ## [2.0.3] - 2026-11-10
 
 ### Added

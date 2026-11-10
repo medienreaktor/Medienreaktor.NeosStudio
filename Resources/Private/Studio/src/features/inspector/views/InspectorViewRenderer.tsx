@@ -1,3 +1,4 @@
+import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import type { Node } from '@/api/neos/schema'
 import type { InspectorView } from '@/features/inspector/inspectorSchema'
 import { Labeled } from '@/features/inspector/PropertyEditor'
@@ -38,7 +39,14 @@ export function InspectorViewRenderer({
   const View = definition.component
   return (
     <Labeled label={view.label}>
-      <View node={node} label={view.label} options={view.viewOptions} />
+      <ExtensionBoundary
+        kind="view"
+        id={view.view ?? ''}
+        variant="inline"
+        resetKeys={[View, node.nodeAggregateId, node.workspaceName]}
+      >
+        <View node={node} label={view.label} options={view.viewOptions} />
+      </ExtensionBoundary>
     </Labeled>
   )
 }

@@ -11,6 +11,7 @@ import {
   nodeTypeConfiguration,
   type PropertyConfig,
 } from '@/api/neos/schema'
+import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -388,18 +389,25 @@ function ElementEditor({
   const invalid = errors !== undefined && errors.length > 0
 
   const control = Editor ? (
-    <Editor
-      subject={{ name: element.name, type, label: element.label }}
-      value={value}
-      options={options}
-      autoFocus={autoFocus}
-      invalid={invalid}
-      // The dialog keeps a live draft it submits on Create, so it tracks both
-      // per-keystroke changes and commits (its validation gates the Create
-      // button and must stay current as the user types).
-      onChange={onChange}
-      onCommit={onChange}
-    />
+    <ExtensionBoundary
+      kind="editor"
+      id={editorId ?? ''}
+      variant="inline"
+      resetKeys={[Editor]}
+    >
+      <Editor
+        subject={{ name: element.name, type, label: element.label }}
+        value={value}
+        options={options}
+        autoFocus={autoFocus}
+        invalid={invalid}
+        // The dialog keeps a live draft it submits on Create, so it tracks
+        // both per-keystroke changes and commits (its validation gates the
+        // Create button and must stay current as the user types).
+        onChange={onChange}
+        onCommit={onChange}
+      />
+    </ExtensionBoundary>
   ) : (
     <Input
       autoFocus={autoFocus}

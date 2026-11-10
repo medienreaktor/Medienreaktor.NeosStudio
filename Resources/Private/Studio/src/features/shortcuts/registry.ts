@@ -303,7 +303,15 @@ export class KeyboardShortcutRegistry extends ObservableRegistry<ResolvedKeyboar
       const definition = matches[i]!
       if (editable && !definition.allowInInput) continue
       if (definition.when && !definition.when()) continue
-      if (definition.handler(event) === false) continue
+      // A throwing handler (a plugin's, say) still claims the key - it
+      // matched and meant to act - but must not break dispatch for good.
+      let handled: boolean | void = undefined
+      try {
+        handled = definition.handler(event)
+      } catch (error) {
+        console.error(`Keyboard shortcut "${definition.id}" threw:`, error)
+      }
+      if (handled === false) continue
       event.preventDefault()
       return true
     }

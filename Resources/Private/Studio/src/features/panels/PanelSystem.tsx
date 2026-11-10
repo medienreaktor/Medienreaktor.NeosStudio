@@ -13,6 +13,7 @@ import {
   SidebarResizeHandle,
   useResizableSidebar,
 } from '@/components/ui/sidebar-resize'
+import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { useSidebarCollapsed } from '@/components/ui/sidebar'
 import { useLatestRef } from '@/hooks/use-latest-ref'
 import { useValueChange } from '@/hooks/use-value-change'
@@ -1030,7 +1031,9 @@ const PanelBody = React.memo(function PanelBody({
   return (
     <PanelIdContext.Provider value={panel}>
       <PanelVisibleContext.Provider value={visible}>
-        <Component />
+        <ExtensionBoundary kind="panel" id={panel} resetKeys={[Component]}>
+          <Component />
+        </ExtensionBoundary>
       </PanelVisibleContext.Provider>
     </PanelIdContext.Provider>
   )

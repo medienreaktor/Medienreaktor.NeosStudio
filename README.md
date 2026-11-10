@@ -92,6 +92,8 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 | Node decorators      | Icon, badges, tint or dimming of tree rows (used for hidden and deleted nodes)                   |
 | Keyboard shortcuts   | App-wide shortcuts                                                                               |
 
+A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators and shortcut handlers are logged and skipped. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
+
 A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), and the registries. The shell loads the bundle from one `Settings.yaml` entry.
 
 TypeScript types ship with the package in one declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (it resolves to `window.NeosStudio` at runtime). `react` is external as well, so install `@types/react` and map `react` to it, because the declaration file lies outside your package and TypeScript would otherwise look for `react` next to it:

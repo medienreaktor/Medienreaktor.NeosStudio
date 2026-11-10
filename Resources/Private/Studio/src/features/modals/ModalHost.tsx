@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 
+import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { stackedDialogClassName } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { faClassName } from '@/features/tree/nodeTypeIcon'
@@ -251,5 +252,13 @@ function SettingsSectionBody({
     )
   }
   const Body = section.component
-  return <Body />
+  return (
+    <ExtensionBoundary
+      kind="settingsSection"
+      id={section.id}
+      resetKeys={[Body]}
+    >
+      <Body />
+    </ExtensionBoundary>
+  )
 }

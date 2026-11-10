@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { AppProviders } from './app/providers'
 import { App } from './app/App'
+import { ShellBoundary } from './components/ExtensionBoundary'
 import './styles.css'
 // Noto Sans (SIL OFL) self-hosted so the shell matches the classic Neos UI
 // typeface without a request to Google. Weights: 400 body, 500/600 for
@@ -67,8 +68,10 @@ registerBuiltinTaskWorkflow()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
+    <ShellBoundary>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </ShellBoundary>
   </React.StrictMode>,
 )

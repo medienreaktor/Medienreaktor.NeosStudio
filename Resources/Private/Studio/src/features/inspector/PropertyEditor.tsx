@@ -1,3 +1,4 @@
+import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import type { NodeAddress, PropertyScope } from '@/api/neos/schema'
 import {
   Popover,
@@ -57,22 +58,36 @@ export function PropertyEditor({
 
   const Editor = definition.component
   const editor = (
-    <Editor
-      subject={{
-        name: property.name,
-        type: property.type,
-        label: property.label,
-      }}
-      value={value}
-      options={property.editorOptions}
-      nodeAddress={nodeAddress}
-      invalid={errors !== undefined && errors.length > 0}
-      // The inspector auto-saves: persist on commit. Live pre-commit changes
-      // are never persisted (that would be a save per keystroke), but they do
-      // feed ClientEval so dependent fields react while typing.
-      onCommit={(next) => onSave(property.name, next)}
-      onChange={(next) => onLiveChange?.(property.name, next)}
-    />
+    // A crashing editor (a plugin's, say) becomes a one-line fallback instead
+    // of taking the inspector down; it tries again on the next node.
+    <ExtensionBoundary
+      kind="editor"
+      id={property.editor ?? ''}
+      variant="inline"
+      resetKeys={[
+        Editor,
+        nodeAddress.nodeAggregateId,
+        nodeAddress.workspaceName,
+        nodeAddress.dimensionSpacePoint,
+      ]}
+    >
+      <Editor
+        subject={{
+          name: property.name,
+          type: property.type,
+          label: property.label,
+        }}
+        value={value}
+        options={property.editorOptions}
+        nodeAddress={nodeAddress}
+        invalid={errors !== undefined && errors.length > 0}
+        // The inspector auto-saves: persist on commit. Live pre-commit changes
+        // are never persisted (that would be a save per keystroke), but they do
+        // feed ClientEval so dependent fields react while typing.
+        onCommit={(next) => onSave(property.name, next)}
+        onChange={(next) => onLiveChange?.(property.name, next)}
+      />
+    </ExtensionBoundary>
   )
   const inlineErrors = <ValidationErrors errors={errors} />
 

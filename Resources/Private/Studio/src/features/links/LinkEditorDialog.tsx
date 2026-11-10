@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -140,12 +141,21 @@ export function LinkEditorDialog({
                 // tab can scroll edge-to-edge under its overlay header.
                 className="h-75 max-h-[50vh] min-h-0 flex-none"
               >
-                <type.component
-                  href={drafts[type.id] ?? null}
-                  onChange={(next) =>
-                    setDrafts((previous) => ({ ...previous, [type.id]: next }))
-                  }
-                />
+                <ExtensionBoundary
+                  kind="linkType"
+                  id={type.id}
+                  resetKeys={[type.component]}
+                >
+                  <type.component
+                    href={drafts[type.id] ?? null}
+                    onChange={(next) =>
+                      setDrafts((previous) => ({
+                        ...previous,
+                        [type.id]: next,
+                      }))
+                    }
+                  />
+                </ExtensionBoundary>
               </TabsContent>
             ))}
           </Tabs>

@@ -84,7 +84,15 @@ export function validateValue(
       !Array.isArray(rawOptions)
         ? (rawOptions as Record<string, unknown>)
         : {}
-    const error = definition.validate(value, options)
+    // A validator that throws (a plugin's, say) is skipped - logged, not
+    // reported as a validation error the editor cannot fix.
+    let error: string | null
+    try {
+      error = definition.validate(value, options)
+    } catch (thrown) {
+      console.error(`Validator "${id}" threw and was skipped:`, thrown)
+      continue
+    }
     if (error !== null) errors.push(error)
   }
   return errors
