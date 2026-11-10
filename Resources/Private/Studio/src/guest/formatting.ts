@@ -88,6 +88,12 @@ export interface Formatting {
    */
   styles: ResolvedStyle[]
   /**
+   * The `formatting` flags as configured, keys this normalization does not
+   * know included: plugin rich text extensions are enabled by keys of their
+   * own (see richTextExtensions.ts).
+   */
+  flags: Readonly<Record<string, unknown>>
+  /**
    * Whether text is wrapped in paragraphs. False - the NodeType's
    * `autoparagraph: false` (for inline editing also when unset), or a
    * property rendered as a <span> or heading (see parseFormatting) - stores
@@ -126,6 +132,7 @@ export const DEFAULT_FORMATTING: Formatting = {
   softHyphen: false,
   nonBreakingSpace: false,
   styles: [],
+  flags: {},
   autoparagraph: true,
   block: true,
   multiline: true,
@@ -256,6 +263,7 @@ export function normalizeFormatting(
     nonBreakingSpace: config.nbsp === true,
     // Resolved below, once the enclosing markup has had its say.
     styles: [],
+    flags: f,
     autoparagraph: config.autoparagraph !== false,
     block,
     // Like CKEditor, `p: false` only hides the paragraph button; Enter still

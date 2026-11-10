@@ -33,6 +33,7 @@ import type {
 import { post } from './bridge'
 import { applyLabel, label, labelCatalogue, setTranslations } from './labels'
 import { applyLinkEdit, cancelLinkEdit } from './linkEditing'
+import { installGuestPluginApi } from './pluginApi'
 import {
   applyRemotePropertyContent,
   ejectFromProperty,
@@ -1861,6 +1862,10 @@ function init(): void {
   window.addEventListener('pagehide', flushPendingCommits)
   post({ type: 'neos-studio/guest-ready', labels: labelCatalogue() })
 }
+
+// Now, not in init(): the plugin guest bundles loaded after this script
+// register their rich text extensions before the editors mount.
+installGuestPluginApi()
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init)

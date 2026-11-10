@@ -13,12 +13,10 @@
  * the property's NodeType formatting config (see formatting.ts), so a property
  * only offers the actions it permits.
  *
- * The registry is internal to the guest: the guest ships as a closed IIFE
- * (vite.guest.config.ts) injected into the preview page, which exposes
- * nothing and loads no plugin code - so there is no way for a third-party
- * package to reach registerToolbarItem today. It is a seam for the guest's
- * own built-in items, and the place a future guest plugin mechanism would
- * hook into.
+ * The registry is internal to the guest. Plugins add buttons through their
+ * rich text extensions instead (richTextExtensions.ts, registered by a
+ * plugin's guest bundle): their toolbar items are mirrored into this registry
+ * (see syncPluginItems), available wherever the extension is active.
  *
  * Buttons act on mousedown with preventDefault so focus never leaves the
  * editor - otherwise clicking a button would blur the editor, collapse the
@@ -29,6 +27,11 @@ import { CellSelection } from '@tiptap/pm/tables'
 import { editorFormatting } from './formatting'
 import { label, registerLabels } from './labels'
 import { requestLinkEdit } from './linkEditing'
+import {
+  activeRichTextExtensions,
+  guardedToolbarCall,
+  richTextExtensionRegistry,
+} from './richTextExtensions'
 import {
   isStyleActive,
   isStyleAvailable,
@@ -72,6 +75,8 @@ export interface ToolbarItem {
   run(editor: Editor): void
   /** Whether the item applies to this editor (default: always). */
   isAvailable?(editor: Editor): boolean
+  /** Shown but inert right now (default: never) - plugin items only. */
+  isDisabled?(editor: Editor): boolean
   /**
    * The choices this item opens as a dropdown instead of acting directly. An
    * item whose menu is empty is not rendered at all, so a picker disappears
@@ -149,6 +154,11 @@ function injectStyles(): void {
     .${TOOLBAR_CLASS} button.${ACTIVE_CLASS} {
       background: ${ACCENT};
       color: #fff;
+    }
+    .${TOOLBAR_CLASS} button[aria-disabled='true'] {
+      background: transparent;
+      opacity: 0.4;
+      cursor: default;
     }
     .${TOOLBAR_CLASS} button svg {
       width: 16px;
@@ -316,7 +326,7 @@ class Toolbar {
         // Keep the editor focused and the selection intact.
         event.preventDefault()
         this.closeMenu()
-        if (this.currentEditor) {
+        if (this.currentEditor && button.ariaDisabled !== 'true') {
           item.run(this.currentEditor)
           this.refreshActiveStates()
           this.reposition()
@@ -388,8 +398,12 @@ class Toolbar {
     if (!this.currentEditor) return
     for (const [id, button] of this.buttons) {
       const item = items.find((candidate) => candidate.id === id)
-      if (item)
-        button.classList.toggle(ACTIVE_CLASS, item.isActive(this.currentEditor))
+      if (!item) continue
+      button.classList.toggle(ACTIVE_CLASS, item.isActive(this.currentEditor))
+      // aria-disabled, not disabled: a disabled button receives no
+      // mousedown, so the press could not be kept from blurring the editor.
+      if (item.isDisabled)
+        button.ariaDisabled = String(item.isDisabled(this.currentEditor))
     }
   }
 
@@ -1018,3 +1032,75 @@ for (const kind of ['block', 'inline'] as const) {
       })),
   })
 }
+
+// --- Plugin items -----------------------------------------------------------
+
+const PLUGIN_ITEM_PREFIX = 'plugin:'
+
+/** The first letter of a label, as the face of a button without an icon. */
+function initialOf(text: string): string {
+  const span = document.createElement('span')
+  span.textContent = text.trim().charAt(0).toUpperCase()
+  return span.outerHTML
+}
+
+/**
+ * Mirror the toolbar items of the registered rich text extensions into the
+ * registry above, replacing the previous set: in registry order, ahead of
+ * the style pickers (which stay last, see above), each available where its
+ * extension is active in the editor. Their callbacks are guarded, so a
+ * throwing plugin item reads as inactive and does nothing rather than
+ * breaking the bars.
+ */
+function syncPluginItems(): void {
+  for (let index = items.length - 1; index >= 0; index--) {
+    if (items[index]?.id.startsWith(PLUGIN_ITEM_PREFIX)) items.splice(index, 1)
+  }
+  const pluginItems: ToolbarItem[] = richTextExtensionRegistry
+    .getAll()
+    .flatMap((definition) =>
+      (definition.toolbar ?? []).map((item): ToolbarItem => ({
+        id: `${PLUGIN_ITEM_PREFIX}${definition.id}:${item.id}`,
+        kind: item.kind ?? 'inline',
+        group: 'plugins',
+        label: item.label,
+        icon: item.svg ?? initialOf(item.label),
+        isAvailable: (editor) =>
+          activeRichTextExtensions(editor).includes(definition),
+        isActive: (editor) =>
+          guardedToolbarCall(
+            definition,
+            item,
+            () => item.isActive?.(editor) ?? false,
+            false,
+          ),
+        isDisabled: (editor) =>
+          guardedToolbarCall(
+            definition,
+            item,
+            () => item.isDisabled?.(editor) ?? false,
+            false,
+          ),
+        run: (editor) =>
+          guardedToolbarCall(
+            definition,
+            item,
+            () => item.run(editor),
+            undefined,
+          ),
+      })),
+    )
+  const stylesIndex = items.findIndex((item) => item.group === 'styles')
+  items.splice(
+    stylesIndex === -1 ? items.length : stylesIndex,
+    0,
+    ...pluginItems,
+  )
+  // Not through registerToolbarItem: the labels come translated from the
+  // plugin and must not join the catalogue the host translates.
+  hideToolbars()
+  inlineToolbar.invalidate()
+  blockToolbar.invalidate()
+}
+syncPluginItems()
+richTextExtensionRegistry.subscribe(syncPluginItems)

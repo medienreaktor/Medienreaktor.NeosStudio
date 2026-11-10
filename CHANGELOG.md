@@ -57,6 +57,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The settings sections, the link editor's tabs and the Tasks panel are
   labelled in the interface language again; they were always English
   because their labels were translated before the translations had loaded.
+- Plugins can extend rich text editing with their own marks, nodes and
+  TipTap extensions and toolbar buttons (`richTextExtensions`), enabled per
+  property by a key of `editorOptions.formatting`, as the classic UI's
+  CKEditor formatting plugins are. They are built with the editor's own
+  TipTap, which the plugin API now offers as `tiptap`. The inspector's rich
+  text editor reads them from the shell; for inline editing in the preview a
+  plugin lists a `guestJavascript` bundle, which Studio loads into the
+  edit-mode preview. A failing extension is logged and left out.
 
 ## [2.0.3] - 2026-11-10
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Controller;
 
+use Medienreaktor\NeosStudio\Service\PluginBundles;
 use Neos\Api\Security\PrivilegeScopes;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Locale;
@@ -67,7 +68,7 @@ class StudioController extends ActionController
      * an empty default for the path either - see Settings.yaml for why an empty
      * array would drop the entries of packages merged before this one.
      *
-     * @var array<string, array{javascript?: string, stylesheet?: string, position?: int}>|null
+     * @var array<string, array{javascript?: string, guestJavascript?: string, stylesheet?: string, position?: int}>|null
      */
     #[Flow\InjectConfiguration(path: 'plugins')]
     protected $plugins;
@@ -415,44 +416,17 @@ class StudioController extends ActionController
      */
     private function pluginTags(): array
     {
-        $plugins = $this->plugins ?? [];
-        // Stable order: explicit `position` ascending, then package key.
-        uasort($plugins, static function (array $a, array $b): int {
-            return ((int)($a['position'] ?? 100)) <=> ((int)($b['position'] ?? 100));
-        });
-
         $styles = '';
         $scripts = '';
-        foreach ($plugins as $plugin) {
-            $stylesheet = $plugin['stylesheet'] ?? null;
-            if (is_string($stylesheet) && ($uri = $this->resourceUri($stylesheet)) !== null) {
+        foreach (PluginBundles::sorted($this->plugins) as $plugin) {
+            if (($uri = PluginBundles::resourceUri($plugin['stylesheet'] ?? null)) !== null) {
                 $styles .= '<link rel="stylesheet" href="' . htmlspecialchars($uri, ENT_QUOTES) . '">';
             }
-            $javascript = $plugin['javascript'] ?? null;
-            if (is_string($javascript) && ($uri = $this->resourceUri($javascript)) !== null) {
+            if (($uri = PluginBundles::resourceUri($plugin['javascript'] ?? null)) !== null) {
                 $scripts .= '<script type="module" src="' . htmlspecialchars($uri, ENT_QUOTES) . '"></script>';
             }
         }
 
         return [$styles, $scripts];
-    }
-
-    /**
-     * Turn a `resource://<Package>/Public/<path>` URI into the published web
-     * URI (`/_Resources/Static/Packages/<Package>/<path>`), cache-busted by
-     * the file's mtime. Returns null when the referenced file is not present -
-     * a plugin whose frontend has not been built is skipped rather than
-     * emitting a 404, so the shell still loads.
-     */
-    private function resourceUri(string $resourcePath): ?string
-    {
-        if (!is_file($resourcePath)) {
-            return null;
-        }
-        if (!preg_match('#^resource://([^/]+)/Public/(.+)$#', $resourcePath, $matches)) {
-            return null;
-        }
-        return '/_Resources/Static/Packages/' . $matches[1] . '/' . $matches[2]
-            . '?v=' . filemtime($resourcePath);
     }
 }

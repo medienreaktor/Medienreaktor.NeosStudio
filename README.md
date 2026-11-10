@@ -93,10 +93,11 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 | Keyboard shortcuts   | App-wide shortcuts                                                                               |
 | Node actions         | Commands in the node context menus and the documents toolbar                                     |
 | Header actions       | Icon buttons in the shell header                                                                 |
+| Rich text extensions | Marks, nodes and toolbar buttons for rich text editing, enabled by a formatting key              |
 
 Labels a registry entry shows - panel titles, settings section titles, link type labels, node and header action labels - take a string or a function returning one (`LazyLabel`). Pass the function when the label is translated (`title: () => translate('Vendor.Package:Main:panel.title', 'Bookings')`): plugins register before the translations have loaded, so a label translated at registration stays in English.
 
-A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators and shortcut handlers are logged and skipped, and so are the conditions of node and header actions; a failing action shows an error toast. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
+A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators, shortcut handlers and rich text extensions are logged and skipped, and so are the conditions of node and header actions; a failing action shows an error toast. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
 
 A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), the registries, the shell's data layer ([data fetching](#data-fetching)) and its [events](#events). The shell loads the bundle from one `Settings.yaml` entry.
 
@@ -346,6 +347,71 @@ function SeoPanel() {
 
 The payloads are typed (`StudioEventMap`). The edit and workspace events report what this editor did in Studio, after it succeeded. A plugin's own writes don't emit them. `remote.changed` only fires while a shared workspace is being edited, since only shared workspaces have a change feed. Handlers run after the shell's own work is done and are never awaited. A handler that throws (or rejects) is logged with the event name, and the other handlers still run.
 
+### Rich text extensions
+
+Plugins can add their own formatting to rich text editing: TipTap marks, nodes and extensions, with toolbar buttons that apply them, the counterpart of the classic UI's CKEditor formatting plugins. A definition in `richTextExtensions` names the `editorOptions.formatting` key that enables it on a property (without one it applies to every rich text property), returns its TipTap extensions from a factory, and lists its toolbar buttons:
+
+```ts
+// richText.ts - shared by the plugin's shell bundle and its guest bundle
+import { richTextExtensions, tiptap } from '@medienreaktor/neos-studio'
+
+const { Mark, markInputRule, mergeAttributes } = tiptap
+
+const Highlight = Mark.create({
+  name: 'highlight',
+  parseHTML: () => [{ tag: 'mark' }],
+  renderHTML: ({ HTMLAttributes }) => ['mark', mergeAttributes(HTMLAttributes), 0],
+  // ==text== while typing
+  addInputRules() {
+    return [markInputRule({ find: /(?:^|\s)(==([^=]+)==)$/, type: this.type })]
+  },
+})
+
+richTextExtensions.register({
+  id: 'vendor.package:highlight',
+  formatting: 'highlight',
+  extensions: () => [Highlight],
+  toolbar: [
+    {
+      id: 'highlight',
+      label: 'Highlight',
+      icon: 'highlighter', // Font Awesome, for the inspector
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>', // for the preview
+      isActive: (editor) => editor.isActive('highlight'),
+      run: (editor) => editor.chain().focus().toggleMark('highlight').run(),
+    },
+  ],
+})
+```
+
+```yaml
+'Vendor.Site:Content.Text':
+  properties:
+    text:
+      ui:
+        inline:
+          editorOptions:
+            formatting:
+              highlight: true
+```
+
+The value is stored as the editor serializes it, so the mark's `parseHTML` and `renderHTML` must round-trip: what `renderHTML` writes (`<mark>`) is what `parseHTML` has to read back the next time the property is edited. Unknown formatting keys are ignored by the built-in formatting, and a key without a registered extension changes nothing.
+
+Build extensions only with the `tiptap` building blocks of the plugin API (`Extension`, `Mark`, `Node`, `mergeAttributes`, the input and paste rule helpers, ProseMirror's `Plugin` and `PluginKey`), never with a TipTap bundled into the plugin: a second copy of TipTap and ProseMirror breaks schema and plugin identity. A factory that throws, or extensions that break the editor together, are logged with the definition's id and left out; the editor keeps working with its built-in formatting. The factory's `context` tells it where it runs (`surface`: `inspector` or `inline`), the property's `formatting` flags (for options of its own) and whether the property has block nodes at all (`block`: false for a single line of inline text, where a block node has no place).
+
+Rich text is edited in two places, and they live in two windows. The inspector's rich text editor (also in the creation dialog) runs in the shell and reads the registry of the shell's `window.NeosStudio`. Inline editing runs inside the preview frame with its own TipTap, so a plugin's extensions for it have to run there too: list a second bundle as `guestJavascript`, and Studio loads it into the edit-mode preview right after its own guest script. There `window.NeosStudio` offers only `version`, `richTextExtensions` and `tiptap`, the preview's own; build the bundle with the same externals, from a module that imports nothing else from the plugin API (like `richText.ts` above, imported by both bundles):
+
+```yaml
+Medienreaktor:
+  NeosStudio:
+    plugins:
+      'Vendor.Package':
+        javascript: 'resource://Vendor.Package/Public/Plugin/plugin.js'
+        guestJavascript: 'resource://Vendor.Package/Public/Plugin/guest.js'
+```
+
+Without a guest bundle the formatting is offered in the inspector only, and inline editing drops the markup it does not know when that property is next edited inline. In the preview the button sits in the bubble over a text selection (`kind: 'block'` moves it to the bar at the caret's block), with `svg` as its face (the site's page has no icon font, so without it the button shows the label's first letter); the inspector shows `icon` like its built-in buttons. Labels are shown as given.
+
 ### Plugin API version 2
 
 `NeosStudio.version` is `2` since the Studio runs on Neos.Api instead of Medienreaktor.NeosApi. What a version 1 plugin has to change:
@@ -452,7 +518,8 @@ src/
                         profile, sharing, shortcuts, sites, tasks, tree, users,
                         workspaces
   guest/                the script injected into the preview iframe:
-                        inline editing, TipTap RTE, toolbar, link editing
+                        inline editing, TipTap RTE, toolbar, link editing,
+                        rich text extensions (shared with the inspector)
   plugin-api/           the public plugin API surface (window.NeosStudio)
   lib/, hooks/          shared utilities
 ```

@@ -46,7 +46,10 @@ const atAlias = {
     if (!id.startsWith('@/')) return null
     const base = path.join(emitted, id.slice(2))
     for (const candidate of [`${base}.d.ts`, path.join(base, 'index.d.ts')]) {
-      if (fs.existsSync(candidate)) return candidate
+      // The real path: relative imports between the emitted files resolve to
+      // it, and a module reached under two paths (node_modules symlinked into
+      // a worktree) would be inlined twice.
+      if (fs.existsSync(candidate)) return fs.realpathSync(candidate)
     }
     throw new Error(`build-plugin-types: cannot resolve ${id}`)
   },
