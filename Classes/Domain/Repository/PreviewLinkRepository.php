@@ -45,6 +45,7 @@ final readonly class PreviewLinkRepository
                 'created_by_user_id' => $link->createdByUserId->value,
                 'created_at' => $link->createdAt->format('Y-m-d H:i:s'),
                 'expires_at' => $link->expiresAt->format('Y-m-d H:i:s'),
+                'token_ciphertext' => $link->tokenCiphertext,
             ]);
         } catch (DbalException $e) {
             throw new \RuntimeException(sprintf('Failed to add preview link for node "%s": %s', $link->nodeAggregateId->value, $e->getMessage()), 1754380001, $e);
@@ -121,6 +122,7 @@ final readonly class PreviewLinkRepository
             UserId::fromString($row['created_by_user_id']),
             new \DateTimeImmutable($row['created_at']),
             new \DateTimeImmutable($row['expires_at']),
+            $row['token_ciphertext'] ?? null,
         );
     }
 }

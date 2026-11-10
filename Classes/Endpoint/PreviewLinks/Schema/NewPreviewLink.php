@@ -13,8 +13,7 @@ use Neos\JsonSchema\Schema;
 use Neos\Schematic\Discovery\AutoDiscoveringSchema;
 
 /**
- * A preview link just created, with the one thing nobody can read again: its
- * share URL
+ * A preview link just created, with its share URL
  */
 final readonly class NewPreviewLink implements ProvidesSchema
 {
@@ -22,7 +21,7 @@ final readonly class NewPreviewLink implements ProvidesSchema
      * @param string $label what the creator called it, may be empty
      * @param string $createdAt when it was created, as ISO 8601
      * @param string $expiresAt when it stops working, as ISO 8601
-     * @param string $shareUrl the absolute URL to share. Only in this response: the secret in it is stored hashed
+     * @param string $shareUrl the absolute URL to share
      */
     public function __construct(
         public PreviewLinkId $id,
@@ -37,7 +36,7 @@ final readonly class NewPreviewLink implements ProvidesSchema
     ) {
     }
 
-    public static function of(PreviewLink $link, string $shareUrl): self
+    public static function of(PreviewLink $link): self
     {
         return new self(
             $link->id,
@@ -48,7 +47,7 @@ final readonly class NewPreviewLink implements ProvidesSchema
             $link->nodeAggregateId,
             $link->createdAt,
             $link->expiresAt,
-            $shareUrl,
+            $link->shareUrl ?? throw new \LogicException('A preview link just created has a share URL', 1762770001),
         );
     }
 

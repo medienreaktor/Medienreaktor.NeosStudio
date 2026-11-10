@@ -1466,6 +1466,7 @@ interface components {
       nodeAggregateId: components['schemas']['NodeAggregateId'];
       createdAt: string;
       expiresAt: string;
+      shareUrl: string | null;
     };
     /** PreviewLinkCreate */
     PreviewLinkCreate: {

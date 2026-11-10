@@ -2218,9 +2218,9 @@
         <source>Copying failed — please copy the link manually.</source>
         <target xml:lang="da">Kopiering mislykkedes — kopiér venligst linket manuelt.</target>
       </trans-unit>
-      <trans-unit id="share.copyOnceHint" xml:space="preserve">
-        <source>Copy the link now — for security it is shown only this once.</source>
-        <target xml:lang="da">Kopiér linket nu — af sikkerhedshensyn vises det kun denne ene gang.</target>
+      <trans-unit id="share.copyLaterHint" xml:space="preserve">
+        <source>You can copy it again later from your active links.</source>
+        <target xml:lang="da">Du kan kopiere det igen senere fra dine aktive links.</target>
       </trans-unit>
       <trans-unit id="share.create" xml:space="preserve">
         <source>Create link</source>
@@ -2253,6 +2253,10 @@
       <trans-unit id="share.label" xml:space="preserve">
         <source>Label</source>
         <target xml:lang="da">Etiket</target>
+      </trans-unit>
+      <trans-unit id="share.notRecoverable" xml:space="preserve">
+        <source>This link was created before links could be copied again. It still works, but its URL can no longer be shown.</source>
+        <target xml:lang="da">Dette link blev oprettet, før links kunne kopieres igen. Det virker stadig, men dets URL kan ikke længere vises.</target>
       </trans-unit>
       <trans-unit id="share.revoke" xml:space="preserve">
         <source>Revoke link</source>

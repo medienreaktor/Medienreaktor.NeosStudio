@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { apiErrorDescription } from '@/api/http/errors'
 import type { Node } from '@/api/neos/schema'
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/toast'
+import { copyText } from '@/lib/clipboard'
 import { translate as t } from '@/lib/i18n'
 
 function documentLabel(document: Node): string {
@@ -37,9 +38,14 @@ function documentLabel(document: Node): string {
 /**
  * Create and manage shareable preview links for the current document: anyone
  * holding the URL sees the page read-only, including hidden content - no
- * login. The URL is shown exactly once (the secret is stored hashed), so the
- * dialog pushes copying it right after creation; the list below manages
- * (revokes) all of the user's active links.
+ * login. The new link's URL is shown right after creation; the list below
+ * lets the user copy any of their active links again and revoke them. Links
+ * from before the server kept their secret have no URL any more (shareUrl
+ * null) - those can only be revoked.
+ *
+ * Copying can be refused - Safari sometimes doesn't count a click as user
+ * activation, which both clipboard paths require. Then the URL is shown
+ * selected in the field, so the keyboard shortcut (always allowed) copies it.
  */
 export function ShareLinkDialog({
   document,
@@ -52,14 +58,23 @@ export function ShareLinkDialog({
 }) {
   const queryClient = useQueryClient()
   // Seeded once: mounted per opening and per document (see ShareButton), so a
-  // refetch of the document never resets the form - nor drops the one-time
-  // URL of a link just created.
+  // refetch of the document never resets the form - nor drops the URL shown
+  // (the link just created, or one whose copying failed).
   const [label, setLabel] = useState(() => documentLabel(document))
   const [ttlHours, setTtlHours] = useState<number>(48)
   const [creating, setCreating] = useState(false)
-  const [createdUrl, setCreatedUrl] = useState<string | null>(null)
+  const [shownUrl, setShownUrl] = useState<string | null>(null)
+  // Bumped when copying fails: selects the URL field once it shows that URL.
+  const [selectRequest, setSelectRequest] = useState(0)
+  const urlInputRef = useRef<HTMLInputElement>(null)
   const { data } = usePreviewLinks(open)
   const links = data ?? []
+
+  useEffect(() => {
+    if (selectRequest === 0) return
+    urlInputRef.current?.focus()
+    urlInputRef.current?.select()
+  }, [selectRequest])
 
   const ttlItems = [
     { value: '24', label: t('share.ttl24', '24 hours') },
@@ -77,7 +92,7 @@ export function ShareLinkDialog({
         label: label.trim() || documentLabel(document),
         ttlHours,
       })
-      setCreatedUrl(link.shareUrl)
+      setShownUrl(link.shareUrl)
       void queryClient.invalidateQueries({ queryKey: studioKeys.previewLinks })
     } catch (e) {
       toast.error(
@@ -91,12 +106,15 @@ export function ShareLinkDialog({
     }
   }
 
-  const copy = async (url: string) => {
+  const copy = async (url: string, trigger: HTMLElement) => {
     try {
-      await navigator.clipboard.writeText(url)
+      await copyText(url, trigger)
       toast.success(t('share.copied', 'Link copied to the clipboard.'))
     } catch {
-      // Clipboard access can be denied; the URL stays visible to copy by hand.
+      // Clipboard access can be denied: show the URL selected, for the
+      // keyboard shortcut.
+      setShownUrl(url)
+      setSelectRequest((request) => request + 1)
       toast.error(
         t(
           'share.copyFailed',
@@ -134,7 +152,7 @@ export function ShareLinkDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {createdUrl === null ? (
+        {shownUrl === null ? (
           <div className="space-y-3.5">
             <Field label={t('share.label', 'Label')} htmlFor="share-label">
               <Input
@@ -181,26 +199,27 @@ export function ShareLinkDialog({
           <div className="space-y-2">
             <div className="flex gap-2">
               <Input
+                ref={urlInputRef}
                 readOnly
-                value={createdUrl}
+                value={shownUrl}
                 onFocus={(event) => event.target.select()}
                 className="type-code-small"
               />
-              <Button onClick={() => copy(createdUrl)}>
+              <Button onClick={(event) => copy(shownUrl, event.currentTarget)}>
                 <i className="fas fa-fw fa-copy" aria-hidden />
                 {t('share.copy', 'Copy')}
               </Button>
             </div>
             <p className="type-small text-muted-foreground">
               {t(
-                'share.copyOnceHint',
-                'Copy the link now — for security it is shown only this once.',
+                'share.copyLaterHint',
+                'You can copy it again later from your active links.',
               )}
             </p>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCreatedUrl(null)}
+              onClick={() => setShownUrl(null)}
             >
               {t('share.createAnother', 'Create another link')}
             </Button>
@@ -234,6 +253,30 @@ export function ShareLinkDialog({
                         new Date(link.expiresAt).toLocaleDateString(),
                       ])}
                     </span>
+                    {link.shareUrl !== null ? (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(event) =>
+                          link.shareUrl &&
+                          copy(link.shareUrl, event.currentTarget)
+                        }
+                        title={t('share.copy', 'Copy')}
+                        aria-label={t('share.copy', 'Copy')}
+                      >
+                        <i className="fas fa-fw fa-copy" aria-hidden />
+                      </Button>
+                    ) : (
+                      <span
+                        className="inline-flex size-7.5 shrink-0 items-center justify-center text-muted-foreground"
+                        title={t(
+                          'share.notRecoverable',
+                          'This link was created before links could be copied again. It still works, but its URL can no longer be shown.',
+                        )}
+                      >
+                        <i className="fas fa-fw fa-circle-info" aria-hidden />
+                      </span>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon-sm"

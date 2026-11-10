@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Medienreaktor\NeosStudio\Endpoint\PreviewLinks;
 
+use Medienreaktor\NeosStudio\Domain\Model;
 use Medienreaktor\NeosStudio\Endpoint\PreviewLinks\RequestBody\PreviewLinkCreate;
 use Medienreaktor\NeosStudio\Endpoint\PreviewLinks\Response\PreviewLinkCreated;
 use Medienreaktor\NeosStudio\Endpoint\PreviewLinks\Schema\NewPreviewLink;
@@ -46,20 +47,23 @@ final readonly class PreviewLinks
         path: '/previewlinks',
         method: 'GET',
         summary: 'List your preview links',
-        description: 'The caller\'s preview links that haven\'t expired, newest first. Their share URLs aren\'t included: only createPreviewLink returns one.',
+        description: 'The caller\'s preview links that haven\'t expired, newest first, with their share URLs. The URL of a link created before share URLs were kept is null: it can\'t be recovered.',
         operationId: 'listPreviewLinks',
         security: [
             ApiAuthContextProvider::SCOPES => [StudioScopes::PREVIEWLINKS_READ],
         ],
     )]
-    public function list(#[AuthContext] ApiCaller $caller): PreviewLinkListing|Forbidden
+    public function list(#[AuthContext] ApiCaller $caller, ServerRequestInterface $request): PreviewLinkListing|Forbidden
     {
         $user = $this->studioCallers->requireUserOf($caller);
         if (!$user instanceof User) {
             return $user;
         }
         return PreviewLinkListing::of(new PreviewLinkList(
-            ...array_map(PreviewLink::from(...), $this->previewLinkService->findLinksOf($user->getId())),
+            ...array_map(
+                fn (Model\PreviewLink $link) => PreviewLink::from($link, $this->shareUrlOf($link, $request)),
+                $this->previewLinkService->findLinksOf($user->getId()),
+            ),
         ));
     }
 
@@ -67,7 +71,7 @@ final readonly class PreviewLinks
         path: '/previewlinks',
         method: 'POST',
         summary: 'Create a preview link',
-        description: 'A link that shows the document to anybody who has it, as the website would show it in the workspace and dimension space point (hidden pages included), until it expires. The response has the share URL, the only time it is readable. A workspace the caller may not read is a 403, a node or content repository that doesn\'t exist a 422.',
+        description: 'A link that shows the document to anybody who has it, as the website would show it in the workspace and dimension space point (hidden pages included), until it expires. The response has the share URL, which listPreviewLinks shows the caller again. A workspace the caller may not read is a 403, a node or content repository that doesn\'t exist a 422.',
         operationId: 'createPreviewLink',
         security: [
             ApiAuthContextProvider::SCOPES => [StudioScopes::PREVIEWLINKS_CREATE],
@@ -105,10 +109,8 @@ final readonly class PreviewLinks
             $previewLink->ttlHours !== null ? new \DateInterval(sprintf('PT%dH', $previewLink->ttlHours)) : null,
             $user->getId(),
         );
-        $uri = $request->getUri();
         return new PreviewLinkCreated(NewPreviewLink::of(
-            PreviewLink::from($link),
-            $uri->getScheme() . '://' . $uri->getAuthority() . '/neos/studio/share/' . $secret,
+            PreviewLink::from($link, $this->shareUrl($secret, $request)),
         ));
     }
 
@@ -132,5 +134,17 @@ final readonly class PreviewLinks
             return NotFound::because(sprintf('You have no preview link with the ID %s', $previewLinkId->value));
         }
         return null;
+    }
+
+    private function shareUrlOf(Model\PreviewLink $link, ServerRequestInterface $request): ?string
+    {
+        $secret = $this->previewLinkService->revealSecret($link);
+        return $secret !== null ? $this->shareUrl($secret, $request) : null;
+    }
+
+    private function shareUrl(string $secret, ServerRequestInterface $request): string
+    {
+        $uri = $request->getUri();
+        return $uri->getScheme() . '://' . $uri->getAuthority() . '/neos/studio/share/' . $secret;
     }
 }

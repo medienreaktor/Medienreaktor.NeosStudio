@@ -1475,13 +1475,13 @@ export interface paths {
     }
     /**
      * List your preview links
-     * @description The caller's preview links that haven't expired, newest first. Their share URLs aren't included: only createPreviewLink returns one.
+     * @description The caller's preview links that haven't expired, newest first, with their share URLs. The URL of a link created before share URLs were kept is null: it can't be recovered.
      */
     get: operations['listPreviewLinks']
     put?: never
     /**
      * Create a preview link
-     * @description A link that shows the document to anybody who has it, as the website would show it in the workspace and dimension space point (hidden pages included), until it expires. The response has the share URL, the only time it is readable. A workspace the caller may not read is a 403, a node or content repository that doesn't exist a 422.
+     * @description A link that shows the document to anybody who has it, as the website would show it in the workspace and dimension space point (hidden pages included), until it expires. The response has the share URL, which listPreviewLinks shows the caller again. A workspace the caller may not read is a 403, a node or content repository that doesn't exist a 422.
      */
     post: operations['createPreviewLink']
     delete?: never
@@ -3043,6 +3043,7 @@ export interface components {
       nodeAggregateId: components['schemas']['NodeAggregateId']
       createdAt: string
       expiresAt: string
+      shareUrl: string | null
     }
     /** PreviewLinkCreate */
     PreviewLinkCreate: {
@@ -9690,7 +9691,7 @@ export interface operations {
       }
     }
     responses: {
-      /** @description The preview link was created, this is the only response with its share URL */
+      /** @description The preview link was created, with its share URL */
       201: {
         headers: {
           [name: string]: unknown

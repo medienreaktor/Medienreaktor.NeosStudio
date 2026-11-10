@@ -2202,9 +2202,9 @@
         <source>Copying failed — please copy the link manually.</source>
         <target xml:lang="zh-CN">复制失败——请手动复制链接。</target>
       </trans-unit>
-      <trans-unit id="share.copyOnceHint" xml:space="preserve">
-        <source>Copy the link now — for security it is shown only this once.</source>
-        <target xml:lang="zh-CN">请立即复制链接——出于安全考虑，它仅显示这一次。</target>
+      <trans-unit id="share.copyLaterHint" xml:space="preserve">
+        <source>You can copy it again later from your active links.</source>
+        <target xml:lang="zh-CN">您之后可以在活动链接中再次复制它。</target>
       </trans-unit>
       <trans-unit id="share.create" xml:space="preserve">
         <source>Create link</source>
@@ -2237,6 +2237,10 @@
       <trans-unit id="share.label" xml:space="preserve">
         <source>Label</source>
         <target xml:lang="zh-CN">标签</target>
+      </trans-unit>
+      <trans-unit id="share.notRecoverable" xml:space="preserve">
+        <source>This link was created before links could be copied again. It still works, but its URL can no longer be shown.</source>
+        <target xml:lang="zh-CN">此链接创建于支持再次复制链接之前。它仍然有效，但无法再显示其 URL。</target>
       </trans-unit>
       <trans-unit id="share.revoke" xml:space="preserve">
         <source>Revoke link</source>

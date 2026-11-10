@@ -8,6 +8,7 @@ use Medienreaktor\NeosStudio\Domain\Model\PreviewLink;
 use Medienreaktor\NeosStudio\Domain\Repository\PreviewLinkRepository;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Security\Cryptography\HashService;
 use Neos\Flow\Utility\Algorithms;
 use Neos\Neos\Domain\Model\UserId;
 
@@ -15,17 +16,23 @@ use Neos\Neos\Domain\Model\UserId;
  * Lifecycle of shareable preview links: minting (secret generation + TTL
  * clamping), validation for the anonymous share endpoint, and revocation.
  *
- * The URL secret is 256 bits from the CSPRNG, transported base64url; only
- * its SHA-256 hash is stored, so neither a database dump nor a backup can
- * reconstruct working links. Lookup is by hash - constant-time comparison
- * is inherent (an attacker without the secret cannot produce a colliding
- * hash to probe with).
+ * The URL secret is 256 bits from the CSPRNG, transported base64url. Lookup
+ * is by its SHA-256 hash - constant-time comparison is inherent (an attacker
+ * without the secret cannot produce a colliding hash to probe with). So the
+ * creator can copy a link again, the secret is also kept encrypted
+ * (XSalsa20-Poly1305) under a key derived from Flow's encryption key: a
+ * database dump or backup alone still reconstructs no working link - it
+ * takes the key in Data/Persistent too. Rotating that key makes the stored
+ * secrets unreadable, which only hides the URLs; the links keep working.
  */
 #[Flow\Scope('singleton')]
 class PreviewLinkService
 {
     #[Flow\Inject]
     protected PreviewLinkRepository $previewLinkRepository;
+
+    #[Flow\Inject]
+    protected HashService $hashService;
 
     /**
      * Interval spec (\DateInterval) applied when the client requests no TTL.
@@ -41,8 +48,8 @@ class PreviewLinkService
     protected string $maxLifetime;
 
     /**
-     * Mint a link for one document. The returned secret appears exactly once -
-     * it is never persisted and cannot be retrieved again.
+     * Mint a link for one document. The secret is persisted only encrypted;
+     * revealSecret() recovers it for the link's creator.
      *
      * @return array{link: PreviewLink, secret: string}
      */
@@ -70,7 +77,8 @@ class PreviewLinkService
             $label,
             $creator,
             $now,
-            $expiresAt
+            $expiresAt,
+            $this->encryptSecret($secret),
         );
         $this->previewLinkRepository->add($link);
 
@@ -126,6 +134,50 @@ class PreviewLinkService
         $this->previewLinkRepository->remove($id);
 
         return true;
+    }
+
+    /**
+     * The URL secret of a link, or null when it can't be recovered: links
+     * minted before secrets were kept, and ones encrypted under a since
+     * rotated encryption key. Callers must have checked ownership.
+     */
+    public function revealSecret(PreviewLink $link): ?string
+    {
+        if ($link->tokenCiphertext === null) {
+            return null;
+        }
+        $payload = base64_decode($link->tokenCiphertext, true);
+        if ($payload === false || strlen($payload) <= SODIUM_CRYPTO_SECRETBOX_NONCEBYTES) {
+            return null;
+        }
+        $secret = sodium_crypto_secretbox_open(
+            substr($payload, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES),
+            substr($payload, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES),
+            $this->secretKey()
+        );
+        // The hash check guards against a row whose ciphertext and hash
+        // don't belong together: never hand out a URL that wouldn't work.
+        if ($secret === false || !hash_equals($link->tokenHash, hash('sha256', $secret))) {
+            return null;
+        }
+
+        return $secret;
+    }
+
+    private function encryptSecret(string $secret): string
+    {
+        $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+
+        return base64_encode($nonce . sodium_crypto_secretbox($secret, $nonce, $this->secretKey()));
+    }
+
+    /**
+     * 32 bytes derived from Flow's encryption key (via its HMAC, which is all
+     * the HashService exposes of it), dedicated to this purpose by the label.
+     */
+    private function secretKey(): string
+    {
+        return hash('sha256', $this->hashService->generateHmac('Medienreaktor.NeosStudio:PreviewLinkSecret'), true);
     }
 
     private function clampExpiry(\DateTimeImmutable $now, ?\DateInterval $requestedTtl): \DateTimeImmutable

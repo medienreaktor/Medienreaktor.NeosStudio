@@ -20,8 +20,10 @@ use Neos\Neos\Domain\Model\UserId;
  * Deliberately NOT an OAuth token: OAuth tokens authenticate an account
  * against the whole API surface and follow that account's session lifecycle
  * (1h TTL, refresh, logout-everywhere revocation). A preview link is a
- * standalone URL secret with its own bounded lifetime - only its SHA-256
- * hash is persisted, the secret exists in the generated URL alone.
+ * standalone URL secret with its own bounded lifetime. It is looked up by
+ * the secret's SHA-256 hash; the secret itself is kept only encrypted
+ * (tokenCiphertext, see PreviewLinkService), so its creator can copy the
+ * link again. Links from before that have no ciphertext.
  */
 #[Flow\Proxy(false)]
 final readonly class PreviewLink
@@ -37,6 +39,7 @@ final readonly class PreviewLink
         public UserId $createdByUserId,
         public \DateTimeImmutable $createdAt,
         public \DateTimeImmutable $expiresAt,
+        public ?string $tokenCiphertext = null,
     ) {
     }
 

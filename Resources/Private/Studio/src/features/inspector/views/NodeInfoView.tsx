@@ -1,6 +1,7 @@
 import { parseDimensionSpacePoint, type Node } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/toast'
+import { copyText } from '@/lib/clipboard'
 import { translate as t } from '@/lib/i18n'
 import type { InspectorViewComponent } from './registry'
 
@@ -32,8 +33,8 @@ export const NodeInfoView: InspectorViewComponent = ({ node }) => {
       ? new Date(value).toLocaleString()
       : t('view.unavailable', 'unavailable')
 
-  const copyNodeType = () => {
-    navigator.clipboard.writeText(node.nodeType).then(
+  const copyNodeType = (event: React.MouseEvent<HTMLElement>) => {
+    copyText(node.nodeType, event.currentTarget).then(
       () =>
         toast.success(
           t('view.copiedNodeType', 'Copied node type to clipboard'),

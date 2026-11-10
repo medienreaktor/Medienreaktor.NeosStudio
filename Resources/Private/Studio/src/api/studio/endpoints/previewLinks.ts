@@ -5,7 +5,10 @@ import { nodeAddressOf } from '../../neos/schema'
 import { studioKeys } from '../keys'
 import type { NewPreviewLink, PreviewLinkCreate } from '../schema'
 
-/** The account's own preview links (the anonymous side is the ShareController). */
+/**
+ * The account's own preview links with their share URLs (null for links from
+ * before the server kept them). The anonymous side is the ShareController.
+ */
 export function usePreviewLinks(enabled = true) {
   return useQuery({
     queryKey: studioKeys.previewLinks,
@@ -16,7 +19,7 @@ export function usePreviewLinks(enabled = true) {
   })
 }
 
-/** The new link with its share URL - the only time the URL is readable. */
+/** The new link with its share URL. */
 export function createPreviewLink(
   node: NodeAddress,
   options: { label?: string; ttlHours?: number } = {},

@@ -17,9 +17,8 @@ use Neos\Schematic\Discovery\AutoDiscoveringSchema;
  * A preview link: anybody with its URL sees one document as the website would
  * show it (hidden pages included) until it expires, without logging in
  *
- * The node is addressed with the fields of Neos.Api's Node. The URL holds a
- * secret that is stored hashed, so it is only in the response of
- * createPreviewLink
+ * The node is addressed with the fields of Neos.Api's Node. Only its creator
+ * ever sees it, so it carries its share URL
  */
 final readonly class PreviewLink implements ProvidesSchema
 {
@@ -27,6 +26,7 @@ final readonly class PreviewLink implements ProvidesSchema
      * @param string $label what the creator called it, may be empty
      * @param string $createdAt when it was created, as ISO 8601
      * @param string $expiresAt when it stops working, as ISO 8601
+     * @param string|null $shareUrl the absolute URL to share. Null when it can't be recovered: links created before share URLs were kept, or kept under a since changed encryption key. Those still work for whoever has the URL
      */
     public function __construct(
         public PreviewLinkId $id,
@@ -37,10 +37,11 @@ final readonly class PreviewLink implements ProvidesSchema
         public NodeAggregateId $nodeAggregateId,
         public string $createdAt,
         public string $expiresAt,
+        public ?string $shareUrl,
     ) {
     }
 
-    public static function from(Model\PreviewLink $link): self
+    public static function from(Model\PreviewLink $link, ?string $shareUrl): self
     {
         return new self(
             PreviewLinkId::fromString($link->id),
@@ -51,6 +52,7 @@ final readonly class PreviewLink implements ProvidesSchema
             NodeAggregateId::fromString($link->nodeAggregateId->value),
             $link->createdAt->format(\DateTimeInterface::ATOM),
             $link->expiresAt->format(\DateTimeInterface::ATOM),
+            $shareUrl,
         );
     }
 

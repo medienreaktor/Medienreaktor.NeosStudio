@@ -2234,9 +2234,9 @@
         <source>Copying failed — please copy the link manually.</source>
         <target xml:lang="es">Error al copiar — copie el enlace manualmente.</target>
       </trans-unit>
-      <trans-unit id="share.copyOnceHint" xml:space="preserve">
-        <source>Copy the link now — for security it is shown only this once.</source>
-        <target xml:lang="es">Copie el enlace ahora — por seguridad solo se muestra esta única vez.</target>
+      <trans-unit id="share.copyLaterHint" xml:space="preserve">
+        <source>You can copy it again later from your active links.</source>
+        <target xml:lang="es">Puedes volver a copiarlo más tarde desde tus enlaces activos.</target>
       </trans-unit>
       <trans-unit id="share.create" xml:space="preserve">
         <source>Create link</source>
@@ -2269,6 +2269,10 @@
       <trans-unit id="share.label" xml:space="preserve">
         <source>Label</source>
         <target xml:lang="es">Etiqueta</target>
+      </trans-unit>
+      <trans-unit id="share.notRecoverable" xml:space="preserve">
+        <source>This link was created before links could be copied again. It still works, but its URL can no longer be shown.</source>
+        <target xml:lang="es">Este enlace se creó antes de que los enlaces pudieran volver a copiarse. Sigue funcionando, pero su URL ya no se puede mostrar.</target>
       </trans-unit>
       <trans-unit id="share.revoke" xml:space="preserve">
         <source>Revoke link</source>

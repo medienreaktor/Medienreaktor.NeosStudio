@@ -28,7 +28,7 @@ final readonly class PreviewLinkCreated implements ApiResponse
 
     public static function description(): string
     {
-        return 'The preview link was created, this is the only response with its share URL';
+        return 'The preview link was created, with its share URL';
     }
 
     public static function bodyType(): TypeReference

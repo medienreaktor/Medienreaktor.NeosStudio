@@ -2202,9 +2202,9 @@
         <source>Copying failed — please copy the link manually.</source>
         <target xml:lang="km">ការចម្លងបានបរាជ័យ — សូមចម្លងតំណដោយដៃ។</target>
       </trans-unit>
-      <trans-unit id="share.copyOnceHint" xml:space="preserve">
-        <source>Copy the link now — for security it is shown only this once.</source>
-        <target xml:lang="km">ចម្លងតំណឥឡូវនេះ — ដើម្បីសុវត្ថិភាព វានឹងបង្ហាញតែម្ដងនេះប៉ុណ្ណោះ។</target>
+      <trans-unit id="share.copyLaterHint" xml:space="preserve">
+        <source>You can copy it again later from your active links.</source>
+        <target xml:lang="km">អ្នកអាចចម្លងវាម្តងទៀតនៅពេលក្រោយពីតំណសកម្មរបស់អ្នក។</target>
       </trans-unit>
       <trans-unit id="share.create" xml:space="preserve">
         <source>Create link</source>
@@ -2237,6 +2237,10 @@
       <trans-unit id="share.label" xml:space="preserve">
         <source>Label</source>
         <target xml:lang="km">ស្លាកសម្គាល់</target>
+      </trans-unit>
+      <trans-unit id="share.notRecoverable" xml:space="preserve">
+        <source>This link was created before links could be copied again. It still works, but its URL can no longer be shown.</source>
+        <target xml:lang="km">តំណនេះត្រូវបានបង្កើតមុនពេលដែលតំណអាចចម្លងម្តងទៀតបាន។ វានៅតែដំណើរការ ប៉ុន្តែ URL របស់វាមិនអាចបង្ហាញបានទៀតទេ។</target>
       </trans-unit>
       <trans-unit id="share.revoke" xml:space="preserve">
         <source>Revoke link</source>
