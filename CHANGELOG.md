@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-10
+
 ### Removed
 
 - The Create panel (drag a node type into the preview) and the Node Types
@@ -18,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The "Create new" dialog no longer fills in piece by piece: its data is
   fetched while the context menu is open (or the pointer is on the "New
   document" button), and the dialog appears once everything is loaded.
+- Large projects no longer slow down with every edit. Hidden panels (Trash,
+  History, Workspaces graph, Media Library) stop refetching until they are
+  shown again; structural edits and publishes refresh only the affected
+  workspaces; remote edits refresh changes and history debounced; and the
+  trees re-read only expanded rows.
+- An inspector save makes about half the requests it did (5 instead of 9 for
+  a page property), as the trees no longer restart the save's own refresh
+  or re-read the node's children.
+- The "+" / "..." element actions sit on the bottom line of the outline
+  instead of covering the label of small elements like buttons. Clicking an
+  element's padding places the caret in its text, links don't navigate in
+  edit mode, and the inline editor turns off autocorrect, auto-capitalize,
+  spellcheck and writing suggestions.
 
 ## [2.0.0] - 2026-11-09
 
@@ -1326,7 +1341,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.1...HEAD
+[2.0.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...2.0.0
 [1.19.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.0...1.19.1
 [1.19.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.1...1.19.0
