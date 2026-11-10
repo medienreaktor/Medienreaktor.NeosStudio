@@ -38,6 +38,7 @@ export function AssetList({
   hasNextPage,
   onLoadMore,
 }: AssetListProps) {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   // The latest props for the observer callback - read, not depended on, so
   // the observer is not rebuilt on every render.
@@ -46,16 +47,20 @@ export function AssetList({
   // Infinite scroll: load the next page when the sentinel scrolls into view -
   // one page at a time. Rebuilt when a page arrives, so a sentinel that is
   // still in view then asks for the next one.
+  // The root is the list's own scroll container: against the implicit
+  // viewport root, `rootMargin` would not extend past the container's clip,
+  // and Safari never reports the edge-adjacent sentinel as intersecting.
   useEffect(() => {
     const node = sentinelRef.current
-    if (!node || !hasNextPage) return
+    const root = scrollRef.current
+    if (!node || !root || !hasNextPage) return
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0]?.isIntersecting) return
         if (loadMore.current.isFetchingNextPage) return
         loadMore.current.onLoadMore()
       },
-      { rootMargin: '400px' },
+      { root, rootMargin: '400px' },
     )
     observer.observe(node)
     return () => observer.disconnect()
@@ -73,7 +78,10 @@ export function AssetList({
   }
 
   return (
-    <div className="min-h-0 flex-1 pt-13 overflow-y-auto @container">
+    <div
+      ref={scrollRef}
+      className="min-h-0 flex-1 pt-13 overflow-y-auto @container"
+    >
       {view === 'grid' ? (
         <div className="grid grid-cols-2 @[22.5rem]:grid-cols-3 @[30rem]:grid-cols-4 @[37.5rem]:grid-cols-5 @[45rem]:grid-cols-6 @[52.5rem]:grid-cols-7 @[60rem]:grid-cols-8 @[67.5rem]:grid-cols-9 @[75rem]:grid-cols-10 gap-2 p-3 pt-0">
           {assets.map((asset) => (
@@ -124,7 +132,7 @@ export function AssetList({
         </table>
       )}
 
-      <div ref={sentinelRef} />
+      <div ref={sentinelRef} aria-hidden className="h-px" />
       {isFetchingNextPage && (
         <div className="flex items-center justify-center gap-2 p-3.5 type-small text-muted-foreground">
           <Spinner className="type-body" />
