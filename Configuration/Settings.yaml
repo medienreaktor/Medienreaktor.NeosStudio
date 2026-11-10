@@ -52,7 +52,8 @@ Medienreaktor:
       defaultLifetime: "P2D"
       # Hard ceiling - requested lifetimes are clamped to this, so no client
       # (and no misconfigured defaultLifetime) can mint longer-lived links.
-      maxLifetime: "P7D"
+      # P1Y matches the longest choice in the Studio's share dialog (1 year).
+      maxLifetime: "P1Y"
 
     # Dynamic access roles: named restriction sets (sites, page tree,
     # dimensions, workspaces, capabilities) that administrators create in the

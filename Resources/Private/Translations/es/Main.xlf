@@ -2294,6 +2294,14 @@
         <source>2 days</source>
         <target xml:lang="es">2 días</target>
       </trans-unit>
+      <trans-unit id="share.ttl720" xml:space="preserve">
+        <source>30 days</source>
+        <target xml:lang="es">30 días</target>
+      </trans-unit>
+      <trans-unit id="share.ttl8760" xml:space="preserve">
+        <source>1 year</source>
+        <target xml:lang="es">1 año</target>
+      </trans-unit>
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="es">7 días</target>

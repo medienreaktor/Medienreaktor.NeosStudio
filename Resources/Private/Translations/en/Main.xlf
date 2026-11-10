@@ -1838,6 +1838,12 @@
       <trans-unit id="share.ttl48" xml:space="preserve">
         <source>2 days</source>
       </trans-unit>
+      <trans-unit id="share.ttl720" xml:space="preserve">
+        <source>30 days</source>
+      </trans-unit>
+      <trans-unit id="share.ttl8760" xml:space="preserve">
+        <source>1 year</source>
+      </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>
       </trans-unit>

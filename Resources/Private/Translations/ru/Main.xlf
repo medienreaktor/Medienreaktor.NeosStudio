@@ -2310,6 +2310,14 @@
         <source>2 days</source>
         <target xml:lang="ru">2 дня</target>
       </trans-unit>
+      <trans-unit id="share.ttl720" xml:space="preserve">
+        <source>30 days</source>
+        <target xml:lang="ru">30 дней</target>
+      </trans-unit>
+      <trans-unit id="share.ttl8760" xml:space="preserve">
+        <source>1 year</source>
+        <target xml:lang="ru">1 год</target>
+      </trans-unit>
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="ru">7 дней</target>

@@ -2446,6 +2446,14 @@
         <source>2 days</source>
         <target xml:lang="de">2 Tage</target>
       </trans-unit>
+      <trans-unit id="share.ttl720" xml:space="preserve">
+        <source>30 days</source>
+        <target xml:lang="de">30 Tage</target>
+      </trans-unit>
+      <trans-unit id="share.ttl8760" xml:space="preserve">
+        <source>1 year</source>
+        <target xml:lang="de">1 Jahr</target>
+      </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>
         <target xml:lang="de">Allgemein</target>

@@ -2278,6 +2278,14 @@
         <source>2 days</source>
         <target xml:lang="da">2 dage</target>
       </trans-unit>
+      <trans-unit id="share.ttl720" xml:space="preserve">
+        <source>30 days</source>
+        <target xml:lang="da">30 dage</target>
+      </trans-unit>
+      <trans-unit id="share.ttl8760" xml:space="preserve">
+        <source>1 year</source>
+        <target xml:lang="da">1 år</target>
+      </trans-unit>
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="da">7 dage</target>

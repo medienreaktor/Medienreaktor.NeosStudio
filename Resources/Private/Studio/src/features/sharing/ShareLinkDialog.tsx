@@ -65,6 +65,9 @@ export function ShareLinkDialog({
     { value: '24', label: t('share.ttl24', '24 hours') },
     { value: '48', label: t('share.ttl48', '2 days') },
     { value: '168', label: t('share.ttl168', '7 days') },
+    { value: '720', label: t('share.ttl720', '30 days') },
+    // 365 days, not P1Y: stays under the server's maxLifetime in leap years too
+    { value: '8760', label: t('share.ttl8760', '1 year') },
   ]
 
   const create = async () => {
