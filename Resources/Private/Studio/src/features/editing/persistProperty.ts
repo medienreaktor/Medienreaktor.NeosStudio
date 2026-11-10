@@ -13,6 +13,7 @@ import {
   nodeAddressKey,
   nodeTypeConfiguration,
 } from '@/api/neos/schema'
+import { emitStudioEvent } from '@/app/events'
 import { queryClient } from '@/app/queryClient'
 import { validateValue } from '@/features/inspector/validators'
 import { invalidateAfterContentEdit } from '@/features/workspaces/invalidate'
@@ -187,6 +188,7 @@ export async function persistPropertyChange(
     setNodeProperties(address, { [property]: value }),
   )
   cacheNode(address, node)
+  emitStudioEvent('node.edited', { address, kind: 'property', name: property })
 }
 
 // Serialization state of the queued variant below, keyed per property.
@@ -255,6 +257,11 @@ export async function persistReferenceChange(
   await withVariantHandling(address, () =>
     setNodeReferences(address, { [referenceName]: targets }),
   )
+  emitStudioEvent('node.edited', {
+    address,
+    kind: 'references',
+    name: referenceName,
+  })
   await queryClient.invalidateQueries({
     queryKey: neosKeys.nodes.references(address),
   })

@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { fetchNode } from '@/api/neos/endpoints/nodes'
 import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
+import { emitStudioEvent } from '@/app/events'
 import { useStudio } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
@@ -35,6 +36,12 @@ export function useTrashRestore(workspaceName: string | null) {
     onSuccess: (restored, node) => {
       void afterWorkspaceRewrite(contentRepositoryId!, workspaceName!)
       workspaceContentChanged()
+      emitStudioEvent('nodes.structureChanged', {
+        contentRepositoryId: contentRepositoryId!,
+        workspaceName: workspaceName!,
+        change: 'restored',
+        nodeAggregateIds: restored.map((entry) => entry.nodeAggregateId),
+      })
       if (
         selectedDocument !== null &&
         selectedDocument.nodeAggregateId === node.nodeAggregateId

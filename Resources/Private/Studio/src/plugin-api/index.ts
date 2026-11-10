@@ -28,9 +28,22 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 
+import {
+  keepPreviousData,
+  type QueryClient,
+  queryOptions,
+  skipToken,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import * as components from './components'
+import { invalidate } from './data'
 import { ApiError } from '@/api/http/errors'
 import { apiFetch, apiStream } from '@/api/neos/client'
+import { studioEvents, useStudioEvent, type StudioEvents } from '@/app/events'
+import { queryClient as shellQueryClient } from '@/app/queryClient'
 import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
@@ -196,6 +209,73 @@ export { useStudio, useStudioActions, useKeyboardShortcut }
 const studioFetch = apiFetch
 export { apiFetch, studioFetch, apiStream, ApiError }
 export type { StreamEvent } from '@/api/http/request'
+
+/**
+ * The shell's TanStack Query - its hooks, bound to the shell's QueryClient,
+ * so a plugin's reads share the shell's cache: deduplicated with the
+ * shell's own reads, refreshed by `invalidate` and from `events`, visible in
+ * the query devtools. Import them from here, never bundle
+ * @tanstack/react-query: a second copy has no QueryClientProvider above the
+ * plugin's components ("No QueryClient set") and its own `skipToken`.
+ *
+ * Key convention: a plugin's query keys start with its package key
+ * (`['Acme.Seo', 'score', nodeAggregateId]`) - the shell's keys never
+ * contain a dot, so they cannot collide, and the plugin can refresh all of
+ * its reads at once by that prefix. The shell's keys are internal: read the
+ * shell's data with apiFetch under the plugin's own keys, and refresh the
+ * shell's reads with `invalidate`, never with its keys.
+ *
+ * `queryClient` is the same client useQueryClient() returns, for code
+ * outside components (a module-level `events.on` handler).
+ */
+const queryClient: QueryClient = shellQueryClient
+export {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  queryOptions,
+  skipToken,
+  keepPreviousData,
+  queryClient,
+}
+export type {
+  QueryClient,
+  QueryKey,
+  QueryFunctionContext,
+  UseQueryOptions,
+  UseQueryResult,
+  UseInfiniteQueryOptions,
+  UseInfiniteQueryResult,
+  UseMutationOptions,
+  UseMutationResult,
+  InfiniteData,
+} from '@tanstack/react-query'
+
+/**
+ * The shell's cache refreshes for a plugin's own writes - see
+ * {@link StudioInvalidation} for which to call when.
+ */
+export { invalidate }
+export type { StudioInvalidation } from './data'
+
+/**
+ * What happens in the shell, as typed events - see {@link StudioEventMap}.
+ * `events.on(name, handler)` returns the unsubscriber; inside a component
+ * prefer {@link useStudioEvent}, which unsubscribes on unmount and always
+ * calls the latest render's handler. Handlers run after the shell's own
+ * flow (never awaited); one that throws is logged and skipped.
+ */
+export const events: StudioEvents = studioEvents
+export { useStudioEvent }
+export type {
+  StructureChange,
+  StudioEventHandler,
+  StudioEventMap,
+  StudioEventName,
+  StudioEvents,
+  WorkspaceRef,
+} from '@/app/events'
 
 /**
  * The shell's per-user avatar scheme (initials avatars colored by user id) -
@@ -381,6 +461,17 @@ export interface NeosStudioPluginApi extends PluginComponents {
   interfaceLanguage: typeof interfaceLanguage
   interfaceLocale: typeof interfaceLocale
   useAssetPickerActive: typeof useAssetPickerActive
+  useQuery: typeof useQuery
+  useInfiniteQuery: typeof useInfiniteQuery
+  useMutation: typeof useMutation
+  useQueryClient: typeof useQueryClient
+  queryOptions: typeof queryOptions
+  skipToken: typeof skipToken
+  keepPreviousData: typeof keepPreviousData
+  queryClient: typeof queryClient
+  invalidate: typeof invalidate
+  events: typeof events
+  useStudioEvent: typeof useStudioEvent
 }
 
 /** The UI primitives of ./components.ts, as published on `window.NeosStudio`. */
@@ -436,5 +527,16 @@ export function installPluginApiGlobals(): void {
     interfaceLanguage,
     interfaceLocale,
     useAssetPickerActive,
+    useQuery,
+    useInfiniteQuery,
+    useMutation,
+    useQueryClient,
+    queryOptions,
+    skipToken,
+    keepPreviousData,
+    queryClient,
+    invalidate,
+    events,
+    useStudioEvent,
   }
 }

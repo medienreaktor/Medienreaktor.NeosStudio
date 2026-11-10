@@ -4,6 +4,7 @@ import { isConflict } from '@/api/http/errors'
 import { changeBaseWorkspace } from '@/api/neos/endpoints/workspaces'
 import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import type { Workspace } from '@/api/neos/schema'
+import { emitStudioEvent } from '@/app/events'
 import { useStudioActions } from '@/app/StudioContext'
 import {
   DropdownMenu,
@@ -82,12 +83,17 @@ export function WorkspaceSwitcher({
         personalWorkspace.name,
         baseWorkspace,
       ),
-    onSuccess: () => {
+    onSuccess: (_, baseWorkspace) => {
       // The workspace list carries the baseWorkspace shown as the selected
       // value, and every cached node read is stale - unchanged nodes now
       // show the new base's content.
       void afterWorkspaceRewrite(contentRepositoryId!, personalWorkspace.name)
       workspaceContentChanged()
+      emitStudioEvent('workspace.rebased', {
+        contentRepositoryId: contentRepositoryId!,
+        workspaceName: personalWorkspace.name,
+        newBaseWorkspaceName: baseWorkspace,
+      })
       toast.success(t('workspace.switched', 'Workspace switched.'))
     },
     onError: (error) => {
