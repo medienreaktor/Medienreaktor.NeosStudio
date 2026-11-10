@@ -7,108 +7,95 @@
 
 ![Neos Studio](Documentation/Banner.png)
 
-**A revolutionary, blazingly fast, collaborative (multiplayer!) editing UI for Neos 9.** Built from scratch on a clean HTTP API — fully independent of `Neos.Neos.Ui`, free to make its own architectural choices. This is what content editing in Neos can feel like: instant, fluid, together with your team, and open for extension from day one.
+**A fast, modern editing interface for Neos 9 — built for editing together.** Work side by side in the same workspace, organize content work in tasks, control who may edit what, and extend all of it from your own packages.
 
-Neos Studio is a modern single-page application (Vite + React + TypeScript + TanStack Query + Tailwind CSS v4) that talks to Neos exclusively through [Neos.Api](https://github.com/medienreaktor/Medienreaktor.NeosApi) — the OAuth-secured HTTP API (OpenAPI-described, secured by Neos.OAuth) over the Event-Sourced Content Repository — plus the Studio API, operations it adds to Neos.Api itself. No Fusion-rendered backend modules, no shared React runtime with the classic UI — just a fast, typed, cache-smart client in front of a well-defined, documented API.
+Studio runs alongside the classic Neos UI. It is a single-page application served at `/neos/studio`. It talks to Neos only through [Neos.Api](https://github.com/medienreaktor/Medienreaktor.NeosApi), an HTTP API secured with OAuth, and does not depend on `Neos.Neos.Ui`. Both interfaces can be used on the same installation.
 
-> **Why a new UI?** The classic Neos UI is a great piece of engineering that has served editors well for years — and Studio owes a lot to the ideas it pioneered. But some of its 2016-era architectural constraints are hard to move past today: the plugin API ties extensions to React 16, and the internal wire protocol was never designed as a public contract. Neos Studio starts from a different premise: an API-first backend, a lean modern frontend, and extensibility through observable registries that _are_ the public contract. It grows alongside the classic UI, adopting editing surfaces one at a time.
+Why a second UI: the classic UI's plugin API ties extensions to React 16, and its internal protocol between client and server was never meant as a public contract. Studio builds on a documented API instead, and plugins extend it through registries that form its public plugin API.
 
-## Highlights
+## Features
 
-### 🤝 Collaborative editing — multiplayer for Neos
+### Editing
 
-Edit **together in the same workspace, live**. Every shared workspace offers a _Collaborative_ entry in the workspace switcher: pick it, and you and your colleagues edit the same content directly — no personal-workspace detours, no publish-to-see-each-other, no conflicts to untangle afterwards.
+Everything editors use every day, in a responsive interface that keeps what it has already loaded instead of reloading on every click.
 
-- **See who's there**: avatar initials next to the switcher, markers on the document a colleague is on (document tree) and the element they're focusing (content outliner _and_ live preview, outlined in their color with a nametag).
-- **See what they do, as it happens**: colleagues' edits stream in within ~2 seconds — or in well under a second with the realtime sidecar (below). Changed elements re-render **in place** in the preview (out-of-band rendering — your scroll position and your own inline edits survive); structural changes refresh the trees.
-- **Nothing extra to install**: no WebSocket server, no Node sidecar, no message broker required. The Event-Sourced Content Repository already keeps one totally ordered change log per workspace — Studio simply tails it over plain HTTP through Neos.Api's workspace events. If it runs Neos 9, it runs multiplayer.
-- **Scales up when you do**: an **optional realtime sidecar** — a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus)-based WebSocket server — upgrades the transport to instant push: presence without heartbeats, a push the moment a workspace changes instead of every editor polling, sub-second latency. Studio falls back to plain polling automatically whenever the sidecar is unreachable, and back again when it returns. See [the realtime sidecar](#the-realtime-sidecar-optional).
-- **Emergent, not a mode**: sessions are ordinary Neos `SHARED` workspaces (create them in the Workspaces module, manage access with the usual roles). Two people in the same workspace — that _is_ the multiplayer. Publishing the session to live works exactly like publishing any workspace.
+- **Visual Editor**: the rendered page with inline editing. Rich text is edited in place with a floating toolbar (TipTap); special characters like soft hyphens and non-breaking spaces can be inserted.
+- **Adding content**: insert before, inside or after any node, from the "+" buttons in the page or the context menus of the trees. Only node types the constraints allow are offered.
+- **Documents and Outline**: the document tree and the content structure of the current page, loaded on demand according to the Neos `loadingDepth` settings. Both support drag and drop moves and context menus (copy, cut, paste, delete, hide). A clipboard panel keeps copied and cut nodes across navigation.
+- **Inspector**: the property editors of the classic UI (text, text area, rich text, select box with data sources, references, asset, assets, image with cropping, link, date and time, range, boolean, code, node type, URI path segment), the inspector views (NodeInfo, Column, Table, TimeSeries, data source widgets), the `Neos.Neos/Validation` validators, `ClientEval:` expressions and property help. Shine-through values are marked, and a variant can be created with one click, in the inspector and in the page.
+- **Media Library**: asset management, also used as the picker for asset properties.
+- **Sites and dimensions**: switchers for both.
 
-### 🗂️ Task workflow — feature branches for content
+### Workspaces and publishing
 
-Content work, organized like code: every task is a **feature branch**. Creating a task spins up a workspace of its own, so an editor can pick a task up, check it out, do the work and send it to review — without touching live or stepping on anyone else's changes.
+- **Publishing**: pending changes are marked in the trees. The review dialog lists the changes of a workspace and lets you choose what to publish or discard. Syncing with the base workspace shows a dialog for resolving conflicts.
+- **Workspaces panel**: the workspaces as a graph, with their unpublished editing steps.
+- **History panel**: the unpublished edits of the current page, step by step.
+- **Trash**: deleted pages stay in the trash until the deletion is published, with who deleted them and when. They can be restored, together with deleted parent pages.
+- **Preview links**: share a page as it looks in a workspace, through a link that expires.
+- **Administration**: create and edit workspaces and manage their roles.
 
-- **A Kanban board, as a panel**: task branches as cards in status columns — _Open_, _In review_, _Done_ — with assignee and comment count. **Dragging a card drives the workflow**: into _In review_ submits the task, back to _Open_ reopens it.
-- **Review before done**: dropping a card on _Done_ never publishes blindly — it opens the Review Changes dialog on the task's workspace, so a reviewer inspects the changes and picks what to publish. Reviewers are whoever holds the configurable reviewer role (default: `Neos.Neos:LivePublisher`).
-- **Completion is event-driven**: a catch-up hook on the Content Repository's event stream watches task workspaces — once the branch is fully published, the task flips to done and everyone involved is notified, no matter which surface (or API client) triggered the publish.
-- **One-click checkout** from the board, the task dialog or the workspace switcher, where task branches sit in their own group with **status-colored badges**. Creating a task — from the switcher or the board — checks it out for you immediately.
-- **Comments on tasks**: every task carries its own discussion thread; submitting for review and reopening take a comment, too.
-- **Notifications built in**: a bell in the top bar collects assignments, review requests, reopens, comments and completions — clicking one jumps straight to the task.
-- **Ordinary Neos underneath**: task branches are plain `SHARED` workspaces plus task metadata, with access through standard workspace roles — the creator and reviewers manage, the assignee collaborates, and uninvolved editors never see task branches at all. Publishing, syncing and conflict resolution work like on any workspace.
+### Working together, live
 
-### 🔐 Access roles — restrict who reaches what
+Edit the same content with your colleagues at the same time. No publishing back and forth just to see each other's changes, and no conflicts to sort out afterwards.
 
-Dynamic, editable **access roles**: name a set of restrictions and assign editors to it, in the UI, without touching `Policy.yaml` or deploying anything. What the classic distributions solved with Sandstorm.NeosAcl, rebuilt for Neos 9 — where the node-level privilege targets that approach relied on no longer exist.
+Every shared workspace has a _Collaborative_ entry in the workspace switcher. Editors who choose it edit that workspace directly instead of their personal one. Changes by others show up within about two seconds. Changed elements are re-rendered in place in the page, so your scroll position and your own unsaved inline edits stay; structural changes refresh the trees.
 
-- **Four axes, one role**: which **sites**, which branches of the **document tree**, which **dimensions**, which **workspaces** (live included — "may edit the draft but not publish to live" is one unticked box) — plus the coarse capabilities (edit, create, delete, move) a role may exercise inside them.
-- **Pick branches from the tree**: the Documents tab browses the real document tree; select a page, then allow or deny it, with or without its sub-pages. Allow rules turn the tree into a whitelist, deny rules cut single pages back out — the rule nearest a page wins, so "the whole section except this one page" is two clicks.
-- **Permissive by default, at every turn**: a fresh role restricts nothing, an empty list means "all", and a user with **no role assigned is unrestricted** — installing this changes nothing until an administrator hands a role out. Administrators are exempt by design, so a role can never lock the last admin out.
-- **Additive, but never a mash-up**: assign someone two roles and they may do what either allows — evaluated _per role_, so one role must cover the whole operation. "May edit the draft" plus "may read live" never combines into writing on live. Never the intersection, never a surprise.
-- **Doomed gestures never start**: every surface asks _before_ offering. A page outside the roles renders as a plain read-only preview with the inspector disarmed (and a notice naming who can widen the role); a withheld capability greys out exactly its actions — context menus, drag & drop, the creation palette and the New-page button, action by action; a dimension value the roles block shows a lock and a tooltip instead of posing as a configuration gap. And if a role change mid-session drops the workspace someone is standing in, a blocking dialog moves them to a permitted one instead of letting the saves fail one by one.
-- **Enforced, not just drawn**: the roles narrow the Studio's UI _and_ the Content Repository itself — an `AuthProviderInterface` implementation wraps Neos' own and refuses writes outside a user's roles, so a restriction holds against a hand-crafted API request too. Creating a workspace is the one write asked exactly as Neos asks it — may the base workspace be read — because the command cannot tell the personal workspace Neos sets up on a user's first login from a new shared one. Node listings and document search are filtered **server-side** as well, so a hidden page never leaks through a search hit — while unrestricted accounts (which is nearly everyone) skip the filter entirely and pay nothing. It only ever _narrows_ Neos' decision, and fails open on its own errors: a bug here degrades to "no extra restrictions", never to a locked-out editorial team.
-- **The tree shows the role, not the site**: only the granted branches and the path down to them appear. The ancestors on that path render dimmed with a lock badge — signposts, not workspaces — and everything else is gone from the tree entirely. The path is resolved server-side per request, so moving a page never strands the branch below it.
+This needs nothing beyond Neos. With the optional [realtime sidecar](#the-realtime-sidecar-optional) you also get:
 
-### ⚡ Blazingly fast, everywhere
+- who else is in the workspace, and where: the page they are on (Documents), the element they are working on (Outline and page, outlined in their color),
+- their text as they type it, not only once it is saved,
+- changes from others within well under a second.
 
-- **Instant loads** — a static Vite-built SPA served at `/neos/studio`, with TanStack Query caching and background revalidation. Navigating between documents doesn't reload the world; it reuses what's already in the cache.
-- **Silent auth** — Studio provisions its own first-party OAuth client (authorization code + PKCE) on first load. Logged-in backend users get a token silently: no consent screen, no setup, and automatic client-side token refresh.
-- **Lazy everything** — document tree and content outliner load on demand, honoring the Neos `loadingDepth` settings, with node type icons, visibility states and pending-change markers.
+If the sidecar becomes unreachable, Studio falls back to polling until it is back.
 
-### 🧩 Dockable panel system
+### Tasks
 
-The entire workspace is built from **panels**: document tree, content outliner, inspector, media browser, clipboard, preview — every surface is a panel that can be docked, resized and toggled. Panels live in a `PanelRegistry`, which means third-party packages register their own panels into the same layout system the built-in ones use. Your panel is a first-class citizen, not an iframe in a corner.
+Content work, organized like code: every task is a branch. A task is a workspace of its own, so work on it stays separate from live and from other tasks until it is published.
 
-### ✍️ Lightweight inline Rich Text Editing
+- **Tasks board**: tasks as cards in the columns _Open_, _In review_ and _Done_, with assignee and number of comments. Moving a card to _In review_ submits the task for review, moving it back to _Open_ reopens it.
+- **Review**: moving a card to _Done_ opens the review dialog for the task's workspace, where a reviewer chooses what to publish. Reviewers are the holders of a configurable role (default `Neos.Neos:LivePublisher`).
+- **Completion**: once a task's workspace is fully published, the task is marked done, regardless of where it was published from.
+- **Workspace switcher**: tasks appear in their own group with their status. Creating a task switches to it.
+- **Comments and notifications**: each task has a comment thread. The notification bell collects assignments, review requests, reopened tasks, comments and completions.
+- **Access**: task workspaces are regular shared workspaces. The creator and reviewers manage them, the assignee collaborates, and other editors don't see them.
 
-Inline editing runs on **TipTap 3** — a lean, headless, ProseMirror-based editor instead of a monolithic CKEditor build. The RTE lives _inside the preview iframe_ with a floating toolbar, driven by a guest-side formatting registry, so what you edit is exactly what renders. The same normalized formatting engine powers the inspector's rich-text editor, and the shared Link Editor (with a pluggable tab registry) handles links in both the RTE and the inspector's link fields.
+### Access roles
 
-### 🖱️ Context menus and drag & drop
+What Sandstorm.NeosAcl offered on earlier Neos versions, rebuilt for Neos 9. Access roles limit what editors can reach. Administrators create them in Studio and assign them to users, without editing `Policy.yaml` or deploying anything.
 
-- **Context menus** on every node — in the document tree, the content outliner and the media browser — with copy, cut, paste, delete, hide and more.
-- **Drag & drop node moves** in the trees, constraint-aware.
-- **Insert dialog**: add content before, inside or after any node, filtered by node type constraints — from the trees' context menus or the "+" buttons in the live preview.
-- A **node clipboard** that survives navigation, with its own panel and document/content separation.
+- **What a role covers**: sites, parts of the document tree, dimensions and workspaces (including live, so "may edit drafts but not publish" is one setting), plus whether the editor may edit, create, delete and move.
+- **Document rules**: pick pages in the tree and allow or deny them, with or without their sub-pages. The rule closest to a page decides.
+- **Defaults**: a new role restricts nothing. Users without a role are not restricted. Administrators are never restricted.
+- **Several roles**: a user may do what any one of their roles allows. Every operation has to be allowed by a single role; roles are not combined.
+- **In the UI**: pages outside the roles open read-only, with a note on who can extend the role. Actions that aren't allowed are disabled. The document tree shows only the granted branches, plus their ancestors (dimmed) as the way there. If a role change removes the workspace someone is working in, Studio moves them to one they may use.
+- **Enforcement**: writes are checked in the Content Repository itself, so the roles also apply to direct API requests. If a check fails with an error, the write is denied. Reading is restricted per workspace. Pages outside the granted branches are hidden in the UI, but the API does not yet filter them out of node listings and search.
 
-### 🔍 A complete, extensible inspector
+### Users and settings
 
-Full parity with the classic inspector — and then some:
+- User administration for administrators, and profile settings for every editor (name, email, password, interface language, light/dark appearance).
+- Access to the classic Neos backend modules from the Studio menu.
+- Interface translations in English, German and 12 more languages, through Neos' XLIFF files.
 
-- **Editors**: text, textarea, rich text, select box (with data source support), references, asset / assets, image, link, date & time, range slider, boolean, code, node type, URI path segment … all registered through an editor registry, all replaceable.
-- **Views**: NodeInfo, Column, Table and TimeSeries views plus data-source-driven widgets — through a views registry.
-- **Validators**: the `Neos.Neos/Validation` built-ins with live inline errors, tab badges and save-blocking — through a validators registry.
-- **ClientEval** support (`ClientEval:` expressions for hidden state and editor options), transient values, and **dimension shine-through indicators** with one-click "create variant" — in the inspector _and_ directly in the preview.
-- **Property help** (`ui.help.message` and `ui.help.thumbnail`) — a popover beside the property label, just like the classic UI.
+## Extending Studio
 
-### 🌐 Full editing environment
+Extensibility is built in from the start: the built-in panels, editors and decorators use the same registries that are open to plugins. A plugin's panel is docked, resized and toggled like any built-in one. Plugins register at runtime, and the UI updates when they do.
 
-- **Live preview** with an inline-editing guest bridge — edit content directly in the rendered page.
-- **Media module**: full asset management plus picker mode for asset editors.
-- **Workspaces, sites and dimensions**: switchers for all three, pending-change tracking, publish and discard.
-- **Trash panel**: deleting a node is a soft removal, so every deleted page waits in the trash until the deletion is published — with who deleted it and when, and one click to restore it (deleted parent pages come back with it).
-- **User & profile management**: administer users, and every editor gets self-service profile settings (name, email, password, interface language).
-- **Localized UI** in English and German via Neos' own XLIFF infrastructure (450+ keys) — translated the Neos way, extendable the Neos way.
-- **Consistent design system**: shadcn-style components on [Base UI](https://base-ui.com) primitives, on semantic design tokens from Figma, with light and dark themes. Focused, familiar.
+| Registry             | What you can add                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| Panels               | New panels, docked like the built-in ones                                                        |
+| Inspector editors    | Property editors for node type properties                                                        |
+| Inspector views      | Read-only views and widgets in the inspector                                                     |
+| Validators           | Client-side validation                                                                           |
+| Link editor tabs     | New link targets in the link dialog                                                              |
+| Settings sections    | Sections in the settings dialog (`modals` is a deprecated alias)                                 |
+| Workspace decorators | Badges and grouping for workspaces in the switcher and the administration (used for task status) |
+| Node decorators      | Icon, badges, tint or dimming of tree rows (used for hidden and deleted nodes)                   |
+| Keyboard shortcuts   | App-wide shortcuts                                                                               |
 
-### 🔌 Extensible by design — registries all the way down
+A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), and the registries. The shell loads the bundle from one `Settings.yaml` entry.
 
-Extensibility isn't bolted on; it's the architecture. Studio's building blocks are **observable registries**:
-
-| Registry             | What you can add                                                                                                                                                                        |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Panels               | Whole new workspace surfaces, docked anywhere                                                                                                                                           |
-| Inspector editors    | Custom property editors for any node type property                                                                                                                                      |
-| Inspector views      | Custom read-only views and widgets                                                                                                                                                      |
-| Validators           | Custom client-side validation                                                                                                                                                           |
-| Link editor tabs     | New link source types in the shared link modal                                                                                                                                          |
-| Modals               | App-level dialogs                                                                                                                                                                       |
-| Workspace decorators | Badges and grouping for workspaces in the switcher and administration (this is how task branches get their status colors)                                                               |
-| Node decorators      | Per-node visuals on every tree row: replace the type icon, layer badge overlays onto it, tint or dim the whole row (this is how hidden nodes dim and deleted nodes get their red badge) |
-| Keyboard shortcuts   | App-wide shortcuts alongside the built-in ones                                                                                                                                          |
-
-Third-party packages ship a small IIFE bundle that binds to the shell's public plugin API (`window.NeosStudio` — React instance, `useStudio()` app state and actions (`useStudioActions()` for just the stable actions), and all registries) with full TypeScript types generated from the shell's own source. The shell injects your bundle via a single `Settings.yaml` entry — no build-system fusion, no webpack surgery, no version lock-in dance. Registration is late-bindable and observable: register, and the UI re-renders.
-
-The types ship with the package as one bundled declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (resolved to `window.NeosStudio` at runtime); `react` stays external too, so install `@types/react` and map `react` to it too (the declaration file lies outside your package, so TypeScript would look for `react` next to it):
+TypeScript types ship with the package in one declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (it resolves to `window.NeosStudio` at runtime). `react` is external as well, so install `@types/react` and map `react` to it, because the declaration file lies outside your package and TypeScript would otherwise look for `react` next to it:
 
 ```jsonc
 "paths": {
@@ -118,6 +105,8 @@ The types ship with the package as one bundled declaration file, `Resources/Publ
   "react-dom": ["./node_modules/@types/react-dom"]
 }
 ```
+
+**Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) registers an example panel, a custom inspector editor (a color picker), a keyboard shortcut and a node decorator from a separate package.
 
 ### Plugin API version 2
 
@@ -132,15 +121,13 @@ The types ship with the package as one bundled declaration file, `Resources/Publ
 - **Custom preview guest scripts**: the `…ContextPath` fields of the guest protocol are `…NodeAddress` fields holding the NodeAddress JSON, `guest-ready` carries the guest's `labels` (the host answers with `init`), and the guest answers `flush` with `flushed`.
 - `modals` is deprecated in favour of `settingsSections` (still an alias).
 
-**Start here:** [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) — a copy-me boilerplate that registers an example panel, a custom inspector editor (a color picker) and a node decorator from a completely separate package.
-
 ## The package family
 
-| Package                                                                                                             | What it is                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [Neos.Api](https://github.com/medienreaktor/Medienreaktor.NeosApi) + [Neos.OAuth](https://github.com/medienreaktor/Neos.OAuth)   | The foundation: the HTTP API for Neos 9 (nodes, workspaces, media, users, sites, views, data sources), described with OpenAPI and secured with OAuth 2 (authorization code + PKCE, refresh token rotation, scopes narrowing the account's privileges). |
-| **Medienreaktor.NeosStudio** (this package)                                                                         | The editing UI built on that API, plus the Studio's operations of the Neos API (tasks, notifications, access roles, preview links, the creation dialog) and the realtime sidecar's change signal.                                                                                       |
-| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins) | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                    |
+| Package                                                                                                                        | What it is                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Neos.Api](https://github.com/medienreaktor/Medienreaktor.NeosApi) + [Neos.OAuth](https://github.com/medienreaktor/Neos.OAuth) | The foundation: the HTTP API for Neos 9 (nodes, workspaces, media, users, sites, views, data sources), described with OpenAPI and secured with OAuth 2 (authorization code + PKCE, refresh token rotation, scopes narrowing the account's privileges). |
+| **Medienreaktor.NeosStudio** (this package)                                                                                    | The editing UI built on that API, plus the Studio's operations of the Neos API (tasks, notifications, access roles, preview links, the creation dialog).                                                                                               |
+| [Medienreaktor.NeosStudio.ExamplePlugins](https://github.com/medienreaktor/Medienreaktor.NeosStudio.ExamplePlugins)            | Plugin boilerplate: example panel + example inspector editor, with the full build setup for extending Studio from your own package.                                                                                                                    |
 
 ## Getting started
 
@@ -167,13 +154,13 @@ Open `/neos/studio` and log in with your Neos backend account. That's it — Stu
 
 ## The realtime sidecar (optional)
 
-Multiplayer needs no extra infrastructure — but it can use some. `Resources/Private/Realtime/` ships a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus) WebSocket server that upgrades Studio's collaboration transport from HTTP polling to push. Without it, everything keeps working: collaboration falls back to plain HTTP polling of the workspace's events in Neos.Api (2s change feed; presence - who else is in the workspace - is only available through the sidecar). The fallback is also automatic at runtime — while the sidecar is unreachable, connected Studios poll; when it comes back, they stop.
+Collaboration works without it. `Resources/Private/Realtime/` contains a small [Hocuspocus](https://github.com/ueberdosis/hocuspocus) WebSocket server. Without it, Studio checks the workspace's events in Neos.Api every two seconds. With it, Studio additionally shows who is in the workspace and colleagues' typing, and changes arrive within well under a second. While the sidecar is unreachable, Studio switches to polling, and stops polling when the sidecar is back.
 
-One WebSocket per editing session (document name `workspace:<contentRepositoryId>:<workspaceName>`):
+How it works: each Studio opens one WebSocket per workspace (document name `workspace:<contentRepositoryId>:<workspaceName>`).
 
-- **Presence** — clients announce their position as stateless messages; the sidecar keeps a server-authoritative roster per workspace (identity comes from the validated token, never from the client) and broadcasts changes instantly. No heartbeats, no TTL ghosts: a closed tab leaves with its connection.
-- **Change signal** — the sidecar watches the head of each active workspace's content stream once per `FEED_INTERVAL_MS` through a shared-secret server-to-server endpoint (`/neos/studio/realtime/cr/{contentRepositoryId}/workspaces/{workspaceName}/head`) and tells every editor in the workspace when it moved (`{type: 'changed', contentStreamId, sequenceNumber}`). No event contents pass through the sidecar: each Studio then reads the new events from Neos.Api's workspace events with its own token, so the API's per-node read permissions apply. Remote edits reach colleagues in well under a second, without every editor polling every 2s.
-- **Yjs seam** — the (currently unused) Yjs document behind each connection is where collaborative text editing attaches later, without a new connection concept.
+- **Presence**: clients send their position, and the sidecar broadcasts the list of users in the workspace. Identity comes from the validated token, not from the client. Closing a tab removes the user.
+- **Live typing**: while someone edits text, their changes are passed on to the others about every 200ms. What gets saved still arrives through the change signal.
+- **Change signal**: the sidecar checks each active workspace once per `FEED_INTERVAL_MS` and tells the editors in it when there are new events (`{type: 'changed', contentStreamId, sequenceNumber}`). No content passes through the sidecar: each Studio reads the new events from Neos.Api with its own token, so the API's read permissions apply.
 
 ### Authentication
 
@@ -190,13 +177,13 @@ npm install
 REALTIME_SHARED_SECRET=... NEOS_BASE_URL=https://your-site npm start
 ```
 
-| Variable                  | Default                 | Purpose                                                     |
-| ------------------------- | ----------------------- | ----------------------------------------------------------- |
-| `PORT`                    | `1234`                  | Listen port                                                 |
-| `NEOS_BASE_URL`           | `http://127.0.0.1:8080` | Base URL of the Neos installation                           |
-| `NEOS_HOST_HEADER`        | _(none)_                | Host header override for internal hostnames                 |
-| `REALTIME_SHARED_SECRET`  | _(required)_            | Must equal `Medienreaktor.NeosStudio.realtime.sharedSecret` |
-| `FEED_INTERVAL_MS`        | `1000`                  | Feed tail cadence per active workspace                      |
+| Variable                 | Default                 | Purpose                                                     |
+| ------------------------ | ----------------------- | ----------------------------------------------------------- |
+| `PORT`                   | `1234`                  | Listen port                                                 |
+| `NEOS_BASE_URL`          | `http://127.0.0.1:8080` | Base URL of the Neos installation                           |
+| `NEOS_HOST_HEADER`       | _(none)_                | Host header override for internal hostnames                 |
+| `REALTIME_SHARED_SECRET` | _(required)_            | Must equal `Medienreaktor.NeosStudio.realtime.sharedSecret` |
+| `FEED_INTERVAL_MS`       | `1000`                  | Feed tail cadence per active workspace                      |
 
 Then point the Studio at it:
 
@@ -221,10 +208,11 @@ src/
   auth/                 authorization-code + PKCE flow, token refresh
   api/                  data layer: typed apiFetch(), query-key factory, one hook file per resource
   components/ui/        shadcn-style components on Base UI primitives (owned code)
-  features/             one folder per feature: tree, inspector, preview, media,
-                        panels, creation, clipboard, editing, links, dimensions,
-                        workspaces, tasks, notifications, collaboration, sites,
-                        users, profile, modals, shortcuts
+  features/             one folder per feature: access, clipboard, collaboration,
+                        creation, dimensions, editing, inspector, links, media,
+                        modals, navigation, notifications, panels, preview,
+                        profile, sharing, shortcuts, sites, tasks, tree, users,
+                        workspaces
   guest/                the script injected into the preview iframe:
                         inline editing, TipTap RTE, toolbar, link editing
   plugin-api/           the public plugin API surface (window.NeosStudio)
@@ -275,7 +263,7 @@ Everything else in the build is internal. The build fails when a listed variable
 
 ### The Studio API
 
-What the Studio adds to Neos (tasks, notifications, preview links, access roles, the review, history and trash of a workspace) are operations of Neos.Api's API itself: [neos/openapi](https://github.com/neos/openapi) Api Classes in `Classes/Endpoint/<Tag>/<Tag>.php` with schematic/jsonschema types (`Schema/`, `RequestBody/`, `Response/`), added to `Neos.OpenApi.FlowAdapter.apis.neos.classes`. So they share everything with Neos.Api's own operations:
+What the Studio adds to Neos (tasks, notifications, preview links, access roles, the creation dialog) are operations of Neos.Api's API itself: [neos/openapi](https://github.com/neos/openapi) Api Classes in `Classes/Endpoint/<Tag>/<Tag>.php` with schematic/jsonschema types (`Schema/`, `RequestBody/`, `Response/`), added to `Neos.OpenApi.FlowAdapter.apis.neos.classes`. So they share everything with Neos.Api's own operations:
 
 - the paths below `/api`, content-repository ones below `/api/cr/{contentRepositoryId}` like Neos.Api's - the shell uses the content repository of the selected site;
 - the OpenAPI document (`/api/openapi.json`) and its docs (`/api/docs`); the SPA's types are generated from it (`npm run api:schema` → `src/api/neos/schema/openapi.ts`, never edited by hand), `src/api/studio/schema` names the Studio's models;
