@@ -1,0 +1,33 @@
+{
+  "name": "@medienreaktor/neos-studio",
+  "version": "2.0.3",
+  "description": "TypeScript declarations of the Neos Studio plugin API (window.NeosStudio). Types only - mark the import external in your plugin bundle.",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/medienreaktor/Medienreaktor.NeosStudio#extending-studio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/medienreaktor/Medienreaktor.NeosStudio.git",
+    "directory": "Resources/Public/Studio/types"
+  },
+  "keywords": [
+    "neos",
+    "neos-studio",
+    "plugin",
+    "types"
+  ],
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts"
+    }
+  },
+  "files": [
+    "index.d.ts",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0"
+  }
+}

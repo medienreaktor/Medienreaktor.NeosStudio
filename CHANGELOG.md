@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with its registry id, and everything else keeps working. Throwing
   validators and keyboard shortcut handlers are logged and skipped. A crash
   in Studio itself shows a reload screen instead of a blank page.
+- The plugin API types are published to npm as `@medienreaktor/neos-studio`
+  (types only, versioned with Studio), so a plugin installs them instead of
+  mapping a path into this package.
 
 ## [2.0.3] - 2026-11-10
 

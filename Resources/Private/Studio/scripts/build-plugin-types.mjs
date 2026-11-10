@@ -170,3 +170,61 @@ fs.writeFileSync(
 )
 const kb = (fs.statSync(file).size / 1024).toFixed(0)
 console.log(`plugin API types: ${path.relative(root, file)} (${kb} kB)`)
+
+// The types directory doubles as a types-only npm package named like the
+// import plugins write, so a plugin can `npm install -D
+// @medienreaktor/neos-studio@<Studio version>` instead of mapping a path into
+// this package. It ships no JavaScript on purpose: at runtime the import
+// resolves to window.NeosStudio through the plugin bundler's externals, and a
+// plugin that forgets those fails at build time rather than bundling a stub.
+// Published by `npm run publish:plugin-types`, versioned with Studio.
+const studio = JSON.parse(
+  fs.readFileSync(path.join(root, 'package.json'), 'utf8'),
+)
+const manifest = {
+  name: '@medienreaktor/neos-studio',
+  version: studio.version,
+  description:
+    'TypeScript declarations of the Neos Studio plugin API (window.NeosStudio). Types only - mark the import external in your plugin bundle.',
+  license: 'GPL-3.0-or-later',
+  homepage:
+    'https://github.com/medienreaktor/Medienreaktor.NeosStudio#extending-studio',
+  repository: {
+    type: 'git',
+    url: 'git+https://github.com/medienreaktor/Medienreaktor.NeosStudio.git',
+    directory: 'Resources/Public/Studio/types',
+  },
+  keywords: ['neos', 'neos-studio', 'plugin', 'types'],
+  types: './index.d.ts',
+  exports: { '.': { types: './index.d.ts' } },
+  files: ['index.d.ts', 'README.md'],
+  sideEffects: false,
+  // The declarations import React's and ReactDOM's types (for the window
+  // globals); the plugin brings them, in the React major the shell runs.
+  peerDependencies: {
+    '@types/react': studio.devDependencies?.['@types/react'] ?? '^19',
+    '@types/react-dom': studio.devDependencies?.['@types/react-dom'] ?? '^19',
+  },
+}
+fs.writeFileSync(
+  path.join(outDir, 'package.json'),
+  JSON.stringify(manifest, null, 2) + '\n',
+)
+fs.writeFileSync(
+  path.join(outDir, 'README.md'),
+  `# @medienreaktor/neos-studio
+
+TypeScript declarations of the [Neos Studio](https://github.com/medienreaktor/Medienreaktor.NeosStudio)
+plugin API, version ${studio.version} of Studio. Types only: a plugin imports from
+\`@medienreaktor/neos-studio\` and marks that import (and \`react\`, \`react-dom\`,
+\`react/jsx-runtime\`) external in its bundler, mapped to the globals the shell
+publishes (\`window.NeosStudio\`, \`window.React\`, ...). Install the version
+matching the Studio you build against:
+
+\`\`\`bash
+npm install -D @medienreaktor/neos-studio@${studio.version} @types/react
+\`\`\`
+
+See "Extending Studio" in Studio's README for the full setup.
+`,
+)

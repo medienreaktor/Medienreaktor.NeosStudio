@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc && tsc -p tsconfig.node.json && vite build && vite build --config vite.guest.config.ts && npm run build:plugin-types && node scripts/check-css-variables.mjs",
     "build:plugin-types": "node scripts/build-plugin-types.mjs",
+    "publish:plugin-types": "npm publish ../../Public/Studio/types --access public",
     "preview": "vite preview",
     "api:schema": "NODE_USE_SYSTEM_CA=1 npx --yes openapi-typescript@7.13.0 ${NEOS_API_SPEC:-https://neos-development-distribution.ddev.site/api/openapi.json} -o src/api/neos/schema/openapi.ts",
     "format": "prettier --write src",

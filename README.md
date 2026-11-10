@@ -96,7 +96,15 @@ A plugin cannot take Studio down: every registered component (panel, editor, vie
 
 A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), and the registries. The shell loads the bundle from one `Settings.yaml` entry.
 
-TypeScript types ship with the package in one declaration file, `Resources/Public/Studio/types/index.d.ts` (built by `npm run build:plugin-types`, which runs at the end of `npm run build`). Map the import to it in your plugin's `tsconfig.json` and keep it external in your bundler (it resolves to `window.NeosStudio` at runtime). `react` is external as well, so install `@types/react` and map `react` to it, because the declaration file lies outside your package and TypeScript would otherwise look for `react` next to it:
+TypeScript types come as one declaration file, `Resources/Public/Studio/types/index.d.ts`, built by `npm run build:plugin-types` (the end of `npm run build`). The same directory is a types-only npm package named like the import, published with every Studio release, so a plugin installs the version matching the Studio it targets:
+
+```bash
+npm install -D @medienreaktor/neos-studio@2.0.3
+```
+
+npm adds `@types/react` and `@types/react-dom` as peers. The package contains no JavaScript: mark `@medienreaktor/neos-studio`, `react`, `react-dom` and `react/jsx-runtime` external in your bundler and map them to the globals the shell publishes (`NeosStudio`, `React`, `ReactDOM`, `ReactJSXRuntime`; see the example plugin's `vite.config.ts`). A plugin that forgets this fails at build time instead of bundling a stub.
+
+Without the npm package - e.g. against an unreleased Studio - map the import to the file in your plugin's `tsconfig.json`. Then map `react` and `react-dom` to your own `@types` as well, because the declaration file lies outside your package and TypeScript would otherwise look for them next to it:
 
 ```jsonc
 "paths": {
@@ -107,7 +115,7 @@ TypeScript types ship with the package in one declaration file, `Resources/Publi
 }
 ```
 
-The declaration file is self-contained apart from React: the types of the libraries behind the plugin API (Base UI behind the UI components, ...) are inlined, so a plugin installs none of them.
+The declarations are self-contained apart from React: the types of the libraries behind the plugin API (Base UI behind the UI components, ...) are inlined, so a plugin installs none of them.
 
 ### UI components
 
@@ -235,6 +243,8 @@ src/
 ```
 
 Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) on semantic tokens; primitives are Base UI (`@base-ui/react`), not Radix.
+
+Release the plugin API types with every Studio release: after tagging, run `npm run publish:plugin-types` in `Resources/Private/Studio/` (needs an npm login with publish rights on the `@medienreaktor` scope). It publishes `Resources/Public/Studio/types` as `@medienreaktor/neos-studio` at the version in `package.json`, so keep that in step with the release.
 
 ### Design tokens
 
