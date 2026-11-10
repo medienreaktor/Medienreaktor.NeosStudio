@@ -13,13 +13,14 @@ import type {
   WorkspaceConflictProblem,
   WorkspacePublish,
 } from '@/api/neos/schema'
-import { neosKeys } from '@/api/neos/keys'
-import { queryClient } from '@/app/queryClient'
 import { useStudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
 import { allowsPublishToLive } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
-import { afterWorkspaceRewrite } from '@/features/workspaces/invalidate'
+import {
+  afterPublish,
+  afterWorkspaceRewrite,
+} from '@/features/workspaces/invalidate'
 import { translate as t } from '@/lib/i18n'
 
 /**
@@ -75,14 +76,16 @@ export function useWorkspacePublishing(workspaceName: string) {
     op: WorkspaceOperation
   } | null>(null)
 
-  const invalidateWorkspace = () => {
+  const invalidateWorkspace = (published: boolean) => {
     // The changes queries (badges, counts), the workspace list's
     // hasPublishableChanges flag - and the node reads: publishing rebases the
     // workspace onto the new base (changes published by others flow in) and
     // discarding rewrites its content, so they are stale either way, and
     // every loaded tree item needs a re-read (per-item caches in the trees
-    // never expire on their own).
-    void afterWorkspaceRewrite(contentRepositoryId!, workspaceName)
+    // never expire on their own). A publish also changed the base
+    // workspace's content (e.g. live) - afterPublish covers its node reads.
+    if (published) void afterPublish(contentRepositoryId!, workspaceName)
+    else void afterWorkspaceRewrite(contentRepositoryId!, workspaceName)
     workspaceContentChanged()
   }
 
@@ -93,12 +96,7 @@ export function useWorkspacePublishing(workspaceName: string) {
       else await discardWorkspace(contentRepositoryId!, workspaceName, op.scope)
     },
     onSuccess: (_data, op) => {
-      invalidateWorkspace()
-      // A publish also changed the base workspace's content (e.g. live):
-      // afterWorkspaceRewrite only covers this workspace's node reads.
-      if (op.kind === 'publish') {
-        void queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
-      }
+      invalidateWorkspace(op.kind === 'publish')
       toast.success(
         op.kind === 'discard'
           ? t('workspace.discard.success', 'Changes discarded.')
@@ -150,7 +148,8 @@ export function useWorkspacePublishing(workspaceName: string) {
       }
     },
     onSuccess: (_data, action) => {
-      invalidateWorkspace()
+      // Resolving a publish conflict publishes the rest after the rebase.
+      invalidateWorkspace(action !== 'discardAll')
       setPendingConflict(null)
       toast.success(
         action === 'discardAll'

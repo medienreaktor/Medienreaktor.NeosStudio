@@ -14,6 +14,7 @@ import { useTaskDecorationData } from '@/features/tasks/decorationData'
 import {
   invalidateAfterContentEdit,
   invalidateWorkspaceQueries,
+  scheduleInvalidateAfterContentEdit,
 } from '@/features/workspaces/invalidate'
 import { queryClient } from '@/app/queryClient'
 import { cn } from '@/lib/utils'
@@ -251,9 +252,15 @@ function Shell() {
         { queryKey: neosKeys.nodes.node(address) },
         { cancelRefetch: false },
       )
+      // Same for the pending changes: the write's own refresh (persistProperty,
+      // or afterStructuralEdit for hide/unhide/delete) already ran - this one
+      // keeps its refetch, and an edit of an already changed node refetches
+      // nothing (see invalidateAfterContentEdit).
       void invalidateAfterContentEdit(
         address.contentRepositoryId,
         address.workspaceName,
+        [address],
+        { cancelRefetch: false },
       )
     },
     nodesEdited: (addresses) => {
@@ -324,19 +331,40 @@ function Shell() {
           })
         }
       }
-      void invalidateAfterContentEdit(
+      // The changes and history behind the dirty markers: coalesced - a
+      // typing colleague's saves arrive with every tick of the feed, and a
+      // full pending-changes read of a big workspace per tick adds up. The
+      // edits are in the viewed dimension space point (the feed passes only
+      // the events affecting it), which lets an already changed node skip
+      // that read altogether.
+      scheduleInvalidateAfterContentEdit(
         baseAddress.contentRepositoryId,
         baseAddress.workspaceName,
+        addresses,
       )
-      signals.reportEdit(addresses)
+      // Property/reference events only (structure goes the wholesale way
+      // below) - the trees re-read the rows, not their children lists.
+      signals.reportEdit(addresses, { kind: 'properties' })
       signals.updatePreviewElements(addresses, true)
     },
     // A collaborator changed the structure (or published/discarded/rebased the
     // session): incremental updates cannot describe this - drop the shared
-    // workspace's node reads and refresh wholesale.
-    remoteWorkspaceChanged: () => {
+    // workspace's node reads and refresh wholesale. The workspace reads
+    // follow the cause: a rewritten content stream (wholesale) may have
+    // changed any of them - status flags, the base's events, a task marked
+    // done - so all are refreshed, right away (it is rare); a structural
+    // edit only changes the shared workspace's changes and history, which
+    // are refreshed coalesced, like content edits (a colleague rearranging
+    // content reports a batch with every tick of the feed).
+    remoteWorkspaceChanged: (wholesale: boolean) => {
       invalidateWorkspaceNodes(collaborativeWorkspace?.name)
-      void invalidateWorkspaceQueries()
+      if (wholesale) void invalidateWorkspaceQueries()
+      else if (site && collaborativeWorkspace) {
+        scheduleInvalidateAfterContentEdit(
+          site.contentRepositoryId,
+          collaborativeWorkspace.name,
+        )
+      }
       refreshWorkspaceContent()
     },
   })

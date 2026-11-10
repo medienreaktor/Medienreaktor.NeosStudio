@@ -2314,6 +2314,17 @@ type PreviewElementUpdate = {
  */
 interface NodeEdit {
   addresses: (NodeAddress | typeof ALL_NODES)[];
+  /**
+   * What changed about the nodes at `addresses`. Omitted: anything - their
+   * properties, their tags, their type, or their children (a child created,
+   * deleted, moved in or out: the reported address is then the parent), so
+   * each tree re-reads the node and its children list. 'properties': only
+   * properties/references of the nodes themselves - their children lists
+   * are known to be untouched and are not re-read. Set it only where that is
+   * certain (a remote NodePropertiesWereSet); hiding needs no flag of its own
+   * either way, see useNodeEditRefresh.
+   */
+  kind?: 'properties';
   token: number;
 }
 /**

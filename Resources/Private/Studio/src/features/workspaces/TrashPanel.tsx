@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
 import { toast } from '@/components/ui/toast'
+import { usePanelVisible } from '@/features/panels/visibility'
 import { FaIcon } from '@/features/tree/nodeTypeIcon'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -31,10 +32,16 @@ import { useTrashRestore } from './useTrashRestore'
  */
 export function TrashPanel() {
   const { site, workspaceName, selectedDocument, selectDocument } = useStudio()
-  // Scoped to the active site like the review dialog
+  // Scoped to the active site like the review dialog. Read only while the
+  // panel shows: the trash is made of the workspace's changes, which every
+  // property save invalidates - behind another tab that would be a changes
+  // listing plus a deletion lookup per keystroke-save for nobody. Hidden, the
+  // query just goes stale and is read afresh when the panel shows again.
+  const visible = usePanelVisible()
   const { data, isLoading, isError } = useWorkspaceTrash(
     workspaceName,
     site?.nodeAggregateId ?? null,
+    { subscribed: visible },
   )
   const { data: workspaces } = useWorkspaces()
   // A page whose restore would bring deleted ancestors along - confirmed first.

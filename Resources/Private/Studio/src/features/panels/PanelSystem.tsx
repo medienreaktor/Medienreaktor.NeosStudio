@@ -13,6 +13,7 @@ import {
   SidebarResizeHandle,
   useResizableSidebar,
 } from '@/components/ui/sidebar-resize'
+import { useSidebarCollapsed } from '@/components/ui/sidebar'
 import { useLatestRef } from '@/hooks/use-latest-ref'
 import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
@@ -52,6 +53,7 @@ import {
 } from './panelLayout'
 import { onPanelRevealRequest } from './reveal'
 import { type PanelDefinition, panelRegistry, panelTitle } from './registry'
+import { PanelVisibleContext } from './visibility'
 
 /**
  * Adobe-CS-style dockable panels: every panel registered in the panelRegistry
@@ -685,6 +687,12 @@ export function PanelDock({ region }: { region: DockRegion }) {
       : null
   const groups = layout.docks[region]
   const horizontal = REGION_ORIENTATION[region] === 'horizontal'
+  // The app renders the 'sidebar' region inside its off-canvas Sidebar, whose
+  // collapse only slides it out of view - everything in it stays mounted, so
+  // its panels must learn they are off screen (see usePanelVisible). The
+  // secondary dock needs no such flag: collapsed, it unmounts its PanelDock.
+  const sidebarCollapsed = useSidebarCollapsed()
+  const offscreen = region === 'sidebar' && sidebarCollapsed
   return (
     <div
       data-panel-drop="dock"
@@ -709,6 +717,7 @@ export function PanelDock({ region }: { region: DockRegion }) {
             <GroupBody
               group={group}
               collapsed={group.collapsed}
+              offscreen={offscreen}
               region={region}
             />
           </div>
@@ -847,7 +856,7 @@ function FloatingGroupWindow({
       onPointerDownCapture={() => toFront(group.id)}
     >
       <GroupTabBar group={group} floating />
-      <GroupBody group={group} collapsed={group.collapsed} />
+      <GroupBody group={group} collapsed={group.collapsed} offscreen={hidden} />
       {handles.map(({ direction, className }) => (
         <div
           key={direction}
@@ -934,10 +943,18 @@ function GroupTabBar({
 function GroupBody({
   group,
   collapsed = false,
+  offscreen = false,
   region,
 }: {
   group: PanelGroup
   collapsed?: boolean
+  /**
+   * The whole group is out of view for a reason outside it: a floating window
+   * hidden while another main tab shows, a docked region slid off canvas.
+   * Together with `collapsed` and the active tab it decides what each panel
+   * learns from usePanelVisible.
+   */
+  offscreen?: boolean
   /**
    * The docked region this group sits in, if any. In a stacking region the
    * body is a 'body' drop zone whose edges dock a new stacked group above/below
@@ -972,7 +989,8 @@ function GroupBody({
         if (!definition) return null
         return (
           // Inactive tabs stay mounted (hidden) so e.g. tree expansion state
-          // survives tab switches.
+          // survives tab switches. What CSS hides here, usePanelVisible tells
+          // the panel, so its queries can stop refetching while out of view.
           <div
             key={panel}
             className={cn(
@@ -980,7 +998,11 @@ function GroupBody({
               panel !== group.active && 'hidden',
             )}
           >
-            <PanelBody panel={panel} component={definition.component} />
+            <PanelBody
+              panel={panel}
+              component={definition.component}
+              visible={panel === group.active && !collapsed && !offscreen}
+            />
           </div>
         )
       })}
@@ -989,21 +1011,27 @@ function GroupBody({
 }
 
 /**
- * A panel's component. Memoized on its (stable) id and component: the group
- * around it re-renders on every layout change - per pointermove while a
- * floating group moves or a tab is dragged - and none of that concerns the
- * panel's own content.
+ * A panel's component. Memoized on its (stable) id and component and its
+ * visibility (which flips only on tab switches, collapses and region
+ * toggles): the group around it re-renders on every layout change - per
+ * pointermove while a floating group moves or a tab is dragged - and none of
+ * that concerns the panel's own content.
  */
 const PanelBody = React.memo(function PanelBody({
   panel,
   component: Component,
+  visible,
 }: {
   panel: PanelId
   component: React.ComponentType
+  /** Whether the panel is actually on screen - see usePanelVisible. */
+  visible: boolean
 }) {
   return (
     <PanelIdContext.Provider value={panel}>
-      <Component />
+      <PanelVisibleContext.Provider value={visible}>
+        <Component />
+      </PanelVisibleContext.Provider>
     </PanelIdContext.Provider>
   )
 })

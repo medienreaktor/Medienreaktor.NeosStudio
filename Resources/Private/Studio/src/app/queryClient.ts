@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { ApiError } from '@/api/http/errors'
+import { installQueryDebug } from './queryDebug'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,3 +13,5 @@ export const queryClient = new QueryClient({
     },
   },
 })
+
+installQueryDebug(queryClient)

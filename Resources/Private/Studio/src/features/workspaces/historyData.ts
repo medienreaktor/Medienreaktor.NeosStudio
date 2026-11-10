@@ -631,16 +631,29 @@ function pendingEventsOf(
 }
 
 /**
+ * How a panel's history read follows the panel. `subscribed: false` - the
+ * panel is hidden (see usePanelVisible) - detaches the read from the cache:
+ * no fetch, no poll, no refetch on invalidation (a property save invalidates
+ * the workspace's changes and history), until it subscribes again and
+ * refetches whatever went stale meanwhile.
+ */
+export interface PanelQueryOptions {
+  subscribed?: boolean
+}
+
+/**
  * The pending histories of several workspaces at once (the Workspaces graph
  * fetches one per visible branch), by workspace name; entries are absent
  * while loading or on error. The roots' (rootNames) read only their newest
- * ROOT_EVENTS_LIMIT events.
+ * ROOT_EVENTS_LIMIT events. `refetchInterval` polls them all.
  */
 export function useWorkspacesPendingEvents(
   workspaceNames: string[],
   rootNames: ReadonlySet<string>,
-  enabled = true,
-  refetchInterval?: number,
+  {
+    refetchInterval,
+    subscribed,
+  }: PanelQueryOptions & { refetchInterval?: number } = {},
 ) {
   const contentRepositoryId = useActiveContentRepositoryId()
   const { data: nodeTypes } = useNodeTypes()
@@ -686,11 +699,13 @@ export function useWorkspacesPendingEvents(
             contentRepositoryId!,
             signal,
           ),
-        enabled: enabled && contentRepositoryId !== null,
+        enabled: contentRepositoryId !== null,
         refetchInterval,
       }
     }),
     combine,
+    // useQueries takes `subscribed` for all its queries at once.
+    subscribed,
   })
 }
 
@@ -701,6 +716,7 @@ export function useWorkspacesPendingEvents(
 export function useDocumentPendingEvents(
   workspaceName: string | null,
   documentAggregateId: string | null,
+  { subscribed }: PanelQueryOptions = {},
 ) {
   const contentRepositoryId = useActiveContentRepositoryId()
   const { data: nodeTypes } = useNodeTypes()
@@ -728,6 +744,7 @@ export function useDocumentPendingEvents(
               signal,
             )
         : skipToken,
+    subscribed,
   })
   const data = useMemo(
     () =>
@@ -990,6 +1007,7 @@ function trashItems(
 export function useWorkspaceTrash(
   workspaceName: string | null,
   siteAggregateId: string | null,
+  { subscribed }: PanelQueryOptions = {},
 ) {
   const contentRepositoryId = useActiveContentRepositoryId()
   const { data: nodeTypes } = useNodeTypes()
@@ -1021,6 +1039,7 @@ export function useWorkspaceTrash(
       return { changes, deletions }
     },
     enabled: workspaceName !== null && contentRepositoryId !== null,
+    subscribed,
   })
   const data = useMemo(
     () =>

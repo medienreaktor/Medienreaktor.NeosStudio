@@ -4,6 +4,7 @@ import { useAssets } from '@/api/neos/endpoints/assets'
 import type { Asset } from '@/api/neos/schema'
 import { translate as t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
+import { usePanelVisible } from '@/features/panels/visibility'
 import { AssetContextMenu, type AssetMenuTarget } from './AssetContextMenu'
 import { AssetDetailsDialog } from './AssetDetailsDialog'
 import { AssetList } from './AssetList'
@@ -75,7 +76,12 @@ export function MediaBrowser({
     else setDetailsAsset(asset)
   }
 
-  const query = useAssets(state.filter)
+  // Inside the Media Library panel: read only while it shows (an upload from
+  // an inspector editor would otherwise refetch every loaded page behind the
+  // Visual Editor's tab). Picker mode activates the panel first, so it is
+  // visible then; outside a panel usePanelVisible is always true.
+  const visible = usePanelVisible()
+  const query = useAssets(state.filter, true, { subscribed: visible })
   const assets = useMemo(
     () => query.data?.pages.flatMap((page) => page.data) ?? [],
     [query.data],

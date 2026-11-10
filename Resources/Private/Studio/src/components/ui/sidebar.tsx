@@ -39,6 +39,18 @@ function useSidebar() {
   return context
 }
 
+/**
+ * Whether the desktop sidebar is collapsed off-canvas: its content stays
+ * mounted, merely moved out of view. False outside a SidebarProvider and on
+ * mobile, where the sidebar is a sheet that unmounts its content when closed
+ * (whatever is mounted there is on screen). Unlike useSidebar it does not
+ * throw, so components that may or may not live in a sidebar can ask.
+ */
+function useSidebarCollapsed(): boolean {
+  const context = React.useContext(SidebarContext)
+  return context !== null && !context.isMobile && context.state === 'collapsed'
+}
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -323,4 +335,5 @@ export {
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
+  useSidebarCollapsed,
 }

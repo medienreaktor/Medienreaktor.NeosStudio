@@ -111,8 +111,18 @@ function assetListQuery(
  * page, the grid appends pages as the user scrolls (the page param is the
  * offset). The whole filter object is the query key, so changing any control
  * starts a fresh list.
+ *
+ * `subscribed: false` (the Media Library hidden behind another tab, see
+ * usePanelVisible) detaches the list from the cache: an invalidation - every
+ * upload, also one from an inspector editor - then only marks it stale
+ * instead of refetching every page loaded so far; it is read afresh when the
+ * list subscribes again.
  */
-export function useAssets(filter: AssetListFilter, enabled = true) {
+export function useAssets(
+  filter: AssetListFilter,
+  enabled = true,
+  { subscribed }: { subscribed?: boolean } = {},
+) {
   // Whether the source sorts is only known from the source list - the local
   // Neos source always does, other sources wait for the list.
   const sources = useAssetSources(
@@ -149,6 +159,7 @@ export function useAssets(filter: AssetListFilter, enabled = true) {
     // Keep the previous results on screen while a new search/filter loads, so
     // the grid updates in place instead of flickering through an empty state.
     placeholderData: keepPreviousData,
+    subscribed,
   })
 }
 

@@ -1,8 +1,7 @@
 import { createNode as createNodeRequest } from '@/api/neos/endpoints/nodeCommands'
-import { neosKeys } from '@/api/neos/keys'
 import type { Node, NodeAddress } from '@/api/neos/schema'
 import { createNodeFromCreationDialog } from '@/api/studio/endpoints/creationDialog'
-import { queryClient } from '@/app/queryClient'
+import { afterStructuralEdit } from '@/features/workspaces/invalidate'
 
 export interface CreateNodeRequest {
   nodeTypeName: string
@@ -56,10 +55,15 @@ export async function createNode(
           references,
         })
 
-  // The collection's children changed - drop all node reads (children lists
-  // are keyed under nodes too) and refresh the pending-changes badges.
-  await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
-  void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+  // The parent's children changed - refresh the workspace's node reads and
+  // its pending changes. Not awaited: the reads are marked stale right away,
+  // so whatever the caller reads next (the new node, the parent's children)
+  // is fetched fresh; waiting for every active read to refetch first would
+  // only delay the dialog.
+  void afterStructuralEdit(
+    request.parentAddress.contentRepositoryId,
+    request.parentAddress.workspaceName,
+  )
 
   return node
 }

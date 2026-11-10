@@ -113,10 +113,13 @@ async function withVariantHandling<T>(
       await invalidateAfterVariation(address)
     }
   }
-  // Refresh the pending-changes badges.
+  // Refresh the pending-changes badges - right away, the editor expects the
+  // dirty marker of a first edit at once. Naming the node lets repeated edits
+  // of an already changed node skip the full pending-changes refetch.
   void invalidateAfterContentEdit(
     address.contentRepositoryId,
     address.workspaceName,
+    [address],
   )
   return result
 }

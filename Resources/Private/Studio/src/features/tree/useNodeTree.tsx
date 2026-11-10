@@ -221,6 +221,9 @@ export function useNodeTree({
         }
       },
     },
+    // Every loaded item passes through here - where useNodeEditRefresh
+    // notices a node whose tags changed and refreshes its descendants.
+    onLoadedItem: (itemId, data) => onLoadedItem(itemId, data),
     // Rows still loading carry null (headless-tree's default, made explicit
     // so it is part of the item type).
     createLoadingItemData: () => null,
@@ -244,8 +247,15 @@ export function useNodeTree({
   // rootline down to the node and highlight it.
   useRevealSelection(tree, selectedAddress, revealNodeTypes)
   // After an edit, re-read the affected items so labels stay in sync and
-  // structural changes appear.
-  useNodeEditRefresh(tree, lastEdit, NODE_TREE_ROOT)
+  // structural changes appear - the visible ones, dropping what collapsed
+  // branches had loaded (see useNodeEditRefresh for the rules).
+  const onLoadedItem = useNodeEditRefresh({
+    tree,
+    lastEdit,
+    rootId: NODE_TREE_ROOT,
+    addressOf,
+    nodeOf: nodeOfItem,
+  })
 
   const decorate = (data: NodeTreeItem): TreeRowDecor | null => {
     const node = nodeOfItem(data)

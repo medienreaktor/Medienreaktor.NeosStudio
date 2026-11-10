@@ -8,7 +8,6 @@ import {
   useState,
 } from 'react'
 import { Button } from '@/components/ui/button'
-import { useLatestRef } from '@/hooks/use-latest-ref'
 import { translate as t } from '@/lib/i18n'
 import { rootFontSize } from '@/lib/rem'
 
@@ -30,8 +29,8 @@ import { rootFontSize } from '@/lib/rem'
  *   ctrl+wheel with small deltas and zoom faster.
  * - The canvas fits its content once, as soon as it is actually visible
  *   (panels mount hidden behind inactive tabs - a hidden tab's wrapper has
- *   zero width) AND the content has extents. `onVisible` fires at the same
- *   visibility edge, so callers can defer fetching until the panel is shown.
+ *   zero width) AND the content has extents. Whether to fetch is not the
+ *   canvas's business: a panel caller gates its queries on usePanelVisible.
  * - The view transform lives in a ref and is written to the surface's style
  *   once per animation frame - panning never re-renders the (possibly large)
  *   graph. Only the zoom readout is React state, updated when the scale
@@ -71,12 +70,6 @@ export interface GraphCanvasProps {
   maxScale?: number
   /** A non-drag click: the `data-graph-id` under the press, null on empty canvas. */
   onPick?: (id: string | null) => void
-  /**
-   * Fires on every visibility edge (true when the viewport gains real size,
-   * false when it loses it - a panel behind an inactive tab has zero width).
-   * Callers gate fetching and polling on this.
-   */
-  onVisibilityChange?: (visible: boolean) => void
   /** Untransformed overlays (search, legends) rendered above the canvas. */
   overlay?: React.ReactNode
   children: React.ReactNode
@@ -90,7 +83,6 @@ export function GraphCanvas({
   minScale = 0.08,
   maxScale = 2,
   onPick,
-  onVisibilityChange,
   overlay,
   children,
   ref,
@@ -139,22 +131,19 @@ export function GraphCanvas({
     [],
   )
 
-  // Visibility via size: the hidden tab's wrapper has zero width.
-  const onVisibilityChangeRef = useLatestRef(onVisibilityChange)
+  // Visibility via size: the hidden tab's wrapper has zero width. Only the
+  // first visible edge matters - it triggers the one-time fit below.
   useEffect(() => {
     const element = viewportRef.current
     if (!element) return
-    let last: boolean | null = null
     const observer = new ResizeObserver(() => {
-      const now = element.clientWidth > 0
-      if (now === last) return
-      last = now
-      if (now) setVisible(true)
-      onVisibilityChangeRef.current?.(now)
+      if (element.clientWidth === 0) return
+      setVisible(true)
+      observer.disconnect()
     })
     observer.observe(element)
     return () => observer.disconnect()
-  }, [onVisibilityChangeRef]) // a stable ref: runs once
+  }, [])
 
   const fitToView = () => {
     const element = viewportRef.current

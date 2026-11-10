@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LoadingState } from '@/components/ui/spinner'
+import { usePanelVisible } from '@/features/panels/visibility'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { BranchHistoryPanel } from './BranchHistoryPanel'
@@ -320,17 +321,23 @@ export function WorkspaceGraphPanel() {
     navigateToNodeInWorkspace,
     checkoutWorkspace,
   } = useStudio()
-  // The panel mounts hidden behind the Visual Editor tab: fetch only once it
-  // has been shown, poll only while it stays visible.
-  const [shown, setShown] = useState(false)
-  const [active, setActive] = useState(false)
-  const refetchInterval = active ? REFRESH_INTERVAL : undefined
+  // The panel mounts hidden behind the Visual Editor tab: its reads subscribe
+  // only while it is visible. Hidden, they neither fetch (not even once, on
+  // mount) nor poll nor refetch on invalidation - every property save
+  // invalidates the edited workspace's history, one of the N event listings
+  // drawn here. Shown again, whatever went stale meanwhile is read afresh and
+  // the polling resumes.
+  const visible = usePanelVisible()
+  const queryOptions = {
+    refetchInterval: REFRESH_INTERVAL,
+    subscribed: visible,
+  }
 
   const {
     data,
     isLoading: workspacesLoading,
     isError,
-  } = useWorkspaces(shown, refetchInterval)
+  } = useWorkspaces(true, queryOptions)
   const workspaces = useMemo(() => data ?? [], [data])
 
   // Pending histories for every workspace - branches for their commit dots
@@ -354,12 +361,7 @@ export function WorkspaceGraphPanel() {
     )
   }, [workspaces, workspaceNames])
   const { byWorkspace: pending, isLoading: eventsLoading } =
-    useWorkspacesPendingEvents(
-      workspaceNames,
-      rootNames,
-      shown,
-      refetchInterval,
-    )
+    useWorkspacesPendingEvents(workspaceNames, rootNames, queryOptions)
 
   const graph = useMemo(
     () => buildWorkspaceGraph(workspaces, pending),
@@ -409,10 +411,6 @@ export function WorkspaceGraphPanel() {
       contentWidth={graph.width}
       contentHeight={graph.height}
       maxScale={2.5}
-      onVisibilityChange={(visible) => {
-        if (visible) setShown(true)
-        setActive(visible)
-      }}
       onPick={(id) => setSelection(parsePick(id))}
       overlay={
         <>

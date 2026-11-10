@@ -3,6 +3,7 @@ import { nodeAddressOf } from '@/api/neos/schema'
 import { useStudio } from '@/app/StudioContext'
 import { Placeholder } from '@/components/ui/placeholder'
 import { LoadingState } from '@/components/ui/spinner'
+import { usePanelVisible } from '@/features/panels/visibility'
 import { translate as t } from '@/lib/i18n'
 import { useDocumentPendingEvents } from './historyData'
 import { HistoryStepRow } from './HistoryStepRow'
@@ -32,14 +33,18 @@ import { groupPendingEvents, type WorkspacePendingStep } from './pendingSteps'
  * collaboration bridge, for a colleague's edits in a shared workspace)
  * invalidates the workspace's history, which this is part of - so another
  * editor's change to the page shows up here within the change feed's poll
- * cadence.
+ * cadence - while the panel is visible. Behind the Inspector's tab (its
+ * default spot) it unsubscribes instead: those invalidations then only mark
+ * the history stale, and showing the panel reads it afresh.
  */
 export function HistoryPanel() {
   const { workspaceName, selectedDocument, inspectAddress } = useStudio()
   const documentId = selectedDocument?.nodeAggregateId ?? null
+  const visible = usePanelVisible()
   const { data: history, isLoading } = useDocumentPendingEvents(
     workspaceName,
     documentId,
+    { subscribed: visible },
   )
   const [expandedId, setExpandedId] = useState<number | null>(null)
 

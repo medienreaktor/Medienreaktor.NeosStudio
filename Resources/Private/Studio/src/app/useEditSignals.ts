@@ -24,10 +24,19 @@ export function useEditSignals() {
     lastEdit,
     previewReloadToken,
     previewElementUpdate,
-    /** Refresh these nodes in the trees - ALL_NODES for every one. */
-    reportEdit: (addresses: (NodeAddress | typeof ALL_NODES)[]) =>
+    /**
+     * Refresh these nodes in the trees - ALL_NODES for every one. kind
+     * 'properties' tells the trees only the nodes' own properties changed,
+     * sparing their children lists (see NodeEdit) - only where that is
+     * certain.
+     */
+    reportEdit: (
+      addresses: (NodeAddress | typeof ALL_NODES)[],
+      options?: { kind?: NodeEdit['kind'] },
+    ) =>
       setLastEdit((previous) => ({
         addresses,
+        ...(options?.kind ? { kind: options.kind } : {}),
         token: (previous?.token ?? 0) + 1,
       })),
     /** Reload the preview iframe. */

@@ -38,7 +38,9 @@ const POLLING_FALLBACK_AFTER_MS = 3_000
  *   surface as onRemoteContentChange (affected node aggregate ids, for
  *   in-place element re-renders); anything structural - or a content-stream
  *   move (someone published/discarded/rebased the session), or a missed
- *   window - surfaces as onRemoteWorkspaceChange (refresh everything). Own
+ *   window - surfaces as onRemoteWorkspaceChange (refresh everything; the
+ *   flag tells a moved content stream or a missed window from structural
+ *   edits within the session). Own
  *   events are filtered out via initiatingUserId: the UI already refreshed
  *   when it issued the command.
  *
@@ -72,7 +74,11 @@ export function CollaborationBridge({
   editingElement: EditingElement | null
   onPresence: (state: { peers: PresencePeer[]; you: string | null }) => void
   onRemoteContentChange: (nodeAggregateIds: string[]) => void
-  onRemoteWorkspaceChange: () => void
+  /**
+   * wholesale: the content stream moved (published/discarded/rebased) or a
+   * window was missed - not just structural edits within the session.
+   */
+  onRemoteWorkspaceChange: (wholesale: boolean) => void
 }) {
   // Latest-value refs keep the transport session stable while props change
   // beneath it - a re-created transport would tear down its connection (or
@@ -149,7 +155,7 @@ export function CollaborationBridge({
         // Created/moved/removed/retagged nodes reshape trees and page
         // alike; the wholesale refresh handles remote deletions of the
         // very node the user is looking at gracefully.
-        callbacksRef.current.onRemoteWorkspaceChange()
+        callbacksRef.current.onRemoteWorkspaceChange(false)
         return
       }
       const ids = [
@@ -165,7 +171,8 @@ export function CollaborationBridge({
     const transportCallbacks: TransportCallbacks = {
       onRoster: handleRoster,
       onEvents: handleEvents,
-      onWorkspaceChanged: () => callbacksRef.current.onRemoteWorkspaceChange(),
+      onWorkspaceChanged: () =>
+        callbacksRef.current.onRemoteWorkspaceChange(true),
       // Collaborators' live-typing ticks flow to the guest via the channel
       // (the PreviewPane subscribes on the other end).
       onLiveEdit: publishRemoteLiveEdit,

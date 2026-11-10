@@ -56,7 +56,20 @@ async function listWorkspaces(
   ).data
 }
 
-export function useWorkspaces(enabled = true, refetchInterval?: number) {
+/**
+ * The workspace list. `refetchInterval` polls it; `subscribed: false` (a
+ * hidden panel, see usePanelVisible) detaches this observer from the cache -
+ * no fetch, no poll and no refetch on invalidation until it subscribes again,
+ * which refetches the list if it went stale meanwhile. Other observers of
+ * the list (the app shell's) keep it fresh regardless.
+ */
+export function useWorkspaces(
+  enabled = true,
+  {
+    refetchInterval,
+    subscribed,
+  }: { refetchInterval?: number; subscribed?: boolean } = {},
+) {
   const contentRepositoryId = useActiveContentRepositoryId()
   return useQuery({
     queryKey: neosKeys.workspaces.list(contentRepositoryId ?? ''),
@@ -65,6 +78,7 @@ export function useWorkspaces(enabled = true, refetchInterval?: number) {
         ? ({ signal }) => listWorkspaces(contentRepositoryId, signal)
         : skipToken,
     refetchInterval,
+    subscribed,
   })
 }
 

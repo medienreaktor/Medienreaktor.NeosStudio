@@ -1,13 +1,12 @@
 import { copyNode, runSequentially } from '@/api/neos/endpoints/nodeCommands'
 import { fetchChildren } from '@/api/neos/endpoints/nodes'
-import { neosKeys } from '@/api/neos/keys'
 import {
   type NodeAddress,
   nodeAddressOf,
   nodeAddressKey,
 } from '@/api/neos/schema'
-import { queryClient } from '@/app/queryClient'
 import { moveNodesByAddress } from '@/features/editing/nodeActions'
+import { afterStructuralEdit } from '@/features/workspaces/invalidate'
 import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
 
 /**
@@ -101,10 +100,14 @@ async function copyNodes(
     )
     return copies.map(nodeAddressOf)
   } finally {
-    // The target's children changed - drop all node reads (children lists
-    // are keyed under nodes) and refresh the pending-changes badges.
-    await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
-    void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
+    // The target's children changed - refresh the target workspace's node
+    // reads and pending changes (also after a failure: earlier copies stay).
+    // Not awaited: the reads are marked stale right away, so the caller's
+    // re-reads of the affected parents fetch fresh data anyway.
+    void afterStructuralEdit(
+      targetParentAddress.contentRepositoryId,
+      targetParentAddress.workspaceName,
+    )
   }
 }
 

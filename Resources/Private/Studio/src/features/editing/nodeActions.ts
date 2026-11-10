@@ -6,9 +6,8 @@ import {
   tagNode,
   untagNode,
 } from '@/api/neos/endpoints/nodeCommands'
-import { neosKeys } from '@/api/neos/keys'
 import type { NodeAddress } from '@/api/neos/schema'
-import { queryClient } from '@/app/queryClient'
+import { afterStructuralEdit } from '@/features/workspaces/invalidate'
 
 /**
  * Structural node actions behind the preview's element menu and move-drag:
@@ -17,6 +16,9 @@ import { queryClient } from '@/app/queryClient'
  * points falling back to it as well, moves follow the node type's
  * moveNodeStrategy - so no variant creation is needed.
  */
+
+/** For structureChange: the items are the written nodes' addresses. */
+const identity = (address: NodeAddress) => address
 
 /** One move for {@link moveNodesByAddress}. */
 export interface MoveByAddress {
@@ -29,12 +31,16 @@ export interface MoveByAddress {
 }
 
 export async function hideNodes(addresses: NodeAddress[]): Promise<void> {
-  await structureChange(addresses, (address) => tagNode(address, 'disabled'))
+  await structureChange(addresses, identity, (address) =>
+    tagNode(address, 'disabled'),
+  )
 }
 
 /** Removes the "disabled" subtree tag set by hideNodes. */
 export async function unhideNodes(addresses: NodeAddress[]): Promise<void> {
-  await structureChange(addresses, (address) => untagNode(address, 'disabled'))
+  await structureChange(addresses, identity, (address) =>
+    untagNode(address, 'disabled'),
+  )
 }
 
 /**
@@ -47,7 +53,7 @@ export async function changeNodeType(
   address: NodeAddress,
   newNodeTypeName: string,
 ): Promise<void> {
-  await structureChange([address], (a) =>
+  await structureChange([address], identity, (a) =>
     changeNodeTypeRequest(a, newNodeTypeName),
   )
 }
@@ -63,7 +69,7 @@ export async function changeNodeType(
  * deletion is published and no other workspace still needs the node.
  */
 export async function deleteNodes(addresses: NodeAddress[]): Promise<void> {
-  await structureChange(addresses, deleteNode)
+  await structureChange(addresses, identity, deleteNode)
 }
 
 /**
@@ -77,6 +83,9 @@ export async function moveNodesByAddress(
 ): Promise<void> {
   await structureChange(
     moves,
+    // The move happens in the node's workspace (paste moves it into the
+    // target's first, see pasteClipboardEntry).
+    (move) => move.nodeAddress,
     ({ nodeAddress, newParentAddress, succeedingSiblingAddress }) =>
       moveNodeRequest(
         nodeAddress,
@@ -88,25 +97,34 @@ export async function moveNodesByAddress(
 
 /**
  * Runs one write per item in order (see runSequentially) and refreshes the
- * node reads afterwards - also after a failure, as earlier writes stay.
+ * workspaces written to afterwards - also after a failure, as earlier writes
+ * stay. Resolves (or rejects) once the writes are done: the refresh is not
+ * awaited - the node reads are marked stale right away, so what the caller
+ * re-reads next (trees, the inspection) is fetched fresh anyway.
  */
 async function structureChange<T>(
   items: T[],
+  addressOf: (item: T) => NodeAddress,
   write: (item: T) => Promise<unknown>,
 ): Promise<void> {
   if (items.length === 0) return
   try {
     await runSequentially(items, write)
   } finally {
-    await invalidateAfterStructureChange()
+    // Usually one workspace; a batch could in principle span several.
+    const workspaces = new Map<string, NodeAddress>()
+    for (const item of items) {
+      const address = addressOf(item)
+      workspaces.set(
+        JSON.stringify([address.contentRepositoryId, address.workspaceName]),
+        address,
+      )
+    }
+    for (const address of workspaces.values()) {
+      void afterStructuralEdit(
+        address.contentRepositoryId,
+        address.workspaceName,
+      )
+    }
   }
-}
-
-/**
- * Children lists changed - drop all node reads (children are keyed under
- * nodes) and refresh the pending-changes badges.
- */
-async function invalidateAfterStructureChange(): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: neosKeys.nodes.all })
-  void queryClient.invalidateQueries({ queryKey: neosKeys.workspaces.all })
 }

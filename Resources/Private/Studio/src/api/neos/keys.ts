@@ -74,6 +74,20 @@ export const neosKeys = {
         'changes',
       ] as const,
     /**
+     * Prefix covering the pending changes of every site filter - under
+     * `changes`. For telling those reads apart, not for invalidating them
+     * alone: the review and the diffs are made of the same changes.
+     */
+    allPendingChanges: (contentRepositoryId: string, name: string) =>
+      [
+        'workspaces',
+        contentRepositoryId,
+        'workspace',
+        name,
+        'changes',
+        'pending',
+      ] as const,
+    /**
      * The pending changes (all, or of one site) with the workspace - under
      * `changes`.
      */
@@ -229,6 +243,9 @@ export const neosKeys = {
   },
   nodes: {
     all: ['nodes'] as const,
+    /** Prefix covering every read of the nodes in a content repository. */
+    contentRepository: (contentRepositoryId: string) =>
+      ['nodes', contentRepositoryId] as const,
     /** Prefix covering every read of the nodes in a workspace. */
     workspace: (contentRepositoryId: string, workspaceName: string) =>
       ['nodes', contentRepositoryId, workspaceName] as const,
