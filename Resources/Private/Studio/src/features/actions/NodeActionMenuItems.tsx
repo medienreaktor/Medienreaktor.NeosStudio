@@ -1,3 +1,4 @@
+import { labelOf } from '@/lib/registry'
 import type { Node } from '@/api/neos/schema'
 import { useStudioActions } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
@@ -175,7 +176,7 @@ function NodeActionItem({
       }}
     >
       <ActionIcon icon={action.icon} busy={busy} />
-      {action.label}
+      {labelOf(action.label)}
     </DropdownMenuItem>
   )
 }

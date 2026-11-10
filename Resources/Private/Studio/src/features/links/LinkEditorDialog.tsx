@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { labelOf } from '@/lib/registry'
 import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -125,7 +126,7 @@ export function LinkEditorDialog({
               {types.map((type) => (
                 <TabsTrigger key={type.id} value={type.id}>
                   {type.icon}
-                  {type.label}
+                  {labelOf(type.label)}
                 </TabsTrigger>
               ))}
             </TabsList>

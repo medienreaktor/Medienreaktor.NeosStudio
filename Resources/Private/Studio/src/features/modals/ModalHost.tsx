@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 
+import { labelOf } from '@/lib/registry'
 import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { stackedDialogClassName } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
@@ -226,7 +227,7 @@ function SettingsNavItem({
           aria-hidden
         />
       )}
-      {section.title}
+      {labelOf(section.title)}
     </button>
   )
 }

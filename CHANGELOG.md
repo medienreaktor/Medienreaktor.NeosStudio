@@ -52,6 +52,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changes. A failing handler is logged and doesn't disturb Studio or other
   handlers.
 
+### Fixed
+
+- The settings sections, the link editor's tabs and the Tasks panel are
+  labelled in the interface language again; they were always English
+  because their labels were translated before the translations had loaded.
+
 ## [2.0.3] - 2026-11-10
 
 ### Added

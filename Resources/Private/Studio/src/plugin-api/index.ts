@@ -363,6 +363,7 @@ export * from './components'
 
 // Re-export the types a plugin needs to write a panel or an editor. These are
 // the contract; keep them stable.
+export type { LazyLabel } from '@/lib/registry'
 export type {
   PanelDefinition,
   PanelPlacement,

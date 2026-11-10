@@ -16,7 +16,7 @@ import { TasksBoard } from './TasksBoard'
 export function registerBuiltinTaskWorkflow(): void {
   panelRegistry.register({
     id: 'tasks',
-    title: t('panel.title.tasks', 'Tasks'),
+    title: () => t('panel.title.tasks', 'Tasks'),
     component: TasksBoard,
     defaultPlacement: { kind: 'dock', region: 'main' },
   })

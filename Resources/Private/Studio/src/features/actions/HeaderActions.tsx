@@ -1,3 +1,4 @@
+import { labelOf } from '@/lib/registry'
 import type { Node } from '@/api/neos/schema'
 import { useStudioActions } from '@/app/StudioContext'
 import { Button } from '@/components/ui/button'
@@ -51,8 +52,8 @@ function HeaderActionButton({
     <Button
       variant="ghost"
       size="icon-sm"
-      title={action.label}
-      aria-label={action.label}
+      title={labelOf(action.label)}
+      aria-label={labelOf(action.label)}
       aria-busy={busy || undefined}
       // The spinner in place of the icon is the busy state; the button
       // stays put, it just cannot start a second run.

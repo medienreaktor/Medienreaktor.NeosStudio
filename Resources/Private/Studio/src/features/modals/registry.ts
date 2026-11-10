@@ -3,6 +3,7 @@ import {
   ObservableRegistry,
   type RegistryEntry,
   useRegistry,
+  type LazyLabel,
 } from '@/lib/registry'
 
 /**
@@ -51,8 +52,12 @@ export type ModalIcon = string
  * (users, sites, workspaces, ...).
  */
 export interface SettingsDialogDefinition extends RegistryDefinition {
-  /** Label shown in the settings subnavigation and section header. */
-  title: string
+  /**
+   * Label shown in the settings subnavigation and section header - or a
+   * function returning it, so a translated label follows the loaded
+   * translations (see LazyLabel).
+   */
+  title: LazyLabel
   /** Optional subnav icon. */
   icon?: ModalIcon
   /**

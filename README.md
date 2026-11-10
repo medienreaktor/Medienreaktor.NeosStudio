@@ -94,6 +94,8 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 | Node actions         | Commands in the node context menus and the documents toolbar                                     |
 | Header actions       | Icon buttons in the shell header                                                                 |
 
+Labels a registry entry shows - panel titles, settings section titles, link type labels, node and header action labels - take a string or a function returning one (`LazyLabel`). Pass the function when the label is translated (`title: () => translate('Vendor.Package:Main:panel.title', 'Bookings')`): plugins register before the translations have loaded, so a label translated at registration stays in English.
+
 A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators and shortcut handlers are logged and skipped, and so are the conditions of node and header actions; a failing action shows an error toast. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
 
 A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), the registries, the shell's data layer ([data fetching](#data-fetching)) and its [events](#events). The shell loads the bundle from one `Settings.yaml` entry.

@@ -28,7 +28,7 @@ export function registerBuiltinModals(): void {
     // gate. Its "account" group draws a separator between it and the
     // administration sections below.
     id: PROFILE_SETTINGS,
-    title: t('modal.profile', 'Profile'),
+    title: () => t('modal.profile', 'Profile'),
     icon: 'user',
     component: ProfileSettings,
     order: 0,
@@ -36,7 +36,7 @@ export function registerBuiltinModals(): void {
   })
   settingsDialogRegistry.register({
     id: USERS_SETTINGS,
-    title: t('modal.users', 'Users'),
+    title: () => t('modal.users', 'Users'),
     icon: 'users',
     component: UserAdministration,
     order: 10,
@@ -47,7 +47,7 @@ export function registerBuiltinModals(): void {
   })
   settingsDialogRegistry.register({
     id: ACCESS_ROLES_SETTINGS,
-    title: t('modal.accessRoles', 'Access roles'),
+    title: () => t('modal.accessRoles', 'Access roles'),
     icon: 'user-shield',
     component: AccessRolesAdministration,
     // Right after the users it restricts - the two are read together.
@@ -57,7 +57,7 @@ export function registerBuiltinModals(): void {
   })
   settingsDialogRegistry.register({
     id: SITES_SETTINGS,
-    title: t('modal.sites', 'Sites'),
+    title: () => t('modal.sites', 'Sites'),
     icon: 'globe',
     component: SitesAdministration,
     order: 20,
@@ -66,7 +66,7 @@ export function registerBuiltinModals(): void {
   })
   settingsDialogRegistry.register({
     id: WORKSPACES_SETTINGS,
-    title: t('modal.workspaces', 'Workspaces'),
+    title: () => t('modal.workspaces', 'Workspaces'),
     icon: 'layer-group',
     component: WorkspacesAdministration,
     order: 30,

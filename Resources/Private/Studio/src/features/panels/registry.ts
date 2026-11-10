@@ -1,5 +1,5 @@
 import type * as React from 'react'
-import { ObservableRegistry } from '@/lib/registry'
+import { ObservableRegistry, labelOf } from '@/lib/registry'
 import type { PanelRect } from './geometry'
 import type { DockRegion } from './panelLayout'
 
@@ -44,9 +44,7 @@ export type PanelDefinition = {
 
 /** A panel's current tab label. */
 export function panelTitle(definition: Pick<PanelDefinition, 'title'>): string {
-  return typeof definition.title === 'function'
-    ? definition.title()
-    : definition.title
+  return labelOf(definition.title)
 }
 
 /**

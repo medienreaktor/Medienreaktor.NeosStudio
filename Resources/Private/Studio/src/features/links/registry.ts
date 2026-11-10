@@ -1,5 +1,5 @@
 import type * as React from 'react'
-import { ObservableRegistry, useRegistry } from '@/lib/registry'
+import { ObservableRegistry, useRegistry, type LazyLabel } from '@/lib/registry'
 
 /**
  * The link type registry: each entry contributes one tab to the Link Editor
@@ -36,8 +36,8 @@ export interface LinkTypeDefinition {
    * their own ids ('Vendor.Package/LinkTypes/Product').
    */
   id: string
-  /** The tab's label. */
-  label: string
+  /** The tab's label - or a function returning it (see LazyLabel). */
+  label: LazyLabel
   /** An icon rendered before the label (and to mark link values of this type). */
   icon?: React.ReactNode
   /** The tab's UI. */

@@ -2,7 +2,12 @@ import * as React from 'react'
 import { type Node, nodeAddressKey } from '@/api/neos/schema'
 import type { StudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
-import { ObservableRegistry, useRegistry } from '@/lib/registry'
+import {
+  ObservableRegistry,
+  useRegistry,
+  type LazyLabel,
+  labelOf,
+} from '@/lib/registry'
 
 /**
  * The action registries: commands a plugin adds to Studio's own menus and
@@ -52,8 +57,12 @@ export interface NodeActionContext {
 export interface NodeActionDefinition {
   /** Unique id. Third-party entries should namespace ('vendor.package:lock'). */
   id: string
-  /** Menu label, already translated. */
-  label: string
+  /**
+   * Menu label - or a function returning it, so it is translated when shown
+   * rather than at registration, before the translations have loaded (see
+   * LazyLabel).
+   */
+  label: LazyLabel
   /** Font Awesome icon name, any syntax `ui.icon` accepts (e.g. "lock", "fas fa-lock"). */
   icon?: string
   /** Sort weight; lower comes first. Defaults to 100. */
@@ -94,8 +103,8 @@ export interface HeaderActionContext {
 export interface HeaderActionDefinition {
   /** Unique id. Third-party entries should namespace ('vendor.package:report'). */
   id: string
-  /** Tooltip and accessible name, already translated. */
-  label: string
+  /** Tooltip and accessible name - or a function returning it (see LazyLabel). */
+  label: LazyLabel
   /** Font Awesome icon name, any syntax `ui.icon` accepts. The button shows only the icon. */
   icon: string
   /** Sort weight; lower comes first (further left). Defaults to 100. */
@@ -234,7 +243,7 @@ const LOADING_TOAST_DELAY_MS = 400
  * toast replaces it in place.
  */
 export function runAction(
-  action: { id: string; label: string },
+  action: { id: string; label: LazyLabel },
   key: string,
   invoke: () => void | Promise<void>,
   { announce = false }: { announce?: boolean } = {},
@@ -243,7 +252,7 @@ export function runAction(
   const toastId = `action:${key}`
   const fail = (error: unknown) => {
     console.error(`Studio: action "${action.id}" failed:`, error)
-    toast.error(error, { title: action.label, id: toastId })
+    toast.error(error, { title: labelOf(action.label), id: toastId })
   }
   let result: unknown
   try {
@@ -257,7 +266,7 @@ export function runAction(
   setRunning(key, true)
   const timer = announce
     ? setTimeout(
-        () => toast.loading(action.label, { id: toastId }),
+        () => toast.loading(labelOf(action.label), { id: toastId }),
         LOADING_TOAST_DELAY_MS,
       )
     : undefined

@@ -22,6 +22,20 @@ import * as React from 'react'
  * their public signatures diverge from the base.
  */
 
+/**
+ * A label a registry entry shows - or a function returning it, called each
+ * time the label is rendered. Registrations run before the translations have
+ * loaded (the shell's built-ins from main.tsx, plugins from their bundle's
+ * top level), so a label translated at registration would stay in English;
+ * a function translates when it is shown. Read it through {@link labelOf}.
+ */
+export type LazyLabel = string | (() => string)
+
+/** The current text of a {@link LazyLabel}. */
+export function labelOf(label: LazyLabel): string {
+  return typeof label === 'function' ? label() : label
+}
+
 /** The minimum every registered definition provides. */
 export interface RegistryEntry {
   /** Unique id. Third-party entries should namespace ('vendor.package:thing'). */
