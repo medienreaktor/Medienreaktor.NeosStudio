@@ -478,6 +478,10 @@
         <source>Close</source>
         <target xml:lang="km">បិទ</target>
       </trans-unit>
+      <trans-unit id="actions.more" xml:space="preserve">
+        <source>More actions</source>
+        <target xml:lang="km">សកម្មភាពបន្ថែម</target>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
         <target xml:lang="km">ភ្ជាប់ទៅ API</target>
@@ -1097,6 +1101,30 @@
       <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="km">បង្កើតផ្នែកផ្លូវ URL ឡើងវិញពីចំណងជើងទំព័របច្ចុប្បន្ន</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.editor" xml:space="preserve">
+        <source>This editor could not be displayed.</source>
+        <target xml:lang="km">មិនអាចបង្ហាញកម្មវិធីកែសម្រួលនេះបានទេ។</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.linkType" xml:space="preserve">
+        <source>This link type could not be displayed.</source>
+        <target xml:lang="km">មិនអាចបង្ហាញប្រភេទតំណនេះបានទេ។</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.panel" xml:space="preserve">
+        <source>This panel could not be displayed.</source>
+        <target xml:lang="km">មិនអាចបង្ហាញផ្ទាំងនេះបានទេ។</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.settingsSection" xml:space="preserve">
+        <source>This settings section could not be displayed.</source>
+        <target xml:lang="km">មិនអាចបង្ហាញផ្នែកការកំណត់នេះបានទេ។</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.view" xml:space="preserve">
+        <source>This view could not be displayed.</source>
+        <target xml:lang="km">មិនអាចបង្ហាញទិដ្ឋភាពនេះបានទេ។</target>
+      </trans-unit>
+      <trans-unit id="extension.retry" xml:space="preserve">
+        <source>Try again</source>
+        <target xml:lang="km">ព្យាយាមម្តងទៀត</target>
       </trans-unit>
       <trans-unit id="graph.fit" xml:space="preserve">
         <source>Fit to view</source>
@@ -2277,6 +2305,18 @@
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="km">7 ថ្ងៃ</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.body" xml:space="preserve">
+        <source>Something went wrong and Studio could not continue. Your saved changes are safe; reload to carry on.</source>
+        <target xml:lang="km">មានបញ្ហាមួយបានកើតឡើង ហើយ Studio មិនអាចបន្តបានទេ។ ការផ្លាស់ប្តូរដែលអ្នកបានរក្សាទុកមានសុវត្ថិភាព។ សូមផ្ទុកឡើងវិញដើម្បីបន្ត។</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.reload" xml:space="preserve">
+        <source>Reload Studio</source>
+        <target xml:lang="km">ផ្ទុក Studio ឡើងវិញ</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.title" xml:space="preserve">
+        <source>Studio stopped working</source>
+        <target xml:lang="km">Studio បានឈប់ដំណើរការ</target>
       </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>

@@ -526,6 +526,10 @@
         <source>Close</source>
         <target xml:lang="pl">Zamknij</target>
       </trans-unit>
+      <trans-unit id="actions.more" xml:space="preserve">
+        <source>More actions</source>
+        <target xml:lang="pl">Więcej akcji</target>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
         <target xml:lang="pl">Połącz z API</target>
@@ -1145,6 +1149,30 @@
       <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="pl">Wygeneruj ponownie segment ścieżki URL z bieżącego tytułu strony</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.editor" xml:space="preserve">
+        <source>This editor could not be displayed.</source>
+        <target xml:lang="pl">Nie udało się wyświetlić tego edytora.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.linkType" xml:space="preserve">
+        <source>This link type could not be displayed.</source>
+        <target xml:lang="pl">Nie udało się wyświetlić tego typu linku.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.panel" xml:space="preserve">
+        <source>This panel could not be displayed.</source>
+        <target xml:lang="pl">Nie udało się wyświetlić tego panelu.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.settingsSection" xml:space="preserve">
+        <source>This settings section could not be displayed.</source>
+        <target xml:lang="pl">Nie udało się wyświetlić tej sekcji ustawień.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.view" xml:space="preserve">
+        <source>This view could not be displayed.</source>
+        <target xml:lang="pl">Nie udało się wyświetlić tego widoku.</target>
+      </trans-unit>
+      <trans-unit id="extension.retry" xml:space="preserve">
+        <source>Try again</source>
+        <target xml:lang="pl">Spróbuj ponownie</target>
       </trans-unit>
       <trans-unit id="graph.fit" xml:space="preserve">
         <source>Fit to view</source>
@@ -2325,6 +2353,18 @@
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="pl">7 dni</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.body" xml:space="preserve">
+        <source>Something went wrong and Studio could not continue. Your saved changes are safe; reload to carry on.</source>
+        <target xml:lang="pl">Coś poszło nie tak i Studio nie mogło kontynuować. Twoje zapisane zmiany są bezpieczne; odśwież, aby kontynuować.</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.reload" xml:space="preserve">
+        <source>Reload Studio</source>
+        <target xml:lang="pl">Odśwież Studio</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.title" xml:space="preserve">
+        <source>Studio stopped working</source>
+        <target xml:lang="pl">Studio przestało działać</target>
       </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>

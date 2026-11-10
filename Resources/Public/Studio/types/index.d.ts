@@ -4,6 +4,4897 @@ import { ReactNode } from "react";
 import * as ReactDOM from "react-dom";
 import * as ReactJSXRuntime from "react/jsx-runtime";
 //#endregion
+//#region @tanstack/query-core/build/modern/subscribable-D2lAzdDi.d.ts
+/**
+ * The base class behind everything in Query that you can subscribe to: `QueryCache`, `MutationCache`,
+ * the observers, and the `FocusManager`/`OnlineManager` behind `focusManager` and `onlineManager`.
+ * Subclasses decide what a listener receives and when it is called.
+ */
+declare class Subscribable<TListener extends Function> {
+  protected listeners: Set<TListener>;
+  constructor();
+  /**
+   * Registers a listener to be called on every update this object notifies about. Returns a function
+   * that removes the listener again — call it to stop listening. The base class never drops a listener
+   * on its own, though some subclasses clear all of theirs in `destroy()`.
+   * @param listener - Called on each update, with whatever the subclass passes to its subscribers.
+   * @returns A function that removes the listener.
+   * @example
+   * ```ts
+   * const unsubscribe = subscribable.subscribe(() => {
+   *   // react to the update
+   * })
+   *
+   * unsubscribe()
+   * ```
+   */
+  subscribe(listener: TListener): () => void;
+  /**
+   * Returns `true` while at least one listener is registered, `false` once they have all unsubscribed.
+   * @returns `true` if at least one listener is registered.
+   */
+  hasListeners(): boolean;
+  /**
+   * Called after a listener is added. Does nothing here; subclasses override it, e.g. to start
+   * tracking what they observe once the first listener subscribes.
+   */
+  protected onSubscribe(): void;
+  /**
+   * Called after a listener is removed. Does nothing here; subclasses override it, e.g. to clean up
+   * once the last listener unsubscribes.
+   */
+  protected onUnsubscribe(): void;
+}
+//#endregion
+//#region @tanstack/query-core/build/modern/removable-B1nFbgZm.d.ts
+/**
+ * The base class for cache entries that are garbage collected once nothing is using them —
+ * `Query` and `Mutation` both extend it. `gcTime` controls how long an unused entry is kept.
+ */
+declare abstract class Removable {
+  #private;
+  gcTime: number;
+  /**
+   * Clears the pending garbage collection timeout, so the entry is no longer scheduled for removal.
+   * A subclass may override this to release what it holds on to as well — `Query` also cancels any
+   * in-flight fetch.
+   */
+  destroy(): void;
+  /**
+   * Schedules the entry to be removed from its cache after `gcTime`, replacing any timeout scheduled
+   * before. Nothing is scheduled if `gcTime` is `Infinity`.
+   */
+  protected scheduleGc(): void;
+  /**
+   * Updates `gcTime`, keeping the longest one seen so far. Without a value, it defaults to 5 minutes
+   * on the client and `Infinity` on the server.
+   * @param newGcTime - The `gcTime` from the latest options, if any.
+   */
+  protected updateGcTime(newGcTime: number | undefined): void;
+  /**
+   * Cancels the scheduled removal, if there is one.
+   */
+  protected clearGcTimeout(): void;
+  /**
+   * Called when the garbage collection timeout fires. Subclasses remove the entry from its cache
+   * unless it is still in use, e.g. because it has observers.
+   */
+  protected abstract optionalRemove(): void;
+}
+//#endregion
+//#region @tanstack/query-core/build/modern/hydration-gHEs4kLM.d.ts
+type QueryObserverListener<TData, TError> = (result: QueryObserverResult<TData, TError>) => void;
+interface ObserverFetchOptions extends FetchOptions {
+  throwOnError?: boolean;
+}
+/**
+ * A `QueryObserver` watches a single query in the `QueryCache` and computes a
+ * `QueryObserverResult` from its state, recomputing and notifying subscribers
+ * whenever the underlying query (or the observer's options) changes. It is
+ * the primitive that framework adapters (e.g. `useQuery`) build their hooks
+ * on top of, but it can also be used directly to observe and switch between
+ * queries outside of any framework.
+ * @example
+ * ```ts
+ * const observer = new QueryObserver(queryClient, {
+ *   queryKey: ['posts'],
+ *   queryFn: fetchPosts,
+ * })
+ *
+ * const unsubscribe = observer.subscribe((result) => {
+ *   console.log(result.data)
+ * })
+ * ```
+ */
+declare class QueryObserver<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> extends Subscribable<QueryObserverListener<TData, TError>> {
+  #private;
+  options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>;
+  constructor(client: QueryClient, options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>);
+  /**
+   * Binds the methods of the result (`refetch`) to the observer, so they keep working when destructured
+   * from it. Subclasses override it to bind their own result methods as well.
+   */
+  protected bindMethods(): void;
+  protected onSubscribe(): void;
+  protected onUnsubscribe(): void;
+  /**
+   * Returns whether the observed query is currently stale and configured
+   * (via the `refetchOnReconnect` option) to refetch when the network
+   * reconnects.
+   * @returns `true` if the observer should refetch the query on reconnect.
+   */
+  shouldFetchOnReconnect(): boolean;
+  /**
+   * Returns whether the observed query is currently stale and configured
+   * (via the `refetchOnWindowFocus` option) to refetch when the window
+   * regains focus.
+   * @returns `true` if the observer should refetch the query on window focus.
+   */
+  shouldFetchOnWindowFocus(): boolean;
+  /**
+   * Stops observing the current query: clears all listeners, cancels the
+   * stale and refetch-interval timers, and removes this observer from the
+   * query it was observing.
+   */
+  destroy(): void;
+  /**
+   * Updates the observer's options. This will re-resolve the query being
+   * observed (switching to a different query if the `queryKey` changed),
+   * trigger a fetch if the new options require one and the observer has
+   * subscribers, recompute the current result, and reschedule the stale and
+   * refetch-interval timers as needed.
+   * @param options - The new observer options. They are defaulted with {@link
+   * QueryClient#defaultQueryOptions} before being applied.
+   * @throws {Error} If `enabled` is neither a boolean nor a function.
+   * @example
+   * ```ts
+   * observer.setOptions({ queryKey: ['posts', 1], queryFn: () => fetchPost(1) })
+   * // later: switch to a different query, reusing the same observer
+   * observer.setOptions({ queryKey: ['posts', 2], queryFn: () => fetchPost(2) })
+   * ```
+   */
+  setOptions(options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>): void;
+  /**
+   * Computes the result the observer would produce for the given (already-defaulted) options
+   * right now, building the underlying `Query` if it doesn't exist yet, without waiting for a
+   * subscription callback. Called by framework adapters on every render (e.g. `useQuery`) so the
+   * returned value is available synchronously, ahead of `setOptions` triggering an actual fetch.
+   * @param options - The defaulted observer options to compute the result for.
+   * @returns The result for the given options.
+   */
+  getOptimisticResult(options: DefaultedQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>): QueryObserverResult<TData, TError>;
+  /**
+   * Returns the most recently computed `QueryObserverResult` for the
+   * observed query. This is a point-in-time read; to be notified of updates
+   * as they happen, subscribe to the observer instead (its inherited
+   * `subscribe` method).
+   * @returns The observer's latest result.
+   * @example
+   * ```ts
+   * const result = observer.getCurrentResult()
+   * console.log(result.status, result.data)
+   * ```
+   */
+  getCurrentResult(): QueryObserverResult<TData, TError>;
+  /**
+   * Wraps a `QueryObserverResult` in a `Proxy` that records which properties are read, via
+   * {@link QueryObserver#trackProp} (and an optional `onPropTracked` callback). Used by framework
+   * adapters when `notifyOnChangeProps` is not set, to implement its default "only re-render on
+   * properties you actually read" behavior.
+   * @param result - The result to wrap.
+   * @param onPropTracked - Called with the name of each property that is read.
+   * @returns A proxy of `result` that tracks property reads.
+   */
+  trackResult(result: QueryObserverResult<TData, TError>, onPropTracked?: (key: keyof QueryObserverResult) => void): QueryObserverResult<TData, TError>;
+  /**
+   * Records that the given `QueryObserverResult` property was read, so a subsequent update only
+   * notifies this observer if a tracked property actually changed. Normally called indirectly via
+   * {@link QueryObserver#trackResult}'s proxy; exposed directly for adapters that track property
+   * access themselves (e.g. through their own reactivity system) instead of via the proxy.
+   * @param key - The name of the property that was read.
+   */
+  trackProp(key: keyof QueryObserverResult): void;
+  /**
+   * Returns the `Query` instance this observer is currently observing.
+   * @returns The observed query.
+   */
+  getCurrentQuery(): Query<TQueryFnData, TError, TQueryData, TQueryKey>;
+  /**
+   * Refetches the observed query and returns a promise that resolves with
+   * the resulting `QueryObserverResult`.
+   * @param options - Set `cancelRefetch` to `false` to keep a running fetch instead of cancelling
+   * it, and `throwOnError` to `true` to reject when the refetch fails.
+   * @returns A promise that resolves with the result after the refetch.
+   * @example
+   * ```ts
+   * const result = await observer.refetch({ cancelRefetch: false })
+   * console.log(result.data)
+   * ```
+   */
+  refetch({ ...options }?: RefetchOptions): Promise<QueryObserverResult<TData, TError>>;
+  /**
+   * Fetches a query defined by the given options without affecting this
+   * observer's own tracked query or result, and returns a promise that
+   * resolves with the `QueryObserverResult` for that fetch. This is useful
+   * for prefetching data that another observer (e.g. a query about to be
+   * navigated to) will need, ahead of time.
+   * @param options - The observer options of the query to fetch.
+   * @returns A promise that resolves with the result for the fetched query.
+   * @example
+   * ```ts
+   * const result = await observer.fetchOptimistic({
+   *   queryKey: ['posts', 2],
+   *   queryFn: () => fetchPost(2),
+   * })
+   * console.log(result.data)
+   * ```
+   */
+  fetchOptimistic(options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>): Promise<QueryObserverResult<TData, TError>>;
+  /**
+   * Fetches the observed query and updates the result once the fetch settles. Used by `refetch` and,
+   * in `InfiniteQueryObserver`, to fetch more pages.
+   * @param fetchOptions - Options for this fetch. `cancelRefetch` defaults to `true`.
+   * @returns A promise that resolves with the updated result.
+   */
+  protected fetch(fetchOptions: ObserverFetchOptions): Promise<QueryObserverResult<TData, TError>>;
+  /**
+   * Computes the result for a query and options from the query's state, applying `select`,
+   * `placeholderData`, and the derived flags. Subclasses override it to add their own fields.
+   * @param query - The query to compute the result for.
+   * @param options - The observer options to compute the result with.
+   * @returns The computed result.
+   */
+  protected createResult(query: Query<TQueryFnData, TError, TQueryData, TQueryKey>, options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>): QueryObserverResult<TData, TError>;
+  /**
+   * Recomputes and stores the current result from the current query/options, notifying listeners
+   * if it changed. Framework adapters call this right after subscribing to make sure no query
+   * update was missed in the gap between creating the observer and subscribing to it.
+   */
+  updateResult(): void;
+  /**
+   * Updates the observer's result when the observed query changes, and reschedules its timers if it
+   * has listeners.
+   * @internal
+   */
+  onQueryUpdate(): void;
+}
+interface QueryConfig<TQueryFnData, TError, TData, TQueryKey extends QueryKey = QueryKey> {
+  client: QueryClient;
+  queryKey: TQueryKey;
+  queryHash: string;
+  options?: QueryOptions<TQueryFnData, TError, TData, TQueryKey>;
+  defaultOptions?: QueryOptions<TQueryFnData, TError, TData, TQueryKey>;
+  state?: QueryState<TData, TError>;
+}
+/**
+ * The raw state stored on a `Query` instance. This is the underlying state
+ * that observer results (e.g. `QueryObserverResult`) are derived from.
+ */
+interface QueryState<TData = unknown, TError = DefaultError> {
+  /**
+   * The last successfully resolved data for the query.
+   */
+  data: TData | undefined;
+  /**
+   * The number of times the query has successfully resolved.
+   */
+  dataUpdateCount: number;
+  /**
+   * The timestamp for when the query most recently returned the `status` as `"success"`.
+   */
+  dataUpdatedAt: number;
+  /**
+   * The error object for the query, if the last attempt resulted in an error.
+   * - Defaults to `null`.
+   */
+  error: TError | null;
+  /**
+   * The sum of all errors, incremented every time the query resolves with an error.
+   */
+  errorUpdateCount: number;
+  /**
+   * The timestamp for when the query most recently returned the `status` as `"error"`.
+   */
+  errorUpdatedAt: number;
+  /**
+   * The failure count for the current fetch.
+   * - Incremented every time the fetch fails.
+   * - Reset to `0` when the fetch succeeds.
+   */
+  fetchFailureCount: number;
+  /**
+   * The reason the current fetch failed, as reported by the retryer.
+   * - Reset to `null` when the fetch succeeds.
+   */
+  fetchFailureReason: TError | null;
+  /**
+   * Metadata passed to the currently in-flight (or most recent) fetch, e.g. the
+   * `fetchMore` direction for infinite queries.
+   */
+  fetchMeta: FetchMeta | null;
+  /**
+   * Whether the query has been marked as invalidated via `invalidate()`.
+   * - Reset to `false` whenever the query resolves successfully.
+   */
+  isInvalidated: boolean;
+  /**
+   * The status of the query.
+   * - `pending` if there's no cached data and no attempt was finished yet.
+   * - `error` if the last attempt resulted in an error.
+   * - `success` if the query has data.
+   */
+  status: QueryStatus;
+  /**
+   * The fetch status of the query.
+   * - `fetching`: the `queryFn` is currently executing.
+   * - `paused`: a fetch wanted to run but has been paused (see network mode).
+   * - `idle`: the query is not fetching.
+   */
+  fetchStatus: FetchStatus;
+}
+/**
+ * The context passed to a {@link QueryBehavior}'s `onFetch`, which can replace `fetchFn` to change
+ * how the query fetches (e.g. to fetch pages for an infinite query).
+ */
+interface FetchContext<TQueryFnData, TError, TData, TQueryKey extends QueryKey = QueryKey> {
+  /**
+   * The function that runs the fetch. By default it calls `queryFn`; `onFetch` can replace it.
+   */
+  fetchFn: () => unknown | Promise<unknown>;
+  /**
+   * The options of this fetch.
+   */
+  fetchOptions?: FetchOptions;
+  /**
+   * The `AbortSignal` that aborts when the fetch is cancelled.
+   */
+  signal: AbortSignal;
+  /**
+   * The options of the query.
+   */
+  options: QueryOptions<TQueryFnData, TError, TData, any>;
+  /**
+   * The `QueryClient` the query belongs to.
+   */
+  client: QueryClient;
+  /**
+   * The key of the query.
+   */
+  queryKey: TQueryKey;
+  /**
+   * The state of the query when the fetch starts.
+   */
+  state: QueryState<TData, TError>;
+}
+/**
+ * Customizes how a query fetches, e.g. the behavior that fetches the pages of an infinite query.
+ */
+interface QueryBehavior<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> {
+  /**
+   * Called before each fetch of the query, e.g. to replace `fetchFn` in the context.
+   */
+  onFetch: (context: FetchContext<TQueryFnData, TError, TData, TQueryKey>, query: Query) => void;
+}
+/**
+ * The direction an infinite query fetches in: `'forward'` for the next page, `'backward'` for the
+ * previous one.
+ */
+type FetchDirection = 'forward' | 'backward';
+/**
+ * Metadata for a fetch, e.g. the direction when an infinite query fetches more pages.
+ */
+interface FetchMeta {
+  /**
+   * Set when an infinite query fetches another page, with the direction to fetch in.
+   */
+  fetchMore?: {
+    direction: FetchDirection;
+  };
+}
+/**
+ * Options for a single fetch of a query.
+ */
+interface FetchOptions<TData = unknown> {
+  /**
+   * If `true`, an in-flight fetch is cancelled before starting a new one, when the query already
+   * has data. Otherwise, the in-flight fetch is reused.
+   */
+  cancelRefetch?: boolean;
+  /**
+   * Metadata of the fetch, stored in the query's `fetchMeta` state.
+   */
+  meta?: FetchMeta;
+  /**
+   * A promise to use for the first attempt instead of calling `fetchFn`, e.g. a pending promise
+   * restored by `hydrate`.
+   */
+  initialPromise?: Promise<TData>;
+}
+interface FailedAction$1<TError> {
+  type: 'failed';
+  failureCount: number;
+  error: TError;
+}
+interface FetchAction {
+  type: 'fetch';
+  meta?: FetchMeta;
+}
+interface SuccessAction$1<TData> {
+  data: TData | undefined;
+  type: 'success';
+  dataUpdatedAt?: number;
+  manual?: boolean;
+}
+interface ErrorAction$1<TError> {
+  type: 'error';
+  error: TError;
+}
+interface InvalidateAction {
+  type: 'invalidate';
+}
+interface PauseAction$1 {
+  type: 'pause';
+}
+interface ContinueAction$1 {
+  type: 'continue';
+}
+interface SetStateAction<TData, TError> {
+  type: 'setState';
+  state: Partial<QueryState<TData, TError>>;
+}
+/**
+ * The actions a query dispatches to update its state, e.g. when it starts fetching, fails, or
+ * succeeds.
+ */
+type Action$1<TData, TError> = ContinueAction$1 | ErrorAction$1<TError> | FailedAction$1<TError> | FetchAction | InvalidateAction | PauseAction$1 | SetStateAction<TData, TError> | SuccessAction$1<TData>;
+/**
+ * Represents a single cached query. A `Query` holds the query's key, options,
+ * state (data/error/status), and the observers currently subscribed to it.
+ *
+ * Instances are created and managed internally by `QueryCache`; application
+ * code typically interacts with queries indirectly through `QueryClient` or
+ * a framework hook like `useQuery`. Direct access to a `Query` instance is
+ * possible via `queryCache.find()`/`findAll()` for inspecting cache state.
+ * @example
+ * ```ts
+ * const queryCache = queryClient.getQueryCache()
+ * const query = queryCache.find({ queryKey: ['posts'] })
+ *
+ * if (query) {
+ *   console.log(query.state.dataUpdatedAt)
+ * }
+ * ```
+ */
+declare class Query<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> extends Removable {
+  #private;
+  queryKey: TQueryKey;
+  queryHash: string;
+  options: QueryOptions<TQueryFnData, TError, TData, TQueryKey>;
+  state: QueryState<TData, TError>;
+  observers: Array<QueryObserver<any, any, any, any, any>>;
+  constructor(config: QueryConfig<TQueryFnData, TError, TData, TQueryKey>);
+  /**
+   * The `meta` object passed in the query's options, if any.
+   * @returns The query's `meta`, or `undefined` if none was set.
+   */
+  get meta(): QueryMeta | undefined;
+  /**
+   * `'infinite'` for an infinite query, otherwise `undefined`.
+   * @internal
+   * @returns The type of the query, set from the `_type` option (e.g. `'infinite'`).
+   */
+  get queryType(): "infinite" | undefined;
+  /**
+   * The promise for the currently in-flight fetch, if the query is fetching.
+   * `undefined` when the query is not fetching.
+   * @returns The promise of the in-flight fetch, or `undefined`.
+   */
+  get promise(): Promise<TData> | undefined;
+  /**
+   * Replaces the query's options and applies their `gcTime`. If the query has no data yet, it gets
+   * the `initialData` from the new options, if any.
+   * @internal
+   * @param options - The new query options, merged on top of the query's default options.
+   */
+  setOptions(options?: QueryOptions<TQueryFnData, TError, TData, TQueryKey>): void;
+  protected optionalRemove(): void;
+  /**
+   * Writes new data to the query and marks it as successfully fetched.
+   * @internal
+   * @param newData - The data to write. Structural sharing with the current data is applied.
+   * @param options - Set `updatedAt` to override the timestamp, and `manual` to mark the write as
+   * manual (e.g. from `queryClient.setQueryData`).
+   * @returns The data that was written.
+   */
+  setData(newData: TData, options?: SetDataOptions & {
+    manual: boolean;
+  }): TData;
+  /**
+   * Merges the given partial state directly into this query's state, notifying observers. Used
+   * by persistence and broadcast plugins to restore a state snapshot, and by devtools to let a
+   * user manually trigger a loading/error state or edit the cached data.
+   * @param state - The partial state to merge into the query's state.
+   */
+  setState(state: Partial<QueryState<TData, TError>>): void;
+  /**
+   * Cancels the query's currently in-flight fetch, if any.
+   * - Returns a promise that resolves once the cancellation has settled.
+   * - If no fetch is in progress, resolves immediately.
+   * @param options - Set `revert` to restore the state from before the fetch started, and `silent`
+   * to suppress the cancellation error when a new fetch replaces the cancelled one.
+   * @returns A promise that resolves once the cancellation has settled.
+   * @example
+   * ```ts
+   * await query.cancel()
+   * ```
+   */
+  cancel(options?: CancelOptions): Promise<void>;
+  /**
+   * Clears the query's garbage collection timeout and silently cancels any
+   * in-flight fetch. Called by `QueryCache` when the query is removed from
+   * the cache.
+   * @see {@link Query#cancel}
+   */
+  destroy(): void;
+  /**
+   * The state the query was created with.
+   * @internal
+   * @returns The state the query had when it was first created, used by {@link Query#reset}.
+   */
+  get resetState(): QueryState<TData, TError>;
+  /**
+   * Resets the query back to its initial state (the state it had when it was
+   * first created, e.g. any `initialData`), destroying it first to cancel any
+   * in-flight fetch.
+   */
+  reset(): void;
+  /**
+   * Returns `true` if the query has at least one observer for which `enabled`
+   * does not resolve to `false`.
+   * @returns `true` if the query has an enabled observer.
+   */
+  isActive(): boolean;
+  /**
+   * Returns `true` if the query is disabled, meaning it will not fetch
+   * automatically.
+   * - If the query has observers, it is disabled when none of them are active
+   *   (see `isActive`).
+   * - If the query has no observers, it is disabled when its `queryFn` is
+   *   `skipToken` or it has never been fetched.
+   * @returns `true` if the query is disabled.
+   */
+  isDisabled(): boolean;
+  /**
+   * Returns `true` if the query has been fetched, i.e. it has resolved with
+   * either data or an error at least once.
+   * @returns `true` if the query has been fetched.
+   */
+  isFetched(): boolean;
+  /**
+   * Returns `true` if the query has at least one observer configured with
+   * `staleTime: 'static'`, meaning it is treated as never stale.
+   * @returns `true` if the query is static.
+   */
+  isStatic(): boolean;
+  /**
+   * Returns `true` if the query is stale.
+   * - If the query has observers, defers to whether any observer's current
+   *   result reports `isStale` (which accounts for each observer's own
+   *   `staleTime` and `enabled` state).
+   * - If the query has no observers, it is considered stale when it has no
+   *   data or has been invalidated.
+   * @returns `true` if the query is stale.
+   * @see {@link Query#isStaleByTime}
+   * @example
+   * ```ts
+   * if (query.isStale()) {
+   *   // refetch or otherwise treat the cached data as outdated
+   * }
+   * ```
+   */
+  isStale(): boolean;
+  /**
+   * Returns `true` if the query's data is stale relative to the given
+   * `staleTime` (defaults to `0`).
+   * - A query with no data is always stale.
+   * - `staleTime: 'static'` is never stale.
+   * - An invalidated query is always stale.
+   * - Otherwise, staleness is based on elapsed time since `dataUpdatedAt`.
+   * @param staleTime - The time, in milliseconds, after which data is considered stale, or
+   * `'static'` to never treat existing data as stale. A query without data is stale either way.
+   * @returns `true` if the query's data is stale.
+   * @see {@link Query#isStale}
+   * @example
+   * ```ts
+   * const isStale = query.isStaleByTime(60 * 1000)
+   * ```
+   */
+  isStaleByTime(staleTime?: StaleTime): boolean;
+  /**
+   * Refetches the query when the window regains focus, if an observer wants that, and continues a
+   * paused fetch.
+   * @internal
+   */
+  onFocus(): void;
+  /**
+   * Refetches the query when the app reconnects, if an observer wants that, and continues a paused
+   * fetch.
+   * @internal
+   */
+  onOnline(): void;
+  /**
+   * Subscribes an observer to the query and stops its garbage collection.
+   * @internal
+   * @param observer - The observer to add. Adding an observer that is already subscribed does
+   * nothing.
+   */
+  addObserver(observer: QueryObserver<any, any, any, any, any>): void;
+  /**
+   * Unsubscribes an observer from the query.
+   * @internal
+   * @param observer - The observer to remove. When the last observer is removed, the in-flight
+   * fetch is cancelled if its abort signal was consumed (otherwise only its retries are stopped),
+   * and garbage collection is scheduled.
+   */
+  removeObserver(observer: QueryObserver<any, any, any, any, any>): void;
+  /**
+   * Returns the number of observers currently subscribed to this query.
+   * @returns The number of observers.
+   * @example
+   * ```ts
+   * if (query.getObserversCount() === 0) {
+   *   // no component is currently watching this query
+   * }
+   * ```
+   */
+  getObserversCount(): number;
+  /**
+   * Marks the query as invalidated, unless it is already invalidated. This
+   * updates `state.isInvalidated` and notifies observers, but does not by
+   * itself trigger a refetch.
+   * @example
+   * ```ts
+   * query.invalidate()
+   * ```
+   */
+  invalidate(): void;
+  /**
+   * Fetches the query, i.e. runs its `queryFn` (through any configured
+   * retryer/behavior) and updates the query's state with the result.
+   * - If a fetch is already in flight, returns its promise instead of
+   *   starting a new one, unless `fetchOptions.cancelRefetch` is set and the
+   *   query already has data, in which case the current fetch is silently
+   *   cancelled first.
+   * - If `options` is passed, it replaces the query's current options
+   *   before fetching.
+   * @param options - Query options that replace the query's current options before fetching. They
+   * are not applied when an in-flight fetch is reused.
+   * @param fetchOptions - Set `cancelRefetch` to cancel an in-flight fetch first (only if the query
+   * already has data), and `meta` to pass extra information to the query's behavior.
+   * @returns A promise that resolves with the fetched data, or rejects with the fetch error. If the
+   * fetch is cancelled with `revert` while the query has data, it resolves with the restored data
+   * instead.
+   */
+  fetch(options?: QueryOptions<TQueryFnData, TError, TData, TQueryKey>, fetchOptions?: FetchOptions<TQueryFnData>): Promise<TData>;
+}
+type MutationObserverListener<TData, TError, TVariables, TOnMutateResult> = (result: MutationObserverResult<TData, TError, TVariables, TOnMutateResult>) => void;
+/**
+ * Observes a single mutation and derives a `MutationObserverResult` from it.
+ * A framework hook like `useMutation` creates one `MutationObserver` per hook
+ * call, keeps it stable across re-renders, calls `setOptions` when the options
+ * passed to the hook change, subscribes to it to re-render on updates, and
+ * reads `getCurrentResult()` for the value to return. Calling `mutate()`
+ * builds a new underlying `Mutation` in the `MutationCache` and executes it.
+ * @example
+ * ```ts
+ * const observer = new MutationObserver(queryClient, {
+ *   mutationFn: (variables: { title: string }) => addPost(variables),
+ * })
+ * ```
+ */
+declare class MutationObserver<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends Subscribable<MutationObserverListener<TData, TError, TVariables, TOnMutateResult>> {
+  #private;
+  options: MutationObserverOptions<TData, TError, TVariables, TOnMutateResult>;
+  constructor(client: QueryClient, options: MutationObserverOptions<TData, TError, TVariables, TOnMutateResult>);
+  /**
+   * Binds the methods of the result (`mutate` and `reset`) to the observer, so they keep working when
+   * destructured from it.
+   */
+  protected bindMethods(): void;
+  /**
+   * Updates the observer's options.
+   *
+   * If the new `mutationKey` differs from the previous one (and both were
+   * defined), the observer is reset, detaching it from the mutation it was
+   * observing. Otherwise, if the currently observed mutation is still
+   * `pending`, its options are updated in place as well.
+   * @param options - The new mutation observer options. They are defaulted with {@link
+   * QueryClient#defaultMutationOptions} before being applied.
+   * @example
+   * ```ts
+   * observer.setOptions({
+   *   mutationFn: (variables: { title: string }) => addPost(variables),
+   *   onSuccess: (data) => console.log(data),
+   * })
+   * ```
+   */
+  setOptions(options: MutationObserverOptions<TData, TError, TVariables, TOnMutateResult>): void;
+  protected onSubscribe(): void;
+  protected onUnsubscribe(): void;
+  /**
+   * Updates the observer's result when the observed mutation changes, and notifies its listeners.
+   * @internal
+   * @param action - The action that updated the observed mutation, passed on to the observer's
+   * callbacks.
+   */
+  onMutationUpdate(action: Action<TData, TError, TVariables, TOnMutateResult>): void;
+  /**
+   * Returns the observer's current result, derived from the observed
+   * mutation's state (or the default, `idle` state if no mutation has been
+   * built yet, e.g. before the first `mutate()` call or after `reset()`).
+   * @returns The observer's latest result.
+   */
+  getCurrentResult(): MutationObserverResult<TData, TError, TVariables, TOnMutateResult>;
+  /**
+   * Detaches the observer from the mutation it is currently observing (if
+   * any) and resets the observed result back to its default, `idle` state.
+   *
+   * This does not cancel an in-flight mutation; the mutation itself keeps
+   * running to completion and its own callbacks still fire, but this
+   * observer stops reflecting its state and a subsequent `mutate()` call
+   * will build a brand new mutation.
+   * @see {@link MutationObserver#mutate}
+   * @example
+   * ```ts
+   * observer.reset()
+   * ```
+   */
+  reset(): void;
+  /**
+   * Builds a new `Mutation` in the `MutationCache` using the observer's
+   * current options, detaches this observer from any previously observed
+   * mutation, attaches it to the new one, and executes it with the given
+   * variables.
+   *
+   * The optional per-call `options` (`onSuccess`/`onError`/`onSettled`) are
+   * invoked once the mutation settles, in addition to any callbacks defined
+   * on the observer's own options.
+   * @param variables - The variables passed to the `mutationFn`.
+   * @param options - Per-call `onSuccess`, `onError`, and `onSettled` callbacks.
+   * @returns A promise that resolves with the mutation's data, or rejects with its error.
+   * @example
+   * ```ts
+   * await observer.mutate(
+   *   { title: 'New post' },
+   *   { onSuccess: (data) => console.log(data) },
+   * )
+   * ```
+   */
+  mutate(variables: TVariables, options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>): Promise<TData>;
+}
+/**
+ * Global callbacks that fire for every mutation handled by a `MutationCache`, regardless of which
+ * component or observer triggered it. They differ from the `defaultOptions` provided to a
+ * `QueryClient` in two ways: `defaultOptions` can be overridden by each mutation, while these
+ * callbacks are always called, and `onMutate` here does not allow returning a result.
+ *
+ * If a callback returns a promise, it will be awaited before the mutation continues.
+ */
+interface MutationCacheConfig {
+  /** Called when any mutation in the cache encounters an error. */
+  onError?: (error: DefaultError, variables: unknown, onMutateResult: unknown, mutation: Mutation<unknown, unknown, unknown>, context: MutationFunctionContext) => Promise<unknown> | unknown;
+  /** Called when any mutation in the cache is successful. */
+  onSuccess?: (data: unknown, variables: unknown, onMutateResult: unknown, mutation: Mutation<unknown, unknown, unknown>, context: MutationFunctionContext) => Promise<unknown> | unknown;
+  /** Called before any mutation in the cache executes. */
+  onMutate?: (variables: unknown, mutation: Mutation<unknown, unknown, unknown>, context: MutationFunctionContext) => Promise<unknown> | unknown;
+  /** Called when any mutation in the cache is settled, either successfully or with an error. */
+  onSettled?: (data: unknown | undefined, error: DefaultError | null, variables: unknown, onMutateResult: unknown, mutation: Mutation<unknown, unknown, unknown>, context: MutationFunctionContext) => Promise<unknown> | unknown;
+}
+interface NotifyEventMutationAdded extends NotifyEvent {
+  type: 'added';
+  mutation: Mutation<any, any, any, any>;
+}
+interface NotifyEventMutationRemoved extends NotifyEvent {
+  type: 'removed';
+  mutation: Mutation<any, any, any, any>;
+}
+interface NotifyEventMutationObserverAdded extends NotifyEvent {
+  type: 'observerAdded';
+  mutation: Mutation<any, any, any, any>;
+  observer: MutationObserver<any, any, any>;
+}
+interface NotifyEventMutationObserverRemoved extends NotifyEvent {
+  type: 'observerRemoved';
+  mutation: Mutation<any, any, any, any>;
+  observer: MutationObserver<any, any, any>;
+}
+interface NotifyEventMutationObserverOptionsUpdated extends NotifyEvent {
+  type: 'observerOptionsUpdated';
+  mutation?: Mutation<any, any, any, any>;
+  observer: MutationObserver<any, any, any, any>;
+}
+interface NotifyEventMutationUpdated extends NotifyEvent {
+  type: 'updated';
+  mutation: Mutation<any, any, any, any>;
+  action: Action<any, any, any, any>;
+}
+/**
+ * The event passed to a `MutationCache` subscriber. Fired whenever a mutation is added or removed
+ * from the cache, its state is updated, or one of its observers is added, removed, or has its
+ * options updated.
+ */
+type MutationCacheNotifyEvent = NotifyEventMutationAdded | NotifyEventMutationRemoved | NotifyEventMutationObserverAdded | NotifyEventMutationObserverRemoved | NotifyEventMutationObserverOptionsUpdated | NotifyEventMutationUpdated;
+type MutationCacheListener = (event: MutationCacheNotifyEvent) => void;
+/**
+ * The `MutationCache` is the storage for mutations.
+ *
+ * Normally, you will not interact with the `MutationCache` directly and instead use a
+ * `QueryClient`. You can subscribe to it (inherited from `Subscribable`) to be informed of
+ * safe/known updates to the cache, such as mutations being added, removed, or updated.
+ * @example
+ * ```ts
+ * const unsubscribe = mutationCache.subscribe((event) => {
+ *   console.log(event.type, event.mutation)
+ * })
+ * ```
+ */
+declare class MutationCache extends Subscribable<MutationCacheListener> {
+  #private;
+  config: MutationCacheConfig;
+  constructor(config?: MutationCacheConfig);
+  /**
+   * Creates a mutation and adds it to the cache.
+   * @internal
+   * @param client - The client the mutation belongs to, used to default its options.
+   * @param options - The mutation options. They are defaulted with {@link
+   * QueryClient#defaultMutationOptions}.
+   * @param state - The initial state of the mutation, e.g. when restoring a dehydrated mutation.
+   * @returns The new mutation, already added to the cache.
+   */
+  build<TData, TError, TVariables, TOnMutateResult>(client: QueryClient, options: MutationOptions<TData, TError, TVariables, TOnMutateResult>, state?: MutationState<TData, TError, TVariables, TOnMutateResult>): Mutation<TData, TError, TVariables, TOnMutateResult>;
+  /**
+   * Adds a mutation to the cache.
+   * @internal
+   * @param mutation - The mutation to add. If it has a `scope`, it is queued in that scope.
+   */
+  add(mutation: Mutation<any, any, any, any>): void;
+  /**
+   * Removes a mutation from the cache.
+   * @internal
+   * @param mutation - The mutation to remove, also from its scope's queue.
+   */
+  remove(mutation: Mutation<any, any, any, any>): void;
+  /**
+   * Checks whether a mutation can run now, given the other mutations in its `scope`.
+   * @internal
+   * @param mutation - The mutation to check.
+   * @returns `true` if the mutation has no `scope`, or no other mutation in its scope is pending
+   * ahead of it.
+   */
+  canRun(mutation: Mutation<any, any, any, any>): boolean;
+  /**
+   * Continues the next paused mutation in the same `scope` after a mutation finishes.
+   * @internal
+   * @param mutation - The mutation that finished.
+   * @returns A promise that resolves once the next paused mutation in the same scope has continued,
+   * or immediately if there is none.
+   */
+  runNext(mutation: Mutation<any, any, any, any>): Promise<unknown>;
+  /**
+   * Removes all mutations from the cache.
+   * @example
+   * ```ts
+   * const mutationCache = queryClient.getMutationCache()
+   *
+   * mutationCache.clear()
+   * ```
+   */
+  clear(): void;
+  /**
+   * Returns all mutations within the cache.
+   *
+   * This is not typically needed for most applications, but can come in handy when needing more
+   * information about a mutation in rare scenarios.
+   * @returns Every mutation in the cache.
+   * @example
+   * ```ts
+   * const mutationCache = queryClient.getMutationCache()
+   *
+   * const mutations = mutationCache.getAll()
+   * ```
+   */
+  getAll(): Array<Mutation>;
+  /**
+   * A slightly more advanced method that can be used to get an existing mutation instance from
+   * the cache. If the mutation does not exist, `undefined` is returned.
+   *
+   * This is not typically needed for most applications, but can come in handy when needing more
+   * information about a mutation in rare scenarios.
+   * @param filters - The filters to match. `exact` defaults to `true`.
+   * @returns The first matching mutation, or `undefined`.
+   * @see {@link MutationCache#findAll}
+   * @example
+   * ```ts
+   * const mutationCache = queryClient.getMutationCache()
+   *
+   * const mutation = mutationCache.find({ mutationKey: ['addPost'] })
+   * ```
+   */
+  find<TData = unknown, TError = DefaultError, TVariables = any, TOnMutateResult = unknown>(filters: MutationFilters): Mutation<TData, TError, TVariables, TOnMutateResult> | undefined;
+  /**
+   * An even more advanced method that can be used to get existing mutation instances from the
+   * cache that match the given filters. If no mutations match, an empty array is returned.
+   *
+   * This is not typically needed for most applications, but can come in handy when needing more
+   * information about mutations in rare scenarios.
+   * @param filters - The filters to match. Without filters, every mutation is returned.
+   * @returns The matching mutations.
+   * @see {@link MutationCache#find}
+   * @example
+   * ```ts
+   * const mutationCache = queryClient.getMutationCache()
+   *
+   * const mutations = mutationCache.findAll({ mutationKey: ['addPost'] })
+   * ```
+   */
+  findAll(filters?: MutationFilters): Array<Mutation>;
+  /**
+   * Notifies every cache listener of an event, in one batch.
+   * @internal
+   * @param event - The event passed to every listener.
+   */
+  notify(event: MutationCacheNotifyEvent): void;
+  /**
+   * Continues every paused mutation, e.g. when the app comes back online.
+   * @internal
+   * @returns A promise that resolves once every paused mutation has continued and settled.
+   */
+  resumePausedMutations(): Promise<unknown>;
+}
+interface MutationConfig<TData, TError, TVariables, TOnMutateResult> {
+  client: QueryClient;
+  mutationId: number;
+  mutationCache: MutationCache;
+  options: MutationOptions<TData, TError, TVariables, TOnMutateResult>;
+  state?: MutationState<TData, TError, TVariables, TOnMutateResult>;
+}
+/**
+ * The raw state stored on a `Mutation` instance. This is the underlying state
+ * that observer results (e.g. `MutationObserverResult`) are derived from.
+ */
+interface MutationState<TData = unknown, TError = DefaultError, TVariables = unknown, TOnMutateResult = unknown> {
+  /**
+   * The value returned by `onMutate`, if defined. Passed to `onSuccess`,
+   * `onError` and `onSettled` as the mutation's context.
+   */
+  context: TOnMutateResult | undefined;
+  /**
+   * The last successfully resolved data for the mutation.
+   */
+  data: TData | undefined;
+  /**
+   * The error object for the mutation, if the last attempt resulted in an error.
+   * - Defaults to `null`.
+   */
+  error: TError | null;
+  /**
+   * The number of times the mutation function has failed for the current attempt.
+   */
+  failureCount: number;
+  /**
+   * The reason the current attempt failed, as reported by the retryer.
+   */
+  failureReason: TError | null;
+  /**
+   * Whether the mutation is currently paused (see network mode), or is
+   * waiting for another mutation with the same `scope` to finish.
+   */
+  isPaused: boolean;
+  /**
+   * The status of the mutation.
+   */
+  status: MutationStatus;
+  /**
+   * The variables the mutation was last called with.
+   */
+  variables: TVariables | undefined;
+  /**
+   * The timestamp for when the mutation was submitted.
+   */
+  submittedAt: number;
+}
+interface FailedAction<TError> {
+  type: 'failed';
+  failureCount: number;
+  error: TError | null;
+}
+interface PendingAction<TVariables, TOnMutateResult> {
+  type: 'pending';
+  isPaused: boolean;
+  variables?: TVariables;
+  context?: TOnMutateResult;
+}
+interface SuccessAction<TData> {
+  type: 'success';
+  data: TData;
+}
+interface ErrorAction<TError> {
+  type: 'error';
+  error: TError;
+}
+interface PauseAction {
+  type: 'pause';
+}
+interface ContinueAction {
+  type: 'continue';
+}
+/**
+ * The actions a mutation dispatches to update its state, e.g. when it starts, fails, pauses, or
+ * succeeds.
+ */
+type Action<TData, TError, TVariables, TOnMutateResult> = ContinueAction | ErrorAction<TError> | FailedAction<TError> | PendingAction<TVariables, TOnMutateResult> | PauseAction | SuccessAction<TData>;
+/**
+ * Represents a single mutation attempt. A `Mutation` holds the mutation's
+ * options, state (data/error/status), and the `MutationObserver`s currently
+ * subscribed to it.
+ *
+ * Instances are created and managed internally by `MutationCache`; application
+ * code typically interacts with mutations indirectly through `QueryClient` or
+ * a framework hook like `useMutation`. Direct access to a `Mutation` instance
+ * is possible via `mutationCache.find()`/`getAll()` for inspecting cache state.
+ * @example
+ * ```ts
+ * const mutationCache = queryClient.getMutationCache()
+ *
+ * const mutation = mutationCache.find({ mutationKey: ['addPost'] })
+ * ```
+ */
+declare class Mutation<TData = unknown, TError = DefaultError, TVariables = unknown, TOnMutateResult = unknown> extends Removable {
+  #private;
+  state: MutationState<TData, TError, TVariables, TOnMutateResult>;
+  options: MutationOptions<TData, TError, TVariables, TOnMutateResult>;
+  readonly mutationId: number;
+  constructor(config: MutationConfig<TData, TError, TVariables, TOnMutateResult>);
+  /**
+   * Replaces the mutation's options and applies their `gcTime`.
+   * @internal
+   * @param options - The new mutation options.
+   */
+  setOptions(options: MutationOptions<TData, TError, TVariables, TOnMutateResult>): void;
+  /**
+   * The `meta` object passed in the mutation's options, if any.
+   * @returns The mutation's `meta`, or `undefined` if none was set.
+   */
+  get meta(): MutationMeta | undefined;
+  /**
+   * Subscribes an observer to the mutation and stops its garbage collection.
+   * @internal
+   * @param observer - The observer to add. Adding an observer that is already subscribed does
+   * nothing.
+   */
+  addObserver(observer: MutationObserver<any, any, any, any>): void;
+  /**
+   * Unsubscribes an observer from the mutation.
+   * @internal
+   * @param observer - The observer to remove. Garbage collection is scheduled afterwards.
+   */
+  removeObserver(observer: MutationObserver<any, any, any, any>): void;
+  protected optionalRemove(): void;
+  /**
+   * Resumes a mutation that is currently paused or was restored from a
+   * dehydrated, still-`pending` state.
+   *
+   * - If this mutation has an active retryer (it paused mid-attempt, e.g. due
+   *   to the network mode or scope-based queuing), its retryer is resumed.
+   * - Otherwise, if the mutation's status is still `pending` (e.g. it was
+   *   dehydrated while an attempt was in flight and never got a retryer in
+   *   this instance), `execute` is called again with the last known variables.
+   * - Otherwise the mutation has already settled and this resolves immediately
+   *   without running anything again.
+   * @returns A promise that settles with the resumed mutation: it rejects if the mutation fails.
+   * It resolves immediately if the mutation has already settled.
+   * @see {@link Mutation#execute}
+   * @example
+   * ```ts
+   * // typically driven by reconnect handling, e.g. queryClient.resumePausedMutations()
+   * const mutation = mutationCache.find({ mutationKey: ['addPost'] })
+   * await mutation?.continue()
+   * ```
+   */
+  continue(): Promise<unknown>;
+  /**
+   * Runs the mutation function for the given variables through a retryer, and
+   * drives the mutation's state and lifecycle callbacks through to settlement.
+   *
+   * If this mutation's state is already `pending` when `execute` is called
+   * (i.e. it was restored, still in-flight, from a dehydrated state), the
+   * `onMutate` step is skipped and a `continue` action is dispatched to
+   * unpause it; otherwise a `pending` action is dispatched first, then the
+   * mutation cache's `onMutate` and the mutation's own `onMutate` option are
+   * awaited in that order, and the resulting context is stored.
+   *
+   * The mutation function is then run (subject to `retry`/`retryDelay`/
+   * `networkMode`, and to the mutation cache's scope-based serialization).
+   * On success, the cache's `onSuccess`/`onSettled` callbacks run before the
+   * mutation's own `onSuccess`/`onSettled` options, a `success` action is
+   * dispatched, and the resolved data is returned. On failure, the same
+   * cache-then-option ordering is used for `onError`/`onSettled`, but each of
+   * those four callbacks is individually caught so that a throwing callback
+   * cannot mask the original error; an `error` action is then dispatched and
+   * the original error is re-thrown.
+   * @param variables - The variables passed to the `mutationFn`.
+   * @returns A promise that resolves with the mutation's data, or rejects with its error.
+   * @see {@link Mutation#continue}
+   * @example
+   * ```ts
+   * // Called internally by `MutationObserver.mutate` and `Mutation.continue` —
+   * // applications normally trigger mutations through those, not this method.
+   * const data = await mutation.execute(variables)
+   * ```
+   */
+  execute(variables: TVariables): Promise<TData>;
+}
+type DropLast<T extends ReadonlyArray<unknown>> = T extends readonly [...infer R, unknown] ? readonly [...R] : never;
+type TuplePrefixes<T extends ReadonlyArray<unknown>> = T extends readonly [] ? readonly [] : TuplePrefixes<DropLast<T>> | T;
+/**
+ * Filters used to select queries, for example in `queryClient.getQueriesData` or `queryClient.invalidateQueries`.
+ * All provided filters must match; filters that are left unspecified are ignored.
+ */
+interface QueryFilters<TQueryKey extends QueryKey = QueryKey> {
+  /**
+   * Filter to active queries, inactive queries or all queries
+   * @defaultValue 'all'
+   */
+  type?: QueryTypeFilter;
+  /**
+   * Match query key exactly
+   */
+  exact?: boolean;
+  /**
+   * Include queries matching this predicate function
+   */
+  predicate?: (query: Query) => boolean;
+  /**
+   * Include queries matching this query key
+   */
+  queryKey?: TQueryKey | TuplePrefixes<TQueryKey>;
+  /**
+   * Include or exclude stale queries
+   */
+  stale?: boolean;
+  /**
+   * Include queries matching their fetchStatus
+   */
+  fetchStatus?: FetchStatus;
+}
+/**
+ * Filters used to select mutations, for example in `mutationCache.findAll` or `queryClient.isMutating`.
+ * All provided filters must match; filters that are left unspecified are ignored.
+ */
+interface MutationFilters<TData = unknown, TError = DefaultError, TVariables = unknown, TOnMutateResult = unknown> {
+  /**
+   * Match mutation key exactly
+   */
+  exact?: boolean;
+  /**
+   * Include mutations matching this predicate function
+   */
+  predicate?: (mutation: Mutation<TData, TError, TVariables, TOnMutateResult>) => boolean;
+  /**
+   * Include mutations matching this mutation key
+   */
+  mutationKey?: TuplePrefixes<MutationKey>;
+  /**
+   * Filter by mutation status
+   */
+  status?: MutationStatus;
+}
+/**
+ * Either a plain value of type `TOutput`, or a function that receives `TInput` and returns `TOutput`.
+ * Used for example by `setQueryData`-style updaters, which accept either the new data directly or a
+ * function that computes it from the previous data. See {@link functionalUpdate}.
+ * @example
+ * ```ts
+ * queryClient.setQueryData(['posts'], newPosts)
+ *
+ * // Or, using an updater function that receives the current data:
+ * queryClient.setQueryData(['posts'], (oldPosts) =>
+ *   oldPosts ? [...oldPosts, newPost] : oldPosts,
+ * )
+ * ```
+ */
+type Updater<TInput, TOutput> = TOutput | ((input: TInput) => TOutput);
+/**
+ * Which queries a filter matches: all of them, only active ones (with enabled observers), or only
+ * inactive ones.
+ */
+type QueryTypeFilter = 'all' | 'active' | 'inactive';
+/**
+ * Intended to be passed as a query's `placeholderData` option, for example
+ * `placeholderData: keepPreviousData`. Instead of resetting the query's data to `undefined` while a new
+ * query key is fetching, it keeps displaying the previously fetched data until the new data arrives.
+ * @param previousData - The data of the previous query key, passed by the observer.
+ * @returns The previous data, unchanged.
+ * @example
+ * ```ts
+ * new QueryObserver(queryClient, {
+ *   queryKey: ['posts', page],
+ *   queryFn: () => fetchPosts(page),
+ *   placeholderData: keepPreviousData,
+ * })
+ * ```
+ */
+declare function keepPreviousData<T>(previousData: T | undefined): T | undefined;
+/**
+ * Sentinel value that can be passed as a query's `queryFn` to conditionally disable the query (equivalent
+ * to `enabled: false`) while preserving full type inference for the query's data. Unlike `enabled: false`,
+ * a query disabled via `skipToken` cannot be triggered with `refetch`.
+ * @example
+ * ```ts
+ * new QueryObserver(queryClient, {
+ *   queryKey: ['post', postId],
+ *   queryFn: postId != null ? () => fetchPost(postId) : skipToken,
+ * })
+ * ```
+ */
+declare const skipToken: unique symbol;
+/**
+ * The type of the {@link skipToken} sentinel value.
+ */
+type SkipToken = typeof skipToken;
+/**
+ * Global callbacks that fire for every query handled by a `QueryCache`, regardless of which
+ * component or observer triggered it. Unlike `QueryClient`'s `defaultOptions`, which a query can
+ * override, these callbacks are always called. Unlike `MutationCacheConfig`'s callbacks, these
+ * are fire-and-forget: their return value is not awaited before the query settles.
+ */
+interface QueryCacheConfig {
+  /** Called when any query in the cache encounters an error. */
+  onError?: (error: DefaultError, query: Query<unknown, unknown, unknown>) => void;
+  /** Called when any query in the cache is successful. */
+  onSuccess?: (data: unknown, query: Query<unknown, unknown, unknown>) => void;
+  /** Called when any query in the cache is settled, either successfully or with an error. */
+  onSettled?: (data: unknown | undefined, error: DefaultError | null, query: Query<unknown, unknown, unknown>) => void;
+}
+interface NotifyEventQueryAdded extends NotifyEvent {
+  type: 'added';
+  query: Query<any, any, any, any>;
+}
+interface NotifyEventQueryRemoved extends NotifyEvent {
+  type: 'removed';
+  query: Query<any, any, any, any>;
+}
+interface NotifyEventQueryUpdated extends NotifyEvent {
+  type: 'updated';
+  query: Query<any, any, any, any>;
+  action: Action$1<any, any>;
+}
+interface NotifyEventQueryObserverAdded extends NotifyEvent {
+  type: 'observerAdded';
+  query: Query<any, any, any, any>;
+  observer: QueryObserver<any, any, any, any, any>;
+}
+interface NotifyEventQueryObserverRemoved extends NotifyEvent {
+  type: 'observerRemoved';
+  query: Query<any, any, any, any>;
+  observer: QueryObserver<any, any, any, any, any>;
+}
+interface NotifyEventQueryObserverResultsUpdated extends NotifyEvent {
+  type: 'observerResultsUpdated';
+  query: Query<any, any, any, any>;
+}
+interface NotifyEventQueryObserverOptionsUpdated extends NotifyEvent {
+  type: 'observerOptionsUpdated';
+  query: Query<any, any, any, any>;
+  observer: QueryObserver<any, any, any, any, any>;
+}
+/**
+ * The event passed to a `QueryCache` subscriber. Fired whenever a query is added or removed from
+ * the cache, its state is updated (e.g. via `query.setState` or `queryClient.removeQueries`), or
+ * one of its observers is added, removed, or has its results or options updated.
+ */
+type QueryCacheNotifyEvent = NotifyEventQueryAdded | NotifyEventQueryRemoved | NotifyEventQueryUpdated | NotifyEventQueryObserverAdded | NotifyEventQueryObserverRemoved | NotifyEventQueryObserverResultsUpdated | NotifyEventQueryObserverOptionsUpdated;
+type QueryCacheListener = (event: QueryCacheNotifyEvent) => void;
+/**
+ * The `QueryCache` is the storage mechanism for TanStack Query. It stores all the data, meta
+ * information, and state of the queries it contains.
+ *
+ * Normally, you will not interact with the `QueryCache` directly and instead use a `QueryClient`
+ * for a specific cache. You can subscribe to it (inherited from `Subscribable`) to be informed of
+ * safe/known updates to the cache, such as queries being added, removed, or updated — updates made
+ * outside of the cache's own tracked mechanisms (e.g. mutating a query's state object directly) do
+ * not notify subscribers.
+ * @example
+ * ```ts
+ * const unsubscribe = queryCache.subscribe((event) => {
+ *   console.log(event.type, event.query)
+ * })
+ * ```
+ */
+declare class QueryCache extends Subscribable<QueryCacheListener> {
+  #private;
+  config: QueryCacheConfig;
+  constructor(config?: QueryCacheConfig);
+  /**
+   * Returns the existing `Query` instance for the given options' `queryKey`/`queryHash`, or
+   * builds and adds a new one to the cache if none exists yet. Used by framework adapters and
+   * plugins (e.g. broadcast/persistence) that need to get-or-create a `Query` directly, bypassing
+   * the reactive `QueryObserver` machinery.
+   * @param client - The client the query belongs to, used to default its options.
+   * @param options - The query options, including the `queryKey`. A new query is created with the
+   * options defaulted by {@link QueryClient#defaultQueryOptions}.
+   * @param state - The initial state of a newly created query, e.g. when hydrating. Ignored if the
+   * query already exists.
+   * @returns The existing or newly created query.
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   *
+   * const query = queryCache.build(queryClient, {
+   *   queryKey: ['posts'],
+   *   queryFn: fetchPosts,
+   * })
+   * ```
+   */
+  build<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(client: QueryClient, options: WithRequired<QueryOptions<TQueryFnData, TError, TData, TQueryKey>, 'queryKey'>, state?: QueryState<TData, TError>): Query<TQueryFnData, TError, TData, TQueryKey>;
+  /**
+   * Adds a query to the cache.
+   * @internal
+   * @param query - The query to add. If a query with the same hash is already cached, nothing
+   * happens.
+   */
+  add(query: Query<any, any, any, any>): void;
+  /**
+   * Destroys the given `Query` and removes it from the cache, notifying subscribers with a
+   * `'removed'` event. A no-op if the query is no longer the one currently stored under its hash
+   * (e.g. it was already replaced). Used by plugins (e.g. the broadcast client) that mirror
+   * removals across `QueryCache` instances.
+   * @param query - The query to remove.
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   * const query = queryCache.find({ queryKey: ['posts'] })
+   *
+   * if (query) {
+   *   queryCache.remove(query)
+   * }
+   * ```
+   */
+  remove(query: Query<any, any, any, any>): void;
+  /**
+   * Removes all queries from the cache.
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   *
+   * queryCache.clear()
+   * ```
+   */
+  clear(): void;
+  /**
+   * Returns the `Query` instance stored under the given `queryHash`, or `undefined` if none
+   * exists. Unlike {@link QueryCache#find}, this looks up by the already-computed hash rather
+   * than by `QueryFilters`. Used by plugins (e.g. broadcast/hydration) that already have a hash
+   * to look up directly.
+   * @param queryHash - The hash of the query to look up.
+   * @returns The query stored under the hash, or `undefined`.
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   * const queryHash = hashKey(['posts'])
+   *
+   * const query = queryCache.get(queryHash)
+   * ```
+   */
+  get<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(queryHash: string): Query<TQueryFnData, TError, TData, TQueryKey> | undefined;
+  /**
+   * Returns all queries within the cache.
+   * @returns Every query in the cache.
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   *
+   * const queries = queryCache.getAll()
+   * ```
+   */
+  getAll(): Array<Query>;
+  /**
+   * A slightly more advanced method that can be used to get an existing query instance from the
+   * cache. This instance not only contains all the state for the query, but all of the instances,
+   * and underlying guts of the query as well. If the query does not exist, `undefined` is
+   * returned.
+   *
+   * This is not typically needed for most applications, but can come in handy when needing more
+   * information about a query in rare scenarios (e.g. looking at `query.state.dataUpdatedAt` to
+   * decide whether a query is fresh enough to be used as an initial value).
+   * @param filters - The filters to match, including the required `queryKey`. `exact` defaults to
+   * `true`.
+   * @returns The first matching query, or `undefined`.
+   * @see {@link QueryCache#findAll}
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   *
+   * const query = queryCache.find({ queryKey: ['posts'] })
+   * ```
+   */
+  find<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData>(filters: WithRequired<QueryFilters, 'queryKey'>): Query<TQueryFnData, TError, TData> | undefined;
+  /**
+   * An even more advanced method that can be used to get existing query instances from the cache
+   * that partially match a query key. If no queries match, an empty array is returned.
+   *
+   * This is not typically needed for most applications, but can come in handy when needing more
+   * information about queries in rare scenarios.
+   * @param filters - The filters to match. Without filters, every query is returned.
+   * @returns The matching queries.
+   * @see {@link QueryCache#find}
+   * @example
+   * ```ts
+   * const queryCache = queryClient.getQueryCache()
+   *
+   * const queries = queryCache.findAll({ queryKey: ['posts'] })
+   * ```
+   */
+  findAll(filters?: QueryFilters<any>): Array<Query>;
+  /**
+   * Notifies every cache listener of an event, in one batch.
+   * @internal
+   * @param event - The event passed to every listener.
+   */
+  notify(event: QueryCacheNotifyEvent): void;
+  /**
+   * Calls {@link Query#onFocus} on every cached query, in one batch.
+   * @internal
+   */
+  onFocus(): void;
+  /**
+   * Calls {@link Query#onOnline} on every cached query, in one batch.
+   * @internal
+   */
+  onOnline(): void;
+}
+/**
+ * `QueryClient` is used to interact with a cache of queries and mutations. It owns a
+ * `QueryCache` and a `MutationCache` (creating default ones if none are passed in) and holds
+ * the default options that are applied to queries and mutations created through it.
+ * @example
+ * ```ts
+ * const queryClient = new QueryClient({
+ *   defaultOptions: {
+ *     queries: {
+ *       staleTime: Infinity,
+ *     },
+ *   },
+ * })
+ *
+ * await queryClient.query({ queryKey: ['posts'], queryFn: fetchPosts })
+ * ```
+ */
+declare class QueryClient {
+  #private;
+  constructor(config?: QueryClientConfig);
+  /**
+   * Called by a framework adapter's `QueryClientProvider`-equivalent when it mounts, to start
+   * listening for focus/online events and resume paused mutations. Ref-counted via an internal
+   * mount count, so nested or multiple providers sharing the same `QueryClient` don't tear down
+   * the shared listeners until the last one unmounts.
+   */
+  mount(): void;
+  /**
+   * The inverse of {@link QueryClient#mount} — called by a framework adapter's
+   * `QueryClientProvider`-equivalent when it unmounts. Only tears down the focus/online
+   * listeners once the mount count returns to `0`.
+   */
+  unmount(): void;
+  /**
+   * Returns the number of queries in the cache that are currently fetching, optionally
+   * matching a set of filters. This includes background-fetching, loading new pages, and
+   * loading more infinite query results.
+   * @param filters - Narrows down which fetching queries are counted. Without filters, every
+   * fetching query is counted.
+   * @returns The number of matching queries whose `fetchStatus` is `'fetching'`.
+   * @example
+   * ```ts
+   * if (queryClient.isFetching()) {
+   *   console.log('At least one query is fetching!')
+   * }
+   * ```
+   */
+  isFetching(filters?: Omit<QueryFilters, 'fetchStatus'>): number;
+  /**
+   * Returns the number of mutations in the cache that are currently pending, optionally
+   * matching a set of filters.
+   * @param filters - Narrows down which pending mutations are counted. Without filters, every
+   * pending mutation is counted.
+   * @returns The number of matching mutations whose `status` is `'pending'`.
+   * @example
+   * ```ts
+   * if (queryClient.isMutating()) {
+   *   console.log('At least one mutation is pending!')
+   * }
+   * ```
+   */
+  isMutating<TMutationFilters extends MutationFilters<any, any> = MutationFilters>(filters?: TMutationFilters): number;
+  /**
+   * Imperative (non-reactive) way to retrieve data for a QueryKey.
+   * Should only be used in callbacks or functions where reading the latest data is necessary, e.g. for optimistic updates.
+   *
+   * Hint: Do not use this function inside a component, because it won't receive updates.
+   * Use `useQuery` to create a `QueryObserver` that subscribes to changes.
+   * @param queryKey - The query key of the query to read.
+   * @returns The cached data for the query, or `undefined` if no query with this key has been observed yet.
+   * @see {@link QueryClient#getQueriesData}
+   */
+  getQueryData<TQueryFnData = unknown, TTaggedQueryKey extends QueryKey = QueryKey, TInferredQueryFnData = InferDataFromTag<TQueryFnData, TTaggedQueryKey>>(queryKey: TTaggedQueryKey): TInferredQueryFnData | undefined;
+  /**
+   * Returns the cached data of a query, or fetches it if there is none. With `revalidateIfStale`,
+   * stale cached data is also refetched in the background.
+   * @param options - The query options. If the query has no cached data yet, it is fetched with
+   * these options.
+   * @returns A promise that resolves to the cached data, or to the fetched data if nothing was
+   * cached yet.
+   * @deprecated Use queryClient.query({ ...options, staleTime: 'static' }) instead. This method will be removed in the next major version.
+   */
+  ensureQueryData<TQueryFnData, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: EnsureQueryDataOptions<TQueryFnData, TError, TData, TQueryKey>): Promise<TData>;
+  /**
+   * Imperative (non-reactive) way to retrieve the cached data of multiple queries at once.
+   * Only queries matching the given filters are returned; if none match, an empty array is
+   * returned.
+   *
+   * Because the matched queries can hold data of different shapes (e.g. a broad filter can match
+   * queries with unrelated data types), the `TQueryFnData` generic defaults to `unknown` rather
+   * than being inferred. Passing a more specific type is a convenience for call sites that know
+   * every matched query holds the same shape — it is not checked against the actual cache
+   * contents.
+   * @param filters - The filters that select which queries to read.
+   * @returns An array of query key and data pairs. The data is `undefined` for a query with no cached data.
+   * @see {@link QueryClient#getQueryData}
+   * @example
+   * ```ts
+   * const data = queryClient.getQueriesData({ queryKey: ['posts'] })
+   * ```
+   */
+  getQueriesData<TQueryFnData = unknown, TQueryFilters extends QueryFilters<any> = QueryFilters>(filters: TQueryFilters): Array<[QueryKey, TQueryFnData | undefined]>;
+  /**
+   * Synchronous way to immediately update a query's cached data. If the updater (or the value
+   * passed) resolves to `undefined`, the cache is left untouched and no query is created;
+   * otherwise, if the query does not exist yet, it will be created. To update multiple queries
+   * at once by partially matching query keys, use {@link QueryClient#setQueriesData} instead.
+   *
+   * Updates must be performed immutably: do not mutate `oldData`, or data previously retrieved
+   * via {@link QueryClient#getQueryData}, in place.
+   * @param queryKey - The query key to set data for.
+   * @param updater - Either the new data, or a function that receives the current data (which
+   * may be `undefined`) and returns the new data.
+   * @param options - Set `updatedAt` to override the timestamp the written data is recorded with.
+   * @returns The data that was written, or `undefined` if the updater returned `undefined` — in that case
+   * the write is skipped and the cache is left unchanged.
+   * @example
+   * ```ts
+   * queryClient.setQueryData(['posts'], newPosts)
+   *
+   * // Or, using an updater function that receives the current data:
+   * queryClient.setQueryData(['posts'], (oldPosts) => [...oldPosts, newPost])
+   * ```
+   */
+  setQueryData<TQueryFnData = unknown, TTaggedQueryKey extends QueryKey = QueryKey, TInferredQueryFnData = InferDataFromTag<TQueryFnData, TTaggedQueryKey>>(queryKey: TTaggedQueryKey, updater: Updater<InferDataFromTag<NoInfer<TQueryFnData>, TTaggedQueryKey> | undefined, NoInfer<TInferredQueryFnData> | undefined>, options?: SetDataOptions): NoInfer<TInferredQueryFnData> | undefined;
+  /**
+   * Synchronous way to immediately update the cached data of multiple queries at once, using
+   * filters or partial query key matching. Only queries that already exist and match the given
+   * filters are updated; no new cache entries are created. Internally this calls
+   * {@link QueryClient#setQueryData} for each matching query.
+   * @param filters - The filters that select which existing queries to update.
+   * @param updater - Either the new data, or a function that receives each matched query's current
+   * data (which may be `undefined`) and returns the new data.
+   * @param options - Set `updatedAt` to override the timestamp the written data is recorded with.
+   * @returns One `[queryKey, data]` tuple per matched query, in the same shape and with the same
+   * `undefined` case as {@link QueryClient#setQueryData}.
+   * @example
+   * ```ts
+   * queryClient.setQueriesData({ queryKey: ['posts'] }, (oldPosts) =>
+   *   oldPosts ? oldPosts.filter((post) => post.id !== deletedId) : oldPosts,
+   * )
+   * ```
+   */
+  setQueriesData<TQueryFnData, TQueryFilters extends QueryFilters<any> = QueryFilters>(filters: TQueryFilters, updater: Updater<NoInfer<TQueryFnData> | undefined, NoInfer<TQueryFnData> | undefined>, options?: SetDataOptions): Array<[QueryKey, TQueryFnData | undefined]>;
+  /**
+   * Imperative (non-reactive) way to retrieve an existing query's state. If the query does not
+   * exist, `undefined` is returned.
+   * @param queryKey - The query key of the query to read.
+   * @returns The query's state, or `undefined` if no query with this key exists.
+   * @example
+   * ```ts
+   * const state = queryClient.getQueryState(['posts'])
+   * console.log(state?.dataUpdatedAt)
+   * ```
+   */
+  getQueryState<TQueryFnData = unknown, TError = DefaultError, TTaggedQueryKey extends QueryKey = QueryKey, TInferredQueryFnData = InferDataFromTag<TQueryFnData, TTaggedQueryKey>, TInferredError = InferErrorFromTag<TError, TTaggedQueryKey>>(queryKey: TTaggedQueryKey): QueryState<TInferredQueryFnData, TInferredError> | undefined;
+  /**
+   * Removes queries from the cache that match the given filters. Unlike
+   * {@link QueryClient#invalidateQueries} or {@link QueryClient#refetchQueries}, this removes
+   * matching queries from the cache instead of refetching them. Without filters, every query in
+   * the cache is removed.
+   * @param filters - The filters that select which queries to remove. Without filters, every query
+   * is removed.
+   * @example
+   * ```ts
+   * queryClient.removeQueries({ queryKey: ['posts'], exact: true })
+   * ```
+   */
+  removeQueries<TTaggedQueryKey extends QueryKey = QueryKey>(filters?: QueryFilters<TTaggedQueryKey>): void;
+  /**
+   * Resets queries matching the given filters back to their initial state (e.g. any
+   * `initialData`), notifying subscribers rather than removing them. Active queries among the
+   * matched set are then refetched, and the returned promise resolves once that refetch settles.
+   * @param filters - The filters that select which queries to reset. Without filters, every query
+   * is reset.
+   * @param options - Passed to the refetch of the active matched queries, e.g. `cancelRefetch` and
+   * `throwOnError`.
+   * @returns A promise that resolves once the refetch of the active matched queries settles.
+   * @example
+   * ```ts
+   * await queryClient.resetQueries({ queryKey: ['posts'], exact: true })
+   * ```
+   */
+  resetQueries<TTaggedQueryKey extends QueryKey = QueryKey>(filters?: QueryFilters<TTaggedQueryKey>, options?: ResetOptions): Promise<void>;
+  /**
+   * Cancels outgoing fetches for queries matching the given filters. Most useful when performing
+   * optimistic updates, since any outgoing refetch that resolves afterwards would otherwise
+   * overwrite the optimistic update. By default (`revert: true`), a cancelled query's data is
+   * reverted to its state before the outgoing fetch started.
+   *
+   * The returned promise never rejects, even if individual cancellations fail.
+   * @param filters - The filters that select which queries to cancel. Without filters, every query
+   * is cancelled.
+   * @param cancelOptions - Passed to each matched query's cancellation. `revert` defaults to
+   * `true`.
+   * @returns A promise that resolves once every cancellation has settled.
+   * @example
+   * ```ts
+   * await queryClient.cancelQueries({ queryKey: ['posts'], exact: true })
+   * ```
+   */
+  cancelQueries<TTaggedQueryKey extends QueryKey = QueryKey>(filters?: QueryFilters<TTaggedQueryKey>, cancelOptions?: CancelOptions): Promise<void>;
+  /**
+   * Marks queries matching the given filters as invalidated. Unlike
+   * {@link QueryClient#removeQueries}, invalidated queries stay in the cache.
+   *
+   * Unless `filters.refetchType` is `'none'`, matching queries are then refetched via
+   * {@link QueryClient#refetchQueries}, using `filters.refetchType` if set, otherwise
+   * `filters.type`, otherwise `'active'`.
+   * @param filters - The filters that select which queries to invalidate, plus `refetchType` to
+   * control which of them to refetch afterwards. Without filters, every query is invalidated.
+   * @param options - Passed to {@link QueryClient#refetchQueries}, e.g. `cancelRefetch` and
+   * `throwOnError`.
+   * @returns A promise that resolves once the refetch settles, or immediately if `refetchType` is
+   * `'none'`.
+   * @example
+   * ```ts
+   * await queryClient.invalidateQueries({ queryKey: ['posts'], refetchType: 'active' })
+   * ```
+   */
+  invalidateQueries<TTaggedQueryKey extends QueryKey = QueryKey>(filters?: InvalidateQueryFilters<TTaggedQueryKey>, options?: InvalidateOptions): Promise<void>;
+  /**
+   * Refetches queries matching the given filters, regardless of whether they are stale. Without
+   * filters, every query in the cache is refetched. Queries that are disabled, or static (only
+   * have observers with a static `staleTime`), are never refetched.
+   *
+   * By default (`cancelRefetch: true`), a currently running fetch is cancelled before the new
+   * one starts. The returned promise resolves once all matching queries have settled; it does
+   * not reject on individual query failures unless `throwOnError` is set.
+   * @param filters - The filters that select which queries to refetch. Without filters, every query
+   * in the cache is included.
+   * @param options - Set `cancelRefetch` to `false` to keep a running fetch instead of cancelling
+   * it, and `throwOnError` to `true` to reject when a refetch fails.
+   * @returns A promise that resolves once every matched query has settled.
+   * @example
+   * ```ts
+   * // refetch all active queries partially matching a query key:
+   * await queryClient.refetchQueries({ queryKey: ['posts'], type: 'active' })
+   * ```
+   */
+  refetchQueries<TTaggedQueryKey extends QueryKey = QueryKey>(filters?: RefetchQueryFilters<TTaggedQueryKey>, options?: RefetchOptions): Promise<void>;
+  /**
+   * Asynchronous method to fetch and cache a query, resolving with the data or throwing with
+   * the error.
+   *
+   * If the query already exists in the cache and its data is not stale (per the given
+   * `staleTime`), the cached data is returned without fetching. Otherwise, the query is fetched
+   * and the promise resolves once the fetch settles. If a `select` function is provided, it is
+   * applied to the data in both cases (cached or freshly fetched) before it is returned.
+   *
+   * Unlike a reactive observer, retries are disabled by default here (`retry: false`) unless
+   * explicitly configured, since there is no component to catch a thrown error and retry through
+   * re-render.
+   *
+   * The accepted options are `QueryObserverOptions` minus the fields that only make sense for a
+   * reactive observer — `enabled`, `refetchInterval`, `refetchIntervalInBackground`,
+   * `refetchOnWindowFocus`, `refetchOnReconnect`, `refetchOnMount`, `retryOnMount`,
+   * `notifyOnChangeProps`, `throwOnError`, `suspense`, and `placeholderData` are not part of this
+   * method's options.
+   *
+   * This method replaces the deprecated `fetchQuery`, and — combined with
+   * `{ staleTime: 'static' }` — the deprecated `ensureQueryData`.
+   * @param options - The query options, including the `queryKey` and the `queryFn` used if the
+   * query needs to fetch.
+   * @returns A promise that resolves to the data, or to the result of `select` if provided. It
+   * rejects with the error from the fetch or from `select`.
+   * @example
+   * ```ts
+   * try {
+   *   const data = await queryClient.query({ queryKey, queryFn, staleTime: 10000 })
+   * } catch (error) {
+   *   console.log(error)
+   * }
+   * ```
+   */
+  query<TQueryFnData, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never>(options: QueryExecuteOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>): Promise<TData>;
+  /**
+   * Fetches and caches a query, or returns its cached data if it isn't stale. Unlike in observers,
+   * the fetch isn't retried unless `retry` is set.
+   * @param options - The query options, including the `queryKey` and the `queryFn` used if the
+   * query needs to fetch.
+   * @returns A promise that resolves to the cached or fetched data, or rejects with the fetch
+   * error.
+   * @deprecated Use queryClient.query(options) instead. This method will be removed in the next major version.
+   */
+  fetchQuery<TQueryFnData, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never>(options: FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>): Promise<TData>;
+  /**
+   * Fetches and caches a query like {@link QueryClient#fetchQuery}, but ignores the result and any
+   * error.
+   * @param options - The query options, including the `queryKey` and the `queryFn` used if the
+   * query needs to fetch.
+   * @returns A promise that resolves once the fetch settles. It never rejects.
+   * @deprecated Use queryClient.query(options) instead. You can swallow errors with `.catch(noop)`. This method will be removed in the next major version.
+   */
+  prefetchQuery<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey>): Promise<void>;
+  /**
+   * Asynchronous method to fetch and cache an infinite query, resolving with an
+   * {@link InfiniteData} object or throwing with the error.
+   *
+   * Behaves like {@link QueryClient#query}, accepting the same options (minus
+   * `initialPageParam`), plus the required `initialPageParam`, and an optional `pages` /
+   * `getNextPageParam` pair used to refetch a fixed number of pages from the start.
+   *
+   * This method replaces the deprecated `fetchInfiniteQuery`, and — combined with
+   * `{ staleTime: 'static' }` — the deprecated `ensureInfiniteQueryData`.
+   * @param options - The infinite query options, including the `queryKey`, the `queryFn`, and the
+   * `initialPageParam`.
+   * @returns A promise that resolves to the {@link InfiniteData}, or to the result of `select` if
+   * provided. It rejects with the error from the fetch or from `select`.
+   * @example
+   * ```ts
+   * try {
+   *   const data = await queryClient.infiniteQuery({ queryKey, queryFn, initialPageParam: 0 })
+   *   console.log(data.pages)
+   * } catch (error) {
+   *   console.log(error)
+   * }
+   * ```
+   */
+  infiniteQuery<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: InfiniteQueryExecuteOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>): Promise<Array<TData> extends Array<InfiniteData<TQueryFnData>> ? InfiniteData<TQueryFnData, TPageParam> : TData>;
+  /**
+   * Fetches and caches an infinite query, or returns its cached data if it isn't stale.
+   * @param options - The infinite query options, including the `queryKey`, the `queryFn`, and the
+   * `initialPageParam`.
+   * @returns A promise that resolves to the cached or fetched {@link InfiniteData}, or rejects with
+   * the fetch error.
+   * @deprecated Use queryClient.infiniteQuery(options) instead. This method will be removed in the next major version.
+   */
+  fetchInfiniteQuery<TQueryFnData, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: FetchInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>): Promise<InfiniteData<TData, TPageParam>>;
+  /**
+   * Fetches and caches an infinite query like {@link QueryClient#fetchInfiniteQuery}, but ignores
+   * the result and any error.
+   * @param options - The infinite query options, including the `queryKey`, the `queryFn`, and the
+   * `initialPageParam`.
+   * @returns A promise that resolves once the fetch settles. It never rejects.
+   * @deprecated Use queryClient.infiniteQuery(options) instead. You can swallow errors with `.catch(noop)`. This method will be removed in the next major version.
+   */
+  prefetchInfiniteQuery<TQueryFnData, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: FetchInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>): Promise<void>;
+  /**
+   * Returns the cached data of an infinite query, or fetches it if there is none. With
+   * `revalidateIfStale`, stale cached data is also refetched in the background.
+   * @param options - The infinite query options. If the query has no cached data yet, it is fetched
+   * with these options.
+   * @returns A promise that resolves to the cached {@link InfiniteData}, or to the fetched data if
+   * nothing was cached yet.
+   * @deprecated Use queryClient.infiniteQuery({ ...options, staleTime: 'static' }) instead. This method will be removed in the next major version.
+   */
+  ensureInfiniteQueryData<TQueryFnData, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: EnsureInfiniteQueryDataOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>): Promise<InfiniteData<TData, TPageParam>>;
+  /**
+   * Resumes mutations that were paused because there was no network connection. Does nothing
+   * (resolving immediately) if the client is currently offline.
+   * @returns A promise that resolves once the resumed mutations have settled.
+   * @example
+   * ```ts
+   * import { QueryClient } from '@tanstack/query-core'
+   *
+   * const queryClient = new QueryClient()
+   * await queryClient.resumePausedMutations()
+   * ```
+   */
+  resumePausedMutations(): Promise<unknown>;
+  /**
+   * Returns the query cache this client is connected to.
+   * @returns The {@link QueryCache} instance.
+   * @example
+   * ```ts
+   * import { QueryClient } from '@tanstack/query-core'
+   *
+   * const queryClient = new QueryClient()
+   * const queryCache = queryClient.getQueryCache()
+   * const queries = queryCache.findAll({ queryKey: ['posts'] })
+   * ```
+   */
+  getQueryCache(): QueryCache;
+  /**
+   * Returns the mutation cache this client is connected to.
+   * @returns The {@link MutationCache} instance.
+   * @example
+   * ```ts
+   * import { QueryClient } from '@tanstack/query-core'
+   *
+   * const queryClient = new QueryClient()
+   * const mutationCache = queryClient.getMutationCache()
+   * const mutations = mutationCache.findAll({ status: 'pending' })
+   * ```
+   */
+  getMutationCache(): MutationCache;
+  /**
+   * Returns the default options that were set when creating the client, or via
+   * {@link QueryClient#setDefaultOptions}.
+   * @returns The client's current default options.
+   * @example
+   * ```ts
+   * import { QueryClient } from '@tanstack/query-core'
+   *
+   * const queryClient = new QueryClient()
+   * const defaultOptions = queryClient.getDefaultOptions()
+   * ```
+   */
+  getDefaultOptions(): DefaultOptions;
+  /**
+   * Dynamically sets the default options for this client, overwriting any previously defined
+   * default options.
+   * @param options - The new default options for queries and mutations.
+   * @see {@link QueryClient#getDefaultOptions}
+   * @example
+   * ```ts
+   * import { QueryClient } from '@tanstack/query-core'
+   *
+   * const queryClient = new QueryClient()
+   * queryClient.setDefaultOptions({
+   *   queries: {
+   *     staleTime: Infinity,
+   *   },
+   * })
+   * ```
+   */
+  setDefaultOptions(options: DefaultOptions): void;
+  /**
+   * Sets default options for queries whose query key partially matches the given `queryKey`.
+   *
+   * If several registered query defaults match a given query key, they are merged together in
+   * registration order by {@link QueryClient#getQueryDefaults}, so register defaults from the
+   * most generic key to the least generic one — more specific defaults should be registered
+   * after more generic ones so they take precedence.
+   * @param queryKey - The query key that query keys are partially matched against.
+   * @param options - The default options applied to matching queries.
+   * @example
+   * ```ts
+   * queryClient.setQueryDefaults(['posts'], { queryFn: fetchPosts })
+   *
+   * await queryClient.query({ queryKey: ['posts'] })
+   * ```
+   */
+  setQueryDefaults<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData>(queryKey: QueryKey, options: Partial<OmitKeyof<QueryObserverOptions<TQueryFnData, TError, TData, TQueryData>, 'queryKey'>>): void;
+  /**
+   * Returns the default options registered for queries whose query key partially matches the
+   * given `queryKey`, via {@link QueryClient#setQueryDefaults}. If multiple registered defaults
+   * match, they are merged together in registration order.
+   * @param queryKey - The query key to look up registered defaults for.
+   * @returns The merged default options of every registration that matches, or an empty object if
+   * none match.
+   * @example
+   * ```ts
+   * const defaultOptions = queryClient.getQueryDefaults(['posts'])
+   * ```
+   */
+  getQueryDefaults(queryKey: QueryKey): OmitKeyof<QueryObserverOptions<any, any, any, any, any>, 'queryKey'>;
+  /**
+   * Sets default options for mutations whose mutation key partially matches the given
+   * `mutationKey`. As with {@link QueryClient#setQueryDefaults}, the order of registration
+   * matters when several registered defaults match the same mutation key.
+   * @param mutationKey - The mutation key that mutation keys are partially matched against.
+   * @param options - The default options applied to matching mutations.
+   * @see {@link QueryClient#getMutationDefaults}
+   * @example
+   * ```ts
+   * queryClient.setMutationDefaults(['addPost'], { mutationFn: addPost })
+   * ```
+   */
+  setMutationDefaults<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown>(mutationKey: MutationKey, options: OmitKeyof<MutationObserverOptions<TData, TError, TVariables, TOnMutateResult>, 'mutationKey'>): void;
+  /**
+   * Returns the default options registered for mutations whose mutation key partially matches
+   * the given `mutationKey`, via {@link QueryClient#setMutationDefaults}. If multiple registered
+   * defaults match, they are merged together in registration order.
+   * @param mutationKey - The mutation key to look up registered defaults for.
+   * @returns The merged default options of every registration that matches, or an empty object if
+   * none match.
+   * @example
+   * ```ts
+   * const defaultOptions = queryClient.getMutationDefaults(['addPost'])
+   * ```
+   */
+  getMutationDefaults(mutationKey: MutationKey): OmitKeyof<MutationObserverOptions<any, any, any, any>, 'mutationKey'>;
+  /**
+   * Called by framework adapters (e.g. inside `useQuery`) to resolve the options passed by the
+   * caller into their final, defaulted form: merging the client's own `defaultOptions.queries`,
+   * then `queryClient.setQueryDefaults` for the given `queryKey`, then the caller's options on
+   * top. A no-op if the options are already defaulted (`_defaulted: true`).
+   * @param options - The query options passed by the caller.
+   * @returns The defaulted options, with `queryHash` and dependent defaults (e.g.
+   * `refetchOnReconnect`) filled in.
+   */
+  defaultQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never>(options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam> | DefaultedQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>): DefaultedQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>;
+  /**
+   * The mutation counterpart of {@link QueryClient#defaultQueryOptions}. Called by framework
+   * adapters (e.g. inside `useMutation`) to merge the client's `defaultOptions.mutations`, then
+   * `queryClient.setMutationDefaults` for the given `mutationKey`, then the caller's options on
+   * top. A no-op if the options are already defaulted (`_defaulted: true`).
+   * @param options - The mutation options passed by the caller.
+   * @returns The defaulted options.
+   */
+  defaultMutationOptions<T extends MutationOptions<any, any, any, any>>(options?: T): T;
+  /**
+   * Clears both the query cache and the mutation cache this client is connected to.
+   * @example
+   * ```ts
+   * import { QueryClient } from '@tanstack/query-core'
+   *
+   * const queryClient = new QueryClient()
+   * queryClient.clear()
+   * ```
+   */
+  clear(): void;
+}
+/** @inline */
+type RetryValue<TError> = boolean | number | ShouldRetryFunction<TError>;
+/** @inline */
+type ShouldRetryFunction<TError = DefaultError> = (failureCount: number, error: TError) => boolean;
+/** @inline */
+type RetryDelayValue<TError> = number | RetryDelayFunction<TError>;
+/** @inline */
+type RetryDelayFunction<TError = DefaultError> = (failureCount: number, error: TError) => number;
+/**
+ * Excludes `undefined` from `T`. Used where a value must be defined, such as the data type that a
+ * defined `initialData` resolves to.
+ */
+type NonUndefinedGuard<T> = T extends undefined ? never : T;
+/**
+ * Like `Omit`, but by default (`'strictly'`) `TKey` must be a key of `TObject`, so omitting a key
+ * that doesn't exist is a type error. Pass `'safely'` to allow other keys too.
+ */
+type OmitKeyof<TObject, TKey extends (TStrictly extends 'safely' ? keyof TObject | (string & Record<never, never>) | (number & Record<never, never>) | (symbol & Record<never, never>) : keyof TObject), TStrictly extends 'strictly' | 'safely' = 'strictly'> = Omit<TObject, TKey>;
+/**
+ * Replaces the types of the properties of `TTargetA` that also exist in `TTargetB` with their types
+ * in `TTargetB`. Properties that only exist in `TTargetB` are not added.
+ */
+type Override<TTargetA, TTargetB> = { [AKey in keyof TTargetA]: AKey extends keyof TTargetB ? TTargetB[AKey] : TTargetA[AKey]; };
+/**
+ * The interface to augment via declaration merging to override Query's default types repository-wide.
+ * Each field it declares replaces the default of the matching type: `defaultError` for {@link DefaultError},
+ * `queryKey` for {@link QueryKey}, `mutationKey` for {@link MutationKey}, `queryMeta` for {@link QueryMeta} and
+ * `mutationMeta` for {@link MutationMeta}. Leave a field out to keep that type's default.
+ * Augment the module you install — `@tanstack/react-query`, `@tanstack/vue-query`,
+ * `@tanstack/solid-query`, `@tanstack/svelte-query`, `@tanstack/preact-query`,
+ * `@tanstack/angular-query-experimental` or `@tanstack/lit-query`. Augmenting `@tanstack/query-core`
+ * works too and covers every adapter at once.
+ * @example
+ * ```ts
+ * // Use the module you installed — here, the React adapter.
+ * declare module '@tanstack/react-query' {
+ *   interface Register {
+ *     defaultError: AxiosError
+ *   }
+ * }
+ * ```
+ */
+interface Register {}
+/**
+ * The error type used wherever an error is not given an explicit type parameter.
+ * Defaults to `Error`; declare `defaultError` on {@link Register} to change it everywhere at once.
+ */
+type DefaultError = Register extends {
+  defaultError: infer TError;
+} ? TError : Error;
+/**
+ * The type of a query key — the serializable array that identifies a query in the cache.
+ * Defaults to `ReadonlyArray<unknown>`; declare `queryKey` on {@link Register} to narrow it repository-wide.
+ */
+type QueryKey = Register extends {
+  queryKey: infer TQueryKey;
+} ? TQueryKey extends ReadonlyArray<unknown> ? TQueryKey : TQueryKey extends Array<unknown> ? TQueryKey : ReadonlyArray<unknown> : ReadonlyArray<unknown>;
+declare const dataTagSymbol: unique symbol;
+/**
+ * The type of the `dataTagSymbol` key, under which a {@link DataTag} stores its data type.
+ */
+type dataTagSymbol = typeof dataTagSymbol;
+declare const dataTagErrorSymbol: unique symbol;
+/**
+ * The type of the `dataTagErrorSymbol` key, under which a {@link DataTag} stores its error type.
+ */
+type dataTagErrorSymbol = typeof dataTagErrorSymbol;
+declare const unsetMarker: unique symbol;
+/**
+ * The type of `unsetMarker`, the default error type of a {@link DataTag}. It marks that no error
+ * type was tagged.
+ */
+type UnsetMarker = typeof unsetMarker;
+/**
+ * Matches any type that has been tagged with {@link DataTag}, whatever its data and error types.
+ */
+type AnyDataTag = {
+  /**
+   * The data type the key was tagged with.
+   */
+  [dataTagSymbol]: any;
+  /**
+   * The error type the key was tagged with.
+   */
+  [dataTagErrorSymbol]: any;
+};
+/**
+ * Tags `TType` (usually a query key) with a data type and an optional error type, so that APIs that
+ * receive it, like `queryClient.getQueryData`, can infer them. A type that is already tagged is
+ * returned as is.
+ */
+type DataTag<TType, TValue, TError = UnsetMarker> = TType extends AnyDataTag ? TType : TType & {
+  [dataTagSymbol]: TValue;
+  [dataTagErrorSymbol]: TError;
+};
+/**
+ * An object whose `queryKey` is tagged with {@link DataTag}, like the options returned by
+ * `queryOptions`.
+ */
+type QueryKeyWithDataTag<TQueryKey extends QueryKey = QueryKey, TQueryFnData = unknown, TError = DefaultError> = {
+  /**
+   * The query key, tagged with the query's data and error types.
+   */
+  queryKey: DataTag<TQueryKey, TQueryFnData, TError>;
+};
+/**
+ * The data type tagged on a query key by {@link DataTag}, or `TQueryFnData` if the key is not
+ * tagged.
+ */
+type InferDataFromTag<TQueryFnData, TTaggedQueryKey extends QueryKey> = TTaggedQueryKey extends DataTag<unknown, infer TaggedValue, unknown> ? TaggedValue : TQueryFnData;
+/**
+ * The error type tagged on a query key by {@link DataTag}, or `TError` if the key is not tagged or
+ * was tagged without an error type.
+ */
+type InferErrorFromTag<TError, TTaggedQueryKey extends QueryKey> = TTaggedQueryKey extends DataTag<unknown, unknown, infer TaggedError> ? TaggedError extends UnsetMarker ? TError : TaggedError : TError;
+/** @inline */
+type QueryFunction<T = unknown, TQueryKey extends QueryKey = QueryKey, TPageParam = never> = (context: QueryFunctionContext<TQueryKey, TPageParam>) => T | Promise<T>;
+/** @inline */
+type StaleTime = number | 'static';
+/** @inline */
+type StaleTimeFunction<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = StaleTime | ((query: Query<TQueryFnData, TError, TData, TQueryKey>) => StaleTime);
+/** @inline */
+type QueryBooleanOption<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = boolean | ((query: Query<TQueryFnData, TError, TData, TQueryKey>) => boolean);
+/** @inline */
+type QueryPersister<T = unknown, TQueryKey extends QueryKey = QueryKey, TPageParam = never> = [TPageParam] extends [never] ? (queryFn: QueryFunction<T, TQueryKey, never>, context: QueryFunctionContext<TQueryKey>, query: Query) => T | Promise<T> : (queryFn: QueryFunction<T, TQueryKey, TPageParam>, context: QueryFunctionContext<TQueryKey>, query: Query) => T | Promise<T>;
+/**
+ * The object passed to `queryFn`: the `QueryClient`, the `queryKey`, an `AbortSignal` that aborts
+ * when the query is cancelled, the query's `meta`, and for infinite queries the `pageParam` of the
+ * page being fetched.
+ */
+type QueryFunctionContext<TQueryKey extends QueryKey = QueryKey, TPageParam = never> = [TPageParam] extends [never] ? {
+  client: QueryClient;
+  queryKey: TQueryKey;
+  signal: AbortSignal;
+  meta: QueryMeta | undefined;
+  pageParam?: unknown;
+  /**
+   * @deprecated
+   * if you want access to the direction, you can add it to the pageParam
+   */
+  direction?: unknown;
+} : {
+  client: QueryClient;
+  queryKey: TQueryKey;
+  signal: AbortSignal;
+  pageParam: TPageParam;
+  /**
+   * @deprecated
+   * if you want access to the direction, you can add it to the pageParam
+   */
+  direction: FetchDirection;
+  meta: QueryMeta | undefined;
+};
+/** @inline */
+type InitialDataFunction<T> = () => T | undefined;
+type NonFunctionGuard<T> = T extends Function ? never : T;
+/** @inline */
+type PlaceholderDataFunction<TQueryFnData = unknown, TError = DefaultError, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = (previousData: TQueryData | undefined, previousQuery: Query<TQueryFnData, TError, TQueryData, TQueryKey> | undefined) => TQueryData | undefined;
+/** @inline */
+type QueryKeyHashFunction<TQueryKey extends QueryKey> = (queryKey: TQueryKey) => string;
+/** @inline */
+type GetPreviousPageParamFunction<TPageParam, TQueryFnData = unknown> = (firstPage: TQueryFnData, allPages: Array<TQueryFnData>, firstPageParam: TPageParam, allPageParams: Array<TPageParam>) => TPageParam | undefined | null;
+/** @inline */
+type GetNextPageParamFunction<TPageParam, TQueryFnData = unknown> = (lastPage: TQueryFnData, allPages: Array<TQueryFnData>, lastPageParam: TPageParam, allPageParams: Array<TPageParam>) => TPageParam | undefined | null;
+/**
+ * The data shape of an infinite query: every page fetched so far, plus the page param each one was fetched with.
+ * `pages` and `pageParams` are index-aligned — `pageParams[i]` is the param that produced `pages[i]`.
+ */
+interface InfiniteData<TData, TPageParam = unknown> {
+  /**
+   * The data of every page fetched so far, in order.
+   */
+  pages: Array<TData>;
+  /**
+   * The page param each page was fetched with, aligned by index with `pages`.
+   */
+  pageParams: Array<TPageParam>;
+}
+/**
+ * The type of the `meta` object that can be attached to a query and read back from `queryFn`, callbacks and
+ * cache-level handlers. Defaults to `Record<string, unknown>`; declare `queryMeta` on {@link Register} to narrow it.
+ */
+type QueryMeta = Register extends {
+  queryMeta: infer TQueryMeta;
+} ? TQueryMeta extends Record<string, unknown> ? TQueryMeta : Record<string, unknown> : Record<string, unknown>;
+/** @inline */
+type NetworkMode = 'online' | 'always' | 'offlineFirst';
+/** @inline */
+type NotifyOnChangeProps = Array<keyof InfiniteQueryObserverResult> | 'all' | undefined | (() => Array<keyof InfiniteQueryObserverResult> | 'all' | undefined);
+/**
+ * The options of a query itself — its `queryKey`, `queryFn`, retries, `gcTime`, `initialData`,
+ * `meta`, and so on — shared by observers and the `QueryClient` methods that fetch queries.
+ */
+interface QueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never> {
+  /**
+   * If `false`, failed queries will not retry by default.
+   * If `true`, failed queries will retry infinitely.
+   * If set to an integer number, e.g. 3, failed queries will retry until the failed query count meets that number.
+   * If set to a function `(failureCount, error) => boolean` failed queries will retry until the function returns false.
+   *
+   * Defaults to `3` on the client and `0` on the server.
+   */
+  retry?: RetryValue<TError>;
+  /**
+   * This function receives a `retryAttempt` integer and the actual Error and returns the delay to apply before the
+   * next attempt in milliseconds.
+   *
+   * A function like `attempt => Math.min(attempt > 1 ? 2 ** attempt * 1000 : 1000, 30 * 1000)` applies exponential
+   * backoff.
+   *
+   * A function like `attempt => attempt * 1000` applies linear backoff.
+   *
+   * Defaults to a function that applies exponential backoff, capped at 30 seconds.
+   */
+  retryDelay?: RetryDelayValue<TError>;
+  /**
+   * Controls whether a query is allowed to run based on the current network connectivity.
+   * @defaultValue 'online'
+   * @see [Network Mode](https://tanstack.com/query/latest/docs/framework/react/guides/network-mode) for more information.
+   */
+  networkMode?: NetworkMode;
+  /**
+   * The time in milliseconds that unused/inactive cache data remains in memory.
+   * When a query's cache becomes unused or inactive, that cache data will be garbage collected after this duration.
+   * When different garbage collection times are specified, the longest one will be used.
+   * Setting it to `Infinity` will disable garbage collection.
+   *
+   * Defaults to `5 * 60 * 1000` (5 minutes), or `Infinity` during SSR.
+   *
+   * Note: the maximum allowed time is about 24 days, imposed by `setTimeout`'s 32-bit signed integer delay — see
+   * `timeoutManager.setTimeoutProvider` for a workaround.
+   */
+  gcTime?: number;
+  /**
+   * The function that the query will use to request data.
+   * Required, unless a default query function has been set via `queryClient.setQueryDefaults` or
+   * `queryClient.setDefaultOptions`.
+   * Receives a {@link QueryFunctionContext}.
+   * Must return a promise that will either resolve data or throw an error. The data cannot be `undefined`.
+   */
+  queryFn?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken;
+  /**
+   * This option can be used to persist the result of a query to an external storage, bypassing the need to actually
+   * call the `queryFn`. Useful for persisting a query's data across e.g. server/client boundaries.
+   */
+  persister?: QueryPersister<TQueryFnData, NoInfer<TQueryKey>, TPageParam>;
+  /**
+   * The hashed form of `queryKey`, computed with `queryKeyHashFn` (or the default hashing function otherwise). Used
+   * as the actual cache key internally.
+   */
+  queryHash?: string;
+  /**
+   * The query key to use for this query.
+   *
+   * The query key will be hashed into a stable hash. See [Query Keys](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys)
+   * for more information.
+   *
+   * The query will automatically update when this key changes (as long as `enabled` is not set to `false`).
+   */
+  queryKey?: TQueryKey;
+  /**
+   * If specified, this function is used to hash the `queryKey` to a string.
+   */
+  queryKeyHashFn?: QueryKeyHashFunction<TQueryKey>;
+  /**
+   * If set, this value will be used as the initial data for the query cache (as long as the query hasn't been
+   * created or cached yet).
+   * If set to a function, the function will be called **once** during the shared/root query initialization, and be
+   * expected to synchronously return the initial data.
+   * Initial data is considered stale by default unless a `staleTime` has been set.
+   * `initialData` **is persisted** to the cache.
+   */
+  initialData?: TData | InitialDataFunction<TData>;
+  /**
+   * If set, this value will be used as the time (in milliseconds) of when the `initialData` itself was last updated.
+   */
+  initialDataUpdatedAt?: number | (() => number | undefined);
+  /** @internal */
+  behavior?: QueryBehavior<TQueryFnData, TError, TData, TQueryKey>;
+  /**
+   * Set this to `false` to disable structural sharing between query results.
+   * Set this to a function which accepts the old and new data and returns resolved data of the same type to implement custom structural sharing logic.
+   * @defaultValue true
+   */
+  structuralSharing?: boolean | ((oldData: unknown | undefined, newData: unknown) => unknown);
+  /** @internal */
+  _defaulted?: boolean;
+  /** @internal */
+  _type?: 'infinite';
+  /**
+   * Additional payload to be stored on each query.
+   * Use this property to pass information that can be used in other places.
+   */
+  meta?: QueryMeta;
+  /**
+   * Maximum number of pages to store in the data of an infinite query.
+   */
+  maxPages?: number;
+}
+/**
+ * Holds the `initialPageParam` option that every infinite query requires.
+ */
+interface InitialPageParam<TPageParam = unknown> {
+  /**
+   * The page param to start from when an infinite query has no pages yet.
+   * It is passed to `queryFn` as `pageParam` for the first page; every page after that gets the
+   * value returned by `getNextPageParam` or `getPreviousPageParam`.
+   * It only applies while the query has no pages: once a first page exists, refetching starts from
+   * that page's own param instead.
+   */
+  initialPageParam: TPageParam;
+}
+/**
+ * The page param options of an infinite query: `initialPageParam`, and the `getNextPageParam` and
+ * `getPreviousPageParam` functions that compute the params of the pages around it.
+ */
+interface InfiniteQueryPageParamsOptions<TQueryFnData = unknown, TPageParam = unknown> extends InitialPageParam<TPageParam> {
+  /**
+   * This function can be set to automatically get the previous cursor for infinite queries.
+   * The result will also be used to determine the value of `hasPreviousPage`.
+   */
+  getPreviousPageParam?: GetPreviousPageParamFunction<TPageParam, TQueryFnData>;
+  /**
+   * This function can be set to automatically get the next cursor for infinite queries.
+   * The result will also be used to determine the value of `hasNextPage`.
+   */
+  getNextPageParam: GetNextPageParamFunction<TPageParam, TQueryFnData>;
+}
+/** @inline */
+type ThrowOnError<TQueryFnData, TError, TQueryData, TQueryKey extends QueryKey> = boolean | ((error: TError, query: Query<TQueryFnData, TError, TQueryData, TQueryKey>) => boolean);
+/**
+ * The options of a `QueryObserver`, and of the hooks built on it like `useQuery`: the
+ * {@link QueryOptions} of the query, plus options that control the observer, such as `enabled`,
+ * `staleTime`, `refetchInterval`, `select`, and `placeholderData`.
+ */
+interface QueryObserverOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never> extends WithRequired<QueryOptions<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam>, 'queryKey'> {
+  /**
+   * Set this to `false` or a function that returns `false` to disable automatic refetching when the query mounts or changes query keys.
+   * To refetch the query, use the `refetch` method returned from the `useQuery` instance.
+   * Accepts a boolean or function that returns a boolean.
+   * @defaultValue true
+   */
+  enabled?: QueryBooleanOption<TQueryFnData, TError, TQueryData, TQueryKey>;
+  /**
+   * The time in milliseconds after data is considered stale.
+   * If set to `Infinity`, the data will never be considered stale.
+   * If set to `'static'`, the data will never be considered stale.
+   * If set to a function, the function will be executed with the query to compute a `staleTime`.
+   * @defaultValue 0
+   */
+  staleTime?: StaleTimeFunction<TQueryFnData, TError, TQueryData, TQueryKey>;
+  /**
+   * If set to a number, the query will continuously refetch at this frequency in milliseconds.
+   * If set to a function, the function will be executed with the latest data and query to compute a frequency
+   * @defaultValue false
+   */
+  refetchInterval?: number | false | ((query: Query<TQueryFnData, TError, TQueryData, TQueryKey>) => number | false | undefined);
+  /**
+   * If set to `true`, the query will continue to refetch while their tab/window is in the background.
+   * @defaultValue false
+   */
+  refetchIntervalInBackground?: boolean;
+  /**
+   * If set to `true`, the query will refetch on window focus if the data is stale.
+   * If set to `false`, the query will not refetch on window focus.
+   * If set to `'always'`, the query will always refetch on window focus (except when `staleTime: 'static'` is used).
+   * If set to a function, the function will be executed with the latest data and query to compute the value.
+   * @defaultValue true
+   */
+  refetchOnWindowFocus?: boolean | 'always' | ((query: Query<TQueryFnData, TError, TQueryData, TQueryKey>) => boolean | 'always');
+  /**
+   * If set to `true`, the query will refetch on reconnect if the data is stale.
+   * If set to `false`, the query will not refetch on reconnect.
+   * If set to `'always'`, the query will always refetch on reconnect (except when `staleTime: 'static'` is used).
+   * If set to a function, the function will be executed with the latest data and query to compute the value.
+   *
+   * Defaults to `true` unless `networkMode` is `'always'`.
+   */
+  refetchOnReconnect?: boolean | 'always' | ((query: Query<TQueryFnData, TError, TQueryData, TQueryKey>) => boolean | 'always');
+  /**
+   * If set to `true`, the query will refetch on mount if the data is stale.
+   * If set to `false`, will disable additional instances of a query to trigger background refetch.
+   * If set to `'always'`, the query will always refetch on mount (except when `staleTime: 'static'` is used).
+   * If set to a function, the function will be executed with the latest data and query to compute the value
+   * @defaultValue true
+   */
+  refetchOnMount?: boolean | 'always' | ((query: Query<TQueryFnData, TError, TQueryData, TQueryKey>) => boolean | 'always');
+  /**
+   * If set to `false`, the query will not be retried on mount if it contains an error.
+   * If set to a function, the function will be executed with the query to compute the value.
+   * @defaultValue true
+   */
+  retryOnMount?: QueryBooleanOption<TQueryFnData, TError, TQueryData, TQueryKey>;
+  /**
+   * If set, the component will only re-render if any of the listed properties change.
+   * When set to `['data', 'error']`, the component will only re-render when the `data` or `error` properties change.
+   * When set to `'all'`, the component will re-render whenever a query is updated.
+   * When set to a function, the function will be executed to compute the list of properties.
+   *
+   * Defaults to `undefined`, in which case property access is tracked automatically, and the
+   * component only re-renders when one of the tracked properties changes.
+   */
+  notifyOnChangeProps?: NotifyOnChangeProps;
+  /**
+   * Whether errors should be thrown instead of setting the `error` property.
+   * If set to `true` or `suspense` is `true`, all errors will be thrown to the error boundary.
+   * If set to `false` and `suspense` is `false`, errors are returned as state.
+   * If set to a function, it will be passed the error and the query, and it should return a boolean indicating whether to show the error in an error boundary (`true`) or return the error as state (`false`).
+   * @defaultValue false
+   */
+  throwOnError?: ThrowOnError<TQueryFnData, TError, TQueryData, TQueryKey>;
+  /**
+   * This option can be used to transform or select a part of the data returned by the query function. It affects
+   * the returned `data` value, but does not affect what gets stored in the query cache.
+   * The `select` function will only run if `data` changed, or if the reference to the `select` function itself
+   * changes. To optimize, memoize the function so its reference stays stable across calls.
+   */
+  select?: (data: TQueryData) => TData;
+  /**
+   * If set to `true`, the query will suspend when `status === 'pending'`
+   * and throw errors when `status === 'error'`.
+   * @defaultValue false
+   */
+  suspense?: boolean;
+  /**
+   * If set, this value will be used as the placeholder data for this particular query observer while the query is still in the `loading` data and no initialData has been provided.
+   */
+  placeholderData?: NonFunctionGuard<TQueryData> | PlaceholderDataFunction<NonFunctionGuard<TQueryData>, TError, NonFunctionGuard<TQueryData>, TQueryKey>;
+  /** @internal */
+  _optimisticResults?: 'optimistic' | 'isRestoring';
+}
+/**
+ * Makes the `TKey` properties of `TTarget` required and non-nullable.
+ */
+type WithRequired<TTarget, TKey extends keyof TTarget> = TTarget & { [_ in TKey]: {}; };
+/**
+ * The {@link QueryObserverOptions} after `QueryClient#defaultQueryOptions` has applied the
+ * defaults, so `throwOnError`, `refetchOnReconnect`, and `queryHash` are always set.
+ */
+type DefaultedQueryObserverOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = WithRequired<QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>, 'throwOnError' | 'refetchOnReconnect' | 'queryHash'>;
+/**
+ * The options of an `InfiniteQueryObserver`: {@link QueryObserverOptions} whose query data is
+ * {@link InfiniteData}, plus the page param options.
+ */
+interface InfiniteQueryObserverOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> extends QueryObserverOptions<TQueryFnData, TError, TData, InfiniteData<TQueryFnData, TPageParam>, TQueryKey, TPageParam>, InfiniteQueryPageParamsOptions<TQueryFnData, TPageParam> {}
+/**
+ * The options of `queryClient.query`: the {@link QueryOptions} of the query, plus a `staleTime`
+ * that decides whether cached data is returned instead of fetching, and a `select` that only
+ * transforms the value the call resolves with.
+ */
+interface QueryExecuteOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never> extends WithRequired<QueryOptions<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam>, 'queryKey'> {
+  /**
+   * Not allowed here, since `initialPageParam` only applies to infinite queries.
+   */
+  initialPageParam?: never;
+  /**
+   * This option can be used to transform or select a part of the data returned by the query function. It affects
+   * the value this call resolves with, but does not affect what gets stored in the query cache.
+   */
+  select?: (data: TQueryData) => TData;
+  /**
+   * The time in milliseconds after data is considered stale.
+   * If the data is fresh it will be returned from the cache.
+   */
+  staleTime?: StaleTimeFunction<TQueryFnData, TError, TQueryData, TQueryKey>;
+}
+/** @deprecated */
+interface FetchQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never> extends WithRequired<QueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, 'queryKey'> {
+  /**
+   * Not allowed here, since `initialPageParam` only applies to infinite queries.
+   */
+  initialPageParam?: never;
+  /**
+   * The time in milliseconds after data is considered stale.
+   * If the data is fresh it will be returned from the cache.
+   */
+  staleTime?: StaleTimeFunction<TQueryFnData, TError, TData, TQueryKey>;
+}
+/** @deprecated */
+interface EnsureQueryDataOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = never> extends FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam> {
+  /**
+   * If `true`, stale cached data is returned and also refetched in the background.
+   */
+  revalidateIfStale?: boolean;
+}
+/** @deprecated */
+type EnsureInfiniteQueryDataOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> = FetchInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam> & {
+  revalidateIfStale?: boolean;
+};
+type InfiniteQueryPages<TQueryFnData = unknown, TPageParam = unknown> = {
+  pages?: never;
+} | {
+  pages: number;
+  getNextPageParam: GetNextPageParamFunction<TPageParam, TQueryFnData>;
+};
+/**
+ * The options of `queryClient.infiniteQuery`: like {@link QueryExecuteOptions}, with the
+ * `initialPageParam`, and optionally `pages` together with `getNextPageParam` to fetch that many
+ * pages at once.
+ */
+type InfiniteQueryExecuteOptions<TQueryFnData = unknown, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> = Omit<QueryExecuteOptions<TQueryFnData, TError, TData, InfiniteData<TQueryFnData, TPageParam>, TQueryKey, TPageParam>, 'initialPageParam'> & InitialPageParam<TPageParam> & InfiniteQueryPages<TQueryFnData, TPageParam>;
+/** @deprecated */
+type FetchInfiniteQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> = Omit<FetchQueryOptions<TQueryFnData, TError, InfiniteData<TData, TPageParam>, TQueryKey, TPageParam>, 'initialPageParam'> & InitialPageParam<TPageParam> & InfiniteQueryPages<TQueryFnData, TPageParam>;
+/**
+ * Options shared by the `QueryClient` and observer methods that refetch queries, controlling
+ * whether a failed refetch makes the returned promise reject.
+ */
+interface ResultOptions {
+  /**
+   * If set to `true`, the method throws if any of the underlying query refetch tasks fail.
+   * If set to `false`, failed refetches are swallowed and not surfaced to the caller.
+   * @defaultValue false
+   */
+  throwOnError?: boolean;
+}
+/**
+ * Options of the methods that refetch queries, like `refetch` and `queryClient.refetchQueries`.
+ */
+interface RefetchOptions extends ResultOptions {
+  /**
+   * If set to `true`, a currently running request will be cancelled before a new request is made
+   *
+   * If set to `false`, no refetch will be made if there is already a request running.
+   * @defaultValue true
+   */
+  cancelRefetch?: boolean;
+}
+/**
+ * The filters of `queryClient.invalidateQueries`: the {@link QueryFilters} that select the queries
+ * to invalidate, plus `refetchType` to choose which of them are refetched.
+ */
+interface InvalidateQueryFilters<TQueryKey extends QueryKey = QueryKey> extends QueryFilters<TQueryKey> {
+  /**
+   * Controls which of the matched (now-invalidated) queries are refetched in the background.
+   *
+   * - `'active'`: only queries with at least one active observer are refetched.
+   * - `'inactive'`: only queries with no active observer are refetched.
+   * - `'all'`: every matched query is refetched, active or not.
+   * - `'none'`: no query is refetched; matched queries are only marked as invalidated.
+   * @defaultValue 'active'
+   */
+  refetchType?: QueryTypeFilter | 'none';
+}
+/**
+ * The filters of `queryClient.refetchQueries`, which select the queries to refetch.
+ */
+interface RefetchQueryFilters<TQueryKey extends QueryKey = QueryKey> extends QueryFilters<TQueryKey> {}
+/**
+ * Options of `queryClient.invalidateQueries`, applied to the refetch that follows the invalidation.
+ */
+interface InvalidateOptions extends RefetchOptions {}
+/**
+ * Options of `queryClient.resetQueries`, applied to the refetch of the active queries after the
+ * reset.
+ */
+interface ResetOptions extends RefetchOptions {}
+/**
+ * Options of `fetchNextPage` on an infinite query result.
+ */
+interface FetchNextPageOptions extends ResultOptions {
+  /**
+   * If set to `true`, calling `fetchNextPage` repeatedly will invoke `queryFn` every time,
+   * whether the previous invocation has resolved or not. Also, the result from previous invocations will be ignored.
+   *
+   * If set to `false`, calling `fetchNextPage` repeatedly won't have any effect until the first invocation has resolved.
+   * @defaultValue true
+   */
+  cancelRefetch?: boolean;
+}
+/**
+ * Options of `fetchPreviousPage` on an infinite query result.
+ */
+interface FetchPreviousPageOptions extends ResultOptions {
+  /**
+   * If set to `true`, calling `fetchPreviousPage` repeatedly will invoke `queryFn` every time,
+   * whether the previous invocation has resolved or not. Also, the result from previous invocations will be ignored.
+   *
+   * If set to `false`, calling `fetchPreviousPage` repeatedly won't have any effect until the first invocation has resolved.
+   * @defaultValue true
+   */
+  cancelRefetch?: boolean;
+}
+/** @inline */
+type QueryStatus = 'pending' | 'error' | 'success';
+/** @inline */
+type FetchStatus = 'fetching' | 'paused' | 'idle';
+/**
+ * The properties shared by every state of a query result, like `data`, `error`, `status`, the
+ * `is*` flags, and `refetch`. Each `QueryObserver*Result` narrows them for one state.
+ */
+interface QueryObserverBaseResult<TData = unknown, TError = DefaultError> {
+  /**
+   * The last successfully resolved data for the query.
+   */
+  data: TData | undefined;
+  /**
+   * The timestamp for when the query most recently returned the `status` as `"success"`.
+   */
+  dataUpdatedAt: number;
+  /**
+   * The error object for the query, if an error was thrown.
+   * - Defaults to `null`.
+   */
+  error: TError | null;
+  /**
+   * The timestamp for when the query most recently returned the `status` as `"error"`.
+   */
+  errorUpdatedAt: number;
+  /**
+   * The failure count for the query.
+   * - Incremented every time the query fails.
+   * - Reset to `0` when the query succeeds.
+   */
+  failureCount: number;
+  /**
+   * The failure reason for the query retry.
+   * - Reset to `null` when the query succeeds.
+   */
+  failureReason: TError | null;
+  /**
+   * The sum of all errors.
+   */
+  errorUpdateCount: number;
+  /**
+   * A derived boolean from the `status` variable, provided for convenience.
+   * - `true` if the query attempt resulted in an error.
+   */
+  isError: boolean;
+  /**
+   * Will be `true` if the query has been fetched.
+   */
+  isFetched: boolean;
+  /**
+   * Will be `true` if the query has been fetched after the component mounted.
+   * - This property can be used to not show any previously cached data.
+   */
+  isFetchedAfterMount: boolean;
+  /**
+   * A derived boolean from the `fetchStatus` variable, provided for convenience.
+   * - `true` whenever the `queryFn` is executing, which includes initial `pending` as well as background refetch.
+   */
+  isFetching: boolean;
+  /**
+   * Is `true` whenever the first fetch for a query is in-flight.
+   * - Is the same as `isFetching && isPending`.
+   */
+  isLoading: boolean;
+  /**
+   * Will be `pending` if there's no cached data and no query attempt was finished yet.
+   */
+  isPending: boolean;
+  /**
+   * Will be `true` if the query failed while fetching for the first time.
+   */
+  isLoadingError: boolean;
+  /**
+   * @deprecated `isInitialLoading` is being deprecated in favor of `isLoading`
+   * and will be removed in the next major version.
+   */
+  isInitialLoading: boolean;
+  /**
+   * A derived boolean from the `fetchStatus` variable, provided for convenience.
+   * - The query wanted to fetch, but has been `paused`.
+   */
+  isPaused: boolean;
+  /**
+   * Will be `true` if the data shown is the placeholder data.
+   */
+  isPlaceholderData: boolean;
+  /**
+   * Will be `true` if the query failed while refetching.
+   */
+  isRefetchError: boolean;
+  /**
+   * Is `true` whenever a background refetch is in-flight, which _does not_ include initial `pending`.
+   * - Is the same as `isFetching && !isPending`.
+   */
+  isRefetching: boolean;
+  /**
+   * Will be `true` if the data in the cache is invalidated or if the data is older than the given `staleTime`.
+   */
+  isStale: boolean;
+  /**
+   * A derived boolean from the `status` variable, provided for convenience.
+   * - `true` if the query has received a response with no errors and is ready to display its data.
+   */
+  isSuccess: boolean;
+  /**
+   * `true` if this observer is enabled, `false` otherwise.
+   */
+  isEnabled: boolean;
+  /**
+   * A function to manually refetch the query.
+   */
+  refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<TData, TError>>;
+  /**
+   * The status of the query.
+   * - Will be:
+   *   - `pending` if there's no cached data and no query attempt was finished yet.
+   *   - `error` if the query attempt resulted in an error.
+   *   - `success` if the query has received a response with no errors and is ready to display its data.
+   */
+  status: QueryStatus;
+  /**
+   * The fetch status of the query.
+   * - `fetching`: Is `true` whenever the queryFn is executing, which includes initial `pending` as well as background refetch.
+   * - `paused`: The query wanted to fetch, but has been `paused`.
+   * - `idle`: The query is not fetching.
+   * - See [Network Mode](https://tanstack.com/query/latest/docs/framework/react/guides/network-mode) for more information.
+   */
+  fetchStatus: FetchStatus;
+}
+/**
+ * A query result in the `pending` state: the query has no data yet.
+ */
+interface QueryObserverPendingResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * `undefined`, since the query has no data yet.
+   */
+  data: undefined;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `true`, since there's no cached data and no query attempt has finished yet.
+   */
+  isPending: true;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'pending'`, since there's no cached data and no query attempt has finished yet.
+   */
+  status: 'pending';
+}
+/**
+ * A query result in the `pending` state while the first fetch is in flight, so `isLoading` is
+ * `true`.
+ */
+interface QueryObserverLoadingResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * `undefined`, since the query has no data yet.
+   */
+  data: undefined;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `true`, since there's no cached data and no query attempt has finished yet.
+   */
+  isPending: true;
+  /**
+   * `true`, since the first fetch is in flight.
+   */
+  isLoading: true;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'pending'`, since there's no cached data and no query attempt has finished yet.
+   */
+  status: 'pending';
+}
+/**
+ * A query result in the `error` state when the first fetch failed, so there is no data.
+ */
+interface QueryObserverLoadingErrorResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * `undefined`, since the first fetch failed before any data was cached.
+   */
+  data: undefined;
+  /**
+   * The error the first fetch failed with.
+   */
+  error: TError;
+  /**
+   * `true`, since the query is in the `error` state.
+   */
+  isError: true;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `true`, since the query failed while fetching for the first time.
+   */
+  isLoadingError: true;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'error'`, since the query attempt resulted in an error.
+   */
+  status: 'error';
+}
+/**
+ * A query result in the `error` state when a refetch failed, so the data from before is kept.
+ */
+interface QueryObserverRefetchErrorResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * The data from before the failed refetch, which is kept.
+   */
+  data: TData;
+  /**
+   * The error the refetch failed with.
+   */
+  error: TError;
+  /**
+   * `true`, since the query is in the `error` state.
+   */
+  isError: true;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `true`, since the query failed while refetching.
+   */
+  isRefetchError: true;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'error'`, since the query attempt resulted in an error.
+   */
+  status: 'error';
+}
+/**
+ * A query result in the `success` state with data from the cache.
+ */
+interface QueryObserverSuccessResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * The last successfully resolved data for the query.
+   */
+  data: TData;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `true`, since the query is in the `success` state.
+   */
+  isSuccess: true;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'success'`, since the query has received a response with no errors and is ready to display its
+   * data.
+   */
+  status: 'success';
+}
+/**
+ * A query result in the `success` state that shows `placeholderData` while the query has no data
+ * yet.
+ */
+interface QueryObserverPlaceholderResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * The `placeholderData` shown while the query has no data yet.
+   */
+  data: TData;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `true`, since the query is in the `success` state.
+   */
+  isSuccess: true;
+  /**
+   * `true`, since the data shown is the `placeholderData`.
+   */
+  isPlaceholderData: true;
+  /**
+   * `'success'`, since the query has received a response with no errors and is ready to display its
+   * data.
+   */
+  status: 'success';
+}
+/**
+ * A query result that always has `data`: the success and refetch error states.
+ */
+type DefinedQueryObserverResult<TData = unknown, TError = DefaultError> = QueryObserverRefetchErrorResult<TData, TError> | QueryObserverSuccessResult<TData, TError>;
+/**
+ * The result of a `QueryObserver`, and of the hooks built on it like `useQuery`. Narrow it by
+ * `status` or the `is*` flags to get the type of each state.
+ */
+type QueryObserverResult<TData = unknown, TError = DefaultError> = DefinedQueryObserverResult<TData, TError> | QueryObserverLoadingErrorResult<TData, TError> | QueryObserverLoadingResult<TData, TError> | QueryObserverPendingResult<TData, TError> | QueryObserverPlaceholderResult<TData, TError>;
+/**
+ * The properties shared by every state of an infinite query result: those of
+ * {@link QueryObserverBaseResult}, plus `fetchNextPage`, `fetchPreviousPage`, and the flags about
+ * them, like `hasNextPage` and `isFetchingNextPage`.
+ */
+interface InfiniteQueryObserverBaseResult<TData = unknown, TError = DefaultError> extends QueryObserverBaseResult<TData, TError> {
+  /**
+   * This function allows you to fetch the next "page" of results.
+   */
+  fetchNextPage: (options?: FetchNextPageOptions) => Promise<InfiniteQueryObserverResult<TData, TError>>;
+  /**
+   * This function allows you to fetch the previous "page" of results.
+   */
+  fetchPreviousPage: (options?: FetchPreviousPageOptions) => Promise<InfiniteQueryObserverResult<TData, TError>>;
+  /**
+   * Will be `true` if there is a next page to be fetched (known via the `getNextPageParam` option).
+   */
+  hasNextPage: boolean;
+  /**
+   * Will be `true` if there is a previous page to be fetched (known via the `getPreviousPageParam` option).
+   */
+  hasPreviousPage: boolean;
+  /**
+   * Will be `true` if the query failed while fetching the next page.
+   */
+  isFetchNextPageError: boolean;
+  /**
+   * Will be `true` while fetching the next page with `fetchNextPage`.
+   */
+  isFetchingNextPage: boolean;
+  /**
+   * Will be `true` if the query failed while fetching the previous page.
+   */
+  isFetchPreviousPageError: boolean;
+  /**
+   * Will be `true` while fetching the previous page with `fetchPreviousPage`.
+   */
+  isFetchingPreviousPage: boolean;
+}
+/**
+ * An infinite query result in the `pending` state: the query has no data yet.
+ */
+interface InfiniteQueryObserverPendingResult<TData = unknown, TError = DefaultError> extends InfiniteQueryObserverBaseResult<TData, TError> {
+  /**
+   * `undefined`, since the query has no data yet.
+   */
+  data: undefined;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `true`, since there's no cached data and no query attempt has finished yet.
+   */
+  isPending: true;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since fetching the next page didn't fail.
+   */
+  isFetchNextPageError: false;
+  /**
+   * `false`, since fetching the previous page didn't fail.
+   */
+  isFetchPreviousPageError: false;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'pending'`, since there's no cached data and no query attempt has finished yet.
+   */
+  status: 'pending';
+}
+/**
+ * An infinite query result in the `pending` state while the first fetch is in flight, so
+ * `isLoading` is `true`.
+ */
+interface InfiniteQueryObserverLoadingResult<TData = unknown, TError = DefaultError> extends InfiniteQueryObserverBaseResult<TData, TError> {
+  /**
+   * `undefined`, since the query has no data yet.
+   */
+  data: undefined;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `true`, since there's no cached data and no query attempt has finished yet.
+   */
+  isPending: true;
+  /**
+   * `true`, since the first fetch is in flight.
+   */
+  isLoading: true;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since fetching the next page didn't fail.
+   */
+  isFetchNextPageError: false;
+  /**
+   * `false`, since fetching the previous page didn't fail.
+   */
+  isFetchPreviousPageError: false;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'pending'`, since there's no cached data and no query attempt has finished yet.
+   */
+  status: 'pending';
+}
+/**
+ * An infinite query result in the `error` state when the first fetch failed, so there is no data.
+ */
+interface InfiniteQueryObserverLoadingErrorResult<TData = unknown, TError = DefaultError> extends InfiniteQueryObserverBaseResult<TData, TError> {
+  /**
+   * `undefined`, since the first fetch failed before any data was cached.
+   */
+  data: undefined;
+  /**
+   * The error the first fetch failed with.
+   */
+  error: TError;
+  /**
+   * `true`, since the query is in the `error` state.
+   */
+  isError: true;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `true`, since the query failed while fetching for the first time.
+   */
+  isLoadingError: true;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since fetching the next page didn't fail.
+   */
+  isFetchNextPageError: false;
+  /**
+   * `false`, since fetching the previous page didn't fail.
+   */
+  isFetchPreviousPageError: false;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'error'`, since the query attempt resulted in an error.
+   */
+  status: 'error';
+}
+/**
+ * An infinite query result in the `error` state when a refetch failed, so the data from before is
+ * kept.
+ */
+interface InfiniteQueryObserverRefetchErrorResult<TData = unknown, TError = DefaultError> extends InfiniteQueryObserverBaseResult<TData, TError> {
+  /**
+   * The data from before the failed refetch, which is kept.
+   */
+  data: TData;
+  /**
+   * The error the refetch failed with.
+   */
+  error: TError;
+  /**
+   * `true`, since the query is in the `error` state.
+   */
+  isError: true;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `true`, since the query failed while refetching.
+   */
+  isRefetchError: true;
+  /**
+   * `false`, since the query isn't in the `success` state.
+   */
+  isSuccess: false;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'error'`, since the query attempt resulted in an error.
+   */
+  status: 'error';
+}
+/**
+ * An infinite query result in the `success` state with data from the cache.
+ */
+interface InfiniteQueryObserverSuccessResult<TData = unknown, TError = DefaultError> extends InfiniteQueryObserverBaseResult<TData, TError> {
+  /**
+   * The last successfully resolved data for the query.
+   */
+  data: TData;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `false`, since fetching the next page didn't fail.
+   */
+  isFetchNextPageError: false;
+  /**
+   * `false`, since fetching the previous page didn't fail.
+   */
+  isFetchPreviousPageError: false;
+  /**
+   * `true`, since the query is in the `success` state.
+   */
+  isSuccess: true;
+  /**
+   * `false`, since the data shown isn't the `placeholderData`.
+   */
+  isPlaceholderData: false;
+  /**
+   * `'success'`, since the query has received a response with no errors and is ready to display its
+   * data.
+   */
+  status: 'success';
+}
+/**
+ * An infinite query result in the `success` state that shows `placeholderData` while the query has
+ * no data yet.
+ */
+interface InfiniteQueryObserverPlaceholderResult<TData = unknown, TError = DefaultError> extends InfiniteQueryObserverBaseResult<TData, TError> {
+  /**
+   * The `placeholderData` shown while the query has no data yet.
+   */
+  data: TData;
+  /**
+   * `false`, since the query isn't in the `error` state.
+   */
+  isError: false;
+  /**
+   * `null`, since the query isn't in the `error` state.
+   */
+  error: null;
+  /**
+   * `false`, since the query has data or a query attempt has finished.
+   */
+  isPending: false;
+  /**
+   * `false`, since the first fetch isn't in flight.
+   */
+  isLoading: false;
+  /**
+   * `false`, since the query didn't fail while fetching for the first time.
+   */
+  isLoadingError: false;
+  /**
+   * `false`, since the query didn't fail while refetching.
+   */
+  isRefetchError: false;
+  /**
+   * `true`, since the query is in the `success` state.
+   */
+  isSuccess: true;
+  /**
+   * `true`, since the data shown is the `placeholderData`.
+   */
+  isPlaceholderData: true;
+  /**
+   * `false`, since fetching the next page didn't fail.
+   */
+  isFetchNextPageError: false;
+  /**
+   * `false`, since fetching the previous page didn't fail.
+   */
+  isFetchPreviousPageError: false;
+  /**
+   * `'success'`, since the query has received a response with no errors and is ready to display its
+   * data.
+   */
+  status: 'success';
+}
+/**
+ * An infinite query result that always has `data`: the success and refetch error states.
+ */
+type DefinedInfiniteQueryObserverResult<TData = unknown, TError = DefaultError> = InfiniteQueryObserverRefetchErrorResult<TData, TError> | InfiniteQueryObserverSuccessResult<TData, TError>;
+/**
+ * The result of an `InfiniteQueryObserver`, and of the hooks built on it like `useInfiniteQuery`.
+ * Narrow it by `status` or the `is*` flags to get the type of each state.
+ */
+type InfiniteQueryObserverResult<TData = unknown, TError = DefaultError> = DefinedInfiniteQueryObserverResult<TData, TError> | InfiniteQueryObserverLoadingErrorResult<TData, TError> | InfiniteQueryObserverLoadingResult<TData, TError> | InfiniteQueryObserverPendingResult<TData, TError> | InfiniteQueryObserverPlaceholderResult<TData, TError>;
+/**
+ * The type of a mutation key — the serializable array used to identify and filter mutations.
+ * Defaults to `ReadonlyArray<unknown>`; declare `mutationKey` on {@link Register} to narrow it repository-wide.
+ */
+type MutationKey = Register extends {
+  mutationKey: infer TMutationKey;
+} ? TMutationKey extends ReadonlyArray<unknown> ? TMutationKey : TMutationKey extends Array<unknown> ? TMutationKey : ReadonlyArray<unknown> : ReadonlyArray<unknown>;
+/** @inline */
+type MutationStatus = 'idle' | 'pending' | 'success' | 'error';
+/**
+ * Groups mutations so they run one after another instead of in parallel.
+ * Mutations that share the same `id` form a queue: while one is running, the others wait in `isPaused: true`
+ * state and resume automatically when their turn comes. Mutations with no scope always run in parallel.
+ */
+type MutationScope = {
+  /**
+   * The scope's identifier. Mutations with the same `id` run one after another.
+   */
+  id: string;
+};
+/**
+ * The type of the `meta` object that can be attached to a mutation and read back from `mutationFn`, callbacks and
+ * cache-level handlers. Defaults to `Record<string, unknown>`; declare `mutationMeta` on {@link Register} to narrow it.
+ */
+type MutationMeta = Register extends {
+  mutationMeta: infer TMutationMeta;
+} ? TMutationMeta extends Record<string, unknown> ? TMutationMeta : Record<string, unknown> : Record<string, unknown>;
+/**
+ * The object passed to `mutationFn` and the mutation callbacks: the `QueryClient`, the mutation's
+ * `meta`, and its `mutationKey`.
+ */
+type MutationFunctionContext = {
+  /**
+   * The `QueryClient` the mutation runs in.
+   */
+  client: QueryClient;
+  /**
+   * The `meta` of the mutation options.
+   */
+  meta: MutationMeta | undefined;
+  /**
+   * The `mutationKey` of the mutation options, if set.
+   */
+  mutationKey?: MutationKey;
+};
+/** @inline */
+type MutationFunction<TData = unknown, TVariables = unknown> = (variables: TVariables, context: MutationFunctionContext) => Promise<TData>;
+/**
+ * The options of a mutation: its `mutationFn`, `mutationKey`, callbacks, retries, `scope`, and so
+ * on.
+ */
+interface MutationOptions<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> {
+  /**
+   * The function that performs the asynchronous task this mutation runs.
+   * Required, unless a default mutation function has been set for the matching `mutationKey` via
+   * `queryClient.setMutationDefaults`.
+   * Receives the `variables` passed to `mutate`, and a {@link MutationFunctionContext} holding the
+   * `QueryClient`, the `mutationKey` and `meta`.
+   * Must return a promise that resolves the mutation's data.
+   */
+  mutationFn?: MutationFunction<TData, TVariables>;
+  /**
+   * The key to use for this mutation. Optional, but required to inherit defaults registered with
+   * `queryClient.setMutationDefaults`, and to match this mutation with `useMutationState` or
+   * `queryClient.isMutating`.
+   */
+  mutationKey?: MutationKey;
+  /**
+   * This function fires before the mutation function runs, and receives the same variables.
+   * Useful for optimistic updates applied in the hope that the mutation succeeds.
+   * The value it returns is passed to `onSuccess`, `onError` and `onSettled` as `onMutateResult`,
+   * which is where an optimistic update is usually rolled back.
+   * If a promise is returned, it is awaited before the mutation function runs.
+   */
+  onMutate?: (variables: TVariables, context: MutationFunctionContext) => Promise<TOnMutateResult> | TOnMutateResult;
+  /**
+   * This function fires when the mutation succeeds, and is passed the mutation's result.
+   * If a promise is returned, it is awaited before `onSettled` runs.
+   */
+  onSuccess?: (data: TData, variables: TVariables, onMutateResult: TOnMutateResult, context: MutationFunctionContext) => Promise<unknown> | unknown;
+  /**
+   * This function fires when the mutation encounters an error, and is passed the error.
+   * If a promise is returned, it is awaited before `onSettled` runs.
+   */
+  onError?: (error: TError, variables: TVariables, onMutateResult: TOnMutateResult | undefined, context: MutationFunctionContext) => Promise<unknown> | unknown;
+  /**
+   * This function fires when the mutation either succeeds or errors, and is passed either the data
+   * or the error.
+   * If a promise is returned, it is awaited before the mutation settles.
+   */
+  onSettled?: (data: TData | undefined, error: TError | null, variables: TVariables, onMutateResult: TOnMutateResult | undefined, context: MutationFunctionContext) => Promise<unknown> | unknown;
+  /**
+   * If `false`, failed mutations will not retry by default.
+   * If `true`, failed mutations will retry infinitely.
+   * If set to an integer number, e.g. 3, failed mutations will retry until the failed mutation count meets that number.
+   * If set to a function `(failureCount, error) => boolean` failed mutations will retry until the function returns false.
+   * @defaultValue 0
+   */
+  retry?: RetryValue<TError>;
+  /**
+   * This function receives a `retryAttempt` integer and the actual Error and returns the delay to apply before the
+   * next attempt in milliseconds.
+   *
+   * Defaults to a function that applies exponential backoff, capped at 30 seconds.
+   */
+  retryDelay?: RetryDelayValue<TError>;
+  /**
+   * Controls whether a mutation is allowed to run based on the current network connectivity.
+   * @defaultValue 'online'
+   * @see [Network Mode](https://tanstack.com/query/latest/docs/framework/react/guides/network-mode) for more information.
+   */
+  networkMode?: NetworkMode;
+  /**
+   * The time in milliseconds that an unused/inactive mutation remains in memory before it is
+   * garbage collected.
+   *
+   * Defaults to `5 * 60 * 1000` (5 minutes), or `Infinity` during SSR.
+   */
+  gcTime?: number;
+  /** @internal */
+  _defaulted?: boolean;
+  /**
+   * Additional payload to be stored on the mutation cache entry.
+   * Use it to pass information that can be read wherever the `mutation` is available, such as the
+   * `onError` and `onSuccess` callbacks of the `MutationCache`.
+   */
+  meta?: MutationMeta;
+  /**
+   * Controls whether this mutation runs alongside others or waits its turn.
+   * Mutations sharing the same `scope.id` run serially, in the order they were started.
+   * Without a scope, a mutation runs as soon as it is triggered.
+   */
+  scope?: MutationScope;
+}
+/**
+ * The options of a `MutationObserver`, and of the hooks built on it like `useMutation`: the
+ * {@link MutationOptions}, plus `throwOnError`.
+ */
+interface MutationObserverOptions<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends MutationOptions<TData, TError, TVariables, TOnMutateResult> {
+  /**
+   * Whether errors should be thrown instead of setting the `error` property.
+   * If set to `true`, all errors will be thrown to the nearest error boundary.
+   * If set to a function, it will be passed the error and should return a boolean indicating whether to throw the
+   * error (`true`) or return it as state (`false`).
+   * @defaultValue false
+   */
+  throwOnError?: boolean | ((error: TError) => boolean);
+}
+/**
+ * The callbacks that can be passed to `mutate` for a single call. They run after the callbacks of
+ * the mutation options.
+ */
+interface MutateOptions<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> {
+  /**
+   * Called when the mutation of this call succeeds, after the `onSuccess` of the mutation options.
+   */
+  onSuccess?: (data: TData, variables: TVariables, onMutateResult: TOnMutateResult | undefined, context: MutationFunctionContext) => void;
+  /**
+   * Called when the mutation of this call fails, after the `onError` of the mutation options.
+   */
+  onError?: (error: TError, variables: TVariables, onMutateResult: TOnMutateResult | undefined, context: MutationFunctionContext) => void;
+  /**
+   * Called when the mutation of this call succeeds or fails, after the `onSettled` of the mutation
+   * options.
+   */
+  onSettled?: (data: TData | undefined, error: TError | null, variables: TVariables, onMutateResult: TOnMutateResult | undefined, context: MutationFunctionContext) => void;
+}
+/**
+ * The parameters of {@link MutateFunction}: `variables`, optional when `TVariables` accepts
+ * `undefined`, and the {@link MutateOptions} for that call.
+ */
+type MutateFunctionRest<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> = undefined extends TVariables ? [variables?: TVariables, options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>] : [variables: TVariables, options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>];
+/**
+ * The `mutate` function of a `MutationObserver`: runs the mutation with the given variables and
+ * resolves with its data.
+ */
+type MutateFunction<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> = (...rest: MutateFunctionRest<TData, TError, TVariables, TOnMutateResult>) => Promise<TData>;
+/**
+ * The properties shared by every state of a mutation result, like `data`, `error`, `variables`,
+ * `status`, the `is*` flags, `mutate`, and `reset`.
+ */
+interface MutationObserverBaseResult<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends MutationState<TData, TError, TVariables, TOnMutateResult> {
+  /**
+   * The last successfully resolved data for the mutation.
+   */
+  data: TData | undefined;
+  /**
+   * The variables object passed to the `mutationFn`.
+   */
+  variables: TVariables | undefined;
+  /**
+   * The error object for the mutation, if an error was encountered.
+   * - Defaults to `null`.
+   */
+  error: TError | null;
+  /**
+   * A boolean variable derived from `status`.
+   * - `true` if the last mutation attempt resulted in an error.
+   */
+  isError: boolean;
+  /**
+   * A boolean variable derived from `status`.
+   * - `true` if the mutation is in its initial state prior to executing.
+   */
+  isIdle: boolean;
+  /**
+   * A boolean variable derived from `status`.
+   * - `true` if the mutation is currently executing.
+   */
+  isPending: boolean;
+  /**
+   * A boolean variable derived from `status`.
+   * - `true` if the last mutation attempt was successful.
+   */
+  isSuccess: boolean;
+  /**
+   * The status of the mutation.
+   * - Will be:
+   *   - `idle` initial status prior to the mutation function executing.
+   *   - `pending` if the mutation is currently executing.
+   *   - `error` if the last mutation attempt resulted in an error.
+   *   - `success` if the last mutation attempt was successful.
+   */
+  status: MutationStatus;
+  /**
+   * The mutation function you can call with variables to trigger the mutation and optionally hooks on additional callback options.
+   * @param variables - The variables object to pass to the `mutationFn`.
+   * @param options.onSuccess - This function will fire when the mutation is successful and will be passed the mutation's result.
+   * @param options.onError - This function will fire if the mutation encounters an error and will be passed the error.
+   * @param options.onSettled - This function will fire when the mutation is either successfully fetched or encounters an error and be passed either the data or error.
+   * @remarks
+   * - If you make multiple requests, `onSuccess` will fire only after the latest call you've made.
+   * - All the callback functions (`onSuccess`, `onError`, `onSettled`) are void functions, and the returned value will be ignored.
+   */
+  mutate: MutateFunction<TData, TError, TVariables, TOnMutateResult>;
+  /**
+   * A function to clean the mutation internal state (i.e., it resets the mutation to its initial state).
+   */
+  reset: () => void;
+}
+/**
+ * A mutation result in the `idle` state: the mutation hasn't run yet, or was reset.
+ */
+interface MutationObserverIdleResult<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends MutationObserverBaseResult<TData, TError, TVariables, TOnMutateResult> {
+  /**
+   * `undefined`, since the mutation hasn't run.
+   */
+  data: undefined;
+  /**
+   * `undefined`, since the mutation hasn't run.
+   */
+  variables: undefined;
+  /**
+   * `null`, since the mutation hasn't failed.
+   */
+  error: null;
+  /**
+   * `false`, since the mutation hasn't failed.
+   */
+  isError: false;
+  /**
+   * `true`, since the mutation hasn't run yet or was reset.
+   */
+  isIdle: true;
+  /**
+   * `false`, since the mutation isn't running.
+   */
+  isPending: false;
+  /**
+   * `false`, since the mutation hasn't succeeded.
+   */
+  isSuccess: false;
+  /**
+   * `'idle'`, since the mutation hasn't run yet or was reset.
+   */
+  status: 'idle';
+}
+/**
+ * A mutation result in the `pending` state while the mutation runs.
+ */
+interface MutationObserverLoadingResult<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends MutationObserverBaseResult<TData, TError, TVariables, TOnMutateResult> {
+  /**
+   * `undefined`, since the mutation hasn't succeeded.
+   */
+  data: undefined;
+  /**
+   * The variables passed to `mutate` for this mutation.
+   */
+  variables: TVariables;
+  /**
+   * `null`, since the mutation hasn't failed.
+   */
+  error: null;
+  /**
+   * `false`, since the mutation hasn't failed.
+   */
+  isError: false;
+  /**
+   * `false`, since the mutation has run.
+   */
+  isIdle: false;
+  /**
+   * `true`, since the mutation is running.
+   */
+  isPending: true;
+  /**
+   * `false`, since the mutation hasn't succeeded.
+   */
+  isSuccess: false;
+  /**
+   * `'pending'`, since the mutation is running.
+   */
+  status: 'pending';
+}
+/**
+ * A mutation result in the `error` state after the mutation failed.
+ */
+interface MutationObserverErrorResult<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends MutationObserverBaseResult<TData, TError, TVariables, TOnMutateResult> {
+  /**
+   * `undefined`, since the mutation hasn't succeeded.
+   */
+  data: undefined;
+  /**
+   * The error the mutation failed with.
+   */
+  error: TError;
+  /**
+   * The variables passed to `mutate` for this mutation.
+   */
+  variables: TVariables;
+  /**
+   * `true`, since the mutation failed.
+   */
+  isError: true;
+  /**
+   * `false`, since the mutation has run.
+   */
+  isIdle: false;
+  /**
+   * `false`, since the mutation isn't running.
+   */
+  isPending: false;
+  /**
+   * `false`, since the mutation hasn't succeeded.
+   */
+  isSuccess: false;
+  /**
+   * `'error'`, since the mutation failed.
+   */
+  status: 'error';
+}
+/**
+ * A mutation result in the `success` state after the mutation succeeded.
+ */
+interface MutationObserverSuccessResult<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends MutationObserverBaseResult<TData, TError, TVariables, TOnMutateResult> {
+  /**
+   * The data the mutation resolved with.
+   */
+  data: TData;
+  /**
+   * `null`, since the mutation hasn't failed.
+   */
+  error: null;
+  /**
+   * The variables passed to `mutate` for this mutation.
+   */
+  variables: TVariables;
+  /**
+   * `false`, since the mutation hasn't failed.
+   */
+  isError: false;
+  /**
+   * `false`, since the mutation has run.
+   */
+  isIdle: false;
+  /**
+   * `false`, since the mutation isn't running.
+   */
+  isPending: false;
+  /**
+   * `true`, since the mutation succeeded.
+   */
+  isSuccess: true;
+  /**
+   * `'success'`, since the mutation succeeded.
+   */
+  status: 'success';
+}
+/**
+ * The result of a `MutationObserver`, and of the hooks built on it like `useMutation`. Narrow it by
+ * `status` or the `is*` flags to get the type of each state.
+ */
+type MutationObserverResult<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> = MutationObserverIdleResult<TData, TError, TVariables, TOnMutateResult> | MutationObserverLoadingResult<TData, TError, TVariables, TOnMutateResult> | MutationObserverErrorResult<TData, TError, TVariables, TOnMutateResult> | MutationObserverSuccessResult<TData, TError, TVariables, TOnMutateResult>;
+/**
+ * The options of `new QueryClient()`: the `queryCache` and `mutationCache` to use, and the
+ * `defaultOptions` for its queries and mutations.
+ */
+interface QueryClientConfig {
+  /** The query cache this client is connected to. A new `QueryCache` is created if not provided. */
+  queryCache?: QueryCache;
+  /**
+   * The mutation cache this client is connected to. A new `MutationCache` is created if not
+   * provided.
+   */
+  mutationCache?: MutationCache;
+  /** Default options for all queries and mutations created through this client. */
+  defaultOptions?: DefaultOptions;
+}
+/**
+ * The default options of a `QueryClient`, applied to every query (`queries`), mutation
+ * (`mutations`), `hydrate`, and `dehydrate` call unless overridden.
+ */
+interface DefaultOptions<TError = DefaultError> {
+  /** Default options applied to every query, unless overridden per-query. */
+  queries?: OmitKeyof<QueryObserverOptions<unknown, TError>, 'suspense' | 'queryKey'>;
+  /** Default options applied to every mutation, unless overridden per-mutation. */
+  mutations?: MutationObserverOptions<unknown, TError, unknown, unknown>;
+  /** Default options used when hydrating queries and mutations; see {@link HydrateOptions}. */
+  hydrate?: HydrateOptions['defaultOptions'];
+  /** Default options used when dehydrating the client's caches; see {@link DehydrateOptions}. */
+  dehydrate?: DehydrateOptions;
+}
+/**
+ * Options for cancelling an in-flight fetch, e.g. via `query.cancel()`.
+ * They are carried on the {@link CancelledError} that the cancelled fetch rejects with.
+ */
+interface CancelOptions {
+  /**
+   * If `true`, the query goes back to the state it had before the fetch started, instead of getting
+   * the cancellation error.
+   */
+  revert?: boolean;
+  /**
+   * If `true`, the cancellation error isn't surfaced, e.g. because another fetch replaces the
+   * cancelled one.
+   */
+  silent?: boolean;
+}
+/**
+ * Options for writing data into the cache, e.g. via `queryClient.setQueryData()`.
+ * `updatedAt` overrides the timestamp the data is recorded with, which is what staleness is measured from;
+ * omit it to use the current time.
+ */
+interface SetDataOptions {
+  /**
+   * The timestamp to record the data with, instead of the current time. Staleness is measured from
+   * it.
+   */
+  updatedAt?: number;
+}
+/** @inline */
+type NotifyEventType = 'added' | 'removed' | 'updated' | 'observerAdded' | 'observerRemoved' | 'observerResultsUpdated' | 'observerOptionsUpdated';
+/**
+ * The base shape of the events that the query and mutation caches send to their listeners.
+ */
+interface NotifyEvent {
+  /**
+   * The kind of event, e.g. `'added'`, `'removed'`, or `'updated'`.
+   */
+  type: NotifyEventType;
+}
+type TransformerFn = (data: any) => any;
+/**
+ * Options for `dehydrate`, controlling which queries/mutations are included in the resulting `DehydratedState` and
+ * how their data/errors are transformed before being serialized (e.g. for embedding in server-rendered markup).
+ */
+interface DehydrateOptions {
+  /** Transforms a query's `data` before it is dehydrated. Useful for non-JSON-serializable data. */
+  serializeData?: TransformerFn;
+  /** Predicate to decide whether a given `Mutation` should be dehydrated. Defaults to `defaultShouldDehydrateMutation`. */
+  shouldDehydrateMutation?: (mutation: Mutation) => boolean;
+  /** Predicate to decide whether a given `Query` should be dehydrated. Defaults to `defaultShouldDehydrateQuery`. */
+  shouldDehydrateQuery?: (query: Query) => boolean;
+  /**
+   * Predicate to decide whether a query's error should be redacted before dehydration. Errors are redacted
+   * (replaced with a generic `Error('redacted')`) unless this function is provided and returns `false` for the
+   * given error, in which case the original error is kept.
+   */
+  shouldRedactErrors?: (error: unknown) => boolean;
+}
+/**
+ * Options for `hydrate`, controlling the default options applied to queries/mutations restored from a
+ * `DehydratedState`, and how to reverse any transformation applied by `DehydrateOptions.serializeData`.
+ */
+interface HydrateOptions {
+  /** Options applied to the queries and mutations restored from the dehydrated state. */
+  defaultOptions?: {
+    /** Transforms a query's `data` after it is read from the dehydrated state, reversing `serializeData`. */
+    deserializeData?: TransformerFn;
+    /** Default options merged into every query restored from the dehydrated state. */
+    queries?: QueryOptions;
+    /** Default options merged into every mutation restored from the dehydrated state. */
+    mutations?: MutationOptions<unknown, DefaultError, unknown, unknown>;
+  };
+}
+//#endregion
+//#region @tanstack/react-query/build/modern/QueryClientProvider.d.ts
+/**
+ * The `useQueryClient` hook returns the current `QueryClient` instance.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The current `QueryClient` instance.
+ * @throws {Error} If no `queryClient` argument is passed and no `QueryClientProvider` is found in the
+ * component tree.
+ */
+declare const useQueryClient: (queryClient?: QueryClient) => QueryClient;
+//#endregion
+//#region @tanstack/react-query/build/modern/types.d.ts
+/**
+ * The options shared by `useQuery` and `useSuspenseQuery`. Extends {@link QueryObserverOptions} from
+ * `@tanstack/query-core` with the `react-query`-specific `subscribed` option.
+ * @template TQueryFnData - The type your `queryFn` resolves to.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs. Defaults to `TQueryFnData` when no
+ * `select` is used.
+ * @template TQueryData - The type of the data actually held in the query cache — the input to `select` and
+ * `placeholderData`. Defaults to, and is usually the same as, `TQueryFnData`.
+ * @template TQueryKey - The type of your `queryKey`.
+ */
+interface UseBaseQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> extends QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey> {
+  /**
+   * Set this to `false` to unsubscribe this observer from updates to the query cache.
+   * @defaultValue true
+   */
+  subscribed?: boolean;
+}
+/**
+ * The options accepted by `useQuery`. Same as {@link UseBaseQueryOptions}, minus `suspense` (which
+ * `react-query` derives from which hook you call rather than exposing as an option).
+ * @template TQueryFnData - The type your `queryFn` resolves to.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs. Defaults to `TQueryFnData` when no
+ * `select` is used.
+ * @template TQueryKey - The type of your `queryKey`.
+ */
+interface UseQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> extends OmitKeyof<UseBaseQueryOptions<TQueryFnData, TError, TData, TQueryFnData, TQueryKey>, 'suspense'> {}
+/**
+ * The options accepted by `useInfiniteQuery`. Extends {@link InfiniteQueryObserverOptions} from
+ * `@tanstack/query-core` with the `react-query`-specific `subscribed` option, minus `suspense` (which
+ * `react-query` derives from which hook you call rather than exposing as an option).
+ * @template TQueryFnData - The type of a single page, as your `queryFn` resolves it.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs — defaults to `InfiniteData<TQueryFnData>`,
+ * the shape of all fetched pages plus their page params.
+ * @template TQueryKey - The type of your `queryKey`.
+ * @template TPageParam - The type of the parameter passed to `queryFn` to fetch a given page.
+ */
+interface UseInfiniteQueryOptions<TQueryFnData = unknown, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> extends OmitKeyof<InfiniteQueryObserverOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, 'suspense'> {
+  /**
+   * Set this to `false` to unsubscribe this observer from updates to the query cache.
+   * @defaultValue true
+   */
+  subscribed?: boolean;
+}
+/**
+ * The result of `useQuery` when `initialData` isn't set — `data` may be `undefined` while the query is
+ * `pending`. Re-exports {@link QueryObserverResult} from `@tanstack/query-core`. `useInfiniteQuery` returns
+ * {@link UseInfiniteQueryResult} instead.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TError - The type of errors your `queryFn` may throw.
+ */
+type UseBaseQueryResult<TData = unknown, TError = DefaultError> = QueryObserverResult<TData, TError>;
+/**
+ * The result of `useQuery`. Same as {@link UseBaseQueryResult}.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TError - The type of errors your `queryFn` may throw.
+ */
+type UseQueryResult<TData = unknown, TError = DefaultError> = UseBaseQueryResult<TData, TError>;
+/**
+ * The result of `useQuery` when `initialData` is set, or of `useSuspenseQuery` before the `isPlaceholderData`
+ * omission — `data` is never `undefined` (unless a `select` changes `TData` to include `undefined`).
+ * Re-exports {@link DefinedQueryObserverResult} from `@tanstack/query-core`.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TError - The type of errors your `queryFn` may throw.
+ */
+type DefinedUseQueryResult<TData = unknown, TError = DefaultError> = DefinedQueryObserverResult<TData, TError>;
+/**
+ * The result of `useInfiniteQuery` when `initialData` isn't set — `data` may be `undefined` while the query is
+ * `pending`. Re-exports {@link InfiniteQueryObserverResult} from `@tanstack/query-core`.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TError - The type of errors your `queryFn` may throw.
+ */
+type UseInfiniteQueryResult<TData = unknown, TError = DefaultError> = InfiniteQueryObserverResult<TData, TError>;
+/**
+ * The result of `useInfiniteQuery` when `initialData` is set — `data` is never `undefined` (unless a
+ * `select` changes `TData` to include `undefined`). Re-exports {@link DefinedInfiniteQueryObserverResult}
+ * from `@tanstack/query-core`.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TError - The type of errors your `queryFn` may throw.
+ */
+type DefinedUseInfiniteQueryResult<TData = unknown, TError = DefaultError> = DefinedInfiniteQueryObserverResult<TData, TError>;
+/**
+ * The options accepted by `useMutation`. Same as {@link MutationObserverOptions} from `@tanstack/query-core`,
+ * minus the internal `_defaulted` flag.
+ * @template TData - The type your mutation function resolves to.
+ * @template TError - The type of errors your mutation function may throw.
+ * @template TVariables - The type of the variable passed to `mutate`/`mutateAsync`.
+ * @template TOnMutateResult - The type returned by `onMutate`, passed to `onSuccess`/`onError`/`onSettled` as
+ * their `onMutateResult` parameter — useful for optimistic-update rollback data.
+ */
+interface UseMutationOptions<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> extends OmitKeyof<MutationObserverOptions<TData, TError, TVariables, TOnMutateResult>, '_defaulted'> {}
+/**
+ * The type of `mutate`, as returned by `useMutation`. Forwards the variables (and an optional per-call
+ * `onSuccess`/`onError`/`onSettled`) to the underlying `mutate` call. Fire-and-forget — errors are surfaced
+ * through the mutation result instead of being thrown by `mutate`, unless `throwOnError` makes `useMutation`
+ * rethrow them.
+ * @template TData - The type your mutation function resolves to.
+ * @template TError - The type of errors your mutation function may throw.
+ * @template TVariables - The type of the variable passed to `mutate`.
+ * @template TOnMutateResult - The type returned by `onMutate`, passed to `onSuccess`/`onError`/`onSettled` as
+ * their `onMutateResult` parameter — useful for optimistic-update rollback data.
+ */
+type UseMutateFunction<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> = (...args: Parameters<MutateFunction<TData, TError, TVariables, TOnMutateResult>>) => void;
+/**
+ * The type of `mutateAsync`, as returned by `useMutation`. Similar to {@link UseMutateFunction}, but returns a
+ * promise which can be awaited.
+ * @template TData - The type your mutation function resolves to.
+ * @template TError - The type of errors your mutation function may throw.
+ * @template TVariables - The type of the variable passed to `mutateAsync`.
+ * @template TOnMutateResult - The type returned by `onMutate`, passed to `onSuccess`/`onError`/`onSettled` as
+ * their `onMutateResult` parameter — useful for optimistic-update rollback data.
+ */
+type UseMutateAsyncFunction<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown> = MutateFunction<TData, TError, TVariables, TOnMutateResult>;
+/**
+ * The result of `useMutation`. Same as {@link MutationObserverResult} from `@tanstack/query-core`, with
+ * `mutate` narrowed to the fire-and-forget {@link UseMutateFunction} signature, plus the added `mutateAsync`.
+ * @template TData - The type your mutation function resolves to.
+ * @template TError - The type of errors your mutation function may throw.
+ * @template TVariables - The type of the variable passed to `mutate`/`mutateAsync`.
+ * @template TOnMutateResult - The type returned by `onMutate`, passed to `onSuccess`/`onError`/`onSettled` as
+ * their `onMutateResult` parameter — useful for optimistic-update rollback data.
+ */
+type UseBaseMutationResult<TData = unknown, TError = DefaultError, TVariables = unknown, TOnMutateResult = unknown> = Override<MutationObserverResult<TData, TError, TVariables, TOnMutateResult>, {
+  mutate: UseMutateFunction<TData, TError, TVariables, TOnMutateResult>;
+}> & {
+  /**
+   * Similar to `mutate`, but returns a promise which can be awaited.
+   */
+  mutateAsync: UseMutateAsyncFunction<TData, TError, TVariables, TOnMutateResult>;
+};
+/**
+ * The result of `useMutation`. Same as {@link UseBaseMutationResult}.
+ * @template TData - The type your mutation function resolves to.
+ * @template TError - The type of errors your mutation function may throw.
+ * @template TVariables - The type of the variable passed to `mutate`/`mutateAsync`.
+ * @template TOnMutateResult - The type returned by `onMutate`, passed to `onSuccess`/`onError`/`onSettled` as
+ * their `onMutateResult` parameter — useful for optimistic-update rollback data.
+ */
+type UseMutationResult<TData = unknown, TError = DefaultError, TVariables = unknown, TOnMutateResult = unknown> = UseBaseMutationResult<TData, TError, TVariables, TOnMutateResult>;
+//#endregion
+//#region @tanstack/react-query/build/modern/queryOptions.d.ts
+/**
+ * The options accepted by the `queryOptions` overload selected when `initialData` is omitted, may be
+ * `undefined`, or is a function that may return `undefined` — `data` may be `undefined` while the query is
+ * `pending`.
+ * @template TQueryFnData - The type your `queryFn` resolves to.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TQueryKey - The type of your `queryKey`.
+ */
+type UndefinedInitialDataOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = UseQueryOptions<TQueryFnData, TError, TData, TQueryKey> & {
+  /**
+   * If set, this value will be used as the initial data for the query cache (as long as the query hasn't been
+   * created or cached yet). If set to a function, the function will be called **once** during the shared/root
+   * query initialization, and be expected to synchronously return the initial data. Initial data is
+   * considered stale by default unless a `staleTime` has been set. `initialData` **is persisted** to the
+   * cache.
+   */
+  initialData?: undefined | InitialDataFunction<NonUndefinedGuard<TQueryFnData>> | NonUndefinedGuard<TQueryFnData>;
+};
+/**
+ * The options accepted by the `queryOptions` overload selected when `queryFn` is not `skipToken` and
+ * `initialData` is omitted, may be `undefined`, or is a function that may return `undefined` — same as
+ * {@link UndefinedInitialDataOptions}, but `queryFn` may not be `skipToken`.
+ * @template TQueryFnData - The type your `queryFn` resolves to.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TQueryKey - The type of your `queryKey`.
+ */
+type UnusedSkipTokenOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = OmitKeyof<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>, 'queryFn'> & {
+  /**
+   * `skipToken` is not allowed as a value here — this overload is selected when `initialData` is omitted, may
+   * be `undefined`, or is a function that may return `undefined`. If you don't intend to run the query yet,
+   * set `enabled: false` — omitting `queryFn` alone still triggers a fetch that fails with "Missing queryFn"
+   * unless `enabled` is `false` or a default query function has been defined. A default query function only
+   * supplies `queryFn`; it doesn't defer the fetch on its own.
+   */
+  queryFn?: Exclude<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>['queryFn'], SkipToken | undefined>;
+};
+/**
+ * The options accepted by the `queryOptions` overload selected when `initialData` is known to be defined —
+ * `data` is never `undefined` (unless a `select` changes `TData` to include `undefined`).
+ * @template TQueryFnData - The type your `queryFn` resolves to.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs.
+ * @template TQueryKey - The type of your `queryKey`.
+ */
+type DefinedInitialDataOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey> = Omit<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>, 'queryFn'> & {
+  /**
+   * If set, this value will be used as the initial data for the query cache (as long as the query hasn't been
+   * created or cached yet). If set to a function, the function will be called **once** during the shared/root
+   * query initialization, and be expected to synchronously return the initial data. Initial data is
+   * considered stale by default unless a `staleTime` has been set. `initialData` **is persisted** to the
+   * cache.
+   */
+  initialData: NonUndefinedGuard<TQueryFnData> | (() => NonUndefinedGuard<TQueryFnData>);
+  /**
+   * Optional here, but omitting it is only safe when no fetch will be attempted — for example with
+   * `enabled: false`, or when a default query function has been defined. Otherwise, an enabled query with no
+   * `queryFn` still tries to fetch and fails with a "Missing queryFn" error; `initialData` does not prevent this.
+   */
+  queryFn?: QueryFunction<TQueryFnData, TQueryKey>;
+};
+/**
+ * You can generally pass everything to `queryOptions` that you can also pass to `useQuery`. These options can
+ * be shared across hooks and imperative APIs such as `queryClient.query`. `options.queryKey` is required and
+ * is the query key to generate options for.
+ *
+ * This overload is selected when `initialData` is known to be defined, so the resulting `data` is never
+ * `undefined` (unless a `select` changes `TData` to include `undefined`).
+ * @param options - The {@link DefinedInitialDataOptions} to use — everything you can pass to `useQuery`, with `initialData` known to be defined.
+ * @returns The same options object, typed so that `queryKey` carries the inferred data type.
+ * @see {@link useQuery} to run a query with these options.
+ * @see [The Query Options API](https://tkdodo.eu/blog/the-query-options-api) for more on this pattern.
+ * @example
+ * ```tsx
+ * import { queryOptions, useQuery } from '@tanstack/react-query'
+ *
+ * export const postsOptions = queryOptions({
+ *   queryKey: ['posts'],
+ *   queryFn: fetchPosts,
+ *   initialData: [],
+ * })
+ *
+ * function Posts() {
+ *   // `data` is `Post[]`, never `undefined`, thanks to `initialData` — even if a refetch fails,
+ *   // so the list stays visible alongside the error.
+ *   const { data, isError, error } = useQuery(postsOptions)
+ *
+ *   return (
+ *     <div>
+ *       {isError ? <span>Error: {error.message}</span> : null}
+ *       <ul>
+ *         {data.map((post) => <li key={post.id}>{post.title}</li>)}
+ *       </ul>
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
+declare function queryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: DefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>): DefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey> & QueryKeyWithDataTag<TQueryKey, TQueryFnData, TError>;
+/**
+ * You can generally pass everything to `queryOptions` that you can also pass to `useQuery`. These options can
+ * be shared across hooks and imperative APIs such as `queryClient.query`. `options.queryKey` is required and
+ * is the query key to generate options for.
+ * @param options - The {@link UnusedSkipTokenOptions} to use — everything you can pass to `useQuery`.
+ * @returns The same options object, typed so that `queryKey` carries the inferred data type.
+ * @see {@link useQuery} to run a query with these options.
+ * @see [The Query Options API](https://tkdodo.eu/blog/the-query-options-api) for more on this pattern.
+ * @example
+ * A parameterized factory, so the same options object can be reused per `id`:
+ * ```tsx
+ * import { queryOptions, useQuery } from '@tanstack/react-query'
+ *
+ * export const postOptions = (id: string) =>
+ *   queryOptions({
+ *     queryKey: ['post', id],
+ *     queryFn: () => fetchPost(id),
+ *   })
+ *
+ * function Post({ id }: { id: string }) {
+ *   const { data, isPending, isError, error } = useQuery(postOptions(id))
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <h1>{data.title}</h1>
+ * }
+ * ```
+ */
+declare function queryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: UnusedSkipTokenOptions<TQueryFnData, TError, TData, TQueryKey>): UnusedSkipTokenOptions<TQueryFnData, TError, TData, TQueryKey> & QueryKeyWithDataTag<TQueryKey, TQueryFnData, TError>;
+/**
+ * You can generally pass everything to `queryOptions` that you can also pass to `useQuery`. These options can
+ * be shared across hooks and imperative APIs such as `queryClient.query`. `options.queryKey` is required and
+ * is the query key to generate options for.
+ * @param options - The {@link UndefinedInitialDataOptions} to use — everything you can pass to `useQuery`.
+ * @returns The same options object, typed so that `queryKey` carries the inferred data type.
+ * @remarks This is the only overload that accepts `queryFn: skipToken`, shown below.
+ * @see {@link useQuery} to run a query with these options.
+ * @see [The Query Options API](https://tkdodo.eu/blog/the-query-options-api) for more on this pattern.
+ * @example
+ * A parameterized factory, so the same options object can be reused per `id`:
+ * ```tsx
+ * import { queryOptions, useQuery } from '@tanstack/react-query'
+ *
+ * export const postOptions = (id: string) =>
+ *   queryOptions({
+ *     queryKey: ['post', id],
+ *     queryFn: () => fetchPost(id),
+ *   })
+ *
+ * function Post({ id }: { id: string }) {
+ *   const { data, isPending, isError, error } = useQuery(postOptions(id))
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <h1>{data.title}</h1>
+ * }
+ * ```
+ * @example
+ * A factory that disables the query, type safe, until `postId` is set:
+ * ```tsx
+ * import { queryOptions, skipToken, useQuery } from '@tanstack/react-query'
+ *
+ * export const postOptions = (postId: number | undefined) =>
+ *   queryOptions({
+ *     queryKey: ['post', postId],
+ *     queryFn: postId != null ? () => fetchPost(postId) : skipToken,
+ *   })
+ *
+ * function Post({ postId }: { postId: number | undefined }) {
+ *   const { data, isLoading, isError, error } = useQuery(postOptions(postId))
+ *
+ *   if (postId == null) return 'Select a post'
+ *   if (isLoading) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <h1>{data?.title}</h1>
+ * }
+ * ```
+ */
+declare function queryOptions<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: UndefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>): UndefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey> & QueryKeyWithDataTag<TQueryKey, TQueryFnData, TError>;
+//#endregion
+//#region @tanstack/react-query/build/modern/useQuery.d.ts
+/**
+ * This overload is selected when `initialData` is known to be defined, so the resulting `data` is never
+ * `undefined` (unless a `select` changes `TData` to include `undefined`).
+ * @param options - The {@link DefinedInitialDataOptions} to use — everything you can pass to `useQuery`, with `initialData` known to be defined.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The current query result, typed so that `status` is `success` — or `error` if a fetch attempt
+ * fails while keeping the existing data (`status` never resolves to `pending` in this overload's type,
+ * since `initialData` guarantees data upfront). `isSuccess`/`isError` are derived booleans for convenience.
+ * @see {@link queryOptions} to share these options between `useQuery` and imperative APIs like `queryClient.query`.
+ * @example
+ * ```tsx
+ * import { useQuery } from '@tanstack/react-query'
+ *
+ * function Posts() {
+ *   // `data` is `Post[]`, never `undefined`, thanks to `initialData` — even if a refetch fails,
+ *   // so the list stays visible alongside the error.
+ *   const { data, isError, error } = useQuery({
+ *     queryKey: ['posts'],
+ *     queryFn: fetchPosts,
+ *     initialData: [],
+ *   })
+ *
+ *   return (
+ *     <div>
+ *       {isError ? <span>Error: {error.message}</span> : null}
+ *       <ul>
+ *         {data.map((post) => <li key={post.id}>{post.title}</li>)}
+ *       </ul>
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
+declare function useQuery<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: DefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>, queryClient?: QueryClient): DefinedUseQueryResult<TData, TError>;
+/**
+ * This overload is selected when `initialData` is omitted, may be `undefined`, or is a function that may
+ * return `undefined`, so the resulting `data` can be `undefined`.
+ * @param options - The {@link UndefinedInitialDataOptions} to use — everything you can pass to `useQuery`.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The current query result. `status` is `pending` if there is no cached data to display, `error` if
+ * the last fetch attempt failed, or `success` if the query has data to display. `isPending`/`isSuccess`/`isError`
+ * are derived booleans for convenience.
+ * @see {@link queryOptions} to share these options between `useQuery` and imperative APIs like `queryClient.query`.
+ * @example
+ * ```tsx
+ * import { useQuery } from '@tanstack/react-query'
+ *
+ * function Posts() {
+ *   const { status, data, error, isFetching } = useQuery({
+ *     queryKey: ['posts'],
+ *     queryFn: fetchPosts,
+ *   })
+ *
+ *   if (status === 'pending') return 'Loading...'
+ *   if (status === 'error') return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <div>
+ *       <ul>
+ *         {data.map((post) => (
+ *           <li key={post.id}>{post.title}</li>
+ *         ))}
+ *       </ul>
+ *       <div>{isFetching ? 'Background Updating...' : ' '}</div>
+ *     </div>
+ *   )
+ * }
+ * ```
+ * @example
+ * The same query, checking `isPending`/`isError` instead of `status` — pick whichever reads better to you:
+ * ```tsx
+ * import { useQuery } from '@tanstack/react-query'
+ *
+ * function Posts() {
+ *   const { isPending, isError, data, error } = useQuery({
+ *     queryKey: ['posts'],
+ *     queryFn: fetchPosts,
+ *   })
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <ul>
+ *       {data.map((post) => <li key={post.id}>{post.title}</li>)}
+ *     </ul>
+ *   )
+ * }
+ * ```
+ */
+declare function useQuery<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: UndefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>, queryClient?: QueryClient): UseQueryResult<TData, TError>;
+/**
+ * Fallback overload for options whose `initialData` presence isn't statically known — for example, an
+ * object typed as {@link UseQueryOptions} rather than an object literal. Prefer one of the other overloads
+ * when possible, since they infer whether `data` can be `undefined` from `initialData` directly.
+ * @param options - The {@link UseQueryOptions} to use — everything you can pass to `useQuery`.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The current query result. `status` is `pending` if there is no cached data to display, `error` if
+ * the last fetch attempt failed, or `success` if the query has data to display. `isPending`/`isSuccess`/`isError`
+ * are derived booleans for convenience.
+ * @see {@link queryOptions} to share these options between `useQuery` and imperative APIs like `queryClient.query`.
+ * @example
+ * ```tsx
+ * import { useQuery } from '@tanstack/react-query'
+ *
+ * function Posts() {
+ *   const { status, data, error, isFetching } = useQuery({
+ *     queryKey: ['posts'],
+ *     queryFn: fetchPosts,
+ *   })
+ *
+ *   if (status === 'pending') return 'Loading...'
+ *   if (status === 'error') return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <div>
+ *       <ul>
+ *         {data.map((post) => (
+ *           <li key={post.id}>{post.title}</li>
+ *         ))}
+ *       </ul>
+ *       <div>{isFetching ? 'Background Updating...' : ' '}</div>
+ *     </div>
+ *   )
+ * }
+ * ```
+ * @example
+ * `select` derives whatever `data` a component needs from the cached value, without changing what's
+ * actually stored in the cache — the cache still holds the full `Post[]`, but `data` here is a `number`:
+ * ```tsx
+ * import { useQuery } from '@tanstack/react-query'
+ *
+ * function PostCount() {
+ *   const { data, isPending, isError, error } = useQuery({
+ *     queryKey: ['posts'],
+ *     queryFn: fetchPosts,
+ *     select: (posts) => posts.length,
+ *   })
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <span>{data} posts</span>
+ * }
+ * ```
+ * @example
+ * A dependent query, only enabled once `postId` is set — use `isLoading`, not `isPending`, so the
+ * loading state doesn't show while the query is disabled:
+ * ```tsx
+ * import { useQuery } from '@tanstack/react-query'
+ *
+ * function Post({ postId }: { postId: number | undefined }) {
+ *   const { data, isLoading, isError, error } = useQuery({
+ *     queryKey: ['post', postId],
+ *     queryFn: () => fetchPost(postId!),
+ *     enabled: postId != null,
+ *   })
+ *
+ *   if (postId == null) return 'Select a post'
+ *   if (isLoading) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <h1>{data?.title}</h1>
+ * }
+ * ```
+ * @example
+ * The same dependent query, type safe: `skipToken` disables the query without needing the
+ * non-null assertion above, since `queryFn` is only ever called when `postId` is defined.
+ * `refetch` doesn't work while `queryFn` is `skipToken` — use `enabled: false` instead if you
+ * need to trigger the query manually:
+ * ```tsx
+ * import { skipToken, useQuery } from '@tanstack/react-query'
+ *
+ * function Post({ postId }: { postId: number | undefined }) {
+ *   const { data, isLoading, isError, error } = useQuery({
+ *     queryKey: ['post', postId],
+ *     queryFn: postId != null ? () => fetchPost(postId) : skipToken,
+ *   })
+ *
+ *   if (postId == null) return 'Select a post'
+ *   if (isLoading) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <h1>{data?.title}</h1>
+ * }
+ * ```
+ * @example
+ * Seeding a detail query from an already-cached list, to skip the loading state. `initialDataUpdatedAt` carries
+ * over the list's own fetch time, so that if you set a `staleTime`, it's measured from when the list was
+ * fetched rather than from now:
+ * ```tsx
+ * import { useQuery, useQueryClient } from '@tanstack/react-query'
+ *
+ * function Post({ postId }: { postId: number }) {
+ *   const queryClient = useQueryClient()
+ *
+ *   const { data, isError, error } = useQuery({
+ *     queryKey: ['post', postId],
+ *     queryFn: () => fetchPost(postId),
+ *     initialData: () =>
+ *       queryClient
+ *         .getQueryData<Array<Post>>(['posts'])
+ *         ?.find((post) => post.id === postId),
+ *     initialDataUpdatedAt: () =>
+ *       queryClient.getQueryState(['posts'])?.dataUpdatedAt,
+ *   })
+ *
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return <h1>{data?.title}</h1>
+ * }
+ * ```
+ * @example
+ * Paginated data, keeping the previous page's data visible while the next page loads:
+ * ```tsx
+ * import { keepPreviousData, useQuery } from '@tanstack/react-query'
+ * import { useState } from 'react'
+ *
+ * function Posts() {
+ *   const [page, setPage] = useState(0)
+ *
+ *   const { data, isPlaceholderData, isError, error } = useQuery({
+ *     queryKey: ['posts', page],
+ *     queryFn: () => fetchPosts(page),
+ *     placeholderData: keepPreviousData,
+ *   })
+ *
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <div>
+ *       <ul>
+ *         {data?.map((post) => <li key={post.id}>{post.title}</li>)}
+ *       </ul>
+ *       <button
+ *         disabled={isPlaceholderData}
+ *         onClick={() => setPage((old) => old + 1)}
+ *       >
+ *         Next Page
+ *       </button>
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
+declare function useQuery<TQueryFnData = unknown, TError = DefaultError, TData = TQueryFnData, TQueryKey extends QueryKey = QueryKey>(options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>, queryClient?: QueryClient): UseQueryResult<TData, TError>;
+//#endregion
+//#region @tanstack/react-query/build/modern/infiniteQueryOptions.d.ts
+/**
+ * The options accepted by the `infiniteQueryOptions` overload selected when `initialData` is omitted, may be
+ * `undefined`, or is a function that may return `undefined` — `data` may be `undefined` while the query is
+ * `pending`.
+ * @template TQueryFnData - The type of a single page, as your `queryFn` resolves it.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs — defaults to `InfiniteData<TQueryFnData>`,
+ * the shape of all fetched pages plus their page params.
+ * @template TQueryKey - The type of your `queryKey`.
+ * @template TPageParam - The type of the parameter passed to `queryFn` to fetch a given page.
+ */
+type UndefinedInitialDataInfiniteOptions<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> = UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam> & {
+  /**
+   * If set, this value will be used as the initial data for the query cache (as long as the query hasn't been
+   * created or cached yet). If set to a function, the function will be called **once** during the shared/root
+   * query initialization, and be expected to synchronously return the initial data. Initial data is
+   * considered stale by default unless a `staleTime` has been set. `initialData` **is persisted** to the
+   * cache.
+   */
+  initialData?: undefined | NonUndefinedGuard<InfiniteData<TQueryFnData, TPageParam>> | InitialDataFunction<NonUndefinedGuard<InfiniteData<TQueryFnData, TPageParam>>>;
+};
+/**
+ * The options accepted by the `infiniteQueryOptions` overload selected when `initialData` is known to be
+ * defined — `data` is never `undefined` (unless a `select` changes `TData` to include `undefined`).
+ * @template TQueryFnData - The type of a single page, as your `queryFn` resolves it.
+ * @template TError - The type of errors your `queryFn` may throw.
+ * @template TData - The type `data` ends up as after `select` runs — defaults to `InfiniteData<TQueryFnData>`,
+ * the shape of all fetched pages plus their page params.
+ * @template TQueryKey - The type of your `queryKey`.
+ * @template TPageParam - The type of the parameter passed to `queryFn` to fetch a given page.
+ */
+type DefinedInitialDataInfiniteOptions<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown> = UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam> & {
+  /**
+   * If set, this value will be used as the initial data for the query cache (as long as the query hasn't been
+   * created or cached yet). If set to a function, the function will be called **once** during the shared/root
+   * query initialization, and be expected to synchronously return the initial data. Initial data is
+   * considered stale by default unless a `staleTime` has been set. `initialData` **is persisted** to the
+   * cache.
+   */
+  initialData: NonUndefinedGuard<InfiniteData<TQueryFnData, TPageParam>> | (() => NonUndefinedGuard<InfiniteData<TQueryFnData, TPageParam>>);
+};
+//#endregion
+//#region @tanstack/react-query/build/modern/useMutation.d.ts
+/**
+ * Unlike queries, mutations are typically used to create/update/delete data or perform server side-effects.
+ * `useMutation` is the hook for that.
+ * @param options - The {@link UseMutationOptions} to use — everything you can pass to `useMutation`.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns `mutate`/`mutateAsync` also accept per-call `onSuccess`/`onError`/`onSettled` callbacks as a second
+ * argument, useful for triggering call-site side effects (e.g. navigation) without coupling them to the shared
+ * mutation definition. Hook-level callbacks (passed to `options`) fire for every mutation; per-call callbacks
+ * fire only for the latest call you've made, and only while the component is still mounted — unmounting before
+ * the mutation settles removes the subscription and prevents them from firing.
+ * @throws {Error} The mutation error, when `throwOnError` is `true` or returns `true` for it, so that it is
+ * thrown to the nearest error boundary.
+ * @see {@link mutationOptions} to share these options across multiple `useMutation` call sites, or to look
+ * the mutation up elsewhere via its `mutationKey` (e.g. with `useMutationState`).
+ * @example
+ * ```tsx
+ * import { useMutation, useQueryClient } from '@tanstack/react-query'
+ *
+ * function AddTodo() {
+ *   const queryClient = useQueryClient()
+ *
+ *   const addMutation = useMutation({
+ *     mutationFn: addTodo,
+ *     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+ *   })
+ *
+ *   return (
+ *     <button
+ *       onClick={() =>
+ *         addMutation.mutate('Item', {
+ *           onError: (error) => console.error('Failed to add item:', error),
+ *         })
+ *       }
+ *     >
+ *       Add
+ *     </button>
+ *   )
+ * }
+ * ```
+ * @example
+ * Rendering the mutation's own state, rather than just firing it off:
+ * ```tsx
+ * import { useMutation, useQueryClient } from '@tanstack/react-query'
+ *
+ * function AddTodo() {
+ *   const queryClient = useQueryClient()
+ *
+ *   const addMutation = useMutation({
+ *     mutationFn: addTodo,
+ *     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+ *   })
+ *
+ *   return (
+ *     <div>
+ *       {addMutation.isPending ? (
+ *         'Adding todo...'
+ *       ) : (
+ *         <>
+ *           {addMutation.isError ? (
+ *             <div>An error occurred: {addMutation.error.message}</div>
+ *           ) : null}
+ *           <button onClick={() => addMutation.mutate('Item')}>Add</button>
+ *         </>
+ *       )}
+ *     </div>
+ *   )
+ * }
+ * ```
+ * @example
+ * Optimistic update via `onMutate`, rolling back on `onError`:
+ * ```tsx
+ * import { useMutation, useQueryClient } from '@tanstack/react-query'
+ *
+ * function AddTodo() {
+ *   const queryClient = useQueryClient()
+ *
+ *   const addMutation = useMutation({
+ *     mutationFn: addTodo,
+ *     onMutate: async (newTodo) => {
+ *       await queryClient.cancelQueries({ queryKey: ['todos'] })
+ *       const previousTodos = queryClient.getQueryData<Array<string>>(['todos'])
+ *
+ *       queryClient.setQueryData<Array<string>>(['todos'], (old) => [
+ *         ...(old ?? []),
+ *         newTodo,
+ *       ])
+ *
+ *       // Passed to `onError` as `onMutateResult` if the mutation fails.
+ *       return { previousTodos }
+ *     },
+ *     onError: (_err, _newTodo, onMutateResult) => {
+ *       queryClient.setQueryData(['todos'], onMutateResult?.previousTodos)
+ *     },
+ *     onSettled: () => {
+ *       queryClient.invalidateQueries({ queryKey: ['todos'] })
+ *     },
+ *   })
+ *
+ *   return (
+ *     <button onClick={() => addMutation.mutate('Item')}>Add</button>
+ *   )
+ * }
+ * ```
+ * @example
+ * Callbacks passed per call to `mutate` only fire for the last call — `mutateAsync` gives you a
+ * promise per call instead, so you can wait for all of them when they succeed:
+ * ```tsx
+ * import { useMutation, useQueryClient } from '@tanstack/react-query'
+ *
+ * function AddTodos() {
+ *   const queryClient = useQueryClient()
+ *
+ *   const addMutation = useMutation({
+ *     mutationFn: addTodo,
+ *     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+ *   })
+ *
+ *   async function handleAddAll(todos: Array<string>) {
+ *     try {
+ *       await Promise.all(todos.map((todo) => addMutation.mutateAsync(todo)))
+ *     } catch (error) {
+ *       console.error('Failed to add todos:', error)
+ *     }
+ *   }
+ *
+ *   return (
+ *     <button onClick={() => handleAddAll(['Todo 1', 'Todo 2', 'Todo 3'])}>
+ *       Add all
+ *     </button>
+ *   )
+ * }
+ * ```
+ * @example
+ * If some of the mutations above can fail independently of the others, and you want to know which ones
+ * did — rather than losing that information the moment the first one rejects — swap `Promise.all` for
+ * `Promise.allSettled`:
+ * ```tsx
+ * import { useMutation, useQueryClient } from '@tanstack/react-query'
+ *
+ * function AddTodos() {
+ *   const queryClient = useQueryClient()
+ *
+ *   const addMutation = useMutation({
+ *     mutationFn: addTodo,
+ *     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+ *   })
+ *
+ *   async function handleAddAll(todos: Array<string>) {
+ *     const addResults = await Promise.allSettled(
+ *       todos.map((todo) => addMutation.mutateAsync(todo)),
+ *     )
+ *
+ *     addResults.forEach((addResult, index) => {
+ *       if (addResult.status === 'rejected') {
+ *         console.error(`Failed to add "${todos[index]}":`, addResult.reason)
+ *       }
+ *     })
+ *   }
+ *
+ *   return (
+ *     <button onClick={() => handleAddAll(['Todo 1', 'Todo 2', 'Todo 3'])}>
+ *       Add all
+ *     </button>
+ *   )
+ * }
+ * ```
+ */
+declare function useMutation<TData = unknown, TError = DefaultError, TVariables = void, TOnMutateResult = unknown>(options: UseMutationOptions<TData, TError, TVariables, TOnMutateResult>, queryClient?: QueryClient): UseMutationResult<TData, TError, TVariables, TOnMutateResult>;
+//#endregion
+//#region @tanstack/react-query/build/modern/useInfiniteQuery.d.ts
+/**
+ * The options for `useInfiniteQuery` are identical to `useQuery`, with the addition of
+ * `initialPageParam`, `getNextPageParam`, `getPreviousPageParam`, and `maxPages`.
+ *
+ * This overload is selected when `initialData` is known to be defined.
+ * @param options - The {@link DefinedInitialDataInfiniteOptions} to use — everything you can pass to `useInfiniteQuery`, with `initialData` known to be defined.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The same properties as `useQuery`, with the addition of `fetchNextPage`, `fetchPreviousPage`,
+ * `hasNextPage`, `hasPreviousPage`, `isFetchingNextPage`, and `isFetchingPreviousPage`. `data.pages` and
+ * `data.pageParams` are also added, as long as a `select` doesn't change `TData` away from its default
+ * `InfiniteData<TQueryFnData>` shape.
+ * @remarks Keep in mind that imperative fetch calls, such as `fetchNextPage`, may interfere with the default
+ * refetch behavior, resulting in outdated data. Make sure to call these functions only in response to user
+ * actions, or add conditions like `hasNextPage && !isFetching`.
+ * @see {@link infiniteQueryOptions} to share these options between `useInfiniteQuery` and imperative APIs like `queryClient.infiniteQuery`.
+ * @example
+ * ```tsx
+ * import { useInfiniteQuery } from '@tanstack/react-query'
+ *
+ * function Projects() {
+ *   // `data` is never `undefined`, thanks to `initialData` — even if a refetch fails, so the
+ *   // list stays visible alongside the error.
+ *   const { data, isError, error } = useInfiniteQuery({
+ *     queryKey: ['projects'],
+ *     queryFn: ({ pageParam }) => fetchProjects(pageParam),
+ *     initialPageParam: 0,
+ *     getNextPageParam: (lastPage) => lastPage.nextId,
+ *     initialData: { pages: [], pageParams: [] },
+ *   })
+ *
+ *   return (
+ *     <div>
+ *       {isError ? <span>Error: {error.message}</span> : null}
+ *       <ul>
+ *         {data.pages.map((page) => page.projects.map((p) => <li key={p.id}>{p.name}</li>))}
+ *       </ul>
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
+declare function useInfiniteQuery<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: DefinedInitialDataInfiniteOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, queryClient?: QueryClient): DefinedUseInfiniteQueryResult<TData, TError>;
+/**
+ * The options for `useInfiniteQuery` are identical to `useQuery`, with the addition of
+ * `initialPageParam`, `getNextPageParam`, `getPreviousPageParam`, and `maxPages`.
+ * @param options - The {@link UndefinedInitialDataInfiniteOptions} to use — everything you can pass to `useInfiniteQuery`.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The same properties as `useQuery`, with the addition of `fetchNextPage`, `fetchPreviousPage`,
+ * `hasNextPage`, `hasPreviousPage`, `isFetchingNextPage`, and `isFetchingPreviousPage`. `data.pages` and
+ * `data.pageParams` are also added, as long as a `select` doesn't change `TData` away from its default
+ * `InfiniteData<TQueryFnData>` shape.
+ * @remarks Keep in mind that imperative fetch calls, such as `fetchNextPage`, may interfere with the default
+ * refetch behavior, resulting in outdated data. Make sure to call these functions only in response to user
+ * actions, or add conditions like `hasNextPage && !isFetching`.
+ * @see {@link infiniteQueryOptions} to share these options between `useInfiniteQuery` and imperative APIs like `queryClient.infiniteQuery`.
+ * @example
+ * Fetching the next page from a "Load More" button click:
+ * ```tsx
+ * import { useInfiniteQuery } from '@tanstack/react-query'
+ *
+ * function Projects() {
+ *   const { data, isPending, isError, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+ *     useInfiniteQuery({
+ *       queryKey: ['projects'],
+ *       queryFn: ({ pageParam }) => fetchProjects(pageParam),
+ *       initialPageParam: 0,
+ *       getNextPageParam: (lastPage) => lastPage.nextId,
+ *     })
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <>
+ *       <ul>
+ *         {data.pages.map((page) =>
+ *           page.projects.map((project) => <li key={project.id}>{project.name}</li>),
+ *         )}
+ *       </ul>
+ *       <button
+ *         onClick={() => fetchNextPage()}
+ *         disabled={!hasNextPage || isFetching}
+ *       >
+ *         {isFetchingNextPage
+ *           ? 'Loading more...'
+ *           : hasNextPage
+ *             ? 'Load More'
+ *             : 'Nothing more to load'}
+ *       </button>
+ *     </>
+ *   )
+ * }
+ * ```
+ * @example
+ * Fetching the next page automatically as the user scrolls, using an `IntersectionObserver` on a
+ * sentinel element after the list:
+ * ```tsx
+ * import { useInfiniteQuery } from '@tanstack/react-query'
+ * import { useEffect, useRef } from 'react'
+ *
+ * function Projects() {
+ *   const {
+ *     data,
+ *     isPending,
+ *     isError,
+ *     error,
+ *     fetchNextPage,
+ *     hasNextPage,
+ *     isFetching,
+ *     isFetchingNextPage,
+ *   } = useInfiniteQuery({
+ *     queryKey: ['projects'],
+ *     queryFn: ({ pageParam }) => fetchProjects(pageParam),
+ *     initialPageParam: 0,
+ *     getNextPageParam: (lastPage) => lastPage.nextId,
+ *   })
+ *
+ *   const sentinelRef = useRef<HTMLDivElement>(null)
+ *
+ *   useEffect(() => {
+ *     const sentinel = sentinelRef.current
+ *     if (sentinel == null || !hasNextPage || isFetching) return
+ *
+ *     const observer = new IntersectionObserver(([entry]) => {
+ *       if (entry?.isIntersecting) fetchNextPage()
+ *     })
+ *     observer.observe(sentinel)
+ *
+ *     return () => observer.disconnect()
+ *   }, [hasNextPage, isFetching, fetchNextPage])
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <>
+ *       <ul>
+ *         {data.pages.map((page) =>
+ *           page.projects.map((project) => <li key={project.id}>{project.name}</li>),
+ *         )}
+ *       </ul>
+ *       <div ref={sentinelRef}>{isFetchingNextPage ? 'Loading more...' : null}</div>
+ *     </>
+ *   )
+ * }
+ * ```
+ */
+declare function useInfiniteQuery<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: UndefinedInitialDataInfiniteOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, queryClient?: QueryClient): UseInfiniteQueryResult<TData, TError>;
+/**
+ * The options for `useInfiniteQuery` are identical to `useQuery`, with the addition of
+ * `initialPageParam`, `getNextPageParam`, `getPreviousPageParam`, and `maxPages`.
+ * @param options - The {@link UseInfiniteQueryOptions} to use — everything you can pass to `useInfiniteQuery`.
+ * @param queryClient - Use this to use a custom `QueryClient`. Otherwise, the one from the nearest context will
+ * be used.
+ * @returns The same properties as `useQuery`, with the addition of `fetchNextPage`, `fetchPreviousPage`,
+ * `hasNextPage`, `hasPreviousPage`, `isFetchingNextPage`, and `isFetchingPreviousPage`. `data.pages` and
+ * `data.pageParams` are also added, as long as a `select` doesn't change `TData` away from its default
+ * `InfiniteData<TQueryFnData>` shape.
+ * @remarks Keep in mind that imperative fetch calls, such as `fetchNextPage`, may interfere with the default
+ * refetch behavior, resulting in outdated data. Make sure to call these functions only in response to user
+ * actions, or add conditions like `hasNextPage && !isFetching`.
+ * @see {@link infiniteQueryOptions} to share these options between `useInfiniteQuery` and imperative APIs like `queryClient.infiniteQuery`.
+ * @example
+ * Fetching the next page from a "Load More" button click:
+ * ```tsx
+ * import { useInfiniteQuery } from '@tanstack/react-query'
+ *
+ * function Projects() {
+ *   const { data, isPending, isError, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+ *     useInfiniteQuery({
+ *       queryKey: ['projects'],
+ *       queryFn: ({ pageParam }) => fetchProjects(pageParam),
+ *       initialPageParam: 0,
+ *       getNextPageParam: (lastPage) => lastPage.nextId,
+ *     })
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <>
+ *       <ul>
+ *         {data.pages.map((page) =>
+ *           page.projects.map((project) => <li key={project.id}>{project.name}</li>),
+ *         )}
+ *       </ul>
+ *       <button
+ *         onClick={() => fetchNextPage()}
+ *         disabled={!hasNextPage || isFetching}
+ *       >
+ *         {isFetchingNextPage
+ *           ? 'Loading more...'
+ *           : hasNextPage
+ *             ? 'Load More'
+ *             : 'Nothing more to load'}
+ *       </button>
+ *     </>
+ *   )
+ * }
+ * ```
+ * @example
+ * Fetching the next page automatically as the user scrolls, using an `IntersectionObserver` on a
+ * sentinel element after the list:
+ * ```tsx
+ * import { useInfiniteQuery } from '@tanstack/react-query'
+ * import { useEffect, useRef } from 'react'
+ *
+ * function Projects() {
+ *   const {
+ *     data,
+ *     isPending,
+ *     isError,
+ *     error,
+ *     fetchNextPage,
+ *     hasNextPage,
+ *     isFetching,
+ *     isFetchingNextPage,
+ *   } = useInfiniteQuery({
+ *     queryKey: ['projects'],
+ *     queryFn: ({ pageParam }) => fetchProjects(pageParam),
+ *     initialPageParam: 0,
+ *     getNextPageParam: (lastPage) => lastPage.nextId,
+ *   })
+ *
+ *   const sentinelRef = useRef<HTMLDivElement>(null)
+ *
+ *   useEffect(() => {
+ *     const sentinel = sentinelRef.current
+ *     if (sentinel == null || !hasNextPage || isFetching) return
+ *
+ *     const observer = new IntersectionObserver(([entry]) => {
+ *       if (entry?.isIntersecting) fetchNextPage()
+ *     })
+ *     observer.observe(sentinel)
+ *
+ *     return () => observer.disconnect()
+ *   }, [hasNextPage, isFetching, fetchNextPage])
+ *
+ *   if (isPending) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <>
+ *       <ul>
+ *         {data.pages.map((page) =>
+ *           page.projects.map((project) => <li key={project.id}>{project.name}</li>),
+ *         )}
+ *       </ul>
+ *       <div ref={sentinelRef}>{isFetchingNextPage ? 'Loading more...' : null}</div>
+ *     </>
+ *   )
+ * }
+ * ```
+ * @example
+ * A query that's disabled, type safe, until `postId` is set — pass `skipToken` as `queryFn`
+ * instead of setting `enabled: false`:
+ * ```tsx
+ * import { skipToken, useInfiniteQuery } from '@tanstack/react-query'
+ *
+ * function Comments({ postId }: { postId: string | undefined }) {
+ *   // Use `isLoading`, not `isPending`, so the loading state doesn't show while the query is disabled.
+ *   const { data, isLoading, isError, error } = useInfiniteQuery({
+ *     queryKey: ['post', postId, 'comments'],
+ *     queryFn:
+ *       postId != null
+ *         ? ({ pageParam }) => fetchComments(postId, pageParam)
+ *         : skipToken,
+ *     initialPageParam: 0,
+ *     getNextPageParam: (lastPage) => lastPage.nextId,
+ *   })
+ *
+ *   if (postId == null) return 'Select a post'
+ *   if (isLoading) return 'Loading...'
+ *   if (isError) return <span>Error: {error.message}</span>
+ *
+ *   return (
+ *     <ul>
+ *       {data?.pages.map((page) => page.comments.map((c) => <li key={c.id}>{c.text}</li>))}
+ *     </ul>
+ *   )
+ * }
+ * ```
+ */
+declare function useInfiniteQuery<TQueryFnData, TError = DefaultError, TData = InfiniteData<TQueryFnData>, TQueryKey extends QueryKey = QueryKey, TPageParam = unknown>(options: UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryKey, TPageParam>, queryClient?: QueryClient): UseInfiniteQueryResult<TData, TError>;
+//#endregion
 //#region clsx/clsx.d.mts
 type ClassValue$1 = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
 type ClassDictionary = Record<string, any>;
@@ -6383,6 +11274,39 @@ declare function Field({ label, htmlFor, children }: {
   children: ReactNode;
 }): import("react").JSX.Element;
 //#endregion
+//#region components/ui/icon.d.ts
+/**
+ * Icons are Font Awesome glyphs. Studio ships the free webfonts (solid,
+ * regular, brands and the v4 shims, imported in main.tsx) because Neos
+ * configures icons - node types, inspector tabs and groups, select box
+ * values - as Font Awesome names, so every configured name renders verbatim,
+ * including project-specific ones we could never enumerate in a mapping
+ * table. The same set is what plugins get: the icon names of the Font Awesome
+ * version the shell ships are part of the plugin contract.
+ */
+type IconVariant = 'solid' | 'regular' | 'brands';
+/** The type-icon-* text styles (styles/texts.css), smallest to largest. */
+type IconSize = 'xs' | 's' | 'm' | 'l' | 'xl' | '2xl' | '3xl';
+interface IconProps extends Omit<React$1.ComponentProps<'i'>, 'children'> {
+  /**
+   * The Font Awesome icon name, in any syntax node type `ui.icon` accepts:
+   * "clock", "fa-clock", "fas fa-clock", "icon-clock".
+   */
+  name: string;
+  /** Font Awesome style; replaces one the name carries. Defaults to solid. */
+  variant?: IconVariant;
+  /** One of the shell's icon text styles (type-icon-*). Defaults to "m". */
+  size?: IconSize;
+  /**
+   * Accessible name. An icon without one is decorative and hidden from
+   * assistive technology - give it one when nothing next to it says what it
+   * means (an icon-only status, say).
+   */
+  label?: string;
+}
+/** A Font Awesome icon, fixed-width and sized like the shell's own. */
+declare function Icon({ name, variant, size, label, className, ...props }: IconProps): React$1.JSX.Element;
+//#endregion
 //#region components/ui/input.d.ts
 declare function Input({ className, type, ...props }: React$1.ComponentProps<'input'>): React$1.JSX.Element;
 //#endregion
@@ -6513,38 +11437,7 @@ declare function TooltipContent({ className, side, align, sideOffset, hidden, ch
   sideOffset?: number;
 }): React$1.JSX.Element | null;
 declare namespace components_d_exports {
-  export { Badge, Button, Checkbox, CollapsibleGroup, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, ConfirmDialog, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Field, Input, LoadingState, Placeholder, Popover, PopoverContent, PopoverTrigger, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleton, Slider, Spinner, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
-}
-//#endregion
-//#region api/http/errors.d.ts
-/**
- * Errors of both APIs the shell talks to (Neos.Api and the Studio API): a
- * failed request rejects with an ApiError carrying the status and the parsed
- * body, an RFC 9457 problem document from either.
- */
-declare class ApiError extends Error {
-  readonly status: number;
-  readonly body: unknown;
-  constructor(status: number, body: unknown);
-}
-//#endregion
-//#region api/http/request.d.ts
-interface FetchInit {
-  method?: string;
-  body?: unknown;
-  signal?: AbortSignal;
-}
-/** One Server-Sent Event as received by {@link stream}. */
-interface StreamEvent {
-  /** The event's `data:` lines, joined with newlines. */
-  data: string;
-  /** The `event:` field; `message` when the server sent none. */
-  event: string;
-  /** The last `id:` field seen on the stream, or null. */
-  id: string | null;
-}
-interface StreamInit extends FetchInit {
-  onEvent: (event: StreamEvent) => void;
+  export { Badge, Button, Checkbox, CollapsibleGroup, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, ConfirmDialog, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Field, Icon, IconProps, IconSize, IconVariant, Input, LoadingState, Placeholder, Popover, PopoverContent, PopoverTrigger, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleton, Slider, Spinner, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 }
 //#endregion
 //#region api/neos/schema/openapi.d.ts
@@ -8510,21 +13403,6 @@ interface components {
   pathItems: never;
 }
 //#endregion
-//#region api/neos/client.d.ts
-/**
- * An untyped request against the Neos API, for paths the generated schema
- * does not know - the plugin API hands it to plugins for their own
- * operations. The shell's own code uses {@link api}.
- */
-declare function apiFetch<T>(path: string, init?: FetchInit): Promise<T>;
-/**
- * A request to a Neos API operation that answers with Server-Sent Events
- * (see http/request.ts stream()), e.g. a plugin's long-running job reporting
- * progress - the plugin API hands it to plugins. Same auth and base URL as
- * {@link apiFetch}.
- */
-declare function apiStream(path: string, init: StreamInit): Promise<void>;
-//#endregion
 //#region api/neos/schema/dimensionSpacePoint.d.ts
 /**
  * Dimension space points as Neos.Api reads and writes them: JSON strings with
@@ -8803,6 +13681,239 @@ type NodeAddress = Pick<Node, 'contentRepositoryId' | 'workspaceName' | 'dimensi
  */
 type NodeReference = NonNullable<Node['references']>[string][number];
 //#endregion
+//#region app/events.d.ts
+/**
+ * Studio's event bus: what happened in the shell, for code that wants to
+ * react to it - plugins first of all (a panel refreshing its own data after a
+ * publish, an analytics hook on saves). useStudio() says what IS; these say
+ * what HAPPENED, each emitted once, at the one place the shell knows it for
+ * sure (the save that succeeded, the publish mutation's success, the change
+ * feed's classification) rather than derived from re-renders.
+ *
+ * Emitting never holds up the shell: handlers run in a microtask after the
+ * emitting code has finished, each on its own - one that throws (or rejects)
+ * is logged with the event's name and the others still run. Nothing waits
+ * for a handler, so a handler cannot slow down or veto the flow it hears
+ * about.
+ *
+ * The payloads are part of the plugin API (see StudioEventMap): additive
+ * changes only.
+ */
+/**
+ * Identifies a workspace: a NodeAddress (or a Node) is one, so either can be
+ * passed wherever a workspace is asked for.
+ */
+interface WorkspaceRef {
+  contentRepositoryId: string;
+  workspaceName: string;
+}
+/**
+ * What a local structural edit did - 'restored' is a restore from the
+ * trash (the node plus any deleted ancestor it lives in).
+ */
+type StructureChange = 'created' | 'copied' | 'moved' | 'deleted' | 'hidden' | 'unhidden' | 'typeChanged' | 'restored';
+/** Every event by name, with its payload. */
+interface StudioEventMap {
+  /**
+   * A property or the references of a node were saved by this editor - from
+   * the inspector or inline in the preview (typing saves in bursts, one
+   * event per save that reached the server). `address` is the node as
+   * written: in the viewed dimension space point (a shine-through node was
+   * varied there first).
+   */
+  'node.edited': {
+    address: NodeAddress;
+    kind: 'property' | 'references';
+    /** The property or reference name. */
+    name: string;
+  };
+  /**
+   * Nodes were created, copied, moved, deleted, hidden/unhidden, retyped or
+   * restored by this editor. For a batch that failed halfway, the nodes
+   * written before the failure. `nodeAggregateIds` are the nodes acted on
+   * (for 'created' and 'copied' the new nodes; a restore names the restored
+   * node first, then its restored ancestors).
+   */
+  'nodes.structureChanged': WorkspaceRef & {
+    change: StructureChange;
+    nodeAggregateIds: string[];
+  };
+  /** This editor published a workspace (all of it, or a site or documents of it). */
+  'workspace.published': WorkspaceRef;
+  /** This editor discarded a workspace's changes (all, or a site's or documents'). */
+  'workspace.discarded': WorkspaceRef;
+  /**
+   * This editor rebased a workspace: synchronized it with its base
+   * (`newBaseWorkspaceName` null), or moved it onto another base.
+   */
+  'workspace.rebased': WorkspaceRef & {
+    newBaseWorkspaceName: string | null;
+  };
+  /**
+   * The workspace being edited changed (personal <-> a shared one), or was
+   * resolved at startup (`previousWorkspaceName` null).
+   */
+  'workspace.switched': {
+    workspaceName: string;
+    previousWorkspaceName: string | null;
+  };
+  /** Another site was opened, or the first one resolved (`previousSite` null). */
+  'site.switched': {
+    site: Site;
+    previousSite: Site | null;
+  };
+  /** The viewed dimension space point (JSON, as in a NodeAddress) changed. */
+  'dimension.switched': {
+    dimensionSpacePoint: string;
+    previousDimensionSpacePoint: string | null;
+  };
+  /**
+   * The selected document changed - another document, or the same one
+   * followed into another workspace or dimension. null: none (any more).
+   */
+  'document.selected': {
+    node: Node | null;
+  };
+  /** The inspected node changed (as document.selected; a document or content). */
+  'node.inspected': {
+    node: Node | null;
+  };
+  /**
+   * Collaborators changed the shared workspace being edited, as the change
+   * feed reports it - only while a shared workspace is the editing context
+   * (personal workspaces have no feed), and only for the viewed dimension.
+   * 'content': properties/references of `nodeAggregateIds`; 'structure':
+   * nodes created/moved/removed/retagged (no ids - refresh broadly);
+   * 'wholesale': the workspace was published, discarded or rebased, or the
+   * feed missed a window.
+   */
+  'remote.changed': WorkspaceRef & {
+    kind: 'content' | 'structure' | 'wholesale';
+    nodeAggregateIds: string[];
+  };
+}
+type StudioEventName = keyof StudioEventMap;
+type StudioEventHandler<Name extends StudioEventName> = (payload: StudioEventMap[Name]) => void;
+/** The listening side of the bus - what plugins get as `events`. */
+interface StudioEvents {
+  /** Listen to an event; returns the unsubscriber. */
+  on<Name extends StudioEventName>(name: Name, handler: StudioEventHandler<Name>): () => void;
+}
+/**
+ * Listen to a Studio event for the lifetime of the calling component. The
+ * subscription stays put while the handler always sees the latest render's
+ * closures (as useKeyboardShortcut does) - an inline arrow function is fine.
+ */
+declare function useStudioEvent<Name extends StudioEventName>(name: Name, handler: StudioEventHandler<Name>): void;
+//#endregion
+//#region plugin-api/data.d.ts
+/**
+ * The shell's cache refreshes, for a plugin's own writes (apiFetch) to
+ * Neos content: each marks stale what the write can have changed of the
+ * shell's cached reads, so the shell's views show it. The query keys behind
+ * them are internal and change as the shell's reads do - these are the
+ * contract. They only refresh data: what the trees and the preview show is
+ * refreshed by the Studio actions (nodeEdited, nodesEdited,
+ * workspaceContentChanged), which a plugin calls as well for the workspace
+ * being edited.
+ *
+ * None needs awaiting: the reads are stale as soon as it returns, so
+ * whatever reads next fetches fresh data; the promise only tells when the
+ * active reads have refetched.
+ */
+interface StudioInvalidation {
+  /**
+   * Properties or references of these nodes were written: their reads, and
+   * their workspace's pending changes (dirty markers, the review) and
+   * history. Pass the addresses as written - in the dimension space point
+   * the edit was made in.
+   */
+  afterContentEdit: (nodes: readonly NodeAddress[]) => Promise<void>;
+  /**
+   * Nodes were created, copied, moved, deleted, hidden/unhidden, retyped or
+   * varied in this workspace: its node reads (all of them - a structural
+   * edit reaches beyond the nodes acted on), pending changes and history.
+   */
+  afterStructuralEdit: (workspace: WorkspaceRef) => Promise<void>;
+  /**
+   * The workspace was published: the workspace reads, and the node reads of
+   * it and of its base (whose content the publish changed).
+   */
+  afterPublish: (workspace: WorkspaceRef) => Promise<void>;
+  /**
+   * The workspace's content was rewritten - discarded, rebased, moved onto
+   * another base: the workspace reads and its node reads.
+   */
+  afterWorkspaceRewrite: (workspace: WorkspaceRef) => Promise<void>;
+  /**
+   * The workspaces themselves changed - one created, deleted, renamed, its
+   * roles or base changed: every workspace read (lists, status, changes).
+   */
+  afterWorkspacesChanged: () => Promise<void>;
+}
+declare const invalidate: StudioInvalidation;
+//#endregion
+//#region plugin-api/version.d.ts
+/**
+ * The API version a plugin can read to feature-detect. Bump on a
+ * breaking change to any exported type or registry contract; plugins that
+ * care can compare against it before registering. 2: the shell runs on
+ * Neos.Api - its models (Node, Workspace, NodeType, Site, ...) and NodeAddress
+ * objects replace the version 1 DTOs and address strings (see the README's
+ * "Plugin API version 2").
+ *
+ * A module of its own so the preview's guest bundle, which publishes the rich
+ * text part of the API in the preview frame, carries the same number without
+ * pulling in the shell's React surface.
+ */
+declare const version: 2;
+//#endregion
+//#region api/http/errors.d.ts
+/**
+ * Errors of both APIs the shell talks to (Neos.Api and the Studio API): a
+ * failed request rejects with an ApiError carrying the status and the parsed
+ * body, an RFC 9457 problem document from either.
+ */
+declare class ApiError extends Error {
+  readonly status: number;
+  readonly body: unknown;
+  constructor(status: number, body: unknown);
+}
+//#endregion
+//#region api/http/request.d.ts
+interface FetchInit {
+  method?: string;
+  body?: unknown;
+  signal?: AbortSignal;
+}
+/** One Server-Sent Event as received by {@link stream}. */
+interface StreamEvent {
+  /** The event's `data:` lines, joined with newlines. */
+  data: string;
+  /** The `event:` field; `message` when the server sent none. */
+  event: string;
+  /** The last `id:` field seen on the stream, or null. */
+  id: string | null;
+}
+interface StreamInit extends FetchInit {
+  onEvent: (event: StreamEvent) => void;
+}
+//#endregion
+//#region api/neos/client.d.ts
+/**
+ * An untyped request against the Neos API, for paths the generated schema
+ * does not know - the plugin API hands it to plugins for their own
+ * operations. The shell's own code uses {@link api}.
+ */
+declare function apiFetch<T>(path: string, init?: FetchInit): Promise<T>;
+/**
+ * A request to a Neos API operation that answers with Server-Sent Events
+ * (see http/request.ts stream()), e.g. a plugin's long-running job reporting
+ * progress - the plugin API hands it to plugins. Same auth and base URL as
+ * {@link apiFetch}.
+ */
+declare function apiStream(path: string, init: StreamInit): Promise<void>;
+//#endregion
 //#region features/preview/PreviewPane.d.ts
 /**
  * A request to refresh nodes' rendered elements in place (see
@@ -8821,12 +13932,12 @@ type PreviewElementUpdate = {
   remote?: boolean;
 };
 //#endregion
-//#region lib/registry.d.ts
+//#region lib/observableRegistry.d.ts
 /**
  * The shared base of Studio's extension registries (panels, settings
  * sections, shortcuts, property editors, inspector views, validators, link
- * types, node and workspace decorators, node and header actions): a small
- * observable, id-keyed store.
+ * types, node and workspace decorators, node and header actions, rich text
+ * extensions): a small observable, id-keyed store.
  *
  * - Registering an already-known id replaces it, so HMR and plugin reloads
  *   stay idempotent (the entry keeps its original registration position, as
@@ -8843,6 +13954,14 @@ type PreviewElementUpdate = {
  * `refresh()` on top of {@link ObservableRegistry.emit}) or compose it when
  * their public signatures diverge from the base.
  */
+/**
+ * A label a registry entry shows - or a function returning it, called each
+ * time the label is rendered. Registrations run before the translations have
+ * loaded (the shell's built-ins from main.tsx, plugins from their bundle's
+ * top level), so a label translated at registration would stay in English;
+ * a function translates when it is shown. Read it through {@link labelOf}.
+ */
+type LazyLabel = string | (() => string);
 /** The minimum every registered definition provides. */
 interface RegistryEntry {
   /** Unique id. Third-party entries should namespace ('vendor.package:thing'). */
@@ -8957,8 +14076,12 @@ interface NodeActionContext {
 interface NodeActionDefinition {
   /** Unique id. Third-party entries should namespace ('vendor.package:lock'). */
   id: string;
-  /** Menu label, already translated. */
-  label: string;
+  /**
+   * Menu label - or a function returning it, so it is translated when shown
+   * rather than at registration, before the translations have loaded (see
+   * LazyLabel).
+   */
+  label: LazyLabel;
   /** Font Awesome icon name, any syntax `ui.icon` accepts (e.g. "lock", "fas fa-lock"). */
   icon?: string;
   /** Sort weight; lower comes first. Defaults to 100. */
@@ -8997,8 +14120,8 @@ interface HeaderActionContext {
 interface HeaderActionDefinition {
   /** Unique id. Third-party entries should namespace ('vendor.package:report'). */
   id: string;
-  /** Tooltip and accessible name, already translated. */
-  label: string;
+  /** Tooltip and accessible name - or a function returning it (see LazyLabel). */
+  label: LazyLabel;
   /** Font Awesome icon name, any syntax `ui.icon` accepts. The button shows only the icon. */
   icon: string;
   /** Sort weight; lower comes first (further left). Defaults to 100. */
@@ -9457,8 +14580,8 @@ interface LinkTypeDefinition {
    * their own ids ('Vendor.Package/LinkTypes/Product').
    */
   id: string;
-  /** The tab's label. */
-  label: string;
+  /** The tab's label - or a function returning it (see LazyLabel). */
+  label: LazyLabel;
   /** An icon rendered before the label (and to mark link values of this type). */
   icon?: React$1.ReactNode;
   /** The tab's UI. */
@@ -9523,8 +14646,12 @@ type ModalIcon = string;
  * (users, sites, workspaces, ...).
  */
 interface SettingsDialogDefinition extends RegistryDefinition {
-  /** Label shown in the settings subnavigation and section header. */
-  title: string;
+  /**
+   * Label shown in the settings subnavigation and section header - or a
+   * function returning it, so a translated label follows the loaded
+   * translations (see LazyLabel).
+   */
+  title: LazyLabel;
   /** Optional subnav icon. */
   icon?: ModalIcon;
   /**
@@ -9777,6 +14904,7390 @@ declare class NodeDecoratorRegistry extends ObservableRegistry<NodeDecoratorDefi
   refresh(): void;
 }
 //#endregion
+//#region orderedmap/dist/index.d.ts
+declare class OrderedMap<T = any> {
+  private constructor(content: Array<string | T>);
+  get(key: string): T | undefined;
+  update(key: string, value: T, newKey?: string): OrderedMap<T>;
+  remove(key: string): OrderedMap<T>;
+  addToStart(key: string, value: T): OrderedMap<T>;
+  addToEnd(key: string, value: T): OrderedMap<T>;
+  addBefore(place: string, key: string, value: T): OrderedMap<T>;
+  forEach(fn: (key: string, value: T) => any): void;
+  prepend(map: MapLike<T>): OrderedMap<T>;
+  append(map: MapLike<T>): OrderedMap<T>;
+  subtract(map: MapLike<T>): OrderedMap<T>;
+  toObject(): Record<string, T>;
+  readonly size: number;
+  static from<T>(map: MapLike<T>): OrderedMap<T>;
+}
+type MapLike<T = any> = Record<string, T> | OrderedMap<T>;
+//#endregion
+//#region prosemirror-model/dist/index.d.ts
+/**
+A mark is a piece of information that can be attached to a node,
+such as it being emphasized, in code font, or a link. It has a
+type and optionally a set of attributes that provide further
+information (such as the target of the link). Marks are created
+through a `Schema`, which controls which types exist and which
+attributes they have.
+*/
+declare class Mark$1 {
+  /**
+    The type of this mark.
+    */
+  readonly type: MarkType$1;
+  /**
+    The attributes associated with this mark.
+    */
+  readonly attrs: Attrs;
+  /**
+    Given a set of marks, create a new set which contains this one as
+    well, in the right position. If this mark is already in the set,
+    the set itself is returned. If any marks that are set to be
+    [exclusive](https://prosemirror.net/docs/ref/#model.MarkSpec.excludes) with this mark are present,
+    those are replaced by this one.
+    */
+  addToSet(set: readonly Mark$1[]): readonly Mark$1[];
+  /**
+    Remove this mark from the given set, returning a new set. If this
+    mark is not in the set, the set itself is returned.
+    */
+  removeFromSet(set: readonly Mark$1[]): readonly Mark$1[];
+  /**
+    Test whether this mark is in the given set of marks.
+    */
+  isInSet(set: readonly Mark$1[]): boolean;
+  /**
+    Test whether this mark has the same type and attributes as
+    another mark.
+    */
+  eq(other: Mark$1): boolean;
+  /**
+    Convert this mark to a JSON-serializeable representation.
+    */
+  toJSON(): any;
+  /**
+    Deserialize a mark from JSON.
+    */
+  static fromJSON(schema: Schema, json: any): Mark$1;
+  /**
+    Test whether two sets of marks are identical.
+    */
+  static sameSet(a: readonly Mark$1[], b: readonly Mark$1[]): boolean;
+  /**
+    Create a properly sorted mark set from null, a single mark, or an
+    unsorted array of marks.
+    */
+  static setFrom(marks?: Mark$1 | readonly Mark$1[] | null): readonly Mark$1[];
+  /**
+    The empty set of marks.
+    */
+  static none: readonly Mark$1[];
+}
+/**
+A description of a DOM structure. Can be either a DOM element, a
+`{dom, contentDOM}` object, or an array.
+
+An array describes a DOM element. The first value in the array
+should be a string—the name of the DOM element, optionally
+prefixed by a namespace URL and a space. If the second element is
+plain object, it is interpreted as a set of attributes for the
+element. Any elements after that (including the 2nd if it's not an
+attribute object) are interpreted as children of the DOM elements,
+and must either be valid `DOMOutputSpec` values, strings (for text
+nodes), or the number zero.
+
+The number zero (pronounced “hole”) is used to indicate the place
+where a node's child nodes should be inserted. If it occurs in an
+output spec, it should be the only child element in its parent
+node.
+*/
+type DOMOutputSpec = Element | {
+  dom: Element;
+  contentDOM?: Element;
+} | readonly [string, ...any[]];
+/**
+A DOM serializer knows how to convert ProseMirror nodes and
+marks of various types to DOM nodes.
+*/
+declare class DOMSerializer {
+  /**
+    The node serialization functions.
+    */
+  readonly nodes: {
+    [node: string]: (node: Node$2) => DOMOutputSpec;
+  };
+  /**
+    The mark serialization functions.
+    */
+  readonly marks: {
+    [mark: string]: (mark: Mark$1, inline: boolean) => DOMOutputSpec;
+  };
+  /**
+    Create a serializer. `nodes` should map node names to functions
+    that take a node and return a description of the corresponding
+    DOM. `marks` does the same for mark names, but also gets an
+    argument that tells it whether the mark's content is block or
+    inline content (for typical use, it'll always be inline). A mark
+    serializer may be `null` to indicate that marks of that type
+    should not be serialized.
+    */
+  constructor(
+  /**
+    The node serialization functions.
+    */
+  nodes: {
+    [node: string]: (node: Node$2) => DOMOutputSpec;
+  },
+  /**
+    The mark serialization functions.
+    */
+  marks: {
+    [mark: string]: (mark: Mark$1, inline: boolean) => DOMOutputSpec;
+  });
+  /**
+    Serialize the content of this fragment to a DOM fragment. When
+    not in the browser, the `document` option, containing a DOM
+    document, should be passed so that the serializer can create
+    nodes.
+    */
+  serializeFragment(fragment: Fragment, options?: {
+    document?: Document;
+  }, target?: HTMLElement | DocumentFragment): DocumentFragment | HTMLElement;
+  /**
+    Serialize this node to a DOM node. This can be useful when you
+    need to serialize a part of a document, as opposed to the whole
+    document. To serialize a whole document, use
+    [`serializeFragment`](https://prosemirror.net/docs/ref/#model.DOMSerializer.serializeFragment) on
+    its [content](https://prosemirror.net/docs/ref/#model.Node.content).
+    */
+  serializeNode(node: Node$2, options?: {
+    document?: Document;
+  }): HTMLElement | Text;
+  /**
+    Render an [output spec](https://prosemirror.net/docs/ref/#model.DOMOutputSpec) to a DOM node. If
+    the spec has a hole (zero) in it, `contentDOM` will point at the
+    node with the hole.
+    */
+  static renderSpec(doc: Document, structure: DOMOutputSpec, xmlNS?: string | null): {
+    dom: HTMLElement;
+    contentDOM?: HTMLElement;
+  };
+  /**
+    Build a serializer using the [`toDOM`](https://prosemirror.net/docs/ref/#model.NodeSpec.toDOM)
+    properties in a schema's node and mark specs.
+    */
+  static fromSchema(schema: Schema): DOMSerializer;
+  /**
+    Gather the serializers in a schema's node specs into an object.
+    This can be useful as a base to build a custom serializer from.
+    */
+  static nodesFromSchema(schema: Schema): {
+    [node: string]: (node: Node$2) => DOMOutputSpec;
+  };
+  /**
+    Gather the serializers in a schema's mark specs into an object.
+    */
+  static marksFromSchema(schema: Schema): {
+    [mark: string]: (mark: Mark$1, inline: boolean) => DOMOutputSpec;
+  };
+}
+/**
+You can [_resolve_](https://prosemirror.net/docs/ref/#model.Node.resolve) a position to get more
+information about it. Objects of this class represent such a
+resolved position, providing various pieces of context
+information, and some helper methods.
+
+Throughout this interface, methods that take an optional `depth`
+parameter will interpret undefined as `this.depth` and negative
+numbers as `this.depth + value`.
+*/
+declare class ResolvedPos {
+  /**
+    The position that was resolved.
+    */
+  readonly pos: number;
+  /**
+    The offset this position has into its parent node.
+    */
+  readonly parentOffset: number;
+  /**
+    The number of levels the parent node is from the root. If this
+    position points directly into the root node, it is 0. If it
+    points into a top-level paragraph, 1, and so on.
+    */
+  depth: number;
+  /**
+    The parent node that the position points into. Note that even if
+    a position points into a text node, that node is not considered
+    the parent—text nodes are ‘flat’ in this model, and have no content.
+    */
+  get parent(): Node$2;
+  /**
+    The root node in which the position was resolved.
+    */
+  get doc(): Node$2;
+  /**
+    The ancestor node at the given level. `p.node(p.depth)` is the
+    same as `p.parent`.
+    */
+  node(depth?: number | null): Node$2;
+  /**
+    The index into the ancestor at the given level. If this points
+    at the 3rd node in the 2nd paragraph on the top level, for
+    example, `p.index(0)` is 1 and `p.index(1)` is 2.
+    */
+  index(depth?: number | null): number;
+  /**
+    The index pointing after this position into the ancestor at the
+    given level.
+    */
+  indexAfter(depth?: number | null): number;
+  /**
+    The (absolute) position at the start of the node at the given
+    level.
+    */
+  start(depth?: number | null): number;
+  /**
+    The (absolute) position at the end of the node at the given
+    level.
+    */
+  end(depth?: number | null): number;
+  /**
+    The (absolute) position directly before the wrapping node at the
+    given level, or, when `depth` is `this.depth + 1`, the original
+    position.
+    */
+  before(depth?: number | null): number;
+  /**
+    The (absolute) position directly after the wrapping node at the
+    given level, or the original position when `depth` is `this.depth + 1`.
+    */
+  after(depth?: number | null): number;
+  /**
+    When this position points into a text node, this returns the
+    distance between the position and the start of the text node.
+    Will be zero for positions that point between nodes.
+    */
+  get textOffset(): number;
+  /**
+    Get the node directly after the position, if any. If the position
+    points into a text node, only the part of that node after the
+    position is returned.
+    */
+  get nodeAfter(): Node$2 | null;
+  /**
+    Get the node directly before the position, if any. If the
+    position points into a text node, only the part of that node
+    before the position is returned.
+    */
+  get nodeBefore(): Node$2 | null;
+  /**
+    Get the position at the given index in the parent node at the
+    given depth (which defaults to `this.depth`).
+    */
+  posAtIndex(index: number, depth?: number | null): number;
+  /**
+    Get the marks at this position, factoring in the surrounding
+    marks' [`inclusive`](https://prosemirror.net/docs/ref/#model.MarkSpec.inclusive) property. If the
+    position is at the start of a non-empty node, the marks of the
+    node after it (if any) are returned.
+    */
+  marks(): readonly Mark$1[];
+  /**
+    Get the marks after the current position, if any, except those
+    that are non-inclusive and not present at position `$end`. This
+    is mostly useful for getting the set of marks to preserve after a
+    deletion. Will return `null` if this position is at the end of
+    its parent node or its parent node isn't a textblock (in which
+    case no marks should be preserved).
+    */
+  marksAcross($end: ResolvedPos): readonly Mark$1[] | null;
+  /**
+    The depth up to which this position and the given (non-resolved)
+    position share the same parent nodes.
+    */
+  sharedDepth(pos: number): number;
+  /**
+    Returns a range based on the place where this position and the
+    given position diverge around block content. If both point into
+    the same textblock, for example, a range around that textblock
+    will be returned. If they point into different blocks, the range
+    around those blocks in their shared ancestor is returned. You can
+    pass in an optional predicate that will be called with a parent
+    node to see if a range into that parent is acceptable.
+    */
+  blockRange(other?: ResolvedPos, pred?: (node: Node$2) => boolean): NodeRange | null;
+  /**
+    Query whether the given position shares the same parent node.
+    */
+  sameParent(other: ResolvedPos): boolean;
+  /**
+    Return the greater of this and the given position.
+    */
+  max(other: ResolvedPos): ResolvedPos;
+  /**
+    Return the smaller of this and the given position.
+    */
+  min(other: ResolvedPos): ResolvedPos;
+}
+/**
+Represents a flat range of content, i.e. one that starts and
+ends in the same node.
+*/
+declare class NodeRange {
+  /**
+    A resolved position along the start of the content. May have a
+    `depth` greater than this object's `depth` property, since
+    these are the positions that were used to compute the range,
+    not re-resolved positions directly at its boundaries.
+    */
+  readonly $from: ResolvedPos;
+  /**
+    A position along the end of the content. See
+    caveat for [`$from`](https://prosemirror.net/docs/ref/#model.NodeRange.$from).
+    */
+  readonly $to: ResolvedPos;
+  /**
+    The depth of the node that this range points into.
+    */
+  readonly depth: number;
+  /**
+    Construct a node range. `$from` and `$to` should point into the
+    same node until at least the given `depth`, since a node range
+    denotes an adjacent set of nodes in a single parent node.
+    */
+  constructor(
+  /**
+    A resolved position along the start of the content. May have a
+    `depth` greater than this object's `depth` property, since
+    these are the positions that were used to compute the range,
+    not re-resolved positions directly at its boundaries.
+    */
+  $from: ResolvedPos,
+  /**
+    A position along the end of the content. See
+    caveat for [`$from`](https://prosemirror.net/docs/ref/#model.NodeRange.$from).
+    */
+  $to: ResolvedPos,
+  /**
+    The depth of the node that this range points into.
+    */
+  depth: number);
+  /**
+    The position at the start of the range.
+    */
+  get start(): number;
+  /**
+    The position at the end of the range.
+    */
+  get end(): number;
+  /**
+    The parent node that the range points into.
+    */
+  get parent(): Node$2;
+  /**
+    The start index of the range in the parent node.
+    */
+  get startIndex(): number;
+  /**
+    The end index of the range in the parent node.
+    */
+  get endIndex(): number;
+}
+/**
+A slice represents a piece cut out of a larger document. It
+stores not only a fragment, but also the depth up to which nodes on
+both side are ‘open’ (cut through).
+*/
+declare class Slice {
+  /**
+    The slice's content.
+    */
+  readonly content: Fragment;
+  /**
+    The open depth at the start of the fragment.
+    */
+  readonly openStart: number;
+  /**
+    The open depth at the end.
+    */
+  readonly openEnd: number;
+  /**
+    Create a slice. When specifying a non-zero open depth, you must
+    make sure that there are nodes of at least that depth at the
+    appropriate side of the fragment—i.e. if the fragment is an
+    empty paragraph node, `openStart` and `openEnd` can't be greater
+    than 1.
+    
+    It is not necessary for the content of open nodes to conform to
+    the schema's content constraints, though it should be a valid
+    start/end/middle for such a node, depending on which sides are
+    open.
+    */
+  constructor(
+  /**
+    The slice's content.
+    */
+  content: Fragment,
+  /**
+    The open depth at the start of the fragment.
+    */
+  openStart: number,
+  /**
+    The open depth at the end.
+    */
+  openEnd: number);
+  /**
+    The size this slice would add when inserted into a document.
+    */
+  get size(): number;
+  /**
+    Tests whether this slice is equal to another slice.
+    */
+  eq(other: Slice): boolean;
+  /**
+    Convert a slice to a JSON-serializable representation.
+    */
+  toJSON(): any;
+  /**
+    Deserialize a slice from its JSON representation.
+    */
+  static fromJSON(schema: Schema, json: any): Slice;
+  /**
+    Create a slice from a fragment by taking the maximum possible
+    open value on both side of the fragment.
+    */
+  static maxOpen(fragment: Fragment, openIsolating?: boolean): Slice;
+  /**
+    The empty slice.
+    */
+  static empty: Slice;
+}
+type DOMNode$1 = InstanceType<typeof window.Node>;
+/**
+These are the options recognized by the
+[`parse`](https://prosemirror.net/docs/ref/#model.DOMParser.parse) and
+[`parseSlice`](https://prosemirror.net/docs/ref/#model.DOMParser.parseSlice) methods.
+*/
+interface ParseOptions {
+  /**
+    By default, whitespace is collapsed as per HTML's rules. Pass
+    `true` to preserve whitespace, but normalize newlines to
+    spaces or, if available, [line break replacements](https://prosemirror.net/docs/ref/#model.NodeSpec.linebreakReplacement),
+    and `"full"` to preserve whitespace entirely.
+    */
+  preserveWhitespace?: boolean | "full";
+  /**
+    When given, the parser will, beside parsing the content,
+    record the document positions of the given DOM positions. It
+    will do so by writing to the objects, adding a `pos` property
+    that holds the document position. DOM positions that are not
+    in the parsed content will not be written to.
+    */
+  findPositions?: {
+    node: DOMNode$1;
+    offset: number;
+    pos?: number;
+  }[];
+  /**
+    The child node index to start parsing from.
+    */
+  from?: number;
+  /**
+    The child node index to stop parsing at.
+    */
+  to?: number;
+  /**
+    By default, the content is parsed into the schema's default
+    [top node type](https://prosemirror.net/docs/ref/#model.Schema.topNodeType). You can pass this
+    option to use the type and attributes from a different node
+    as the top container.
+    */
+  topNode?: Node$2;
+  /**
+    Provide the starting content match that content parsed into the
+    top node is matched against.
+    */
+  topMatch?: ContentMatch;
+  /**
+    A set of additional nodes to count as
+    [context](https://prosemirror.net/docs/ref/#model.GenericParseRule.context) when parsing, above the
+    given [top node](https://prosemirror.net/docs/ref/#model.ParseOptions.topNode).
+    */
+  context?: ResolvedPos;
+}
+/**
+Fields that may be present in both [tag](https://prosemirror.net/docs/ref/#model.TagParseRule) and
+[style](https://prosemirror.net/docs/ref/#model.StyleParseRule) parse rules.
+*/
+interface GenericParseRule {
+  /**
+    Can be used to change the order in which the parse rules in a
+    schema are tried. Those with higher priority come first. Rules
+    without a priority are counted as having priority 50. This
+    property is only meaningful in a schema—when directly
+    constructing a parser, the order of the rule array is used.
+    */
+  priority?: number;
+  /**
+    By default, when a rule matches an element or style, no further
+    rules get a chance to match it. By setting this to `false`, you
+    indicate that even when this rule matches, other rules that come
+    after it should also run.
+    */
+  consuming?: boolean;
+  /**
+    When given, restricts this rule to only match when the current
+    context—the parent nodes into which the content is being
+    parsed—matches this expression. Should contain one or more node
+    names or node group names followed by single or double slashes.
+    For example `"paragraph/"` means the rule only matches when the
+    parent node is a paragraph, `"blockquote/paragraph/"` restricts
+    it to be in a paragraph that is inside a blockquote, and
+    `"section//"` matches any position inside a section—a double
+    slash matches any sequence of ancestor nodes. To allow multiple
+    different contexts, they can be separated by a pipe (`|`)
+    character, as in `"blockquote/|list_item/"`.
+    */
+  context?: string;
+  /**
+    The name of the mark type to wrap the matched content in.
+    */
+  mark?: string;
+  /**
+    When true, ignore content that matches this rule. Any `<head>`,
+    `<noscript>`, `<script>`, `<object>`, `<style>`, or `<title>`
+    tags encountered are automatically ignored when no rules match
+    them..
+    */
+  ignore?: boolean;
+  /**
+    When true, finding an element that matches this rule will close
+    the current node.
+    */
+  closeParent?: boolean;
+  /**
+    When true, ignore the node that matches this rule, but do parse
+    its content.
+    */
+  skip?: boolean;
+  /**
+    Attributes for the node or mark created by this rule. When
+    `getAttrs` is provided, it takes precedence.
+    */
+  attrs?: Attrs;
+}
+/**
+Parse rule targeting a DOM element.
+*/
+interface TagParseRule extends GenericParseRule {
+  /**
+    A CSS selector describing the kind of DOM elements to match.
+    */
+  tag: string;
+  /**
+    The namespace to match. Nodes are only matched when the
+    namespace matches or this property is null.
+    */
+  namespace?: string;
+  /**
+    The name of the node type to create when this rule matches. Each
+    rule should have either a `node`, `mark`, or `ignore` property
+    (except when it appears in a [node](https://prosemirror.net/docs/ref/#model.NodeSpec.parseDOM) or
+    [mark spec](https://prosemirror.net/docs/ref/#model.MarkSpec.parseDOM), in which case the `node`
+    or `mark` property will be derived from its position).
+    */
+  node?: string;
+  /**
+    A function used to compute the attributes for the node or mark
+    created by this rule. Can also be used to describe further
+    conditions the DOM element or style must match. When it returns
+    `false`, the rule won't match. When it returns null or undefined,
+    that is interpreted as an empty/default set of attributes.
+    */
+  getAttrs?: (node: HTMLElement) => Attrs | false | null;
+  /**
+    For rules that produce non-leaf nodes, by default the content of
+    the DOM element is parsed as content of the node. If the child
+    nodes are in a descendent node, this may be a CSS selector
+    string that the parser must use to find the actual content
+    element, or a function that returns the actual content element
+    to the parser.
+    */
+  contentElement?: string | HTMLElement | ((node: HTMLElement) => HTMLElement);
+  /**
+    Can be used to override the content of a matched node. When
+    present, instead of parsing the node's child nodes, the result of
+    this function is used.
+    */
+  getContent?: (node: DOMNode$1, schema: Schema) => Fragment;
+  /**
+    Controls whether whitespace should be preserved when parsing the
+    content inside the matched element. `false` means whitespace may
+    be collapsed, `true` means that whitespace should be preserved
+    but newlines normalized to spaces, and `"full"` means that
+    newlines should also be preserved.
+    */
+  preserveWhitespace?: boolean | "full";
+}
+/**
+A parse rule targeting a style property.
+*/
+interface StyleParseRule extends GenericParseRule {
+  /**
+    A CSS property name to match. This rule will match inline styles
+    that list that property. May also have the form
+    `"property=value"`, in which case the rule only matches if the
+    property's value exactly matches the given value. (For more
+    complicated filters, use [`getAttrs`](https://prosemirror.net/docs/ref/#model.StyleParseRule.getAttrs)
+    and return false to indicate that the match failed.) Rules
+    matching styles may only produce [marks](https://prosemirror.net/docs/ref/#model.GenericParseRule.mark),
+    not nodes.
+    */
+  style: string;
+  /**
+    Given to make TS see ParseRule as a tagged union @hide
+    */
+  tag?: undefined;
+  /**
+    Style rules can remove marks from the set of active marks.
+    */
+  clearMark?: (mark: Mark$1) => boolean;
+  /**
+    A function used to compute the attributes for the node or mark
+    created by this rule. Called with the style's value.
+    */
+  getAttrs?: (node: string) => Attrs | false | null;
+}
+/**
+A value that describes how to parse a given DOM node or inline
+style as a ProseMirror node or mark.
+*/
+type ParseRule = TagParseRule | StyleParseRule;
+/**
+A DOM parser represents a strategy for parsing DOM content into a
+ProseMirror document conforming to a given schema. Its behavior is
+defined by an array of [rules](https://prosemirror.net/docs/ref/#model.ParseRule).
+*/
+declare class DOMParser {
+  /**
+    The schema into which the parser parses.
+    */
+  readonly schema: Schema;
+  /**
+    The set of [parse rules](https://prosemirror.net/docs/ref/#model.ParseRule) that the parser
+    uses, in order of precedence.
+    */
+  readonly rules: readonly ParseRule[];
+  /**
+    Create a parser that targets the given schema, using the given
+    parsing rules.
+    */
+  constructor(
+  /**
+    The schema into which the parser parses.
+    */
+  schema: Schema,
+  /**
+    The set of [parse rules](https://prosemirror.net/docs/ref/#model.ParseRule) that the parser
+    uses, in order of precedence.
+    */
+  rules: readonly ParseRule[]);
+  /**
+    Parse a document from the content of a DOM node.
+    */
+  parse(dom: DOMNode$1, options?: ParseOptions): Node$2;
+  /**
+    Parses the content of the given DOM node, like
+    [`parse`](https://prosemirror.net/docs/ref/#model.DOMParser.parse), and takes the same set of
+    options. But unlike that method, which produces a whole node,
+    this one returns a slice that is open at the sides, meaning that
+    the schema constraints aren't applied to the start of nodes to
+    the left of the input and the end of nodes at the end.
+    */
+  parseSlice(dom: DOMNode$1, options?: ParseOptions): Slice;
+  /**
+    Construct a DOM parser using the parsing rules listed in a
+    schema's [node specs](https://prosemirror.net/docs/ref/#model.NodeSpec.parseDOM), reordered by
+    [priority](https://prosemirror.net/docs/ref/#model.GenericParseRule.priority).
+    */
+  static fromSchema(schema: Schema): DOMParser;
+}
+/**
+An object holding the attributes of a node.
+*/
+type Attrs = {
+  readonly [attr: string]: any;
+};
+/**
+Node types are objects allocated once per `Schema` and used to
+[tag](https://prosemirror.net/docs/ref/#model.Node.type) `Node` instances. They contain information
+about the node type, such as its name and what kind of node it
+represents.
+*/
+declare class NodeType$2 {
+  /**
+    The name the node type has in this schema.
+    */
+  readonly name: string;
+  /**
+    A link back to the `Schema` the node type belongs to.
+    */
+  readonly schema: Schema;
+  /**
+    The spec that this type is based on
+    */
+  readonly spec: NodeSpec;
+  /**
+    True if this node type has inline content.
+    */
+  inlineContent: boolean;
+  /**
+    True if this is a block type
+    */
+  isBlock: boolean;
+  /**
+    True if this is the text node type.
+    */
+  isText: boolean;
+  /**
+    True if this is an inline type.
+    */
+  get isInline(): boolean;
+  /**
+    True if this is a textblock type, a block that contains inline
+    content.
+    */
+  get isTextblock(): boolean;
+  /**
+    True for node types that allow no content.
+    */
+  get isLeaf(): boolean;
+  /**
+    True when this node is an atom, i.e. when it does not have
+    directly editable content.
+    */
+  get isAtom(): boolean;
+  /**
+    Return true when this node type is part of the given
+    [group](https://prosemirror.net/docs/ref/#model.NodeSpec.group).
+    */
+  isInGroup(group: string): boolean;
+  /**
+    The starting match of the node type's content expression.
+    */
+  contentMatch: ContentMatch;
+  /**
+    The set of marks allowed in this node. `null` means all marks
+    are allowed.
+    */
+  markSet: readonly MarkType$1[] | null;
+  /**
+    The node type's [whitespace](https://prosemirror.net/docs/ref/#model.NodeSpec.whitespace) option.
+    */
+  get whitespace(): "pre" | "normal";
+  /**
+    Tells you whether this node type has any required attributes.
+    */
+  hasRequiredAttrs(): boolean;
+  /**
+    Indicates whether this node allows some of the same content as
+    the given node type.
+    */
+  compatibleContent(other: NodeType$2): boolean;
+  /**
+    Create a `Node` of this type. The given attributes are
+    checked and defaulted (you can pass `null` to use the type's
+    defaults entirely, if no required attributes exist). `content`
+    may be a `Fragment`, a node, an array of nodes, or
+    `null`. Similarly `marks` may be `null` to default to the empty
+    set of marks.
+    */
+  create(attrs?: Attrs | null, content?: Fragment | Node$2 | readonly Node$2[] | null, marks?: readonly Mark$1[]): Node$2;
+  /**
+    Like [`create`](https://prosemirror.net/docs/ref/#model.NodeType.create), but check the given content
+    against the node type's content restrictions, and throw an error
+    if it doesn't match.
+    */
+  createChecked(attrs?: Attrs | null, content?: Fragment | Node$2 | readonly Node$2[] | null, marks?: readonly Mark$1[]): Node$2;
+  /**
+    Like [`create`](https://prosemirror.net/docs/ref/#model.NodeType.create), but see if it is
+    necessary to add nodes to the start or end of the given fragment
+    to make it fit the node. If no fitting wrapping can be found,
+    return null. Note that, due to the fact that required nodes can
+    always be created, this will always succeed if you pass null or
+    `Fragment.empty` as content.
+    */
+  createAndFill(attrs?: Attrs | null, content?: Fragment | Node$2 | readonly Node$2[] | null, marks?: readonly Mark$1[]): Node$2 | null;
+  /**
+    Returns true if the given fragment is valid content for this node
+    type.
+    */
+  validContent(content: Fragment): boolean;
+  /**
+    Check whether the given mark type is allowed in this node.
+    */
+  allowsMarkType(markType: MarkType$1): boolean;
+  /**
+    Test whether the given set of marks are allowed in this node.
+    */
+  allowsMarks(marks: readonly Mark$1[]): boolean;
+  /**
+    Removes the marks that are not allowed in this node from the given set.
+    */
+  allowedMarks(marks: readonly Mark$1[]): readonly Mark$1[];
+}
+/**
+Like nodes, marks (which are associated with nodes to signify
+things like emphasis or being part of a link) are
+[tagged](https://prosemirror.net/docs/ref/#model.Mark.type) with type objects, which are
+instantiated once per `Schema`.
+*/
+declare class MarkType$1 {
+  /**
+    The name of the mark type.
+    */
+  readonly name: string;
+  /**
+    The schema that this mark type instance is part of.
+    */
+  readonly schema: Schema;
+  /**
+    The spec on which the type is based.
+    */
+  readonly spec: MarkSpec;
+  /**
+    Create a mark of this type. `attrs` may be `null` or an object
+    containing only some of the mark's attributes. The others, if
+    they have defaults, will be added.
+    */
+  create(attrs?: Attrs | null): Mark$1;
+  /**
+    When there is a mark of this type in the given set, a new set
+    without it is returned. Otherwise, the input set is returned.
+    */
+  removeFromSet(set: readonly Mark$1[]): readonly Mark$1[];
+  /**
+    Tests whether there is a mark of this type in the given set.
+    */
+  isInSet(set: readonly Mark$1[]): Mark$1 | undefined;
+  /**
+    Queries whether a given mark type is
+    [excluded](https://prosemirror.net/docs/ref/#model.MarkSpec.excludes) by this one.
+    */
+  excludes(other: MarkType$1): boolean;
+}
+/**
+An object describing a schema, as passed to the [`Schema`](https://prosemirror.net/docs/ref/#model.Schema)
+constructor.
+*/
+interface SchemaSpec<Nodes extends string = any, Marks extends string = any> {
+  /**
+    The node types in this schema. Maps names to
+    [`NodeSpec`](https://prosemirror.net/docs/ref/#model.NodeSpec) objects that describe the node type
+    associated with that name. Their order is significant—it
+    determines which [parse rules](https://prosemirror.net/docs/ref/#model.NodeSpec.parseDOM) take
+    precedence by default, and which nodes come first in a given
+    [group](https://prosemirror.net/docs/ref/#model.NodeSpec.group).
+    */
+  nodes: { [name in Nodes]: NodeSpec; } | OrderedMap<NodeSpec>;
+  /**
+    The mark types that exist in this schema. The order in which they
+    are provided determines the order in which [mark
+    sets](https://prosemirror.net/docs/ref/#model.Mark.addToSet) are sorted and in which [parse
+    rules](https://prosemirror.net/docs/ref/#model.MarkSpec.parseDOM) are tried.
+    */
+  marks?: { [name in Marks]: MarkSpec; } | OrderedMap<MarkSpec>;
+  /**
+    The name of the default top-level node for the schema. Defaults
+    to `"doc"`.
+    */
+  topNode?: string;
+}
+/**
+A description of a node type, used when defining a schema.
+*/
+interface NodeSpec {
+  /**
+    The content expression for this node, as described in the [schema
+    guide](https://prosemirror.net/docs/guide/#schema.content_expressions). When not given,
+    the node does not allow any content.
+    */
+  content?: string;
+  /**
+    The marks that are allowed inside of this node. May be a
+    space-separated string referring to mark names or groups, `"_"`
+    to explicitly allow all marks, or `""` to disallow marks. When
+    not given, nodes with inline content default to allowing all
+    marks, other nodes default to not allowing marks.
+    */
+  marks?: string;
+  /**
+    The group or space-separated groups to which this node belongs,
+    which can be referred to in the content expressions for the
+    schema.
+    */
+  group?: string;
+  /**
+    Should be set to true for inline nodes. (Implied for text nodes.)
+    */
+  inline?: boolean;
+  /**
+    Can be set to true to indicate that, though this isn't a [leaf
+    node](https://prosemirror.net/docs/ref/#model.NodeType.isLeaf), it doesn't have directly editable
+    content and should be treated as a single unit in the view.
+    */
+  atom?: boolean;
+  /**
+    The attributes that nodes of this type get.
+    */
+  attrs?: {
+    [name: string]: AttributeSpec;
+  };
+  /**
+    Controls whether nodes of this type can be selected as a [node
+    selection](https://prosemirror.net/docs/ref/#state.NodeSelection). Defaults to true for non-text
+    nodes.
+    */
+  selectable?: boolean;
+  /**
+    Determines whether nodes of this type can be dragged without
+    being selected. Defaults to false.
+    */
+  draggable?: boolean;
+  /**
+    Can be used to indicate that this node contains code, which
+    causes some commands to behave differently.
+    */
+  code?: boolean;
+  /**
+    Controls way whitespace in this a node is parsed. The default is
+    `"normal"`, which causes the [DOM parser](https://prosemirror.net/docs/ref/#model.DOMParser) to
+    collapse whitespace in normal mode, and normalize it (replacing
+    newlines and such with spaces) otherwise. `"pre"` causes the
+    parser to preserve spaces inside the node. When this option isn't
+    given, but [`code`](https://prosemirror.net/docs/ref/#model.NodeSpec.code) is true, `whitespace`
+    will default to `"pre"`. Note that this option doesn't influence
+    the way the node is rendered—that should be handled by `toDOM`
+    and/or styling.
+    */
+  whitespace?: "pre" | "normal";
+  /**
+    Determines whether this node is considered an important parent
+    node during replace operations (such as paste). Non-defining (the
+    default) nodes get dropped when their entire content is replaced,
+    whereas defining nodes persist and wrap the inserted content.
+    */
+  definingAsContext?: boolean;
+  /**
+    In inserted content the defining parents of the content are
+    preserved when possible. Typically, non-default-paragraph
+    textblock types, and possibly list items, are marked as defining.
+    */
+  definingForContent?: boolean;
+  /**
+    When enabled, enables both
+    [`definingAsContext`](https://prosemirror.net/docs/ref/#model.NodeSpec.definingAsContext) and
+    [`definingForContent`](https://prosemirror.net/docs/ref/#model.NodeSpec.definingForContent).
+    */
+  defining?: boolean;
+  /**
+    When enabled (default is false), the sides of nodes of this type
+    count as boundaries that regular editing operations, like
+    backspacing or lifting, won't cross. An example of a node that
+    should probably have this enabled is a table cell.
+    */
+  isolating?: boolean;
+  /**
+    Defines the default way a node of this type should be serialized
+    to DOM/HTML (as used by
+    [`DOMSerializer.fromSchema`](https://prosemirror.net/docs/ref/#model.DOMSerializer^fromSchema)).
+    Should return a DOM node or an [array
+    structure](https://prosemirror.net/docs/ref/#model.DOMOutputSpec) that describes one, with an
+    optional number zero (“hole”) in it to indicate where the node's
+    content should be inserted.
+    
+    For text nodes, the default is to create a text DOM node. Though
+    it is possible to create a serializer where text is rendered
+    differently, this is not supported inside the editor, so you
+    shouldn't override that in your text node spec.
+    */
+  toDOM?: (node: Node$2) => DOMOutputSpec;
+  /**
+    Associates DOM parser information with this node, which can be
+    used by [`DOMParser.fromSchema`](https://prosemirror.net/docs/ref/#model.DOMParser^fromSchema) to
+    automatically derive a parser. The `node` field in the rules is
+    implied (the name of this node will be filled in automatically).
+    If you supply your own parser, you do not need to also specify
+    parsing rules in your schema.
+    */
+  parseDOM?: readonly TagParseRule[];
+  /**
+    Defines the default way a node of this type should be serialized
+    to a string representation for debugging (e.g. in error messages).
+    */
+  toDebugString?: (node: Node$2) => string;
+  /**
+    Defines the default way a [leaf node](https://prosemirror.net/docs/ref/#model.NodeType.isLeaf) of
+    this type should be serialized to a string (as used by
+    [`Node.textBetween`](https://prosemirror.net/docs/ref/#model.Node.textBetween) and
+    [`Node.textContent`](https://prosemirror.net/docs/ref/#model.Node.textContent)).
+    */
+  leafText?: (node: Node$2) => string;
+  /**
+    A single inline node in a schema can be set to be a linebreak
+    equivalent. When converting between block types that support the
+    node and block types that don't but have
+    [`whitespace`](https://prosemirror.net/docs/ref/#model.NodeSpec.whitespace) set to `"pre"`,
+    [`setBlockType`](https://prosemirror.net/docs/ref/#transform.Transform.setBlockType) will convert
+    between newline characters to or from linebreak nodes as
+    appropriate.
+    */
+  linebreakReplacement?: boolean;
+  /**
+    Node specs may include arbitrary properties that can be read by
+    other code via [`NodeType.spec`](https://prosemirror.net/docs/ref/#model.NodeType.spec).
+    */
+  [key: string]: any;
+}
+/**
+Used to define marks when creating a schema.
+*/
+interface MarkSpec {
+  /**
+    The attributes that marks of this type get.
+    */
+  attrs?: {
+    [name: string]: AttributeSpec;
+  };
+  /**
+    Whether this mark should be active when the cursor is positioned
+    at its end (or at its start when that is also the start of the
+    parent node). Defaults to true.
+    */
+  inclusive?: boolean;
+  /**
+    Determines which other marks this mark can coexist with. Should
+    be a space-separated strings naming other marks or groups of marks.
+    When a mark is [added](https://prosemirror.net/docs/ref/#model.Mark.addToSet) to a set, all marks
+    that it excludes are removed in the process. If the set contains
+    any mark that excludes the new mark but is not, itself, excluded
+    by the new mark, the mark can not be added an the set. You can
+    use the value `"_"` to indicate that the mark excludes all
+    marks in the schema.
+    
+    Defaults to only being exclusive with marks of the same type. You
+    can set it to an empty string (or any string not containing the
+    mark's own name) to allow multiple marks of a given type to
+    coexist (as long as they have different attributes).
+    */
+  excludes?: string;
+  /**
+    The group or space-separated groups to which this mark belongs.
+    */
+  group?: string;
+  /**
+    Determines whether marks of this type can span multiple adjacent
+    nodes when serialized to DOM/HTML. Defaults to true.
+    */
+  spanning?: boolean;
+  /**
+    Marks the content of this span as being code, which causes some
+    commands and extensions to treat it differently.
+    */
+  code?: boolean;
+  /**
+    Defines the default way marks of this type should be serialized
+    to DOM/HTML. When the resulting spec contains a hole, that is
+    where the marked content is placed. Otherwise, it is appended to
+    the top node.
+    */
+  toDOM?: (mark: Mark$1, inline: boolean) => DOMOutputSpec;
+  /**
+    Associates DOM parser information with this mark (see the
+    corresponding [node spec field](https://prosemirror.net/docs/ref/#model.NodeSpec.parseDOM)). The
+    `mark` field in the rules is implied.
+    */
+  parseDOM?: readonly ParseRule[];
+  /**
+    Mark specs can include additional properties that can be
+    inspected through [`MarkType.spec`](https://prosemirror.net/docs/ref/#model.MarkType.spec) when
+    working with the mark.
+    */
+  [key: string]: any;
+}
+/**
+Used to [define](https://prosemirror.net/docs/ref/#model.NodeSpec.attrs) attributes on nodes or
+marks.
+*/
+interface AttributeSpec {
+  /**
+    The default value for this attribute, to use when no explicit
+    value is provided. Attributes that have no default must be
+    provided whenever a node or mark of a type that has them is
+    created.
+    */
+  default?: any;
+  /**
+    A function or type name used to validate values of this
+    attribute. This will be used when deserializing the attribute
+    from JSON, and when running [`Node.check`](https://prosemirror.net/docs/ref/#model.Node.check).
+    When a function, it should raise an exception if the value isn't
+    of the expected type or shape. When a string, it should be a
+    `|`-separated string of primitive types (`"number"`, `"string"`,
+    `"boolean"`, `"null"`, and `"undefined"`), and the library will
+    raise an error when the value is not one of those types.
+    */
+  validate?: string | ((value: any) => void);
+}
+/**
+A document schema. Holds [node](https://prosemirror.net/docs/ref/#model.NodeType) and [mark
+type](https://prosemirror.net/docs/ref/#model.MarkType) objects for the nodes and marks that may
+occur in conforming documents, and provides functionality for
+creating and deserializing such documents.
+
+When given, the type parameters provide the names of the nodes and
+marks in this schema.
+*/
+declare class Schema<Nodes extends string = any, Marks extends string = any> {
+  /**
+    The [spec](https://prosemirror.net/docs/ref/#model.SchemaSpec) on which the schema is based,
+    with the added guarantee that its `nodes` and `marks`
+    properties are
+    [`OrderedMap`](https://code.haverbeke.berlin/marijn/orderedmap) instances
+    (not raw objects).
+    */
+  spec: {
+    nodes: OrderedMap<NodeSpec>;
+    marks: OrderedMap<MarkSpec>;
+    topNode?: string;
+  };
+  /**
+    An object mapping the schema's node names to node type objects.
+    */
+  nodes: { readonly [name in Nodes]: NodeType$2; } & {
+    readonly [key: string]: NodeType$2;
+  };
+  /**
+    A map from mark names to mark type objects.
+    */
+  marks: { readonly [name in Marks]: MarkType$1; } & {
+    readonly [key: string]: MarkType$1;
+  };
+  /**
+    The [linebreak
+    replacement](https://prosemirror.net/docs/ref/#model.NodeSpec.linebreakReplacement) node defined
+    in this schema, if any.
+    */
+  linebreakReplacement: NodeType$2 | null;
+  /**
+    Construct a schema from a schema [specification](https://prosemirror.net/docs/ref/#model.SchemaSpec).
+    */
+  constructor(spec: SchemaSpec<Nodes, Marks>);
+  /**
+    The type of the [default top node](https://prosemirror.net/docs/ref/#model.SchemaSpec.topNode)
+    for this schema.
+    */
+  topNodeType: NodeType$2;
+  /**
+    An object for storing whatever values modules may want to
+    compute and cache per schema. (If you want to store something
+    in it, try to use property names unlikely to clash.)
+    */
+  cached: {
+    [key: string]: any;
+  };
+  /**
+    Create a node in this schema. The `type` may be a string or a
+    `NodeType` instance. Attributes will be extended with defaults,
+    `content` may be a `Fragment`, `null`, a `Node`, or an array of
+    nodes.
+    */
+  node(type: string | NodeType$2, attrs?: Attrs | null, content?: Fragment | Node$2 | readonly Node$2[], marks?: readonly Mark$1[]): Node$2;
+  /**
+    Create a text node in the schema. Empty text nodes are not
+    allowed.
+    */
+  text(text: string, marks?: readonly Mark$1[] | null): Node$2;
+  /**
+    Create a mark with the given type and attributes.
+    */
+  mark(type: string | MarkType$1, attrs?: Attrs | null): Mark$1;
+  /**
+    Deserialize a node from its JSON representation. This method is
+    bound.
+    */
+  nodeFromJSON: (json: any) => Node$2;
+  /**
+    Deserialize a mark from its JSON representation. This method is
+    bound.
+    */
+  markFromJSON: (json: any) => Mark$1;
+}
+/**
+A fragment represents a node's collection of child nodes.
+
+Like nodes, fragments are persistent data structures, and you
+should not mutate them or their content. Rather, you create new
+instances whenever needed. The API tries to make this easy.
+*/
+declare class Fragment {
+  /**
+    The child nodes in this fragment.
+    */
+  readonly content: readonly Node$2[];
+  /**
+    The size of the fragment, which is the total of the size of
+    its content nodes.
+    */
+  readonly size: number;
+  /**
+    Invoke a callback for all descendant nodes between the given two
+    positions (relative to start of this fragment). Doesn't descend
+    into a node when the callback returns `false`.
+    */
+  nodesBetween(from: number, to: number, f: (node: Node$2, start: number, parent: Node$2 | null, index: number) => boolean | void, nodeStart?: number, parent?: Node$2): void;
+  /**
+    Call the given callback for every descendant node. `pos` will be
+    relative to the start of the fragment. The callback may return
+    `false` to prevent traversal of a given node's children.
+    */
+  descendants(f: (node: Node$2, pos: number, parent: Node$2 | null, index: number) => boolean | void): void;
+  /**
+    Extract the text between `from` and `to`. See the same method on
+    [`Node`](https://prosemirror.net/docs/ref/#model.Node.textBetween).
+    */
+  textBetween(from: number, to: number, blockSeparator?: string | null, leafText?: string | null | ((leafNode: Node$2) => string)): string;
+  /**
+    Create a new fragment containing the combined content of this
+    fragment and the other.
+    */
+  append(other: Fragment): Fragment;
+  /**
+    Cut out the sub-fragment between the two given positions.
+    */
+  cut(from: number, to?: number): Fragment;
+  /**
+    Create a new fragment in which the node at the given index is
+    replaced by the given node.
+    */
+  replaceChild(index: number, node: Node$2): Fragment;
+  /**
+    Create a new fragment by prepending the given node to this
+    fragment.
+    */
+  addToStart(node: Node$2): Fragment;
+  /**
+    Create a new fragment by appending the given node to this
+    fragment.
+    */
+  addToEnd(node: Node$2): Fragment;
+  /**
+    Compare this fragment to another one.
+    */
+  eq(other: Fragment): boolean;
+  /**
+    The first child of the fragment, or `null` if it is empty.
+    */
+  get firstChild(): Node$2 | null;
+  /**
+    The last child of the fragment, or `null` if it is empty.
+    */
+  get lastChild(): Node$2 | null;
+  /**
+    The number of child nodes in this fragment.
+    */
+  get childCount(): number;
+  /**
+    Get the child node at the given index. Raise an error when the
+    index is out of range.
+    */
+  child(index: number): Node$2;
+  /**
+    Get the child node at the given index, if it exists.
+    */
+  maybeChild(index: number): Node$2 | null;
+  /**
+    Call `f` for every child node, passing the node, its offset
+    into this parent node, and its index.
+    */
+  forEach(f: (node: Node$2, offset: number, index: number) => void): void;
+  /**
+    Find the first position at which this fragment and another
+    fragment differ, or `null` if they are the same.
+    */
+  findDiffStart(other: Fragment, pos?: number): number | null;
+  /**
+    Find the first position, searching from the end, at which this
+    fragment and the given fragment differ, or `null` if they are
+    the same. Since this position will not be the same in both
+    nodes, an object with two separate positions is returned.
+    */
+  findDiffEnd(other: Fragment, pos?: number, otherPos?: number): {
+    a: number;
+    b: number;
+  } | null;
+  /**
+    Return a debugging string that describes this fragment.
+    */
+  toString(): string;
+  /**
+    Create a JSON-serializeable representation of this fragment.
+    */
+  toJSON(): any;
+  /**
+    Deserialize a fragment from its JSON representation.
+    */
+  static fromJSON(schema: Schema, value: any): Fragment;
+  /**
+    Build a fragment from an array of nodes. Ensures that adjacent
+    text nodes with the same marks are joined together.
+    */
+  static fromArray(array: readonly Node$2[]): Fragment;
+  /**
+    Create a fragment from something that can be interpreted as a
+    set of nodes. For `null`, it returns the empty fragment. For a
+    fragment, the fragment itself. For a node or array of nodes, a
+    fragment containing those nodes.
+    */
+  static from(nodes?: Fragment | Node$2 | readonly Node$2[] | null): Fragment;
+  /**
+    An empty fragment. Intended to be reused whenever a node doesn't
+    contain anything (rather than allocating a new empty fragment for
+    each leaf node).
+    */
+  static empty: Fragment;
+}
+type MatchEdge = {
+  type: NodeType$2;
+  next: ContentMatch;
+};
+/**
+Instances of this class represent a match state of a node type's
+[content expression](https://prosemirror.net/docs/ref/#model.NodeSpec.content), and can be used to
+find out whether further content matches here, and whether a given
+position is a valid end of the node.
+*/
+declare class ContentMatch {
+  /**
+    True when this match state represents a valid end of the node.
+    */
+  readonly validEnd: boolean;
+  /**
+    Match a node type, returning a match after that node if
+    successful.
+    */
+  matchType(type: NodeType$2): ContentMatch | null;
+  /**
+    Try to match a fragment. Returns the resulting match when
+    successful.
+    */
+  matchFragment(frag: Fragment, start?: number, end?: number): ContentMatch | null;
+  /**
+    Get the first matching node type at this match position that can
+    be generated.
+    */
+  get defaultType(): NodeType$2 | null;
+  /**
+    Try to match the given fragment, and if that fails, see if it can
+    be made to match by inserting nodes in front of it. When
+    successful, return a fragment of inserted nodes (which may be
+    empty if nothing had to be inserted). When `toEnd` is true, only
+    return a fragment if the resulting match goes to the end of the
+    content expression.
+    */
+  fillBefore(after: Fragment, toEnd?: boolean, startIndex?: number): Fragment | null;
+  /**
+    Find a set of wrapping node types that would allow a node of the
+    given type to appear at this position. The result may be empty
+    (when it fits directly) and will be null when no such wrapping
+    exists.
+    */
+  findWrapping(target: NodeType$2): readonly NodeType$2[] | null;
+  /**
+    The number of outgoing edges this node has in the finite
+    automaton that describes the content expression.
+    */
+  get edgeCount(): number;
+  /**
+    Get the _n_​th outgoing edge from this node in the finite
+    automaton that describes the content expression.
+    */
+  edge(n: number): MatchEdge;
+}
+/**
+This class represents a node in the tree that makes up a
+ProseMirror document. So a document is an instance of `Node`, with
+children that are also instances of `Node`.
+
+Nodes are persistent data structures. Instead of changing them, you
+create new ones with the content you want. Old ones keep pointing
+at the old document shape. This is made cheaper by sharing
+structure between the old and new data as much as possible, which a
+tree shape like this (without back pointers) makes easy.
+
+**Do not** directly mutate the properties of a `Node` object. See
+[the guide](https://prosemirror.net/docs/guide/#doc) for more information.
+*/
+declare class Node$2 {
+  /**
+    The type of node that this is.
+    */
+  readonly type: NodeType$2;
+  /**
+    An object mapping attribute names to values. The kind of
+    attributes allowed and required are
+    [determined](https://prosemirror.net/docs/ref/#model.NodeSpec.attrs) by the node type.
+    */
+  readonly attrs: Attrs;
+  /**
+    The marks (things like whether it is emphasized or part of a
+    link) applied to this node.
+    */
+  readonly marks: readonly Mark$1[];
+  /**
+    A container holding the node's children.
+    */
+  readonly content: Fragment;
+  /**
+    The array of this node's child nodes.
+    */
+  get children(): readonly Node$2[];
+  /**
+    For text nodes, this contains the node's text content.
+    */
+  readonly text: string | undefined;
+  /**
+    The size of this node, as defined by the integer-based [indexing
+    scheme](https://prosemirror.net/docs/guide/#doc.indexing). For text nodes, this is the
+    amount of characters. For other leaf nodes, it is one. For
+    non-leaf nodes, it is the size of the content plus two (the
+    start and end token).
+    */
+  get nodeSize(): number;
+  /**
+    The number of children that the node has.
+    */
+  get childCount(): number;
+  /**
+    Get the child node at the given index. Raises an error when the
+    index is out of range.
+    */
+  child(index: number): Node$2;
+  /**
+    Get the child node at the given index, if it exists.
+    */
+  maybeChild(index: number): Node$2 | null;
+  /**
+    Call `f` for every child node, passing the node, its offset
+    into this parent node, and its index.
+    */
+  forEach(f: (node: Node$2, offset: number, index: number) => void): void;
+  /**
+    Invoke a callback for all descendant nodes recursively overlapping
+    the given two positions that are relative to start of this
+    node's content. This includes all ancestors of the nodes
+    containing the two positions. The callback is invoked with the
+    node, its position relative to the original node (method receiver),
+    its parent node, and its child index. When the callback returns
+    false for a given node, that node's children will not be
+    recursed over. The last parameter can be used to specify a
+    starting position to count from.
+    */
+  nodesBetween(from: number, to: number, f: (node: Node$2, pos: number, parent: Node$2 | null, index: number) => void | boolean, startPos?: number): void;
+  /**
+    Call the given callback for every descendant node. Doesn't
+    descend into a node when the callback returns `false`.
+    */
+  descendants(f: (node: Node$2, pos: number, parent: Node$2 | null, index: number) => void | boolean): void;
+  /**
+    Concatenates all the text nodes found in this fragment and its
+    children.
+    */
+  get textContent(): string;
+  /**
+    Get all text between positions `from` and `to`. When
+    `blockSeparator` is given, it will be inserted to separate text
+    from different block nodes. If `leafText` is given, it'll be
+    inserted for every non-text leaf node encountered, otherwise
+    [`leafText`](https://prosemirror.net/docs/ref/#model.NodeSpec.leafText) will be used.
+    */
+  textBetween(from: number, to: number, blockSeparator?: string | null, leafText?: null | string | ((leafNode: Node$2) => string)): string;
+  /**
+    Returns this node's first child, or `null` if there are no
+    children.
+    */
+  get firstChild(): Node$2 | null;
+  /**
+    Returns this node's last child, or `null` if there are no
+    children.
+    */
+  get lastChild(): Node$2 | null;
+  /**
+    Test whether two nodes represent the same piece of document.
+    */
+  eq(other: Node$2): boolean;
+  /**
+    Compare the markup (type, attributes, and marks) of this node to
+    those of another. Returns `true` if both have the same markup.
+    */
+  sameMarkup(other: Node$2): boolean;
+  /**
+    Check whether this node's markup correspond to the given type,
+    attributes, and marks.
+    */
+  hasMarkup(type: NodeType$2, attrs?: Attrs | null, marks?: readonly Mark$1[]): boolean;
+  /**
+    Create a new node with the same markup as this node, containing
+    the given content (or empty, if no content is given).
+    */
+  copy(content?: Fragment | null): Node$2;
+  /**
+    Create a copy of this node, with the given set of marks instead
+    of the node's own marks.
+    */
+  mark(marks: readonly Mark$1[]): Node$2;
+  /**
+    Create a copy of this node with only the content between the
+    given positions. If `to` is not given, it defaults to the end of
+    the node.
+    */
+  cut(from: number, to?: number): Node$2;
+  /**
+    Cut out the part of the document between the given positions, and
+    return it as a `Slice` object.
+    */
+  slice(from: number, to?: number, includeParents?: boolean): Slice;
+  /**
+    Replace the part of the document between the given positions with
+    the given slice. The slice must 'fit', meaning its open sides
+    must be able to connect to the surrounding content, and its
+    content nodes must be valid children for the node they are placed
+    into. If any of this is violated, an error of type
+    [`ReplaceError`](https://prosemirror.net/docs/ref/#model.ReplaceError) is thrown.
+    */
+  replace(from: number, to: number, slice: Slice): Node$2;
+  /**
+    Find the node directly after the given position.
+    */
+  nodeAt(pos: number): Node$2 | null;
+  /**
+    Find the (direct) child node after the given offset, if any,
+    and return it along with its index and offset relative to this
+    node.
+    */
+  childAfter(pos: number): {
+    node: Node$2 | null;
+    index: number;
+    offset: number;
+  };
+  /**
+    Find the (direct) child node before the given offset, if any,
+    and return it along with its index and offset relative to this
+    node.
+    */
+  childBefore(pos: number): {
+    node: Node$2 | null;
+    index: number;
+    offset: number;
+  };
+  /**
+    Resolve the given position in the document, returning an
+    [object](https://prosemirror.net/docs/ref/#model.ResolvedPos) with information about its context.
+    */
+  resolve(pos: number): ResolvedPos;
+  /**
+    Test whether a given mark or mark type occurs in this document
+    between the two given positions.
+    */
+  rangeHasMark(from: number, to: number, type: Mark$1 | MarkType$1): boolean;
+  /**
+    True when this is a block (non-inline node)
+    */
+  get isBlock(): boolean;
+  /**
+    True when this is a textblock node, a block node with inline
+    content.
+    */
+  get isTextblock(): boolean;
+  /**
+    True when this node allows inline content.
+    */
+  get inlineContent(): boolean;
+  /**
+    True when this is an inline node (a text node or a node that can
+    appear among text).
+    */
+  get isInline(): boolean;
+  /**
+    True when this is a text node.
+    */
+  get isText(): boolean;
+  /**
+    True when this is a leaf node.
+    */
+  get isLeaf(): boolean;
+  /**
+    True when this is an atom, i.e. when it does not have directly
+    editable content. This is usually the same as `isLeaf`, but can
+    be configured with the [`atom` property](https://prosemirror.net/docs/ref/#model.NodeSpec.atom)
+    on a node's spec (typically used when the node is displayed as
+    an uneditable [node view](https://prosemirror.net/docs/ref/#view.NodeView)).
+    */
+  get isAtom(): boolean;
+  /**
+    Return a string representation of this node for debugging
+    purposes.
+    */
+  toString(): string;
+  /**
+    Get the content match in this node at the given index.
+    */
+  contentMatchAt(index: number): ContentMatch;
+  /**
+    Test whether replacing the range between `from` and `to` (by
+    child index) with the given replacement fragment (which defaults
+    to the empty fragment) would leave the node's content valid. You
+    can optionally pass `start` and `end` indices into the
+    replacement fragment.
+    */
+  canReplace(from: number, to: number, replacement?: Fragment, start?: number, end?: number): boolean;
+  /**
+    Test whether replacing the range `from` to `to` (by index) with
+    a node of the given type would leave the node's content valid.
+    */
+  canReplaceWith(from: number, to: number, type: NodeType$2, marks?: readonly Mark$1[]): boolean;
+  /**
+    Test whether the given node's content could be appended to this
+    node. If that node is empty, this will only return true if there
+    is at least one node type that can appear in both nodes (to avoid
+    merging completely incompatible nodes).
+    */
+  canAppend(other: Node$2): boolean;
+  /**
+    Check whether this node and its descendants conform to the
+    schema, and raise an exception when they do not.
+    */
+  check(): void;
+  /**
+    Return a JSON-serializeable representation of this node.
+    */
+  toJSON(): any;
+  /**
+    Deserialize a node from its JSON representation.
+    */
+  static fromJSON(schema: Schema, json: any): Node$2;
+}
+//#endregion
+//#region prosemirror-transform/dist/index.d.ts
+/**
+There are several things that positions can be mapped through.
+Such objects conform to this interface.
+*/
+interface Mappable {
+  /**
+    Map a position through this object. When given, `assoc` (should
+    be -1 or 1, defaults to 1) determines with which side the
+    position is associated, which determines in which direction to
+    move when a chunk of content is inserted at the mapped position.
+    */
+  map: (pos: number, assoc?: number) => number;
+  /**
+    Map a position, and return an object containing additional
+    information about the mapping. The result's `deleted` field tells
+    you whether the position was deleted (completely enclosed in a
+    replaced range) during the mapping. When content on only one side
+    is deleted, the position itself is only considered deleted when
+    `assoc` points in the direction of the deleted content.
+    */
+  mapResult: (pos: number, assoc?: number) => MapResult;
+}
+/**
+An object representing a mapped position with extra
+information.
+*/
+declare class MapResult {
+  /**
+    The mapped version of the position.
+    */
+  readonly pos: number;
+  /**
+    Tells you whether the position was deleted, that is, whether the
+    step removed the token on the side queried (via the `assoc`)
+    argument from the document.
+    */
+  get deleted(): boolean;
+  /**
+    Tells you whether the token before the mapped position was deleted.
+    */
+  get deletedBefore(): boolean;
+  /**
+    True when the token after the mapped position was deleted.
+    */
+  get deletedAfter(): boolean;
+  /**
+    Tells whether any of the steps mapped through deletes across the
+    position (including both the token before and after the
+    position).
+    */
+  get deletedAcross(): boolean;
+}
+/**
+A map describing the deletions and insertions made by a step, which
+can be used to find the correspondence between positions in the
+pre-step version of a document and the same position in the
+post-step version.
+*/
+declare class StepMap implements Mappable {
+  /**
+    Create a position map. The modifications to the document are
+    represented as an array of numbers, in which each group of three
+    represents a modified chunk as `[start, oldSize, newSize]`.
+    */
+  constructor(
+  /**
+    @internal
+    */
+  ranges: readonly number[],
+  /**
+    @internal
+    */
+  inverted?: boolean);
+  mapResult(pos: number, assoc?: number): MapResult;
+  map(pos: number, assoc?: number): number;
+  /**
+    Calls the given function on each of the changed ranges included in
+    this map.
+    */
+  forEach(f: (oldStart: number, oldEnd: number, newStart: number, newEnd: number) => void): void;
+  /**
+    Create an inverted version of this map. The result can be used to
+    map positions in the post-step document to the pre-step document.
+    */
+  invert(): StepMap;
+  /**
+    Create a map that moves all positions by offset `n` (which may be
+    negative). This can be useful when applying steps meant for a
+    sub-document to a larger document, or vice-versa.
+    */
+  static offset(n: number): StepMap;
+  /**
+    A StepMap that contains no changed ranges.
+    */
+  static empty: StepMap;
+}
+/**
+A mapping represents a pipeline of zero or more [step
+maps](https://prosemirror.net/docs/ref/#transform.StepMap). It has special provisions for losslessly
+handling mapping positions through a series of steps in which some
+steps are inverted versions of earlier steps. (This comes up when
+‘[rebasing](https://prosemirror.net/docs/guide/#transform.rebasing)’ steps for
+collaboration or history management.)
+*/
+declare class Mapping implements Mappable {
+  /**
+    The starting position in the `maps` array, used when `map` or
+    `mapResult` is called.
+    */
+  from: number;
+  /**
+    The end position in the `maps` array.
+    */
+  to: number;
+  /**
+    Create a new mapping with the given position maps.
+    */
+  constructor(maps?: readonly StepMap[],
+  /**
+    @internal
+    */
+  mirror?: number[] | undefined,
+  /**
+    The starting position in the `maps` array, used when `map` or
+    `mapResult` is called.
+    */
+  from?: number,
+  /**
+    The end position in the `maps` array.
+    */
+  to?: number);
+  /**
+    The step maps in this mapping.
+    */
+  get maps(): readonly StepMap[];
+  private _maps;
+  private ownData;
+  /**
+    Create a mapping that maps only through a part of this one.
+    */
+  slice(from?: number, to?: number): Mapping;
+  /**
+    Add a step map to the end of this mapping. If `mirrors` is
+    given, it should be the index of the step map that is the mirror
+    image of this one.
+    */
+  appendMap(map: StepMap, mirrors?: number): void;
+  /**
+    Add all the step maps in a given mapping to this one (preserving
+    mirroring information).
+    */
+  appendMapping(mapping: Mapping): void;
+  /**
+    Finds the offset of the step map that mirrors the map at the
+    given offset, in this mapping (as per the second argument to
+    `appendMap`).
+    */
+  getMirror(n: number): number | undefined;
+  /**
+    Append the inverse of the given mapping to this one.
+    */
+  appendMappingInverted(mapping: Mapping): void;
+  /**
+    Create an inverted version of this mapping.
+    */
+  invert(): Mapping;
+  /**
+    Map a position through this mapping.
+    */
+  map(pos: number, assoc?: number): number;
+  /**
+    Map a position through this mapping, returning a mapping
+    result.
+    */
+  mapResult(pos: number, assoc?: number): MapResult;
+}
+/**
+A step object represents an atomic change. It generally applies
+only to the document it was created for, since the positions
+stored in it will only make sense for that document.
+
+New steps are defined by creating classes that extend `Step`,
+overriding the `apply`, `invert`, `map`, `getMap` and `fromJSON`
+methods, and registering your class with a unique
+JSON-serialization identifier using
+[`Step.jsonID`](https://prosemirror.net/docs/ref/#transform.Step^jsonID).
+*/
+declare abstract class Step {
+  /**
+    Applies this step to the given document, returning a result
+    object that either indicates failure, if the step can not be
+    applied to this document, or indicates success by containing a
+    transformed document.
+    */
+  abstract apply(doc: Node$2): StepResult;
+  /**
+    Get the step map that represents the changes made by this step,
+    and which can be used to transform between positions in the old
+    and the new document.
+    */
+  getMap(): StepMap;
+  /**
+    Create an inverted version of this step. Needs the document as it
+    was before the step as argument.
+    */
+  abstract invert(doc: Node$2): Step;
+  /**
+    Map this step through a mappable thing, returning either a
+    version of that step with its positions adjusted, or `null` if
+    the step was entirely deleted by the mapping.
+    */
+  abstract map(mapping: Mappable): Step | null;
+  /**
+    Try to merge this step with another one, to be applied directly
+    after it. Returns the merged step when possible, null if the
+    steps can't be merged.
+    */
+  merge(other: Step): Step | null;
+  /**
+    Create a JSON-serializeable representation of this step. When
+    defining this for a custom subclass, make sure the result object
+    includes the step type's [JSON id](https://prosemirror.net/docs/ref/#transform.Step^jsonID) under
+    the `stepType` property.
+    */
+  abstract toJSON(): any;
+  /**
+    Deserialize a step from its JSON representation. Will call
+    through to the step class' own implementation of this method.
+    */
+  static fromJSON(schema: Schema, json: any): Step;
+  /**
+    To be able to serialize steps to JSON, each step needs a string
+    ID to attach to its JSON representation. Use this method to
+    register an ID for your step classes. Try to pick something
+    that's unlikely to clash with steps from other modules.
+    */
+  static jsonID(id: string, stepClass: {
+    fromJSON(schema: Schema, json: any): Step;
+  }): {
+    fromJSON(schema: Schema, json: any): Step;
+  };
+}
+/**
+The result of [applying](https://prosemirror.net/docs/ref/#transform.Step.apply) a step. Contains either a
+new document or a failure value.
+*/
+declare class StepResult {
+  /**
+    The transformed document, if successful.
+    */
+  readonly doc: Node$2 | null;
+  /**
+    The failure message, if unsuccessful.
+    */
+  readonly failed: string | null;
+  /**
+    Create a successful step result.
+    */
+  static ok(doc: Node$2): StepResult;
+  /**
+    Create a failed step result.
+    */
+  static fail(message: string): StepResult;
+  /**
+    Call [`Node.replace`](https://prosemirror.net/docs/ref/#model.Node.replace) with the given
+    arguments. Create a successful result if it succeeds, and a
+    failed one if it throws a `ReplaceError`.
+    */
+  static fromReplace(doc: Node$2, from: number, to: number, slice: Slice): StepResult;
+}
+/**
+Abstraction to build up and track an array of
+[steps](https://prosemirror.net/docs/ref/#transform.Step) representing a document transformation.
+
+Most transforming methods return the `Transform` object itself, so
+that they can be chained.
+*/
+declare class Transform {
+  /**
+    The current document (the result of applying the steps in the
+    transform).
+    */
+  doc: Node$2;
+  /**
+    The steps in this transform.
+    */
+  readonly steps: Step[];
+  /**
+    The documents before each of the steps.
+    */
+  readonly docs: Node$2[];
+  /**
+    A mapping with the maps for each of the steps in this transform.
+    */
+  readonly mapping: Mapping;
+  /**
+    Create a transform that starts with the given document.
+    */
+  constructor(
+  /**
+    The current document (the result of applying the steps in the
+    transform).
+    */
+  doc: Node$2);
+  /**
+    The starting document.
+    */
+  get before(): Node$2;
+  /**
+    Apply a new step in this transform, saving the result. Throws an
+    error when the step fails.
+    */
+  step(step: Step): this;
+  /**
+    Try to apply a step in this transformation, ignoring it if it
+    fails. Returns the step result.
+    */
+  maybeStep(step: Step): StepResult;
+  /**
+    True when the document has been changed (when there are any
+    steps).
+    */
+  get docChanged(): boolean;
+  /**
+    Return a single range, in post-transform document positions,
+    that covers all content changed by this transform. Returns null
+    if no replacements are made. Note that this will ignore changes
+    that add/remove marks without replacing the underlying content.
+    */
+  changedRange(): {
+    from: number;
+    to: number;
+  } | null;
+  /**
+    Replace the part of the document between `from` and `to` with the
+    given `slice`.
+    */
+  replace(from: number, to?: number, slice?: Slice): this;
+  /**
+    Replace the given range with the given content, which may be a
+    fragment, node, or array of nodes.
+    */
+  replaceWith(from: number, to: number, content: Fragment | Node$2 | readonly Node$2[]): this;
+  /**
+    Delete the content between the given positions.
+    */
+  delete(from: number, to: number): this;
+  /**
+    Insert the given content at the given position.
+    */
+  insert(pos: number, content: Fragment | Node$2 | readonly Node$2[]): this;
+  /**
+    Replace a range of the document with a given slice, using
+    `from`, `to`, and the slice's
+    [`openStart`](https://prosemirror.net/docs/ref/#model.Slice.openStart) property as hints, rather
+    than fixed start and end points. This method may grow the
+    replaced area or close open nodes in the slice in order to get a
+    fit that is more in line with WYSIWYG expectations, by dropping
+    fully covered parent nodes of the replaced region when they are
+    marked [non-defining as
+    context](https://prosemirror.net/docs/ref/#model.NodeSpec.definingAsContext), or including an
+    open parent node from the slice that _is_ marked as [defining
+    its content](https://prosemirror.net/docs/ref/#model.NodeSpec.definingForContent).
+    
+    This is the method, for example, to handle paste. The similar
+    [`replace`](https://prosemirror.net/docs/ref/#transform.Transform.replace) method is a more
+    primitive tool which will _not_ move the start and end of its given
+    range, and is useful in situations where you need more precise
+    control over what happens.
+    */
+  replaceRange(from: number, to: number, slice: Slice): this;
+  /**
+    Replace the given range with a node, but use `from` and `to` as
+    hints, rather than precise positions. When from and to are the same
+    and are at the start or end of a parent node in which the given
+    node doesn't fit, this method may _move_ them out towards a parent
+    that does allow the given node to be placed. When the given range
+    completely covers a parent node, this method may completely replace
+    that parent node.
+    */
+  replaceRangeWith(from: number, to: number, node: Node$2): this;
+  /**
+    Delete the given range, expanding it to cover fully covered
+    parent nodes until a valid replace is found.
+    */
+  deleteRange(from: number, to: number): this;
+  /**
+    Split the content in the given range off from its parent, if there
+    is sibling content before or after it, and move it up the tree to
+    the depth specified by `target`. You'll probably want to use
+    [`liftTarget`](https://prosemirror.net/docs/ref/#transform.liftTarget) to compute `target`, to make
+    sure the lift is valid.
+    */
+  lift(range: NodeRange, target: number): this;
+  /**
+    Join the blocks around the given position. If depth is 2, their
+    last and first siblings are also joined, and so on.
+    */
+  join(pos: number, depth?: number): this;
+  /**
+    Wrap the given [range](https://prosemirror.net/docs/ref/#model.NodeRange) in the given set of wrappers.
+    The wrappers are assumed to be valid in this position, and should
+    probably be computed with [`findWrapping`](https://prosemirror.net/docs/ref/#transform.findWrapping).
+    */
+  wrap(range: NodeRange, wrappers: readonly {
+    type: NodeType$2;
+    attrs?: Attrs | null;
+  }[]): this;
+  /**
+    Set the type of all textblocks (partly) between `from` and `to` to
+    the given node type with the given attributes.
+    */
+  setBlockType(from: number, to: number | undefined, type: NodeType$2, attrs?: Attrs | null | ((oldNode: Node$2) => Attrs)): this;
+  /**
+    Change the type, attributes, and/or marks of the node at `pos`.
+    When `type` isn't given, the existing node type is preserved,
+    */
+  setNodeMarkup(pos: number, type?: NodeType$2 | null, attrs?: Attrs | null, marks?: readonly Mark$1[]): this;
+  /**
+    Set a single attribute on a given node to a new value.
+    The `pos` addresses the document content. Use `setDocAttribute`
+    to set attributes on the document itself.
+    */
+  setNodeAttribute(pos: number, attr: string, value: any): this;
+  /**
+    Set a single attribute on the document to a new value.
+    */
+  setDocAttribute(attr: string, value: any): this;
+  /**
+    Add a mark to the node at position `pos`.
+    */
+  addNodeMark(pos: number, mark: Mark$1): this;
+  /**
+    Remove a mark (or all marks of the given type) from the node at
+    position `pos`.
+    */
+  removeNodeMark(pos: number, mark: Mark$1 | MarkType$1): this;
+  /**
+    Split the node at the given position, and optionally, if `depth` is
+    greater than one, any number of nodes above that. By default, the
+    parts split off will inherit the node type of the original node.
+    This can be changed by passing an array of types and attributes to
+    use after the split (with the outermost nodes coming first).
+    */
+  split(pos: number, depth?: number, typesAfter?: (null | {
+    type: NodeType$2;
+    attrs?: Attrs | null;
+  })[]): this;
+  /**
+    Add the given mark to the inline content between `from` and `to`.
+    */
+  addMark(from: number, to: number, mark: Mark$1): this;
+  /**
+    Remove marks from inline nodes between `from` and `to`. When
+    `mark` is a single mark, remove precisely that mark. When it is
+    a mark type, remove all marks of that type. When it is null,
+    remove all marks of any type.
+    */
+  removeMark(from: number, to: number, mark?: Mark$1 | MarkType$1 | null): this;
+  /**
+    Removes all marks and nodes from the content of the node at
+    `pos` that don't match the given new parent node type. Accepts
+    an optional starting [content match](https://prosemirror.net/docs/ref/#model.ContentMatch) as
+    third argument.
+    */
+  clearIncompatible(pos: number, parentType: NodeType$2, match?: ContentMatch): this;
+}
+//#endregion
+//#region prosemirror-view/dist/index.d.ts
+type DOMNode = InstanceType<typeof window.Node>;
+type WidgetConstructor = ((view: EditorView, getPos: () => number | undefined) => DOMNode) | DOMNode;
+/**
+Decoration objects can be provided to the view through the
+[`decorations` prop](https://prosemirror.net/docs/ref/#view.EditorProps.decorations). They come in
+several variants—see the static members of this class for details.
+*/
+declare class Decoration$1 {
+  /**
+    The start position of the decoration.
+    */
+  readonly from: number;
+  /**
+    The end position. Will be the same as `from` for [widget
+    decorations](https://prosemirror.net/docs/ref/#view.Decoration^widget).
+    */
+  readonly to: number;
+  /**
+    Creates a widget decoration, which is a DOM node that's shown in
+    the document at the given position. It is recommended that you
+    delay rendering the widget by passing a function that will be
+    called when the widget is actually drawn in a view, but you can
+    also directly pass a DOM node. `getPos` can be used to find the
+    widget's current document position.
+    */
+  static widget(pos: number, toDOM: WidgetConstructor, spec?: {
+    /**
+        Controls which side of the document position this widget is
+        associated with. When negative, it is drawn before a cursor
+        at its position, and content inserted at that position ends
+        up after the widget. When zero (the default) or positive, the
+        widget is drawn after the cursor and content inserted there
+        ends up before the widget.
+        
+        When there are multiple widgets at a given position, their
+        `side` values determine the order in which they appear. Those
+        with lower values appear first. The ordering of widgets with
+        the same `side` value is unspecified.
+        
+        When `marks` is null, `side` also determines the marks that
+        the widget is wrapped in—those of the node before when
+        negative, those of the node after when positive.
+        */
+    side?: number;
+    /**
+        By default, the cursor, when at the position of the widget,
+        will be strictly kept on the side indicated by
+        [`side`](https://prosemirror.net/docs/ref/#view.Decoration^widget^spec.side). Set this to true
+        to allow the DOM selection to stay on the other side if the
+        client sets it there.
+        
+        **Note**: Mapping of this decoration, which decides on which
+        side insertions at its position appear, will still happen
+        according to `side`, and keyboard cursor motion will not,
+        without further custom handling, visit both sides of the
+        widget.
+        */
+    relaxedSide?: boolean;
+    /**
+        The precise set of marks to draw around the widget.
+        */
+    marks?: readonly Mark$1[];
+    /**
+        Can be used to control which DOM events, when they bubble out
+        of this widget, the editor view should ignore.
+        */
+    stopEvent?: (event: Event) => boolean;
+    /**
+        When set (defaults to false), selection changes inside the
+        widget are ignored, and don't cause ProseMirror to try and
+        re-sync the selection with its selection state.
+        */
+    ignoreSelection?: boolean;
+    /**
+        When comparing decorations of this type (in order to decide
+        whether it needs to be redrawn), ProseMirror will by default
+        compare the widget DOM node by identity. If you pass a key,
+        that key will be compared instead, which can be useful when
+        you generate decorations on the fly and don't want to store
+        and reuse DOM nodes. Make sure that any widgets with the same
+        key are interchangeable—if widgets differ in, for example,
+        the behavior of some event handler, they should get
+        different keys.
+        */
+    key?: string;
+    /**
+        Called when the widget decoration is removed or the editor is
+        destroyed.
+        */
+    destroy?: (node: DOMNode) => void;
+    /**
+        Specs allow arbitrary additional properties.
+        */
+    [key: string]: any;
+  }): Decoration$1;
+  /**
+    Creates an inline decoration, which adds the given attributes to
+    each inline node between `from` and `to`.
+    */
+  static inline(from: number, to: number, attrs: DecorationAttrs, spec?: {
+    /**
+        Determines how the left side of the decoration is
+        [mapped](https://prosemirror.net/docs/ref/#transform.Position_Mapping) when content is
+        inserted directly at that position. By default, the decoration
+        won't include the new content, but you can set this to `true`
+        to make it inclusive.
+        */
+    inclusiveStart?: boolean;
+    /**
+        Determines how the right side of the decoration is mapped.
+        See
+        [`inclusiveStart`](https://prosemirror.net/docs/ref/#view.Decoration^inline^spec.inclusiveStart).
+        */
+    inclusiveEnd?: boolean;
+    /**
+        Specs may have arbitrary additional properties.
+        */
+    [key: string]: any;
+  }): Decoration$1;
+  /**
+    Creates a node decoration. `from` and `to` should point precisely
+    before and after a node in the document. That node, and only that
+    node, will receive the given attributes.
+    */
+  static node(from: number, to: number, attrs: DecorationAttrs, spec?: any): Decoration$1;
+  /**
+    The spec provided when creating this decoration. Can be useful
+    if you've stored extra information in that object.
+    */
+  get spec(): any;
+}
+/**
+A set of attributes to add to a decorated node. Most properties
+simply directly correspond to DOM attributes of the same name,
+which will be set to the property's value. These are exceptions:
+*/
+type DecorationAttrs = {
+  /**
+    When non-null, the target node is wrapped in a DOM element of
+    this type (and the other attributes are applied to this element).
+    */
+  nodeName?: string;
+  /**
+    A CSS class name or a space-separated set of class names to be
+    _added_ to the classes that the node already had.
+    */
+  class?: string;
+  /**
+    A string of CSS to be _added_ to the node's existing `style` property.
+    */
+  style?: string;
+  /**
+    Any other properties are treated as regular DOM attributes.
+    */
+  [attribute: string]: string | undefined;
+};
+/**
+An object that can [provide](https://prosemirror.net/docs/ref/#view.EditorProps.decorations)
+decorations. Implemented by [`DecorationSet`](https://prosemirror.net/docs/ref/#view.DecorationSet),
+and passed to [node views](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+*/
+interface DecorationSource {
+  /**
+    Map the set of decorations in response to a change in the
+    document.
+    */
+  map: (mapping: Mapping, node: Node$2) => DecorationSource;
+  /**
+    Extract a DecorationSource containing decorations for the given child node at the given offset.
+    */
+  forChild(offset: number, child: Node$2): DecorationSource;
+  /**
+    Call the given function for each decoration set in the group.
+    */
+  forEachSet(f: (set: DecorationSet) => void): void;
+}
+/**
+A collection of [decorations](https://prosemirror.net/docs/ref/#view.Decoration), organized in such
+a way that the drawing algorithm can efficiently use and compare
+them. This is a persistent data structure—it is not modified,
+updates create a new value.
+*/
+declare class DecorationSet implements DecorationSource {
+  /**
+    Create a set of decorations, using the structure of the given
+    document. This will consume (modify) the `decorations` array, so
+    you must make a copy if you want need to preserve that.
+    */
+  static create(doc: Node$2, decorations: Decoration$1[]): DecorationSet;
+  /**
+    Find all decorations in this set which touch the given range
+    (including decorations that start or end directly at the
+    boundaries) and match the given predicate on their spec. When
+    `start` and `end` are omitted, all decorations in the set are
+    considered. When `predicate` isn't given, all decorations are
+    assumed to match.
+    */
+  find(start?: number, end?: number, predicate?: (spec: any) => boolean): Decoration$1[];
+  private findInner;
+  /**
+    Map the set of decorations in response to a change in the
+    document.
+    */
+  map(mapping: Mapping, doc: Node$2, options?: {
+    /**
+        When given, this function will be called for each decoration
+        that gets dropped as a result of the mapping, passing the
+        spec of that decoration.
+        */
+    onRemove?: (decorationSpec: any) => void;
+  }): DecorationSet;
+  /**
+    Add the given array of decorations to the ones in the set,
+    producing a new set. Consumes the `decorations` array. Needs
+    access to the current document to create the appropriate tree
+    structure.
+    */
+  add(doc: Node$2, decorations: Decoration$1[]): DecorationSet;
+  private addInner;
+  /**
+    Create a new set that contains the decorations in this set, minus
+    the ones in the given array.
+    */
+  remove(decorations: Decoration$1[]): DecorationSet;
+  private removeInner;
+  forChild(offset: number, node: Node$2): DecorationSet | DecorationGroup;
+  /**
+    The empty set of decorations.
+    */
+  static empty: DecorationSet;
+  forEachSet(f: (set: DecorationSet) => void): void;
+}
+declare class DecorationGroup implements DecorationSource {
+  readonly members: readonly DecorationSet[];
+  constructor(members: readonly DecorationSet[]);
+  map(mapping: Mapping, doc: Node$2): DecorationSource;
+  forChild(offset: number, child: Node$2): DecorationSource | DecorationSet;
+  eq(other: DecorationGroup): boolean;
+  locals(node: Node$2): readonly any[];
+  static from(members: readonly DecorationSource[]): DecorationSource;
+  forEachSet(f: (set: DecorationSet) => void): void;
+}
+declare global {
+  interface Node {}
+}
+/**
+A ViewMutationRecord represents a DOM
+[mutation](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver)
+or a selection change happens within the view. When the change is
+a selection change, the record will have a `type` property of
+`"selection"` (which doesn't occur for native mutation records).
+*/
+type ViewMutationRecord = MutationRecord | {
+  type: "selection";
+  target: DOMNode;
+};
+/**
+By default, document nodes are rendered using the result of the
+[`toDOM`](https://prosemirror.net/docs/ref/#model.NodeSpec.toDOM) method of their spec, and managed
+entirely by the editor. For some use cases, such as embedded
+node-specific editing interfaces, you want more control over
+the behavior of a node's in-editor representation, and need to
+[define](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews) a custom node view.
+
+Objects returned as node views must conform to this interface.
+*/
+interface NodeView {
+  /**
+    The outer DOM node that represents the document node.
+    */
+  dom: HTMLElement;
+  /**
+    The DOM node that should hold the node's content. Only meaningful
+    if the node view also defines a `dom` property and if its node
+    type is not a leaf node type. When this is present, ProseMirror
+    will take care of rendering the node's children into it. When it
+    is not present, the node view itself is responsible for rendering
+    (or deciding not to render) its child nodes.
+    */
+  contentDOM?: HTMLElement | null;
+  /**
+    When given, this will be called when the view is updating
+    itself. It will be given a node, an array of active decorations
+    around the node (which are automatically drawn, and the node
+    view may ignore if it isn't interested in them), and a
+    [decoration source](https://prosemirror.net/docs/ref/#view.DecorationSource) that represents any
+    decorations that apply to the content of the node (which again
+    may be ignored). It should return true if it was able to update
+    to that node, and false otherwise. If the node view has a
+    `contentDOM` property (or no `dom` property), updating its child
+    nodes will be handled by ProseMirror.
+    */
+  update?: (node: Node$2, decorations: readonly Decoration$1[], innerDecorations: DecorationSource) => boolean;
+  /**
+    By default, `update` will only be called when a node of the same
+    node type appears in this view's position. When you set this to
+    true, it will be called for any node, making it possible to have
+    a node view that representsmultiple types of nodes. You will
+    need to check the type of the nodes you get in `update` and
+    return `false` for types you cannot handle.
+    */
+  multiType?: boolean;
+  /**
+    Can be used to override the way the node's selected status (as a
+    node selection) is displayed.
+    */
+  selectNode?: () => void;
+  /**
+    When defining a `selectNode` method, you should also provide a
+    `deselectNode` method to remove the effect again.
+    */
+  deselectNode?: () => void;
+  /**
+    This will be called to handle setting the selection inside the
+    node. The `anchor` and `head` positions are relative to the start
+    of the node. By default, a DOM selection will be created between
+    the DOM positions corresponding to those positions, but if you
+    override it you can do something else.
+    */
+  setSelection?: (anchor: number, head: number, root: Document | ShadowRoot) => void;
+  /**
+    Can be used to prevent the editor view from trying to handle some
+    or all DOM events that bubble up from the node view. Events for
+    which this returns true are not handled by the editor.
+    */
+  stopEvent?: (event: Event) => boolean;
+  /**
+    Called when a [mutation](https://prosemirror.net/docs/ref/#view.ViewMutationRecord) happens within the
+    view. Return false if the editor should re-read the selection or re-parse
+    the range around the mutation, true if it can safely be ignored.
+    */
+  ignoreMutation?: (mutation: ViewMutationRecord) => boolean;
+  /**
+    Called when the node view is removed from the editor or the whole
+    editor is destroyed.
+    */
+  destroy?: () => void;
+}
+/**
+By default, document marks are rendered using the result of the
+[`toDOM`](https://prosemirror.net/docs/ref/#model.MarkSpec.toDOM) method of their spec, and managed entirely
+by the editor. For some use cases, you want more control over the behavior
+of a mark's in-editor representation, and need to
+[define](https://prosemirror.net/docs/ref/#view.EditorProps.markViews) a custom mark view.
+
+Objects returned as mark views must conform to this interface.
+*/
+interface MarkView {
+  /**
+    The outer DOM node that represents the document node.
+    */
+  dom: HTMLElement;
+  /**
+    The DOM node that should hold the mark's content. When this is not
+    present, the `dom` property is used as the content DOM.
+    */
+  contentDOM?: HTMLElement | null;
+  /**
+    When given, this is called when the view is updating itself. It
+    will be given a mark (of the same type as the current one). When it
+    returns true, the existing DOM is kept and reused (its content is
+    still managed by ProseMirror); when it returns false, the mark view
+    is rebuilt.
+    */
+  update?: (mark: Mark$1) => boolean;
+  /**
+    Called when a [mutation](https://prosemirror.net/docs/ref/#view.ViewMutationRecord) happens within the
+    view. Return false if the editor should re-read the selection or re-parse
+    the range around the mutation, true if it can safely be ignored.
+    */
+  ignoreMutation?: (mutation: ViewMutationRecord) => boolean;
+  /**
+    Called when the mark view is removed from the editor or the whole
+    editor is destroyed.
+    */
+  destroy?: () => void;
+}
+/**
+An editor view manages the DOM structure that represents an
+editable document. Its state and behavior are determined by its
+[props](https://prosemirror.net/docs/ref/#view.DirectEditorProps).
+*/
+declare class EditorView {
+  private directPlugins;
+  private _root;
+  private mounted;
+  private prevDirectPlugins;
+  private pluginViews;
+  /**
+    The view's current [state](https://prosemirror.net/docs/ref/#state.EditorState).
+    */
+  state: EditorState;
+  /**
+    Create a view. `place` may be a DOM node that the editor should
+    be appended to, a function that will place it into the document,
+    or an object whose `mount` property holds the node to use as the
+    document container. If it is `null`, the editor will not be
+    added to the document.
+    */
+  constructor(place: null | DOMNode | ((editor: HTMLElement) => void) | {
+    mount: HTMLElement;
+  }, props: DirectEditorProps);
+  /**
+    An editable DOM node containing the document. (You probably
+    should not directly interfere with its content.)
+    */
+  readonly dom: HTMLElement;
+  /**
+    Indicates whether the editor is currently [editable](https://prosemirror.net/docs/ref/#view.EditorProps.editable).
+    */
+  editable: boolean;
+  /**
+    When editor content is being dragged, this object contains
+    information about the dragged slice and whether it is being
+    copied or moved. At any other time, it is null.
+    */
+  dragging: null | {
+    slice: Slice;
+    move: boolean;
+  };
+  /**
+    Holds `true` when a
+    [composition](https://w3c.github.io/uievents/#events-compositionevents)
+    is active.
+    */
+  get composing(): boolean;
+  /**
+    The view's current [props](https://prosemirror.net/docs/ref/#view.EditorProps).
+    */
+  get props(): DirectEditorProps;
+  /**
+    Update the view's props. Will immediately cause an update to
+    the DOM.
+    */
+  update(props: DirectEditorProps): void;
+  /**
+    Update the view by updating existing props object with the object
+    given as argument. Equivalent to `view.update(Object.assign({},
+    view.props, props))`.
+    */
+  setProps(props: Partial<DirectEditorProps>): void;
+  /**
+    Update the editor's `state` prop, without touching any of the
+    other props.
+    */
+  updateState(state: EditorState): void;
+  private updateStateInner;
+  private destroyPluginViews;
+  private updatePluginViews;
+  private updateDraggedNode;
+  /**
+    Goes over the values of a prop, first those provided directly,
+    then those from plugins given to the view, then from plugins in
+    the state (in order), and calls `f` every time a non-undefined
+    value is found. When `f` returns a truthy value, that is
+    immediately returned. When `f` isn't provided, it is treated as
+    the identity function (the prop value is returned directly).
+    */
+  someProp<PropName extends keyof EditorProps, Result>(propName: PropName, f: (value: NonNullable<EditorProps[PropName]>) => Result): Result | undefined;
+  someProp<PropName extends keyof EditorProps>(propName: PropName): NonNullable<EditorProps[PropName]> | undefined;
+  /**
+    Query whether the view has focus.
+    */
+  hasFocus(): boolean;
+  /**
+    Focus the editor.
+    */
+  focus(): void;
+  /**
+    Get the document root in which the editor exists. This will
+    usually be the top-level `document`, but might be a [shadow
+    DOM](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Shadow_DOM)
+    root if the editor is inside one.
+    */
+  get root(): Document | ShadowRoot;
+  /**
+    When an existing editor view is moved to a new document or
+    shadow tree, call this to make it recompute its root.
+    */
+  updateRoot(): void;
+  /**
+    Given a pair of viewport coordinates, return the document
+    position that corresponds to them. May return null if the given
+    coordinates aren't inside of the editor. When an object is
+    returned, its `pos` property is the position nearest to the
+    coordinates, and its `inside` property holds the position of the
+    inner node that the position falls inside of, or -1 if it is at
+    the top level, not in any node.
+    */
+  posAtCoords(coords: {
+    left: number;
+    top: number;
+  }): {
+    pos: number;
+    inside: number;
+  } | null;
+  /**
+    Returns the viewport rectangle at a given document position.
+    `left` and `right` will be the same number, as this returns a
+    flat cursor-ish rectangle. If the position is between two things
+    that aren't directly adjacent, `side` determines which element
+    is used. When < 0, the element before the position is used,
+    otherwise the element after.
+    */
+  coordsAtPos(pos: number, side?: number): {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
+  /**
+    Find the DOM position that corresponds to the given document
+    position. When `side` is negative, find the position as close as
+    possible to the content before the position. When positive,
+    prefer positions close to the content after the position. When
+    zero, prefer as shallow a position as possible.
+    
+    Note that you should **not** mutate the editor's internal DOM,
+    only inspect it (and even that is usually not necessary).
+    */
+  domAtPos(pos: number, side?: number): {
+    node: DOMNode;
+    offset: number;
+  };
+  /**
+    Find the DOM node that represents the document node after the
+    given position. May return `null` when the position doesn't point
+    in front of a node or if the node is inside an opaque node view.
+    
+    This is intended to be able to call things like
+    `getBoundingClientRect` on that DOM node. Do **not** mutate the
+    editor DOM directly, or add styling this way, since that will be
+    immediately overriden by the editor as it redraws the node.
+    */
+  nodeDOM(pos: number): DOMNode | null;
+  /**
+    Find the document position that corresponds to a given DOM
+    position. (Whenever possible, it is preferable to inspect the
+    document structure directly, rather than poking around in the
+    DOM, but sometimes—for example when interpreting an event
+    target—you don't have a choice.)
+    
+    The `bias` parameter can be used to influence which side of a DOM
+    node to use when the position is inside a leaf node.
+    */
+  posAtDOM(node: DOMNode, offset: number, bias?: number): number;
+  /**
+    Find out whether the selection is at the end of a textblock when
+    moving in a given direction. When, for example, given `"left"`,
+    it will return true if moving left from the current cursor
+    position would leave that position's parent textblock. Will apply
+    to the view's current state by default, but it is possible to
+    pass a different state.
+    */
+  endOfTextblock(dir: "up" | "down" | "left" | "right" | "forward" | "backward", state?: EditorState): boolean;
+  /**
+    Run the editor's paste logic with the given HTML string. The
+    `event`, if given, will be passed to the
+    [`handlePaste`](https://prosemirror.net/docs/ref/#view.EditorProps.handlePaste) hook.
+    */
+  pasteHTML(html: string, event?: ClipboardEvent): boolean;
+  /**
+    Run the editor's paste logic with the given plain-text input.
+    */
+  pasteText(text: string, event?: ClipboardEvent): boolean;
+  /**
+    Serialize the given slice as it would be if it was copied from
+    this editor. Returns a DOM element that contains a
+    representation of the slice as its children, a textual
+    representation, and the transformed slice (which can be
+    different from the given input due to hooks like
+    [`transformCopied`](https://prosemirror.net/docs/ref/#view.EditorProps.transformCopied)).
+    */
+  serializeForClipboard(slice: Slice): {
+    dom: HTMLElement;
+    text: string;
+    slice: Slice;
+  };
+  /**
+    Removes the editor from the DOM and destroys all [node
+    views](https://prosemirror.net/docs/ref/#view.NodeView).
+    */
+  destroy(): void;
+  /**
+    This is true when the view has been
+    [destroyed](https://prosemirror.net/docs/ref/#view.EditorView.destroy) (and thus should not be
+    used anymore).
+    */
+  get isDestroyed(): boolean;
+  /**
+    Used for testing.
+    */
+  dispatchEvent(event: Event): void;
+  /**
+    Dispatch a transaction. Will call
+    [`dispatchTransaction`](https://prosemirror.net/docs/ref/#view.DirectEditorProps.dispatchTransaction)
+    when given, and otherwise defaults to applying the transaction to
+    the current state and calling
+    [`updateState`](https://prosemirror.net/docs/ref/#view.EditorView.updateState) with the result.
+    This method is bound to the view instance, so that it can be
+    easily passed around.
+    */
+  dispatch: (tr: Transaction) => void;
+}
+/**
+The type of function [provided](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews) to
+create [node views](https://prosemirror.net/docs/ref/#view.NodeView).
+*/
+type NodeViewConstructor = (node: Node$2, view: EditorView, getPos: () => number | undefined, decorations: readonly Decoration$1[], innerDecorations: DecorationSource) => NodeView;
+/**
+The function types [used](https://prosemirror.net/docs/ref/#view.EditorProps.markViews) to create
+mark views.
+*/
+type MarkViewConstructor = (mark: Mark$1, view: EditorView, inline: boolean) => MarkView;
+/**
+Helper type that maps event names to event object types, but
+includes events that TypeScript's HTMLElementEventMap doesn't know
+about.
+*/
+interface DOMEventMap extends HTMLElementEventMap {
+  [event: string]: any;
+}
+/**
+Props are configuration values that can be passed to an editor view
+or included in a plugin. This interface lists the supported props.
+
+The various event-handling functions may all return `true` to
+indicate that they handled the given event. The view will then take
+care to call `preventDefault` on the event, except with
+`handleDOMEvents`, where the handler itself is responsible for that.
+
+How a prop is resolved depends on the prop. Handler functions are
+called one at a time, starting with the base props and then
+searching through the plugins (in order of appearance) until one of
+them returns true. For some props, the first plugin that yields a
+value gets precedence.
+
+The optional type parameter refers to the type of `this` in prop
+functions, and is used to pass in the plugin type when defining a
+[plugin](https://prosemirror.net/docs/ref/#state.Plugin).
+*/
+interface EditorProps<P = any> {
+  /**
+    Can be an object mapping DOM event type names to functions that
+    handle them. Such functions will be called before any handling
+    ProseMirror does of events fired on the editable DOM element.
+    Contrary to the other event handling props, when returning true
+    from such a function, you are responsible for calling
+    `preventDefault` yourself (or not, if you want to allow the
+    default behavior).
+    */
+  handleDOMEvents?: { [event in keyof DOMEventMap]?: (this: P, view: EditorView, event: DOMEventMap[event]) => boolean | void; };
+  /**
+    Called when the editor receives a `keydown` event.
+    */
+  handleKeyDown?: (this: P, view: EditorView, event: KeyboardEvent) => boolean | void;
+  /**
+    Handler for `keypress` events.
+    */
+  handleKeyPress?: (this: P, view: EditorView, event: KeyboardEvent) => boolean | void;
+  /**
+    Whenever the user directly input text, this handler is called
+    before the input is applied. If it returns `true`, the default
+    behavior of actually inserting the text is suppressed.
+    */
+  handleTextInput?: (this: P, view: EditorView, from: number, to: number, text: string, deflt: () => Transaction) => boolean | void;
+  /**
+    Called for each node around a click, from the inside out. The
+    `direct` flag will be true for the inner node.
+    */
+  handleClickOn?: (this: P, view: EditorView, pos: number, node: Node$2, nodePos: number, event: MouseEvent, direct: boolean) => boolean | void;
+  /**
+    Called when the editor is clicked, after `handleClickOn` handlers
+    have been called.
+    */
+  handleClick?: (this: P, view: EditorView, pos: number, event: MouseEvent) => boolean | void;
+  /**
+    Called for each node around a double click.
+    */
+  handleDoubleClickOn?: (this: P, view: EditorView, pos: number, node: Node$2, nodePos: number, event: MouseEvent, direct: boolean) => boolean | void;
+  /**
+    Called when the editor is double-clicked, after `handleDoubleClickOn`.
+    */
+  handleDoubleClick?: (this: P, view: EditorView, pos: number, event: MouseEvent) => boolean | void;
+  /**
+    Called for each node around a triple click.
+    */
+  handleTripleClickOn?: (this: P, view: EditorView, pos: number, node: Node$2, nodePos: number, event: MouseEvent, direct: boolean) => boolean | void;
+  /**
+    Called when the editor is triple-clicked, after `handleTripleClickOn`.
+    */
+  handleTripleClick?: (this: P, view: EditorView, pos: number, event: MouseEvent) => boolean | void;
+  /**
+    Can be used to override the behavior of pasting. `slice` is the
+    pasted content parsed by the editor, but you can directly access
+    the event to get at the raw content.
+    */
+  handlePaste?: (this: P, view: EditorView, event: ClipboardEvent, slice: Slice) => boolean | void;
+  /**
+    Called when something is dropped on the editor. `moved` will be
+    true if this drop moves from the current selection (which should
+    thus be deleted).
+    */
+  handleDrop?: (this: P, view: EditorView, event: DragEvent, slice: Slice, moved: boolean) => boolean | void;
+  /**
+    Called when the view, after updating its state, tries to scroll
+    the selection into view. A handler function may return false to
+    indicate that it did not handle the scrolling and further
+    handlers or the default behavior should be tried.
+    */
+  handleScrollToSelection?: (this: P, view: EditorView) => boolean;
+  /**
+    Determines whether an in-editor drag event should copy or move
+    the selection. When not given, the event's `altKey` property is
+    used on macOS, `ctrlKey` on other platforms.
+    */
+  dragCopies?: (event: DragEvent) => boolean;
+  /**
+    Can be used to override the way a selection is created when
+    reading a DOM selection between the given anchor and head.
+    */
+  createSelectionBetween?: (this: P, view: EditorView, anchor: ResolvedPos, head: ResolvedPos) => Selection | null;
+  /**
+    The [parser](https://prosemirror.net/docs/ref/#model.DOMParser) to use when reading editor changes
+    from the DOM. Defaults to calling
+    [`DOMParser.fromSchema`](https://prosemirror.net/docs/ref/#model.DOMParser^fromSchema) on the
+    editor's schema.
+    */
+  domParser?: DOMParser;
+  /**
+    Can be used to transform pasted HTML text, _before_ it is parsed,
+    for example to clean it up.
+    */
+  transformPastedHTML?: (this: P, html: string, view: EditorView) => string;
+  /**
+    The [parser](https://prosemirror.net/docs/ref/#model.DOMParser) to use when reading content from
+    the clipboard. When not given, the value of the
+    [`domParser`](https://prosemirror.net/docs/ref/#view.EditorProps.domParser) prop is used.
+    */
+  clipboardParser?: DOMParser;
+  /**
+    Transform pasted plain text. The `plain` flag will be true when
+    the text is pasted as plain text.
+    */
+  transformPastedText?: (this: P, text: string, plain: boolean, view: EditorView) => string;
+  /**
+    A function to parse text from the clipboard into a document
+    slice. Called after
+    [`transformPastedText`](https://prosemirror.net/docs/ref/#view.EditorProps.transformPastedText).
+    The default behavior is to split the text into lines, wrap them
+    in `<p>` tags, and call
+    [`clipboardParser`](https://prosemirror.net/docs/ref/#view.EditorProps.clipboardParser) on it.
+    The `plain` flag will be true when the text is pasted as plain text.
+    */
+  clipboardTextParser?: (this: P, text: string, $context: ResolvedPos, plain: boolean, view: EditorView) => Slice;
+  /**
+    Can be used to transform pasted or dragged-and-dropped content
+    before it is applied to the document. The `plain` flag will be
+    true when the text is pasted as plain text.
+    */
+  transformPasted?: (this: P, slice: Slice, view: EditorView, plain: boolean) => Slice;
+  /**
+    Can be used to transform copied or cut content before it is
+    serialized to the clipboard.
+    */
+  transformCopied?: (this: P, slice: Slice, view: EditorView) => Slice;
+  /**
+    Allows you to pass custom rendering and behavior logic for
+    nodes. Should map node names to constructor functions that
+    produce a [`NodeView`](https://prosemirror.net/docs/ref/#view.NodeView) object implementing the
+    node's display behavior. The third argument `getPos` is a
+    function that can be called to get the node's current position,
+    which can be useful when creating transactions to update it.
+    Note that if the node is not in the document, the position
+    returned by this function will be `undefined`.
+    
+    `decorations` is an array of node or inline decorations that are
+    active around the node. They are automatically drawn in the
+    normal way, and you will usually just want to ignore this, but
+    they can also be used as a way to provide context information to
+    the node view without adding it to the document itself.
+    
+    `innerDecorations` holds the decorations for the node's content.
+    You can safely ignore this if your view has no content or a
+    `contentDOM` property, since the editor will draw the decorations
+    on the content. But if you, for example, want to create a nested
+    editor with the content, it may make sense to provide it with the
+    inner decorations.
+    
+    (For backwards compatibility reasons, [mark
+    views](https://prosemirror.net/docs/ref/#view.EditorProps.markViews) can also be included in this
+    object.)
+    */
+  nodeViews?: {
+    [node: string]: NodeViewConstructor;
+  };
+  /**
+    Pass custom mark rendering functions. Note that these cannot
+    provide the kind of dynamic behavior that [node
+    views](https://prosemirror.net/docs/ref/#view.NodeView) can—they just provide custom rendering
+    logic. The third argument indicates whether the mark's content
+    is inline.
+    */
+  markViews?: {
+    [mark: string]: MarkViewConstructor;
+  };
+  /**
+    The DOM serializer to use when putting content onto the
+    clipboard. If not given, the result of
+    [`DOMSerializer.fromSchema`](https://prosemirror.net/docs/ref/#model.DOMSerializer^fromSchema)
+    will be used. This object will only have its
+    [`serializeFragment`](https://prosemirror.net/docs/ref/#model.DOMSerializer.serializeFragment)
+    method called, and you may provide an alternative object type
+    implementing a compatible method.
+    */
+  clipboardSerializer?: DOMSerializer;
+  /**
+    A function that will be called to get the text for the current
+    selection when copying text to the clipboard. By default, the
+    editor will use [`textBetween`](https://prosemirror.net/docs/ref/#model.Node.textBetween) on the
+    selected range.
+    */
+  clipboardTextSerializer?: (this: P, content: Slice, view: EditorView) => string;
+  /**
+    A set of [document decorations](https://prosemirror.net/docs/ref/#view.Decoration) to show in the
+    view.
+    */
+  decorations?: (this: P, state: EditorState) => DecorationSource | null | undefined;
+  /**
+    When this returns false, the content of the view is not directly
+    editable.
+    */
+  editable?: (this: P, state: EditorState) => boolean;
+  /**
+    Control the DOM attributes of the editable element. May be either
+    an object or a function going from an editor state to an object.
+    By default, the element will get a class `"ProseMirror"`, and
+    will have its `contentEditable` attribute determined by the
+    [`editable` prop](https://prosemirror.net/docs/ref/#view.EditorProps.editable). Additional classes
+    provided here will be added to the class. For other attributes,
+    the value provided first (as in
+    [`someProp`](https://prosemirror.net/docs/ref/#view.EditorView.someProp)) will be used.
+    */
+  attributes?: {
+    [name: string]: string;
+  } | ((state: EditorState) => {
+    [name: string]: string;
+  });
+  /**
+    Determines the distance (in pixels) between the cursor and the
+    end of the visible viewport at which point, when scrolling the
+    cursor into view, scrolling takes place. Defaults to 0.
+    */
+  scrollThreshold?: number | {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  /**
+    Determines the extra space (in pixels) that is left above or
+    below the cursor when it is scrolled into view. Defaults to 5.
+    */
+  scrollMargin?: number | {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+}
+/**
+The props object given directly to the editor view supports some
+fields that can't be used in plugins:
+*/
+interface DirectEditorProps extends EditorProps {
+  /**
+    The current state of the editor.
+    */
+  state: EditorState;
+  /**
+    A set of plugins to use in the view, applying their [plugin
+    view](https://prosemirror.net/docs/ref/#state.PluginSpec.view) and
+    [props](https://prosemirror.net/docs/ref/#state.PluginSpec.props). Passing plugins with a state
+    component (a [state field](https://prosemirror.net/docs/ref/#state.PluginSpec.state) field or a
+    [transaction](https://prosemirror.net/docs/ref/#state.PluginSpec.filterTransaction) filter or
+    appender) will result in an error, since such plugins must be
+    present in the state to work.
+    */
+  plugins?: readonly Plugin[];
+  /**
+    The callback over which to send transactions (state updates)
+    produced by the view. If you specify this, you probably want to
+    make sure this ends up calling the view's
+    [`updateState`](https://prosemirror.net/docs/ref/#view.EditorView.updateState) method with a new
+    state that has the transaction
+    [applied](https://prosemirror.net/docs/ref/#state.EditorState.apply). The callback will be bound to have
+    the view instance as its `this` binding.
+    */
+  dispatchTransaction?: (tr: Transaction) => void;
+}
+//#endregion
+//#region prosemirror-state/dist/index.d.ts
+/**
+The type of object passed to
+[`EditorState.create`](https://prosemirror.net/docs/ref/#state.EditorState^create).
+*/
+interface EditorStateConfig {
+  /**
+    The schema to use (only relevant if no `doc` is specified).
+    */
+  schema?: Schema;
+  /**
+    The starting document. Either this or `schema` _must_ be
+    provided.
+    */
+  doc?: Node$2;
+  /**
+    A valid selection in the document.
+    */
+  selection?: Selection;
+  /**
+    The initial set of [stored marks](https://prosemirror.net/docs/ref/#state.EditorState.storedMarks).
+    */
+  storedMarks?: readonly Mark$1[] | null;
+  /**
+    The plugins that should be active in this state.
+    */
+  plugins?: readonly Plugin[];
+}
+/**
+The state of a ProseMirror editor is represented by an object of
+this type. A state is a persistent data structure—it isn't
+updated, but rather a new state value is computed from an old one
+using the [`apply`](https://prosemirror.net/docs/ref/#state.EditorState.apply) method.
+
+A state holds a number of built-in fields, and plugins can
+[define](https://prosemirror.net/docs/ref/#state.PluginSpec.state) additional fields.
+*/
+declare class EditorState {
+  /**
+    The current document.
+    */
+  doc: Node$2;
+  /**
+    The selection.
+    */
+  selection: Selection;
+  /**
+    A set of marks to apply to the next input. Will be null when
+    no explicit marks have been set.
+    */
+  storedMarks: readonly Mark$1[] | null;
+  /**
+    The schema of the state's document.
+    */
+  get schema(): Schema;
+  /**
+    The plugins that are active in this state.
+    */
+  get plugins(): readonly Plugin[];
+  /**
+    Apply the given transaction to produce a new state.
+    */
+  apply(tr: Transaction): EditorState;
+  /**
+    Verbose variant of [`apply`](https://prosemirror.net/docs/ref/#state.EditorState.apply) that
+    returns the precise transactions that were applied (which might
+    be influenced by the [transaction
+    hooks](https://prosemirror.net/docs/ref/#state.PluginSpec.filterTransaction) of
+    plugins) along with the new state.
+    */
+  applyTransaction(rootTr: Transaction): {
+    state: EditorState;
+    transactions: readonly Transaction[];
+  };
+  /**
+    Accessor that constructs and returns a new [transaction](https://prosemirror.net/docs/ref/#state.Transaction) from this state.
+    */
+  get tr(): Transaction;
+  /**
+    Create a new state.
+    */
+  static create(config: EditorStateConfig): EditorState;
+  /**
+    Create a new state based on this one, but with an adjusted set
+    of active plugins. State fields that exist in both sets of
+    plugins are kept unchanged. Those that no longer exist are
+    dropped, and those that are new are initialized using their
+    [`init`](https://prosemirror.net/docs/ref/#state.StateField.init) method, passing in the new
+    configuration object..
+    */
+  reconfigure(config: {
+    /**
+        New set of active plugins.
+        */
+    plugins?: readonly Plugin[];
+  }): EditorState;
+  /**
+    Serialize this state to JSON. If you want to serialize the state
+    of plugins, pass an object mapping property names to use in the
+    resulting JSON object to plugin objects. The argument may also be
+    a string or number, in which case it is ignored, to support the
+    way `JSON.stringify` calls `toString` methods.
+    */
+  toJSON(pluginFields?: {
+    [propName: string]: Plugin;
+  }): any;
+  /**
+    Deserialize a JSON representation of a state. `config` should
+    have at least a `schema` field, and should contain array of
+    plugins to initialize the state with. `pluginFields` can be used
+    to deserialize the state of plugins, by associating plugin
+    instances with the property names they use in the JSON object.
+    */
+  static fromJSON(config: {
+    /**
+        The schema to use.
+        */
+    schema: Schema;
+    /**
+        The set of active plugins.
+        */
+    plugins?: readonly Plugin[];
+  }, json: any, pluginFields?: {
+    [propName: string]: Plugin;
+  }): EditorState;
+}
+/**
+This is the type passed to the [`Plugin`](https://prosemirror.net/docs/ref/#state.Plugin)
+constructor. It provides a definition for a plugin.
+*/
+interface PluginSpec<PluginState> {
+  /**
+    The [view props](https://prosemirror.net/docs/ref/#view.EditorProps) added by this plugin. Props
+    that are functions will be bound to have the plugin instance as
+    their `this` binding.
+    */
+  props?: EditorProps<Plugin<PluginState>>;
+  /**
+    Allows a plugin to define a [state field](https://prosemirror.net/docs/ref/#state.StateField), an
+    extra slot in the state object in which it can keep its own data.
+    */
+  state?: StateField<PluginState>;
+  /**
+    Can be used to make this a keyed plugin. You can have only one
+    plugin with a given key in a given state, but it is possible to
+    access the plugin's configuration and state through the key,
+    without having access to the plugin instance object.
+    */
+  key?: PluginKey;
+  /**
+    When the plugin needs to interact with the editor view, or
+    set something up in the DOM, use this field. The function
+    will be called when the plugin's state is associated with an
+    editor view.
+    */
+  view?: (view: EditorView) => PluginView;
+  /**
+    When present, this will be called before a transaction is
+    applied by the state, allowing the plugin to cancel it (by
+    returning false).
+    */
+  filterTransaction?: (tr: Transaction, state: EditorState) => boolean;
+  /**
+    Allows the plugin to append another transaction to be applied
+    after the given array of transactions. When another plugin
+    appends a transaction after this was called, it is called again
+    with the new state and new transactions—but only the new
+    transactions, i.e. it won't be passed transactions that it
+    already saw.
+    */
+  appendTransaction?: (transactions: readonly Transaction[], oldState: EditorState, newState: EditorState) => Transaction | null | undefined;
+  /**
+    Additional properties are allowed on plugin specs, which can be
+    read via [`Plugin.spec`](https://prosemirror.net/docs/ref/#state.Plugin.spec).
+    */
+  [key: string]: any;
+}
+/**
+A stateful object that can be installed in an editor by a
+[plugin](https://prosemirror.net/docs/ref/#state.PluginSpec.view).
+*/
+type PluginView = {
+  /**
+    Called whenever the view's state is updated.
+    */
+  update?: (view: EditorView, prevState: EditorState) => void;
+  /**
+    Called when the view is destroyed or receives a state
+    with different plugins.
+    */
+  destroy?: () => void;
+};
+/**
+Plugins bundle functionality that can be added to an editor.
+They are part of the [editor state](https://prosemirror.net/docs/ref/#state.EditorState) and
+may influence that state and the view that contains it.
+*/
+declare class Plugin<PluginState = any> {
+  /**
+    The plugin's [spec object](https://prosemirror.net/docs/ref/#state.PluginSpec).
+    */
+  readonly spec: PluginSpec<PluginState>;
+  /**
+    Create a plugin.
+    */
+  constructor(
+  /**
+    The plugin's [spec object](https://prosemirror.net/docs/ref/#state.PluginSpec).
+    */
+  spec: PluginSpec<PluginState>);
+  /**
+    The [props](https://prosemirror.net/docs/ref/#view.EditorProps) exported by this plugin.
+    */
+  readonly props: EditorProps<Plugin<PluginState>>;
+  /**
+    Extract the plugin's state field from an editor state.
+    */
+  getState(state: EditorState): PluginState | undefined;
+}
+/**
+A plugin spec may provide a state field (under its
+[`state`](https://prosemirror.net/docs/ref/#state.PluginSpec.state) property) of this type, which
+describes the state it wants to keep. Functions provided here are
+always called with the plugin instance as their `this` binding.
+*/
+interface StateField<T> {
+  /**
+    Initialize the value of the field. `config` will be the object
+    passed to [`EditorState.create`](https://prosemirror.net/docs/ref/#state.EditorState^create). Note
+    that `instance` is a half-initialized state instance, and will
+    not have values for plugin fields initialized after this one.
+    */
+  init: (config: EditorStateConfig, instance: EditorState) => T;
+  /**
+    Apply the given transaction to this state field, producing a new
+    field value. Note that the `newState` argument is again a partially
+    constructed state does not yet contain the state from plugins
+    coming after this one.
+    */
+  apply: (tr: Transaction, value: T, oldState: EditorState, newState: EditorState) => T;
+  /**
+    Convert this field to JSON. Optional, can be left off to disable
+    JSON serialization for the field.
+    */
+  toJSON?: (value: T) => any;
+  /**
+    Deserialize the JSON representation of this field. Note that the
+    `state` argument is again a half-initialized state.
+    */
+  fromJSON?: (config: EditorStateConfig, value: any, state: EditorState) => T;
+}
+/**
+A key is used to [tag](https://prosemirror.net/docs/ref/#state.PluginSpec.key) plugins in a way
+that makes it possible to find them, given an editor state.
+Assigning a key does mean only one plugin of that type can be
+active in a state.
+*/
+declare class PluginKey<PluginState = any> {
+  /**
+    Create a plugin key.
+    */
+  constructor(name?: string);
+  /**
+    Get the active plugin with this key, if any, from an editor
+    state.
+    */
+  get(state: EditorState): Plugin<PluginState> | undefined;
+  /**
+    Get the plugin's state from an editor state.
+    */
+  getState(state: EditorState): PluginState | undefined;
+}
+/**
+An editor state transaction, which can be applied to a state to
+create an updated state. Use
+[`EditorState.tr`](https://prosemirror.net/docs/ref/#state.EditorState.tr) to create an instance.
+
+Transactions track changes to the document (they are a subclass of
+[`Transform`](https://prosemirror.net/docs/ref/#transform.Transform)), but also other state changes,
+like selection updates and adjustments of the set of [stored
+marks](https://prosemirror.net/docs/ref/#state.EditorState.storedMarks). In addition, you can store
+metadata properties in a transaction, which are extra pieces of
+information that client code or plugins can use to describe what a
+transaction represents, so that they can update their [own
+state](https://prosemirror.net/docs/ref/#state.StateField) accordingly.
+
+The [editor view](https://prosemirror.net/docs/ref/#view.EditorView) uses a few metadata
+properties: it will attach a property `"pointer"` with the value
+`true` to selection transactions directly caused by mouse or touch
+input, a `"composition"` property holding an ID identifying the
+composition that caused it to transactions caused by composed DOM
+input, and a `"uiEvent"` property of that may be `"paste"`,
+`"cut"`, or `"drop"`.
+*/
+declare class Transaction extends Transform {
+  /**
+    The timestamp associated with this transaction, in the same
+    format as `Date.now()`.
+    */
+  time: number;
+  private curSelection;
+  private curSelectionFor;
+  private updated;
+  private meta;
+  /**
+    The stored marks set by this transaction, if any.
+    */
+  storedMarks: readonly Mark$1[] | null;
+  /**
+    The transaction's current selection. This defaults to the editor
+    selection [mapped](https://prosemirror.net/docs/ref/#state.Selection.map) through the steps in the
+    transaction, but can be overwritten with
+    [`setSelection`](https://prosemirror.net/docs/ref/#state.Transaction.setSelection).
+    */
+  get selection(): Selection;
+  /**
+    Update the transaction's current selection. Will determine the
+    selection that the editor gets when the transaction is applied.
+    */
+  setSelection(selection: Selection): this;
+  /**
+    Whether the selection was explicitly updated by this transaction.
+    */
+  get selectionSet(): boolean;
+  /**
+    Set the current stored marks.
+    */
+  setStoredMarks(marks: readonly Mark$1[] | null): this;
+  /**
+    Make sure the current stored marks or, if that is null, the marks
+    at the selection, match the given set of marks. Does nothing if
+    this is already the case.
+    */
+  ensureMarks(marks: readonly Mark$1[]): this;
+  /**
+    Add a mark to the set of stored marks.
+    */
+  addStoredMark(mark: Mark$1): this;
+  /**
+    Remove a mark or mark type from the set of stored marks.
+    */
+  removeStoredMark(mark: Mark$1 | MarkType$1): this;
+  /**
+    Whether the stored marks were explicitly set for this transaction.
+    */
+  get storedMarksSet(): boolean;
+  /**
+    Update the timestamp for the transaction.
+    */
+  setTime(time: number): this;
+  /**
+    Replace the current selection with the given slice.
+    */
+  replaceSelection(slice: Slice): this;
+  /**
+    Replace the selection with the given node. When `inheritMarks` is
+    true and the content is inline, it inherits the marks from the
+    place where it is inserted.
+    */
+  replaceSelectionWith(node: Node$2, inheritMarks?: boolean): this;
+  /**
+    Delete the selection.
+    */
+  deleteSelection(): this;
+  /**
+    Replace the given range, or the selection if no range is given,
+    with a text node containing the given string.
+    */
+  insertText(text: string, from?: number, to?: number): this;
+  /**
+    Store a metadata property in this transaction, keyed either by
+    name or by plugin.
+    */
+  setMeta(key: string | Plugin | PluginKey, value: any): this;
+  /**
+    Retrieve a metadata property for a given name or plugin.
+    */
+  getMeta(key: string | Plugin | PluginKey): any;
+  /**
+    Returns true if this transaction doesn't contain any metadata,
+    and can thus safely be extended.
+    */
+  get isGeneric(): boolean;
+  /**
+    Indicate that the editor should scroll the selection into view
+    when updated to the state produced by this transaction.
+    */
+  scrollIntoView(): this;
+  /**
+    True when this transaction has had `scrollIntoView` called on it.
+    */
+  get scrolledIntoView(): boolean;
+}
+/**
+Superclass for editor selections. Every selection type should
+extend this. Should not be instantiated directly.
+*/
+declare abstract class Selection {
+  /**
+    The resolved anchor of the selection (the side that stays in
+    place when the selection is modified).
+    */
+  readonly $anchor: ResolvedPos;
+  /**
+    The resolved head of the selection (the side that moves when
+    the selection is modified).
+    */
+  readonly $head: ResolvedPos;
+  /**
+    Initialize a selection with the head and anchor and ranges. If no
+    ranges are given, constructs a single range across `$anchor` and
+    `$head`.
+    */
+  constructor(
+  /**
+    The resolved anchor of the selection (the side that stays in
+    place when the selection is modified).
+    */
+  $anchor: ResolvedPos,
+  /**
+    The resolved head of the selection (the side that moves when
+    the selection is modified).
+    */
+  $head: ResolvedPos, ranges?: readonly SelectionRange[]);
+  /**
+    The ranges covered by the selection.
+    */
+  ranges: readonly SelectionRange[];
+  /**
+    The selection's anchor, as an unresolved position.
+    */
+  get anchor(): number;
+  /**
+    The selection's head.
+    */
+  get head(): number;
+  /**
+    The lower bound of the selection's main range.
+    */
+  get from(): number;
+  /**
+    The upper bound of the selection's main range.
+    */
+  get to(): number;
+  /**
+    The resolved lower  bound of the selection's main range.
+    */
+  get $from(): ResolvedPos;
+  /**
+    The resolved upper bound of the selection's main range.
+    */
+  get $to(): ResolvedPos;
+  /**
+    Indicates whether the selection contains any content.
+    */
+  get empty(): boolean;
+  /**
+    Test whether the selection is the same as another selection.
+    */
+  abstract eq(selection: Selection): boolean;
+  /**
+    Map this selection through a [mappable](https://prosemirror.net/docs/ref/#transform.Mappable)
+    thing. `doc` should be the new document to which we are mapping.
+    */
+  abstract map(doc: Node$2, mapping: Mappable): Selection;
+  /**
+    Get the content of this selection as a slice.
+    */
+  content(): Slice;
+  /**
+    Replace the selection with a slice or, if no slice is given,
+    delete the selection. Will append to the given transaction.
+    */
+  replace(tr: Transaction, content?: Slice): void;
+  /**
+    Replace the selection with the given node, appending the changes
+    to the given transaction.
+    */
+  replaceWith(tr: Transaction, node: Node$2): void;
+  /**
+    Convert the selection to a JSON representation. When implementing
+    this for a custom selection class, make sure to give the object a
+    `type` property whose value matches the ID under which you
+    [registered](https://prosemirror.net/docs/ref/#state.Selection^jsonID) your class.
+    */
+  abstract toJSON(): any;
+  /**
+    Find a valid cursor or leaf node selection starting at the given
+    position and searching back if `dir` is negative, and forward if
+    positive. When `textOnly` is true, only consider cursor
+    selections. Will return null when no valid selection position is
+    found.
+    */
+  static findFrom($pos: ResolvedPos, dir: number, textOnly?: boolean): Selection | null;
+  /**
+    Find a valid cursor or leaf node selection near the given
+    position. Searches forward first by default, but if `bias` is
+    negative, it will search backwards first.
+    */
+  static near($pos: ResolvedPos, bias?: number): Selection;
+  /**
+    Find the cursor or leaf node selection closest to the start of
+    the given document. Will return an
+    [`AllSelection`](https://prosemirror.net/docs/ref/#state.AllSelection) if no valid position
+    exists.
+    */
+  static atStart(doc: Node$2): Selection;
+  /**
+    Find the cursor or leaf node selection closest to the end of the
+    given document.
+    */
+  static atEnd(doc: Node$2): Selection;
+  /**
+    Deserialize the JSON representation of a selection. Must be
+    implemented for custom classes (as a static class method).
+    */
+  static fromJSON(doc: Node$2, json: any): Selection;
+  /**
+    To be able to deserialize selections from JSON, custom selection
+    classes must register themselves with an ID string, so that they
+    can be disambiguated. Try to pick something that's unlikely to
+    clash with classes from other modules.
+    */
+  static jsonID(id: string, selectionClass: {
+    fromJSON: (doc: Node$2, json: any) => Selection;
+  }): {
+    fromJSON: (doc: Node$2, json: any) => Selection;
+  };
+  /**
+    Get a [bookmark](https://prosemirror.net/docs/ref/#state.SelectionBookmark) for this selection,
+    which is a value that can be mapped without having access to a
+    current document, and later resolved to a real selection for a
+    given document again. (This is used mostly by the history to
+    track and restore old selections.) The default implementation of
+    this method just converts the selection to a text selection and
+    returns the bookmark for that.
+    */
+  getBookmark(): SelectionBookmark;
+  /**
+    Controls whether, when a selection of this type is active in the
+    browser, the selected range should be visible to the user.
+    Defaults to `true`.
+    */
+  visible: boolean;
+}
+/**
+A lightweight, document-independent representation of a selection.
+You can define a custom bookmark type for a custom selection class
+to make the history handle it well.
+*/
+interface SelectionBookmark {
+  /**
+    Map the bookmark through a set of changes.
+    */
+  map: (mapping: Mappable) => SelectionBookmark;
+  /**
+    Resolve the bookmark to a real selection again. This may need to
+    do some error checking and may fall back to a default (usually
+    [`TextSelection.between`](https://prosemirror.net/docs/ref/#state.TextSelection^between)) if
+    mapping made the bookmark invalid.
+    */
+  resolve: (doc: Node$2) => Selection;
+}
+/**
+Represents a selected range in a document.
+*/
+declare class SelectionRange {
+  /**
+    The lower bound of the range.
+    */
+  readonly $from: ResolvedPos;
+  /**
+    The upper bound of the range.
+    */
+  readonly $to: ResolvedPos;
+  /**
+    Create a range.
+    */
+  constructor(
+  /**
+    The lower bound of the range.
+    */
+  $from: ResolvedPos,
+  /**
+    The upper bound of the range.
+    */
+  $to: ResolvedPos);
+}
+//#endregion
+//#region @tiptap/core/dist/index.d.ts
+//#region src/EventEmitter.d.ts
+type StringKeyOf<T> = Extract<keyof T, string>;
+type CallbackType<T extends Record<string, any>, EventName extends StringKeyOf<T>> = T[EventName] extends any[] ? T[EventName] : [T[EventName]];
+type CallbackFunction<T extends Record<string, any>, EventName extends StringKeyOf<T>> = (...props: CallbackType<T, EventName>) => any;
+declare class EventEmitter<T extends Record<string, any>> {
+  private callbacks;
+  on<EventName extends StringKeyOf<T>>(event: EventName, fn: CallbackFunction<T, EventName>): this;
+  emit<EventName extends StringKeyOf<T>>(event: EventName, ...args: CallbackType<T, EventName>): this;
+  off<EventName extends StringKeyOf<T>>(event: EventName, fn?: CallbackFunction<T, EventName>): this;
+  once<EventName extends StringKeyOf<T>>(event: EventName, fn: CallbackFunction<T, EventName>): this;
+  removeAllListeners(): void;
+}
+//#endregion
+//#region src/decorations/Decoration.d.ts
+interface WidgetDecorationOptions {
+  side?: number;
+  relaxedSide?: boolean;
+  marks?: readonly Mark$1[];
+  stopEvent?: (event: Event) => boolean;
+  ignoreSelection?: boolean;
+  /**
+   * runs when ProseMirror drops the widget, also on editor destroy and unmount.
+   * skipped on teardown for widgets made with the React or Vue widget renderer.
+   * receives the DOM node, not a ProseMirror node.
+   */
+  destroy?: (node: globalThis.Node) => void;
+}
+type DecorationKind = 'inline' | 'node' | 'widget';
+/**
+ * Base class for decorations built in `addDecorations()`. Shadows `Decoration`
+ * from `@tiptap/pm/view`, like core's `Node` and `Mark` do, so alias one of them
+ * in files that need both.
+ *
+ * @example
+ * import { Decoration } from '@tiptap/core'
+ * import { Decoration as PMDecoration } from '@tiptap/pm/view'
+ *
+ * const highlight = Decoration.Inline(1, 5, { class: 'highlight' })
+ */
+declare abstract class Decoration {
+  abstract kind: DecorationKind;
+  abstract get anchor(): number;
+  /**
+   * Builds the ProseMirror decoration. When `extensionName` is provided,
+   * it is embedded into the decoration spec for incremental merge tracking.
+   * @param extensionName The name of the extension that produced this decoration.
+   * @returns The ProseMirror decoration.
+   */
+  abstract toPMDecoration(extensionName?: string): Decoration$1;
+  static Inline(from: number, to: number, attrs?: DecorationAttrs, spec?: Record<string, any>): InlineDecoration;
+  static Node(pos: number, to: number, attrs?: DecorationAttrs, spec?: Record<string, any>): NodeDecoration$1;
+  /**
+   * Creates a widget decoration: a DOM node drawn at a document position.
+   *
+   * The `key` is the widget's identity. While it stays the same, ProseMirror
+   * keeps the widget mounted and only its position tracks the document.
+   * `render`, `side`, `destroy` and other options are fixed on first mount.
+   * Change the key to remount with new options.
+   *
+   * @param pos The document position where the widget is drawn.
+   * @param render Called once on first mount. Returns the DOM node.
+   * @param options Must include a unique `key`. See `WidgetDecorationOptions`.
+   * @returns The widget decoration.
+   */
+  static Widget(pos: number, render: (view: EditorView, getPos: () => number | undefined) => HTMLElement, options: {
+    key: string;
+  } & WidgetDecorationOptions & Record<string, any>): WidgetDecoration;
+}
+/**
+ * Represents an inline decoration (text-level highlighting, etc.).
+ */
+declare class InlineDecoration extends Decoration {
+  kind: "inline";
+  from: number;
+  to: number;
+  attrs: DecorationAttrs;
+  spec?: Record<string, any>;
+  constructor(from: number, to: number, attrs?: DecorationAttrs, spec?: Record<string, any>);
+  get anchor(): number;
+  toPMDecoration(extensionName?: string): Decoration$1;
+}
+/**
+ * Represents a node-level decoration (block-level highlights, etc.).
+ */
+declare class NodeDecoration$1 extends Decoration {
+  kind: "node";
+  from: number;
+  to: number;
+  attrs: DecorationAttrs;
+  spec?: Record<string, any>;
+  constructor(pos: number, to: number, attrs?: DecorationAttrs, spec?: Record<string, any>);
+  get anchor(): number;
+  toPMDecoration(extensionName?: string): Decoration$1;
+}
+/**
+ * Represents a widget decoration (inline widgets, etc.).
+ */
+declare class WidgetDecoration extends Decoration {
+  kind: "widget";
+  pos: number;
+  key: string;
+  render: (view: EditorView, getPos: () => number | undefined) => HTMLElement;
+  spec?: WidgetDecorationOptions & Record<string, any>;
+  constructor(pos: number, render: (view: EditorView, getPos: () => number | undefined) => HTMLElement, key: string, spec?: WidgetDecorationOptions & Record<string, any>);
+  get anchor(): number;
+  toPMDecoration(extensionName?: string): Decoration$1;
+}
+//#endregion
+//#region src/decorations/types.d.ts
+interface DecorationCreateProps {
+  /**
+   * The editor instance. Read `state` from the `state` argument, not
+   * `editor.state` — during `create()` the editor's view state has not been
+   * updated yet, so `editor.state` points at the pre-transaction document.
+   */
+  editor: Editor;
+  /**
+   * The editor state being built. This is the correct state to read from
+   * inside `create()`; `editor.state` is stale until the transaction finishes
+   * applying.
+   */
+  state: EditorState;
+  /** The editor view, or `null` while the editor is not mounted. */
+  view: EditorView | null;
+}
+interface DecorationShouldUpdateProps {
+  editor: Editor;
+  tr: Transaction;
+  oldState: EditorState;
+  newState: EditorState;
+}
+interface DecorationRangeProps extends DecorationCreateProps {
+  /** Start of the block range to scan, inclusive. */
+  from: number;
+  /**
+   * End of the block range to scan, exclusive. `to` is the next block's start
+   * and that block rebuilds it, so decorations anchored there are ignored.
+   * The last block is the exception: it owns the end of the document.
+   */
+  to: number;
+}
+interface BaseDecorationSpec {
+  create: (props: DecorationCreateProps) => Decoration[];
+  shouldUpdate?: (props: DecorationShouldUpdateProps) => boolean;
+}
+interface DocumentDecorationSpec extends BaseDecorationSpec {
+  update?: 'document';
+  createInRange?: never;
+}
+interface ChangedRangesDecorationSpec extends BaseDecorationSpec {
+  update: 'changedRanges';
+  createInRange: (props: DecorationRangeProps) => Decoration[];
+}
+interface ManualDecorationSpec extends BaseDecorationSpec {
+  update: 'manual';
+  shouldUpdate?: never;
+  createInRange?: never;
+}
+type DecorationSpec = DocumentDecorationSpec | ChangedRangesDecorationSpec | ManualDecorationSpec;
+interface DecorationManagerState {
+  decorationSetsByExtension: Record<string, DecorationSet>;
+  widgetKeysByExtension: Record<string, Set<string>>;
+  mergedDecorationSet: DecorationSet;
+  widgetKeys: Set<string>;
+}
+interface ResolvedDecorationEntry {
+  name: string;
+  spec: DecorationSpec;
+}
+interface DecorationManagerEntry {
+  name: string;
+  addDecorations: () => DecorationSpec | null;
+}
+declare class DecorationManager {
+  editor: Editor;
+  entries: ResolvedDecorationEntry[];
+  plugin: Plugin<DecorationManagerState> | null;
+  private warnedWidgetKeys;
+  private warnedOutOfRangeExtensions;
+  private readonly handleBeforeTransaction;
+  constructor(options: {
+    editor: Editor;
+    entries: DecorationManagerEntry[];
+  });
+  destroy(): void;
+  /**
+   * Returns the set of live widget keys from all decoration extensions.
+   * @returns A readonly set of widget keys
+   */
+  liveWidgetKeys(): ReadonlySet<string>;
+  /**
+   * The mounted editor view, or `null` when destroyed. Decoration callbacks
+   * must never receive the placeholder view `editor.view` falls back to.
+   * @returns The mounted editor view, or `null`
+   */
+  private get mountedView();
+  /**
+   * Resolves decoration entries by calling the addDecorations function for each extension entry.
+   * @param entries The decoration manager entries to resolve
+   * @returns An array of resolved decoration entries
+   */
+  private resolveEntries;
+  /**
+   * Creates the ProseMirror plugin for managing decorations.
+   * @returns A ProseMirror plugin with state management
+   */
+  private createPlugin;
+  /**
+   * Applies changed ranges recomputation to a decoration set, dropping stale decorations and rebuilding only the touched blocks.
+   * @param name The name of the decoration extension
+   * @param spec The decoration spec
+   * @param previous The previous decoration manager state
+   * @param tr The transaction to apply
+   * @param newState The new editor state
+   * @returns The updated decoration set and widget keys
+   */
+  private applyChangedRangesRecompute;
+  /**
+   * Rebuilds decorations for the changed block ranges: maps the previous set
+   * forward, then for each range removes stale decorations, calls
+   * `createInRange`, and adds the new ones while syncing widget keys.
+   * @param name The extension name.
+   * @param spec The decoration spec.
+   * @param previous The previous decoration manager state.
+   * @param tr The transaction to apply.
+   * @param newState The new editor state.
+   * @param ranges The block ranges to rebuild.
+   * @returns The updated decoration set and widget keys.
+   */
+  private rebuildRanges;
+  /**
+   * Builds a full decoration set for the entire document.
+   * @param name The name of the decoration extension
+   * @param spec The decoration spec
+   * @param state The editor state
+   * @returns The decoration set and widget keys
+   */
+  private buildFullSet;
+  /**
+   * Runs a decoration callback and swallows anything it throws. These run inside
+   * `state.apply`, where an uncaught error would abort the whole transaction.
+   * @param name The extension name.
+   * @param method The callback name, used in the error message.
+   * @param create The callback to run.
+   * @returns The decorations, or an empty array if the callback threw.
+   */
+  private runCreate;
+  private warnDuplicateWidgetKeys;
+  /**
+   * Builds the merged DecorationSet during init. Skips the merge for a
+   * single extension since its per-extension set is already correct.
+   * @param doc The document to build the merged set for.
+   * @param decorationSetsByExtension The per-extension decoration sets.
+   * @returns The merged decoration set.
+   */
+  private buildMergedSet;
+  /**
+   * Computes the merged DecorationSet after apply. Single extension skips the
+   * merge; nothing recomputed maps the previous merged set forward; otherwise
+   * the merge is rebuilt from the per-extension sets.
+   */
+  private mergeAfterApply;
+}
+//#endregion
+//#region src/InputRule.d.ts
+type InputRuleMatch = {
+  index: number;
+  text: string;
+  replaceWith?: string;
+  match?: RegExpMatchArray;
+  data?: Record<string, any>;
+};
+type InputRuleFinder = RegExp | ((text: string) => InputRuleMatch | null);
+declare class InputRule {
+  find: InputRuleFinder;
+  handler: (props: {
+    state: EditorState;
+    range: Range;
+    match: ExtendedRegExpMatchArray;
+    commands: SingleCommands;
+    chain: () => ChainedCommands;
+    can: () => CanCommands;
+  }) => void | null;
+  undoable: boolean;
+  constructor(config: {
+    find: InputRuleFinder;
+    handler: (props: {
+      state: EditorState;
+      range: Range;
+      match: ExtendedRegExpMatchArray;
+      commands: SingleCommands;
+      chain: () => ChainedCommands;
+      can: () => CanCommands;
+    }) => void | null;
+    undoable?: boolean;
+  });
+}
+//#endregion
+//#region src/Mark.d.ts
+interface MarkConfig<Options = any, Storage = any> extends ExtendableConfig<Options, Storage, MarkConfig<Options, Storage>, MarkType$1> {
+  /**
+   * Mark View
+   */
+  addMarkView?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: MarkType$1;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['addMarkView'];
+  }) => MarkViewRenderer) | null;
+  /**
+   * Keep mark after split node
+   */
+  keepOnSplit?: boolean | (() => boolean);
+  /**
+   * Whether this mark is removed by `unsetAllMarks`.
+   * Set to `false` for semantic marks (comments, suggestions) that should survive "clear formatting".
+   * @default true
+   */
+  clearable?: boolean | (() => boolean);
+  /**
+   * Inclusive
+   */
+  inclusive?: MarkSpec['inclusive'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['inclusive'];
+    editor?: Editor;
+  }) => MarkSpec['inclusive']);
+  /**
+   * Excludes
+   */
+  excludes?: MarkSpec['excludes'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['excludes'];
+    editor?: Editor;
+  }) => MarkSpec['excludes']);
+  /**
+   * Marks this Mark as exitable
+   */
+  exitable?: boolean | (() => boolean);
+  /**
+   * Group
+   */
+  group?: MarkSpec['group'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['group'];
+    editor?: Editor;
+  }) => MarkSpec['group']);
+  /**
+   * Spanning
+   */
+  spanning?: MarkSpec['spanning'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['spanning'];
+    editor?: Editor;
+  }) => MarkSpec['spanning']);
+  /**
+   * Code
+   */
+  code?: boolean | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['code'];
+    editor?: Editor;
+  }) => boolean);
+  /**
+   * Parse HTML
+   */
+  parseHTML?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['parseHTML'];
+    editor?: Editor;
+  }) => MarkSpec['parseDOM'];
+  /**
+   * Render HTML
+   */
+  renderHTML?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['renderHTML'];
+    editor?: Editor;
+  }, props: {
+    mark: Mark$1;
+    HTMLAttributes: Record<string, any>;
+  }) => DOMOutputSpec) | null;
+  /**
+   * Attributes
+   */
+  addAttributes?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<MarkConfig<Options, Storage>>['addAttributes'];
+    editor?: Editor;
+  }) => Attributes | {};
+}
+/**
+ * The Mark class is used to create custom mark extensions.
+ * @see https://tiptap.dev/api/extensions#create-a-new-extension
+ */
+declare class Mark<Options = any, Storage = any> extends Extendable<Options, Storage, MarkConfig<Options, Storage>> {
+  type: string;
+  /**
+   * Create a new Mark instance
+   * @param config - Mark configuration object or a function that returns a configuration object
+   */
+  static create<O = any, S = any>(config?: Partial<MarkConfig<O, S>> | (() => Partial<MarkConfig<O, S>>)): Mark<O, S>;
+  static handleExit({ editor, mark }: {
+    editor: Editor;
+    mark: Mark;
+  }): boolean;
+  configure(options?: Partial<Options>): Mark<Options, Storage>;
+  extend<ExtendedOptions = Options, ExtendedStorage = Storage, ExtendedConfig extends MarkConfig<ExtendedOptions, ExtendedStorage> = MarkConfig<ExtendedOptions, ExtendedStorage>>(extendedConfig?: (() => Partial<ExtendedConfig>) | (Partial<ExtendedConfig> & ThisType<{
+    name: string;
+    options: ExtendedOptions;
+    storage: ExtendedStorage;
+    editor: Editor;
+    type: MarkType$1;
+  }>)): Mark<ExtendedOptions, ExtendedStorage>;
+}
+//#endregion
+//#region src/Node.d.ts
+interface NodeConfig<Options = any, Storage = any> extends ExtendableConfig<Options, Storage, NodeConfig<Options, Storage>, NodeType$2> {
+  /**
+   * Node View
+   */
+  addNodeView?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: NodeType$2;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['addNodeView'];
+  }) => NodeViewRenderer | null) | null;
+  /**
+   * Defines if this node should be a top level node (doc)
+   * @default false
+   * @example true
+   */
+  topNode?: boolean;
+  /**
+   * The content expression for this node, as described in the [schema
+   * guide](/docs/guide/#schema.content_expressions). When not given,
+   * the node does not allow any content.
+   *
+   * You can read more about it on the Prosemirror documentation here
+   * @see https://prosemirror.net/docs/guide/#schema.content_expressions
+   * @default undefined
+   * @example content: 'block+'
+   * @example content: 'headline paragraph block*'
+   */
+  content?: NodeSpec['content'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['content'];
+    editor?: Editor;
+  }) => NodeSpec['content']);
+  /**
+   * The marks that are allowed inside of this node. May be a
+   * space-separated string referring to mark names or groups, `"_"`
+   * to explicitly allow all marks, or `""` to disallow marks. When
+   * not given, nodes with inline content default to allowing all
+   * marks, other nodes default to not allowing marks.
+   *
+   * @example marks: 'strong em'
+   */
+  marks?: NodeSpec['marks'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['marks'];
+    editor?: Editor;
+  }) => NodeSpec['marks']);
+  /**
+   * The group or space-separated groups to which this node belongs,
+   * which can be referred to in the content expressions for the
+   * schema.
+   *
+   * By default Tiptap uses the groups 'block' and 'inline' for nodes. You
+   * can also use custom groups if you want to group specific nodes together
+   * and handle them in your schema.
+   * @example group: 'block'
+   * @example group: 'inline'
+   * @example group: 'customBlock' // this uses a custom group
+   */
+  group?: NodeSpec['group'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['group'];
+    editor?: Editor;
+  }) => NodeSpec['group']);
+  /**
+   * Should be set to true for inline nodes. (Implied for text nodes.)
+   */
+  inline?: NodeSpec['inline'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['inline'];
+    editor?: Editor;
+  }) => NodeSpec['inline']);
+  /**
+   * Can be set to true to indicate that, though this isn't a [leaf
+   * node](https://prosemirror.net/docs/ref/#model.NodeType.isLeaf), it doesn't have directly editable
+   * content and should be treated as a single unit in the view.
+   *
+   * @example atom: true
+   */
+  atom?: NodeSpec['atom'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['atom'];
+    editor?: Editor;
+  }) => NodeSpec['atom']);
+  /**
+   * Controls whether nodes of this type can be selected as a [node
+   * selection](https://prosemirror.net/docs/ref/#state.NodeSelection). Defaults to true for non-text
+   * nodes.
+   *
+   * @default true
+   * @example selectable: false
+   */
+  selectable?: NodeSpec['selectable'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['selectable'];
+    editor?: Editor;
+  }) => NodeSpec['selectable']);
+  /**
+   * Determines whether nodes of this type can be dragged without
+   * being selected. Defaults to false.
+   *
+   * @default: false
+   * @example: draggable: true
+   */
+  draggable?: NodeSpec['draggable'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['draggable'];
+    editor?: Editor;
+  }) => NodeSpec['draggable']);
+  /**
+   * Can be used to indicate that this node contains code, which
+   * causes some commands to behave differently.
+   */
+  code?: NodeSpec['code'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['code'];
+    editor?: Editor;
+  }) => NodeSpec['code']);
+  /**
+   * Controls way whitespace in this a node is parsed. The default is
+   * `"normal"`, which causes the [DOM parser](https://prosemirror.net/docs/ref/#model.DOMParser) to
+   * collapse whitespace in normal mode, and normalize it (replacing
+   * newlines and such with spaces) otherwise. `"pre"` causes the
+   * parser to preserve spaces inside the node. When this option isn't
+   * given, but [`code`](https://prosemirror.net/docs/ref/#model.NodeSpec.code) is true, `whitespace`
+   * will default to `"pre"`. Note that this option doesn't influence
+   * the way the node is rendered—that should be handled by `toDOM`
+   * and/or styling.
+   */
+  whitespace?: NodeSpec['whitespace'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['whitespace'];
+    editor?: Editor;
+  }) => NodeSpec['whitespace']);
+  /**
+   * Allows a **single** node to be set as linebreak equivalent (e.g. hardBreak).
+   * When converting between block types that have whitespace set to "pre"
+   * and don't support the linebreak node (e.g. codeBlock) and other block types
+   * that do support the linebreak node (e.g. paragraphs) - this node will be used
+   * as the linebreak instead of stripping the newline.
+   *
+   * See [linebreakReplacement](https://prosemirror.net/docs/ref/#model.NodeSpec.linebreakReplacement).
+   */
+  linebreakReplacement?: NodeSpec['linebreakReplacement'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['linebreakReplacement'];
+    editor?: Editor;
+  }) => NodeSpec['linebreakReplacement']);
+  /**
+   * When enabled, enables both
+   * [`definingAsContext`](https://prosemirror.net/docs/ref/#model.NodeSpec.definingAsContext) and
+   * [`definingForContent`](https://prosemirror.net/docs/ref/#model.NodeSpec.definingForContent).
+   *
+   * @default false
+   * @example isolating: true
+   */
+  defining?: NodeSpec['defining'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['defining'];
+    editor?: Editor;
+  }) => NodeSpec['defining']);
+  /**
+   * When enabled (default is false), the sides of nodes of this type
+   * count as boundaries that regular editing operations, like
+   * backspacing or lifting, won't cross. An example of a node that
+   * should probably have this enabled is a table cell.
+   */
+  isolating?: NodeSpec['isolating'] | ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['isolating'];
+    editor?: Editor;
+  }) => NodeSpec['isolating']);
+  /**
+   * Associates DOM parser information with this node, which can be
+   * used by [`DOMParser.fromSchema`](https://prosemirror.net/docs/ref/#model.DOMParser^fromSchema) to
+   * automatically derive a parser. The `node` field in the rules is
+   * implied (the name of this node will be filled in automatically).
+   * If you supply your own parser, you do not need to also specify
+   * parsing rules in your schema.
+   *
+   * @example parseHTML: [{ tag: 'div', attrs: { 'data-id': 'my-block' } }]
+   */
+  parseHTML?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['parseHTML'];
+    editor?: Editor;
+  }) => NodeSpec['parseDOM'];
+  /**
+   * A description of a DOM structure. Can be either a string, which is
+   * interpreted as a text node, a DOM node, which is interpreted as
+   * itself, a `{dom, contentDOM}` object, or an array.
+   *
+   * An array describes a DOM element. The first value in the array
+   * should be a string—the name of the DOM element, optionally prefixed
+   * by a namespace URL and a space. If the second element is plain
+   * object, it is interpreted as a set of attributes for the element.
+   * Any elements after that (including the 2nd if it's not an attribute
+   * object) are interpreted as children of the DOM elements, and must
+   * either be valid `DOMOutputSpec` values, or the number zero.
+   *
+   * The number zero (pronounced “hole”) is used to indicate the place
+   * where a node's child nodes should be inserted. If it occurs in an
+   * output spec, it should be the only child element in its parent
+   * node.
+   *
+   * @example toDOM: ['div[data-id="my-block"]', { class: 'my-block' }, 0]
+   */
+  renderHTML?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['renderHTML'];
+    editor?: Editor;
+  }, props: {
+    node: Node$2;
+    HTMLAttributes: Record<string, any>;
+  }) => DOMOutputSpec) | null;
+  /**
+   * renders the node as text
+   * @example renderText: () => 'foo
+   */
+  renderText?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['renderText'];
+    editor?: Editor;
+  }, props: {
+    node: Node$2;
+    pos: number;
+    parent: Node$2;
+    index: number;
+  }) => string) | null;
+  /**
+   * Add attributes to the node
+   * @example addAttributes: () => ({ class: 'foo' })
+   */
+  addAttributes?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<NodeConfig<Options, Storage>>['addAttributes'];
+    editor?: Editor;
+  }) => Attributes | {};
+}
+/**
+ * The Node class is used to create custom node extensions.
+ * @see https://tiptap.dev/api/extensions#create-a-new-extension
+ */
+declare class Node$1<Options = any, Storage = any> extends Extendable<Options, Storage, NodeConfig<Options, Storage>> {
+  type: string;
+  /**
+   * Create a new Node instance
+   * @param config - Node configuration object or a function that returns a configuration object
+   */
+  static create<O = any, S = any>(config?: Partial<NodeConfig<O, S>> | (() => Partial<NodeConfig<O, S>>)): Node$1<O, S>;
+  configure(options?: Partial<Options>): Node$1<Options, Storage>;
+  extend<ExtendedOptions = Options, ExtendedStorage = Storage, ExtendedConfig extends NodeConfig<ExtendedOptions, ExtendedStorage> = NodeConfig<ExtendedOptions, ExtendedStorage>>(extendedConfig?: (() => Partial<ExtendedConfig>) | (Partial<ExtendedConfig> & ThisType<{
+    name: string;
+    options: ExtendedOptions;
+    storage: ExtendedStorage;
+    editor: Editor;
+    type: NodeType$2;
+  }>)): Node$1<ExtendedOptions, ExtendedStorage>;
+}
+//#endregion
+//#region src/PasteRule.d.ts
+type PasteRuleMatch = {
+  index: number;
+  text: string;
+  replaceWith?: string;
+  match?: RegExpMatchArray;
+  data?: Record<string, any>;
+};
+type PasteRuleFinder = RegExp | ((text: string, event?: ClipboardEvent | null) => PasteRuleMatch[] | null | undefined);
+/**
+ * Paste rules are used to react to pasted content.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#paste-rules
+ */
+declare class PasteRule {
+  find: PasteRuleFinder;
+  handler: (props: {
+    state: EditorState;
+    range: Range;
+    match: ExtendedRegExpMatchArray;
+    commands: SingleCommands;
+    chain: () => ChainedCommands;
+    can: () => CanCommands;
+    pasteEvent: ClipboardEvent | null;
+    dropEvent: DragEvent | null;
+  }) => void | null;
+  constructor(config: {
+    find: PasteRuleFinder;
+    handler: (props: {
+      can: () => CanCommands;
+      chain: () => ChainedCommands;
+      commands: SingleCommands;
+      dropEvent: DragEvent | null;
+      match: ExtendedRegExpMatchArray;
+      pasteEvent: ClipboardEvent | null;
+      range: Range;
+      state: EditorState;
+    }) => void | null;
+  });
+}
+//#endregion
+//#region src/Extendable.d.ts
+interface ExtendableConfig<Options = any, Storage = any, Config extends ExtensionConfig<Options, Storage> | NodeConfig<Options, Storage> | MarkConfig<Options, Storage> | ExtendableConfig<Options, Storage> = ExtendableConfig<Options, Storage, any, any>, PMType = any> {
+  /**
+   * The extension name - this must be unique.
+   * It will be used to identify the extension.
+   *
+   * @example 'myExtension'
+   */
+  name: string;
+  /**
+   * The priority of your extension. The higher, the earlier it will be called
+   * and will take precedence over other extensions with a lower priority.
+   * @default 100
+   * @example 101
+   */
+  priority?: number;
+  /**
+   * This method will add options to this extension
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#settings
+   * @example
+   * addOptions() {
+   *  return {
+   *    myOption: 'foo',
+   *    myOtherOption: 10,
+   * }
+   */
+  addOptions?: (this: {
+    name: string;
+    parent: ParentConfig<Config>['addOptions'];
+  }) => Options;
+  /**
+   * The default storage this extension can save data to.
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#storage
+   * @example
+   * defaultStorage: {
+   *   prefetchedUsers: [],
+   *   loading: false,
+   * }
+   */
+  addStorage?: (this: {
+    name: string;
+    options: Options;
+    parent: ParentConfig<Config>['addStorage'];
+  }) => Storage;
+  /**
+     * This function adds globalAttributes to specific nodes.
+     * @see https://tiptap.dev/docs/editor/guide/custom-extensions#global-attributes
+     * @example
+     * addGlobalAttributes() {
+     *   return [
+     *     {
+             // Extend the following extensions
+     *       types: [
+     *         'heading',
+     *         'paragraph',
+     *       ],
+     *       // … with those attributes
+     *       attributes: {
+     *         textAlign: {
+     *           default: 'left',
+     *           renderHTML: attributes => ({
+     *             style: `text-align: ${attributes.textAlign}`,
+     *           }),
+     *           parseHTML: element => element.style.textAlign || 'left',
+     *         },
+     *       },
+     *     },
+     *   ]
+     * }
+     */
+  addGlobalAttributes?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    extensions: (Node$1 | Mark)[];
+    parent: ParentConfig<Config>['addGlobalAttributes'];
+  }) => GlobalAttributes;
+  /**
+   * This function adds commands to the editor
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#commands
+   * @example
+   * addCommands() {
+   *   return {
+   *     myCommand: () => ({ chain }) => chain().setMark('type', 'foo').run(),
+   *   }
+   * }
+   */
+  addCommands?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['addCommands'];
+  }) => Partial<RawCommands>;
+  /**
+   * This function registers keyboard shortcuts.
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#keyboard-shortcuts
+   * @example
+   * addKeyboardShortcuts() {
+   *   return {
+   *     'Mod-l': () => this.editor.commands.toggleBulletList(),
+   *   }
+   * },
+   */
+  addKeyboardShortcuts?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['addKeyboardShortcuts'];
+  }) => {
+    [key: string]: KeyboardShortcutCommand;
+  };
+  /**
+   * This function adds input rules to the editor.
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#input-rules
+   * @example
+   * addInputRules() {
+   *   return [
+   *     markInputRule({
+   *       find: inputRegex,
+   *       type: this.type,
+   *     }),
+   *   ]
+   * },
+   */
+  addInputRules?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['addInputRules'];
+  }) => InputRule[];
+  /**
+   * This function adds paste rules to the editor.
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#paste-rules
+   * @example
+   * addPasteRules() {
+   *   return [
+   *     markPasteRule({
+   *       find: pasteRegex,
+   *       type: this.type,
+   *     }),
+   *   ]
+   * },
+   */
+  addPasteRules?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['addPasteRules'];
+  }) => PasteRule[];
+  /**
+   * This function adds Prosemirror plugins to the editor
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#prosemirror-plugins
+   * @example
+   * addProseMirrorPlugins() {
+   *   return [
+   *     customPlugin(),
+   *   ]
+   * }
+   */
+  addProseMirrorPlugins?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['addProseMirrorPlugins'];
+  }) => Plugin[];
+  /**
+   * Adds editor decorations (node, inline, widget). Return a spec with a `create`
+   * function that builds instances via `Decoration.Node`/`Inline`/`Widget`. Use
+   * `shouldUpdate`, `update: 'changedRanges'` + `createInRange`, or `update: 'manual'` to control recomputation.
+   * @see https://tiptap.dev/docs/editor/core-concepts/decorations
+   * @example
+   * addDecorations() {
+   *   return {
+   *     create: ({ state }) =>
+   *       findChildren(state.doc, node => node.type.name === 'heading').map(
+   *         ({ pos, node }) =>
+   *           Decoration.Node(pos, pos + node.nodeSize, { class: 'is-heading' }),
+   *       ),
+   *   }
+   * }
+   *
+   * For framework widgets, use `ReactWidgetRenderer` or `VueWidgetRenderer`
+   * from the matching framework package. Give stateful widgets a stable key.
+   *
+   * `create` and `createInRange` must not throw. An exception escapes through
+   * `editor.commands.*` and stops the document from updating until it stops.
+   */
+  addDecorations?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['addDecorations'];
+  }) => DecorationSpec | null;
+  /**
+   * This function transforms pasted HTML content before it's parsed.
+   * Extensions can use this to modify or clean up pasted HTML.
+   * The transformations are chained - each extension's transform receives
+   * the output from the previous extension's transform.
+   * @see https://tiptap.dev/docs/editor/guide/custom-extensions#transform-pasted-html
+   * @example
+   * transformPastedHTML(html) {
+   *   // Remove all style attributes
+   *   return html.replace(/style="[^"]*"/g, '')
+   * }
+   */
+  transformPastedHTML?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['transformPastedHTML'];
+  }, html: string) => string;
+  /**
+   * This function adds additional extensions to the editor. This is useful for
+   * building extension kits.
+   * @example
+   * addExtensions() {
+   *   return [
+   *     BulletList,
+   *     OrderedList,
+   *     ListItem
+   *   ]
+   * }
+   */
+  addExtensions?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<Config>['addExtensions'];
+  }) => Extensions;
+  /**
+   * The markdown token name
+   *
+   * This is the name of the token that this extension uses to parse and render markdown and comes from the Marked Lexer.
+   *
+   * @see https://github.com/markedjs/marked/blob/master/src/Tokens.ts
+   *
+   */
+  markdownTokenName?: string;
+  /**
+   * The parse function used by the markdown parser to convert markdown tokens to ProseMirror nodes.
+   *
+   * Bound to the configured extension instance, so `this.name`, `this.options`
+   * and `this.storage` are available even when parsing without an Editor.
+   */
+  parseMarkdown?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<Config>['parseMarkdown'];
+  }, token: MarkdownToken, helpers: MarkdownParseHelpers) => MarkdownParseResult;
+  /**
+   * The serializer function used by the markdown serializer to convert ProseMirror nodes to markdown tokens.
+   *
+   * Bound to the configured extension instance, so `this.name`, `this.options`
+   * and `this.storage` are available even when serializing without an Editor.
+   */
+  renderMarkdown?: (this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<Config>['renderMarkdown'];
+  }, node: JSONContent, helpers: MarkdownRendererHelpers, ctx: RenderContext) => string;
+  /**
+   * The markdown tokenizer responsible for turning a markdown string into tokens
+   *
+   * Custom tokenizers are only needed when you want to parse non-standard markdown token.
+   */
+  markdownTokenizer?: MarkdownTokenizer;
+  /**
+   * Optional markdown options for indentation
+   */
+  markdownOptions?: {
+    /**
+     * Defines if this markdown element should indent it's child elements
+     */
+    indentsContent?: boolean;
+    /**
+     * Lets a mark tell the Markdown serializer which inline HTML tags it can
+     * safely use when plain markdown delimiters would become ambiguous.
+     *
+     * This is mainly useful for overlapping marks. For example, bold followed
+     * by bold+italic followed by italic cannot always be written back with only
+     * `*` and `**` in a way that still parses correctly. In that case, the
+     * serializer can close the overlapping section with markdown and reopen the
+     * remaining tail with HTML instead.
+     *
+     * Example:
+     * - desired formatting: `**123` + `*456*` + `789 italic`
+     * - serialized result: `**123*456***<em>789</em>`
+     *
+     * If your extension defines custom mark names, set `htmlReopen` on that
+     * extension so the serializer can reuse its HTML form for overlap cases.
+     */
+    htmlReopen?: {
+      open: string;
+      close: string;
+    };
+  };
+  /**
+   * This function extends the schema of the node.
+   * @example
+   * extendNodeSchema() {
+   *   return {
+   *     group: 'inline',
+   *     selectable: false,
+   *   }
+   * }
+   */
+  extendNodeSchema?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<Config>['extendNodeSchema'];
+  }, extension: Node$1) => Record<string, any>) | null;
+  /**
+   * This function extends the schema of the mark.
+   * @example
+   * extendMarkSchema() {
+   *   return {
+   *     group: 'inline',
+   *     selectable: false,
+   *   }
+   * }
+   */
+  extendMarkSchema?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    parent: ParentConfig<Config>['extendMarkSchema'];
+  }, extension: Mark) => Record<string, any>) | null;
+  /**
+   * The editor is not ready yet.
+   */
+  onBeforeCreate?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onBeforeCreate'];
+  }, event: EditorEvents['beforeCreate']) => void) | null;
+  /**
+   * The editor is ready.
+   */
+  onCreate?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onCreate'];
+  }, event: EditorEvents['create']) => void) | null;
+  /**
+   * The content has changed.
+   */
+  onUpdate?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onUpdate'];
+  }, event: EditorEvents['update']) => void) | null;
+  /**
+   * The selection has changed.
+   */
+  onSelectionUpdate?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onSelectionUpdate'];
+  }, event: EditorEvents['selectionUpdate']) => void) | null;
+  /**
+   * The editor state has changed.
+   */
+  onTransaction?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onTransaction'];
+  }, event: EditorEvents['transaction']) => void) | null;
+  /**
+   * The editor is focused.
+   */
+  onFocus?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onFocus'];
+  }, event: EditorEvents['focus']) => void) | null;
+  /**
+   * The editor isn’t focused anymore.
+   */
+  onBlur?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onBlur'];
+  }, event: EditorEvents['blur']) => void) | null;
+  /**
+   * The editor is destroyed.
+   */
+  onDestroy?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['onDestroy'];
+  }, event: EditorEvents['destroy']) => void) | null;
+  /**
+   * This hook allows you to intercept and modify transactions before they are dispatched.
+   *
+   * Example
+   * ```ts
+   * dispatchTransaction({ transaction, next }) {
+   *   console.log('Dispatching transaction:', transaction)
+   *   next(transaction)
+   * }
+   * ```
+   *
+   * @param props - The dispatch transaction props
+   */
+  dispatchTransaction?: ((this: {
+    name: string;
+    options: Options;
+    storage: Storage;
+    editor: Editor;
+    type: PMType;
+    parent: ParentConfig<Config>['dispatchTransaction'];
+  }, props: DispatchTransactionProps) => void) | null;
+}
+declare class Extendable<Options = any, Storage = any, Config = ExtensionConfig<Options, Storage> | NodeConfig<Options, Storage> | MarkConfig<Options, Storage>> {
+  type: string;
+  parent: Extendable | null;
+  child: Extendable | null;
+  name: string;
+  config: Config;
+  constructor(config?: Partial<Config>);
+  get options(): Options;
+  get storage(): Readonly<Storage>;
+  configure(options?: Partial<Options>): Extendable<Options, Storage, ExtensionConfig<Options, Storage> | NodeConfig<Options, Storage> | MarkConfig<Options, Storage>>;
+  extend<ExtendedOptions = Options, ExtendedStorage = Storage, ExtendedConfig = ExtensionConfig<ExtendedOptions, ExtendedStorage> | NodeConfig<ExtendedOptions, ExtendedStorage> | MarkConfig<ExtendedOptions, ExtendedStorage>>(extendedConfig?: Partial<ExtendedConfig>): Extendable<ExtendedOptions, ExtendedStorage>;
+}
+//#endregion
+//#region src/Extension.d.ts
+interface ExtensionConfig<Options = any, Storage = any> extends ExtendableConfig<Options, Storage, ExtensionConfig<Options, Storage>, null> {}
+/**
+ * The Extension class is the base class for all extensions.
+ * @see https://tiptap.dev/api/extensions#create-a-new-extension
+ */
+declare class Extension<Options = any, Storage = any> extends Extendable<Options, Storage, ExtensionConfig<Options, Storage>> {
+  type: string;
+  /**
+   * Create a new Extension instance
+   * @param config - Extension configuration object or a function that returns a configuration object
+   */
+  static create<O = any, S = any>(config?: Partial<ExtensionConfig<O, S>> | (() => Partial<ExtensionConfig<O, S>>)): Extension<O, S>;
+  configure(options?: Partial<Options>): Extension<Options, Storage>;
+  extend<ExtendedOptions = Options, ExtendedStorage = Storage, ExtendedConfig = ExtensionConfig<ExtendedOptions, ExtendedStorage>>(extendedConfig?: (() => Partial<ExtendedConfig>) | (Partial<ExtendedConfig> & ThisType<{
+    name: string;
+    options: ExtendedOptions;
+    storage: ExtendedStorage;
+    editor: Editor;
+    type: null;
+  }>)): Extension<ExtendedOptions, ExtendedStorage>;
+}
+//#endregion
+//#region src/helpers/MappablePosition.d.ts
+/**
+ * A class that represents a mappable position in the editor. It can be extended
+ * by other extensions to add additional position mapping capabilities.
+ */
+declare class MappablePosition {
+  /**
+   * The absolute position in the editor.
+   */
+  position: number;
+  constructor(position: number);
+  /**
+   * Creates a MappablePosition from a JSON object.
+   */
+  static fromJSON(json: any): MappablePosition;
+  /**
+   * Converts the MappablePosition to a JSON object.
+   */
+  toJSON(): any;
+}
+/**
+ * The result of the getUpdatedPosition function.
+ */
+interface GetUpdatedPositionResult {
+  position: MappablePosition;
+  mapResult: MapResult | null;
+}
+type AnyExtension = Extendable;
+type Extensions = AnyExtension[];
+type ParentConfig<T> = Partial<{ [P in keyof T]: Required<T>[P] extends ((...args: any) => any) ? (...args: Parameters<Required<T>[P]>) => ReturnType<Required<T>[P]> : T[P]; }>;
+type MaybeReturnType<T> = T extends ((...args: any) => any) ? ReturnType<T> : T;
+interface EditorEvents {
+  mount: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+  };
+  unmount: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+  };
+  beforeCreate: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+  };
+  create: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+  };
+  contentError: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The error that occurred while parsing the content
+     */
+    error: Error;
+    /**
+     * If called, will re-initialize the editor with the collaboration extension removed.
+     * This will prevent syncing back deletions of content not present in the current schema.
+     */
+    disableCollaboration: () => void;
+  };
+  update: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The transaction that caused the update
+     */
+    transaction: Transaction;
+    /**
+     * Appended transactions that were added to the initial transaction by plugins
+     */
+    appendedTransactions: Transaction[];
+  };
+  selectionUpdate: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The transaction that caused the selection update
+     */
+    transaction: Transaction;
+  };
+  beforeTransaction: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The transaction that will be applied
+     */
+    transaction: Transaction;
+    /**
+     * The next state of the editor after the transaction is applied
+     */
+    nextState: EditorState;
+  };
+  transaction: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The initial transaction
+     */
+    transaction: Transaction;
+    /**
+     * Appended transactions that were added to the initial transaction by plugins
+     */
+    appendedTransactions: Transaction[];
+  };
+  focus: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The focus event
+     */
+    event: FocusEvent;
+    /**
+     * The transaction that caused the focus
+     */
+    transaction: Transaction;
+  };
+  blur: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The focus event
+     */
+    event: FocusEvent;
+    /**
+     * The transaction that caused the blur
+     */
+    transaction: Transaction;
+  };
+  destroy: void;
+  paste: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The clipboard event
+     */
+    event: ClipboardEvent;
+    /**
+     * The slice that was pasted
+     */
+    slice: Slice;
+  };
+  drop: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The drag event
+     */
+    event: DragEvent;
+    /**
+     * The slice that was dropped
+     */
+    slice: Slice;
+    /**
+     * Whether the content was moved (true) or copied (false)
+     */
+    moved: boolean;
+  };
+  delete: {
+    /**
+     * The editor instance
+     */
+    editor: Editor;
+    /**
+     * The range of the deleted content (before the deletion)
+     */
+    deletedRange: Range;
+    /**
+     * The new range of positions of where the deleted content was in the new document (after the deletion)
+     */
+    newRange: Range;
+    /**
+     * The transaction that caused the deletion
+     */
+    transaction: Transaction;
+    /**
+     * The combined transform (including all appended transactions) that caused the deletion
+     */
+    combinedTransform: Transform;
+    /**
+     * Whether the deletion was partial (only a part of this content was deleted)
+     */
+    partial: boolean;
+    /**
+     * This is the start position of the mark in the document (before the deletion)
+     */
+    from: number;
+    /**
+     * This is the end position of the mark in the document (before the deletion)
+     */
+    to: number;
+  } & ({
+    /**
+     * The content that was deleted
+     */
+    type: 'node';
+    /**
+     * The node which the deletion occurred in
+     * @note This can be a parent node of the deleted content
+     */
+    node: Node$2;
+    /**
+     * The new start position of the node in the document (after the deletion)
+     */
+    newFrom: number;
+    /**
+     * The new end position of the node in the document (after the deletion)
+     */
+    newTo: number;
+  } | {
+    /**
+     * The content that was deleted
+     */
+    type: 'mark';
+    /**
+     * The mark that was deleted
+     */
+    mark: Mark$1;
+  });
+}
+/**
+ * Props passed to the `dispatchTransaction` hook in extensions.
+ */
+type DispatchTransactionProps = {
+  /**
+   * The transaction that is about to be dispatched.
+   */
+  transaction: Transaction;
+  /**
+   * A function that should be called to pass the transaction down to the next extension
+   * (or eventually to the editor).
+   *
+   * @param transaction The transaction to dispatch
+   */
+  next: (transaction: Transaction) => void;
+};
+type EnableRules = (AnyExtension | string)[] | boolean;
+interface EditorOptions {
+  /**
+   * The element to bind the editor to:
+   * - If an `Element` is passed, the editor will be mounted appended to that element
+   * - If `null` is passed, the editor will not be mounted automatically
+   * - If an object with a `mount` property is passed, the editor will be mounted to that element
+   * - If a function is passed, it will be called with the editor's element, which should place the editor within the document
+   */
+  element: Element | {
+    mount: HTMLElement;
+  } | ((editor: HTMLElement) => void) | null;
+  /**
+   * The content of the editor (HTML, JSON, or a JSON array)
+   */
+  content: Content;
+  /**
+   * The extensions to use
+   */
+  extensions: Extensions;
+  /**
+   * A complete ProseMirror specification applied when the editor is created.
+   * Its structure replaces local node, mark and attribute definitions.
+   * Local extensions retain parsing, rendering, commands and plugins.
+   * Every node and mark must have a matching local extension, and vice versa.
+   * Changing this option on an existing editor does not rebuild its schema.
+   */
+  schemaSpec?: SchemaSpec;
+  /**
+   * Whether to inject base CSS styles
+   */
+  injectCSS: boolean;
+  /**
+   * A nonce to use for CSP while injecting styles
+   */
+  injectNonce: string | undefined;
+  /**
+   * The editor's initial focus position
+   */
+  autofocus: FocusPosition;
+  /**
+   * Whether the editor is editable
+   */
+  editable: boolean;
+  /**
+   * The default text direction for all content in the editor.
+   * When set to 'ltr' or 'rtl', all nodes will have the corresponding dir attribute.
+   * When set to 'auto', the dir attribute will be set based on content detection.
+   * When undefined, no dir attribute will be added.
+   * @default undefined
+   */
+  textDirection?: 'ltr' | 'rtl' | 'auto';
+  /**
+   * The editor's props
+   */
+  editorProps: EditorProps;
+  /**
+   * The editor's content parser options
+   */
+  parseOptions: ParseOptions;
+  /**
+   * The editor's core extension options
+   */
+  coreExtensionOptions?: {
+    clipboardTextSerializer?: {
+      blockSeparator?: string;
+    };
+    /**
+     * Options for the `tabindex` core extension.
+     */
+    tabindex?: {
+      /**
+       * The value for the `tabindex` attribute on the editor element.
+       */
+      value?: string;
+    };
+    delete?: {
+      /**
+       * Whether the `delete` extension should be called asynchronously to avoid blocking the editor while processing deletions
+       * @default true deletion events are called asynchronously
+       */
+      async?: boolean;
+      /**
+       * Allows filtering the transactions that are processed by the `delete` extension.
+       * If the function returns `true`, the transaction will be ignored.
+       */
+      filterTransaction?: (transaction: Transaction) => boolean;
+    };
+  };
+  /**
+   * Whether to enable input rules behavior
+   */
+  enableInputRules: EnableRules;
+  /**
+   * Whether to enable paste rules behavior
+   */
+  enablePasteRules: EnableRules;
+  /**
+   * Determines whether core extensions are enabled.
+   *
+   * If set to `false`, all core extensions will be disabled.
+   * To disable specific core extensions, provide an object where the keys are the extension names and the values are `false`.
+   * Extensions not listed in the object will remain enabled.
+   *
+   * @example
+   * // Disable all core extensions
+   * enabledCoreExtensions: false
+   *
+   * @example
+   * // Disable only the keymap core extension
+   * enabledCoreExtensions: { keymap: false }
+   *
+   * @default true
+   */
+  enableCoreExtensions?: boolean | Partial<Record<'editable' | 'clipboardTextSerializer' | 'commands' | 'focusEvents' | 'keymap' | 'tabindex' | 'drop' | 'paste' | 'delete' | 'textDirection', false>>;
+  /**
+   * If `true`, the editor will check the content for errors on initialization.
+   * Emitting the `contentError` event if the content is invalid.
+   * Which can be used to show a warning or error message to the user.
+   * @default false
+   */
+  enableContentCheck: boolean;
+  /**
+   * If `true`, the editor will emit the `contentError` event if invalid content is
+   * encountered but `enableContentCheck` is `false`. This lets you preserve the
+   * invalid editor content while still showing a warning or error message to
+   * the user.
+   *
+   * @default false
+   */
+  emitContentError: boolean;
+  /**
+   * Called before the editor is constructed.
+   */
+  onBeforeCreate: (props: EditorEvents['beforeCreate']) => void;
+  /**
+   * Called after the editor is constructed.
+   */
+  onCreate: (props: EditorEvents['create']) => void;
+  /**
+   * Called when the editor is mounted.
+   */
+  onMount: (props: EditorEvents['mount']) => void;
+  /**
+   * Called when the editor is unmounted.
+   */
+  onUnmount: (props: EditorEvents['unmount']) => void;
+  /**
+   * Called when the editor encounters an error while parsing the content.
+   * Only enabled if `enableContentCheck` is `true`.
+   */
+  onContentError: (props: EditorEvents['contentError']) => void;
+  /**
+   * Called when the editor's content is updated.
+   */
+  onUpdate: (props: EditorEvents['update']) => void;
+  /**
+   * Called when the editor's selection is updated.
+   */
+  onSelectionUpdate: (props: EditorEvents['selectionUpdate']) => void;
+  /**
+   * Called after a transaction is applied to the editor.
+   */
+  onTransaction: (props: EditorEvents['transaction']) => void;
+  /**
+   * Called on focus events.
+   */
+  onFocus: (props: EditorEvents['focus']) => void;
+  /**
+   * Called on blur events.
+   */
+  onBlur: (props: EditorEvents['blur']) => void;
+  /**
+   * Called when the editor is destroyed.
+   */
+  onDestroy: (props: EditorEvents['destroy']) => void;
+  /**
+   * Called when content is pasted into the editor.
+   */
+  onPaste: (e: ClipboardEvent, slice: Slice) => void;
+  /**
+   * Called when content is dropped into the editor.
+   */
+  onDrop: (e: DragEvent, slice: Slice, moved: boolean) => void;
+  /**
+   * Called when content is deleted from the editor.
+   */
+  onDelete: (props: EditorEvents['delete']) => void;
+  /**
+   * Whether to enable extension-level dispatching of transactions.
+   * If `false`, extensions cannot define their own `dispatchTransaction` hook.
+   *
+   * @default true
+   * @example
+   * new Editor({
+   *   enableExtensionDispatchTransaction: false,
+   * })
+   */
+  enableExtensionDispatchTransaction?: boolean;
+}
+/**
+ * The editor's content as HTML
+ */
+type HTMLContent = string;
+/**
+ * A Tiptap JSON node or document. Tiptap JSON is the standard format for
+ * storing and manipulating Tiptap content. It is equivalent to the JSON
+ * representation of a Prosemirror node.
+ *
+ * Tiptap JSON documents are trees of nodes. The root node is usually of type
+ * `doc`. Nodes can have other nodes as children. Nodes can also have marks and
+ * attributes. Text nodes (nodes with type `text`) have a `text` property and no
+ * children.
+ *
+ * @example
+ * ```ts
+ * const content: JSONContent = {
+ *   type: 'doc',
+ *   content: [
+ *     {
+ *       type: 'paragraph',
+ *       content: [
+ *         {
+ *           type: 'text',
+ *           text: 'Hello ',
+ *         },
+ *         {
+ *           type: 'text',
+ *           text: 'world',
+ *           marks: [{ type: 'bold' }],
+ *         },
+ *       ],
+ *     },
+ *   ],
+ * }
+ * ```
+ */
+type JSONContent = {
+  /**
+   * The type of the node
+   */
+  type?: string;
+  /**
+   * The attributes of the node. Attributes can have any JSON-serializable value.
+   */
+  attrs?: Record<string, any> | undefined;
+  /**
+   * The children of the node. A node can have other nodes as children.
+   */
+  content?: JSONContent[];
+  /**
+   * A list of marks of the node. Inline nodes can have marks.
+   */
+  marks?: {
+    /**
+     * The type of the mark
+     */
+    type: string;
+    /**
+     * The attributes of the mark. Attributes can have any JSON-serializable value.
+     */
+    attrs?: Record<string, any>;
+    [key: string]: any;
+  }[];
+  /**
+   * The text content of the node. This property is only present on text nodes
+   * (i.e. nodes with `type: 'text'`).
+   *
+   * Text nodes cannot have children, but they can have marks.
+   */
+  text?: string;
+  [key: string]: any;
+};
+/**
+ * A mark type is either a JSON representation of a mark or a Prosemirror mark instance
+ */
+type MarkType<Type extends string | {
+  name: string;
+} = any, TAttributes extends undefined | Record<string, any> = any> = {
+  type: Type;
+  attrs: TAttributes;
+};
+/**
+ * A node type is either a JSON representation of a node or a Prosemirror node instance
+ */
+type NodeType$1<Type extends string | {
+  name: string;
+} = any, TAttributes extends undefined | Record<string, any> = any, NodeMarkType extends MarkType = any, TContent extends (NodeType$1 | TextType)[] = any> = {
+  type: Type;
+  attrs: TAttributes;
+  content?: TContent;
+  marks?: NodeMarkType[];
+};
+/**
+ * A node type is either a JSON representation of a doc node or a Prosemirror doc node instance
+ */
+type DocumentType<TDocAttributes extends Record<string, any> | undefined = Record<string, any>, TContentType extends NodeType$1[] = NodeType$1[]> = Omit<NodeType$1<'doc', TDocAttributes, never, TContentType>, 'marks' | 'content'> & {
+  content: TContentType;
+};
+/**
+ * A node type is either a JSON representation of a text node or a Prosemirror text node instance
+ */
+type TextType<TMarkType extends MarkType = MarkType> = {
+  type: 'text';
+  text: string;
+  marks: TMarkType[];
+};
+type Content = HTMLContent | JSONContent | JSONContent[] | null;
+type CommandProps = {
+  editor: Editor;
+  tr: Transaction;
+  commands: SingleCommands;
+  can: () => CanCommands;
+  chain: () => ChainedCommands;
+  state: EditorState;
+  view: EditorView;
+  dispatch: ((args?: any) => any) | undefined;
+};
+type Command = (props: CommandProps) => boolean;
+type KeyboardShortcutCommand = (props: {
+  editor: Editor;
+}) => boolean;
+type Attribute = {
+  default?: any;
+  validate?: string | ((value: any) => void);
+  rendered?: boolean;
+  renderHTML?: ((attributes: Record<string, any>) => Record<string, any> | null) | null;
+  parseHTML?: ((element: HTMLElement) => any | null) | null;
+  keepOnSplit?: boolean;
+  isRequired?: boolean;
+};
+type Attributes = {
+  [key: string]: Attribute;
+};
+type ExtensionAttribute = {
+  type: string;
+  name: string;
+  attribute: Required<Omit<Attribute, 'validate'>> & Pick<Attribute, 'validate'>;
+};
+type GlobalAttributes = {
+  /**
+   * The node & mark types this attribute should be applied to.
+   * Can be a specific array of type names, or a shorthand string:
+   * - `'*'` applies to all nodes (excluding text) and all marks
+   * - `'nodes'` applies to all nodes (excluding the built-in text node)
+   * - `'marks'` applies to all marks
+   * - `string[]` applies to specific node/mark types by name
+   * @example
+   * types: '*'                                    // All nodes and marks
+   * types: 'nodes'                                // All nodes
+   * types: 'marks'                                // All marks
+   * types: ['heading', 'paragraph']               // Specific types
+   */
+  types: string[] | 'nodes' | 'marks' | '*';
+  /**
+   * The attributes to add to the node or mark types.
+   */
+  attributes: Record<string, Attribute | undefined>;
+}[];
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
+type ValuesOf<T> = T[keyof T];
+type KeysWithTypeOf<T, Type> = { [P in keyof T]: T[P] extends Type ? P : never; }[keyof T];
+interface NodeViewRendererProps {
+  /**
+   * The node that is being rendered.
+   */
+  node: Parameters<NodeViewConstructor>[0];
+  /**
+   * The editor's view.
+   */
+  view: Parameters<NodeViewConstructor>[1];
+  /**
+   * A function that can be called to get the node's current position in the document.
+   */
+  getPos: Parameters<NodeViewConstructor>[2];
+  /**
+   * is an array of node or inline decorations that are active around the node.
+   * They are automatically drawn in the normal way, and you will usually just want to ignore this, but they can also be used as a way to provide context information to the node view without adding it to the document itself.
+   */
+  decorations: Parameters<NodeViewConstructor>[3];
+  /**
+   * holds the decorations for the node's content. You can safely ignore this if your view has no content or a contentDOM property, since the editor will draw the decorations on the content.
+   * But if you, for example, want to create a nested editor with the content, it may make sense to provide it with the inner decorations.
+   */
+  innerDecorations: Parameters<NodeViewConstructor>[4];
+  /**
+   * The editor instance.
+   */
+  editor: Editor;
+  /**
+   * The extension that is responsible for the node.
+   */
+  extension: Node$1;
+  /**
+   * The HTML attributes that should be added to the node's DOM element.
+   */
+  HTMLAttributes: Record<string, any>;
+}
+type NodeViewRenderer = (props: NodeViewRendererProps) => NodeView;
+interface MarkViewRendererProps {
+  /**
+   * The node that is being rendered.
+   */
+  mark: Parameters<MarkViewConstructor>[0];
+  /**
+   * The editor's view.
+   */
+  view: Parameters<MarkViewConstructor>[1];
+  /**
+   * indicates whether the mark's content is inline
+   */
+  inline: Parameters<MarkViewConstructor>[2];
+  /**
+   * The editor instance.
+   */
+  editor: Editor;
+  /**
+   * The extension that is responsible for the mark.
+   */
+  extension: Mark;
+  /**
+   * The HTML attributes that should be added to the mark's DOM element.
+   */
+  HTMLAttributes: Record<string, any>;
+  updateAttributes: (attrs: Record<string, any>) => void;
+}
+type MarkViewRenderer<Props = MarkViewRendererProps> = (props: Props) => MarkView;
+type UnionCommands<T = Command> = UnionToIntersection<ValuesOf<Pick<Commands<T>, KeysWithTypeOf<Commands<T>, object>>>>;
+type RawCommands = { [Item in keyof UnionCommands]: UnionCommands<Command>[Item]; };
+type SingleCommands = { [Item in keyof UnionCommands]: UnionCommands<boolean>[Item]; };
+type ChainedCommands = { [Item in keyof UnionCommands]: UnionCommands<ChainedCommands>[Item]; } & {
+  run: () => boolean;
+};
+type CanCommands = SingleCommands & {
+  chain: () => ChainedCommands;
+};
+type FocusPosition = 'start' | 'end' | 'all' | number | boolean | null;
+type Range = {
+  from: number;
+  to: number;
+};
+type TextSerializer = (props: {
+  node: Node$2;
+  pos: number;
+  parent: Node$2;
+  index: number;
+  range: Range;
+}) => string;
+type ExtendedRegExpMatchArray = RegExpMatchArray & {
+  data?: Record<string, any>;
+};
+/** Markdown related types */
+type MarkdownToken = {
+  type?: string;
+  raw?: string;
+  text?: string;
+  tokens?: MarkdownToken[];
+  depth?: number;
+  items?: MarkdownToken[];
+  [key: string]: any;
+};
+/**
+ * Helpers specifically for parsing markdown tokens into Tiptap JSON.
+ * These are provided to extension parse handlers.
+ */
+type MarkdownParseHelpers = {
+  /** Parse an array of inline tokens into text nodes with marks */
+  parseInline: (tokens: MarkdownToken[]) => JSONContent[];
+  /** Tokenize source text as inline markdown when supported by the markdown parser */
+  tokenizeInline?: (src: string) => MarkdownToken[];
+  /** Parse an array of block-level tokens */
+  parseChildren: (tokens: MarkdownToken[]) => JSONContent[];
+  /** Parse block-level tokens while preserving implicit empty paragraphs from blank lines */
+  parseBlockChildren?: (tokens: MarkdownToken[]) => JSONContent[];
+  /** Create a text node with optional marks */
+  createTextNode: (text: string, marks?: Array<{
+    type: string;
+    attrs?: any;
+  }>) => JSONContent;
+  /** Create any node type with attributes and content */
+  createNode: (type: string, attrs?: any, content?: JSONContent[]) => JSONContent;
+  /** Apply a mark to content (used for inline marks like bold, italic) */
+  applyMark: (markType: string, content: JSONContent[], attrs?: any) => {
+    mark: string;
+    content: JSONContent[];
+    attrs?: any;
+  };
+};
+/**
+ * Return shape for parser-level `parse` handlers.
+ * - a single JSON-like node
+ * - an array of JSON-like nodes
+ * - or a `{ mark: string, content: JSONLike[] }` shape to apply a mark
+ */
+type MarkdownParseResult = JSONContent | JSONContent[] | {
+  mark: string;
+  content: JSONContent[];
+  attrs?: any;
+};
+type RenderContext = {
+  index: number;
+  level: number;
+  meta?: Record<string, any>;
+  parentType?: string | null;
+  previousNode?: JSONContent | null;
+};
+/**
+ * Configuration object passed to custom marked.js tokenizers
+ */
+type MarkdownLexerConfiguration = {
+  /**
+   * Can be used to transform source text into inline tokens - useful while tokenizing child tokens.
+   * @param src
+   * @returns Array of inline tokens
+   */
+  inlineTokens: (src: string) => MarkdownToken[];
+  /**
+   * Can be used to transform source text into block-level tokens - useful while tokenizing child tokens.
+   * @param src
+   * @returns Array of block-level tokens
+   */
+  blockTokens: (src: string) => MarkdownToken[];
+  /** Returns whether a line continues an existing paragraph without starting a block. */
+  isParagraphContinuation?: (line: string) => boolean;
+};
+/** Custom tokenizer function for marked.js extensions */
+type MarkdownTokenizer = {
+  /** Token name this tokenizer creates */
+  name: string;
+  /** Priority level for tokenizer ordering (higher = earlier) */
+  level?: 'block' | 'inline';
+  /** A string to look for or a function that returns the start index of the token in the source string */
+  start?: string | ((src: string) => number);
+  /** Function that attempts to parse custom syntax from start of text */
+  tokenize: (src: string, tokens: MarkdownToken[], lexer: MarkdownLexerConfiguration) => MarkdownToken | undefined | void;
+};
+type MarkdownRendererHelpers = {
+  /**
+   * Render children nodes to a markdown string, optionally separated by a string.
+   * @param nodes The node or array of nodes to render
+   * @param separator An optional separator string (legacy) or RenderContext
+   * @returns The rendered markdown string
+   */
+  renderChildren: (nodes: JSONContent | JSONContent[], separator?: string) => string;
+  /** Render a single child node with its sibling index preserved */
+  renderChild?: (node: JSONContent, index: number) => string;
+  /**
+   * Render a text token to a markdown string
+   * @param prefix The prefix to add before the content
+   * @param content The content to wrap
+   * @returns The wrapped content
+   */
+  wrapInBlock: (prefix: string, content: string) => string;
+  /**
+   * Indent a markdown string according to the provided RenderContext
+   * @param content The content to indent
+   * @returns The indented content
+   */
+  indent: (content: string) => string;
+};
+type Utils = {
+  /**
+   * Returns the new position after applying a transaction.
+   *
+   * @param position The position to update. A MappablePosition instance.
+   * @param transaction The transaction to apply.
+   * @returns The new position after applying the transaction.
+   *
+   * @example
+   * const position = editor.utils.createMappablePosition(10)
+   * const {position, mapResult} = editor.utils.getUpdatedPosition(position, transaction)
+   */
+  getUpdatedPosition: (position: MappablePosition, transaction: Transaction) => GetUpdatedPositionResult;
+  /**
+   * Creates a MappablePosition from a position number. A mappable position can be used to track the
+   * next position after applying a transaction.
+   *
+   * @param position The position (as a number) where the MappablePosition will be created.
+   * @returns A new MappablePosition instance at the given position.
+   *
+   * @example
+   * const position = editor.utils.createMappablePosition(10)
+   */
+  createMappablePosition: (position: number) => MappablePosition;
+};
+interface Commands<ReturnType = any> {}
+interface Storage {}
+//#endregion
+//#region src/helpers/flattenExtensions.d.ts
+/**
+ * Create a flattened array of extensions by traversing the `addExtensions` field.
+ * @param extensions An array of Tiptap extensions
+ * @returns A flattened array of Tiptap extensions
+ */
+declare function flattenExtensions(extensions: Extensions): Extensions;
+//#endregion
+//#region src/helpers/getMarkAttributes.d.ts
+declare function getMarkAttributes(state: EditorState, typeOrName: string | MarkType$1): Record<string, any>;
+//#endregion
+//#region src/helpers/getMarkRange.d.ts
+/**
+ * Get the range of a mark at a resolved position.
+ */
+declare function getMarkRange(
+/**
+ * The position to get the mark range for.
+ */
+$pos: ResolvedPos,
+/**
+ * The mark type to get the range for.
+ */
+type: MarkType$1,
+/**
+ * The attributes to match against.
+ * If not provided, only the first mark at the position will be matched.
+ */
+attributes?: Record<string, any>): Range | void;
+//#endregion
+//#region src/helpers/resolveExtensions.d.ts
+/**
+ * Returns a flattened and sorted extension list while
+ * also checking for duplicated extensions and warns the user.
+ * @param extensions An array of Tiptap extensions
+ * @returns An flattened and sorted array of Tiptap extensions
+ */
+declare function resolveExtensions(extensions: Extensions): Extensions;
+//#endregion
+//#region src/helpers/sortExtensions.d.ts
+/**
+ * Sort extensions by priority.
+ * @param extensions An array of Tiptap extensions
+ * @returns A sorted array of Tiptap extensions by priority
+ */
+declare function sortExtensions(extensions: Extensions): Extensions;
+//#endregion
+//#region src/ExtensionManager.d.ts
+declare class ExtensionManager {
+  editor: Editor;
+  schema: Schema;
+  private readonly hasSchemaSpec;
+  /**
+   * A flattened and sorted array of all extensions
+   */
+  extensions: Extensions;
+  /**
+   * A non-flattened array of base extensions (no sub-extensions)
+   */
+  baseExtensions: Extensions;
+  splittableMarks: string[];
+  nonClearableMarks: string[];
+  decorationManager: DecorationManager | null;
+  constructor(extensions: Extensions, editor: Editor);
+  static resolve: typeof resolveExtensions;
+  static sort: typeof sortExtensions;
+  static flatten: typeof flattenExtensions;
+  /**
+   * Get all commands from the extensions.
+   * @returns An object with all commands where the key is the command name and the value is the command function
+   */
+  get commands(): RawCommands;
+  /**
+   * Get all registered Prosemirror plugins from the extensions.
+   * @returns An array of Prosemirror plugins
+   */
+  get plugins(): Plugin[];
+  /**
+   * Aggregates decorations from extensions into a single plugin, or returns null
+   * if none exist. Destroys the previous manager to avoid orphaned listeners.
+   * @returns A ProseMirror plugin or `null`
+   * @example
+   * const plugin = editor.extensionManager.createDecorationPlugin()
+   */
+  createDecorationPlugin(): Plugin | null;
+  /**
+   * Get all attributes from the extensions.
+   * @returns An array of attributes
+   */
+  get attributes(): ExtensionAttribute[];
+  /**
+   * Get all node views from the extensions.
+   * @returns An object with all node views where the key is the node name and the value is the node view function
+   */
+  get nodeViews(): Record<string, NodeViewConstructor>;
+  /**
+   * Get the composed dispatchTransaction function from all extensions.
+   * @param baseDispatch The base dispatch function (e.g. from the editor or user props)
+   * @returns A composed dispatch function
+   */
+  dispatchTransaction(baseDispatch: (tr: Transaction) => void): (tr: Transaction) => void;
+  /**
+   * Get the composed transformPastedHTML function from all extensions.
+   * @param baseTransform The base transform function (e.g. from the editor props)
+   * @returns A composed transform function that chains all extension transforms
+   */
+  transformPastedHTML(baseTransform?: (html: string, view?: any) => string): (html: string, view?: EditorView) => string;
+  get markViews(): Record<string, MarkViewConstructor>;
+  /**
+   * Destroy the extension manager and clean up all extension references
+   * to prevent memory leaks through parent/child extension chains.
+   *
+   * Walks each extension's full parent chain and nulls every forward
+   * `parent.child → current` link where the parent still points to the
+   * current node. This breaks the retention path from module-scope
+   * singleton roots through deep extend() chains.
+   *
+   * Only ancestor `.child` links matching the current chain are cleared.
+   * The `.parent` pointer on ancestors is never touched — extensions
+   * may be shared across live editors, so their own backward references
+   * and non-matching forward links must remain intact.
+   */
+  destroy(): void;
+  /**
+   * Go through all extensions, create extension storages & setup marks
+   * & bind editor event listener.
+   */
+  private setupExtensions;
+}
+//#endregion
+//#region src/NodePos.d.ts
+declare class NodePos {
+  private resolvedPos;
+  private isBlock;
+  private editor;
+  private get name();
+  constructor(pos: ResolvedPos, editor: Editor, isBlock?: boolean, node?: Node$2 | null);
+  private currentNode;
+  get node(): Node$2;
+  get element(): HTMLElement;
+  actualDepth: number | null;
+  get depth(): number;
+  get pos(): number;
+  get content(): Fragment;
+  set content(content: Content);
+  get attributes(): {
+    [key: string]: any;
+  };
+  get textContent(): string;
+  get size(): number;
+  get from(): number;
+  get range(): Range;
+  get to(): number;
+  get parent(): NodePos | null;
+  get before(): NodePos | null;
+  get after(): NodePos | null;
+  get children(): NodePos[];
+  get firstChild(): NodePos | null;
+  get lastChild(): NodePos | null;
+  closest(selector: string, attributes?: {
+    [key: string]: any;
+  }): NodePos | null;
+  querySelector(selector: string, attributes?: {
+    [key: string]: any;
+  }): NodePos | null;
+  querySelectorAll(selector: string, attributes?: {
+    [key: string]: any;
+  }, firstItemOnly?: boolean): NodePos[];
+  setAttribute(attributes: {
+    [key: string]: any;
+  }): void;
+}
+//#endregion
+//#region src/commands/blur.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    blur: {
+      /**
+       * Removes focus from the editor.
+       * @example editor.commands.blur()
+       */
+      blur: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/clearContent.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    clearContent: {
+      /**
+       * Clear the whole document.
+       * @example editor.commands.clearContent()
+       */
+      clearContent: (
+      /**
+       * Whether to emit an update event.
+       * @default true
+       */
+      emitUpdate?: boolean) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/clearNodes.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    clearNodes: {
+      /**
+       * Normalize nodes to a simple paragraph.
+       * @example editor.commands.clearNodes()
+       */
+      clearNodes: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/command.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    command: {
+      /**
+       * Define a command inline.
+       * @param fn The command function.
+       * @example
+       * editor.commands.command(({ tr, state }) => {
+       *   ...
+       *   return true
+       * })
+       */
+      command: (fn: (props: Parameters<Command>[0]) => boolean) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/createParagraphNear.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    createParagraphNear: {
+      /**
+       * Create a paragraph nearby.
+       * @example editor.commands.createParagraphNear()
+       */
+      createParagraphNear: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/cut.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    cut: {
+      /**
+       * Cuts content from a range and inserts it at a given position.
+       * @param range The range to cut.
+       * @param range.from The start position of the range.
+       * @param range.to The end position of the range.
+       * @param targetPos The position to insert the content at.
+       * @example editor.commands.cut({ from: 1, to: 3 }, 5)
+       */
+      cut: ({ from, to }: {
+        from: number;
+        to: number;
+      }, targetPos: number) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/deleteCurrentNode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    deleteCurrentNode: {
+      /**
+       * Delete the node that currently has the selection anchor.
+       * @example editor.commands.deleteCurrentNode()
+       */
+      deleteCurrentNode: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/deleteNode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    deleteNode: {
+      /**
+       * Delete a node with a given type or name.
+       * @param typeOrName The type or name of the node.
+       * @example editor.commands.deleteNode('paragraph')
+       */
+      deleteNode: (typeOrName: string | NodeType$2) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/deleteRange.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    deleteRange: {
+      /**
+       * Delete a given range.
+       * @param range The range to delete.
+       * @example editor.commands.deleteRange({ from: 1, to: 3 })
+       */
+      deleteRange: (range: Range) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/deleteSelection.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    deleteSelection: {
+      /**
+       * Delete the selection, if there is one.
+       * @example editor.commands.deleteSelection()
+       */
+      deleteSelection: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/enter.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    enter: {
+      /**
+       * Trigger enter.
+       * @example editor.commands.enter()
+       */
+      enter: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/exitCode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    exitCode: {
+      /**
+       * Exit from a code block.
+       * @example editor.commands.exitCode()
+       */
+      exitCode: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/extendMarkRange.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    extendMarkRange: {
+      /**
+       * Extends the text selection to the current mark by type or name.
+       * @param typeOrName The type or name of the mark.
+       * @param attributes The attributes to match against.
+       * If not provided, only the first mark at the position will be matched.
+       * @example editor.commands.extendMarkRange('bold')
+       * @example editor.commands.extendMarkRange('mention', { userId: "1" })
+       */
+      extendMarkRange: (
+      /**
+       * The type or name of the mark.
+       */
+      typeOrName: string | MarkType$1,
+      /**
+       * The attributes of the mark.
+       */
+      attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/first.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    first: {
+      /**
+       * Runs one command after the other and stops at the first which returns true.
+       * @param commands The commands to run.
+       * @example editor.commands.first([command1, command2])
+       */
+      first: (commands: Command[] | ((props: CommandProps) => Command[])) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/focus.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    focus: {
+      /**
+       * Focus the editor at the given position.
+       * @param position The position to focus at.
+       * @param options.scrollIntoView Scroll the focused position into view after focusing
+       * @example editor.commands.focus()
+       * @example editor.commands.focus(32, { scrollIntoView: false })
+       */
+      focus: (
+      /**
+       * The position to focus at.
+       */
+      position?: FocusPosition,
+      /**
+       * Optional options
+       * @default { scrollIntoView: true }
+       */
+      options?: {
+        scrollIntoView?: boolean;
+      }) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/forEach.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    forEach: {
+      /**
+       * Loop through an array of items.
+       */
+      forEach: <T>(items: T[], fn: (item: T, props: CommandProps & {
+        index: number;
+      }) => boolean) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/insertContent.d.ts
+interface InsertContentOptions {
+  /**
+   * Options for parsing the content.
+   */
+  parseOptions?: ParseOptions;
+  /**
+   * Whether to update the selection after inserting the content.
+   */
+  updateSelection?: boolean;
+  applyInputRules?: boolean;
+  applyPasteRules?: boolean;
+}
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    insertContent: {
+      /**
+       * Insert a node or string of HTML at the current position.
+       * @example editor.commands.insertContent('<h1>Example</h1>')
+       * @example editor.commands.insertContent('<h1>Example</h1>', { updateSelection: false })
+       */
+      insertContent: (
+      /**
+       * The ProseMirror content to insert.
+       */
+      value: Content | Node$2 | Fragment,
+      /**
+       * Optional options
+       */
+      options?: InsertContentOptions) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/insertContentAt.d.ts
+interface InsertContentAtOptions {
+  /**
+   * Options for parsing the content.
+   */
+  parseOptions?: ParseOptions;
+  /**
+   * Whether to update the selection after inserting the content.
+   */
+  updateSelection?: boolean;
+  /**
+   * Whether to apply input rules after inserting the content.
+   */
+  applyInputRules?: boolean;
+  /**
+   * Whether to apply paste rules after inserting the content.
+   */
+  applyPasteRules?: boolean;
+  /**
+   * Whether to throw an error if the content is invalid.
+   */
+  errorOnInvalidContent?: boolean;
+}
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    insertContentAt: {
+      /**
+       * Insert a node or string of HTML at a specific position.
+       * @example editor.commands.insertContentAt(0, '<h1>Example</h1>')
+       */
+      insertContentAt: (
+      /**
+       * The position to insert the content at.
+       */
+      position: number | Range,
+      /**
+       * The ProseMirror content to insert.
+       */
+      value: Content | Node$2 | Fragment,
+      /**
+       * Optional options
+       */
+      options?: InsertContentAtOptions) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/insertDefaultBlock.d.ts
+interface InsertDefaultBlockOptions {
+  /**
+   * The position to insert the block at.
+   * Accepts a number or a resolved ProseMirror position.
+   * Defaults to the current caret position.
+   */
+  pos?: number | ResolvedPos;
+  /**
+   * Attributes to apply to the inserted node.
+   * Only attributes that match the node's schema will be applied.
+   */
+  attrs?: Record<string, any>;
+  /**
+   * Content to insert into the block.
+   * Accepts string (plain text or HTML), ProseMirror node, or Fragment.
+   */
+  content?: Content | Node$2 | Fragment;
+  /**
+   * Whether to update the selection after inserting the content.
+   * @default true
+   */
+  updateSelection?: boolean;
+}
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    insertDefaultBlock: {
+      /**
+       * Insert a default content block at the given position.
+       * Returns false when the default block can't be inserted at that position.
+       * @example editor.commands.insertDefaultBlock()
+       * @example editor.commands.insertDefaultBlock({ pos: 5, content: 'Hello' })
+       */
+      insertDefaultBlock: (options?: InsertDefaultBlockOptions) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/join.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    joinUp: {
+      /**
+       * Join the selected block or, if there is a text selection, the closest ancestor block of the selection that can be joined, with the sibling above it.
+       * @example editor.commands.joinUp()
+       */
+      joinUp: () => ReturnType;
+    };
+    joinDown: {
+      /**
+       * Join the selected block, or the closest ancestor of the selection that can be joined, with the sibling after it.
+       * @example editor.commands.joinDown()
+       */
+      joinDown: () => ReturnType;
+    };
+    joinBackward: {
+      /**
+       * If the selection is empty and at the start of a textblock, try to reduce the distance between that block and the one before it—if there's a block directly before it that can be joined, join them.
+       * If not, try to move the selected block closer to the next one in the document structure by lifting it out of its
+       * parent or moving it into a parent of the previous block. Will use the view for accurate (bidi-aware) start-of-textblock detection if given.
+       * @example editor.commands.joinBackward()
+       */
+      joinBackward: () => ReturnType;
+    };
+    joinForward: {
+      /**
+       * If the selection is empty and the cursor is at the end of a textblock, try to reduce or remove the boundary between that block and the one after it,
+       * either by joining them or by moving the other block closer to this one in the tree structure.
+       * Will use the view for accurate start-of-textblock detection if given.
+       * @example editor.commands.joinForward()
+       */
+      joinForward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/joinItemBackward.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    joinItemBackward: {
+      /**
+       * Join two items backward.
+       * @example editor.commands.joinItemBackward()
+       */
+      joinItemBackward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/joinItemForward.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    joinItemForward: {
+      /**
+       * Join two items Forwards.
+       * @example editor.commands.joinItemForward()
+       */
+      joinItemForward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/joinTextblockBackward.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    joinTextblockBackward: {
+      /**
+       * A more limited form of joinBackward that only tries to join the current textblock to the one before it, if the cursor is at the start of a textblock.
+       */
+      joinTextblockBackward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/joinTextblockForward.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    joinTextblockForward: {
+      /**
+       * A more limited form of joinForward that only tries to join the current textblock to the one after it, if the cursor is at the end of a textblock.
+       */
+      joinTextblockForward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/keyboardShortcut.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    keyboardShortcut: {
+      /**
+       * Trigger a keyboard shortcut.
+       * @param name The name of the keyboard shortcut.
+       * @example editor.commands.keyboardShortcut('Mod-b')
+       */
+      keyboardShortcut: (name: string) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/lift.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    lift: {
+      /**
+       * Removes an existing wrap if possible lifting the node out of it
+       * @param typeOrName The type or name of the node.
+       * @param attributes The attributes of the node.
+       * @example editor.commands.lift('paragraph')
+       * @example editor.commands.lift('heading', { level: 1 })
+       */
+      lift: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/liftEmptyBlock.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    liftEmptyBlock: {
+      /**
+       * If the cursor is in an empty textblock that can be lifted, lift the block.
+       * @example editor.commands.liftEmptyBlock()
+       */
+      liftEmptyBlock: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/liftListItem.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    liftListItem: {
+      /**
+       * Create a command to lift the list item around the selection up into a wrapping list.
+       * @param typeOrName The type or name of the node.
+       * @example editor.commands.liftListItem('listItem')
+       */
+      liftListItem: (typeOrName: string | NodeType$2) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/newlineInCode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    newlineInCode: {
+      /**
+       * Add a newline character in code.
+       * @example editor.commands.newlineInCode()
+       */
+      newlineInCode: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/resetAttributes.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    resetAttributes: {
+      /**
+       * Resets some node attributes to the default value.
+       * @param typeOrName The type or name of the node.
+       * @param attributes The attributes of the node to reset.
+       * @example editor.commands.resetAttributes('heading', 'level')
+       */
+      resetAttributes: (typeOrName: string | NodeType$2 | MarkType$1, attributes: string | string[]) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/scrollIntoView.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    scrollIntoView: {
+      /**
+       * Scroll the selection into view.
+       * @example editor.commands.scrollIntoView()
+       */
+      scrollIntoView: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/selectAll.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    selectAll: {
+      /**
+       * Select the whole document.
+       * @example editor.commands.selectAll()
+       */
+      selectAll: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/selectNodeBackward.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    selectNodeBackward: {
+      /**
+       * Select a node backward.
+       * @example editor.commands.selectNodeBackward()
+       */
+      selectNodeBackward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/selectNodeForward.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    selectNodeForward: {
+      /**
+       * Select a node forward.
+       * @example editor.commands.selectNodeForward()
+       */
+      selectNodeForward: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/selectParentNode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    selectParentNode: {
+      /**
+       * Select the parent node.
+       * @example editor.commands.selectParentNode()
+       */
+      selectParentNode: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/selectTextblockEnd.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    selectTextblockEnd: {
+      /**
+       * Moves the cursor to the end of current text block.
+       * @example editor.commands.selectTextblockEnd()
+       */
+      selectTextblockEnd: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/selectTextblockStart.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    selectTextblockStart: {
+      /**
+       * Moves the cursor to the start of current text block.
+       * @example editor.commands.selectTextblockStart()
+       */
+      selectTextblockStart: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setContent.d.ts
+interface SetContentOptions {
+  /**
+   * Options for parsing the content.
+   * @default {}
+   */
+  parseOptions?: ParseOptions;
+  /**
+   * Whether to throw an error if the content is invalid.
+   */
+  errorOnInvalidContent?: boolean;
+  /**
+   * Whether to emit an update event.
+   * @default true
+   */
+  emitUpdate?: boolean;
+}
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setContent: {
+      /**
+       * Replace the whole document with new content.
+       * @param content The new content.
+       * @param emitUpdate Whether to emit an update event.
+       * @param parseOptions Options for parsing the content.
+       * @example editor.commands.setContent('<p>Example text</p>')
+       */
+      setContent: (
+      /**
+       * The new content.
+       */
+      content: Content | Fragment | Node$2,
+      /**
+       * Options for `setContent`.
+       */
+      options?: SetContentOptions) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setMark.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setMark: {
+      /**
+       * Add a mark with new attributes.
+       * @param typeOrName The mark type or name.
+       * @example editor.commands.setMark('bold', { level: 1 })
+       */
+      setMark: (typeOrName: string | MarkType$1, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setMeta.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setMeta: {
+      /**
+       * Store a metadata property in the current transaction.
+       * @param key The key of the metadata property.
+       * @param value The value to store.
+       * @example editor.commands.setMeta('foo', 'bar')
+       */
+      setMeta: (key: string | Plugin | PluginKey, value: any) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setNode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setNode: {
+      /**
+       * Replace a given range with a node.
+       * @param typeOrName The type or name of the node
+       * @param attributes The attributes of the node
+       * @example editor.commands.setNode('paragraph')
+       */
+      setNode: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setNodeSelection.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setNodeSelection: {
+      /**
+       * Creates a NodeSelection.
+       * @param position - Position of the node.
+       * @example editor.commands.setNodeSelection(10)
+       */
+      setNodeSelection: (position: number) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setTextDirection.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setTextDirection: {
+      /**
+       * Set the text direction for nodes.
+       * If no position is provided, it will use the current selection.
+       * @param direction The text direction to set ('ltr', 'rtl', or 'auto')
+       * @param position Optional position or range to apply the direction to
+       * @example editor.commands.setTextDirection('rtl')
+       * @example editor.commands.setTextDirection('ltr', { from: 0, to: 10 })
+       */
+      setTextDirection: (direction: 'ltr' | 'rtl' | 'auto', position?: number | Range) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/setTextSelection.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    setTextSelection: {
+      /**
+       * Creates a TextSelection.
+       * @param position The position of the selection.
+       * @example editor.commands.setTextSelection(10)
+       */
+      setTextSelection: (position: number | Range) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/sinkListItem.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    sinkListItem: {
+      /**
+       * Sink the list item down into an inner list.
+       * @param typeOrName The type or name of the node.
+       * @example editor.commands.sinkListItem('listItem')
+       */
+      sinkListItem: (typeOrName: string | NodeType$2) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/splitBlock.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    splitBlock: {
+      /**
+       * Forks a new node from an existing node.
+       * @param options.keepMarks Keep marks from the previous node.
+       * @example editor.commands.splitBlock()
+       * @example editor.commands.splitBlock({ keepMarks: true })
+       */
+      splitBlock: (options?: {
+        keepMarks?: boolean;
+      }) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/splitListItem.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    splitListItem: {
+      /**
+       * Splits one list item into two list items.
+       * @param typeOrName The type or name of the node.
+       * @param overrideAttrs The attributes to ensure on the new node.
+       * @example editor.commands.splitListItem('listItem')
+       */
+      splitListItem: (typeOrName: string | NodeType$2, overrideAttrs?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/toggleList.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    toggleList: {
+      /**
+       * Toggle between different list types.
+       * @param listTypeOrName The type or name of the list.
+       * @param itemTypeOrName The type or name of the list item.
+       * @param keepMarks Keep marks when toggling.
+       * @param attributes Attributes for the new list.
+       * @example editor.commands.toggleList('bulletList', 'listItem')
+       */
+      toggleList: (listTypeOrName: string | NodeType$2, itemTypeOrName: string | NodeType$2, keepMarks?: boolean, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/toggleMark.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    toggleMark: {
+      /**
+       * Toggle a mark on and off.
+       * @param typeOrName The mark type or name.
+       * @param attributes The attributes of the mark.
+       * @param options.extendEmptyMarkRange Removes the mark even across the current selection. Defaults to `false`.
+       * @example editor.commands.toggleMark('bold')
+       */
+      toggleMark: (
+      /**
+       * The mark type or name.
+       */
+      typeOrName: string | MarkType$1,
+      /**
+       * The attributes of the mark.
+       */
+      attributes?: Record<string, any>, options?: {
+        /**
+         * Removes the mark even across the current selection. Defaults to `false`.
+         */
+        extendEmptyMarkRange?: boolean;
+      }) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/toggleNode.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    toggleNode: {
+      /**
+       * Toggle a node with another node.
+       * @param typeOrName The type or name of the node.
+       * @param toggleTypeOrName The type or name of the node to toggle.
+       * @param attributes The attributes of the node.
+       * @example editor.commands.toggleNode('heading', 'paragraph')
+       */
+      toggleNode: (typeOrName: string | NodeType$2, toggleTypeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/toggleWrap.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    toggleWrap: {
+      /**
+       * Wraps nodes in another node, or removes an existing wrap.
+       * @param typeOrName The type or name of the node.
+       * @param attributes The attributes of the node.
+       * @example editor.commands.toggleWrap('blockquote')
+       */
+      toggleWrap: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/undoInputRule.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    undoInputRule: {
+      /**
+       * Undo an input rule.
+       * @example editor.commands.undoInputRule()
+       */
+      undoInputRule: () => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/unsetAllMarks.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    unsetAllMarks: {
+      /**
+       * Remove all clearable marks in the current selection.
+       * Marks with `clearable: false` are preserved
+       * @param options.ignoreClearable If true, removes all marks regardless of `clearable` setting. Defaults to `false`.
+       * @example editor.commands.unsetAllMarks()
+       * @example editor.commands.unsetAllMarks({ ignoreClearable: true })
+       */
+      unsetAllMarks: (options?: {
+        ignoreClearable?: boolean;
+      }) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/unsetMark.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    unsetMark: {
+      /**
+       * Remove all marks in the current selection.
+       * @param typeOrName The mark type or name.
+       * @param options.extendEmptyMarkRange Removes the mark even across the current selection. Defaults to `false`.
+       * @example editor.commands.unsetMark('bold')
+       */
+      unsetMark: (
+      /**
+       * The mark type or name.
+       */
+      typeOrName: string | MarkType$1, options?: {
+        /**
+         * Removes the mark even across the current selection. Defaults to `false`.
+         */
+        extendEmptyMarkRange?: boolean;
+      }) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/unsetTextDirection.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    unsetTextDirection: {
+      /**
+       * Remove the text direction attribute from nodes.
+       * If no position is provided, it will use the current selection.
+       * @param position Optional position or range to remove the direction from
+       * @example editor.commands.unsetTextDirection()
+       * @example editor.commands.unsetTextDirection({ from: 0, to: 10 })
+       */
+      unsetTextDirection: (position?: number | Range) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/updateAttributes.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    updateAttributes: {
+      /**
+       * Update attributes of a node or mark.
+       * @param typeOrName The type or name of the node or mark.
+       * @param attributes The attributes of the node or mark.
+       * @example editor.commands.updateAttributes('mention', { userId: "2" })
+       */
+      updateAttributes: (
+      /**
+       * The type or name of the node or mark.
+       */
+      typeOrName: string | NodeType$2 | MarkType$1,
+      /**
+       * The attributes of the node or mark.
+       */
+      attributes: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/updateDecorations.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    updateDecorations: {
+      /**
+       * Force declarative decorations to recompute, bypassing each extension's
+       * `shouldUpdate` gate. Pass an extension name to recompute only that
+       * extension's decorations, or omit it to recompute all of them.
+       * @param extensionName The name of the extension to recompute (optional).
+       * @example editor.commands.updateDecorations()
+       * @example editor.commands.updateDecorations('myExtension')
+       */
+      updateDecorations: (extensionName?: string) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/wrapIn.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    wrapIn: {
+      /**
+       * Wraps nodes in another node.
+       * @param typeOrName The type or name of the node.
+       * @param attributes The attributes of the node.
+       * @example editor.commands.wrapIn('blockquote')
+       */
+      wrapIn: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+//#endregion
+//#region src/commands/wrapInList.d.ts
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    wrapInList: {
+      /**
+       * Wrap a node in a list.
+       * @param typeOrName The type or name of the node.
+       * @param attributes The attributes of the node.
+       * @example editor.commands.wrapInList('bulletList')
+       */
+      wrapInList: (typeOrName: string | NodeType$2, attributes?: Record<string, any>) => ReturnType;
+    };
+  }
+}
+declare class Editor extends EventEmitter<EditorEvents> {
+  private commandManager;
+  extensionManager: ExtensionManager;
+  private css;
+  private className;
+  schema: Schema;
+  private editorView;
+  isFocused: boolean;
+  private destroyed;
+  private editorState;
+  /**
+   * The editor is considered initialized after the `create` event has been emitted.
+   */
+  isInitialized: boolean;
+  extensionStorage: Storage;
+  /**
+   * A unique ID for this editor instance.
+   */
+  instanceId: string;
+  private hasWarnedStaleDecorationRead;
+  options: EditorOptions;
+  constructor(options?: Partial<EditorOptions>);
+  /**
+   * Attach the editor to the DOM, creating a new editor view.
+   */
+  mount(el: NonNullable<EditorOptions['element']> & {}): void;
+  /**
+   * Remove the editor from the DOM, but still allow remounting at a different point in time
+   */
+  unmount(): void;
+  /**
+   * Returns the editor storage.
+   */
+  get storage(): Storage;
+  /**
+   * An object of all registered commands.
+   */
+  get commands(): SingleCommands;
+  /**
+   * Create a command chain to call multiple commands at once.
+   */
+  chain(): ChainedCommands;
+  /**
+   * Check if a command or a command chain can be executed. Without executing it.
+   */
+  can(): CanCommands;
+  /**
+   * Inject CSS styles.
+   */
+  private injectCSS;
+  /**
+   * Update editor options.
+   *
+   * @param options A list of options
+   */
+  setOptions(options?: Partial<EditorOptions>): void;
+  /**
+   * Update editable state of the editor.
+   */
+  setEditable(editable: boolean, emitUpdate?: boolean): void;
+  /**
+   * Returns whether the editor is editable.
+   */
+  get isEditable(): boolean;
+  /**
+   * Returns the editor view.
+   */
+  get view(): EditorView;
+  /**
+   * Returns the editor state.
+   */
+  get state(): EditorState;
+  /**
+   * Register a ProseMirror plugin.
+   *
+   * @param plugin A ProseMirror plugin
+   * @param handlePlugins Control how to merge the plugin into the existing plugins.
+   * @returns The new editor state
+   */
+  registerPlugin(plugin: Plugin, handlePlugins?: (newPlugin: Plugin, plugins: Plugin[]) => Plugin[]): EditorState;
+  /**
+   * Unregister a ProseMirror plugin.
+   *
+   * @param nameOrPluginKeyToRemove The plugins name
+   * @returns The new editor state or undefined if the editor is destroyed
+   */
+  unregisterPlugin(nameOrPluginKeyToRemove: string | PluginKey | (string | PluginKey)[]): EditorState | undefined;
+  /**
+   * Creates an extension manager.
+   */
+  private createExtensionManager;
+  /**
+   * Creates an command manager.
+   */
+  private createCommandManager;
+  /**
+   * Creates a ProseMirror schema.
+   */
+  private createSchema;
+  /**
+   * Creates the initial document.
+   */
+  private createDoc;
+  /**
+   * Returns the attributes for the editor element.
+   * Merges the default `role="textbox"` with the attributes from `editorProps`,
+   * so the role is kept no matter when the props are applied.
+   */
+  private getEditorViewAttributes;
+  /**
+   * Creates a ProseMirror view.
+   */
+  private createView;
+  /**
+   * Creates all node and mark views.
+   */
+  createNodeViews(): void;
+  /**
+   * Prepend class name to element.
+   */
+  prependClass(): void;
+  isCapturingTransaction: boolean;
+  private capturedTransaction;
+  captureTransaction(fn: () => void): Transaction | null;
+  /**
+   * The callback over which to send transactions (state updates) produced by the view.
+   *
+   * @param transaction An editor state transaction
+   */
+  private dispatchTransaction;
+  /**
+   * Get attributes of the currently selected node or mark.
+   */
+  getAttributes(nameOrType: string | NodeType$2 | MarkType$1): Record<string, any>;
+  /**
+   * Returns if the currently selected node or mark is active.
+   *
+   * @param name Name of the node or mark
+   * @param attributes Attributes of the node or mark
+   */
+  isActive(name: string, attributes?: {}): boolean;
+  isActive(attributes: {}): boolean;
+  /**
+   * Get the document as JSON.
+   */
+  getJSON(): DocumentType<Record<string, any> | undefined, NodeType$1<string, undefined | Record<string, any>, any, (NodeType$1 | TextType)[]>[]>;
+  /**
+   * Get the document as HTML.
+   */
+  getHTML(): string;
+  /**
+   * Get the document as text.
+   */
+  getText(options?: {
+    blockSeparator?: string;
+    textSerializers?: Record<string, TextSerializer>;
+  }): string;
+  /**
+   * Check if there is no content.
+   */
+  get isEmpty(): boolean;
+  /**
+   * Destroy the editor.
+   */
+  destroy(): void;
+  /**
+   * Check if the editor is already destroyed.
+   */
+  get isDestroyed(): boolean;
+  $node(selector: string, attributes?: {
+    [key: string]: any;
+  }): NodePos | null;
+  $nodes(selector: string, attributes?: {
+    [key: string]: any;
+  }): NodePos[] | null;
+  $pos(pos: number): NodePos;
+  get $doc(): NodePos;
+  /**
+   * Returns a set of utilities for working with positions and ranges.
+   */
+  utils: Utils;
+}
+//#endregion
+//#region src/inputRules/markInputRule.d.ts
+/**
+ * Build an input rule that adds a mark when the
+ * matched text is typed into it.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#input-rules
+ */
+declare function markInputRule(config: {
+  find: InputRuleFinder;
+  type: MarkType$1;
+  undoable?: boolean;
+  getAttributes?: Record<string, any> | ((match: ExtendedRegExpMatchArray) => Record<string, any>) | false | null;
+}): InputRule;
+//#endregion
+//#region src/inputRules/nodeInputRule.d.ts
+/**
+ * Build an input rule that adds a node when the
+ * matched text is typed into it.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#input-rules
+ */
+declare function nodeInputRule(config: {
+  /**
+   * The regex to match.
+   */
+  find: InputRuleFinder;
+  /**
+   * The node type to add.
+   */
+  type: NodeType$2;
+  /**
+   * Whether the input rule should be undoable
+   * when the user presses backspace.
+   */
+  undoable?: boolean;
+  /**
+   * A function that returns the attributes for the node
+   * can also be an object of attributes
+   */
+  getAttributes?: Record<string, any> | ((match: ExtendedRegExpMatchArray) => Record<string, any>) | false | null;
+}): InputRule;
+//#endregion
+//#region src/inputRules/textblockTypeInputRule.d.ts
+/**
+ * Build an input rule that changes the type of a textblock when the
+ * matched text is typed into it. When using a regular expresion you’ll
+ * probably want the regexp to start with `^`, so that the pattern can
+ * only occur at the start of a textblock.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#input-rules
+ */
+declare function textblockTypeInputRule(config: {
+  find: InputRuleFinder;
+  type: NodeType$2;
+  undoable?: boolean;
+  getAttributes?: Record<string, any> | ((match: ExtendedRegExpMatchArray) => Record<string, any>) | false | null;
+}): InputRule;
+//#endregion
+//#region src/inputRules/textInputRule.d.ts
+/**
+ * Build an input rule that replaces text when the
+ * matched text is typed into it.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#input-rules
+ */
+declare function textInputRule(config: {
+  find: InputRuleFinder;
+  replace: string;
+  undoable?: boolean;
+}): InputRule;
+//#endregion
+//#region src/inputRules/wrappingInputRule.d.ts
+/**
+ * Build an input rule for automatically wrapping a textblock when a
+ * given string is typed. When using a regular expresion you’ll
+ * probably want the regexp to start with `^`, so that the pattern can
+ * only occur at the start of a textblock.
+ *
+ * `type` is the type of node to wrap in.
+ *
+ * By default, if there’s a node with the same type above the newly
+ * wrapped node, the rule will try to join those
+ * two nodes. You can pass a join predicate, which takes a regular
+ * expression match and the node before the wrapped node, and can
+ * return a boolean to indicate whether a join should happen.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#input-rules
+ */
+declare function wrappingInputRule(config: {
+  find: InputRuleFinder;
+  type: NodeType$2;
+  keepMarks?: boolean;
+  keepAttributes?: boolean;
+  editor?: Editor;
+  undoable?: boolean;
+  getAttributes?: Record<string, any> | ((match: ExtendedRegExpMatchArray) => Record<string, any>) | false | null;
+  joinPredicate?: (match: ExtendedRegExpMatchArray, node: Node$2) => boolean;
+}): InputRule;
+//#endregion
+//#region src/pasteRules/markPasteRule.d.ts
+/**
+ * Build an paste rule that adds a mark when the
+ * matched text is pasted into it.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#paste-rules
+ */
+declare function markPasteRule(config: {
+  find: PasteRuleFinder;
+  type: MarkType$1;
+  getAttributes?: Record<string, any> | ((match: ExtendedRegExpMatchArray, event: ClipboardEvent) => Record<string, any>) | false | null;
+}): PasteRule;
+//#endregion
+//#region src/pasteRules/nodePasteRule.d.ts
+/**
+ * Build an paste rule that adds a node when the
+ * matched text is pasted into it.
+ * @see https://tiptap.dev/docs/editor/api/paste-rules
+ */
+declare function nodePasteRule(config: {
+  find: PasteRuleFinder;
+  type: NodeType$2;
+  getAttributes?: Record<string, any> | ((match: ExtendedRegExpMatchArray, event: ClipboardEvent) => Record<string, any>) | false | null;
+  getContent?: JSONContent[] | ((attrs: Record<string, any>) => JSONContent[]) | false | null;
+}): PasteRule;
+//#endregion
+//#region src/pasteRules/textPasteRule.d.ts
+/**
+ * Build an paste rule that replaces text when the
+ * matched text is pasted into it.
+ * @see https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#paste-rules
+ */
+declare function textPasteRule(config: {
+  find: PasteRuleFinder;
+  replace: string;
+}): PasteRule;
+//#endregion
+//#region src/utilities/callOrReturn.d.ts
+/**
+ * Optionally calls `value` as a function.
+ * Otherwise it is returned directly.
+ * @param value Function or any value.
+ * @param context Optional context to bind to function.
+ * @param props Optional props to pass to function.
+ */
+declare function callOrReturn<T>(value: T, context?: any, ...props: any[]): MaybeReturnType<T>;
+//#endregion
+//#region src/utilities/mergeAttributes.d.ts
+declare function mergeAttributes(...objects: Record<string, any>[]): Record<string, any>;
+//#endregion
+//#region guest/richTextExtensions.d.ts
+/** Which editor an extension is built for. */
+type RichTextSurface = 'inspector' | 'inline';
+/** What an extension factory knows about the editor it builds for. */
+interface RichTextExtensionContext {
+  /**
+   * 'inspector': the inspector's RichTextEditor (also in the creation
+   * dialog). 'inline': inline editing in the preview.
+   */
+  surface: RichTextSurface;
+  /**
+   * The property's `editorOptions.formatting` flags as configured, keys the
+   * Studio itself does not know included - a factory can read options of its
+   * own from here (e.g. `highlightColors`).
+   */
+  formatting: Readonly<Record<string, unknown>>;
+  /**
+   * Whether the schema has block nodes. False for a property edited as a
+   * single line of inline content (rendered into a <span>, Neos.Neos:Editable
+   * `block = false`): block nodes added there have no place in the document.
+   */
+  block: boolean;
+  /** Whether more than one top-level block is allowed (autoparagraph). */
+  multiline: boolean;
+}
+/** A toolbar button applying a plugin's extension. */
+interface RichTextToolbarItem {
+  /** Unique within its definition. */
+  id: string;
+  /** Tooltip and accessible label. Already translated - shown as given. */
+  label: string;
+  /**
+   * A Font Awesome icon name ('highlighter'), as for node types - the
+   * inspector's toolbar renders it like its built-in buttons.
+   */
+  icon: string;
+  /**
+   * The button face in the preview's inline toolbar: inline SVG markup
+   * (24x24 viewBox, `currentColor`), matching its built-in buttons. The
+   * preview renders the site's page, which has no icon font, so without it
+   * the button shows the label's first letter.
+   */
+  svg?: string;
+  /**
+   * Which of the preview's two toolbars carries the button: 'inline' (the
+   * default), the bubble over a text selection with the marks, or 'block',
+   * the bar at the caret's block. The inspector has a single toolbar.
+   */
+  kind?: 'inline' | 'block';
+  /** Whether its mark/node is active at the selection (pressed look). */
+  isActive?(editor: Editor): boolean;
+  /** Whether the button is unavailable right now (e.g. no selection). */
+  isDisabled?(editor: Editor): boolean;
+  /** Apply it, typically `editor.chain().focus().toggleMark(...).run()`. */
+  run(editor: Editor): void;
+}
+/** A plugin's rich text extension. */
+interface RichTextExtensionDefinition extends RegistryEntry {
+  /**
+   * The `editorOptions.formatting` key that enables it on a property (e.g.
+   * 'highlight' for `formatting: { highlight: true }`). Without one it applies
+   * to every rich text property.
+   */
+  formatting?: string;
+  /**
+   * The TipTap extensions to add to the editor, built with the `tiptap`
+   * building blocks of the plugin API (never a bundled TipTap). Called for
+   * every editor created; a factory that throws is logged and skipped, and
+   * the editor is built without it.
+   */
+  extensions(context: RichTextExtensionContext): AnyExtension[];
+  /** Toolbar buttons, shown wherever the extension is active. */
+  toolbar?: RichTextToolbarItem[];
+}
+/**
+ * The registry of rich text extensions. Ordered by `order`, which is also the
+ * order of their toolbar buttons; a changed registry rebuilds the editors
+ * that are not being edited.
+ */
+declare class RichTextExtensionRegistry extends ObservableRegistry<RichTextExtensionDefinition> {
+  constructor();
+}
+declare const richTextExtensionRegistry: RichTextExtensionRegistry;
+//#endregion
+//#region guest/tiptap.d.ts
+declare const tiptap$1: {
+  Extension: typeof Extension;
+  Mark: typeof Mark;
+  Node: typeof Node$1;
+  mergeAttributes: typeof mergeAttributes;
+  callOrReturn: typeof callOrReturn;
+  getMarkAttributes: typeof getMarkAttributes;
+  getMarkRange: typeof getMarkRange;
+  InputRule: typeof InputRule;
+  PasteRule: typeof PasteRule;
+  markInputRule: typeof markInputRule;
+  markPasteRule: typeof markPasteRule;
+  nodeInputRule: typeof nodeInputRule;
+  nodePasteRule: typeof nodePasteRule;
+  textInputRule: typeof textInputRule;
+  textPasteRule: typeof textPasteRule;
+  textblockTypeInputRule: typeof textblockTypeInputRule;
+  wrappingInputRule: typeof wrappingInputRule;
+  Plugin: typeof Plugin;
+  PluginKey: typeof PluginKey;
+};
+/** The TipTap building blocks published on the plugin API. */
+type TiptapBuildingBlocks = typeof tiptap$1;
+//#endregion
 //#region features/workspaces/decorators.d.ts
 /**
  * The workspace-decorator registry: plugins visually mark workspaces the shell
@@ -9876,6 +22387,72 @@ declare class WorkspaceDecoratorRegistry extends ObservableRegistry<WorkspaceDec
   refresh(): void;
 }
 //#endregion
+//#region features/media/AssetPicker.d.ts
+/**
+ * Whether a pick is in progress - the Media Library has taken over the main
+ * area. A modal hosting an asset or image editor (the node creation dialog, a
+ * plugin's dialog) closes while this is true, or it covers the picker; its
+ * state has to live outside the dialog content to survive. False without a
+ * provider, so it is safe anywhere.
+ */
+declare function useAssetPickerActive(): boolean;
+//#endregion
+//#region lib/i18n.d.ts
+/**
+ * Resolves once the bundle has loaded (or failed to - labels then stay on
+ * their fallbacks). Plugin scripts run before that: a label resolved at
+ * registration time (a settings section's title, a shortcut's) is the
+ * fallback unless the registration waits for this.
+ */
+declare function translationsLoaded(): Promise<void>;
+/**
+ * The backend user's interface language as Neos names it ("de", "pt_BR"),
+ * fixed for the page load - a changed language applies after a reload.
+ */
+declare const interfaceLanguage: string;
+/**
+ * The interface language as a BCP 47 tag ("de", "pt-BR") - what Intl
+ * formatters and `lang` attributes take.
+ */
+declare const interfaceLocale: string;
+/** Positional ({0}, {1}, ...) or named ({name}) interpolation arguments. */
+type TranslateArgs = Array<string | number> | Record<string, string | number>;
+/**
+ * Translate a Studio UI string.
+ *
+ * @param id       Either a bare trans-unit id resolved against
+ *                 "Medienreaktor.NeosStudio:Main" (the common case), or a
+ *                 fully-qualified "Package:Source:id" to reuse a core label.
+ * @param fallback English source text shown when the bundle is missing the id
+ *                 (also the value used before the bundle finishes loading).
+ * @param args     Optional placeholder values.
+ */
+declare function translate(id: string, fallback?: string, args?: TranslateArgs): string;
+/**
+ * Translate a Studio UI string that depends on a count - "1 site" vs "3
+ * sites".
+ *
+ * The catalogue holds such a string as a plural group, the way Flow does
+ * (`<group restype="x-gettext-plurals">` with trans-units "id[0]", "id[1]",
+ * ...), which the XLIFF endpoint hands over as an array of forms. The forms
+ * follow the CLDR plural categories the locale has, in CLDR order (zero, one,
+ * two, few, many, other): English and German have one/other, Polish
+ * one/few/many/other. The count picks the category, the category the form;
+ * a catalogue that still has a single string uses it for every count.
+ *
+ * `{0}` is the count; further args continue at `{1}`.
+ *
+ * @param fallback English [singular, plural], used without a bundle entry.
+ */
+declare function translatePlural(id: string, count: number, fallback: [singular: string, plural: string], args?: Array<string | number>): string;
+//#endregion
+//#region guest/pluginApi.d.ts
+interface NeosStudioGuestPluginApi {
+  version: typeof version;
+  richTextExtensions: typeof richTextExtensionRegistry;
+  tiptap: typeof tiptap$1;
+}
+//#endregion
 //#region api/studio/schema/index.d.ts
 /**
  * The models of the Studio's operations of the Neos API, by the names its
@@ -9888,15 +22465,6 @@ type Task = Schemas['Task'];
 type TaskStatus = Schemas['TaskStatus'];
 //#endregion
 //#region plugin-api/index.d.ts
-/**
- * The API version a plugin can read to feature-detect. Bump on a
- * breaking change to any exported type or registry contract; plugins that
- * care can compare against it before registering. 2: the shell runs on
- * Neos.Api - its models (Node, Workspace, NodeType, Site, ...) and NodeAddress
- * objects replace the version 1 DTOs and address strings (see the README's
- * "Plugin API version 2").
- */
-declare const version: 2;
 /** Register/unregister panels. See {@link PanelDefinition}. */
 declare const panels: PanelRegistry;
 /** Register/unregister inspector + creation-dialog property editors. See {@link PropertyEditorDefinition}. */
@@ -9955,6 +22523,23 @@ declare const nodeActions: NodeActionRegistry;
  */
 declare const headerActions: HeaderActionRegistry;
 /**
+ * Register/unregister rich text extensions - custom marks, nodes and editor
+ * behaviour with their toolbar buttons, enabled per property by a key of its
+ * `editorOptions.formatting`. This registry feeds the inspector's
+ * RichTextEditor; inline editing in the preview runs in the preview's own
+ * window and has a registry of its own there, filled by a plugin's
+ * `guestJavascript` bundle (README "Rich text extensions"). See
+ * {@link RichTextExtensionDefinition}.
+ */
+declare const richTextExtensions: RichTextExtensionRegistry;
+/**
+ * The editor's TipTap building blocks (Extension, Mark, Node,
+ * mergeAttributes, the input/paste rule helpers, ProseMirror's Plugin and
+ * PluginKey) - build rich text extensions with these, never with a bundled
+ * TipTap: a second copy breaks schema and plugin identity.
+ */
+declare const tiptap: typeof tiptap$1;
+/**
  * Typed requests sharing the shell's OAuth session (bearer token,
  * single-flighted refresh). Resolve with the parsed JSON body on 2xx and
  * throw {@link ApiError} otherwise.
@@ -9972,6 +22557,33 @@ declare const headerActions: HeaderActionRegistry;
  *    ApiError.
  */
 declare const studioFetch: typeof apiFetch;
+/**
+ * The shell's TanStack Query - its hooks, bound to the shell's QueryClient,
+ * so a plugin's reads share the shell's cache: deduplicated with the
+ * shell's own reads, refreshed by `invalidate` and from `events`, visible in
+ * the query devtools. Import them from here, never bundle
+ * @tanstack/react-query: a second copy has no QueryClientProvider above the
+ * plugin's components ("No QueryClient set") and its own `skipToken`.
+ *
+ * Key convention: a plugin's query keys start with its package key
+ * (`['Acme.Seo', 'score', nodeAggregateId]`) - the shell's keys never
+ * contain a dot, so they cannot collide, and the plugin can refresh all of
+ * its reads at once by that prefix. The shell's keys are internal: read the
+ * shell's data with apiFetch under the plugin's own keys, and refresh the
+ * shell's reads with `invalidate`, never with its keys.
+ *
+ * `queryClient` is the same client useQueryClient() returns, for code
+ * outside components (a module-level `events.on` handler).
+ */
+declare const queryClient: QueryClient;
+/**
+ * What happens in the shell, as typed events - see {@link StudioEventMap}.
+ * `events.on(name, handler)` returns the unsubscriber; inside a component
+ * prefer {@link useStudioEvent}, which unsubscribes on unmount and always
+ * calls the latest render's handler. Handlers run after the shell's own
+ * flow (never awaited); one that throws is logged and skipped.
+ */
+declare const events: StudioEvents;
 /** Options accepted by the toast helpers. */
 interface ToastOptions {
   /** Bold heading; defaults to a per-kind label ("Success", "Error", …). */
@@ -10014,6 +22626,8 @@ interface NeosStudioPluginApi extends PluginComponents {
   nodeDecorators: typeof nodeDecorators;
   nodeActions: typeof nodeActions;
   headerActions: typeof headerActions;
+  richTextExtensions: typeof richTextExtensions;
+  tiptap: typeof tiptap;
   isMacPlatform: typeof isMacPlatform;
   useStudio: typeof useStudio;
   useStudioActions: typeof useStudioActions;
@@ -10025,6 +22639,23 @@ interface NeosStudioPluginApi extends PluginComponents {
   ApiError: typeof ApiError;
   presenceColor: typeof presenceColor;
   presenceInitials: typeof presenceInitials;
+  translate: typeof translate;
+  translatePlural: typeof translatePlural;
+  translationsLoaded: typeof translationsLoaded;
+  interfaceLanguage: typeof interfaceLanguage;
+  interfaceLocale: typeof interfaceLocale;
+  useAssetPickerActive: typeof useAssetPickerActive;
+  useQuery: typeof useQuery;
+  useInfiniteQuery: typeof useInfiniteQuery;
+  useMutation: typeof useMutation;
+  useQueryClient: typeof useQueryClient;
+  queryOptions: typeof queryOptions;
+  skipToken: typeof skipToken;
+  keepPreviousData: typeof keepPreviousData;
+  queryClient: typeof queryClient;
+  invalidate: typeof invalidate;
+  events: typeof events;
+  useStudioEvent: typeof useStudioEvent;
 }
 /** The UI primitives of ./components.ts, as published on `window.NeosStudio`. */
 type PluginComponents = typeof components_d_exports;
@@ -10043,4 +22674,4 @@ declare global {
  */
 declare function installPluginApiGlobals(): void;
 //#endregion
-export { type Account, type AccountRole, ApiError, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, Badge, type BaseWorkspaceChange, Button, type Change, type ChangeDiff, Checkbox, CollapsibleGroup, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, ConfirmDialog, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, type Event$1 as Event, type EventDiff, Field, type HeaderActionContext, type HeaderActionDefinition, Input, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, LoadingState, type ModalIcon, NeosStudioPluginApi, type Node, type NodeActionContext, type NodeActionDefinition, type NodeActionSurface, type NodeAddress, type NodeClassification, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, Placeholder, PluginComponents, Popover, PopoverContent, PopoverTrigger, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type ResolvedKeyboardShortcut, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, type SettingsDialogDefinition, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, Skeleton, Slider, Spinner, type StreamEvent, type StudioActions, type StudioContextValue, type StudioState, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, type Task, type TaskStatus, Textarea, ToastApi, ToastOptions, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UriPathSegment, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, apiFetch, apiStream, editors, headerActions, installPluginApiGlobals, isMacPlatform, type isRemoved, links, modals, nodeActions, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, nodeDecorators, type nodeTypeConfiguration, panels, type parseDimensionSpacePoint, presenceColor, presenceInitials, type sameDimensionSpacePoint, type sameNodeAddress, settingsSections, shortcuts, studioFetch, toast, useKeyboardShortcut, useStudio, useStudioActions, validators, version, views, workspaceDecorators };
+export { type Account, type AccountRole, type AnyExtension, ApiError, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, Badge, type BaseWorkspaceChange, Button, type Change, type ChangeDiff, Checkbox, CollapsibleGroup, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, ConfirmDialog, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, type Event$1 as Event, type EventDiff, type ExtensionConfig, Field, type HeaderActionContext, type HeaderActionDefinition, Icon, type IconProps, type IconSize, type IconVariant, type InfiniteData, Input, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LazyLabel, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, LoadingState, type MarkConfig, type ModalIcon, type NeosStudioGuestPluginApi, NeosStudioPluginApi, type Node, type NodeActionContext, type NodeActionDefinition, type NodeActionSurface, type NodeAddress, type NodeClassification, type NodeConfig, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, Placeholder, PluginComponents, Popover, PopoverContent, PopoverTrigger, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type QueryClient, type QueryFunctionContext, type QueryKey, type ResolvedKeyboardShortcut, type RichTextExtensionContext, type RichTextExtensionDefinition, type RichTextSurface, type RichTextToolbarItem, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, type SettingsDialogDefinition, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, Skeleton, Slider, Spinner, type StreamEvent, type StructureChange, type StudioActions, type StudioContextValue, type StudioEventHandler, type StudioEventMap, type StudioEventName, type StudioEvents, type StudioInvalidation, type StudioState, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, type Task, type TaskStatus, Textarea, type TiptapBuildingBlocks, type Editor as TiptapEditor, ToastApi, ToastOptions, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type TranslateArgs, type UriPathSegment, type UseInfiniteQueryOptions, type UseInfiniteQueryResult, type UseMutationOptions, type UseMutationResult, type UseQueryOptions, type UseQueryResult, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRef, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, apiFetch, apiStream, editors, events, headerActions, installPluginApiGlobals, interfaceLanguage, interfaceLocale, invalidate, isMacPlatform, type isRemoved, keepPreviousData, links, modals, nodeActions, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, nodeDecorators, type nodeTypeConfiguration, panels, type parseDimensionSpacePoint, presenceColor, presenceInitials, queryClient, queryOptions, richTextExtensions, type sameDimensionSpacePoint, type sameNodeAddress, settingsSections, shortcuts, skipToken, studioFetch, tiptap, toast, translate, translatePlural, translationsLoaded, useAssetPickerActive, useInfiniteQuery, useKeyboardShortcut, useMutation, useQuery, useQueryClient, useStudio, useStudioActions, useStudioEvent, validators, version, views, workspaceDecorators };

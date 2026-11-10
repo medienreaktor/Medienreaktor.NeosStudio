@@ -510,6 +510,10 @@
         <source>Close</source>
         <target xml:lang="lv">Aizvērt</target>
       </trans-unit>
+      <trans-unit id="actions.more" xml:space="preserve">
+        <source>More actions</source>
+        <target xml:lang="lv">Citas darbības</target>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
         <target xml:lang="lv">Savienoties ar API</target>
@@ -1129,6 +1133,30 @@
       <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="lv">Pārbūvēt URL ceļa segmentu no pašreizējā lapas virsraksta</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.editor" xml:space="preserve">
+        <source>This editor could not be displayed.</source>
+        <target xml:lang="lv">Šo redaktoru nevarēja parādīt.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.linkType" xml:space="preserve">
+        <source>This link type could not be displayed.</source>
+        <target xml:lang="lv">Šo saites veidu nevarēja parādīt.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.panel" xml:space="preserve">
+        <source>This panel could not be displayed.</source>
+        <target xml:lang="lv">Šo paneli nevarēja parādīt.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.settingsSection" xml:space="preserve">
+        <source>This settings section could not be displayed.</source>
+        <target xml:lang="lv">Šo iestatījumu sadaļu nevarēja parādīt.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.view" xml:space="preserve">
+        <source>This view could not be displayed.</source>
+        <target xml:lang="lv">Šo skatu nevarēja parādīt.</target>
+      </trans-unit>
+      <trans-unit id="extension.retry" xml:space="preserve">
+        <source>Try again</source>
+        <target xml:lang="lv">Mēģināt vēlreiz</target>
       </trans-unit>
       <trans-unit id="graph.fit" xml:space="preserve">
         <source>Fit to view</source>
@@ -2309,6 +2337,18 @@
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="lv">7 dienas</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.body" xml:space="preserve">
+        <source>Something went wrong and Studio could not continue. Your saved changes are safe; reload to carry on.</source>
+        <target xml:lang="lv">Radās kļūda, un Studio nevarēja turpināt. Jūsu saglabātās izmaiņas ir drošībā; pārlādējiet, lai turpinātu.</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.reload" xml:space="preserve">
+        <source>Reload Studio</source>
+        <target xml:lang="lv">Pārlādēt Studio</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.title" xml:space="preserve">
+        <source>Studio stopped working</source>
+        <target xml:lang="lv">Studio pārstāja darboties</target>
       </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>

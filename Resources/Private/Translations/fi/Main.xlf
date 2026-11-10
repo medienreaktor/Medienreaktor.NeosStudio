@@ -494,6 +494,10 @@
         <source>Close</source>
         <target xml:lang="fi">Sulje</target>
       </trans-unit>
+      <trans-unit id="actions.more" xml:space="preserve">
+        <source>More actions</source>
+        <target xml:lang="fi">Lisää toimintoja</target>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
         <target xml:lang="fi">Yhdistä API:hin</target>
@@ -1113,6 +1117,30 @@
       <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="fi">Luo URL-polun osa uudelleen sivun nykyisestä otsikosta</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.editor" xml:space="preserve">
+        <source>This editor could not be displayed.</source>
+        <target xml:lang="fi">Tätä editoria ei voitu näyttää.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.linkType" xml:space="preserve">
+        <source>This link type could not be displayed.</source>
+        <target xml:lang="fi">Tätä linkkityyppiä ei voitu näyttää.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.panel" xml:space="preserve">
+        <source>This panel could not be displayed.</source>
+        <target xml:lang="fi">Tätä paneelia ei voitu näyttää.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.settingsSection" xml:space="preserve">
+        <source>This settings section could not be displayed.</source>
+        <target xml:lang="fi">Tätä asetusosiota ei voitu näyttää.</target>
+      </trans-unit>
+      <trans-unit id="extension.crashed.view" xml:space="preserve">
+        <source>This view could not be displayed.</source>
+        <target xml:lang="fi">Tätä näkymää ei voitu näyttää.</target>
+      </trans-unit>
+      <trans-unit id="extension.retry" xml:space="preserve">
+        <source>Try again</source>
+        <target xml:lang="fi">Yritä uudelleen</target>
       </trans-unit>
       <trans-unit id="graph.fit" xml:space="preserve">
         <source>Fit to view</source>
@@ -2293,6 +2321,18 @@
       <trans-unit id="share.ttl168" xml:space="preserve">
         <source>7 days</source>
         <target xml:lang="fi">7 päivää</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.body" xml:space="preserve">
+        <source>Something went wrong and Studio could not continue. Your saved changes are safe; reload to carry on.</source>
+        <target xml:lang="fi">Jokin meni pieleen, eikä Studio voinut jatkaa. Tallennetut muutoksesi ovat tallessa; lataa uudelleen jatkaaksesi.</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.reload" xml:space="preserve">
+        <source>Reload Studio</source>
+        <target xml:lang="fi">Lataa Studio uudelleen</target>
+      </trans-unit>
+      <trans-unit id="shell.crashed.title" xml:space="preserve">
+        <source>Studio stopped working</source>
+        <target xml:lang="fi">Studio lakkasi toimimasta</target>
       </trans-unit>
       <trans-unit id="shortcuts.category.general" xml:space="preserve">
         <source>General</source>
