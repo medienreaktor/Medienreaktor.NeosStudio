@@ -125,6 +125,7 @@ export function DocumentTree({
       />
       <NodeTreeContextMenu
         nodeTree={nodeTree}
+        surface="documentTree"
         entityLabel={t('editing.entity.document', 'document')}
         entityLabelPlural={t('editing.entity.documents', 'documents')}
         clipboardKind="document"

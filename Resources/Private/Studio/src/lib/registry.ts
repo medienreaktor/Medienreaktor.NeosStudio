@@ -3,7 +3,8 @@ import * as React from 'react'
 /**
  * The shared base of Studio's extension registries (panels, settings
  * sections, shortcuts, property editors, inspector views, validators, link
- * types, node and workspace decorators): a small observable, id-keyed store.
+ * types, node and workspace decorators, node and header actions): a small
+ * observable, id-keyed store.
  *
  * - Registering an already-known id replaces it, so HMR and plugin reloads
  *   stay idempotent (the entry keeps its original registration position, as

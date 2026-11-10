@@ -91,8 +91,10 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 | Workspace decorators | Badges and grouping for workspaces in the switcher and the administration (used for task status) |
 | Node decorators      | Icon, badges, tint or dimming of tree rows (used for hidden and deleted nodes)                   |
 | Keyboard shortcuts   | App-wide shortcuts                                                                               |
+| Node actions         | Commands in the node context menus and the documents toolbar                                     |
+| Header actions       | Icon buttons in the shell header                                                                 |
 
-A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators and shortcut handlers are logged and skipped. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
+A plugin cannot take Studio down: every registered component (panel, editor, view, settings section, link type) renders inside an error boundary, so one that throws shows a "could not be displayed" notice with a Try again button in its place and logs the error with its registry id, while the rest of Studio keeps working. Throwing decorators, validators and shortcut handlers are logged and skipped, and so are the conditions of node and header actions; a failing action shows an error toast. A crashed component tries again when it is registered anew (e.g. after a rebuild) and, for editors and views, on the next node.
 
 A plugin is a small IIFE bundle that uses the shell's plugin API on `window.NeosStudio`: the shell's React, `useStudio()` for app state and actions (`useStudioActions()` for the actions only), and the registries. The shell loads the bundle from one `Settings.yaml` entry.
 
@@ -116,6 +118,58 @@ Without the npm package - e.g. against an unreleased Studio - map the import to 
 ```
 
 The declarations are self-contained apart from React: the types of the libraries behind the plugin API (Base UI behind the UI components, ...) are inlined, so a plugin installs none of them.
+
+### Node and header actions
+
+A plugin adds commands as data - an id, a label, an icon and a function - and Studio renders them. A node action appears in the context menu of the document tree, the content outliner and a content element's handle in the preview, after the built-in items, and in a "…" menu in the documents toolbar for the selected document (shown only while an action is offered there). A header action is an icon button in the shell header.
+
+```ts
+import { apiFetch, headerActions, nodeActions, toast } from '@medienreaktor/neos-studio'
+
+nodeActions.register({
+  id: 'acme.seo:audit',
+  label: 'Run SEO audit',
+  icon: 'magnifying-glass-chart',   // Font Awesome, any syntax ui.icon accepts
+  group: 'acme.seo',                // optional: actions of a group sit together, between separators
+  order: 100,                       // optional: lower first
+  destructive: false,               // optional: red, for actions that remove or overwrite
+  when: (node, { surface, selection }) => surface !== 'preview' && node.nodeType.startsWith('Acme.Site:'),
+  run: async (node, { selection, studio }) => {
+    await apiFetch('/acme/seo-audit', { method: 'POST', body: { nodes: selection.map((n) => n.nodeAggregateId) } })
+    studio.nodeEdited(node)           // refresh trees, inspector and preview
+    toast.success('Audit started')
+  },
+})
+
+headerActions.register({
+  id: 'acme.seo:report',
+  label: 'SEO report',
+  icon: 'chart-line',
+  when: ({ document, workspaceName }) => document !== null,
+  run: ({ document, studio }) => { /* ... */ },
+})
+```
+
+- `run(node, context)` gets the node the menu was opened on (Neos.Api's `Node`) and `context`: `surface` (`'documentTree'`, `'contentOutliner'`, `'preview'` or `'documentsToolbar'`), `selection` (every node the invocation is about - the whole multi-selection in a tree, otherwise just the node) and `studio`, the shell's actions. A header action's `run(context)` gets the selected `document`, the `workspaceName` and `studio`.
+- `when` decides whether to offer the action. It runs while the menu or header renders, so keep it cheap and synchronous. Without it the action is always offered.
+- If `run` throws or its promise rejects, Studio shows the error as a toast titled with the action's label and logs it with the action id. While the promise is pending the action is busy: a header button shows a spinner, a menu item is disabled with a spinner when the menu is opened again, and a run that takes longer than a moment shows a loading toast. If `when` throws, the action is hidden and the error logged.
+- Studio's own menu items (create, cut, copy, paste, hide, delete) are not registered actions: they work on parts of a multi-selection, read the clipboard and share the delete confirmation, which a `run(node)` cannot express.
+
+To try it, paste into the browser console of a running Studio:
+
+```js
+NeosStudio.nodeActions.register({
+  id: 'test:hello',
+  label: 'Say hello',
+  icon: 'hand',
+  run: (node, { surface, selection }) =>
+    new Promise((resolve) => setTimeout(() => {
+      NeosStudio.toast.success(`${node.label} (${surface}, ${selection.length} selected)`)
+      resolve()
+    }, 1500)),
+})
+NeosStudio.headerActions.register({ id: 'test:fail', label: 'Fail', icon: 'bug', run: () => { throw new Error('Boom') } })
+```
 
 ### UI components
 

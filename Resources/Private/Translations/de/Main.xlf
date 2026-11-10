@@ -494,6 +494,10 @@
         <source>Close</source>
         <target xml:lang="de">Schließen</target>
       </trans-unit>
+      <trans-unit id="actions.more" xml:space="preserve">
+        <source>More actions</source>
+        <target xml:lang="de">Weitere Aktionen</target>
+      </trans-unit>
       <trans-unit id="app.connectToApi" xml:space="preserve">
         <source>Connect to the API</source>
         <target xml:lang="de">Mit der API verbinden</target>

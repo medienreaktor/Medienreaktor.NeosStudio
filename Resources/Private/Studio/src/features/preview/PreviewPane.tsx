@@ -637,6 +637,7 @@ export function PreviewPane({
       </div>
       <NodeContextMenu
         target={elementMenu}
+        surface="preview"
         entityLabel={t('editing.entity.element', 'element')}
         clipboardKind="content"
         onPasted={(affectedAddresses) => {

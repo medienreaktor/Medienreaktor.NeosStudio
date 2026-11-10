@@ -16,12 +16,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { fetchNode, useAllowedChildNodeTypes } from '@/api/neos/endpoints/nodes'
 import {
+  fetchNode,
+  useAllowedChildNodeTypes,
+  useNode,
+} from '@/api/neos/endpoints/nodes'
+import {
+  type Node,
   type NodeAddress,
   nodeAddressKey,
   nodeAddressOf,
 } from '@/api/neos/schema'
+import { NodeActionMenuItems } from '@/features/actions/NodeActionMenuItems'
+import {
+  type NodeActionSurface,
+  useNodeActions,
+} from '@/features/actions/registry'
 import { prefetchInsertion } from '@/features/creation/prefetchInsertion'
 import { translate as t } from '@/lib/i18n'
 import {
@@ -43,6 +53,12 @@ import { deleteNodes, hideNodes, unhideNodes } from './nodeActions'
  */
 export interface NodeMenuTarget {
   address: NodeAddress
+  /**
+   * The node itself, when the opener has it at hand (the trees do) - what
+   * registered node actions are run on. Absent (the preview's handle): read
+   * by address, and only when node actions are registered at all.
+   */
+  node?: Node
   /** Address of the parent node - focused and refreshed after a delete. */
   parentAddress: NodeAddress | null
   /** Explicitly hidden (tag set on the node itself) - offers "Unhide". */
@@ -85,6 +101,13 @@ export type NodeMenuAction = 'hide' | 'unhide' | 'delete'
  * or already in the wanted state) and showing how many it will affect. Cut
  * and copy capture the selection as ONE clipboard entry, pasted as a group.
  * Create stays single-node: an insertion point is one position.
+ *
+ * With a `surface`, the registered node actions offered for the clicked node
+ * follow the built-in items (see features/actions). The built-ins stay
+ * hand-written rather than registered: they act on per-action subsets of a
+ * multi-selection with counts, read the clipboard and the node type
+ * constraints, share the delete confirmation and report through per-surface
+ * callbacks - none of which fits a node action's plain `run(node)`.
  */
 export function NodeContextMenu({
   target,
@@ -96,6 +119,7 @@ export function NodeContextMenu({
   onDone,
   onPasted,
   onCreateNew,
+  surface,
 }: {
   target: NodeMenuTarget | null
   /**
@@ -130,6 +154,11 @@ export function NodeContextMenu({
    * next to them, where constraints permit) is fine.
    */
   onCreateNew?: (target: NodeMenuTarget) => void
+  /**
+   * Where the menu is shown - offers the registered node actions, which may
+   * decide by surface. Absent: built-in items only.
+   */
+  surface?: NodeActionSurface
 }) {
   // A delete waiting for confirmation; the dialog is open while set.
   const [pendingDelete, setPendingDelete] = useState<NodeMenuTarget[] | null>(
@@ -175,6 +204,19 @@ export function NodeContextMenu({
     (t) => !t.tethered && t.permitted?.move !== false,
   )
   const copyable = targets.filter((t) => !t.tethered)
+  // The node the registered actions run on. A target without its node (the
+  // preview's handle) is read by address - cached, and only when there are
+  // actions to offer, so a plain menu costs no request.
+  const nodeActions = useNodeActions()
+  const wantsNode =
+    surface !== undefined && nodeActions.length > 0 && target !== null
+  const { data: fetchedNode } = useNode(
+    wantsNode && target && !target.node ? target.address : null,
+  )
+  const actionNode = wantsNode ? (target?.node ?? fetchedNode ?? null) : null
+  const actionSelection = targets.flatMap((menuTarget) =>
+    menuTarget.node ? [menuTarget.node] : [],
+  )
   // Language-neutral "how many this will affect" suffix, multi-select only.
   const count = (n: number) => (multi ? ` (${n})` : '')
 
@@ -458,6 +500,14 @@ export function NodeContextMenu({
               {t('editing.delete', 'Delete')}
               {count(deletable.length)}
             </DropdownMenuItem>
+            {surface !== undefined && actionNode !== null && (
+              <NodeActionMenuItems
+                node={actionNode}
+                surface={surface}
+                selection={multi ? actionSelection : undefined}
+                onSelect={onClose}
+              />
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
