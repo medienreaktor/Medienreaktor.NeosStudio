@@ -342,9 +342,16 @@ export function revealPanel(
   let next = layout.hidden.includes(panel)
     ? showPanel(layout, panel, null, definitions)
     : layout
-  next = mapGroups(next, (g) =>
-    g.panels.includes(panel) ? { ...g, active: panel, collapsed: false } : g,
-  )
+  // Already the expanded active tab: keep the layout object (no re-render, no
+  // persist) - callers like the document tree reveal on every click.
+  const alreadyShown = [...Object.values(next.docks).flat(), ...next.floating]
+    .filter((g) => g.panels.includes(panel))
+    .every((g) => g.active === panel && !g.collapsed)
+  if (!alreadyShown) {
+    next = mapGroups(next, (g) =>
+      g.panels.includes(panel) ? { ...g, active: panel, collapsed: false } : g,
+    )
+  }
   const floatingGroup = next.floating.find((g) => g.panels.includes(panel))
   return floatingGroup ? bringToFront(next, floatingGroup.id) : next
 }

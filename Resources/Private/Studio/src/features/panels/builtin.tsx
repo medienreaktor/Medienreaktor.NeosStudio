@@ -41,6 +41,7 @@ import { LoadingState } from '@/components/ui/spinner'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useRequestAttention } from './PanelSystem'
+import { requestPanelReveal } from './reveal'
 import { panelRegistry } from './registry'
 
 /**
@@ -103,6 +104,12 @@ function DocumentsPanel() {
     nodeEdited,
     nodesEdited,
   } = useStudio()
+  // Picking a document in the tree (or the search list) is "go there":
+  // also bring the visual editor on screen if it is hidden or behind a tab.
+  const openDocument = (document: Node) => {
+    selectDocument(document)
+    requestPanelReveal('visual-editor')
+  }
   const [insertRequest, setInsertRequest] = useState<InsertRequest | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedTerm, setDebouncedTerm] = useState('')
@@ -161,7 +168,7 @@ function DocumentsPanel() {
             selectedAddress={
               selectedDocument ? nodeAddressOf(selectedDocument) : null
             }
-            onSelect={selectDocument}
+            onSelect={openDocument}
           />
         )}
         {/* Remount per site so a site switch starts with fresh expansion
@@ -183,7 +190,7 @@ function DocumentsPanel() {
               selectedDocument ? nodeAddressOf(selectedDocument) : null
             }
             lastEdit={lastEdit}
-            onSelect={selectDocument}
+            onSelect={openDocument}
             onMoved={nodesEdited}
             // Branches an access role refuses outright leave the tree; pages
             // merely outside a role stay, dimmed and locked by the access
