@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   publish, without authorization checks and across every workspace based on
   live; the access roles were applied to that cleanup too and failed it on
   any workspace they leave out.
+- Publishing to live has to be allowed by a role that also covers the
+  workspace being published. Asked across all roles at once, a role for a
+  shared workspace that must not go live, plus a role that may go live from
+  the personal workspace, added up to publishing the shared workspace to
+  live.
 
 ## [2.2.0] - 2026-11-11
 

@@ -283,6 +283,38 @@ final class AccessRoleConstraintsTest extends TestCase
         self::assertSame('redaktion-nord', AccessRole::identifierFromLabel('  Redaktion  Nord  '));
     }
 
+    /**
+     * The same trap for publishing: "Entwurf" may work in the shared draft but
+     * not go live, "Live" may go live from the personal workspace. Asked per
+     * axis, together they would publish Entwurf to live.
+     */
+    #[Test]
+    public function publishingToLiveMustBeAllowedByARoleCoveringTheSourceWorkspace(): void
+    {
+        $draft = $this->role(AccessRoleConstraints::create(
+            workspaceNames: ['entwurf'],
+            allowPublishToLive: false,
+        ));
+        $livePublisher = $this->role(AccessRoleConstraints::create(
+            workspaceNames: ['live'],
+            allowPersonalWorkspace: true,
+            allowPublishToLive: true,
+        ));
+        $access = EffectiveAccess::restrictedBy([$draft, $livePublisher]);
+
+        // Per axis, both answer yes - which is exactly the trap.
+        self::assertTrue($access->allowsWorkspaceEditing('entwurf', 'SHARED'));
+        self::assertTrue($access->allowsPublishToLive());
+
+        self::assertFalse($access->allowsPublishingToLiveFrom('entwurf', 'SHARED'));
+        self::assertTrue($access->allowsPublishingToLiveFrom('user-editor', 'PERSONAL'));
+
+        // The draft role alone may go live from nowhere.
+        $draftOnly = EffectiveAccess::restrictedBy([$draft]);
+        self::assertFalse($draftOnly->allowsPublishingToLiveFrom('entwurf', 'SHARED'));
+        self::assertFalse($draftOnly->allowsPublishingToLiveFrom('user-editor', 'PERSONAL'));
+    }
+
     private function role(AccessRoleConstraints $constraints): AccessRole
     {
         $now = new \DateTimeImmutable('2026-08-24 12:00:00');

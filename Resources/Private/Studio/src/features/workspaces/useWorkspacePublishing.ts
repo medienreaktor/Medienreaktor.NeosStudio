@@ -16,7 +16,7 @@ import type {
 import { emitStudioEvent } from '@/app/events'
 import { useStudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
-import { allowsPublishToLive } from '@/features/access/rules'
+import { allowsPublishingToLiveFrom } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
 import {
   afterPublish,
@@ -42,7 +42,10 @@ export function useCanPublish(
     workspaces.find(
       (candidate) => candidate.name === workspace.baseWorkspaceName,
     )?.classification === 'root'
-  return !publishesToRoot || allowsPublishToLive(access)
+  return (
+    !publishesToRoot ||
+    allowsPublishingToLiveFrom(access, workspace.name, workspace.classification)
+  )
 }
 
 /**

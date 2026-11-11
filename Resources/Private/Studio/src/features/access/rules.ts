@@ -215,10 +215,23 @@ export function allowsWorkspaceEditing(
   )
 }
 
-export function allowsPublishToLive(
+/**
+ * May the changes in this workspace be published into live? One role has to
+ * allow both - working in the workspace and publishing to live - or "may work
+ * in Entwurf" plus "may go live from the personal workspace" would add up to
+ * publishing Entwurf to live. Mirrors EffectiveAccess::allowsPublishingToLiveFrom().
+ */
+export function allowsPublishingToLiveFrom(
   access: EffectiveAccess | undefined,
+  workspaceName: string,
+  classification: string,
 ): boolean {
-  return anyRole(access, (c) => c.allowPublishToLive)
+  return anyRole(
+    access,
+    (c) =>
+      c.allowPublishToLive &&
+      roleAllowsWorkspaceEditing(c, workspaceName, classification),
+  )
 }
 
 /**
