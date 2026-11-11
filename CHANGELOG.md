@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.2] - 2026-11-11
+
+### Fixed
+
+- Editors with an access role no longer get "403 Access denied" after every
+  publish that in fact went through. Neos cleans up removed nodes after each
+  publish, without authorization checks and across every workspace based on
+  live; the access roles were applied to that cleanup too and failed it on
+  any workspace they leave out.
+- Publishing to live has to be allowed by a role that also covers the
+  workspace being published. Asked across all roles at once, a role for a
+  shared workspace that must not go live, plus a role that may go live from
+  the personal workspace, added up to publishing the shared workspace to
+  live.
+
 ## [1.19.1] - 2026-11-04
 
 ### Added
@@ -1286,7 +1301,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.2...HEAD
+[1.19.2]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.1...1.19.2
 [1.19.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.19.0...1.19.1
 [1.19.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.1...1.19.0
 [1.18.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/1.18.0...1.18.1
