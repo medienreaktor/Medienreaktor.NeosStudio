@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { generateUriPathSegment, useNode } from '@/api/neos/endpoints/nodes'
 import { Button } from '@/components/ui/button'
+import { DraftField } from '@/components/ui/draft-field'
 import { Input } from '@/components/ui/input'
+import { useUnsavedDraft } from '@/features/inspector/unsavedChanges'
 import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import type { PropertyEditorComponent } from './registry'
@@ -14,9 +16,11 @@ export const URI_PATH_SEGMENT_EDITOR =
  * next to it: it rebuilds the segment from the current page title, running the
  * same server-side, language-aware transliteration (see generateUriPathSegment)
  * so the result matches what the old UI produced. Like the plain text editor it
- * holds a local draft and commits on blur/Enter (Escape reverts); syncing also
- * writes the generated value straight into the draft so the field reflects it
- * before the save round-trips. As there, the draft follows the incoming value
+ * holds a local draft, reports it live through onChange and commits on Enter
+ * or the inline apply button (Escape or the revert button reverts; leaving
+ * the field does not save); syncing writes the generated value straight into
+ * the draft and commits it, so the field reflects it before the save
+ * round-trips. As there, the draft follows the incoming value
  * while there is no unsaved edit, and only a draft that differs from the value
  * the edit started from commits.
  *
@@ -25,8 +29,10 @@ export const URI_PATH_SEGMENT_EDITOR =
  * nodeAddress is present), not in the creation dialog.
  */
 export const UriPathSegmentEditor: PropertyEditorComponent = ({
+  subject,
   value,
   onCommit,
+  onChange,
   nodeAddress,
   autoFocus,
   invalid,
@@ -39,6 +45,8 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
     setBase(initial)
     setDraft(initial)
   }
+  // The draft last handed to onCommit - see textEditorBody.
+  const [submitted, setSubmitted] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
 
   // Read from cache (the inspector already fetched this node) to feed the
@@ -46,9 +54,25 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
   // ClientEval:node.properties.title.
   const { data: self } = useNode(nodeAddress ?? null)
 
+  const dirty = draft !== base && draft !== submitted
   const commit = () => {
-    if (draft !== base) onCommit(draft)
+    if (!dirty) return
+    setSubmitted(draft)
+    onCommit(draft)
   }
+  const revert = () => {
+    setBase(initial)
+    setDraft(initial)
+    setSubmitted(null)
+    onChange?.(initial)
+  }
+
+  useUnsavedDraft(
+    dirty,
+    nodeAddress !== undefined
+      ? { label: subject.label, apply: commit, discard: revert }
+      : null,
+  )
 
   const sync = async () => {
     if (!nodeAddress) return
@@ -60,7 +84,11 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
         typeof title === 'string' ? title : '',
       )
       setDraft(slug)
-      if (slug !== initial) onCommit(slug)
+      onChange?.(slug)
+      if (slug !== initial) {
+        setSubmitted(slug)
+        onCommit(slug)
+      }
     } catch (error) {
       toast.error(error, {
         title: t(
@@ -75,23 +103,32 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
 
   return (
     <div className="flex items-center gap-2">
-      <Input
-        autoFocus={autoFocus}
-        value={draft}
-        aria-invalid={invalid || undefined}
-        disabled={isSyncing}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault()
-            setBase(initial)
-            setDraft(initial)
-            event.currentTarget.blur()
-          }
-          if (event.key === 'Enter') event.currentTarget.blur()
-        }}
-      />
+      <DraftField
+        className="min-w-0 flex-1"
+        dirty={dirty}
+        actions={nodeAddress !== undefined}
+        onApply={commit}
+        onRevert={revert}
+      >
+        <Input
+          data-draft-target=""
+          autoFocus={autoFocus}
+          value={draft}
+          aria-invalid={invalid || undefined}
+          disabled={isSyncing}
+          onChange={(event) => {
+            setDraft(event.target.value)
+            onChange?.(event.target.value)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              revert()
+            }
+            if (event.key === 'Enter') commit()
+          }}
+        />
+      </DraftField>
       {nodeAddress && (
         <Button
           variant="secondary"

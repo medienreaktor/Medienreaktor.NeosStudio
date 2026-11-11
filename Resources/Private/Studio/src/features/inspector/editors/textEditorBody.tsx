@@ -1,20 +1,28 @@
 import { useState } from 'react'
+import { DraftField, isApplyChord } from '@/components/ui/draft-field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { useUnsavedDraft } from '@/features/inspector/unsavedChanges'
 import type { PropertyEditorProps } from './registry'
 
 /**
  * The shared implementation behind the single-line and multi-line text
  * editors. Holds the draft locally, reports every keystroke through onChange,
- * and commits on blur (or Enter, in the single-line variant); Escape reverts
- * the draft. Doubles as the number editor for integer/float properties - an
- * empty field clears the value, a non-number is refused and reverts on commit.
+ * and commits explicitly: Enter in the single-line variant, mod+Enter in the
+ * multi-line one, or the inline apply button; Escape or the revert button
+ * throws the draft away (see DraftField). Leaving the field does NOT commit -
+ * the buttons stay visible while the draft is unsaved.
+ * Doubles as the number editor for integer/float properties - an empty field
+ * clears the value, a non-number is refused and reverts on commit.
  *
  * The draft follows the incoming value while there is no unsaved edit (a save
  * from elsewhere, a collaborator's change, the refetch after the own commit),
  * and a commit only fires when the draft differs from the value the edit
- * started from - a focus+blur never writes a stale draft over a newer value.
+ * started from.
+ *
+ * In the creation dialog (no nodeAddress) the buttons are left out: the
+ * dialog takes every keystroke through onChange, there is nothing to apply.
  */
 export function TextEditorBody({
   multiline,
@@ -23,6 +31,7 @@ export function TextEditorBody({
   onCommit,
   onChange,
   options,
+  nodeAddress,
   autoFocus,
   invalid,
 }: PropertyEditorProps & { multiline: boolean }) {
@@ -34,6 +43,9 @@ export function TextEditorBody({
     setBase(initial)
     setDraft(initial)
   }
+  // The draft last handed to onCommit - not dirty any more, though the base
+  // only catches up once the saved value comes back.
+  const [submitted, setSubmitted] = useState<string | null>(null)
   const placeholder = plainEditorOption(options, 'placeholder')
   const isNumeric = subject.type === 'integer' || subject.type === 'float'
 
@@ -55,18 +67,43 @@ export function TextEditorBody({
     if (ok) onChange?.(outgoing)
   }
 
+  const dirty = draft !== base && draft !== submitted
+
   const commit = () => {
-    if (draft === base) return
+    if (!dirty) return
     const { ok, value: outgoing } = parse(draft)
     if (!ok) {
-      setBase(initial)
-      setDraft(initial)
+      revert()
       return
     }
+    setSubmitted(draft)
     onCommit(outgoing)
   }
 
-  const keyHandlers = {
+  const revert = () => {
+    setBase(initial)
+    setDraft(initial)
+    setSubmitted(null)
+    onChange?.(parse(initial).value)
+  }
+
+  // Pending input guards the selection change that would drop it.
+  useUnsavedDraft(
+    dirty,
+    nodeAddress !== undefined
+      ? { label: subject.label, apply: commit, discard: revert }
+      : null,
+  )
+
+  const fieldProps = {
+    autoFocus,
+    value: draft,
+    placeholder,
+    'aria-invalid': invalid || undefined,
+    'data-draft-target': '',
+    onChange: (
+      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => change(event.target.value),
     onKeyDown: (
       event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -74,43 +111,33 @@ export function TextEditorBody({
         // preventDefault keeps any surrounding dialog/panel open - Escape here
         // only cancels the draft.
         event.preventDefault()
-        setBase(initial)
-        setDraft(initial)
-        onChange?.(parse(initial).value)
-        event.currentTarget.blur()
+        revert()
       }
-      // Enter commits via blur, but must keep inserting newlines in textareas.
-      if (
-        event.key === 'Enter' &&
-        event.currentTarget instanceof HTMLInputElement
-      ) {
-        event.currentTarget.blur()
+      // Enter commits, but must keep inserting newlines in textareas - there
+      // mod+Enter commits (without the newline). A single-line Enter keeps
+      // its default, so it still submits a surrounding form (the creation
+      // dialog).
+      if (event.key === 'Enter' && !multiline) commit()
+      if (multiline && isApplyChord(event)) {
+        event.preventDefault()
+        commit()
       }
     },
-    onBlur: commit,
   }
 
-  if (multiline) {
-    return (
-      <Textarea
-        autoFocus={autoFocus}
-        value={draft}
-        placeholder={placeholder}
-        aria-invalid={invalid || undefined}
-        onChange={(event) => change(event.target.value)}
-        {...keyHandlers}
-      />
-    )
-  }
   return (
-    <Input
-      autoFocus={autoFocus}
-      value={draft}
-      placeholder={placeholder}
-      aria-invalid={invalid || undefined}
-      inputMode={isNumeric ? 'decimal' : undefined}
-      onChange={(event) => change(event.target.value)}
-      {...keyHandlers}
-    />
+    <DraftField
+      dirty={dirty}
+      placement={multiline ? 'bottom' : 'inline'}
+      actions={nodeAddress !== undefined}
+      onApply={commit}
+      onRevert={revert}
+    >
+      {multiline ? (
+        <Textarea {...fieldProps} />
+      ) : (
+        <Input {...fieldProps} inputMode={isNumeric ? 'decimal' : undefined} />
+      )}
+    </DraftField>
   )
 }

@@ -817,6 +817,12 @@
       <trans-unit id="editor.dateTime.prevMonth" xml:space="preserve">
         <source>Previous month</source>
       </trans-unit>
+      <trans-unit id="editor.draft.apply" xml:space="preserve">
+        <source>Apply ({0})</source>
+      </trans-unit>
+      <trans-unit id="editor.draft.revert" xml:space="preserve">
+        <source>Revert ({0})</source>
+      </trans-unit>
       <trans-unit id="editor.link.edit" xml:space="preserve">
         <source>Edit link</source>
       </trans-unit>
@@ -1171,6 +1177,21 @@
       <trans-unit id="inspector.shineThroughHint" xml:space="preserve">
         <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
       </trans-unit>
+      <trans-unit id="inspector.unsaved.description" xml:space="preserve">
+        <source>Some fields have changes that are not saved yet. Save them before you continue?</source>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.discard" xml:space="preserve">
+        <source>Discard</source>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.save" xml:space="preserve">
+        <source>Save and continue</source>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.stay" xml:space="preserve">
+        <source>Keep editing</source>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.title" xml:space="preserve">
+        <source>Unsaved changes</source>
+      </trans-unit>
       <trans-unit id="inspector.validationError" xml:space="preserve">
         <source>{0} validation error</source>
       </trans-unit>
@@ -1348,6 +1369,9 @@
       <trans-unit id="media.copyright" xml:space="preserve">
         <source>Copyright</source>
       </trans-unit>
+      <trans-unit id="media.createTag" xml:space="preserve">
+        <source>Create tag "{0}"</source>
+      </trans-unit>
       <trans-unit id="media.delete" xml:space="preserve">
         <source>Delete</source>
       </trans-unit>
@@ -1371,9 +1395,6 @@
       </trans-unit>
       <trans-unit id="media.deleteThis" xml:space="preserve">
         <source>Delete this {0}?</source>
-      </trans-unit>
-      <trans-unit id="media.dimensions" xml:space="preserve">
-        <source>Dimensions</source>
       </trans-unit>
       <trans-unit id="media.done" xml:space="preserve">
         <source>Done</source>
@@ -1399,9 +1420,6 @@
       <trans-unit id="media.for" xml:space="preserve">
         <source>for</source>
       </trans-unit>
-      <trans-unit id="media.format" xml:space="preserve">
-        <source>Format</source>
-      </trans-unit>
       <trans-unit id="media.gridView" xml:space="preserve">
         <source>Grid view</source>
       </trans-unit>
@@ -1426,11 +1444,11 @@
       <trans-unit id="media.loadingMore" xml:space="preserve">
         <source>Loading more…</source>
       </trans-unit>
+      <trans-unit id="media.mediaType" xml:space="preserve">
+        <source>Media type</source>
+      </trans-unit>
       <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
         <source>Saving the metadata failed</source>
-      </trans-unit>
-      <trans-unit id="media.metadataSaved" xml:space="preserve">
-        <source>Metadata saved.</source>
       </trans-unit>
       <trans-unit id="media.modified" xml:space="preserve">
         <source>Modified</source>
@@ -1452,9 +1470,6 @@
       </trans-unit>
       <trans-unit id="media.noTags" xml:space="preserve">
         <source>No tags yet</source>
-      </trans-unit>
-      <trans-unit id="media.none" xml:space="preserve">
-        <source>None</source>
       </trans-unit>
       <trans-unit id="media.nounCollection" xml:space="preserve">
         <source>collection</source>
@@ -1506,8 +1521,8 @@
       <trans-unit id="media.save" xml:space="preserve">
         <source>Save</source>
       </trans-unit>
-      <trans-unit id="media.saveMetadata" xml:space="preserve">
-        <source>Save metadata</source>
+      <trans-unit id="media.saved" xml:space="preserve">
+        <source>Saved</source>
       </trans-unit>
       <trans-unit id="media.saving" xml:space="preserve">
         <source>Saving…</source>
@@ -1541,6 +1556,9 @@
       </trans-unit>
       <trans-unit id="media.tagAddFailed" xml:space="preserve">
         <source>Adding the tag failed</source>
+      </trans-unit>
+      <trans-unit id="media.tagCreateFailed" xml:space="preserve">
+        <source>Creating the tag failed</source>
       </trans-unit>
       <trans-unit id="media.tagFilterSuspended" xml:space="preserve">
         <source>{0} (not while searching)</source>

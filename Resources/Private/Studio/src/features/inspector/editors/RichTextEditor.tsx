@@ -8,6 +8,7 @@ import {
 } from 'react'
 import type { Editor } from '@tiptap/core'
 import { Button } from '@/components/ui/button'
+import { DraftField, isApplyChord } from '@/components/ui/draft-field'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { useUnsavedDraft } from '@/features/inspector/unsavedChanges'
 import { LinkEditorDialog } from '@/features/links/LinkEditorDialog'
 import { linkAttributesFrom, type LinkValue } from '@/features/links/linkValue'
 import {
@@ -57,10 +59,11 @@ export const RICH_TEXT_EDITOR = 'Neos.Neos/Inspector/Editors/RichTextEditor'
  * The inspector's rich text editor: the same TipTap engine that powers inline
  * editing in the preview (same schema mapping, so a property permits exactly
  * what its NodeType's `formatting` flags declare), mounted as an inspector
- * field with a persistent toolbar. Commits serializedHtml() on blur like the
- * inline editors; Escape reverts to the last committed markup. While nothing
- * is being edited (not focused, no uncommitted change) it follows a value
- * changed elsewhere.
+ * field with a persistent toolbar. Commits serializedHtml() explicitly - on
+ * mod+Enter or the inline apply button; Escape or the revert button restores
+ * the last committed markup (see DraftField). Leaving the editor does not
+ * save; the buttons stay visible while there is uncommitted input. While nothing is being edited (not
+ * focused, no uncommitted change) it follows a value changed elsewhere.
  */
 export const RichTextEditor: PropertyEditorComponent = ({
   value,
@@ -68,6 +71,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
   onCommit,
   onChange,
   subject,
+  nodeAddress,
   autoFocus,
 }: PropertyEditorProps) => {
   const formatting = useMemo<Formatting>(() => {
@@ -91,11 +95,16 @@ export const RichTextEditor: PropertyEditorComponent = ({
   // recreating the editor when the inspector re-renders.
   const callbacks = useLatestRef({ onCommit, onChange })
   // The committed baseline, captured after TipTap normalizes the markup so a
-  // blur without a real edit never reports a spurious change.
+  // commit without a real edit never reports a spurious change.
   const committedHtml = useRef('')
   // Set while a toolbar popup (the block format select) holds the focus: the
-  // editor blurs, but the edit is still in progress - no commit then.
+  // editor blurs, but the edit is still in progress - the value prop is not
+  // followed then.
   const holdFocus = useRef(false)
+  // Whether the content differs from the committed baseline - drives the
+  // inline apply / revert buttons. Kept from the editor's events (updates
+  // and commits), as the baseline lives in a ref render must not read.
+  const [dirty, setDirty] = useState(false)
 
   // Commits the content if it differs from the committed baseline.
   const commitPending = useCallback(
@@ -103,6 +112,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
       const html = serializedHtml(instance, formatting)
       if (html === committedHtml.current) return
       committedHtml.current = html
+      setDirty(false)
       callbacks.current.onCommit(html)
     },
     [formatting, callbacks],
@@ -118,7 +128,11 @@ export const RichTextEditor: PropertyEditorComponent = ({
         handleKeyDown: (_view, event) => {
           if (event.key === 'Escape') {
             instance.commands.setContent(committedHtml.current)
-            instance.commands.blur()
+            return true
+          }
+          // Enter alone starts a new paragraph; mod+Enter commits.
+          if (isApplyChord(event)) {
+            commitPending(instance)
             return true
           }
           return false
@@ -126,18 +140,17 @@ export const RichTextEditor: PropertyEditorComponent = ({
       },
       onCreate: ({ editor }) => {
         committedHtml.current = serializedHtml(editor, formatting)
+        setDirty(false)
       },
       onUpdate: ({ editor }) => {
-        callbacks.current.onChange?.(serializedHtml(editor, formatting))
+        const html = serializedHtml(editor, formatting)
+        setDirty(html !== committedHtml.current)
+        callbacks.current.onChange?.(html)
         refresh()
       },
       onSelectionUpdate: refresh,
       onFocus: refresh,
-      onBlur: ({ editor }) => {
-        refresh()
-        if (holdFocus.current) return
-        commitPending(editor)
-      },
+      onBlur: refresh,
     }
     const instance = createRichTextEditor(
       editorOptions,
@@ -169,6 +182,15 @@ export const RichTextEditor: PropertyEditorComponent = ({
     refresh()
   }, [editor, value, formatting])
 
+  const apply = () => editor && commitPending(editor)
+  const revert = () => editor?.commands.setContent(committedHtml.current)
+  useUnsavedDraft(
+    dirty,
+    nodeAddress !== undefined
+      ? { label: subject.label, apply, discard: revert }
+      : null,
+  )
+
   const placeholder = plainEditorOption(options, 'placeholder')
   const isEmpty = editor?.isEmpty ?? true
 
@@ -182,10 +204,15 @@ export const RichTextEditor: PropertyEditorComponent = ({
           onHoldFocus={(hold) => {
             holdFocus.current = hold
           }}
-          onLeave={() => commitPending(editor)}
         />
       )}
-      <div className="relative">
+      <DraftField
+        placement="bottom"
+        dirty={dirty}
+        actions={nodeAddress !== undefined}
+        onApply={apply}
+        onRevert={revert}
+      >
         {placeholder && isEmpty && (
           <span
             aria-hidden
@@ -196,9 +223,15 @@ export const RichTextEditor: PropertyEditorComponent = ({
         )}
         <div
           ref={containerRef}
+          data-draft-target=""
           className={cn(
             'px-3 py-2 type-body',
-            '[&_.tiptap]:min-h-18.5 [&_.tiptap]:outline-none',
+            // With the buttons, their strip (pb-8) is part of the minimum
+            // height - the field is as tall as without them.
+            nodeAddress !== undefined
+              ? '[&_.tiptap]:min-h-12.5'
+              : '[&_.tiptap]:min-h-18.5',
+            '[&_.tiptap]:outline-none',
             // Tailwind's preflight strips list and heading styling; restore a
             // compact editing rendition scoped to the editor content.
             '[&_.tiptap_h1]:type-default [&_.tiptap_h1]:font-bold',
@@ -214,7 +247,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
             '[&_.tiptap_p+p]:mt-2',
           )}
         />
-      </div>
+      </DraftField>
     </div>
   )
 }
@@ -278,15 +311,12 @@ function Toolbar({
   formatting,
   subject,
   onHoldFocus,
-  onLeave,
 }: {
   editor: Editor
   formatting: Formatting
   subject: string
-  /** Called with true while the block format popup is open - the editor skips the commit on its blur. */
+  /** Called with true while the block format popup is open - the editor is still being edited. */
   onHoldFocus: (hold: boolean) => void
-  /** The focus left the editor for good while a popup held it - commit now. */
-  onLeave: () => void
 }) {
   // The link being edited while the dialog is open, with the selection to
   // apply it to (opening the dialog blurs the editor; the range survives).
@@ -372,9 +402,8 @@ function Toolbar({
           items={blockChoices}
           value={activeBlock(editor, formatting)}
           // The popup takes the focus from the editor while open, which is
-          // part of the edit, not its end: no commit on that blur, and the
-          // focus goes back into the editor afterwards - unless the popup was
-          // left for another control, which ends the edit.
+          // part of the edit: the focus goes back into the editor afterwards
+          // - unless the popup was left for another control.
           onOpenChange={(open) => {
             onHoldFocus(open)
             if (open) return
@@ -387,8 +416,6 @@ function Toolbar({
                 toolbarRef.current?.contains(active)
               ) {
                 editor.commands.focus()
-              } else {
-                onLeave()
               }
             })
           }}

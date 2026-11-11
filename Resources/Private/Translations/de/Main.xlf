@@ -1086,6 +1086,14 @@
         <source>Previous month</source>
         <target xml:lang="de">Vorheriger Monat</target>
       </trans-unit>
+      <trans-unit id="editor.draft.apply" xml:space="preserve">
+        <source>Apply ({0})</source>
+        <target xml:lang="de">Übernehmen ({0})</target>
+      </trans-unit>
+      <trans-unit id="editor.draft.revert" xml:space="preserve">
+        <source>Revert ({0})</source>
+        <target xml:lang="de">Zurücksetzen ({0})</target>
+      </trans-unit>
       <trans-unit id="editor.link.edit" xml:space="preserve">
         <source>Edit link</source>
         <target xml:lang="de">Link bearbeiten</target>
@@ -1558,6 +1566,26 @@
         <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
         <target xml:lang="de">Dieser Knoten existiert in der aktuellen Dimension noch nicht - beim Bearbeiten wird hier eine eigenständige Variante erstellt.</target>
       </trans-unit>
+      <trans-unit id="inspector.unsaved.description" xml:space="preserve">
+        <source>Some fields have changes that are not saved yet. Save them before you continue?</source>
+        <target xml:lang="de">Einige Felder enthalten Änderungen, die noch nicht gespeichert sind. Vor dem Fortfahren speichern?</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.discard" xml:space="preserve">
+        <source>Discard</source>
+        <target xml:lang="de">Verwerfen</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.save" xml:space="preserve">
+        <source>Save and continue</source>
+        <target xml:lang="de">Speichern und fortfahren</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.stay" xml:space="preserve">
+        <source>Keep editing</source>
+        <target xml:lang="de">Weiter bearbeiten</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.title" xml:space="preserve">
+        <source>Unsaved changes</source>
+        <target xml:lang="de">Ungespeicherte Änderungen</target>
+      </trans-unit>
       <trans-unit id="inspector.validationError" xml:space="preserve">
         <source>{0} validation error</source>
         <target xml:lang="de">{0} Validierungsfehler</target>
@@ -1794,6 +1822,10 @@
         <source>Copyright</source>
         <target xml:lang="de">Copyright</target>
       </trans-unit>
+      <trans-unit id="media.createTag" xml:space="preserve">
+        <source>Create tag "{0}"</source>
+        <target xml:lang="de">Tag „{0}“ anlegen</target>
+      </trans-unit>
       <trans-unit id="media.delete" xml:space="preserve">
         <source>Delete</source>
         <target xml:lang="de">Löschen</target>
@@ -1825,10 +1857,6 @@
       <trans-unit id="media.deleteThis" xml:space="preserve">
         <source>Delete this {0}?</source>
         <target xml:lang="de">{0} löschen?</target>
-      </trans-unit>
-      <trans-unit id="media.dimensions" xml:space="preserve">
-        <source>Dimensions</source>
-        <target xml:lang="de">Abmessungen</target>
       </trans-unit>
       <trans-unit id="media.done" xml:space="preserve">
         <source>Done</source>
@@ -1862,10 +1890,6 @@
         <source>for</source>
         <target xml:lang="de">für</target>
       </trans-unit>
-      <trans-unit id="media.format" xml:space="preserve">
-        <source>Format</source>
-        <target xml:lang="de">Format</target>
-      </trans-unit>
       <trans-unit id="media.gridView" xml:space="preserve">
         <source>Grid view</source>
         <target xml:lang="de">Rasteransicht</target>
@@ -1898,13 +1922,13 @@
         <source>Loading more…</source>
         <target xml:lang="de">Weitere werden geladen…</target>
       </trans-unit>
+      <trans-unit id="media.mediaType" xml:space="preserve">
+        <source>Media type</source>
+        <target xml:lang="de">Medientyp</target>
+      </trans-unit>
       <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
         <source>Saving the metadata failed</source>
         <target xml:lang="de">Speichern der Metadaten fehlgeschlagen</target>
-      </trans-unit>
-      <trans-unit id="media.metadataSaved" xml:space="preserve">
-        <source>Metadata saved.</source>
-        <target xml:lang="de">Metadaten gespeichert.</target>
       </trans-unit>
       <trans-unit id="media.modified" xml:space="preserve">
         <source>Modified</source>
@@ -1933,10 +1957,6 @@
       <trans-unit id="media.noTags" xml:space="preserve">
         <source>No tags yet</source>
         <target xml:lang="de">Noch keine Tags</target>
-      </trans-unit>
-      <trans-unit id="media.none" xml:space="preserve">
-        <source>None</source>
-        <target xml:lang="de">Keine</target>
       </trans-unit>
       <trans-unit id="media.nounCollection" xml:space="preserve">
         <source>collection</source>
@@ -2004,9 +2024,9 @@
         <source>Save</source>
         <target xml:lang="de">Speichern</target>
       </trans-unit>
-      <trans-unit id="media.saveMetadata" xml:space="preserve">
-        <source>Save metadata</source>
-        <target xml:lang="de">Metadaten speichern</target>
+      <trans-unit id="media.saved" xml:space="preserve">
+        <source>Saved</source>
+        <target xml:lang="de">Gespeichert</target>
       </trans-unit>
       <trans-unit id="media.saving" xml:space="preserve">
         <source>Saving…</source>
@@ -2051,6 +2071,10 @@
       <trans-unit id="media.tagAddFailed" xml:space="preserve">
         <source>Adding the tag failed</source>
         <target xml:lang="de">Hinzufügen des Tags fehlgeschlagen</target>
+      </trans-unit>
+      <trans-unit id="media.tagCreateFailed" xml:space="preserve">
+        <source>Creating the tag failed</source>
+        <target xml:lang="de">Das Anlegen des Tags ist fehlgeschlagen</target>
       </trans-unit>
       <trans-unit id="media.tagFilterSuspended" xml:space="preserve">
         <source>{0} (not while searching)</source>
