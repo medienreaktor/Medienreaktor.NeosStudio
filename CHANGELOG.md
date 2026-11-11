@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-11
+
+### Added
+
+- Text fields in the inspector (text, text area, URL path segment, rich
+  text) and in the asset details dialog show small apply and revert buttons
+  while they hold unsaved input. Enter applies (Cmd/Ctrl+Enter in multi-line
+  fields), Escape reverts.
+- Unsaved input is never dropped silently: selecting another node, following
+  a link, or switching workspace, dimension or site asks first - save and
+  continue, discard, or keep editing. Reloading or closing the tab warns
+  too.
+- Clicking a field label focuses its control, and opens select boxes,
+  reference pickers and the date picker. Labels are tied to their controls
+  for assistive technology. Property editors receive an `id` for their main
+  control (plugin API); an editor that ignores it keeps working.
+- The asset details dialog lists tags as their tree (expandable, searchable
+  by name and parent path) and can create a missing tag right from the
+  search.
+
+### Changed
+
+- Text fields no longer save when they lose focus - only explicitly (see
+  above). Switching inspector tabs keeps what was typed.
+- The asset details dialog works like the inspector: tags and collections
+  use the same picker as the References editor, metadata saves per field or
+  all at once with "Save and close" (next to Revert, replacing Done while
+  anything is unsaved), and closing with unsaved metadata asks first. The
+  dialog keeps its size as entries are added and shows the file format by
+  its common name.
+- The remove buttons of selected references are quieter.
+
+### Fixed
+
+- Reverting a text field's change (Escape) no longer saves it first.
+- In the node creation dialog, clicking the label of an asset or references
+  field no longer clicks the field's first button.
+
 ## [2.0.5] - 2026-11-10
 
 ### Fixed
@@ -1440,7 +1478,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.5...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.0...HEAD
+[2.1.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.5...2.1.0
 [2.0.5]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.4...2.0.5
 [2.0.4]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.3...2.0.4
 [2.0.3]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.2...2.0.3
