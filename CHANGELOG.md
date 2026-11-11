@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-11-11
+
 ### Fixed
 
 - Editors with an access role no longer get "403 Access denied" after every
@@ -1515,7 +1517,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.1...HEAD
+[2.2.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.5...2.1.0
