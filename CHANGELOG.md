@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-11-11
+
+### Fixed
+
+- Moving a content element into another content collection and back no
+  longer leaves it in the content outliner under both collections (with a
+  shared selection highlight) until a reload.
+
 ## [2.1.0] - 2026-11-11
 
 ### Added
@@ -1478,7 +1486,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.1...HEAD
+[2.1.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.5...2.1.0
 [2.0.5]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.4...2.0.5
 [2.0.4]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.3...2.0.4
