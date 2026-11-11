@@ -32,6 +32,7 @@ import {
   treePickerOptions,
   type PickerTreeNode,
 } from '@/features/inspector/editors/ReferencePicker'
+import { UnsavedChangesPrompt } from '@/features/inspector/unsavedChanges'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { removeAsset } from './AssetContextMenu'
@@ -61,10 +62,11 @@ interface AssetDetailsDialogProps {
  * double-clicking an asset in the manage module. Reads the canonical detail so
  * the form, tags and collections are always fresh.
  *
- * Every field saves on its own, like the inspector: the text fields on Enter
- * / mod+Enter or their inline apply button (Escape or the revert button
- * throws the draft away; leaving a field does not save), tags and collections
- * as they are picked or removed. So there is no "save" button - the footer's "Done" just closes.
+ * The metadata text fields save explicitly, like the inspector: one at a time
+ * on Enter / mod+Enter or their inline apply button, or all together with
+ * the footer's Save, which replaces "Done" while anything is unsaved (next to
+ * Revert). Closing with unsaved fields asks first. Tags and collections save
+ * as they are picked or removed.
  */
 export function AssetDetailsDialog({
   asset: listAsset,
@@ -76,17 +78,32 @@ export function AssetDetailsDialog({
   const asset = detail.data ?? listAsset
   const editable = !asset.isReadOnly && asset.localAssetId !== null
   const localId = asset.localAssetId
+  const form = useMetadataForm(asset, editable ? localId : null)
+  const unsaved = form.dirtyKeys.length > 0
 
   // The parent mounts us only while an asset is selected, so drive `open` from
   // local state: open from the start (the dialog plays its enter transition on
   // mount), and defer the parent's unmount until `onOpenChangeComplete` so the
   // exit transition plays.
   const [open, setOpen] = useState(true)
+  // Closing with unsaved fields asks first (Escape, the X, the backdrop).
+  const [confirmClose, setConfirmClose] = useState(false)
+  const [savingAll, setSavingAll] = useState(false)
+  const requestClose = () => (unsaved ? setConfirmClose(true) : setOpen(false))
+
+  const saveAll = async () => {
+    setSavingAll(true)
+    try {
+      return await form.save()
+    } finally {
+      setSavingAll(false)
+    }
+  }
 
   return (
     <Dialog
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(next) => (next ? setOpen(true) : requestClose())}
       onOpenChangeComplete={(nextOpen) => !nextOpen && onOpenChange(false)}
     >
       <DialogContent size="lg" className="max-w-210">
@@ -111,24 +128,19 @@ export function AssetDetailsDialog({
 
             {editable && localId ? (
               <>
-                <MetadataField
-                  label={t('media.title', 'Title')}
-                  value={asset.title ?? ''}
-                  onSave={(title) => updateAsset(localId, { title })}
-                />
-                <MetadataField
-                  label={t('media.caption', 'Caption')}
-                  value={asset.caption ?? ''}
-                  multiline
-                  onSave={(caption) => updateAsset(localId, { caption })}
-                />
-                <MetadataField
-                  label={t('media.copyright', 'Copyright')}
-                  value={asset.copyrightNotice ?? ''}
-                  onSave={(copyrightNotice) =>
-                    updateAsset(localId, { copyrightNotice })
-                  }
-                />
+                {METADATA_FIELDS.map((field) => (
+                  <MetadataField
+                    key={field.key}
+                    label={field.label()}
+                    multiline={field.multiline}
+                    value={form.drafts[field.key]}
+                    dirty={form.isDirty(field.key)}
+                    status={form.status[field.key] ?? 'idle'}
+                    onChange={(value) => form.setDraft(field.key, value)}
+                    onApply={() => void form.save([field.key])}
+                    onRevert={() => form.revert([field.key])}
+                  />
+                ))}
                 <TagAssignment localId={localId} assigned={asset.tags ?? []} />
                 <CollectionAssignment
                   localId={localId}
@@ -155,7 +167,8 @@ export function AssetDetailsDialog({
         </div>
 
         {/* Destructive / file actions on the left, the closing action where
-            the eye ends: bottom right. */}
+            the eye ends: bottom right - Revert + Save while fields are
+            unsaved, Done otherwise. */}
         <DialogFooter className="sm:justify-between">
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             {editable && localId && (
@@ -168,50 +181,89 @@ export function AssetDetailsDialog({
               </>
             )}
           </div>
-          <Button size="sm" onClick={() => setOpen(false)}>
-            {t('media.done', 'Done')}
-          </Button>
+          {unsaved ? (
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={savingAll}
+                onClick={() => form.revert()}
+              >
+                {t('media.revertChanges', 'Revert')}
+              </Button>
+              <Button
+                size="sm"
+                disabled={savingAll}
+                onClick={() => void saveAll()}
+              >
+                {savingAll
+                  ? t('media.saving', 'Saving…')
+                  : t('common.save', 'Save')}
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" onClick={() => setOpen(false)}>
+              {t('media.done', 'Done')}
+            </Button>
+          )}
         </DialogFooter>
+
+        <UnsavedChangesPrompt
+          open={confirmClose}
+          labels={METADATA_FIELDS.filter((field) =>
+            form.dirtyKeys.includes(field.key),
+          ).map((field) => field.label())}
+          saveLabel={t('media.saveAndClose', 'Save and close')}
+          busy={savingAll}
+          onSave={async () => {
+            if (!(await saveAll())) return
+            setConfirmClose(false)
+            setOpen(false)
+          }}
+          onDiscard={() => {
+            form.revert()
+            setConfirmClose(false)
+            setOpen(false)
+          }}
+          onStay={() => setConfirmClose(false)}
+        />
       </DialogContent>
     </Dialog>
   )
 }
 
-/**
- * The read-only file facts: a one-line summary of what people look for first
- * (format, dimensions, size), then the details as a divided list.
- */
+/** The read-only file facts, as a compact label / value list. */
 function FileFacts({ asset }: { asset: Asset }) {
   const { stem, extension } = splitFilename(asset.filename)
-  const summary = [
-    formatLabel(asset.filename, asset.mediaType),
-    asset.width && asset.height ? `${asset.width} × ${asset.height}` : null,
-    formatBytes(asset.fileSize),
-  ].filter(Boolean)
-
   return (
-    <div className="space-y-2">
-      <p className="type-body-strong text-foreground">{summary.join(' · ')}</p>
-      <dl className="divide-y divide-border rounded-md border border-border type-small">
-        <Fact label={t('media.filename', 'Filename')}>
-          <span className="flex min-w-0" title={asset.filename}>
-            <span className="truncate">{stem}</span>
-            <span className="shrink-0">{extension}</span>
-          </span>
+    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 type-small text-muted-foreground">
+      <Fact label={t('media.type', 'Type')}>
+        {assetTypeLabel(asset.assetType)}
+      </Fact>
+      <Fact label={t('media.format', 'Format')}>
+        <span title={asset.mediaType}>
+          {formatLabel(asset.filename, asset.mediaType)}
+        </span>
+      </Fact>
+      <Fact label={t('media.size', 'Size')}>{formatBytes(asset.fileSize)}</Fact>
+      {asset.width && asset.height ? (
+        <Fact label={t('media.dimensions', 'Dimensions')}>
+          {asset.width} × {asset.height}
         </Fact>
-        <Fact label={t('media.type', 'Type')}>
-          {assetTypeLabel(asset.assetType)}
-        </Fact>
-        <Fact label={t('media.mediaType', 'Media type')}>
-          <span className="block truncate font-mono">{asset.mediaType}</span>
-        </Fact>
-        <Fact label={t('media.modified', 'Modified')}>
-          <span title={formatDateTime(asset.lastModified)}>
-            {formatDate(asset.lastModified)}
-          </span>
-        </Fact>
-      </dl>
-    </div>
+      ) : null}
+      <Fact label={t('media.modified', 'Modified')}>
+        <span title={formatDateTime(asset.lastModified)}>
+          {formatDate(asset.lastModified)}
+        </span>
+      </Fact>
+      <Fact label={t('media.filename', 'Filename')}>
+        {/* The stem truncates, the extension stays visible. */}
+        <span className="flex min-w-0 justify-end" title={asset.filename}>
+          <span className="truncate">{stem}</span>
+          <span className="shrink-0">{extension}</span>
+        </span>
+      </Fact>
+    </dl>
   )
 }
 
@@ -223,80 +275,181 @@ function Fact({
   children: React.ReactNode
 }) {
   return (
-    <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 px-2.5 py-1.5">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 text-foreground">{children}</dd>
-    </div>
+    <>
+      <dt>{label}</dt>
+      <dd className="min-w-0 truncate text-right">{children}</dd>
+    </>
   )
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved'
 
-/**
- * One metadata text field, saving itself the way the inspector's text
- * editors do (see textEditorBody): a local draft committed on Enter
- * (mod+Enter when multi-line) or the inline apply button, reverted by Escape
- * or the revert button. The label shows the save state. The draft follows the
- * incoming value while there is no unsaved edit; a failed save keeps the
- * draft so the user can try again.
- */
-function MetadataField({
-  label,
-  value,
-  multiline = false,
-  onSave,
-}: {
-  label: string
-  value: string
-  multiline?: boolean
-  onSave: (value: string) => Promise<unknown>
-}) {
-  const [draft, setDraft] = useState(value)
-  const [base, setBase] = useState(value)
-  if (value !== base && (draft === base || draft === value)) {
-    setBase(value)
-    setDraft(value)
+type MetadataKey = 'title' | 'caption' | 'copyrightNotice'
+type MetadataValues = Record<MetadataKey, string>
+
+const METADATA_FIELDS: {
+  key: MetadataKey
+  label: () => string
+  multiline: boolean
+}[] = [
+  { key: 'title', label: () => t('media.title', 'Title'), multiline: false },
+  {
+    key: 'caption',
+    label: () => t('media.caption', 'Caption'),
+    multiline: true,
+  },
+  {
+    key: 'copyrightNotice',
+    label: () => t('media.copyright', 'Copyright'),
+    multiline: false,
+  },
+]
+const METADATA_KEYS = METADATA_FIELDS.map((field) => field.key)
+
+function savedMetadata(asset: Asset): MetadataValues {
+  return {
+    title: asset.title ?? '',
+    caption: asset.caption ?? '',
+    copyrightNotice: asset.copyrightNotice ?? '',
   }
-  const [status, setStatus] = useState<SaveStatus>('idle')
-  // The draft being / last saved - not dirty any more, though the base only
-  // catches up once the saved asset comes back. Cleared by a failed save.
-  const [submitted, setSubmitted] = useState<string | null>(null)
-  const dirty = draft !== base && draft !== submitted
+}
+
+function pick(values: MetadataValues, keys: MetadataKey[]) {
+  return Object.fromEntries(
+    keys.map((key) => [key, values[key]]),
+  ) as Partial<MetadataValues>
+}
+
+/**
+ * The metadata form's state: one draft per field, saved per field (inline
+ * apply) or together (the footer's Save, one request). Works like the
+ * inspector's text editors (see textEditorBody): a field's draft follows the
+ * saved value while it has no unsaved edit; a draft handed to a save counts
+ * as clean right away (the saved asset comes back a moment later); a failed
+ * save keeps the drafts so the user can try again. Each field's status
+ * ("Saving…", then "Saved" for a moment) shows beside its label.
+ */
+function useMetadataForm(asset: Asset, localId: string | null) {
+  const saved = savedMetadata(asset)
+  const [drafts, setDrafts] = useState(saved)
+  const [bases, setBases] = useState(saved)
+  const follow = METADATA_KEYS.filter(
+    (key) =>
+      saved[key] !== bases[key] &&
+      (drafts[key] === bases[key] || drafts[key] === saved[key]),
+  )
+  if (follow.length > 0) {
+    setBases({ ...bases, ...pick(saved, follow) })
+    setDrafts({ ...drafts, ...pick(saved, follow) })
+  }
+  const [submitted, setSubmitted] = useState<Partial<MetadataValues>>({})
+  const [status, setStatus] = useState<
+    Partial<Record<MetadataKey, SaveStatus>>
+  >({})
+
+  const isDirty = (key: MetadataKey) =>
+    drafts[key] !== bases[key] && drafts[key] !== submitted[key]
+  const dirtyKeys = METADATA_KEYS.filter(isDirty)
 
   // "Saved" fades back to nothing after a moment.
   useEffect(() => {
-    if (status !== 'saved') return
-    const timer = setTimeout(() => setStatus('idle'), 2000)
+    if (!Object.values(status).includes('saved')) return
+    const timer = setTimeout(
+      () =>
+        setStatus((previous) =>
+          Object.fromEntries(
+            Object.entries(previous).filter(([, value]) => value !== 'saved'),
+          ),
+        ),
+      2000,
+    )
     return () => clearTimeout(timer)
   }, [status])
 
-  const commit = async () => {
-    if (!dirty) return
-    setSubmitted(draft)
-    setStatus('saving')
+  const setFieldStatus = (keys: MetadataKey[], value: SaveStatus) =>
+    setStatus((previous) => ({
+      ...previous,
+      ...Object.fromEntries(keys.map((key) => [key, value])),
+    }))
+  const forget = (keys: MetadataKey[]) =>
+    setSubmitted((previous) =>
+      Object.fromEntries(
+        Object.entries(previous).filter(
+          ([key]) => !keys.includes(key as MetadataKey),
+        ),
+      ),
+    )
+
+  /** Saves the given fields (default: every unsaved one); false on failure. */
+  const save = async (keys: MetadataKey[] = dirtyKeys): Promise<boolean> => {
+    const toSave = keys.filter(isDirty)
+    if (toSave.length === 0 || localId === null) return true
+    const update = pick(drafts, toSave)
+    setSubmitted((previous) => ({ ...previous, ...update }))
+    setFieldStatus(toSave, 'saving')
     try {
-      await onSave(draft)
-      setStatus('saved')
+      await updateAsset(localId, update)
+      setFieldStatus(toSave, 'saved')
+      return true
     } catch (e) {
-      setSubmitted(null)
-      setStatus('idle')
+      forget(toSave)
+      setFieldStatus(toSave, 'idle')
       toast.error(e, {
         title: t('media.metadataSaveFailed', 'Saving the metadata failed'),
       })
+      return false
     }
   }
-  const revert = () => {
-    setDraft(base)
-    setSubmitted(null)
+
+  /** Throws the given fields' drafts away (default: every unsaved one). */
+  const revert = (keys: MetadataKey[] = dirtyKeys) => {
+    setDrafts((previous) => ({ ...previous, ...pick(bases, keys) }))
+    forget(keys)
   }
 
+  return {
+    drafts,
+    setDraft: (key: MetadataKey, value: string) =>
+      setDrafts((previous) => ({ ...previous, [key]: value })),
+    isDirty,
+    dirtyKeys,
+    status,
+    save,
+    revert,
+  }
+}
+
+/**
+ * One metadata text field, behaving like the inspector's text editors: Enter
+ * (mod+Enter when multi-line) or the inline apply button saves it, Escape or
+ * the revert button discards its draft. Its state lives in useMetadataForm.
+ */
+function MetadataField({
+  label,
+  multiline,
+  value,
+  dirty,
+  status,
+  onChange,
+  onApply,
+  onRevert,
+}: {
+  label: string
+  multiline: boolean
+  value: string
+  dirty: boolean
+  status: SaveStatus
+  onChange: (value: string) => void
+  onApply: () => void
+  onRevert: () => void
+}) {
   const fieldProps = {
-    value: draft,
+    value,
     'aria-label': label,
     'data-draft-target': '',
     onChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => setDraft(event.target.value),
+    ) => onChange(event.target.value),
     onKeyDown: (
       event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -304,11 +457,11 @@ function MetadataField({
         // Only cancel the draft - keep the dialog open.
         event.preventDefault()
         event.stopPropagation()
-        revert()
+        onRevert()
       }
       if (event.key === 'Enter' && (!multiline || isApplyChord(event))) {
         event.preventDefault()
-        void commit()
+        onApply()
       }
     },
   }
@@ -318,8 +471,8 @@ function MetadataField({
       <DraftField
         dirty={dirty}
         placement={multiline ? 'bottom' : 'inline'}
-        onApply={() => void commit()}
-        onRevert={revert}
+        onApply={onApply}
+        onRevert={onRevert}
       >
         {multiline ? <Textarea {...fieldProps} /> : <Input {...fieldProps} />}
       </DraftField>

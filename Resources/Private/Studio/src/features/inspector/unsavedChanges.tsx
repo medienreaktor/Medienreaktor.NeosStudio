@@ -124,7 +124,42 @@ export function UnsavedChangesDialog() {
     : []
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && resolve('stay')}>
+    <UnsavedChangesPrompt
+      open={open}
+      labels={labels}
+      onSave={() => resolve('save')}
+      onDiscard={() => resolve('discard')}
+      onStay={() => resolve('stay')}
+    />
+  )
+}
+
+/**
+ * The "unsaved changes" question itself, for any surface with explicitly
+ * saved fields (the inspector's guard above, the asset details dialog):
+ * lists the fields, then keep editing / discard / save.
+ */
+export function UnsavedChangesPrompt({
+  open,
+  labels,
+  saveLabel = t('inspector.unsaved.save', 'Save and continue'),
+  busy = false,
+  onSave,
+  onDiscard,
+  onStay,
+}: {
+  open: boolean
+  /** The labels of the fields with unsaved input. */
+  labels: string[]
+  saveLabel?: string
+  /** While true (a save in flight), the buttons are disabled. */
+  busy?: boolean
+  onSave: () => void
+  onDiscard: () => void
+  onStay: () => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && !busy && onStay()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -145,15 +180,15 @@ export function UnsavedChangesDialog() {
           </ul>
         )}
         <DialogFooter className="sm:justify-between">
-          <Button variant="secondary" onClick={() => resolve('stay')}>
+          <Button variant="secondary" disabled={busy} onClick={onStay}>
             {t('inspector.unsaved.stay', 'Keep editing')}
           </Button>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button variant="destructive" onClick={() => resolve('discard')}>
+            <Button variant="destructive" disabled={busy} onClick={onDiscard}>
               {t('inspector.unsaved.discard', 'Discard')}
             </Button>
-            <Button onClick={() => resolve('save')}>
-              {t('inspector.unsaved.save', 'Save and continue')}
+            <Button disabled={busy} onClick={onSave}>
+              {saveLabel}
             </Button>
           </div>
         </DialogFooter>

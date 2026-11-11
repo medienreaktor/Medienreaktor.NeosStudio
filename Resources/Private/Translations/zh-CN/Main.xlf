@@ -958,6 +958,10 @@
         <source>Picking asset failed</source>
         <target xml:lang="zh-CN">选取资产失败</target>
       </trans-unit>
+      <trans-unit id="editor.picker.chosen" xml:space="preserve">
+        <source>Chosen</source>
+        <target xml:lang="zh-CN">已选</target>
+      </trans-unit>
       <trans-unit id="editor.range.currentValue" xml:space="preserve">
         <source>Current value</source>
         <target xml:lang="zh-CN">当前值</target>
@@ -1690,6 +1694,10 @@
         <source>Delete this {0}?</source>
         <target xml:lang="zh-CN">删除此{0}？</target>
       </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="zh-CN">尺寸</target>
+      </trans-unit>
       <trans-unit id="media.done" xml:space="preserve">
         <source>Done</source>
         <target xml:lang="zh-CN">完成</target>
@@ -1722,6 +1730,10 @@
         <source>for</source>
         <target xml:lang="zh-CN">用于</target>
       </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+        <target xml:lang="zh-CN">格式</target>
+      </trans-unit>
       <trans-unit id="media.gridView" xml:space="preserve">
         <source>Grid view</source>
         <target xml:lang="zh-CN">网格视图</target>
@@ -1753,10 +1765,6 @@
       <trans-unit id="media.loadingMore" xml:space="preserve">
         <source>Loading more…</source>
         <target xml:lang="zh-CN">正在加载更多…</target>
-      </trans-unit>
-      <trans-unit id="media.mediaType" xml:space="preserve">
-        <source>Media type</source>
-        <target xml:lang="zh-CN">媒体类型</target>
       </trans-unit>
       <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
         <source>Saving the metadata failed</source>
@@ -1846,9 +1854,17 @@
         <source>Rename {0}</source>
         <target xml:lang="zh-CN">重命名{0}</target>
       </trans-unit>
+      <trans-unit id="media.revertChanges" xml:space="preserve">
+        <source>Revert</source>
+        <target xml:lang="zh-CN">还原</target>
+      </trans-unit>
       <trans-unit id="media.save" xml:space="preserve">
         <source>Save</source>
         <target xml:lang="zh-CN">保存</target>
+      </trans-unit>
+      <trans-unit id="media.saveAndClose" xml:space="preserve">
+        <source>Save and close</source>
+        <target xml:lang="zh-CN">保存并关闭</target>
       </trans-unit>
       <trans-unit id="media.saved" xml:space="preserve">
         <source>Saved</source>

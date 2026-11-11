@@ -35,7 +35,7 @@ export interface ReferenceOption {
   /** Expands / collapses a tree entry (the chevron, or → / ←). */
   onToggleExpanded?: () => void
   /**
-   * Already chosen - listed with a check instead of its icon (a tree keeps
+   * Already chosen - marked with a small check at the row's end (a tree keeps
    * chosen entries in place, as they carry the structure).
    */
   checked?: boolean
@@ -259,60 +259,39 @@ export function ReferencePicker({
                     key={option.id}
                     value={option}
                     disabled={option.disabled}
+                    className={cn(option.depth !== undefined && TREE_ROW)}
                     style={
                       option.depth !== undefined
-                        ? { paddingLeft: `${0.5 + option.depth}rem` }
+                        ? {
+                            paddingLeft: `${option.depth * 0.875 + 0.125}rem`,
+                          }
                         : undefined
                     }
                   >
-                    {option.depth !== undefined &&
-                      (option.onToggleExpanded ? (
-                        <span
-                          aria-hidden
-                          className="mt-0.5 grid size-4 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                          onPointerDown={stop}
-                          onMouseDown={stop}
-                          onPointerUp={stop}
-                          onMouseUp={stop}
-                          onClick={(event) => {
-                            stop(event)
-                            option.onToggleExpanded?.()
-                          }}
-                        >
+                    {option.depth !== undefined ? (
+                      <TreeRowContent option={option} />
+                    ) : (
+                      <>
+                        {option.iconClass && (
                           <i
                             className={cn(
-                              'fas fa-chevron-right type-icon-s transition-transform',
-                              option.expanded && 'rotate-90',
+                              option.iconClass,
+                              'fa-fw mt-0.5 type-icon-m text-muted-foreground',
                             )}
+                            aria-hidden
                           />
-                        </span>
-                      ) : (
-                        <span className="size-4 shrink-0" aria-hidden />
-                      ))}
-                    {option.checked ? (
-                      <i
-                        className="fas fa-check fa-fw mt-0.5 type-icon-m text-primary-text"
-                        aria-hidden
-                      />
-                    ) : (
-                      option.iconClass && (
-                        <i
-                          className={cn(
-                            option.iconClass,
-                            'fa-fw mt-0.5 type-icon-m text-muted-foreground',
+                        )}
+                        <span className="min-w-0">
+                          <span className="block truncate">{option.label}</span>
+                          {option.secondary && (
+                            <span className="block truncate type-small text-muted-foreground">
+                              {option.secondary}
+                            </span>
                           )}
-                          aria-hidden
-                        />
-                      )
-                    )}
-                    <span className="min-w-0">
-                      <span className="block truncate">{option.label}</span>
-                      {option.secondary && (
-                        <span className="block truncate type-small text-muted-foreground">
-                          {option.secondary}
                         </span>
-                      )}
-                    </span>
+                        {option.checked && <CheckedMark />}
+                      </>
+                    )}
                   </ComboboxItem>
                 )}
               </ComboboxCollection>
@@ -321,6 +300,75 @@ export function ReferencePicker({
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
+  )
+}
+
+/**
+ * A tree entry's row geometry - the document tree's (TreeList): compact
+ * rows, centred content, 0.875rem indent per level (set inline).
+ */
+const TREE_ROW =
+  'items-center gap-1 overflow-hidden whitespace-nowrap py-0.5 pr-1.5'
+
+/**
+ * A tree entry's content, drawn like a document tree row: the caret toggle
+ * (or its empty slot), the icon in the foreground color, the label.
+ */
+function TreeRowContent({ option }: { option: ReferenceOption }) {
+  return (
+    <>
+      <span
+        aria-hidden
+        className={cn(
+          'flex size-4.5 shrink-0 items-center justify-center rounded-sm type-small text-muted-foreground',
+          option.onToggleExpanded && 'hover:bg-accent hover:text-foreground',
+        )}
+        {...(option.onToggleExpanded && {
+          onPointerDown: stop,
+          onMouseDown: stop,
+          onPointerUp: stop,
+          onMouseUp: stop,
+          onClick: (event: React.MouseEvent) => {
+            stop(event)
+            option.onToggleExpanded?.()
+          },
+        })}
+      >
+        {option.onToggleExpanded && (
+          <i
+            className={cn(
+              'fas fa-caret-right fa-fw type-icon-m transition-transform duration-150',
+              option.expanded && 'rotate-90',
+            )}
+          />
+        )}
+      </span>
+      {option.iconClass && (
+        <span className="shrink-0 text-foreground">
+          <i
+            className={cn(option.iconClass, 'fa-fw type-icon-m')}
+            aria-hidden
+          />
+        </span>
+      )}
+      <span className="overflow-hidden text-ellipsis">{option.label}</span>
+      {option.checked && <CheckedMark />}
+    </>
+  )
+}
+
+/**
+ * The mark of a chosen entry: a small check at the row's end, like a checked
+ * menu item - quiet, as the chosen entries are listed above the picker too.
+ */
+function CheckedMark() {
+  return (
+    <span className="ml-auto shrink-0 self-center pl-2 text-primary-text">
+      <i className="fas fa-check type-icon-s" aria-hidden />
+      <span className="sr-only">
+        {translate('editor.picker.chosen', 'Chosen')}
+      </span>
+    </span>
   )
 }
 

@@ -990,6 +990,10 @@
         <source>Picking asset failed</source>
         <target xml:lang="fr">Échec de la sélection de la ressource</target>
       </trans-unit>
+      <trans-unit id="editor.picker.chosen" xml:space="preserve">
+        <source>Chosen</source>
+        <target xml:lang="fr">Choisi</target>
+      </trans-unit>
       <trans-unit id="editor.range.currentValue" xml:space="preserve">
         <source>Current value</source>
         <target xml:lang="fr">Valeur actuelle</target>
@@ -1722,6 +1726,10 @@
         <source>Delete this {0}?</source>
         <target xml:lang="fr">Supprimer cette {0} ?</target>
       </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="fr">Dimensions</target>
+      </trans-unit>
       <trans-unit id="media.done" xml:space="preserve">
         <source>Done</source>
         <target xml:lang="fr">Terminé</target>
@@ -1754,6 +1762,10 @@
         <source>for</source>
         <target xml:lang="fr">pour</target>
       </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+        <target xml:lang="fr">Format</target>
+      </trans-unit>
       <trans-unit id="media.gridView" xml:space="preserve">
         <source>Grid view</source>
         <target xml:lang="fr">Vue en grille</target>
@@ -1785,10 +1797,6 @@
       <trans-unit id="media.loadingMore" xml:space="preserve">
         <source>Loading more…</source>
         <target xml:lang="fr">Chargement de la suite…</target>
-      </trans-unit>
-      <trans-unit id="media.mediaType" xml:space="preserve">
-        <source>Media type</source>
-        <target xml:lang="fr">Type de média</target>
       </trans-unit>
       <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
         <source>Saving the metadata failed</source>
@@ -1878,9 +1886,17 @@
         <source>Rename {0}</source>
         <target xml:lang="fr">Renommer {0}</target>
       </trans-unit>
+      <trans-unit id="media.revertChanges" xml:space="preserve">
+        <source>Revert</source>
+        <target xml:lang="fr">Annuler les modifications</target>
+      </trans-unit>
       <trans-unit id="media.save" xml:space="preserve">
         <source>Save</source>
         <target xml:lang="fr">Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="media.saveAndClose" xml:space="preserve">
+        <source>Save and close</source>
+        <target xml:lang="fr">Enregistrer et fermer</target>
       </trans-unit>
       <trans-unit id="media.saved" xml:space="preserve">
         <source>Saved</source>

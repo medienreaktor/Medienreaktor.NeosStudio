@@ -974,6 +974,10 @@
         <source>Picking asset failed</source>
         <target xml:lang="fi">Aineiston valinta epäonnistui</target>
       </trans-unit>
+      <trans-unit id="editor.picker.chosen" xml:space="preserve">
+        <source>Chosen</source>
+        <target xml:lang="fi">Valittu</target>
+      </trans-unit>
       <trans-unit id="editor.range.currentValue" xml:space="preserve">
         <source>Current value</source>
         <target xml:lang="fi">Nykyinen arvo</target>
@@ -1706,6 +1710,10 @@
         <source>Delete this {0}?</source>
         <target xml:lang="fi">Poistetaanko tämä {0}?</target>
       </trans-unit>
+      <trans-unit id="media.dimensions" xml:space="preserve">
+        <source>Dimensions</source>
+        <target xml:lang="fi">Mitat</target>
+      </trans-unit>
       <trans-unit id="media.done" xml:space="preserve">
         <source>Done</source>
         <target xml:lang="fi">Valmis</target>
@@ -1738,6 +1746,10 @@
         <source>for</source>
         <target xml:lang="fi">kohteelle</target>
       </trans-unit>
+      <trans-unit id="media.format" xml:space="preserve">
+        <source>Format</source>
+        <target xml:lang="fi">Muoto</target>
+      </trans-unit>
       <trans-unit id="media.gridView" xml:space="preserve">
         <source>Grid view</source>
         <target xml:lang="fi">Ruudukkonäkymä</target>
@@ -1769,10 +1781,6 @@
       <trans-unit id="media.loadingMore" xml:space="preserve">
         <source>Loading more…</source>
         <target xml:lang="fi">Ladataan lisää…</target>
-      </trans-unit>
-      <trans-unit id="media.mediaType" xml:space="preserve">
-        <source>Media type</source>
-        <target xml:lang="fi">Mediatyyppi</target>
       </trans-unit>
       <trans-unit id="media.metadataSaveFailed" xml:space="preserve">
         <source>Saving the metadata failed</source>
@@ -1862,9 +1870,17 @@
         <source>Rename {0}</source>
         <target xml:lang="fi">Nimeä {0} uudelleen</target>
       </trans-unit>
+      <trans-unit id="media.revertChanges" xml:space="preserve">
+        <source>Revert</source>
+        <target xml:lang="fi">Palauta</target>
+      </trans-unit>
       <trans-unit id="media.save" xml:space="preserve">
         <source>Save</source>
         <target xml:lang="fi">Tallenna</target>
+      </trans-unit>
+      <trans-unit id="media.saveAndClose" xml:space="preserve">
+        <source>Save and close</source>
+        <target xml:lang="fi">Tallenna ja sulje</target>
       </trans-unit>
       <trans-unit id="media.saved" xml:space="preserve">
         <source>Saved</source>
