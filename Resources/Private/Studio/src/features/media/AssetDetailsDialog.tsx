@@ -64,8 +64,9 @@ interface AssetDetailsDialogProps {
  *
  * The metadata text fields save explicitly, like the inspector: one at a time
  * on Enter / mod+Enter or their inline apply button, or all together with
- * the footer's Save, which replaces "Done" while anything is unsaved (next to
- * Revert). Closing with unsaved fields asks first. Tags and collections save
+ * the footer's "Save and close", which replaces "Done" while anything is
+ * unsaved (next to Revert). A failed save keeps the dialog open. Closing
+ * otherwise with unsaved fields asks first. Tags and collections save
  * as they are picked or removed.
  */
 export function AssetDetailsDialog({
@@ -167,8 +168,8 @@ export function AssetDetailsDialog({
         </div>
 
         {/* Destructive / file actions on the left, the closing action where
-            the eye ends: bottom right - Revert + Save while fields are
-            unsaved, Done otherwise. */}
+            the eye ends: bottom right - Revert + "Save and close" while
+            fields are unsaved, Done otherwise. */}
         <DialogFooter className="sm:justify-between">
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             {editable && localId && (
@@ -194,11 +195,13 @@ export function AssetDetailsDialog({
               <Button
                 size="sm"
                 disabled={savingAll}
-                onClick={() => void saveAll()}
+                onClick={async () => {
+                  if (await saveAll()) setOpen(false)
+                }}
               >
                 {savingAll
                   ? t('media.saving', 'Saving…')
-                  : t('common.save', 'Save')}
+                  : t('media.saveAndClose', 'Save and close')}
               </Button>
             </div>
           ) : (
