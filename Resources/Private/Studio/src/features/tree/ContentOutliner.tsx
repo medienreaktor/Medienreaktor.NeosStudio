@@ -111,8 +111,8 @@ function OutlinerTree({
     // content children" flag it needs here.
     fetchRoot: () =>
       fetchNode(nodeAddressOf(document), CONTENT_NODE_TYPES, deleted),
-    fetchChildren: (address) =>
-      fetchChildren(address, CONTENT_NODE_TYPES, deleted),
+    fetchChildren: (address, options) =>
+      fetchChildren(address, CONTENT_NODE_TYPES, deleted, options),
     loadErrorTitle: t('tree.outlineLoadFailed', 'Loading the outline failed'),
     loadErrorToastId: 'outliner-load',
     // hasChildren of outliner items comes from content-filtered children

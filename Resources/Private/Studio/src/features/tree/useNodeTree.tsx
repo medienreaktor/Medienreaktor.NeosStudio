@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   type AsyncDataLoaderDataRef,
   asyncDataLoaderFeature,
@@ -7,6 +7,7 @@ import {
   type TreeInstance,
 } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
+import { isCancelledError } from '@tanstack/react-query'
 import { isNotFound } from '@/api/http/errors'
 import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import {
@@ -58,6 +59,12 @@ export const MISSING_NODE = '__node_tree_missing__'
 export type NodeTreeItem =
   Node | typeof NODE_TREE_ROOT | typeof MISSING_NODE | null
 
+/** One loaded child as headless-tree's getChildrenWithData returns it. */
+interface ChildEntry {
+  id: string
+  data: NodeTreeItem
+}
+
 /** The node behind an item, null for the placeholders and loading rows. */
 export function nodeOfItem(data: NodeTreeItem): Node | null {
   return data === null || data === NODE_TREE_ROOT || data === MISSING_NODE
@@ -98,8 +105,15 @@ export function useNodeTree({
   fetchItem: (address: NodeAddress) => Promise<Node>
   /** Reads the visible root; null when there is none (an empty site). */
   fetchRoot: () => Promise<Node | null>
-  /** Reads an item's children - already filtered to what the tree shows. */
-  fetchChildren: (address: NodeAddress) => Promise<Node[]>
+  /**
+   * Reads an item's children - already filtered to what the tree shows.
+   * restart: a refresh of a loaded list, which must read the server's
+   * current state (see fetchChildren's restart option).
+   */
+  fetchChildren: (
+    address: NodeAddress,
+    options: { restart: boolean },
+  ) => Promise<Node[]>
   loadErrorTitle: string
   /** Toast id, so failing loads of many rows raise one toast. */
   loadErrorToastId: string
@@ -137,6 +151,8 @@ export function useNodeTree({
   // Flips once the visible root has resolved, so the tree shows a spinner
   // while it loads and a real empty state only afterwards.
   const [rootLoaded, setRootLoaded] = useState(false)
+  // The latest children load per item (see loadChildren).
+  const childrenLoads = useRef(new Map<string, Promise<ChildEntry[]>>())
   const { data: nodeTypes } = useNodeTypes()
   const decorators = useNodeDecorators()
   const pendingChanges = usePendingChanges(workspaceName)
@@ -208,18 +224,7 @@ export function useNodeTree({
             setRootLoaded(true)
           }
         }
-        try {
-          const children = await fetchChildren(addressOf(itemId))
-          return children.map((node) => ({
-            id: node.nodeAggregateId,
-            data: node as NodeTreeItem,
-          }))
-        } catch (e) {
-          // The node was deleted out from under us (e.g. published) - no
-          // children to show, and no error worth reporting.
-          reportLoadError(e)
-          return []
-        }
+        return loadChildren(itemId)
       },
     },
     // Every loaded item passes through here - where useNodeEditRefresh
@@ -230,6 +235,90 @@ export function useNodeTree({
     createLoadingItemData: () => null,
     features: [asyncDataLoaderFeature, selectionFeature, dnd.feature],
   })
+
+  /**
+   * Loads an item's children list; what it resolves to is what headless-tree
+   * stores. headless-tree does not order overlapping reloads of a loaded
+   * list (an optimistic invalidateChildrenIds runs unguarded), so a slower,
+   * older read could land last and win - after a move, the old parent would
+   * keep listing the moved node. Every load therefore resolves to the result
+   * of the newest load of the item started meanwhile (the entry is kept
+   * after it resolved, so a straggler finishing even later still finds it).
+   * A reload of a loaded list (a refresh after an edit) also restarts the
+   * read instead of joining one already running, which may predate the edit.
+   * Finally, the result is the truth about where its children are: see
+   * claimChildren.
+   */
+  const loadChildren = async (itemId: string): Promise<ChildEntry[]> => {
+    const dataRef = tree.getDataRef<AsyncDataLoaderDataRef>().current
+    const restart = dataRef.childrenIds?.[itemId] !== undefined
+    let load = readChildren(itemId, restart)
+    childrenLoads.current.set(itemId, load)
+    for (;;) {
+      const result = await load
+      const latest = childrenLoads.current.get(itemId)
+      if (latest === undefined || latest === load) {
+        claimChildren(itemId, result)
+        return result
+      }
+      load = latest
+    }
+  }
+
+  /**
+   * A node has exactly one parent in the tree's subgraph, so the children
+   * just read for `itemId` cannot also be children of another loaded item:
+   * where another list still names one, that list is stale (it was read
+   * before a move, or its refresh got lost). The node leaves that list right
+   * away - otherwise it renders twice, both rows sharing one id and thus one
+   * selection - and the list is re-read to settle what else changed in it.
+   */
+  const claimChildren = (itemId: string, children: ChildEntry[]) => {
+    if (children.length === 0) return
+    const childrenIds =
+      tree.getDataRef<AsyncDataLoaderDataRef>().current.childrenIds ?? {}
+    const claimed = new Set(children.map((child) => child.id))
+    for (const [parentId, ids] of Object.entries(childrenIds)) {
+      if (parentId === itemId || !ids.some((id) => claimed.has(id))) continue
+      // No rebuild needed: headless-tree rebuilds once it stored this
+      // result, which is right after this returns.
+      childrenIds[parentId] = ids.filter((id) => !claimed.has(id))
+      setTimeout(
+        () => void tree.getItemInstance(parentId)?.invalidateChildrenIds(true),
+      )
+    }
+  }
+
+  /** One read of an item's children list; never rejects. */
+  const readChildren = async (
+    itemId: string,
+    restart: boolean,
+  ): Promise<ChildEntry[]> => {
+    try {
+      const children = await fetchChildren(addressOf(itemId), { restart })
+      return children.map((node) => ({
+        id: node.nodeAggregateId,
+        data: node as NodeTreeItem,
+      }))
+    } catch (e) {
+      // Cancelled by a restarted read elsewhere: keep what is loaded (a
+      // newer load of this item, if any, replaces it - see loadChildren).
+      if (isCancelledError(e)) return loadedChildren(itemId)
+      // The node was deleted out from under us (e.g. published) - no
+      // children to show, and no error worth reporting.
+      reportLoadError(e)
+      return []
+    }
+  }
+
+  /** The item's children as loaded so far (rows with data only). */
+  const loadedChildren = (itemId: string): ChildEntry[] => {
+    const dataRef = tree.getDataRef<AsyncDataLoaderDataRef>().current
+    return (dataRef.childrenIds?.[itemId] ?? []).flatMap((id) => {
+      const data = dataRef.itemData?.[id] as NodeTreeItem | undefined
+      return data === undefined || data === null ? [] : [{ id, data }]
+    })
+  }
 
   /** Re-read the children lists listing this item (see getItem). */
   const refreshParentsOf = (itemId: string) => {

@@ -77,8 +77,13 @@ export function DocumentTree({
       siteNode === null
         ? Promise.resolve(null)
         : fetchNode(siteNode, DOCUMENT_NODE_TYPE),
-    fetchChildren: async (address) => {
-      const children = await fetchChildren(address, DOCUMENT_NODE_TYPE)
+    fetchChildren: async (address, options) => {
+      const children = await fetchChildren(
+        address,
+        DOCUMENT_NODE_TYPE,
+        false,
+        options,
+      )
       return filterDocuments?.(children) ?? children
     },
     loadErrorTitle: t('tree.treeLoadFailed', 'Loading the tree failed'),

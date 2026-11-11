@@ -527,9 +527,25 @@ export async function fetchChildren(
    * page, which inherits its "removed" tag and is invisible without this.
    */
   removed = false,
+  options: {
+    /**
+     * Read the list now, from the server: cancel a read of it that is
+     * already running instead of joining it, and ignore the cache. For
+     * refreshes after a structural write - a read still in flight may have
+     * started before the write and would return the old list (a node moved
+     * out showing in both its old and its new parent).
+     */
+    restart?: boolean
+  } = {},
 ): Promise<Node[]> {
+  const queryKey = neosKeys.nodes.children(address, nodeTypes, removed)
+  if (options.restart) {
+    // Its callers are told by a CancelledError (see isCancelledError).
+    await queryClient.cancelQueries({ queryKey, exact: true })
+  }
   const nodes = await queryClient.fetchQuery({
-    queryKey: neosKeys.nodes.children(address, nodeTypes, removed),
+    queryKey,
+    ...(options.restart ? { staleTime: 0 } : {}),
     queryFn: ({ signal }) =>
       fetchAllPages((page) =>
         unwrap(
