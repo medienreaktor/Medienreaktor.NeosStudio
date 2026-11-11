@@ -918,6 +918,14 @@
         <source>Previous month</source>
         <target xml:lang="km">ខែមុន</target>
       </trans-unit>
+      <trans-unit id="editor.draft.apply" xml:space="preserve">
+        <source>Apply ({0})</source>
+        <target xml:lang="km">អនុវត្ត ({0})</target>
+      </trans-unit>
+      <trans-unit id="editor.draft.revert" xml:space="preserve">
+        <source>Revert ({0})</source>
+        <target xml:lang="km">ត្រឡប់វិញ ({0})</target>
+      </trans-unit>
       <trans-unit id="editor.link.edit" xml:space="preserve">
         <source>Edit link</source>
         <target xml:lang="km">កែសម្រួលតំណ</target>
@@ -949,6 +957,10 @@
       <trans-unit id="editor.pickAssetFailed" xml:space="preserve">
         <source>Picking asset failed</source>
         <target xml:lang="km">ការជ្រើសរើសមេឌាបានបរាជ័យ</target>
+      </trans-unit>
+      <trans-unit id="editor.picker.chosen" xml:space="preserve">
+        <source>Chosen</source>
+        <target xml:lang="km">បានជ្រើសរើស</target>
       </trans-unit>
       <trans-unit id="editor.range.currentValue" xml:space="preserve">
         <source>Current value</source>
@@ -1390,6 +1402,26 @@
         <source>This node does not exist in the current dimension yet - editing it creates an independent variant here.</source>
         <target xml:lang="km">ថ្នាំងនេះមិនទាន់មាននៅក្នុងវិមាត្របច្ចុប្បន្ននៅឡើយទេ - ការកែសម្រួលវានឹងបង្កើតវ៉ារ្យ៉ង់ឯករាជ្យនៅទីនេះ។</target>
       </trans-unit>
+      <trans-unit id="inspector.unsaved.description" xml:space="preserve">
+        <source>Some fields have changes that are not saved yet. Save them before you continue?</source>
+        <target xml:lang="km">វាលមួយចំនួនមានការផ្លាស់ប្តូរដែលមិនទាន់រក្សាទុក។ រក្សាទុកពួកវាមុនពេលបន្តទេ?</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.discard" xml:space="preserve">
+        <source>Discard</source>
+        <target xml:lang="km">បោះបង់</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.save" xml:space="preserve">
+        <source>Save and continue</source>
+        <target xml:lang="km">រក្សាទុក និងបន្ត</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.stay" xml:space="preserve">
+        <source>Keep editing</source>
+        <target xml:lang="km">បន្តកែសម្រួល</target>
+      </trans-unit>
+      <trans-unit id="inspector.unsaved.title" xml:space="preserve">
+        <source>Unsaved changes</source>
+        <target xml:lang="km">ការផ្លាស់ប្តូរមិនទាន់រក្សាទុក</target>
+      </trans-unit>
       <trans-unit id="inspector.validationError" xml:space="preserve">
         <source>{0} validation error</source>
         <target xml:lang="km">កំហុសសុពលភាព {0}</target>
@@ -1626,6 +1658,10 @@
         <source>Copyright</source>
         <target xml:lang="km">រក្សាសិទ្ធិ</target>
       </trans-unit>
+      <trans-unit id="media.createTag" xml:space="preserve">
+        <source>Create tag "{0}"</source>
+        <target xml:lang="km">បង្កើតស្លាក "{0}"</target>
+      </trans-unit>
       <trans-unit id="media.delete" xml:space="preserve">
         <source>Delete</source>
         <target xml:lang="km">លុប</target>
@@ -1734,10 +1770,6 @@
         <source>Saving the metadata failed</source>
         <target xml:lang="km">ការរក្សាទុកទិន្នន័យមេតាបានបរាជ័យ</target>
       </trans-unit>
-      <trans-unit id="media.metadataSaved" xml:space="preserve">
-        <source>Metadata saved.</source>
-        <target xml:lang="km">បានរក្សាទុកទិន្នន័យមេតា។</target>
-      </trans-unit>
       <trans-unit id="media.modified" xml:space="preserve">
         <source>Modified</source>
         <target xml:lang="km">បានកែប្រែ</target>
@@ -1765,10 +1797,6 @@
       <trans-unit id="media.noTags" xml:space="preserve">
         <source>No tags yet</source>
         <target xml:lang="km">មិនទាន់មានស្លាកនៅឡើយទេ</target>
-      </trans-unit>
-      <trans-unit id="media.none" xml:space="preserve">
-        <source>None</source>
-        <target xml:lang="km">គ្មាន</target>
       </trans-unit>
       <trans-unit id="media.nounCollection" xml:space="preserve">
         <source>collection</source>
@@ -1826,13 +1854,21 @@
         <source>Rename {0}</source>
         <target xml:lang="km">ប្ដូរឈ្មោះ {0}</target>
       </trans-unit>
+      <trans-unit id="media.revertChanges" xml:space="preserve">
+        <source>Revert</source>
+        <target xml:lang="km">ត្រឡប់វិញ</target>
+      </trans-unit>
       <trans-unit id="media.save" xml:space="preserve">
         <source>Save</source>
         <target xml:lang="km">រក្សាទុក</target>
       </trans-unit>
-      <trans-unit id="media.saveMetadata" xml:space="preserve">
-        <source>Save metadata</source>
-        <target xml:lang="km">រក្សាទុកទិន្នន័យមេតា</target>
+      <trans-unit id="media.saveAndClose" xml:space="preserve">
+        <source>Save and close</source>
+        <target xml:lang="km">រក្សាទុក និងបិទ</target>
+      </trans-unit>
+      <trans-unit id="media.saved" xml:space="preserve">
+        <source>Saved</source>
+        <target xml:lang="km">បានរក្សាទុក</target>
       </trans-unit>
       <trans-unit id="media.saving" xml:space="preserve">
         <source>Saving…</source>
@@ -1877,6 +1913,10 @@
       <trans-unit id="media.tagAddFailed" xml:space="preserve">
         <source>Adding the tag failed</source>
         <target xml:lang="km">ការបន្ថែមស្លាកបានបរាជ័យ</target>
+      </trans-unit>
+      <trans-unit id="media.tagCreateFailed" xml:space="preserve">
+        <source>Creating the tag failed</source>
+        <target xml:lang="km">ការបង្កើតស្លាកបានបរាជ័យ</target>
       </trans-unit>
       <trans-unit id="media.tagFilterSuspended" xml:space="preserve">
         <source>{0} (not while searching)</source>

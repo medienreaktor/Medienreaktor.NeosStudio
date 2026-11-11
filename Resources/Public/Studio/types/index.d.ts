@@ -14397,13 +14397,14 @@ interface PropertyEditorSubject {
  * hosts remount on a subject change to reset), and report outward through two
  * callbacks. The split is what lets one editor serve both hosts:
  *
- *  - `onCommit` fires at a natural commit boundary (blur, Enter, a discrete
- *    pick) and carries the value worth keeping. The inspector persists here;
+ *  - `onCommit` fires at an explicit commit (Enter, a text editor's inline
+ *    apply button, a discrete pick) and carries the value worth keeping -
+ *    leaving a field does not commit. The inspector persists here;
  *    it is the essential signal, so every editor must call it.
  *  - `onChange` fires on every keystroke-level change, before a commit, so a
  *    host tracking a live working copy stays current. The creation dialog
- *    needs this - its required-field validation gates the Create button, which
- *    would otherwise lag a click behind commit-on-blur. Editors with no
+ *    needs this - it submits what was typed, committed or not, and its
+ *    required-field validation gates the Create button. Editors with no
  *    distinct editing phase (a checkbox, a select) need only call `onCommit`.
  *
  * The host decides what those mean: the inspector auto-saves on commit, the
@@ -14415,12 +14416,19 @@ interface PropertyEditorProps {
   subject: PropertyEditorSubject;
   /** The current value as the node carries it. Seeds the editor's state; `undefined` means unset, `null` clears it. */
   value: unknown;
-  /** Commit a value worth keeping (blur, Enter, a discrete pick). Required - the inspector persists here. */
+  /** Commit a value worth keeping (Enter, an apply button, a discrete pick). Required - the inspector persists here. */
   onCommit: (value: unknown) => void;
   /** Report a live, pre-commit value (per keystroke). Optional - only hosts tracking a working copy (the creation dialog) consume it. */
   onChange?: (value: unknown) => void;
   /** The editor's configuration - ui.inspector.editorOptions / ui.editorOptions for this property. */
   options: Record<string, unknown>;
+  /**
+   * The id for the editor's main control (its input, textarea, trigger
+   * button or editable): the host's label points at it, which names the
+   * control and focuses it on a click. Editors should set it on exactly one
+   * focusable element; absent when the host renders no label.
+   */
+  id?: string;
   /** Focus on mount; the host sets this for the first field of a form. */
   autoFocus?: boolean;
   /**

@@ -26,20 +26,7 @@ import {
 import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { nodeAccessState } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
-import { Button } from '@/components/ui/button'
-import {
-  Combobox,
-  ComboboxCollection,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxGroup,
-  ComboboxGroupLabel,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxStatus,
-  ComboboxTrigger,
-} from '@/components/ui/combobox'
+import { FieldIconButton } from '@/components/ui/field-icon-button'
 import { faClassName } from '@/components/ui/icon'
 import { toast } from '@/components/ui/toast'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
@@ -47,23 +34,15 @@ import { translate } from '@/lib/i18n'
 import { resolveNodeTypeIconClass } from '@/features/tree/nodeTypeIcon'
 import { moveItem } from '@/lib/arrays'
 import { cn } from '@/lib/utils'
+import {
+  ReferencePicker,
+  SelectedItemRow,
+  type ReferenceOption,
+} from './ReferencePicker'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const REFERENCE_EDITOR = 'Neos.Neos/Inspector/Editors/ReferenceEditor'
 export const REFERENCES_EDITOR = 'Neos.Neos/Inspector/Editors/ReferencesEditor'
-
-/** One pickable target, normalized from a node search hit or a data source option. */
-interface ReferenceOption {
-  /** The node aggregate id - what a reference stores. */
-  id: string
-  label: string
-  /** Complete Font Awesome class, already resolved (node type icon or data source icon). */
-  iconClass: string | null
-  /** Disambiguation line under the label - the document breadcrumb for search hits. */
-  secondary?: string
-  group?: string
-  disabled?: boolean
-}
 
 /**
  * The labels of the documents from the site down to a search hit, the hit's
@@ -236,148 +215,6 @@ function useReferenceOptions(
   }
 }
 
-/** Options grouped as the list renders them: ungrouped first (value ''), then one per group value, in first-seen order. */
-interface ReferenceOptionGroup {
-  value: string
-  items: ReferenceOption[]
-}
-
-/**
- * The dropdown shared by both editors - Base UI's combobox: a select-like
- * trigger opening a popup with the search input at the top ("search inside
- * the field") and the grouped option list below - ungrouped options first,
- * then one labeled group per distinct group value in first-seen order. The
- * combobox does the keyboard handling (arrows move the highlight, skipping
- * disabled options; Enter picks; Escape closes); the options arrive filtered
- * (server-side search, or the data source filtered by the caller), so it
- * filters nothing itself.
- */
-function ReferencePicker({
-  triggerContent,
-  disabled = false,
-  options,
-  loading,
-  hint,
-  searchTerm,
-  onSearchTermChange,
-  onPick,
-  open,
-  onOpenChange,
-}: {
-  triggerContent: React.ReactNode
-  disabled?: boolean
-  options: ReferenceOption[]
-  loading: boolean
-  hint: string | null
-  searchTerm: string
-  onSearchTermChange: (term: string) => void
-  onPick: (option: ReferenceOption) => void
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  const groups: ReferenceOptionGroup[] = []
-  for (const option of options) {
-    const value = option.group ?? ''
-    let group = groups.find((candidate) => candidate.value === value)
-    if (!group) {
-      group = { value, items: [] }
-      // Ungrouped options lead.
-      if (value === '') groups.unshift(group)
-      else groups.push(group)
-    }
-    group.items.push(option)
-  }
-
-  return (
-    <Combobox<ReferenceOption>
-      items={groups}
-      filter={null}
-      // Picking only ever adds - the editor shows the selection itself.
-      value={null}
-      onValueChange={(option) => {
-        if (option) onPick(option)
-        onOpenChange(false)
-      }}
-      inputValue={searchTerm}
-      onInputValueChange={(term, details) => {
-        // A pick fills the input with the label - not a search.
-        if (details.reason !== 'item-press') onSearchTermChange(term)
-      }}
-      open={open}
-      onOpenChange={(next) => onOpenChange(next)}
-      itemToStringLabel={(option) => option.label}
-      isItemEqualToValue={(option, other) => option.id === other.id}
-      autoHighlight
-      disabled={disabled}
-    >
-      <ComboboxTrigger>{triggerContent}</ComboboxTrigger>
-      <ComboboxContent>
-        <div className="relative">
-          <i
-            className="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-2 type-icon-xl -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <ComboboxInput
-            placeholder={translate('editor.searchPlaceholder', 'Search…')}
-            className="h-7.5 pl-7.5"
-          />
-        </div>
-        <ComboboxStatus>
-          {loading ? (
-            <>
-              <i className="fas fa-spinner fa-spin type-icon-l" aria-hidden />
-              {translate('editor.searching', 'Searching…')}
-            </>
-          ) : options.length === 0 && hint !== null ? (
-            hint
-          ) : null}
-        </ComboboxStatus>
-        <ComboboxEmpty>
-          {!loading && hint === null
-            ? translate('editor.noMatches', 'No matches')
-            : null}
-        </ComboboxEmpty>
-        <ComboboxList className="mt-1">
-          {(group: ReferenceOptionGroup) => (
-            <ComboboxGroup key={group.value} items={group.items}>
-              {group.value !== '' && (
-                <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
-              )}
-              <ComboboxCollection>
-                {(option: ReferenceOption) => (
-                  <ComboboxItem
-                    key={option.id}
-                    value={option}
-                    disabled={option.disabled}
-                  >
-                    {option.iconClass && (
-                      <i
-                        className={cn(
-                          option.iconClass,
-                          'fa-fw mt-0.5 type-icon-m text-muted-foreground',
-                        )}
-                        aria-hidden
-                      />
-                    )}
-                    <span className="min-w-0">
-                      <span className="block truncate">{option.label}</span>
-                      {option.secondary && (
-                        <span className="block truncate type-small text-muted-foreground">
-                          {option.secondary}
-                        </span>
-                      )}
-                    </span>
-                  </ComboboxItem>
-                )}
-              </ComboboxCollection>
-            </ComboboxGroup>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
-  )
-}
-
 /**
  * Reference (single) and References (multi) editors, modelled on the old UI:
  * search-as-you-type over site documents (or a data source's curated list),
@@ -400,6 +237,7 @@ function ReferencePicker({
  * go-to button (single), like the old UI's reference link.
  */
 function ReferenceEditorBase({
+  id,
   subject,
   onCommit,
   options,
@@ -487,6 +325,7 @@ function ReferenceEditorBase({
   )
 
   const pickerProps = {
+    id,
     options: availableOptions,
     loading: picker.loading,
     hint: picker.hint,
@@ -529,25 +368,18 @@ function ReferenceEditorBase({
           />
         </div>
         {display?.documentAddress && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title={goToPageLabel}
-            aria-label={goToPageLabel}
+          <FieldIconButton
+            icon="fa-arrow-up-right-from-square"
+            label={goToPageLabel}
             onClick={() => navigateToNode(display.documentAddress!)}
-          >
-            <i className="fas fa-arrow-up-right-from-square" aria-hidden />
-          </Button>
+          />
         )}
         {current !== null && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title={translate('editor.remove', 'Remove')}
+          <FieldIconButton
+            icon="fa-xmark"
+            label={translate('editor.remove', 'Remove')}
             onClick={() => commit([])}
-          >
-            <i className="fas fa-xmark" aria-hidden />
-          </Button>
+          />
         )}
       </div>
     )
@@ -575,7 +407,7 @@ function ReferenceEditorBase({
       {selected.map((id, index) => {
         const display = displayFor(id)
         return (
-          <div
+          <SelectedItemRow
             key={id}
             draggable={draggable}
             onDragStart={(event) => {
@@ -590,47 +422,32 @@ function ReferenceEditorBase({
               handleDragOver(index)
             }}
             onDragEnd={handleDragEnd}
-            className={cn(
-              'flex h-8.5 items-center gap-2 rounded-md border border-border bg-background px-2 type-body',
-              dragIndex === index && 'opacity-50',
-            )}
-          >
-            {draggable && (
-              <i
-                className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
-                aria-hidden
-              />
-            )}
-            {display.iconClass && (
-              <i
-                className={cn(
-                  display.iconClass,
-                  'fa-fw type-icon-m text-muted-foreground',
-                )}
-                aria-hidden
-              />
-            )}
-            {display.documentAddress ? (
-              <button
-                type="button"
-                title={goToPageLabel}
-                onClick={() => navigateToNode(display.documentAddress!)}
-                className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              >
-                {display.label}
-              </button>
-            ) : (
-              <span className="min-w-0 flex-1 truncate">{display.label}</span>
-            )}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              title={translate('editor.remove', 'Remove')}
-              onClick={() => commit(selected.filter((other) => other !== id))}
-            >
-              <i className="fas fa-xmark" aria-hidden />
-            </Button>
-          </div>
+            className={cn(dragIndex === index && 'opacity-50')}
+            leading={
+              draggable && (
+                <i
+                  className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
+                  aria-hidden
+                />
+              )
+            }
+            iconClass={display.iconClass}
+            label={
+              display.documentAddress ? (
+                <button
+                  type="button"
+                  title={goToPageLabel}
+                  onClick={() => navigateToNode(display.documentAddress!)}
+                  className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  {display.label}
+                </button>
+              ) : (
+                display.label
+              )
+            }
+            onRemove={() => commit(selected.filter((other) => other !== id))}
+          />
         )
       })}
       <ReferencePicker

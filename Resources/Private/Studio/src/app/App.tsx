@@ -7,6 +7,7 @@ import { neosKeys } from '@/api/neos/keys'
 import {
   nodeAddressOf,
   sameDimensionSpacePoint,
+  sameNodeAddress,
   type NodeAddress,
 } from '@/api/neos/schema'
 import type { EditingElement } from '@/features/collaboration/types'
@@ -57,6 +58,10 @@ import {
   AssetPickerPanelBridge,
   AssetPickerProvider,
 } from '@/features/media/AssetPicker'
+import {
+  guardNavigation,
+  UnsavedChangesDialog,
+} from '@/features/inspector/unsavedChanges'
 import { ModalProvider } from '@/features/modals/ModalHost'
 import { LegacyModulesMenu } from '@/features/navigation/LegacyModulesMenu'
 import {
@@ -221,21 +226,43 @@ function Shell() {
     signals.reloadPreview()
   }
 
+  // Every user-driven selection change goes through the unsaved-changes
+  // guard: it remounts the inspector, which would drop a pending draft.
+  // Re-selecting the inspected node itself changes nothing - no question.
+  const guardSelection = (target: NodeAddress | null, run: () => void) => {
+    if (
+      target &&
+      inspectedNode &&
+      sameNodeAddress(target, nodeAddressOf(inspectedNode))
+    ) {
+      run()
+      return
+    }
+    guardNavigation(run)
+  }
+
   // The app state and actions panels read via useStudio(). Panels register
   // themselves in the panel registry (see features/panels/builtin.tsx); their
   // placement (sidebar dock, floating, tab grouping) is the panel system's
   // business. The actions keep their identity, the state changes only with
   // what it holds - the panels re-render when there is something new to show.
   const actions = useStableCallbacks<StudioActions>({
-    selectDocument: selection.selectDocument,
-    inspectNode: selection.inspectNode,
+    selectDocument: (node) =>
+      guardSelection(nodeAddressOf(node), () => selection.selectDocument(node)),
+    inspectNode: (node) =>
+      guardSelection(nodeAddressOf(node), () => selection.inspectNode(node)),
     // A click in the preview: inspect the node and reveal it in the outliner
     // (via inspectedNode). Fine to fail - e.g. the node vanished meanwhile.
-    inspectAddress: selection.inspectAddress,
-    navigateToNode,
-    navigateToNodeInWorkspace,
+    inspectAddress: (address) =>
+      guardSelection(address, () => selection.inspectAddress(address)),
+    navigateToNode: (address) =>
+      guardSelection(address, () => navigateToNode(address)),
+    navigateToNodeInWorkspace: (address, name) =>
+      guardSelection(null, () => navigateToNodeInWorkspace(address, name)),
     checkoutWorkspace: (name) =>
-      switchEditingContext(name === personalWorkspace?.name ? null : name),
+      guardSelection(null, () =>
+        switchEditingContext(name === personalWorkspace?.name ? null : name),
+      ),
     reportInlineEdit: (addresses) => signals.reportEdit(addresses),
     nodeEdited: (address, options) => {
       signals.reportEdit([address], { kind: options?.kind })
@@ -278,16 +305,23 @@ function Shell() {
   // The shell's own handlers, stable for the same reason: the bridge and the
   // header take them as props.
   const handlers = useStableCallbacks({
-    switchEditingContext,
-    changeDimension,
+    switchEditingContext: (name: string | null) =>
+      guardSelection(null, () => switchEditingContext(name)),
+    // The lockout's way out: the content repository refuses the account's
+    // writes already, so pending drafts could not be saved - no question.
+    forceSwitchEditingContext: switchEditingContext,
+    changeDimension: (point: string) =>
+      guardSelection(null, () => changeDimension(point)),
     selectSite: (nodeName: string) => {
       const next = editing.sites.find((s) => s.nodeName === nodeName)
       if (!next) return
-      editing.selectSite(next)
-      // The stored document belongs to the previous site - a reload should
-      // land on the new site's root, not re-resolve a document from the old
-      // one.
-      selection.clear({ forget: true })
+      guardSelection(null, () => {
+        editing.selectSite(next)
+        // The stored document belongs to the previous site - a reload should
+        // land on the new site's root, not re-resolve a document from the old
+        // one.
+        selection.clear({ forget: true })
+      })
     },
     variantCreated: (point: string) => {
       // The new variants exist now - drop the workspace's cached node reads
@@ -447,6 +481,7 @@ function Shell() {
                   dialog. Inside ModalProvider and SidebarProvider so the
                   settings and sidebar shortcuts reach their contexts. */}
                 <ShortcutHost />
+                <UnsavedChangesDialog />
                 <AssetPickerPanelBridge />
                 {/* The collaborative session's engine: presence heartbeats and
                   the change-feed tail. Mounted (and thus polling) only while
@@ -521,7 +556,7 @@ function Shell() {
                     workspaces={editing.workspaces}
                     personalWorkspace={personalWorkspace}
                     activeWorkspace={activeWorkspace}
-                    onSwitchEditingContext={handlers.switchEditingContext}
+                    onSwitchEditingContext={handlers.forceSwitchEditingContext}
                   />
                 </SidebarInset>
               </PanelsProvider>

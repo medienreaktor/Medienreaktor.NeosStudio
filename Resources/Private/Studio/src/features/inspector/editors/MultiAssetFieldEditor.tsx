@@ -35,6 +35,7 @@ import type { PropertyEditorProps } from './registry'
  * editor would otherwise never learn about).
  */
 export function MultiAssetFieldEditor({
+  id,
   subject,
   value,
   onCommit,
@@ -128,6 +129,7 @@ export function MultiAssetFieldEditor({
         />
       ))}
       <Button
+        id={id}
         variant="outline"
         size="sm"
         onClick={add}

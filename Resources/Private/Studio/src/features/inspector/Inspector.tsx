@@ -227,6 +227,21 @@ export function InspectorPanel({
     setVisibleTabs(evaluatedTabs)
   }
 
+  const activeTab =
+    visibleTabs?.some((tab) => tab.id === selectedTab) === true
+      ? selectedTab
+      : (visibleTabs?.[0]?.id ?? null)
+  // Tabs mount on their first visit and then stay mounted (hidden), so an
+  // unsaved draft survives switching tabs - the editors save explicitly, a
+  // tab switch must not drop what was typed. Unvisited tabs cost nothing.
+  // Adjusted while rendering, like visibleTabs.
+  const [visitedTabs, setVisitedTabs] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  )
+  if (activeTab !== null && !visitedTabs.has(activeTab)) {
+    setVisitedTabs(new Set(visitedTabs).add(activeTab))
+  }
+
   // Validate every visible property's current value (persisted, overlaid with
   // live edits) - like the classic UI's validation of transient values, so
   // errors show while typing, not only after a failed save attempt. Hidden
@@ -417,11 +432,7 @@ export function InspectorPanel({
               // so the property editors (and their in-flight drafts) survive
               // ClientEval visibility changes and node switches.
               <Tabs
-                value={
-                  visibleTabs.some((tab) => tab.id === selectedTab)
-                    ? selectedTab
-                    : visibleTabs[0]?.id
-                }
+                value={activeTab}
                 onValueChange={(value) => setSelectedTab(value as string)}
               >
                 {/* Wrapping, not scrolling: the inspector panel is narrow and
@@ -492,18 +503,20 @@ export function InspectorPanel({
                   <TabsContent
                     key={tab.id}
                     value={tab.id}
+                    keepMounted
                     className="space-y-3.5"
                   >
-                    {tab.groups.map((group) => (
-                      <PropertyGroup
-                        key={group.id}
-                        group={group}
-                        node={node}
-                        validationErrors={validationErrors}
-                        onSave={save}
-                        onLiveChange={reportLiveChange}
-                      />
-                    ))}
+                    {visitedTabs.has(tab.id) &&
+                      tab.groups.map((group) => (
+                        <PropertyGroup
+                          key={group.id}
+                          group={group}
+                          node={node}
+                          validationErrors={validationErrors}
+                          onSave={save}
+                          onLiveChange={reportLiveChange}
+                        />
+                      ))}
                   </TabsContent>
                 ))}
               </Tabs>

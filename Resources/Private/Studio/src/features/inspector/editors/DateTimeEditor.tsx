@@ -40,6 +40,7 @@ export const DATE_TIME_EDITOR = 'Neos.Neos/Inspector/Editors/DateTimeEditor'
  * here too.
  */
 export const DateTimeEditor: PropertyEditorComponent = ({
+  id,
   value,
   onCommit,
   options,
@@ -105,6 +106,9 @@ export const DateTimeEditor: PropertyEditorComponent = ({
     <Popover open={open} onOpenChange={openMonth}>
       <div className="relative">
         <PopoverTrigger
+          id={id}
+          // The property label opens the picker (see FieldLabel).
+          data-label-opens="click"
           disabled={disabled}
           render={
             <Button

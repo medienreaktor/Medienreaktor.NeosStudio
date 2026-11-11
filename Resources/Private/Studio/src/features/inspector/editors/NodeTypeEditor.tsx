@@ -48,6 +48,7 @@ const typeLabel = (nodeType: NodeType): string =>
  * and when the position offers no real alternative.
  */
 export const NodeTypeEditor: PropertyEditorComponent = ({
+  id,
   value,
   onCommit,
   nodeAddress,
@@ -167,7 +168,7 @@ export const NodeTypeEditor: PropertyEditorComponent = ({
         if (selected && selected !== currentType) onCommit(selected)
       }}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger id={id} className="w-full">
         <SelectValue>
           {(selected: string | null) => {
             const name = selected ?? currentType
