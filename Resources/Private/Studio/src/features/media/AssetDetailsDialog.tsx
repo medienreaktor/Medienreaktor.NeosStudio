@@ -112,9 +112,14 @@ export function AssetDetailsDialog({
           <DialogTitle className="truncate pr-5.5">{asset.label}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-5.5 md:grid-cols-2">
+        {/* A fixed body height, so the dialog never resizes (and, being
+            centred, never jumps) as tags, collections or usages come and go -
+            the content scrolls instead: the whole body on narrow screens,
+            each column on its own side by side. The stable scrollbar gutter
+            keeps a scrollbar that appears from narrowing the column. */}
+        <div className="grid h-[min(70vh,42rem)] gap-5.5 overflow-y-auto [scrollbar-gutter:stable] md:grid-cols-2 md:overflow-visible">
           {/* Left: preview + read-only file facts. */}
-          <div className="space-y-3.5 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
+          <div className="space-y-3.5 md:h-full md:min-h-0 md:overflow-y-auto md:pr-1 md:[scrollbar-gutter:stable]">
             <div className="grid place-items-center overflow-hidden rounded-md bg-card p-2">
               <AssetThumb asset={asset} preview />
             </div>
@@ -122,7 +127,7 @@ export function AssetDetailsDialog({
           </div>
 
           {/* Right: editable metadata, tags, collections and usage. */}
-          <div className="space-y-3.5 md:max-h-[70vh] md:overflow-y-auto md:pr-1">
+          <div className="space-y-3.5 md:h-full md:min-h-0 md:overflow-y-auto md:pr-1 md:[scrollbar-gutter:stable]">
             {!isImportedAsset(asset) && isRemoteAsset(asset) && (
               <RemoteImport asset={asset} />
             )}
