@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 import {
   createAssetTag,
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DraftField, isApplyChord } from '@/components/ui/draft-field'
+import { FieldLabel } from '@/components/ui/field-label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -451,7 +452,9 @@ function MetadataField({
   onApply: () => void
   onRevert: () => void
 }) {
+  const id = useId()
   const fieldProps = {
+    id,
     value,
     'aria-label': label,
     'data-draft-target': '',
@@ -475,7 +478,7 @@ function MetadataField({
   }
 
   return (
-    <Field label={label} status={status}>
+    <Field label={label} htmlFor={id} status={status}>
       <DraftField
         dirty={dirty}
         placement={multiline ? 'bottom' : 'inline'}
@@ -654,6 +657,7 @@ function AssignmentField({
   createLabel?: (term: string) => string
   onCreate?: (label: string) => Promise<void>
 }) {
+  const id = useId()
   const [searchTerm, setSearchTerm] = useState('')
   const [open, setOpen] = useState(false)
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
@@ -689,7 +693,7 @@ function AssignmentField({
   }
 
   return (
-    <Field label={label}>
+    <Field label={label} htmlFor={id}>
       <div className="flex flex-col gap-1">
         {assigned.map((entry) => (
           <SelectedItemRow
@@ -702,6 +706,7 @@ function AssignmentField({
           />
         ))}
         <ReferencePicker
+          id={id}
           triggerContent={
             <span className="text-muted-foreground">{placeholder}</span>
           }
@@ -816,10 +821,16 @@ function DeleteButton({
 
 function Field({
   label,
+  htmlFor,
   status = 'idle',
   children,
 }: {
   label: string
+  /**
+   * The id of the control the label names and focuses (see FieldLabel).
+   * Without one (the usage table) the caption is a heading.
+   */
+  htmlFor?: string
   /** A text field's save state, shown at the end of the label row. */
   status?: SaveStatus
   children: React.ReactNode
@@ -829,7 +840,11 @@ function Field({
   return (
     <div>
       <div className="mb-1 flex items-center gap-1.5 type-small text-foreground">
-        <h3>{label}</h3>
+        {htmlFor ? (
+          <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
+        ) : (
+          <h3>{label}</h3>
+        )}
         {status !== 'idle' && (
           <span
             role="status"

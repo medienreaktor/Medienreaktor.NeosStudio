@@ -1,4 +1,12 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { FieldLabel } from '@/components/ui/field-label'
 import {
   configuredLabel,
   type NodeTypeMap,
@@ -385,6 +393,8 @@ function ElementEditor({
   )
   const definition = usePropertyEditor(editorId)
   const Editor = definition?.component
+  // The editor's main control carries this id; the label points at it.
+  const controlId = useId()
   const invalid = errors !== undefined && errors.length > 0
 
   const control = Editor ? (
@@ -395,6 +405,7 @@ function ElementEditor({
       resetKeys={[Editor]}
     >
       <Editor
+        id={controlId}
         subject={{ name: element.name, type, label: element.label }}
         value={value}
         options={options}
@@ -409,6 +420,7 @@ function ElementEditor({
     </ExtensionBoundary>
   ) : (
     <Input
+      id={controlId}
       autoFocus={autoFocus}
       value={typeof value === 'string' ? value : ''}
       aria-invalid={invalid || undefined}
@@ -428,13 +440,19 @@ function ElementEditor({
   }
 
   return (
-    <label className="flex flex-col gap-1.5 type-body">
-      <span className="type-small-strong text-muted-foreground">
+    // Not a wrapping <label>: a composite control (asset, references) would
+    // get its FIRST button clicked from anywhere on the label text - which
+    // could be a remove button. The label points at the main control instead.
+    <div className="flex flex-col gap-1.5 type-body">
+      <FieldLabel
+        htmlFor={controlId}
+        className="type-small-strong text-muted-foreground"
+      >
         {element.label}
         {element.required && <span className="text-destructive-text"> *</span>}
-      </span>
+      </FieldLabel>
       {control}
       <ValidationErrors errors={errors} />
-    </label>
+    </div>
   )
 }

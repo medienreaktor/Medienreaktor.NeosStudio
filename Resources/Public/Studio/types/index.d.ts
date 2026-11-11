@@ -14422,6 +14422,13 @@ interface PropertyEditorProps {
   onChange?: (value: unknown) => void;
   /** The editor's configuration - ui.inspector.editorOptions / ui.editorOptions for this property. */
   options: Record<string, unknown>;
+  /**
+   * The id for the editor's main control (its input, textarea, trigger
+   * button or editable): the host's label points at it, which names the
+   * control and focuses it on a click. Editors should set it on exactly one
+   * focusable element; absent when the host renders no label.
+   */
+  id?: string;
   /** Focus on mount; the host sets this for the first field of a form. */
   autoFocus?: boolean;
   /**

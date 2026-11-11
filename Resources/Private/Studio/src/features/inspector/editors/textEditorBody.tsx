@@ -26,6 +26,7 @@ import type { PropertyEditorProps } from './registry'
  */
 export function TextEditorBody({
   multiline,
+  id,
   subject,
   value,
   onCommit,
@@ -96,6 +97,7 @@ export function TextEditorBody({
   )
 
   const fieldProps = {
+    id,
     autoFocus,
     value: draft,
     placeholder,

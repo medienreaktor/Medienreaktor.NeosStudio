@@ -66,7 +66,12 @@ export const SelectBoxEditor: PropertyEditorComponent = (props) => {
 }
 
 /** The classic editorOptions.values variant, options sorted by position. */
-function StaticSelectBox({ value, onCommit, options }: PropertyEditorProps) {
+function StaticSelectBox({
+  id,
+  value,
+  onCommit,
+  options,
+}: PropertyEditorProps) {
   const valuesConfig = (options.values ?? {}) as Record<
     string,
     SelectBoxValueConfig | null
@@ -87,6 +92,7 @@ function StaticSelectBox({ value, onCommit, options }: PropertyEditorProps) {
 
   return (
     <SelectBoxControl
+      id={id}
       items={items}
       value={value}
       onCommit={onCommit}
@@ -105,6 +111,7 @@ function StaticSelectBox({ value, onCommit, options }: PropertyEditorProps) {
  * has no bearer-token equivalent and is not supported.
  */
 function DataSourceSelectBox({
+  id,
   value,
   onCommit,
   options,
@@ -152,6 +159,7 @@ function DataSourceSelectBox({
 
   return (
     <SelectBoxControl
+      id={id}
       items={items}
       value={value}
       onCommit={onCommit}
@@ -197,12 +205,15 @@ function GroupedOptions({ items }: { items: SelectBoxItem[] }) {
 
 /** Dispatch on multiplicity; both controls work on string keys and commit the items' original values. */
 function SelectBoxControl({
+  id,
   items,
   value,
   onCommit,
   options,
   disabled = false,
 }: {
+  /** The trigger's id - the property label points at it. */
+  id?: string
   items: SelectBoxItem[]
   value: unknown
   onCommit: (value: unknown) => void
@@ -214,6 +225,7 @@ function SelectBoxControl({
   if (options.multiple === true) {
     return (
       <MultiSelectList
+        id={id}
         items={items}
         value={value}
         onCommit={onCommit}
@@ -228,6 +240,7 @@ function SelectBoxControl({
 
   return (
     <SingleSelect
+      id={id}
       items={items}
       value={value}
       onCommit={onCommit}
@@ -266,6 +279,7 @@ function multiKeys(value: unknown): string[] {
  * adopts a value changed elsewhere (no editing phase to protect).
  */
 function SingleSelect({
+  id,
   items,
   value,
   onCommit,
@@ -273,6 +287,7 @@ function SingleSelect({
   placeholder,
   disabled,
 }: {
+  id?: string
   items: SelectBoxItem[]
   value: unknown
   onCommit: (value: unknown) => void
@@ -316,7 +331,7 @@ function SingleSelect({
         onCommit(key === null ? null : valueFor(key))
       }}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger id={id} className="w-full">
         <SelectValue>
           {(current: string | null) =>
             current !== null ? (
@@ -350,6 +365,7 @@ function SingleSelect({
  * and follows a value changed elsewhere, except while a row is dragged.
  */
 function MultiSelectList({
+  id,
   items,
   value,
   onCommit,
@@ -357,6 +373,7 @@ function MultiSelectList({
   placeholder,
   disabled,
 }: {
+  id?: string
   items: SelectBoxItem[]
   value: unknown
   onCommit: (value: unknown) => void
@@ -463,7 +480,7 @@ function MultiSelectList({
           if (typeof next === 'string') commit([...selected, next])
         }}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger id={id} className="w-full">
           <SelectValue>
             {() => <span className="text-muted-foreground">{placeholder}</span>}
           </SelectValue>

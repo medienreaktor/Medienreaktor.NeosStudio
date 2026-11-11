@@ -29,6 +29,7 @@ export const URI_PATH_SEGMENT_EDITOR =
  * nodeAddress is present), not in the creation dialog.
  */
 export const UriPathSegmentEditor: PropertyEditorComponent = ({
+  id,
   subject,
   value,
   onCommit,
@@ -111,6 +112,7 @@ export const UriPathSegmentEditor: PropertyEditorComponent = ({
         onRevert={revert}
       >
         <Input
+          id={id}
           data-draft-target=""
           autoFocus={autoFocus}
           value={draft}

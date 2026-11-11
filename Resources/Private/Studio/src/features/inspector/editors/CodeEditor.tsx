@@ -143,6 +143,7 @@ function CodeArea({
  * `readonly` open the dialog read-only.
  */
 export const CodeEditor: PropertyEditorComponent = ({
+  id,
   subject,
   value,
   onCommit,
@@ -182,6 +183,7 @@ export const CodeEditor: PropertyEditorComponent = ({
   return (
     <>
       <button
+        id={id}
         type="button"
         onClick={openDialog}
         autoFocus={autoFocus}

@@ -70,6 +70,7 @@ export const RichTextEditor: PropertyEditorComponent = ({
   options,
   onCommit,
   onChange,
+  id,
   subject,
   nodeAddress,
   autoFocus,
@@ -125,6 +126,8 @@ export const RichTextEditor: PropertyEditorComponent = ({
       element,
       content: typeof value === 'string' ? value : '',
       editorProps: {
+        // The editable itself is the labelled control (see FieldLabel).
+        attributes: id ? { id } : {},
         handleKeyDown: (_view, event) => {
           if (event.key === 'Escape') {
             instance.commands.setContent(committedHtml.current)

@@ -36,6 +36,7 @@ export const LINK_EDITOR = 'Neos.Neos/Inspector/Editors/LinkEditor'
  * value of another one (javascript:, data:, ...) shows an inline error.
  */
 export const LinkFieldEditor: PropertyEditorComponent = ({
+  id,
   subject,
   value,
   onCommit,
@@ -95,6 +96,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
     <>
       {href === null ? (
         <button
+          id={id}
           type="button"
           onClick={() => setOpen(true)}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-2.5 type-body text-muted-foreground hover:border-placeholder hover:text-foreground"
@@ -111,6 +113,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
             {label}
           </span>
           <Button
+            id={id}
             variant="ghost"
             size="icon-sm"
             onClick={() => setOpen(true)}

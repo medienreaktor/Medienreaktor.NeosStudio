@@ -33,6 +33,7 @@ import { translate as t } from '@/lib/i18n'
  * this editor would otherwise never learn about.
  */
 export function AssetFieldEditor({
+  id,
   subject,
   value,
   onCommit,
@@ -116,6 +117,7 @@ export function AssetFieldEditor({
     const iconClass = kind === 'image' ? 'fa-image' : 'fa-paperclip'
     return (
       <button
+        id={id}
         type="button"
         onClick={select}
         className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-3.5 type-body text-muted-foreground hover:border-placeholder hover:text-foreground"
@@ -154,6 +156,7 @@ export function AssetFieldEditor({
           {/* Covers the preview: invisible until hover, but clickable throughout
               so a click anywhere on the preview reselects. */}
           <button
+            id={id}
             type="button"
             onClick={select}
             className="absolute inset-0 flex items-center justify-center bg-scrim/60 opacity-0 transition-opacity group-hover:opacity-100"
@@ -231,7 +234,7 @@ export function AssetFieldEditor({
               : t('editor.loading', 'Loading…')}
         </div>
       </div>
-      <Button variant="outline" size="sm" onClick={select}>
+      <Button id={id} variant="outline" size="sm" onClick={select}>
         {t('editor.select', 'Select…')}
       </Button>
       <Button

@@ -45,6 +45,7 @@ function rangeOptions(options: Record<string, unknown>): RangeOptions {
  * blurs - one save per adjustment instead of one per tick.
  */
 export const RangeEditor: PropertyEditorComponent = ({
+  id,
   value,
   options,
   onCommit,
@@ -96,6 +97,7 @@ export const RangeEditor: PropertyEditorComponent = ({
     >
       <span className="flex h-8.5 w-1/3 shrink-0 items-center gap-1.5">
         <Input
+          id={id}
           type="text"
           inputMode="decimal"
           value={draft}

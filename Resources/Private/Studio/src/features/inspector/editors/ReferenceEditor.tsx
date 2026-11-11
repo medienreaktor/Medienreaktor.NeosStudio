@@ -237,6 +237,7 @@ function useReferenceOptions(
  * go-to button (single), like the old UI's reference link.
  */
 function ReferenceEditorBase({
+  id,
   subject,
   onCommit,
   options,
@@ -324,6 +325,7 @@ function ReferenceEditorBase({
   )
 
   const pickerProps = {
+    id,
     options: availableOptions,
     loading: picker.loading,
     hint: picker.hint,

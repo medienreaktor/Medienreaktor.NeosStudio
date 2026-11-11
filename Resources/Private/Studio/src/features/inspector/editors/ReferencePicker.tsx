@@ -138,6 +138,7 @@ interface ReferenceOptionGroup {
  * collapse the highlighted entry.
  */
 export function ReferencePicker({
+  id,
   triggerContent,
   disabled = false,
   options,
@@ -150,6 +151,8 @@ export function ReferencePicker({
   onOpenChange,
   closeOnPick = true,
 }: {
+  /** The trigger's id - a field label points at it. */
+  id?: string
   triggerContent: React.ReactNode
   disabled?: boolean
   options: ReferenceOption[]
@@ -208,7 +211,7 @@ export function ReferencePicker({
       }}
       disabled={disabled}
     >
-      <ComboboxTrigger>{triggerContent}</ComboboxTrigger>
+      <ComboboxTrigger id={id}>{triggerContent}</ComboboxTrigger>
       <ComboboxContent>
         <div className="relative">
           <i

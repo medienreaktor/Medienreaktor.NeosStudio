@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import type { NodeAddress, PropertyScope } from '@/api/neos/schema'
 import {
@@ -5,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { FieldLabel } from '@/components/ui/field-label'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -44,6 +46,8 @@ export function PropertyEditor({
   onLiveChange?: (propertyName: string, value: unknown) => void
 }) {
   const definition = usePropertyEditor(property.editor)
+  // The editor's main control carries this id; the label points at it.
+  const controlId = useId()
   if (!definition) {
     return (
       <Labeled
@@ -77,6 +81,7 @@ export function PropertyEditor({
           type: property.type,
           label: property.label,
         }}
+        id={controlId}
         value={value}
         options={property.editorOptions}
         nodeAddress={nodeAddress}
@@ -120,7 +125,12 @@ export function PropertyEditor({
     )
   }
   return (
-    <Labeled label={property.label} scope={property.scope} help={property.help}>
+    <Labeled
+      label={property.label}
+      htmlFor={controlId}
+      scope={property.scope}
+      help={property.help}
+    >
       {editor}
       {inlineErrors}
     </Labeled>
@@ -130,11 +140,18 @@ export function PropertyEditor({
 /** The property label above its control - the default inspector field layout. */
 export function Labeled({
   label,
+  htmlFor,
   scope,
   help,
   children,
 }: {
   label: string
+  /**
+   * The id of the control the label names (and focuses when clicked) - see
+   * FieldLabel. Without one (a view, a read-only value) the caption is plain
+   * text: there is no control to name.
+   */
+  htmlFor?: string
   /** When given and not "node", the label carries the variant-spanning hint icon. */
   scope?: PropertyScope
   /** When given, the label carries the ui.help popover trigger. */
@@ -151,10 +168,13 @@ export function Labeled({
           spansVariants ? 'text-variant-text' : 'text-foreground',
         )}
       >
-        {/* The hint icons sit OUTSIDE the label element: a label forwards
-            clicks to its first labelable descendant, which would open the
-            popover from anywhere on the label text. */}
-        <label>{label}</label>
+        {/* The hint icons sit OUTSIDE the label element, so a click on them
+            never reaches the label (which would focus the control). */}
+        {htmlFor ? (
+          <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
+        ) : (
+          <span>{label}</span>
+        )}
         {help && <HelpHint help={help} />}
         {spansVariants && <ScopeHint scope={scope} />}
       </div>
