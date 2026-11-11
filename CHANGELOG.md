@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-11
+
+### Added
+
+- Undo and redo buttons in the header for your own edits in the workspace
+  being edited: property and reference changes, hiding and unhiding,
+  deleting, moving (by drag or cut and paste), creating, and pasting copies.
+  Their tooltips name the edit, e.g. "Undo: Change “Title” of “Home”", and
+  the page of a content element that isn't on the page shown. After an
+  undo or redo, Studio goes to where it took effect: the page, with the
+  changed element selected (a removed page: the page above it).
+  Typing in one field is one undo step. An undo is refused when someone
+  changed the same thing again since. The history lasts for the browser
+  session and is cleared when the workspace is published, discarded or
+  synchronized.
+
 ## [2.1.1] - 2026-11-11
 
 ### Fixed
@@ -1486,7 +1502,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.5...2.1.0
 [2.0.5]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.0.4...2.0.5

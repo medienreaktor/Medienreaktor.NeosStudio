@@ -104,7 +104,7 @@ A plugin is a small IIFE bundle that uses the shell's plugin API on `window.Neos
 TypeScript types come as one declaration file, `Resources/Public/Studio/types/index.d.ts`, built by `npm run build:plugin-types` (the end of `npm run build`). The same directory is a types-only npm package named like the import, published with every Studio release, so a plugin installs the version matching the Studio it targets:
 
 ```bash
-npm install -D @medienreaktor/neos-studio@2.1.1
+npm install -D @medienreaktor/neos-studio@2.2.0
 ```
 
 npm adds `@types/react` and `@types/react-dom` as peers. The package contains no JavaScript: mark `@medienreaktor/neos-studio`, `react`, `react-dom` and `react/jsx-runtime` external in your bundler and map them to the globals the shell publishes (`NeosStudio`, `React`, `ReactDOM`, `ReactJSXRuntime`; see the example plugin's `vite.config.ts`). A plugin that forgets this fails at build time instead of bundling a stub.
