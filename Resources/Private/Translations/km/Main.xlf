@@ -3066,6 +3066,84 @@
         <source>Loading the tree failed</source>
         <target xml:lang="km">ការផ្ទុកមែកធាងបានបរាជ័យ</target>
       </trans-unit>
+      <trans-unit id="undo.changedMeanwhile" xml:space="preserve">
+        <source>Someone changed it again since, so it was left as it is: {0}</source>
+        <target xml:lang="km">វាត្រូវបានផ្លាស់ប្តូរម្តងទៀតតាំងពីពេលនោះ ដូច្នេះវាត្រូវបានទុកដដែល៖ {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.create" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="km">បង្កើត {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.delete" xml:space="preserve">
+        <source>Delete {0}</source>
+        <target xml:lang="km">លុប {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.edit" xml:space="preserve">
+        <source>Change “{0}” of “{1}”</source>
+        <target xml:lang="km">ផ្លាស់ប្តូរ “{0}” នៃ “{1}”</target>
+      </trans-unit>
+      <group id="undo.elements" restype="x-gettext-plurals">
+        <trans-unit id="undo.elements[0]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="km">{0} ធាតុ</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="undo.hide" xml:space="preserve">
+        <source>Hide {0}</source>
+        <target xml:lang="km">លាក់ {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.move" xml:space="preserve">
+        <source>Move {0}</source>
+        <target xml:lang="km">ផ្លាស់ទី {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToRedo" xml:space="preserve">
+        <source>Nothing to redo</source>
+        <target xml:lang="km">គ្មានអ្វីត្រូវធ្វើវិញទេ</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToUndo" xml:space="preserve">
+        <source>Nothing to undo</source>
+        <target xml:lang="km">គ្មានអ្វីត្រូវមិនធ្វើវិញទេ</target>
+      </trans-unit>
+      <trans-unit id="undo.onPage" xml:space="preserve">
+        <source>{0} (on “{1}”)</source>
+        <target xml:lang="km">{0} (នៅលើ “{1}”)</target>
+      </trans-unit>
+      <trans-unit id="undo.paste" xml:space="preserve">
+        <source>Paste {0}</source>
+        <target xml:lang="km">បិទភ្ជាប់ {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.quoted" xml:space="preserve">
+        <source>“{0}”</source>
+        <target xml:lang="km">“{0}”</target>
+      </trans-unit>
+      <trans-unit id="undo.redo" xml:space="preserve">
+        <source>Redo</source>
+        <target xml:lang="km">ធ្វើវិញ</target>
+      </trans-unit>
+      <trans-unit id="undo.redoAction" xml:space="preserve">
+        <source>Redo: {0}</source>
+        <target xml:lang="km">ធ្វើវិញ៖ {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.redoFailed" xml:space="preserve">
+        <source>Redo failed</source>
+        <target xml:lang="km">ការធ្វើវិញបានបរាជ័យ</target>
+      </trans-unit>
+      <trans-unit id="undo.undo" xml:space="preserve">
+        <source>Undo</source>
+        <target xml:lang="km">មិនធ្វើវិញ</target>
+      </trans-unit>
+      <trans-unit id="undo.undoAction" xml:space="preserve">
+        <source>Undo: {0}</source>
+        <target xml:lang="km">មិនធ្វើវិញ៖ {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.undoFailed" xml:space="preserve">
+        <source>Undo failed</source>
+        <target xml:lang="km">ការមិនធ្វើវិញបានបរាជ័យ</target>
+      </trans-unit>
+      <trans-unit id="undo.unhide" xml:space="preserve">
+        <source>Unhide {0}</source>
+        <target xml:lang="km">បង្ហាញ {0}</target>
+      </trans-unit>
       <trans-unit id="userMenu.label" xml:space="preserve">
         <source>User menu</source>
         <target xml:lang="km">ម៉ឺនុយអ្នកប្រើប្រាស់</target>

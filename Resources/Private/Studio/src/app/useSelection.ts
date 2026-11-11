@@ -95,6 +95,20 @@ export type Selection = {
     beforeSelect?: (node: Node) => void,
   ) => void
   /**
+   * Show a node where it is: select the document and inspect the node in it
+   * (null: the document itself), flashing it in the preview - after
+   * `beforeSelect`, as navigateTo. A document that doesn't resolve (any
+   * more) falls back to `fallback`, a node that doesn't to the document.
+   */
+  reveal: (
+    location: {
+      document: NodeAddress
+      node: NodeAddress | null
+      fallback: NodeAddress | null
+    },
+    beforeSelect?: (node: Node) => void,
+  ) => void
+  /**
    * Keep the selected document across a dimension or editing-context switch:
    * its address in the target subgraph (it may not exist there - then
    * nothing is selected). The inspection returns to the document.
@@ -264,6 +278,29 @@ export function useSelection(siteAddress: NodeAddress | null): Selection {
         beforeSelect?.(node)
         select({ document: selectedOf(node), inspected: selectedOf(node) })
       }),
+    reveal: ({ document: documentAddress, node, fallback }, beforeSelect) => {
+      const show = (shown: Node) => {
+        beforeSelect?.(shown)
+        select({ document: selectedOf(shown), inspected: selectedOf(shown) })
+        // Only inside the document it was located in.
+        if (
+          node === null ||
+          shown.nodeAggregateId !== documentAddress.nodeAggregateId
+        ) {
+          return
+        }
+        whenCurrent(fetchNode(node), (contentNode) => {
+          select((previous) => ({
+            ...previous,
+            inspected: selectedOf(contentNode),
+          }))
+          flashNode(contentNode.nodeAggregateId)
+        })
+      }
+      whenCurrent(fetchNode(documentAddress), show, () => {
+        if (fallback) whenCurrent(fetchNode(fallback), show)
+      })
+    },
     follow: (subgraph) =>
       select((previous) => {
         if (previous.document === null) return NOTHING

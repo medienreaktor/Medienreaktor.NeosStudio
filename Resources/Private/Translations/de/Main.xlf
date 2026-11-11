@@ -3246,6 +3246,88 @@
         <source>Loading the tree failed</source>
         <target xml:lang="de">Laden des Baums fehlgeschlagen</target>
       </trans-unit>
+      <trans-unit id="undo.changedMeanwhile" xml:space="preserve">
+        <source>Someone changed it again since, so it was left as it is: {0}</source>
+        <target xml:lang="de">Das wurde inzwischen erneut geändert und deshalb so belassen: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.create" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="de">{0} erstellen</target>
+      </trans-unit>
+      <trans-unit id="undo.delete" xml:space="preserve">
+        <source>Delete {0}</source>
+        <target xml:lang="de">{0} löschen</target>
+      </trans-unit>
+      <trans-unit id="undo.edit" xml:space="preserve">
+        <source>Change “{0}” of “{1}”</source>
+        <target xml:lang="de">„{0}“ von „{1}“ ändern</target>
+      </trans-unit>
+      <group id="undo.elements" restype="x-gettext-plurals">
+        <trans-unit id="undo.elements[0]" xml:space="preserve">
+          <source>{0} element</source>
+          <target xml:lang="de">{0} Element</target>
+        </trans-unit>
+        <trans-unit id="undo.elements[1]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="de">{0} Elemente</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="undo.hide" xml:space="preserve">
+        <source>Hide {0}</source>
+        <target xml:lang="de">{0} verbergen</target>
+      </trans-unit>
+      <trans-unit id="undo.move" xml:space="preserve">
+        <source>Move {0}</source>
+        <target xml:lang="de">{0} verschieben</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToRedo" xml:space="preserve">
+        <source>Nothing to redo</source>
+        <target xml:lang="de">Nichts zu wiederholen</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToUndo" xml:space="preserve">
+        <source>Nothing to undo</source>
+        <target xml:lang="de">Nichts rückgängig zu machen</target>
+      </trans-unit>
+      <trans-unit id="undo.onPage" xml:space="preserve">
+        <source>{0} (on “{1}”)</source>
+        <target xml:lang="de">{0} (auf „{1}“)</target>
+      </trans-unit>
+      <trans-unit id="undo.paste" xml:space="preserve">
+        <source>Paste {0}</source>
+        <target xml:lang="de">{0} einfügen</target>
+      </trans-unit>
+      <trans-unit id="undo.quoted" xml:space="preserve">
+        <source>“{0}”</source>
+        <target xml:lang="de">„{0}“</target>
+      </trans-unit>
+      <trans-unit id="undo.redo" xml:space="preserve">
+        <source>Redo</source>
+        <target xml:lang="de">Wiederholen</target>
+      </trans-unit>
+      <trans-unit id="undo.redoAction" xml:space="preserve">
+        <source>Redo: {0}</source>
+        <target xml:lang="de">Wiederholen: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.redoFailed" xml:space="preserve">
+        <source>Redo failed</source>
+        <target xml:lang="de">Wiederholen fehlgeschlagen</target>
+      </trans-unit>
+      <trans-unit id="undo.undo" xml:space="preserve">
+        <source>Undo</source>
+        <target xml:lang="de">Rückgängig</target>
+      </trans-unit>
+      <trans-unit id="undo.undoAction" xml:space="preserve">
+        <source>Undo: {0}</source>
+        <target xml:lang="de">Rückgängig: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.undoFailed" xml:space="preserve">
+        <source>Undo failed</source>
+        <target xml:lang="de">Rückgängig machen fehlgeschlagen</target>
+      </trans-unit>
+      <trans-unit id="undo.unhide" xml:space="preserve">
+        <source>Unhide {0}</source>
+        <target xml:lang="de">{0} einblenden</target>
+      </trans-unit>
       <trans-unit id="userMenu.label" xml:space="preserve">
         <source>User menu</source>
         <target xml:lang="de">Benutzermenü</target>

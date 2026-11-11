@@ -5,12 +5,14 @@ import { isOfType, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import { siteNodeAddress } from '@/api/neos/endpoints/sites'
 import { neosKeys } from '@/api/neos/keys'
 import {
+  type Node,
   nodeAddressOf,
   sameDimensionSpacePoint,
   sameNodeAddress,
   type NodeAddress,
 } from '@/api/neos/schema'
 import type { EditingElement } from '@/features/collaboration/types'
+import type { HistoryLocation } from '@/features/history/location'
 import { useTaskDecorationData } from '@/features/tasks/decorationData'
 import {
   invalidateAfterContentEdit,
@@ -181,16 +183,17 @@ function Shell() {
    * switch so the trees browse the same dimension as the preview. Compared
    * when the document has resolved, against the dimension as it is then.
    */
+  const followDimensionOf = (node: Node) => {
+    const currentPoint = currentDimension.current
+    if (
+      currentPoint &&
+      !sameDimensionSpacePoint(node.dimensionSpacePoint, currentPoint)
+    ) {
+      editing.setDimensionSpacePoint(node.dimensionSpacePoint)
+    }
+  }
   const navigateToNode = (address: NodeAddress) =>
-    selection.navigateTo(address, (node) => {
-      const currentPoint = currentDimension.current
-      if (
-        currentPoint &&
-        !sameDimensionSpacePoint(node.dimensionSpacePoint, currentPoint)
-      ) {
-        editing.setDimensionSpacePoint(node.dimensionSpacePoint)
-      }
-    })
+    selection.navigateTo(address, followDimensionOf)
 
   /**
    * Show a document that lives in another workspace (the review dialog's
@@ -337,6 +340,12 @@ function Shell() {
       // show the just-created variant right away.
       changeDimension(point)
     },
+    // After an undo/redo: show its result where it is - on another page, or
+    // in another dimension, too.
+    reveal: (location: HistoryLocation) =>
+      guardSelection(location.node ?? location.document, () =>
+        selection.reveal(location, followDimensionOf),
+      ),
     reload: () => {
       // Reload the preview, both trees and the inspector together. Nothing
       // blanks meanwhile: the cached node reads are invalidated, not dropped,
@@ -536,6 +545,7 @@ function Shell() {
                     onReload={handlers.reload}
                     onSwitchEditingContext={handlers.switchEditingContext}
                     onNavigate={actions.navigateToNodeInWorkspace}
+                    onReveal={handlers.reveal}
                   />
 
                   {/* The main area and the optional right-hand sidebar. The Visual

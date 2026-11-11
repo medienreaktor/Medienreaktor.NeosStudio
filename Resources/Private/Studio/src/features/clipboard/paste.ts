@@ -6,8 +6,12 @@ import {
   nodeAddressKey,
 } from '@/api/neos/schema'
 import { emitStudioEvent } from '@/app/events'
-import { moveNodesByAddress } from '@/features/editing/nodeActions'
+import {
+  moveNodesByAddress,
+  recordCreation,
+} from '@/features/editing/nodeActions'
 import { afterStructuralEdit } from '@/features/workspaces/invalidate'
+import { translate as t } from '@/lib/i18n'
 import { type ClipboardEntry, clipboardRemove } from './clipboardStore'
 
 /**
@@ -107,6 +111,7 @@ async function copyNodes(
       change: 'copied',
       nodeAggregateIds: copies.map((copy) => copy.nodeAggregateId),
     })
+    recordCreation(copies, (subject) => t('undo.paste', 'Paste {0}', [subject]))
     return copies.map(nodeAddressOf)
   } finally {
     // The target's children changed - refresh the target workspace's node

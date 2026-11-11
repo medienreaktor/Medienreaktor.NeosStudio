@@ -3098,6 +3098,92 @@
         <source>Loading the tree failed</source>
         <target xml:lang="es">Error al cargar el árbol</target>
       </trans-unit>
+      <trans-unit id="undo.changedMeanwhile" xml:space="preserve">
+        <source>Someone changed it again since, so it was left as it is: {0}</source>
+        <target xml:lang="es">Se ha vuelto a cambiar desde entonces, así que se ha dejado como está: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.create" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="es">Crear {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.delete" xml:space="preserve">
+        <source>Delete {0}</source>
+        <target xml:lang="es">Eliminar {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.edit" xml:space="preserve">
+        <source>Change “{0}” of “{1}”</source>
+        <target xml:lang="es">Cambiar «{0}» de «{1}»</target>
+      </trans-unit>
+      <group id="undo.elements" restype="x-gettext-plurals">
+        <trans-unit id="undo.elements[0]" xml:space="preserve">
+          <source>{0} element</source>
+          <target xml:lang="es">{0} elemento</target>
+        </trans-unit>
+        <trans-unit id="undo.elements[1]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="es">{0} elementos</target>
+        </trans-unit>
+        <trans-unit id="undo.elements[2]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="es">{0} elementos</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="undo.hide" xml:space="preserve">
+        <source>Hide {0}</source>
+        <target xml:lang="es">Ocultar {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.move" xml:space="preserve">
+        <source>Move {0}</source>
+        <target xml:lang="es">Mover {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToRedo" xml:space="preserve">
+        <source>Nothing to redo</source>
+        <target xml:lang="es">Nada que rehacer</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToUndo" xml:space="preserve">
+        <source>Nothing to undo</source>
+        <target xml:lang="es">Nada que deshacer</target>
+      </trans-unit>
+      <trans-unit id="undo.onPage" xml:space="preserve">
+        <source>{0} (on “{1}”)</source>
+        <target xml:lang="es">{0} (en «{1}»)</target>
+      </trans-unit>
+      <trans-unit id="undo.paste" xml:space="preserve">
+        <source>Paste {0}</source>
+        <target xml:lang="es">Pegar {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.quoted" xml:space="preserve">
+        <source>“{0}”</source>
+        <target xml:lang="es">«{0}»</target>
+      </trans-unit>
+      <trans-unit id="undo.redo" xml:space="preserve">
+        <source>Redo</source>
+        <target xml:lang="es">Rehacer</target>
+      </trans-unit>
+      <trans-unit id="undo.redoAction" xml:space="preserve">
+        <source>Redo: {0}</source>
+        <target xml:lang="es">Rehacer: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.redoFailed" xml:space="preserve">
+        <source>Redo failed</source>
+        <target xml:lang="es">No se pudo rehacer</target>
+      </trans-unit>
+      <trans-unit id="undo.undo" xml:space="preserve">
+        <source>Undo</source>
+        <target xml:lang="es">Deshacer</target>
+      </trans-unit>
+      <trans-unit id="undo.undoAction" xml:space="preserve">
+        <source>Undo: {0}</source>
+        <target xml:lang="es">Deshacer: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.undoFailed" xml:space="preserve">
+        <source>Undo failed</source>
+        <target xml:lang="es">No se pudo deshacer</target>
+      </trans-unit>
+      <trans-unit id="undo.unhide" xml:space="preserve">
+        <source>Unhide {0}</source>
+        <target xml:lang="es">Mostrar {0}</target>
+      </trans-unit>
       <trans-unit id="userMenu.label" xml:space="preserve">
         <source>User menu</source>
         <target xml:lang="es">Menú de usuario</target>

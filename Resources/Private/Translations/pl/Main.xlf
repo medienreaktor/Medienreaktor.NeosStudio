@@ -3114,6 +3114,96 @@
         <source>Loading the tree failed</source>
         <target xml:lang="pl">Ładowanie drzewa nie powiodło się</target>
       </trans-unit>
+      <trans-unit id="undo.changedMeanwhile" xml:space="preserve">
+        <source>Someone changed it again since, so it was left as it is: {0}</source>
+        <target xml:lang="pl">W międzyczasie zostało to ponownie zmienione, więc pozostawiono bez zmian: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.create" xml:space="preserve">
+        <source>Create {0}</source>
+        <target xml:lang="pl">Utwórz {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.delete" xml:space="preserve">
+        <source>Delete {0}</source>
+        <target xml:lang="pl">Usuń {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.edit" xml:space="preserve">
+        <source>Change “{0}” of “{1}”</source>
+        <target xml:lang="pl">Zmień „{0}” w „{1}”</target>
+      </trans-unit>
+      <group id="undo.elements" restype="x-gettext-plurals">
+        <trans-unit id="undo.elements[0]" xml:space="preserve">
+          <source>{0} element</source>
+          <target xml:lang="pl">{0} element</target>
+        </trans-unit>
+        <trans-unit id="undo.elements[1]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="pl">{0} elementy</target>
+        </trans-unit>
+        <trans-unit id="undo.elements[2]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="pl">{0} elementów</target>
+        </trans-unit>
+        <trans-unit id="undo.elements[3]" xml:space="preserve">
+          <source>{0} elements</source>
+          <target xml:lang="pl">{0} elementu</target>
+        </trans-unit>
+      </group>
+      <trans-unit id="undo.hide" xml:space="preserve">
+        <source>Hide {0}</source>
+        <target xml:lang="pl">Ukryj {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.move" xml:space="preserve">
+        <source>Move {0}</source>
+        <target xml:lang="pl">Przenieś {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToRedo" xml:space="preserve">
+        <source>Nothing to redo</source>
+        <target xml:lang="pl">Nic do ponowienia</target>
+      </trans-unit>
+      <trans-unit id="undo.nothingToUndo" xml:space="preserve">
+        <source>Nothing to undo</source>
+        <target xml:lang="pl">Nic do cofnięcia</target>
+      </trans-unit>
+      <trans-unit id="undo.onPage" xml:space="preserve">
+        <source>{0} (on “{1}”)</source>
+        <target xml:lang="pl">{0} (na „{1}”)</target>
+      </trans-unit>
+      <trans-unit id="undo.paste" xml:space="preserve">
+        <source>Paste {0}</source>
+        <target xml:lang="pl">Wklej {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.quoted" xml:space="preserve">
+        <source>“{0}”</source>
+        <target xml:lang="pl">„{0}”</target>
+      </trans-unit>
+      <trans-unit id="undo.redo" xml:space="preserve">
+        <source>Redo</source>
+        <target xml:lang="pl">Ponów</target>
+      </trans-unit>
+      <trans-unit id="undo.redoAction" xml:space="preserve">
+        <source>Redo: {0}</source>
+        <target xml:lang="pl">Ponów: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.redoFailed" xml:space="preserve">
+        <source>Redo failed</source>
+        <target xml:lang="pl">Ponowienie nie powiodło się</target>
+      </trans-unit>
+      <trans-unit id="undo.undo" xml:space="preserve">
+        <source>Undo</source>
+        <target xml:lang="pl">Cofnij</target>
+      </trans-unit>
+      <trans-unit id="undo.undoAction" xml:space="preserve">
+        <source>Undo: {0}</source>
+        <target xml:lang="pl">Cofnij: {0}</target>
+      </trans-unit>
+      <trans-unit id="undo.undoFailed" xml:space="preserve">
+        <source>Undo failed</source>
+        <target xml:lang="pl">Cofnięcie nie powiodło się</target>
+      </trans-unit>
+      <trans-unit id="undo.unhide" xml:space="preserve">
+        <source>Unhide {0}</source>
+        <target xml:lang="pl">Pokaż {0}</target>
+      </trans-unit>
       <trans-unit id="userMenu.label" xml:space="preserve">
         <source>User menu</source>
         <target xml:lang="pl">Menu użytkownika</target>

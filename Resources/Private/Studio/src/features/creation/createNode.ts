@@ -2,7 +2,9 @@ import { createNode as createNodeRequest } from '@/api/neos/endpoints/nodeComman
 import type { Node, NodeAddress } from '@/api/neos/schema'
 import { createNodeFromCreationDialog } from '@/api/studio/endpoints/creationDialog'
 import { emitStudioEvent } from '@/app/events'
+import { recordCreation } from '@/features/editing/nodeActions'
 import { afterStructuralEdit } from '@/features/workspaces/invalidate'
+import { translate as t } from '@/lib/i18n'
 
 export interface CreateNodeRequest {
   nodeTypeName: string
@@ -71,6 +73,7 @@ export async function createNode(
     change: 'created',
     nodeAggregateIds: [node.nodeAggregateId],
   })
+  recordCreation([node], (subject) => t('undo.create', 'Create {0}', [subject]))
 
   return node
 }

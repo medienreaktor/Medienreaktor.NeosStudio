@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useActiveContentRepositoryId } from '@/api/neos/activeContentRepository'
 import { useNodeVariants } from '@/api/neos/endpoints/nodes'
 import type { Node, NodeAddress } from '@/api/neos/schema'
 import type { EditingContext } from '@/app/useEditingContext'
@@ -7,6 +8,8 @@ import { PresenceAvatars } from '@/features/collaboration/PresenceAvatars'
 import { HeaderActions } from '@/features/actions/HeaderActions'
 import { CreateVariantDialog } from '@/features/dimensions/CreateVariantDialog'
 import { DimensionSwitcher } from '@/features/dimensions/DimensionSwitcher'
+import { HistoryButtons } from '@/features/history/HistoryButtons'
+import type { HistoryLocation } from '@/features/history/location'
 import { ModalLauncher } from '@/features/modals/ModalLauncher'
 import { PreviewButton } from '@/features/preview/PreviewButton'
 import { PreviewToolbar } from '@/features/preview/PreviewPane'
@@ -18,8 +21,8 @@ import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 /**
  * The bar over the main area: the site, dimension and workspace switchers,
- * the preview's controls, the registered header actions and the publish
- * entry point - plus the dialog for creating a document variant the
+ * the preview's controls, undo/redo, the registered header actions and the
+ * publish entry point - plus the dialog for creating a document variant the
  * dimension switcher opens.
  */
 export function ShellHeader({
@@ -31,6 +34,7 @@ export function ShellHeader({
   onReload,
   onSwitchEditingContext,
   onNavigate,
+  onReveal,
 }: {
   editing: EditingContext
   /** The selected document. */
@@ -43,6 +47,8 @@ export function ShellHeader({
   onReload: () => void
   onSwitchEditingContext: (workspaceName: string | null) => void
   onNavigate: (address: NodeAddress, workspaceName: string) => void
+  /** Show where an undo/redo took effect. */
+  onReveal: (location: HistoryLocation) => void
 }) {
   const {
     sites,
@@ -61,6 +67,7 @@ export function ShellHeader({
   const [variantRequest, setVariantRequest] = useState<string | null>(null)
   // Where the selected document exists; drives the switcher's muted "+" items.
   const { data: documentVariants } = useNodeVariants(document)
+  const contentRepositoryId = useActiveContentRepositoryId()
 
   return (
     // Fixed height so the bar does not jump as the switchers and workspace
@@ -110,6 +117,17 @@ export function ShellHeader({
         <PreviewToolbar document={document} onReload={onReload} />
       </div>
       <div className="flex items-center gap-2">
+        {contentRepositoryId && activeWorkspace && (
+          <HistoryButtons
+            workspace={{
+              contentRepositoryId,
+              workspaceName: activeWorkspace.name,
+            }}
+            document={document}
+            onApplied={onReload}
+            onReveal={onReveal}
+          />
+        )}
         <HeaderActions
           document={document}
           workspaceName={activeWorkspace?.name ?? null}
