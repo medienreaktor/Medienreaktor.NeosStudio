@@ -107,6 +107,8 @@ export const DateTimeEditor: PropertyEditorComponent = ({
       <div className="relative">
         <PopoverTrigger
           id={id}
+          // The property label opens the picker (see FieldLabel).
+          data-label-opens="click"
           disabled={disabled}
           render={
             <Button
