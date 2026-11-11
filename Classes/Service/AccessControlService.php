@@ -139,6 +139,16 @@ class AccessControlService
     }
 
     /**
+     * Whether the current code runs inside
+     * SecurityContext::withoutAuthorizationChecks() - then the roles have
+     * nothing to say, exactly as Neos' own privileges have nothing to say.
+     */
+    public function authorizationChecksAreDisabled(): bool
+    {
+        return $this->securityContext->areAuthorizationChecksDisabled();
+    }
+
+    /**
      * Where a node sits: its ancestor chain (node first, root last) and the
      * site it belongs to - the two things page-tree and site rules are
      * evaluated against.

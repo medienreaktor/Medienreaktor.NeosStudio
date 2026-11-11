@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Editors with an access role no longer get "403 Access denied" after every
+  publish that in fact went through. Neos cleans up removed nodes after each
+  publish, without authorization checks and across every workspace based on
+  live; the access roles were applied to that cleanup too and failed it on
+  any workspace they leave out.
+
 ## [2.2.0] - 2026-11-11
 
 ### Added

@@ -380,6 +380,17 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         if (!$this->accessControlService->isEnforcedInContentRepository()) {
             return null;
         }
+        // Code running inside SecurityContext::withoutAuthorizationChecks() is
+        // the system, not the editor - Neos' own provider grants it, and the
+        // roles must not take that back. Neos runs the soft-removal garbage
+        // collector this way after every publish, across ALL workspaces based
+        // on live; applying the editor's roles there failed the publish
+        // request after the publish itself had already been committed. The
+        // checks below fail closed on their own errors, so stepping aside has
+        // to happen here, before any of them.
+        if ($this->accessControlService->authorizationChecksAreDisabled()) {
+            return null;
+        }
         $access = $this->accessControlService->effectiveAccessForCurrentUser();
 
         return $access->unrestricted ? null : $access;
