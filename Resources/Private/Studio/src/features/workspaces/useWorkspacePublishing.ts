@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { allowsPublishToLive } from '@/api/accessRoles'
+import { allowsPublishingToLiveFrom } from '@/api/accessRoles'
 import { useMutation } from '@tanstack/react-query'
 import {
   discardWorkspace,
@@ -34,7 +34,10 @@ export function useCanPublish(
   const publishesToRoot =
     workspaces.find((candidate) => candidate.name === workspace.baseWorkspace)
       ?.classification === 'ROOT'
-  return !publishesToRoot || allowsPublishToLive(access)
+  return (
+    !publishesToRoot ||
+    allowsPublishingToLiveFrom(access, workspace.name, workspace.classification)
+  )
 }
 
 /** A publish/discard, optionally scoped; no filter = the whole workspace. */

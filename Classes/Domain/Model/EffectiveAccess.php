@@ -119,9 +119,30 @@ final readonly class EffectiveAccess
         return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowsWorkspaceEditing($workspaceName, $classification));
     }
 
+    /**
+     * Could any role publish to live at all? For shaping lists only - whether
+     * a particular publish may go live is {@see allowsPublishingToLiveFrom()}.
+     */
     public function allowsPublishToLive(): bool
     {
         return $this->anyRole(static fn (AccessRoleConstraints $c) => $c->allowPublishToLive);
+    }
+
+    /**
+     * May the changes in this workspace be published into live? One role has
+     * to allow both: working in the workspace and publishing to live. Asked
+     * separately, a role "Entwurf" (works in Entwurf, may not go live) plus a
+     * role "Live" (may go live from the personal workspace) would add up to
+     * publishing Entwurf to live - which neither role allows.
+     *
+     * @param string $classification ROOT, PERSONAL, SHARED or UNKNOWN
+     */
+    public function allowsPublishingToLiveFrom(string $workspaceName, string $classification): bool
+    {
+        return $this->anyRole(
+            static fn (AccessRoleConstraints $c) => $c->allowPublishToLive
+                && $c->allowsWorkspaceEditing($workspaceName, $classification)
+        );
     }
 
     public function allowsCapability(string $capability): bool

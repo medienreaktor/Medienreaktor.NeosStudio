@@ -155,7 +155,7 @@ final readonly class AccessControlAuthProvider implements AuthProviderInterface
         if (
             ($command instanceof PublishWorkspace || $command instanceof PublishIndividualNodesFromWorkspace)
             && $this->publishesIntoRootWorkspace($command->workspaceName)
-            && !$access->allowsPublishToLive()
+            && !$access->allowsPublishingToLiveFrom($command->workspaceName->value, $this->classificationOf($command->workspaceName))
         ) {
             return Privilege::denied('Your access role(s) do not allow publishing to live');
         }
