@@ -1,7 +1,9 @@
+# Standard Dependabot configuration of a medienreaktor Composer package, copied
+# unchanged from the set-up-ci skill (templates/package/dependabot.yml).
 version: 2
 updates:
-    # ci.yml pins third-party actions by commit SHA, which is the right call for
-    # review but means nothing ever tells us they went stale. This does.
+    # The workflows pin third-party actions by commit SHA, which is the right call
+    # for review but means nothing ever tells us they went stale. This does.
     - package-ecosystem: "github-actions"
       directory: "/"
       schedule:
@@ -35,29 +37,21 @@ updates:
       ignore:
           # The Neos range encodes which Neos generations this package supports.
           # The CI matrix proves that range; moving it is a release decision, not
-          # dependency drift.
+          # dependency drift. Matches nothing in a package outside Neos.
           - dependency-name: "neos/*"
+          # A Studio plugin's Studio range follows the Studio release it is built
+          # and type-checked against; moving it is a release decision too.
+          - dependency-name: "medienreaktor/neos-studio"
 
-    # The frontend ships prebuilt, so a dependency update is a rebuild of the
-    # committed assets as well; the frontend job in ci.yml fails a pull request
-    # that updates one without the other. One grouped pull request per month.
+    # Every frontend, wherever ci.yml finds one: the root or Resources/Private/*/.
     - package-ecosystem: "npm"
-      directory: "/Resources/Private/Studio"
+      directories:
+          - "/"
+          - "/Resources/Private/*"
       schedule:
           interval: "monthly"
       groups:
           frontend:
-              patterns:
-                  - "*"
-      commit-message:
-          prefix: "build"
-
-    - package-ecosystem: "npm"
-      directory: "/Resources/Private/Realtime"
-      schedule:
-          interval: "monthly"
-      groups:
-          realtime:
               patterns:
                   - "*"
       commit-message:
