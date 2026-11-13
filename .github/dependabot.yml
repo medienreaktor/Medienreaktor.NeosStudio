@@ -1,5 +1,7 @@
-# Standard Dependabot configuration of a medienreaktor Composer package, copied
-# unchanged from the set-up-ci skill (templates/package/dependabot.yml).
+# Standard Dependabot configuration of a medienreaktor Composer package with a
+# frontend, copied unchanged from the set-up-ci skill
+# (templates/package/dependabot-frontend.yml). It is dependabot.yml plus the npm
+# entry, which Dependabot fails on in a package without a package.json.
 version: 2
 updates:
     # The workflows pin third-party actions by commit SHA, which is the right call
@@ -42,6 +44,9 @@ updates:
           # A Studio plugin's Studio range follows the Studio release it is built
           # and type-checked against; moving it is a release decision too.
           - dependency-name: "medienreaktor/neos-studio"
+          # The same for a package built on Symfony rather than Neos (FigmaTools'
+          # symfony/console): the range the matrix proves, not drift.
+          - dependency-name: "symfony/*"
 
     # Every frontend, wherever ci.yml finds one: the root or Resources/Private/*/.
     - package-ecosystem: "npm"

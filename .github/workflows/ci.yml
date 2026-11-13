@@ -231,7 +231,9 @@ jobs:
   # the newest admitted PHP, the corner the test matrix's last cell also covers:
   # the floor PHP may be older than the newest Neos supports.
   functional:
-    name: Functional (PHP ${{ needs.detect.outputs.newest }}, highest deps)
+    # A fixed name: most packages skip this job, and a skipped job shows its
+    # name unexpanded. The PHP version is in the log's setup step.
+    name: Functional (newest PHP, highest deps)
     needs: detect
     if: needs.detect.outputs.functional == 'true'
     runs-on: ${{ github.event.repository.private && 'hetzner' || 'ubuntu-latest' }}
