@@ -1,7 +1,8 @@
 # Standard Dependabot configuration of a medienreaktor Composer package with a
-# frontend, copied unchanged from the set-up-ci skill
-# (templates/package/dependabot-frontend.yml). It is dependabot.yml plus the npm
-# entry, which Dependabot fails on in a package without a package.json.
+# frontend, copied unchanged from the set-up-ci skill (templates/package/dependabot-
+# frontend.yml). The skill picks one of four variants: with or without a frontend
+# (Dependabot fails a run when an ecosystem's directories hold no manifest) and with
+# or without a Packistry dependency (Dependabot cannot authenticate to Packistry).
 version: 2
 updates:
     # The workflows pin third-party actions by commit SHA, which is the right call
@@ -47,6 +48,10 @@ updates:
           # The same for a package built on Symfony rather than Neos (FigmaTools'
           # symfony/console): the range the matrix proves, not drift.
           - dependency-name: "symfony/*"
+          # A PHPUnit major changes the configuration format and the PHP floor the
+          # runner needs (13 wants 8.4.1), so moving to one is a decision, not drift.
+          - dependency-name: "phpunit/phpunit"
+            update-types: ["version-update:semver-major"]
 
     # Every frontend, wherever ci.yml finds one: the root or Resources/Private/*/.
     - package-ecosystem: "npm"
