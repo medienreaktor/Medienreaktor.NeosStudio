@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-11-17
+
+### Added
+
+- The anchor field in the link dialog suggests the anchors of the picked
+  document: its content with a non-empty anchor property, shown as label
+  plus `#anchor`. Typing a free anchor still works. A hint appears when the
+  anchor does not exist on the picked document. The properties are set in
+  `Medienreaktor.NeosStudio.links.anchors` (`property`, default `sectionId`,
+  and `labelProperty`, default `anchorName`).
+
+### Changed
+
+- External links are checked before they can be applied: whitespace inside
+  the address, a second scheme (`https:// https://…`, `https://node://…`)
+  or an address that does not parse is reported in the dialog and keeps
+  Apply disabled. Addresses starting with `/`, `#`, `?`, `./`, `mailto:` or
+  `tel:` no longer get `https://` put in front.
+
+### Fixed
+
+- The plugin types build again with rolldown-plugin-dts 0.30.
+
 ## [2.2.1] - 2026-11-11
 
 ### Fixed
@@ -1517,7 +1540,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.0...HEAD
+[2.3.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.1...2.3.0
 [2.2.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.1...2.2.0
 [2.1.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.0...2.1.1
