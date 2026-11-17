@@ -27,6 +27,9 @@ export const DOCUMENT_NODE_TYPE = 'Neos.Neos:Document'
 export const CONTENT_NODE_TYPES =
   'Neos.Neos:Content,Neos.Neos:ContentCollection'
 
+/** Content elements alone, without the collections that hold them. */
+const CONTENT_NODE_TYPE = 'Neos.Neos:Content'
+
 /** The query parameters of getNode (Neos.Api's). */
 type NodeQuery = NonNullable<operations['getNode']['parameters']['query']>
 
@@ -468,6 +471,62 @@ export function useFilteredDescendants(
                 }),
               ),
             )
+        : skipToken,
+  })
+}
+
+/**
+ * The content of a document that carries an anchor - a non-empty string in
+ * the anchor property - each with its ancestors: what the link dialog offers
+ * as #fragments. Content of the documents below it is left out: Neos.Api's
+ * descendantOf does not stop at a document, so the nearest document among
+ * each hit's ancestors has to be this one.
+ */
+export function useAnchoredContent(
+  document: NodeAddress | null,
+  anchorProperty: string,
+) {
+  return useQuery({
+    queryKey: neosKeys.nodes.descendants(document, {
+      nodeTypes: CONTENT_NODE_TYPE,
+      anchorProperty,
+    }),
+    queryFn:
+      document !== null && anchorProperty !== ''
+        ? async ({ signal }) => {
+            const [nodes, nodeTypes] = await Promise.all([
+              fetchAllPages((page) =>
+                unwrap(
+                  api.GET(NODES, {
+                    params: {
+                      path: {
+                        contentRepositoryId: document.contentRepositoryId,
+                      },
+                      query: descendantsQuery(document, CONTENT_NODE_TYPE, {
+                        // "*= ''" matches every string, "!= ''" drops the
+                        // empty one; nodes without the property match neither.
+                        filterByProperty: `${anchorProperty} *= '' AND ${anchorProperty} != ''`,
+                        ...page,
+                      }),
+                    },
+                    signal,
+                  }),
+                ),
+              ),
+              fetchNodeTypes(document.contentRepositoryId),
+            ])
+            const types = nodeTypeMap(nodeTypes)
+            return nodes.filter(
+              (node) =>
+                node.ancestors?.find((ancestor) =>
+                  matchesNodeTypeFilter(
+                    types,
+                    ancestor.nodeType,
+                    DOCUMENT_NODE_TYPE,
+                  ),
+                )?.nodeAggregateId === document.nodeAggregateId,
+            )
+          }
         : skipToken,
   })
 }

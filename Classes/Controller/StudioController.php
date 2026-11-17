@@ -97,6 +97,16 @@ class StudioController extends ActionController
     protected $publishCelebration;
 
     /**
+     * The property holding a content node's anchor (its #fragment) and the
+     * one holding its label, for the link dialog's anchor picker. Untyped:
+     * absent configuration injects null, which keeps the defaults.
+     *
+     * @var array{property?: string, labelProperty?: string}|null
+     */
+    #[Flow\InjectConfiguration(path: 'links.anchors')]
+    protected $linkAnchors;
+
+    /**
      * The classic backend's language picker options (locale identifier =>
      * label) - the profile settings offer the same choice. Untyped: absent
      * configuration injects null.
@@ -152,6 +162,9 @@ class StudioController extends ActionController
             // confetti burst; the publishCelebration setting, off for the whole
             // installation when an operator sets it to false.
             'publishCelebration' => $this->publishCelebration !== false,
+            // The properties the link dialog's anchor picker reads (see
+            // the links.anchors setting).
+            'linkAnchors' => $this->linkAnchors(),
             'xliffEndpoint' => $origin . '/neos/xliff.json',
             // The bundle is browser-cached for a week; the classic backend
             // busts that with the XLIFF cache version (renewed on every
@@ -177,6 +190,20 @@ class StudioController extends ActionController
         ];
 
         return $this->renderSpa($config);
+    }
+
+    /**
+     * The links.anchors setting with its defaults filled in.
+     *
+     * @return array{property: string, labelProperty: string}
+     */
+    private function linkAnchors(): array
+    {
+        $anchors = is_array($this->linkAnchors) ? $this->linkAnchors : [];
+        return [
+            'property' => (string)($anchors['property'] ?? 'sectionId'),
+            'labelProperty' => (string)($anchors['labelProperty'] ?? 'anchorName'),
+        ];
     }
 
     /**

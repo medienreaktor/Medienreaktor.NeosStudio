@@ -278,10 +278,18 @@ export const neosKeys = {
       ['nodes', ...nodeKey(address), 'references'] as const,
     allowedChildNodeTypes: (address: NodeAddress | null) =>
       ['nodes', ...nodeKey(address), 'allowed-child-node-types'] as const,
-    /** Descendants of the node: a search, or the document toolbar's filter. */
+    /**
+     * Descendants of the node: a search, the document toolbar's filter, or
+     * the content carrying an anchor (the link dialog's anchor picker).
+     */
     descendants: (
       address: NodeAddress | null,
-      query: { nodeTypes: string; search?: string; title?: string },
+      query: {
+        nodeTypes: string
+        search?: string
+        title?: string
+        anchorProperty?: string
+      },
     ) => ['nodes', ...nodeKey(address), 'descendants', query] as const,
   },
   dataSources: {

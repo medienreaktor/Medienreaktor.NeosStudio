@@ -41,6 +41,12 @@ export interface StudioConfig {
    * which an operator can turn off installation-wide.
    */
   publishCelebration: boolean
+  /**
+   * What the link dialog's anchor picker reads (the links.anchors setting):
+   * the property holding a content node's anchor and the one holding its
+   * label - an empty label property falls back to the node's label.
+   */
+  linkAnchors: { property: string; labelProperty: string }
   /** Core endpoint serving the XLIFF labels as JSON (session-authenticated). */
   xliffEndpoint: string
   /**
@@ -88,6 +94,7 @@ const fallback: StudioConfig = {
   availableLanguages: [{ value: 'en', label: 'English' }],
   uiMode: 'dark',
   publishCelebration: true,
+  linkAnchors: { property: 'sectionId', labelProperty: 'anchorName' },
   xliffEndpoint: '/neos/xliff.json',
   xliffVersion: null,
   logoutEndpoint: '/neos/logout',

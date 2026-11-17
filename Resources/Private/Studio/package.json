@@ -16,7 +16,8 @@
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "i18n:check": "node scripts/check-translations.mjs",
-    "lint": "eslint . && prettier --check src"
+    "lint": "eslint . && prettier --check src",
+    "test": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

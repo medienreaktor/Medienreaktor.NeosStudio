@@ -1470,9 +1470,21 @@
         <source>Anchor</source>
         <target xml:lang="fr">Ancre</target>
       </trans-unit>
+      <trans-unit id="link.anchorMissing" xml:space="preserve">
+        <source>The selected page has no element with this anchor - the link will lead to the top of the page.</source>
+        <target xml:lang="fr">La page sélectionnée n'a aucun élément avec cette ancre - le lien mènera en haut de la page.</target>
+      </trans-unit>
       <trans-unit id="link.anchorPlaceholder" xml:space="preserve">
         <source>Optional #anchor on the target page</source>
         <target xml:lang="fr">#ancre optionnelle sur la page cible</target>
+      </trans-unit>
+      <trans-unit id="link.anchorsFailed" xml:space="preserve">
+        <source>The anchors of this page could not be loaded - you can still type one.</source>
+        <target xml:lang="fr">Les ancres de cette page n'ont pas pu être chargées - vous pouvez quand même en saisir une.</target>
+      </trans-unit>
+      <trans-unit id="link.anchorsPickDocument" xml:space="preserve">
+        <source>Pick a document to see its anchors.</source>
+        <target xml:lang="fr">Choisissez un document pour voir ses ancres.</target>
       </trans-unit>
       <trans-unit id="link.andBehaves" xml:space="preserve">
         <source>and how the link behaves</source>
@@ -1538,6 +1550,10 @@
         <source>Insert link</source>
         <target xml:lang="fr">Insérer un lien</target>
       </trans-unit>
+      <trans-unit id="link.loadingAnchors" xml:space="preserve">
+        <source>Loading anchors…</source>
+        <target xml:lang="fr">Chargement des ancres…</target>
+      </trans-unit>
       <trans-unit id="link.loadingDocuments" xml:space="preserve">
         <source>Loading documents…</source>
         <target xml:lang="fr">Chargement des documents…</target>
@@ -1545,6 +1561,10 @@
       <trans-unit id="link.media" xml:space="preserve">
         <source>Media</source>
         <target xml:lang="fr">Médias</target>
+      </trans-unit>
+      <trans-unit id="link.noAnchors" xml:space="preserve">
+        <source>This page has no anchors.</source>
+        <target xml:lang="fr">Cette page n'a pas d'ancres.</target>
       </trans-unit>
       <trans-unit id="link.noDocuments" xml:space="preserve">
         <source>This site has no documents yet.</source>
@@ -1602,9 +1622,21 @@
         <source>URL</source>
         <target xml:lang="fr">URL</target>
       </trans-unit>
+      <trans-unit id="link.urlInvalid" xml:space="preserve">
+        <source>This is not a valid web address.</source>
+        <target xml:lang="fr">Ce n'est pas une adresse web valide.</target>
+      </trans-unit>
       <trans-unit id="link.urlPlaceholder" xml:space="preserve">
         <source>https://example.com</source>
         <target xml:lang="fr">https://exemple.com</target>
+      </trans-unit>
+      <trans-unit id="link.urlSecondScheme" xml:space="preserve">
+        <source>This looks like two addresses in one - keep only one of them.</source>
+        <target xml:lang="fr">Cela ressemble à deux adresses en une - n'en gardez qu'une seule.</target>
+      </trans-unit>
+      <trans-unit id="link.urlWhitespace" xml:space="preserve">
+        <source>A web address cannot contain spaces - remove them or encode them as %20.</source>
+        <target xml:lang="fr">Une adresse web ne peut pas contenir d'espaces - supprimez-les ou écrivez-les %20.</target>
       </trans-unit>
       <trans-unit id="media.addTag" xml:space="preserve">
         <source>Add tag…</source>

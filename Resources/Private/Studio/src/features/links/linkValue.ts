@@ -93,6 +93,68 @@ export function isAllowedHref(href: string): boolean {
   return scheme === null || ALLOWED_SCHEMES.has((scheme[1] ?? '').toLowerCase())
 }
 
+/** Why a typed external link can't be stored. */
+export type ExternalHrefError =
+  /** Nothing typed yet - not a mistake, just nothing to apply. */
+  | { kind: 'empty' }
+  /** A space, tab or line break inside the address. */
+  | { kind: 'whitespace' }
+  /** A scheme right behind the first one - "https://https://...", "https://node://...". */
+  | { kind: 'second_scheme' }
+  /** A scheme outside the allowed ones (javascript:, data:, ...), see isAllowedHref. */
+  | { kind: 'scheme_not_allowed' }
+  /** Something the URL parser rejects, e.g. "https://" alone. */
+  | { kind: 'unparsable' }
+
+export type ExternalHrefResult =
+  { ok: true; href: string } | { ok: false; error: ExternalHrefError }
+
+/** A relative link: a path, query or anchor without scheme. */
+const RELATIVE = /^[/?#.]/
+
+/**
+ * A scheme following the first one: either any scheme with "//" or one of the
+ * allowed schemes (node:, mailto:, ...). Credentials ("https://user:pw@host")
+ * have neither, and a URL further down the query ("?to=https://...") is not
+ * right behind the first scheme.
+ */
+const SECOND_SCHEME = new RegExp(
+  `^[a-z][a-z0-9+.-]*:(?://)?(?:[a-z][a-z0-9+.-]*://|(?:${[...ALLOWED_SCHEMES].join('|')}):)`,
+  'i',
+)
+
+/** Only resolves relative links for the parse check, never stored. */
+const PARSE_BASE = 'https://example.invalid/'
+
+/**
+ * The href a typed external link is stored as. A URL without a scheme gets
+ * https:// - "example.com" is what people type, "https://example.com" is what
+ * the link must store. Links with a scheme (https:, mailto:, tel:, ...) and
+ * relative links (/path, ?query, #anchor, ./file) stay as typed. Refused are
+ * whitespace inside the address, a second scheme right behind the first (a
+ * pasted URL in front of another one), schemes that could run script (see
+ * isAllowedHref) and anything the URL parser cannot read.
+ */
+export function parseExternalHref(raw: string): ExternalHrefResult {
+  const typed = raw.trim()
+  if (typed === '') return { ok: false, error: { kind: 'empty' } }
+  const href =
+    hasScheme(typed) || RELATIVE.test(typed) ? typed : `https://${typed}`
+  // Checked without the whitespace, so "https:// https://x" reads as the
+  // second scheme it is rather than as a stray space.
+  if (SECOND_SCHEME.test(href.replace(/\s+/g, ''))) {
+    return { ok: false, error: { kind: 'second_scheme' } }
+  }
+  if (/\s/.test(href)) return { ok: false, error: { kind: 'whitespace' } }
+  if (!isAllowedHref(href)) {
+    return { ok: false, error: { kind: 'scheme_not_allowed' } }
+  }
+  if (!URL.canParse(href, PARSE_BASE)) {
+    return { ok: false, error: { kind: 'unparsable' } }
+  }
+  return { ok: true, href }
+}
+
 /** An inline link's DOM attributes (guest protocol) as a LinkValue. */
 export function linkValueFromAttributes(attributes: LinkAttributes): LinkValue {
   return {

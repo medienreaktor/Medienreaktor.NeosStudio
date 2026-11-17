@@ -48,6 +48,15 @@ Medienreaktor:
       # e.g.: openssl rand -hex 32
       sharedSecret: ""
 
+    links:
+      # The anchor picker of the link dialog: after a document is picked, it
+      # offers the content below it whose anchor property is filled (by
+      # default Flownative.Anchorlinks' sectionId), labelled with the label
+      # property when set, else with the node's label.
+      anchors:
+        property: "sectionId"
+        labelProperty: "anchorName"
+
     previewLinks:
       # Lifetime applied when a client requests none (\DateInterval spec).
       defaultLifetime: "P2D"

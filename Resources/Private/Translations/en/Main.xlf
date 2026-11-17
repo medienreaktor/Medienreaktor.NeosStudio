@@ -1207,8 +1207,17 @@
       <trans-unit id="link.anchor" xml:space="preserve">
         <source>Anchor</source>
       </trans-unit>
+      <trans-unit id="link.anchorMissing" xml:space="preserve">
+        <source>The selected page has no element with this anchor - the link will lead to the top of the page.</source>
+      </trans-unit>
       <trans-unit id="link.anchorPlaceholder" xml:space="preserve">
         <source>Optional #anchor on the target page</source>
+      </trans-unit>
+      <trans-unit id="link.anchorsFailed" xml:space="preserve">
+        <source>The anchors of this page could not be loaded - you can still type one.</source>
+      </trans-unit>
+      <trans-unit id="link.anchorsPickDocument" xml:space="preserve">
+        <source>Pick a document to see its anchors.</source>
       </trans-unit>
       <trans-unit id="link.andBehaves" xml:space="preserve">
         <source>and how the link behaves</source>
@@ -1258,11 +1267,17 @@
       <trans-unit id="link.insert" xml:space="preserve">
         <source>Insert link</source>
       </trans-unit>
+      <trans-unit id="link.loadingAnchors" xml:space="preserve">
+        <source>Loading anchors…</source>
+      </trans-unit>
       <trans-unit id="link.loadingDocuments" xml:space="preserve">
         <source>Loading documents…</source>
       </trans-unit>
       <trans-unit id="link.media" xml:space="preserve">
         <source>Media</source>
+      </trans-unit>
+      <trans-unit id="link.noAnchors" xml:space="preserve">
+        <source>This page has no anchors.</source>
       </trans-unit>
       <trans-unit id="link.noDocuments" xml:space="preserve">
         <source>This site has no documents yet.</source>
@@ -1306,8 +1321,17 @@
       <trans-unit id="link.url" xml:space="preserve">
         <source>URL</source>
       </trans-unit>
+      <trans-unit id="link.urlInvalid" xml:space="preserve">
+        <source>This is not a valid web address.</source>
+      </trans-unit>
       <trans-unit id="link.urlPlaceholder" xml:space="preserve">
         <source>https://example.com</source>
+      </trans-unit>
+      <trans-unit id="link.urlSecondScheme" xml:space="preserve">
+        <source>This looks like two addresses in one - keep only one of them.</source>
+      </trans-unit>
+      <trans-unit id="link.urlWhitespace" xml:space="preserve">
+        <source>A web address cannot contain spaces - remove them or encode them as %20.</source>
       </trans-unit>
       <trans-unit id="media.addTag" xml:space="preserve">
         <source>Add tag…</source>

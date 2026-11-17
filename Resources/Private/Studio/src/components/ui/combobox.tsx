@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Autocomplete as AutocompletePrimitive } from '@base-ui/react/autocomplete'
 import { Combobox as ComboboxPrimitive } from '@base-ui/react/combobox'
 
 import { cn } from '@/lib/utils'
@@ -13,6 +14,13 @@ function Combobox<Value, Multiple extends boolean | undefined = false>(
 ) {
   return <ComboboxPrimitive.Root {...props} />
 }
+
+/**
+ * Base UI's Autocomplete: a text input that suggests items but keeps whatever
+ * is typed - free text with suggestions, where the Combobox insists on an
+ * item. Its parts are the Combobox ones below (Base UI shares them).
+ */
+const Autocomplete = AutocompletePrimitive.Root
 
 /** A select-like button opening the popup (the input then sits inside it). */
 function ComboboxTrigger({
@@ -183,6 +191,7 @@ function ComboboxStatus({
 }
 
 export {
+  Autocomplete,
   Combobox,
   ComboboxCollection,
   ComboboxContent,
