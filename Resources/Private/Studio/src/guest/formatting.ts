@@ -375,8 +375,10 @@ export function extensionsFor(config: Formatting): Extensions {
     ...(config.alignment
       ? [TextAlign.configure({ types: ['heading', 'paragraph'] })]
       : []),
+    // Not resizable: column widths have no place in the CKEditor table markup
+    // Neos stores (see classicTables.ts), so a resize would be lost on save.
     ...(config.table
-      ? [TableKit.configure({ table: { resizable: true } })]
+      ? [TableKit.configure({ table: { resizable: false } })]
       : []),
     ...marks,
     ...styles,

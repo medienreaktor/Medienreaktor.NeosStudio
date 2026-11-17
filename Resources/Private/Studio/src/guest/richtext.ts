@@ -133,9 +133,9 @@ let stylesInjected = false
 
 /**
  * Editing affordances the rendered site does not style: the cell borders that
- * keep an in-progress table legible, the selected-cell highlight and the
- * column-resize handle ProseMirror's table view draws. Scoped to the editor
- * (.tiptap inside a property) so the site's own table styling is untouched.
+ * keep an in-progress table legible and the selected-cell highlight. Scoped
+ * to the editor (.tiptap inside a property) so the site's own table styling
+ * is untouched.
  */
 function injectEditorStyles(): void {
   if (stylesInjected) return
@@ -168,18 +168,6 @@ function injectEditorStyles(): void {
       inset: 0;
       background: rgba(0, 173, 238, 0.15);
       pointer-events: none;
-    }
-    [${PROPERTY_ATTRIBUTE}] .tiptap .column-resize-handle {
-      position: absolute;
-      right: -2px;
-      top: 0;
-      bottom: -2px;
-      width: 4px;
-      background: rgb(0, 173, 238);
-      pointer-events: none;
-    }
-    [${PROPERTY_ATTRIBUTE}] .tiptap.resize-cursor {
-      cursor: col-resize;
     }
     /* The paragraphs serializedHtml() unwraps (see serialize.ts) exist only
        in the editor: the site renders that text bare inside its own markup

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Tables edited in Studio are stored in the markup of the classic Neos UI
+  again: wrapped in `<figure class="table">`, with the heading row in a
+  `<thead>` and without TipTap's inline widths and `<colgroup>`. Sites styled
+  for CKEditor tables no longer show them shrunk to their content or with
+  unreadable heading cells. Columns can no longer be resized by dragging,
+  since the classic markup has no place for column widths.
+
 ## [2.3.0] - 2026-11-17
 
 ### Added

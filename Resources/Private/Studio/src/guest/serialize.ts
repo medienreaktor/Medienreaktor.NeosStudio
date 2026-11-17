@@ -32,6 +32,7 @@
 import type { Editor } from '@tiptap/core'
 import { Paragraph } from '@tiptap/extension-paragraph'
 import { Fragment } from '@tiptap/pm/model'
+import { toClassicTables } from './classicTables'
 import type { Formatting } from './formatting'
 
 const NBSP = String.fromCharCode(0xa0)
@@ -98,7 +99,10 @@ function unwrapSoleParagraph(
   paragraph.replaceWith(...paragraph.childNodes)
 }
 
-/** getHTML() normalized to the flat list/table/paragraph markup Neos stores. */
+/**
+ * getHTML() normalized to the flat list/table/paragraph markup Neos stores,
+ * with tables in CKEditor 5's shape (see classicTables.ts).
+ */
 export function serializedHtml(editor: Editor, config: Formatting): string {
   const html = editor.getHTML()
   const unwrapDocument = !config.autoparagraph && html.startsWith('<p')
@@ -110,8 +114,7 @@ export function serializedHtml(editor: Editor, config: Formatting): string {
     !unwrapDocument &&
     !fillParagraphs &&
     !html.includes('<li') &&
-    !html.includes('<td') &&
-    !html.includes('<th')
+    !html.includes('<table')
   )
     return html
   const template = document.createElement('template')
@@ -133,5 +136,6 @@ export function serializedHtml(editor: Editor, config: Formatting): string {
     unwrapSoleParagraph(cell, [])
   }
   if (unwrapDocument) unwrapSoleParagraph(template.content, [])
+  toClassicTables(template.content)
   return template.innerHTML
 }
