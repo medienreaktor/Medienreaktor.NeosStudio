@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-11-17
+
 ### Fixed
 
 - Tables edited in Studio are stored in the markup of the classic Neos UI
@@ -1549,7 +1551,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.1...HEAD
+[2.3.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.1...2.3.0
 [2.2.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.1.1...2.2.0
