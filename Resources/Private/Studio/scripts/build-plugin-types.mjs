@@ -142,12 +142,13 @@ await build({
   // React is the only package the plugin resolves itself; the others are
   // inlined by inlinePackageTypes.
   external: (id) => isReact(id),
-  // dtsInput: bundle already-emitted .d.ts; oxc/tsconfig:false keep the
-  // plugin from loading the TypeScript JS API, which TS 7 no longer ships.
+  // dtsOnly: bundle already-emitted .d.ts; the oxc generator and
+  // tsconfig:false keep the plugin from loading the TypeScript JS API, which
+  // TS 7 no longer ships.
   plugins: [
     atAlias,
     inlinePackageTypes,
-    dts({ dtsInput: true, emitDtsOnly: true, oxc: true, tsconfig: false }),
+    dts({ dtsOnly: true, generator: 'oxc', tsconfig: false }),
   ],
   output: {
     dir: outDir,
