@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-11-18
+
+### Added
+
+- Plugins can add icon buttons to the handle of a content element in the
+  preview: a node action registered with `handle: true` (and an `icon`)
+  shows as a button left of the "+", in `order`, for the elements its
+  `when` allows (asked with `surface: 'preview'`). It stays in the "…"
+  menu too; an element gets at most three such buttons, further ones are
+  in the menu only. The buttons come from the plugin bundle alone - Studio
+  draws the icon and runs the action, so errors still end as a toast.
+
 ## [2.3.1] - 2026-11-17
 
 ### Fixed
@@ -1551,7 +1563,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.4.0...HEAD
+[2.4.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.1...2.4.0
 [2.3.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.1...2.3.0
 [2.2.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.0...2.2.1
