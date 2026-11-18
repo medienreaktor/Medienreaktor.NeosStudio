@@ -14,29 +14,41 @@ import { labelOf } from '@/lib/registry'
 import type { HandleAction } from './protocol'
 
 /**
- * The node actions offered as buttons on the handle of this node's element,
- * ready for the guest. The node is read through the query cache, so moving
- * the handle back and forth costs no further requests; a node that cannot be
- * read gets no buttons.
+ * The node behind a handle and the handle actions offered on it. The node is
+ * read through the query cache, so moving the handle back and forth costs no
+ * further requests; the registry is read after it arrived.
  */
-export async function handleActionsFor(
-  address: NodeAddress,
-  studio: StudioActions,
-): Promise<HandleAction[]> {
-  const candidates = nodeActionRegistry.getAll()
-  let node
-  try {
-    node = await fetchNode(address)
-  } catch {
-    return []
-  }
+async function offeredOn(address: NodeAddress, studio: StudioActions) {
+  const node = await fetchNode(address)
   const context: NodeActionContext = {
     surface: 'preview',
     selection: [node],
     studio,
   }
+  const actions = offeredHandleActions(
+    nodeActionRegistry.getAll(),
+    node,
+    context,
+  )
+  return { node, context, actions }
+}
+
+/**
+ * The node actions offered as buttons on the handle of this node's element,
+ * ready for the guest. A node that cannot be read gets no buttons.
+ */
+export async function handleActionsFor(
+  address: NodeAddress,
+  studio: StudioActions,
+): Promise<HandleAction[]> {
+  let offered
+  try {
+    offered = await offeredOn(address, studio)
+  } catch {
+    return []
+  }
   return Promise.all(
-    offeredHandleActions(candidates, node, context).map(async (action) => ({
+    offered.actions.map(async (action) => ({
       id: action.id,
       label: labelOf(action.label),
       icon: action.icon ? await iconImage(action.icon) : null,
@@ -53,23 +65,15 @@ export async function runHandleAction(
   address: NodeAddress,
   studio: StudioActions,
 ): Promise<void> {
-  let node
+  let offered
   try {
-    node = await fetchNode(address)
+    offered = await offeredOn(address, studio)
   } catch (error) {
     toast.error(error)
     return
   }
-  const context: NodeActionContext = {
-    surface: 'preview',
-    selection: [node],
-    studio,
-  }
-  const action = offeredHandleActions(
-    nodeActionRegistry.getAll(),
-    node,
-    context,
-  ).find((candidate) => candidate.id === actionId)
+  const { node, context, actions } = offered
+  const action = actions.find((candidate) => candidate.id === actionId)
   if (!action) return
   // The button gives no feedback of its own, so a slow run announces
   // itself with a loading toast, as from a menu.
