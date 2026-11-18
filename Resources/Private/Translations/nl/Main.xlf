@@ -1130,6 +1130,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="nl">Het URL-padsegment opnieuw opbouwen op basis van de huidige paginatitel</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="nl">Dit dialoogvenster kon niet worden weergegeven.</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="nl">Deze editor kon niet worden weergegeven.</target>

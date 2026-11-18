@@ -2,6 +2,7 @@ import * as React from 'react'
 import { type Node, nodeAddressKey } from '@/api/neos/schema'
 import type { StudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { anyDialogOpen, subscribeDialogs } from '@/features/dialogs/store'
 import {
   ObservableRegistry,
   useRegistry,
@@ -263,6 +264,30 @@ export function useActionBusy(key: string): boolean {
 const LOADING_TOAST_DELAY_MS = 400
 
 /**
+ * Call `show` once a run has gone LOADING_TOAST_DELAY_MS without feedback.
+ * An open dialog is feedback: a run awaiting `dialogs.open()` would
+ * otherwise announce itself underneath its own dialog. The delay starts over
+ * when the last dialog closes. Returns the cancel.
+ */
+function announceWhenSilent(show: () => void): () => void {
+  let waiting = false
+  const fire = () => {
+    if (anyDialogOpen()) waiting = true
+    else show()
+  }
+  let timer = setTimeout(fire, LOADING_TOAST_DELAY_MS)
+  const unsubscribe = subscribeDialogs(() => {
+    if (!waiting || anyDialogOpen()) return
+    waiting = false
+    timer = setTimeout(fire, LOADING_TOAST_DELAY_MS)
+  })
+  return () => {
+    clearTimeout(timer)
+    unsubscribe()
+  }
+}
+
+/**
  * Run a plugin action's `run` with the guarantees the registries promise: a
  * sync throw and a rejected promise both end as an error toast titled with
  * the action's label and a console error naming its id; a pending promise
@@ -293,20 +318,19 @@ export function runAction(
   // Any thenable counts - a plugin's promise library is its own business.
   if (!isThenable(result)) return
   setRunning(key, true)
-  const timer = announce
-    ? setTimeout(
-        () => toast.loading(labelOf(action.label), { id: toastId }),
-        LOADING_TOAST_DELAY_MS,
+  const cancelAnnouncement = announce
+    ? announceWhenSilent(() =>
+        toast.loading(labelOf(action.label), { id: toastId }),
       )
     : undefined
   Promise.resolve(result)
     .then(
       () => {
-        clearTimeout(timer)
+        cancelAnnouncement?.()
         if (announce) toast.dismiss(toastId)
       },
       (error: unknown) => {
-        clearTimeout(timer)
+        cancelAnnouncement?.()
         fail(error)
       },
     )

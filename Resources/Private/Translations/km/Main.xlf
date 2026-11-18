@@ -1114,6 +1114,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="km">បង្កើតផ្នែកផ្លូវ URL ឡើងវិញពីចំណងជើងទំព័របច្ចុប្បន្ន</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="km">មិនអាចបង្ហាញប្រអប់នេះបានទេ។</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="km">មិនអាចបង្ហាញកម្មវិធីកែសម្រួលនេះបានទេ។</target>

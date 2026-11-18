@@ -1282,6 +1282,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="de">URL-Pfadsegment aus dem aktuellen Seitentitel neu erstellen</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="de">Dieser Dialog konnte nicht angezeigt werden.</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="de">Dieser Editor konnte nicht angezeigt werden.</target>

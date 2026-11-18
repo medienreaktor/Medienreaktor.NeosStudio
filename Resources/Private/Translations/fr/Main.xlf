@@ -1146,6 +1146,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="fr">Régénérer le segment d'URL à partir du titre actuel de la page</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="fr">Cette boîte de dialogue n'a pas pu être affichée.</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="fr">Cet éditeur n'a pas pu être affiché.</target>

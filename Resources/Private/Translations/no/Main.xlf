@@ -1130,6 +1130,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="no">Bygg URL-stisegmentet på nytt fra gjeldende sidetittel</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="no">Denne dialogen kunne ikke vises.</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="no">Denne editoren kunne ikke vises.</target>

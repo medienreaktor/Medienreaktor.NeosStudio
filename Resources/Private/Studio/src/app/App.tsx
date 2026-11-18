@@ -64,6 +64,7 @@ import {
   guardNavigation,
   UnsavedChangesDialog,
 } from '@/features/inspector/unsavedChanges'
+import { DialogHost } from '@/features/dialogs/DialogHost'
 import { ModalProvider } from '@/features/modals/ModalHost'
 import { LegacyModulesMenu } from '@/features/navigation/LegacyModulesMenu'
 import {
@@ -491,6 +492,9 @@ function Shell() {
                   settings and sidebar shortcuts reach their contexts. */}
                 <ShortcutHost />
                 <UnsavedChangesDialog />
+                {/* Plugin dialogs (dialogs.open), inside every provider a panel
+                  has - the asset picker included. */}
+                <DialogHost />
                 <AssetPickerPanelBridge />
                 {/* The collaborative session's engine: presence heartbeats and
                   the change-feed tail. Mounted (and thus polling) only while

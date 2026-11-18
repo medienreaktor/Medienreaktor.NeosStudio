@@ -185,6 +185,62 @@ NeosStudio.nodeActions.register({
 NeosStudio.headerActions.register({ id: 'test:fail', label: 'Fail', icon: 'bug', run: () => { throw new Error('Boom') } })
 ```
 
+### Dialogs
+
+A plugin opens its own dialog with `dialogs.open(Component, props)`, from an action, a shortcut or any event handler, without a panel of its own being open. Studio mounts the component inside the shell, so it has the shell's look, theme and translations, and `useStudio()`, `useQuery`/`useMutation` and `translate` work in it as in a panel.
+
+```tsx
+import {
+  Button, DialogContent, DialogFooter, DialogHeader, DialogTitle, Textarea,
+  dialogs, nodeActions, translate as t, type DialogControls, type Node,
+} from '@medienreaktor/neos-studio'
+
+function CommentDialog({ node, close }: { node: Node } & DialogControls<string>) {
+  const [text, setText] = React.useState('')
+  return (
+    <DialogContent size="sm">
+      <DialogHeader>
+        <DialogTitle>{t('Acme.Comments:Main:title', 'Comment on {label}', { label: node.label })}</DialogTitle>
+      </DialogHeader>
+      <Textarea value={text} onChange={(event) => setText(event.target.value)} />
+      <DialogFooter>
+        <Button variant="outline" onClick={() => close()}>Cancel</Button>
+        <Button onClick={() => close(text)}>Comment</Button>
+      </DialogFooter>
+    </DialogContent>
+  )
+}
+
+nodeActions.register({
+  id: 'acme.comments:comment',
+  label: 'Comment',
+  icon: 'comment',
+  handle: true,
+  run: async (node) => {
+    const text = await dialogs.open(CommentDialog, { node }).result
+    if (text !== undefined) await saveComment(node, text)
+  },
+})
+```
+
+- The component gets its props plus `close(result?)`. Studio owns the dialog itself: open state, Escape, outside clicks and the close button close it. The component renders `DialogContent` (with the `size` it needs) and what goes in it.
+- `open()` returns `{ close, result }`. `result` is a promise that settles when the dialog closes: with the value passed to `close`, or `undefined` when it was dismissed. It never rejects.
+- Returned from an action's `run`, the dialog keeps the action busy while it is open, so it cannot be started twice for the same node. The action's loading toast waits until no dialog is open.
+- A dialog opened while another is open stacks on top of it, and Escape closes the top one. Closing a dialog also closes the ones on top of it.
+- If the component crashes, the dialog shows "This dialog could not be displayed" with the error, and the console names the component (its `displayName` or function name).
+- While a built-in asset editor in the dialog picks from the Media Library, the dialog steps aside and comes back with its state.
+
+To try it, paste into the browser console of a running Studio:
+
+```js
+const { createElement: h } = React
+const { dialogs, DialogContent, DialogTitle, Button, toast } = NeosStudio
+const Hello = ({ name, close }) => h(DialogContent, null,
+  h(DialogTitle, null, `Hello ${name}`),
+  h(Button, { onClick: () => close('ok') }, 'OK'))
+dialogs.open(Hello, { name: 'world' }).result.then((result) => toast.info(`Closed with ${result}`))
+```
+
 ### UI components
 
 A plugin builds its UI from the shell's own primitives, imported from the plugin API like everything else:
