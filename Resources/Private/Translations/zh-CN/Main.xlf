@@ -1114,6 +1114,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="zh-CN">根据当前页面标题重新生成 URL 路径段</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="zh-CN">无法显示此对话框。</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="zh-CN">无法显示此编辑器。</target>

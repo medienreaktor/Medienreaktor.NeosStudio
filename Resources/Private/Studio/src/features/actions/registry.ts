@@ -2,6 +2,7 @@ import * as React from 'react'
 import { type Node, nodeAddressKey } from '@/api/neos/schema'
 import type { StudioActions } from '@/app/StudioContext'
 import { toast } from '@/components/ui/toast'
+import { anyDialogOpen, subscribeDialogs } from '@/features/dialogs/store'
 import {
   ObservableRegistry,
   useRegistry,
@@ -74,6 +75,14 @@ export interface NodeActionDefinition {
   group?: string
   /** Rendered in the destructive style (red) - for actions that remove or overwrite. */
   destructive?: boolean
+  /**
+   * Also show the action as an icon button on the handle of a content
+   * element in the preview, left of the "+" (needs an `icon`). It stays in
+   * the element's "..." menu too, which is all that offers it when more than
+   * MAX_HANDLE_ACTIONS handle actions are offered for the element. `when` is
+   * asked with `surface: 'preview'`, as for the menu.
+   */
+  handle?: boolean
   /**
    * Whether to offer the action for this node. Called while the menu
    * renders, so it must be cheap and synchronous (derive from the node:
@@ -198,6 +207,27 @@ export function offeredNodeActionGroups(
   return [...groups.values()]
 }
 
+/** Handle buttons per element at most, so the handle does not grow over the content. */
+export const MAX_HANDLE_ACTIONS = 3
+
+/** The actions asking for a handle button at all, whatever the node. */
+export function handleActionCandidates(
+  actions: NodeActionDefinition[],
+): NodeActionDefinition[] {
+  return actions.filter((action) => action.handle === true && !!action.icon)
+}
+
+/** The handle buttons to show for this node: offered, in order, capped. */
+export function offeredHandleActions(
+  actions: NodeActionDefinition[],
+  node: Node,
+  context: NodeActionContext,
+): NodeActionDefinition[] {
+  return handleActionCandidates(actions)
+    .filter((action) => offered(action, node, context))
+    .slice(0, MAX_HANDLE_ACTIONS)
+}
+
 // Running actions, keyed by action and subject (see busyKey): a module-level
 // store so the busy state survives the menu that started the run closing,
 // and a reopened menu still shows the action busy.
@@ -234,6 +264,30 @@ export function useActionBusy(key: string): boolean {
 const LOADING_TOAST_DELAY_MS = 400
 
 /**
+ * Call `show` once a run has gone LOADING_TOAST_DELAY_MS without feedback.
+ * An open dialog is feedback: a run awaiting `dialogs.open()` would
+ * otherwise announce itself underneath its own dialog. The delay starts over
+ * when the last dialog closes. Returns the cancel.
+ */
+function announceWhenSilent(show: () => void): () => void {
+  let waiting = false
+  const fire = () => {
+    if (anyDialogOpen()) waiting = true
+    else show()
+  }
+  let timer = setTimeout(fire, LOADING_TOAST_DELAY_MS)
+  const unsubscribe = subscribeDialogs(() => {
+    if (!waiting || anyDialogOpen()) return
+    waiting = false
+    timer = setTimeout(fire, LOADING_TOAST_DELAY_MS)
+  })
+  return () => {
+    clearTimeout(timer)
+    unsubscribe()
+  }
+}
+
+/**
  * Run a plugin action's `run` with the guarantees the registries promise: a
  * sync throw and a rejected promise both end as an error toast titled with
  * the action's label and a console error naming its id; a pending promise
@@ -264,20 +318,19 @@ export function runAction(
   // Any thenable counts - a plugin's promise library is its own business.
   if (!isThenable(result)) return
   setRunning(key, true)
-  const timer = announce
-    ? setTimeout(
-        () => toast.loading(labelOf(action.label), { id: toastId }),
-        LOADING_TOAST_DELAY_MS,
+  const cancelAnnouncement = announce
+    ? announceWhenSilent(() =>
+        toast.loading(labelOf(action.label), { id: toastId }),
       )
     : undefined
   Promise.resolve(result)
     .then(
       () => {
-        clearTimeout(timer)
+        cancelAnnouncement?.()
         if (announce) toast.dismiss(toastId)
       },
       (error: unknown) => {
-        clearTimeout(timer)
+        cancelAnnouncement?.()
         fail(error)
       },
     )

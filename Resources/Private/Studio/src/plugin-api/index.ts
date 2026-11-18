@@ -48,6 +48,13 @@ import { queryClient as shellQueryClient } from '@/app/queryClient'
 import { useStudio, useStudioActions } from '@/app/StudioContext'
 import { toast as toastImpl } from '@/components/ui/toast'
 import {
+  type DialogComponent,
+  type DialogHandle,
+  type DialogPropsOf,
+  type DialogResultOf,
+  openDialog,
+} from '@/features/dialogs/store'
+import {
   presenceColor,
   presenceInitials,
 } from '@/features/collaboration/presenceColors'
@@ -182,7 +189,8 @@ export const propertyHints: PropertyHintRegistry = propertyHintRegistry
  * Register/unregister node actions - commands on a node, offered in the
  * context menus of the document tree, the content outliner and the
  * preview's content elements, and in the documents toolbar's "..." menu for
- * the selected document. See {@link NodeActionDefinition}.
+ * the selected document; with `handle: true` also as an icon button on the
+ * handle of a content element in the preview. See {@link NodeActionDefinition}.
  */
 export const nodeActions: NodeActionRegistry = nodeActionRegistry
 /**
@@ -381,6 +389,37 @@ export interface ToastApi {
 export const toast: ToastApi = toastImpl
 
 /**
+ * Open a plugin's own dialog from anywhere - a node or header action, a
+ * shortcut, an event handler - without a panel to render it in. The shell
+ * mounts the component inside its providers, so `useStudio()`, the query
+ * hooks and `translate` work in it as in a panel. See {@link DialogApi.open}.
+ */
+export interface DialogApi {
+  /**
+   * Show `component` as a dialog, with `props` and `close`. The shell owns
+   * the dialog's root (open state, Escape, outside clicks, stacking on
+   * dialogs already open); the component renders `DialogContent` - title,
+   * body, footer, `size` - and calls `close(result)` when done. A crash
+   * shows a fallback in the dialog and is logged with the component's name
+   * (`displayName` or function name).
+   *
+   * The returned `result` settles when the dialog closes, with the value
+   * passed to `close` (undefined when dismissed). Return it from an
+   * action's `run` to keep the action busy while the dialog is open.
+   */
+  open<C extends DialogComponent>(
+    component: C,
+    ...props: object extends DialogPropsOf<C>
+      ? [props?: DialogPropsOf<C>]
+      : [props: DialogPropsOf<C>]
+  ): DialogHandle<DialogResultOf<C>>
+}
+
+export const dialogs: DialogApi = {
+  open: (component, ...[props]) => openDialog(component, props),
+}
+
+/**
  * The shell's UI primitives - Button, Input, Select, Dialog, DropdownMenu,
  * Tooltip, ... - for plugin UI that looks and behaves like the shell's own.
  * Imported by name like everything else here; see ./components.ts for the
@@ -457,6 +496,7 @@ export type {
   NodeDecorationOverlay,
   NodeDecoratorDefinition,
 } from '@/features/tree/decorators'
+export type { DialogControls, DialogHandle } from '@/features/dialogs/store'
 export type {
   PropertyHint,
   PropertyHintDefinition,
@@ -503,6 +543,7 @@ export interface NeosStudioPluginApi extends PluginComponents {
   useStudioActions: typeof useStudioActions
   useKeyboardShortcut: typeof useKeyboardShortcut
   toast: typeof toast
+  dialogs: typeof dialogs
   apiFetch: typeof apiFetch
   studioFetch: typeof studioFetch
   apiStream: typeof apiStream
@@ -572,6 +613,7 @@ export function installPluginApiGlobals(): void {
     useStudioActions,
     useKeyboardShortcut,
     toast,
+    dialogs,
     apiFetch,
     studioFetch,
     apiStream,

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
  * the same registries and so the same boundaries.
  */
 export type ExtensionKind =
-  'panel' | 'editor' | 'view' | 'settingsSection' | 'linkType'
+  'panel' | 'editor' | 'view' | 'settingsSection' | 'linkType' | 'dialog'
 
 interface ExtensionBoundaryProps {
   kind: ExtensionKind
@@ -27,6 +27,12 @@ interface ExtensionBoundaryProps {
    * staying broken for the session.
    */
   resetKeys?: readonly unknown[]
+  /**
+   * Frames the fallback, for a component that brings its own frame - a
+   * dialog renders its popup itself, so without one the fallback would show
+   * nowhere.
+   */
+  fallbackFrame?: React.ComponentType<{ children: React.ReactNode }>
   children: React.ReactNode
 }
 
@@ -59,6 +65,11 @@ function crashMessage(kind: ExtensionKind): string {
         'extension.crashed.linkType',
         'This link type could not be displayed.',
       )
+    case 'dialog':
+      return t(
+        'extension.crashed.dialog',
+        'This dialog could not be displayed.',
+      )
   }
 }
 
@@ -77,7 +88,7 @@ function sameKeys(
 
 /**
  * Contains a crash of one registered component - a plugin's panel, editor,
- * view, settings section or link type, or a built-in one - to that
+ * view, settings section, link type or dialog, or a built-in one - to that
  * component. Without it, React 19 unmounts the whole app on an error thrown
  * while rendering (or in an effect), so one broken plugin would blank Studio
  * for every editor. The fallback names the component, offers to try again,
@@ -122,10 +133,10 @@ export class ExtensionBoundary extends React.Component<
     const { error } = this.state
     if (!error) return this.props.children
 
-    const { kind, id, variant = 'block' } = this.props
+    const { kind, id, variant = 'block', fallbackFrame: Frame } = this.props
     const message = crashMessage(kind)
 
-    return (
+    const fallback = (
       <div
         role="alert"
         data-extension-kind={kind}
@@ -159,6 +170,7 @@ export class ExtensionBoundary extends React.Component<
         </Button>
       </div>
     )
+    return Frame ? <Frame>{fallback}</Frame> : fallback
   }
 }
 

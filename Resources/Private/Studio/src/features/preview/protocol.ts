@@ -100,6 +100,21 @@ export type GuestToHostMessage =
       defaultMode: 'inside' | 'after'
     }
   /**
+   * The handle moved to this content element while handle actions are
+   * registered (see handle-actions-changed): the host answers with
+   * handle-actions, the buttons the element's node is offered.
+   */
+  | { type: 'neos-studio/handle-actions-request'; nodeAddress: string }
+  /**
+   * A handle button of a registered node action was clicked: the host runs
+   * the action on the node, if it is still offered there.
+   */
+  | {
+      type: 'neos-studio/node-action-request'
+      actionId: string
+      nodeAddress: string
+    }
+  /**
    * A content element was dragged by its handle onto a new insertion point.
    * The element goes before the succeeding sibling, or to the end of the
    * collection when the sibling is null.
@@ -192,6 +207,19 @@ export interface PresenceHighlight {
   name: string
 }
 
+/**
+ * A registered node action as a button on the element handle. The guest has
+ * neither the shell's translations nor its icon font, so both arrive
+ * resolved.
+ */
+export interface HandleAction {
+  id: string
+  /** Translated; the button's aria-label and title. */
+  label: string
+  /** The glyph as an image URL (used as a mask, so it takes the button's color); null when it could not be drawn. */
+  icon: string | null
+}
+
 export type HostToGuestMessage =
   /**
    * Answer to guest-ready: the guest's label catalogue, translated into the
@@ -219,6 +247,19 @@ export type HostToGuestMessage =
    * node is not rendered on this page.
    */
   | { type: 'neos-studio/flash-node'; aggregateId: string }
+  /**
+   * The registered handle actions changed (also sent once the guest is
+   * ready). With `available` false none could show, and the guest asks
+   * nothing; otherwise it drops the buttons it holds and asks again for the
+   * element under the handle.
+   */
+  | { type: 'neos-studio/handle-actions-changed'; available: boolean }
+  /** Answer to handle-actions-request; an empty list shows no buttons. */
+  | {
+      type: 'neos-studio/handle-actions'
+      nodeAddress: string
+      actions: HandleAction[]
+    }
   /**
    * The collaborators currently on this document and the elements they
    * focus. Replaces the previous set; an empty list clears all presence
@@ -317,6 +358,11 @@ const GUEST_MESSAGE_FIELDS: {
     nodeAddress: isString,
     parentNodeAddress: isStringOrNull,
     defaultMode: (value) => value === 'inside' || value === 'after',
+  },
+  'neos-studio/handle-actions-request': { nodeAddress: isString },
+  'neos-studio/node-action-request': {
+    actionId: isString,
+    nodeAddress: isString,
   },
   'neos-studio/move-node-request': {
     nodeAddress: isString,

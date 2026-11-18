@@ -1162,6 +1162,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="ru">Пересоздать сегмент пути URL из текущего заголовка страницы</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="ru">Не удалось отобразить это диалоговое окно.</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="ru">Не удалось отобразить этот редактор.</target>

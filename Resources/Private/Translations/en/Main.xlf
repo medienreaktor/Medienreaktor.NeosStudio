@@ -964,6 +964,9 @@
       <trans-unit id="editor.uriPathSegment.rebuild" xml:space="preserve">
         <source>Rebuild the URL path segment from the current page title</source>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
       </trans-unit>

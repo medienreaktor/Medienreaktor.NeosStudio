@@ -27,6 +27,7 @@
  */
 import type {
   GuestToHostMessage,
+  HandleAction,
   HostToGuestMessage,
   PresenceHighlight,
 } from '../features/preview/protocol'
@@ -77,6 +78,9 @@ const EMPTY_CLASS = 'neos-studio-empty'
 const INDICATOR_ID = 'neos-studio-drop-indicator'
 const HANDLE_ID = 'neos-studio-element-handle'
 const ADD_BUTTON_ID = 'neos-studio-element-add-button'
+const HANDLE_ACTION_CLASS = 'neos-studio-handle-action'
+/** The buttons sitting against the element under the handle. */
+const HANDLE_ROW_SELECTOR = `#${HANDLE_ID}, #${ADD_BUTTON_ID}, .${HANDLE_ACTION_CLASS}`
 const COLLECTION_ADD_CLASS = 'neos-studio-collection-add'
 const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
 const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
@@ -317,7 +321,7 @@ function injectStyles(): void {
     }
     /* The "+" companion of the handle: opens the insertion dialog for the
        element (create before/inside/after). Same look, click-only. */
-    #${ADD_BUTTON_ID} {
+    #${ADD_BUTTON_ID}, .${HANDLE_ACTION_CLASS} {
       position: fixed;
       z-index: 2147483646;
       display: none;
@@ -333,6 +337,22 @@ function injectStyles(): void {
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
+    }
+    /* The glyph of a plugin's handle button arrives as an image from the
+       host (the page has no icon font) and is used as a mask, so it takes
+       the button's color like the inline SVGs. */
+    .${HANDLE_ACTION_CLASS} > span {
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      mask: var(--neos-studio-icon) center / contain no-repeat;
+    }
+    /* No glyph to draw (an unknown icon name): the label's initial. */
+    .${HANDLE_ACTION_CLASS} > span[data-initial] {
+      mask: none;
+      background: none;
+      font: 600 12px/14px system-ui, -apple-system, sans-serif;
+      text-align: center;
     }
     /* The standing "add content" affordance inside empty collections - the
        only way into a collection with nothing to hover. */
@@ -582,6 +602,58 @@ function onAddClick(): void {
   })
 }
 
+/**
+ * Plugins' node actions as buttons left of the "+" (registered with
+ * `handle: true` in the shell). The host decides which ones an element gets
+ * - it evaluates their `when` on the node - and runs them; the guest only
+ * asks whenever the handle moves to another element, and draws the answer.
+ */
+let handleActionsAvailable = false
+/** The element the shown (or awaited) handle actions are for. */
+let handleActionsElement: HTMLElement | null = null
+let handleActionButtons: HTMLElement[] = []
+
+function setHandleActions(actions: HandleAction[]): void {
+  for (const button of handleActionButtons) button.remove()
+  handleActionButtons = actions.map((action) => {
+    const button = document.createElement('div')
+    button.className = HANDLE_ACTION_CLASS
+    button.setAttribute('role', 'button')
+    button.setAttribute('aria-label', action.label)
+    button.title = action.label
+    const icon = document.createElement('span')
+    icon.setAttribute('aria-hidden', 'true')
+    if (action.icon !== null) {
+      icon.style.setProperty('--neos-studio-icon', `url("${action.icon}")`)
+    } else {
+      icon.dataset.initial = ''
+      icon.textContent = action.label.charAt(0)
+    }
+    button.appendChild(icon)
+    button.addEventListener('click', () => onHandleActionClick(action.id))
+    document.body.appendChild(button)
+    return button
+  })
+}
+
+/** Ask the host for the buttons of the element the handle moved to. */
+function requestHandleActions(element: HTMLElement | null): void {
+  handleActionsElement = element
+  setHandleActions([])
+  const nodeAddress = element?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (handleActionsAvailable && nodeAddress)
+    post({ type: 'neos-studio/handle-actions-request', nodeAddress })
+}
+
+function onHandleActionClick(actionId: string): void {
+  const element = handleTarget
+  const nodeAddress = element?.getAttribute(WRAPPER_ATTRIBUTE)
+  if (!element || !nodeAddress) return
+  // As for "+" and "...": the action is about the element - inspect it.
+  select(element, { notifyHost: true })
+  post({ type: 'neos-studio/node-action-request', actionId, nodeAddress })
+}
+
 /** The element the handle is currently attached to (hovered or selected). */
 let handleTarget: HTMLElement | null = null
 
@@ -610,6 +682,12 @@ function positionHandle(): void {
       : null
   const target = hovered ?? selected
   handleTarget = target !== null && target.isConnected ? target : null
+  if (handleTarget !== handleActionsElement) requestHandleActions(handleTarget)
+  // While the element is dragged the pair stays its grip; the plugins'
+  // buttons have nothing to offer then.
+  const actionButtons = activeDrag === null ? handleActionButtons : []
+  if (actionButtons.length === 0)
+    for (const button of handleActionButtons) button.style.display = 'none'
   if (handleTarget === null) {
     handle.style.display = 'none'
     addButton.style.display = 'none'
@@ -622,8 +700,16 @@ function positionHandle(): void {
   // the pair without crossing other content, whose hover would move the pair
   // away from under it.
   const rect = handleTarget.getBoundingClientRect()
-  const pairLeft = Math.max(HANDLE_GAP, rect.right - HANDLE_PAIR_WIDTH)
+  const rowWidth =
+    HANDLE_PAIR_WIDTH + actionButtons.length * (HANDLE_SIZE + HANDLE_GAP)
+  const rowLeft = Math.max(HANDLE_GAP, rect.right - rowWidth)
+  const pairLeft = rowLeft + (rowWidth - HANDLE_PAIR_WIDTH)
   const top = rect.bottom + OUTLINE_CENTER_OFFSET - HANDLE_SIZE / 2
+  actionButtons.forEach((button, index) => {
+    button.style.display = 'flex'
+    button.style.left = `${rowLeft + index * (HANDLE_SIZE + HANDLE_GAP)}px`
+    button.style.top = `${top}px`
+  })
   // The "+" sits directly left of the "..." handle.
   addButton.style.display = 'flex'
   addButton.style.left = `${pairLeft}px`
@@ -911,7 +997,7 @@ const richTextHooks: RichTextHooks = {
 function isStudioUi(target: HTMLElement): boolean {
   return (
     target.closest(
-      `#${HANDLE_ID}, #${ADD_BUTTON_ID}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}, .${COLLECTION_ADD_CLASS}`,
+      `${HANDLE_ROW_SELECTOR}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}, .${COLLECTION_ADD_CLASS}`,
     ) !== null
   )
 }
@@ -1039,9 +1125,10 @@ function handleLinkClick(
 
 function onMouseOver(event: MouseEvent): void {
   const target = event.target as HTMLElement | null
-  // Over the "..." handle or its "+" companion (they sit against their
-  // element): keep the hover state, so they do not vanish under the pointer.
-  if (target?.closest?.(`#${HANDLE_ID}, #${ADD_BUTTON_ID}`)) return
+  // Over the "..." handle, its "+" companion or a plugin's button (they sit
+  // against their element): keep the hover state, so they do not vanish
+  // under the pointer.
+  if (target?.closest?.(HANDLE_ROW_SELECTOR)) return
   // Over the image overlay's button (the only part taking the pointer): keep
   // the overlay shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
@@ -1125,6 +1212,7 @@ function collectionAllows(
 
 function startDrag(nodeTypeName: string, movingElement: HTMLElement): void {
   activeDrag = { nodeTypeName, movingElement }
+  scheduleHandleUpdate()
   for (const collection of document.querySelectorAll<HTMLElement>(
     `[${COLLECTION_ATTRIBUTE}]`,
   )) {
@@ -1137,6 +1225,7 @@ function startDrag(nodeTypeName: string, movingElement: HTMLElement): void {
 
 function endDrag(): void {
   activeDrag = null
+  scheduleHandleUpdate()
   setDropTarget(null)
   for (const collection of document.querySelectorAll<HTMLElement>(
     `.${DROPPABLE_CLASS}`,
@@ -1772,6 +1861,21 @@ function onHostMessage(event: MessageEvent): void {
     // An element replaced out-of-band can leave stale index entries behind.
     const element = indexed?.isConnected ? indexed : null
     select(element, { notifyHost: false, reveal: message.reveal !== false })
+  }
+  if (message?.type === 'neos-studio/handle-actions-changed') {
+    handleActionsAvailable = message.available
+    // Asks afresh for the element under the handle, if any.
+    requestHandleActions(handleTarget)
+    scheduleHandleUpdate()
+  }
+  if (
+    message?.type === 'neos-studio/handle-actions' &&
+    // An answer for an element the handle has left since is dropped.
+    message.nodeAddress ===
+      handleActionsElement?.getAttribute(WRAPPER_ATTRIBUTE)
+  ) {
+    setHandleActions(message.actions)
+    scheduleHandleUpdate()
   }
   if (message?.type === 'neos-studio/flash-node') {
     flash(elementsByAggregateId.get(message.aggregateId) ?? null)

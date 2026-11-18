@@ -1130,6 +1130,10 @@
         <source>Rebuild the URL path segment from the current page title</source>
         <target xml:lang="fi">Luo URL-polun osa uudelleen sivun nykyisestä otsikosta</target>
       </trans-unit>
+      <trans-unit id="extension.crashed.dialog" xml:space="preserve">
+        <source>This dialog could not be displayed.</source>
+        <target xml:lang="fi">Tätä valintaikkunaa ei voitu näyttää.</target>
+      </trans-unit>
       <trans-unit id="extension.crashed.editor" xml:space="preserve">
         <source>This editor could not be displayed.</source>
         <target xml:lang="fi">Tätä editoria ei voitu näyttää.</target>

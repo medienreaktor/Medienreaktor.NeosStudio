@@ -106,7 +106,7 @@ A plugin is a small IIFE bundle that uses the shell's plugin API on `window.Neos
 TypeScript types come as one declaration file, `Resources/Public/Studio/types/index.d.ts`, built by `npm run build:plugin-types` (the end of `npm run build`). The same directory is a types-only npm package named like the import, published with every Studio release, so a plugin installs the version matching the Studio it targets:
 
 ```bash
-npm install -D @medienreaktor/neos-studio@2.4.0
+npm install -D @medienreaktor/neos-studio@2.6.0
 ```
 
 npm adds `@types/react` and `@types/react-dom` as peers. The package contains no JavaScript: mark `@medienreaktor/neos-studio`, `react`, `react-dom` and `react/jsx-runtime` external in your bundler and map them to the globals the shell publishes (`NeosStudio`, `React`, `ReactDOM`, `ReactJSXRuntime`; see the example plugin's `vite.config.ts`). A plugin that forgets this fails at build time instead of bundling a stub.
@@ -138,6 +138,7 @@ nodeActions.register({
   group: 'acme.seo',                // optional: actions of a group sit together, between separators
   order: 100,                       // optional: lower first
   destructive: false,               // optional: red, for actions that remove or overwrite
+  handle: false,                    // optional: also an icon button on the element handle in the preview
   when: (node, { surface, selection }) => surface !== 'preview' && node.nodeType.startsWith('Acme.Site:'),
   run: async (node, { selection, studio }) => {
     await apiFetch('/acme/seo-audit', { method: 'POST', body: { nodes: selection.map((n) => n.nodeAggregateId) } })
@@ -158,6 +159,7 @@ headerActions.register({
 - `run(node, context)` gets the node the menu was opened on (Neos.Api's `Node`) and `context`: `surface` (`'documentTree'`, `'contentOutliner'`, `'preview'` or `'documentsToolbar'`), `selection` (every node the invocation is about - the whole multi-selection in a tree, otherwise just the node) and `studio`, the shell's actions. A header action's `run(context)` gets the selected `document`, the `workspaceName` and `studio`.
 - `when` decides whether to offer the action. It runs while the menu or header renders, so keep it cheap and synchronous. Without it the action is always offered.
 - If `run` throws or its promise rejects, Studio shows the error as a toast titled with the action's label and logs it with the action id. While the promise is pending the action is busy: a header button shows a spinner, a menu item is disabled with a spinner when the menu is opened again, and a run that takes longer than a moment shows a loading toast. If `when` throws, the action is hidden and the error logged.
+- With `handle: true` (and an `icon`), a node action also shows as an icon button on the handle of a content element in the preview, left of the "+", in `order`. `when` decides per element, asked with `surface: 'preview'` as for the "…" menu, and `run` gets the same context as from there. The action stays in the "…" menu too, and only the first three handle actions offered for an element get a button, so the handle does not grow over the content; the others are in the menu only. The label becomes the button's tooltip and accessible name. The buttons come from the bundle alone: Studio draws the icon and runs the action, no code goes into the page.
 - Studio's own menu items (create, cut, copy, paste, hide, delete) are not registered actions: they work on parts of a multi-selection, read the clipboard and share the delete confirmation, which a `run(node)` cannot express.
 
 To try it, paste into the browser console of a running Studio:
@@ -172,6 +174,14 @@ NeosStudio.nodeActions.register({
       NeosStudio.toast.success(`${node.label} (${surface}, ${selection.length} selected)`)
       resolve()
     }, 1500)),
+})
+NeosStudio.nodeActions.register({
+  id: 'test:comment',
+  label: 'Comment',
+  icon: 'comment',
+  handle: true,
+  when: (node, { surface }) => surface !== 'preview' || node.nodeType.endsWith(':Content.Text'),
+  run: (node) => NeosStudio.toast.info(`Comment on ${node.label}`),
 })
 NeosStudio.headerActions.register({ id: 'test:fail', label: 'Fail', icon: 'bug', run: () => { throw new Error('Boom') } })
 ```
@@ -210,6 +220,62 @@ panels.refresh()
 - A hint shows under its field, with an icon and color for its tone. It informs only: unlike a validator it does not mark the field invalid, does not hold up saving and needs no `validation` entry in the node type. Hints of all providers stack, in their `order`.
 - `hints` and `badge` are called while Studio renders: keep them synchronous and cheap, fetch elsewhere, then `refresh()`. One that throws is logged and skipped.
 - A badge with a count of 0, or null, shows nothing. `tone` is `alert` (red, the default), `warning` (orange) or `neutral`; `label` is the tooltip. `panels.refresh()` re-reads the badges only, the layout stays as it is.
+
+### Dialogs
+
+A plugin opens its own dialog with `dialogs.open(Component, props)`, from an action, a shortcut or any event handler, without a panel of its own being open. Studio mounts the component inside the shell, so it has the shell's look, theme and translations, and `useStudio()`, `useQuery`/`useMutation` and `translate` work in it as in a panel.
+
+```tsx
+import {
+  Button, DialogContent, DialogFooter, DialogHeader, DialogTitle, Textarea,
+  dialogs, nodeActions, translate as t, type DialogControls, type Node,
+} from '@medienreaktor/neos-studio'
+
+function CommentDialog({ node, close }: { node: Node } & DialogControls<string>) {
+  const [text, setText] = React.useState('')
+  return (
+    <DialogContent size="sm">
+      <DialogHeader>
+        <DialogTitle>{t('Acme.Comments:Main:title', 'Comment on {label}', { label: node.label })}</DialogTitle>
+      </DialogHeader>
+      <Textarea value={text} onChange={(event) => setText(event.target.value)} />
+      <DialogFooter>
+        <Button variant="outline" onClick={() => close()}>Cancel</Button>
+        <Button onClick={() => close(text)}>Comment</Button>
+      </DialogFooter>
+    </DialogContent>
+  )
+}
+
+nodeActions.register({
+  id: 'acme.comments:comment',
+  label: 'Comment',
+  icon: 'comment',
+  handle: true,
+  run: async (node) => {
+    const text = await dialogs.open(CommentDialog, { node }).result
+    if (text !== undefined) await saveComment(node, text)
+  },
+})
+```
+
+- The component gets its props plus `close(result?)`. Studio owns the dialog itself: open state, Escape, outside clicks and the close button close it. The component renders `DialogContent` (with the `size` it needs) and what goes in it.
+- `open()` returns `{ close, result }`. `result` is a promise that settles when the dialog closes: with the value passed to `close`, or `undefined` when it was dismissed. It never rejects.
+- Returned from an action's `run`, the dialog keeps the action busy while it is open, so it cannot be started twice for the same node. The action's loading toast waits until no dialog is open.
+- A dialog opened while another is open stacks on top of it, and Escape closes the top one. Closing a dialog also closes the ones on top of it.
+- If the component crashes, the dialog shows "This dialog could not be displayed" with the error, and the console names the component (its `displayName` or function name).
+- While a built-in asset editor in the dialog picks from the Media Library, the dialog steps aside and comes back with its state.
+
+To try it, paste into the browser console of a running Studio:
+
+```js
+const { createElement: h } = React
+const { dialogs, DialogContent, DialogTitle, Button, toast } = NeosStudio
+const Hello = ({ name, close }) => h(DialogContent, null,
+  h(DialogTitle, null, `Hello ${name}`),
+  h(Button, { onClick: () => close('ok') }, 'OK'))
+dialogs.open(Hello, { name: 'world' }).result.then((result) => toast.info(`Closed with ${result}`))
+```
 
 ### UI components
 
