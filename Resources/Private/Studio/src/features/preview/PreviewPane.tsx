@@ -19,6 +19,11 @@ import {
   takePendingFlash,
 } from '@/app/flash'
 import { useNodeEditable } from '@/features/access/useAccess'
+import { useStudioActions } from '@/app/StudioContext'
+import {
+  handleActionCandidates,
+  useNodeActions,
+} from '@/features/actions/registry'
 import {
   InsertNodeDialog,
   type InsertRequest,
@@ -50,6 +55,7 @@ import type {
   LinkAttributes,
   PresenceHighlight,
 } from './protocol'
+import { handleActionsFor, runHandleAction } from './handleActions'
 import { useGuestBridge } from './useGuestBridge'
 import { usePreviewLayers } from './usePreviewLayers'
 
@@ -197,6 +203,8 @@ export function PreviewPane({
   } | null>(null)
   // Opening the Media Library picker for an image clicked in the preview.
   const { requestPick } = useAssetPicker()
+  const studio = useStudioActions()
+  const nodeActions = useNodeActions()
 
   // Read by the message handler, which runs outside of render.
   const documentAddressRef = useLatestRef(document)
@@ -323,6 +331,24 @@ export function PreviewPane({
             : null,
           defaultMode: message.defaultMode,
         })
+        break
+      }
+      case 'neos-studio/handle-actions-request': {
+        const address = addressOf(message.nodeAddress)
+        if (!address) break
+        const nodeAddress = message.nodeAddress
+        void handleActionsFor(address, studio).then((actions) =>
+          postToGuest({
+            type: 'neos-studio/handle-actions',
+            nodeAddress,
+            actions,
+          }),
+        )
+        break
+      }
+      case 'neos-studio/node-action-request': {
+        const address = addressOf(message.nodeAddress)
+        if (address) void runHandleAction(message.actionId, address, studio)
         break
       }
       case 'neos-studio/element-menu-request': {
@@ -585,6 +611,17 @@ export function PreviewPane({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
     if (updateToken !== undefined) runElementUpdate()
   }, [updateToken])
+
+  // On every registry change - a re-registered action may be offered
+  // elsewhere now - and right after the guest boots: it asks for handle
+  // buttons only while some could show.
+  useEffect(() => {
+    if (!guestReady) return
+    postToGuest({
+      type: 'neos-studio/handle-actions-changed',
+      available: handleActionCandidates(nodeActions).length > 0,
+    })
+  }, [guestReady, nodeActions, postToGuest])
 
   // Push the collaborators' positions into the guest (also right after it
   // boots, so a reloaded frame regains the presence decor and edit locks).

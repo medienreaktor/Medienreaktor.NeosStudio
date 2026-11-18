@@ -75,6 +75,14 @@ export interface NodeActionDefinition {
   /** Rendered in the destructive style (red) - for actions that remove or overwrite. */
   destructive?: boolean
   /**
+   * Also show the action as an icon button on the handle of a content
+   * element in the preview, left of the "+" (needs an `icon`). It stays in
+   * the element's "..." menu too, which is all that offers it when more than
+   * MAX_HANDLE_ACTIONS handle actions are offered for the element. `when` is
+   * asked with `surface: 'preview'`, as for the menu.
+   */
+  handle?: boolean
+  /**
    * Whether to offer the action for this node. Called while the menu
    * renders, so it must be cheap and synchronous (derive from the node:
    * nodeType, tags, properties). Absent: always offered. A `when` that
@@ -196,6 +204,27 @@ export function offeredNodeActionGroups(
     groups.set(key, [...(groups.get(key) ?? []), action])
   }
   return [...groups.values()]
+}
+
+/** Handle buttons per element at most, so the handle does not grow over the content. */
+export const MAX_HANDLE_ACTIONS = 3
+
+/** The actions asking for a handle button at all, whatever the node. */
+export function handleActionCandidates(
+  actions: NodeActionDefinition[],
+): NodeActionDefinition[] {
+  return actions.filter((action) => action.handle === true && !!action.icon)
+}
+
+/** The handle buttons to show for this node: offered, in order, capped. */
+export function offeredHandleActions(
+  actions: NodeActionDefinition[],
+  node: Node,
+  context: NodeActionContext,
+): NodeActionDefinition[] {
+  return handleActionCandidates(actions)
+    .filter((action) => offered(action, node, context))
+    .slice(0, MAX_HANDLE_ACTIONS)
 }
 
 // Running actions, keyed by action and subject (see busyKey): a module-level

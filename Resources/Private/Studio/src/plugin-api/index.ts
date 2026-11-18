@@ -171,7 +171,8 @@ export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
  * Register/unregister node actions - commands on a node, offered in the
  * context menus of the document tree, the content outliner and the
  * preview's content elements, and in the documents toolbar's "..." menu for
- * the selected document. See {@link NodeActionDefinition}.
+ * the selected document; with `handle: true` also as an icon button on the
+ * handle of a content element in the preview. See {@link NodeActionDefinition}.
  */
 export const nodeActions: NodeActionRegistry = nodeActionRegistry
 /**

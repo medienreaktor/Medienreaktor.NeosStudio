@@ -137,6 +137,7 @@ nodeActions.register({
   group: 'acme.seo',                // optional: actions of a group sit together, between separators
   order: 100,                       // optional: lower first
   destructive: false,               // optional: red, for actions that remove or overwrite
+  handle: false,                    // optional: also an icon button on the element handle in the preview
   when: (node, { surface, selection }) => surface !== 'preview' && node.nodeType.startsWith('Acme.Site:'),
   run: async (node, { selection, studio }) => {
     await apiFetch('/acme/seo-audit', { method: 'POST', body: { nodes: selection.map((n) => n.nodeAggregateId) } })
@@ -157,6 +158,7 @@ headerActions.register({
 - `run(node, context)` gets the node the menu was opened on (Neos.Api's `Node`) and `context`: `surface` (`'documentTree'`, `'contentOutliner'`, `'preview'` or `'documentsToolbar'`), `selection` (every node the invocation is about - the whole multi-selection in a tree, otherwise just the node) and `studio`, the shell's actions. A header action's `run(context)` gets the selected `document`, the `workspaceName` and `studio`.
 - `when` decides whether to offer the action. It runs while the menu or header renders, so keep it cheap and synchronous. Without it the action is always offered.
 - If `run` throws or its promise rejects, Studio shows the error as a toast titled with the action's label and logs it with the action id. While the promise is pending the action is busy: a header button shows a spinner, a menu item is disabled with a spinner when the menu is opened again, and a run that takes longer than a moment shows a loading toast. If `when` throws, the action is hidden and the error logged.
+- With `handle: true` (and an `icon`), a node action also shows as an icon button on the handle of a content element in the preview, left of the "+", in `order`. `when` decides per element, asked with `surface: 'preview'` as for the "…" menu, and `run` gets the same context as from there. The action stays in the "…" menu too, and only the first three handle actions offered for an element get a button, so the handle does not grow over the content; the others are in the menu only. The label becomes the button's tooltip and accessible name. The buttons come from the bundle alone: Studio draws the icon and runs the action, no code goes into the page.
 - Studio's own menu items (create, cut, copy, paste, hide, delete) are not registered actions: they work on parts of a multi-selection, read the clipboard and share the delete confirmation, which a `run(node)` cannot express.
 
 To try it, paste into the browser console of a running Studio:
@@ -171,6 +173,14 @@ NeosStudio.nodeActions.register({
       NeosStudio.toast.success(`${node.label} (${surface}, ${selection.length} selected)`)
       resolve()
     }, 1500)),
+})
+NeosStudio.nodeActions.register({
+  id: 'test:comment',
+  label: 'Comment',
+  icon: 'comment',
+  handle: true,
+  when: (node, { surface }) => surface !== 'preview' || node.nodeType.endsWith(':Content.Text'),
+  run: (node) => NeosStudio.toast.info(`Comment on ${node.label}`),
 })
 NeosStudio.headerActions.register({ id: 'test:fail', label: 'Fail', icon: 'bug', run: () => { throw new Error('Boom') } })
 ```

@@ -13830,6 +13830,14 @@ interface NodeActionDefinition {
   /** Rendered in the destructive style (red) - for actions that remove or overwrite. */
   destructive?: boolean;
   /**
+   * Also show the action as an icon button on the handle of a content
+   * element in the preview, left of the "+" (needs an `icon`). It stays in
+   * the element's "..." menu too, which is all that offers it when more than
+   * MAX_HANDLE_ACTIONS handle actions are offered for the element. `when` is
+   * asked with `surface: 'preview'`, as for the menu.
+   */
+  handle?: boolean;
+  /**
    * Whether to offer the action for this node. Called while the menu
    * renders, so it must be cheap and synchronous (derive from the node:
    * nodeType, tags, properties). Absent: always offered. A `when` that
@@ -22082,7 +22090,8 @@ export declare const nodeDecorators: NodeDecoratorRegistry;
  * Register/unregister node actions - commands on a node, offered in the
  * context menus of the document tree, the content outliner and the
  * preview's content elements, and in the documents toolbar's "..." menu for
- * the selected document. See {@link NodeActionDefinition}.
+ * the selected document; with `handle: true` also as an icon button on the
+ * handle of a content element in the preview. See {@link NodeActionDefinition}.
  */
 export declare const nodeActions: NodeActionRegistry;
 /**
