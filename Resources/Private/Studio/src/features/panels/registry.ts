@@ -1,4 +1,4 @@
-import type * as React from 'react'
+import * as React from 'react'
 import { ObservableRegistry, labelOf } from '@/lib/registry'
 import type { PanelRect } from './geometry'
 import type { DockRegion } from './panelLayout'
@@ -40,6 +40,22 @@ export type PanelDefinition = {
   component: React.ComponentType
   /** Where the panel appears when absent from the stored layout. */
   defaultPlacement: PanelPlacement
+  /**
+   * A count on the panel's tab, to draw attention to what the panel has to
+   * say: findings, unread messages, open tasks. Asked whenever the tab
+   * renders - keep it cheap and synchronous - and again after
+   * {@link PanelRegistry.refresh}. Null, or a count of 0, for none.
+   */
+  badge?: () => PanelBadge | null
+}
+
+/** A count bubble on a panel's tab. */
+export interface PanelBadge {
+  count: number
+  /** alert (red, the default), warning (orange) or neutral. */
+  tone?: 'alert' | 'warning' | 'neutral'
+  /** Tooltip and accessible description, e.g. "3 warnings". */
+  label?: string
 }
 
 /** A panel's current tab label. */
@@ -52,6 +68,48 @@ export function panelTitle(definition: Pick<PanelDefinition, 'title'>): string {
  * replaces-by-id, stable getAll() snapshot, bound subscribe) lives in
  * {@link ObservableRegistry}.
  */
-export class PanelRegistry extends ObservableRegistry<PanelDefinition> {}
+export class PanelRegistry extends ObservableRegistry<PanelDefinition> {
+  private badgeListeners = new Set<() => void>()
+  private badgeVersion = 0
+
+  /**
+   * Ask every panel for its badge again: a panel's own data changed. Only the
+   * tabs re-render - the layout is left alone.
+   */
+  refresh(): void {
+    this.badgeVersion++
+    for (const listener of this.badgeListeners) listener()
+  }
+
+  /** @internal Subscribes a tab to {@link refresh}. */
+  subscribeBadges = (listener: () => void): (() => void) => {
+    this.badgeListeners.add(listener)
+    return () => this.badgeListeners.delete(listener)
+  }
+
+  /** @internal Changes with every {@link refresh}. */
+  badgesVersion = (): number => this.badgeVersion
+}
 
 export const panelRegistry = new PanelRegistry()
+
+/**
+ * A panel's badge, re-read after every refresh(). A badge function that throws
+ * is logged and shows nothing - a broken plugin must not take the tabs down.
+ */
+export function usePanelBadge(
+  definition: PanelDefinition | undefined,
+): PanelBadge | null {
+  React.useSyncExternalStore(
+    panelRegistry.subscribeBadges,
+    panelRegistry.badgesVersion,
+  )
+  if (!definition?.badge) return null
+  try {
+    const badge = definition.badge()
+    return badge && badge.count > 0 ? badge : null
+  } catch (error) {
+    console.error(`Badge of panel "${definition.id}" threw:`, error)
+    return null
+  }
+}

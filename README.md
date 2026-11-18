@@ -83,9 +83,10 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 
 | Registry             | What you can add                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------------------ |
-| Panels               | New panels, docked like the built-in ones                                                        |
+| Panels               | New panels, docked like the built-in ones, optionally with a count badge on their tab            |
 | Inspector editors    | Property editors for node type properties                                                        |
 | Inspector views      | Read-only views and widgets in the inspector                                                     |
+| Property hints       | Notes under a property's field in the inspector, from a plugin's own data                       |
 | Validators           | Client-side validation                                                                           |
 | Link editor tabs     | New link targets in the link dialog                                                              |
 | Settings sections    | Sections in the settings dialog (`modals` is a deprecated alias)                                 |
@@ -105,7 +106,7 @@ A plugin is a small IIFE bundle that uses the shell's plugin API on `window.Neos
 TypeScript types come as one declaration file, `Resources/Public/Studio/types/index.d.ts`, built by `npm run build:plugin-types` (the end of `npm run build`). The same directory is a types-only npm package named like the import, published with every Studio release, so a plugin installs the version matching the Studio it targets:
 
 ```bash
-npm install -D @medienreaktor/neos-studio@2.3.1
+npm install -D @medienreaktor/neos-studio@2.4.0
 ```
 
 npm adds `@types/react` and `@types/react-dom` as peers. The package contains no JavaScript: mark `@medienreaktor/neos-studio`, `react`, `react-dom` and `react/jsx-runtime` external in your bundler and map them to the globals the shell publishes (`NeosStudio`, `React`, `ReactDOM`, `ReactJSXRuntime`; see the example plugin's `vite.config.ts`). A plugin that forgets this fails at build time instead of bundling a stub.
@@ -174,6 +175,41 @@ NeosStudio.nodeActions.register({
 })
 NeosStudio.headerActions.register({ id: 'test:fail', label: 'Fail', icon: 'bug', run: () => { throw new Error('Boom') } })
 ```
+
+### Property hints and panel badges
+
+A plugin with something to say about content - a content check's findings, a workflow's reminders - says it where the editor works, without configuring every node type and without getting in the way of saving.
+
+```ts
+import { panels, propertyHints } from '@medienreaktor/neos-studio'
+
+propertyHints.register({
+  id: 'acme.seo:findings',
+  // Called while the inspector renders, for every property of the inspected node.
+  hints: (node, propertyName) =>
+    findingsFor(node.nodeAggregateId, propertyName).map((finding) => ({
+      tone: finding.severe ? 'error' : 'warning', // or 'info'
+      message: finding.message,
+      source: 'SEO', // optional, shown before the message
+    })),
+})
+
+panels.register({
+  id: 'acme.seo:findings',
+  title: 'SEO',
+  component: SeoPanel,
+  defaultPlacement: { kind: 'dock', region: 'secondary', group: 'inspect' }, // next to Inspector and History
+  badge: () => ({ count: openFindings(), tone: 'warning', label: `${openFindings()} findings` }),
+})
+
+// When the plugin's own data changed:
+propertyHints.refresh()
+panels.refresh()
+```
+
+- A hint shows under its field, with an icon and color for its tone. It informs only: unlike a validator it does not mark the field invalid, does not hold up saving and needs no `validation` entry in the node type. Hints of all providers stack, in their `order`.
+- `hints` and `badge` are called while Studio renders: keep them synchronous and cheap, fetch elsewhere, then `refresh()`. One that throws is logged and skipped.
+- A badge with a count of 0, or null, shows nothing. `tone` is `alert` (red, the default), `warning` (orange) or `neutral`; `label` is the tooltip. `panels.refresh()` re-reads the badges only, the layout stays as it is.
 
 ### UI components
 

@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 const VARIANTS = {
   /** Red attention bubble, e.g. pending changes pinned to a button corner. */
   alert: 'bg-destructive text-destructive-foreground',
+  /** Orange attention bubble: something to look at, not something wrong. */
+  warning: 'bg-warning text-warning-foreground',
   /**
    * A faint wash of the surrounding text color (currentColor), so the count
    * fits any context - inside a colored button as well as in running text.

@@ -47,6 +47,7 @@ import {
   evaluateInspectorTabs,
 } from './clientEval'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
+import { PropertyHints } from './hints/registry'
 import { PropertyEditor } from './PropertyEditor'
 import { validateValue } from './validators'
 import { InspectorViewRenderer } from './views/InspectorViewRenderer'
@@ -675,6 +676,7 @@ function PropertyGroup({
               onSave={onSave}
               onLiveChange={onLiveChange}
             />
+            <PropertyHints node={node} propertyName={item.property.name} />
             {inheritedHidden && (
               <p className="mt-1 type-small text-muted-foreground">
                 {t(

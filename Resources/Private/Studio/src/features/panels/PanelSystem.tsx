@@ -19,6 +19,7 @@ import { useLatestRef } from '@/hooks/use-latest-ref'
 import { useValueChange } from '@/hooks/use-value-change'
 import { translate as t } from '@/lib/i18n'
 import { rootFontSize } from '@/lib/rem'
+import { CountBadge } from '@/components/ui/count-badge'
 import { useRegistry } from '@/lib/registry'
 import { cn } from '@/lib/utils'
 import {
@@ -53,7 +54,12 @@ import {
   toggleCollapsed,
 } from './panelLayout'
 import { onPanelRevealRequest } from './reveal'
-import { type PanelDefinition, panelRegistry, panelTitle } from './registry'
+import {
+  type PanelDefinition,
+  panelRegistry,
+  panelTitle,
+  usePanelBadge,
+} from './registry'
 import { PanelVisibleContext } from './visibility'
 
 /**
@@ -574,6 +580,25 @@ export function PanelsProvider({
   )
 }
 
+/** The count a panel shows on its tab, if any (PanelDefinition.badge). */
+function PanelTabBadge({
+  definition,
+}: {
+  definition: PanelDefinition | undefined
+}) {
+  const badge = usePanelBadge(definition)
+  if (!badge) return null
+  return (
+    <CountBadge
+      count={badge.count}
+      variant={badge.tone ?? 'alert'}
+      title={badge.label}
+      aria-label={badge.label}
+      className="ml-1.5 inline-flex align-middle"
+    />
+  )
+}
+
 /** A panel's tab label, translated at render time; the id when unregistered. */
 function titleOf(
   definitions: Map<PanelId, PanelDefinition>,
@@ -921,6 +946,7 @@ function GroupTabBar({
             )}
           >
             {titleOf(definitions, panel)}
+            <PanelTabBadge definition={definitions.get(panel)} />
           </button>
         </React.Fragment>
       ))}

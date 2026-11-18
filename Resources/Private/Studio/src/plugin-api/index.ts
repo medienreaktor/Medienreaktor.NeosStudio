@@ -90,6 +90,10 @@ import {
   nodeDecoratorRegistry,
 } from '@/features/tree/decorators'
 import {
+  PropertyHintRegistry,
+  propertyHintRegistry,
+} from '@/features/inspector/hints/registry'
+import {
   RichTextExtensionRegistry,
   richTextExtensionRegistry,
 } from '@/guest/richTextExtensions'
@@ -167,6 +171,13 @@ export const workspaceDecorators: WorkspaceDecoratorRegistry =
  * too. See {@link NodeDecoratorDefinition}.
  */
 export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
+/**
+ * Register/unregister property hints - notes under a property's field in the
+ * inspector, from a plugin's own data: a finding of a content check, a
+ * workflow reminder. They inform only: no invalid field, no blocked save, no
+ * node type configuration. See {@link PropertyHintDefinition}.
+ */
+export const propertyHints: PropertyHintRegistry = propertyHintRegistry
 /**
  * Register/unregister node actions - commands on a node, offered in the
  * context menus of the document tree, the content outliner and the
@@ -381,6 +392,7 @@ export * from './components'
 // the contract; keep them stable.
 export type { LazyLabel } from '@/lib/registry'
 export type {
+  PanelBadge,
   PanelDefinition,
   PanelPlacement,
 } from '@/features/panels/registry'
@@ -446,6 +458,11 @@ export type {
   NodeDecoratorDefinition,
 } from '@/features/tree/decorators'
 export type {
+  PropertyHint,
+  PropertyHintDefinition,
+  PropertyHintTone,
+} from '@/features/inspector/hints/registry'
+export type {
   HeaderActionContext,
   HeaderActionDefinition,
   NodeActionContext,
@@ -476,6 +493,7 @@ export interface NeosStudioPluginApi extends PluginComponents {
   shortcuts: typeof shortcuts
   workspaceDecorators: typeof workspaceDecorators
   nodeDecorators: typeof nodeDecorators
+  propertyHints: typeof propertyHints
   nodeActions: typeof nodeActions
   headerActions: typeof headerActions
   richTextExtensions: typeof richTextExtensions
@@ -544,6 +562,7 @@ export function installPluginApiGlobals(): void {
     shortcuts,
     workspaceDecorators,
     nodeDecorators,
+    propertyHints,
     nodeActions,
     headerActions,
     richTextExtensions,
