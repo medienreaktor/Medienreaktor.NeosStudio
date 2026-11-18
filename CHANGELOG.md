@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-11-18
+
+### Added
+
+- Plugins can open their own dialogs with `dialogs.open(Component, props)`
+  from a node action, header action, shortcut or any event handler, without
+  a panel of their own. The dialog renders inside the shell, with its look,
+  theme, translations and data hooks (`useStudio()`, `useQuery`, ...). The
+  component renders `DialogContent` and gets `close(result?)`; `open()`
+  returns `{ close, result }`, and returning `result` from an action's `run`
+  keeps the action busy while the dialog is open. Dialogs stack, Escape
+  closes the top one, and a crashing dialog shows a fallback instead of
+  taking Studio down.
+
 ## [2.4.0] - 2026-11-18
 
 ### Added
@@ -1563,7 +1577,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.4.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.5.0...HEAD
+[2.5.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.4.0...2.5.0
 [2.4.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.1...2.4.0
 [2.3.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.2.1...2.3.0
