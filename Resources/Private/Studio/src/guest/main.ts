@@ -79,6 +79,8 @@ const INDICATOR_ID = 'neos-studio-drop-indicator'
 const HANDLE_ID = 'neos-studio-element-handle'
 const ADD_BUTTON_ID = 'neos-studio-element-add-button'
 const HANDLE_ACTION_CLASS = 'neos-studio-handle-action'
+/** The buttons sitting against the element under the handle. */
+const HANDLE_ROW_SELECTOR = `#${HANDLE_ID}, #${ADD_BUTTON_ID}, .${HANDLE_ACTION_CLASS}`
 const COLLECTION_ADD_CLASS = 'neos-studio-collection-add'
 const IMAGE_OVERLAY_ID = 'neos-studio-image-overlay'
 const SHINE_BUTTON_ID = 'neos-studio-shine-variant-button'
@@ -995,7 +997,7 @@ const richTextHooks: RichTextHooks = {
 function isStudioUi(target: HTMLElement): boolean {
   return (
     target.closest(
-      `#${HANDLE_ID}, #${ADD_BUTTON_ID}, .${HANDLE_ACTION_CLASS}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}, .${COLLECTION_ADD_CLASS}`,
+      `${HANDLE_ROW_SELECTOR}, #${IMAGE_OVERLAY_ID}, #${SHINE_BUTTON_ID}, .${TOOLBAR_CLASS}, .${COLLECTION_ADD_CLASS}`,
     ) !== null
   )
 }
@@ -1126,12 +1128,7 @@ function onMouseOver(event: MouseEvent): void {
   // Over the "..." handle, its "+" companion or a plugin's button (they sit
   // against their element): keep the hover state, so they do not vanish
   // under the pointer.
-  if (
-    target?.closest?.(
-      `#${HANDLE_ID}, #${ADD_BUTTON_ID}, .${HANDLE_ACTION_CLASS}`,
-    )
-  )
-    return
+  if (target?.closest?.(HANDLE_ROW_SELECTOR)) return
   // Over the image overlay's button (the only part taking the pointer): keep
   // the overlay shown.
   if (target?.closest?.(`#${IMAGE_OVERLAY_ID}`)) return
