@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The plugin API types (`@medienreaktor/neos-studio` on npm) are published
+  by CI for every release tag, at the tag's version, through npm trusted
+  publishing. The tag is the only source of the version: `package.json`
+  carries none, and `npm run publish:plugin-types` is gone.
+
 ## [2.6.0] - 2026-11-18
 
 ### Added

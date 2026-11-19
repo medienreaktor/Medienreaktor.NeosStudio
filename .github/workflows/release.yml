@@ -1,6 +1,9 @@
 # Publishes the plugin API's type declarations (Resources/Public/Studio/types)
-# to npm as @medienreaktor/neos-studio, the version every Studio release tag
-# names. Nothing is built here: index.d.ts is committed with the release.
+# to npm as @medienreaktor/neos-studio, at the version the release tag names.
+# The tag is the version's only source, as it is for Composer: no file in the
+# repository carries one, and this job writes it into the manifest it
+# publishes. npm's default dist-tag applies, so every release becomes `latest`.
+# Nothing is built here: index.d.ts is committed with the release.
 #
 # Authenticates through npm trusted publishing (OIDC), configured on npmjs.com
 # for this repository and this file name - renaming the file breaks it. There
@@ -52,13 +55,17 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - name: Check the tag against the package version
+      # Only a plain version (2.7.0, 2.7.0-rc.1) is one npm accepts; a tag
+      # like v2.7.0 fails here rather than at the registry.
+      - name: Set the version from the tag
+        working-directory: Resources/Public/Studio/types
         run: |
-          version=$(node -p "require('./Resources/Public/Studio/types/package.json').version")
-          if [ "$version" != "$TAG" ]; then
-            echo "::error::Tag $TAG, but Resources/Public/Studio/types/package.json says $version."
+          if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag $TAG is not a version like 2.7.0."
             exit 1
           fi
+          npm pkg set version="$TAG"
 
       - name: Publish
-        run: npm publish Resources/Public/Studio/types --access public
+        working-directory: Resources/Public/Studio/types
+        run: npm publish --access public

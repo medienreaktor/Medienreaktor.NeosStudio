@@ -106,7 +106,7 @@ A plugin is a small IIFE bundle that uses the shell's plugin API on `window.Neos
 TypeScript types come as one declaration file, `Resources/Public/Studio/types/index.d.ts`, built by `npm run build:plugin-types` (the end of `npm run build`). The same directory is a types-only npm package named like the import, published with every Studio release, so a plugin installs the version matching the Studio it targets:
 
 ```bash
-npm install -D @medienreaktor/neos-studio@2.6.0
+npm install -D @medienreaktor/neos-studio@<Studio version>
 ```
 
 npm adds `@types/react` and `@types/react-dom` as peers. The package contains no JavaScript: mark `@medienreaktor/neos-studio`, `react`, `react-dom` and `react/jsx-runtime` external in your bundler and map them to the globals the shell publishes (`NeosStudio`, `React`, `ReactDOM`, `ReactJSXRuntime`; see the example plugin's `vite.config.ts`). A plugin that forgets this fails at build time instead of bundling a stub.
@@ -629,7 +629,7 @@ src/
 
 Conventions: every query key comes from `api/keys.ts` (never inline literals); one hook file per API resource; feature folders own their UI and hooks; `@/` aliases `src/`. Styling is Tailwind v4 (CSS-first config) on semantic tokens; primitives are Base UI (`@base-ui/react`), not Radix.
 
-Release the plugin API types with every Studio release: after tagging, run `npm run publish:plugin-types` in `Resources/Private/Studio/` (needs an npm login with publish rights on the `@medienreaktor` scope). It publishes `Resources/Public/Studio/types` as `@medienreaktor/neos-studio` at the version in `package.json`, so keep that in step with the release.
+A release is a changelog entry and a tag (`2.7.0`, no `v`); no file carries the version. Composer takes it from the tag, and so does `.github/workflows/release.yml`, which publishes `Resources/Public/Studio/types` as `@medienreaktor/neos-studio` at the tag's version, with npm's default dist-tag `latest`. It authenticates through npm trusted publishing, so nobody needs an npm login. Run `npm run build` before tagging, so the committed `index.d.ts` matches the release. A version is published once and can never be replaced: a broken release needs a new patch release. Publish a tag by hand from the Actions tab (Release, Run workflow), e.g. when its run failed. Before tagging a pre-release, give the workflow `--tag next`, or the release candidate becomes `latest`.
 
 ### Design tokens
 
