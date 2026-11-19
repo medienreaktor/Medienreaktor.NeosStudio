@@ -1,0 +1,64 @@
+# Publishes the plugin API's type declarations (Resources/Public/Studio/types)
+# to npm as @medienreaktor/neos-studio, the version every Studio release tag
+# names. Nothing is built here: index.d.ts is committed with the release.
+#
+# Authenticates through npm trusted publishing (OIDC), configured on npmjs.com
+# for this repository and this file name - renaming the file breaks it. There
+# is no npm token anywhere. Trusted publishing needs a GitHub-hosted runner.
+name: Release
+
+on:
+  push:
+    tags: [ '*.*.*' ]
+  # Publishes a release tagged before this workflow existed, or one whose
+  # publish failed.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish, e.g. 2.6.0'
+        required: true
+
+# A version can be published only once; two runs of one tag must not race.
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  npm:
+    name: Publish plugin types to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      # The OIDC token npm exchanges for a publish.
+      id-token: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.TAG }}
+
+      # Trusted publishing needs npm 11.5.1 or later, which Node 22 does not
+      # ship. This only runs npm, so it does not follow the build's .nvmrc.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the tag against the package version
+        run: |
+          version=$(node -p "require('./Resources/Public/Studio/types/package.json').version")
+          if [ "$version" != "$TAG" ]; then
+            echo "::error::Tag $TAG, but Resources/Public/Studio/types/package.json says $version."
+            exit 1
+          fi
+
+      - name: Publish
+        run: npm publish Resources/Public/Studio/types --access public
