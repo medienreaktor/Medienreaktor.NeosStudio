@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-11-19
+
 ### Changed
 
 - The plugin API types (`@medienreaktor/neos-studio` on npm) are published
@@ -1598,7 +1600,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.1...HEAD
+[2.6.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.0...2.6.1
 [2.6.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.5.0...2.6.0
 [2.5.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.4.0...2.5.0
 [2.4.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.3.1...2.4.0
