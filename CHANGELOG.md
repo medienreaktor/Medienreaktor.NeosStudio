@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-11-24
+
+### Added
+
+- Property actions (`propertyActions` in the plugin API): buttons under a
+  property's field in the inspector, whatever editor the property has. `when`
+  decides per node and property (its editor and `editorOptions` included);
+  `run` gets the field's current value, unsaved typing included, and
+  `setValue`, which saves and shows the new value in the field. A plugin no
+  longer has to replace an editor to put a button under it.
+
+### Changed
+
+- A property hint's action is a button like a property action's, with an
+  optional `icon`, instead of a link.
+
 ## [2.7.0] - 2026-11-23
 
 ### Added
@@ -1610,7 +1626,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.7.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.0...HEAD
+[2.8.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.7.0...2.8.0
 [2.7.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.1...2.7.0
 [2.6.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.0...2.6.1
 [2.6.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.5.0...2.6.0
