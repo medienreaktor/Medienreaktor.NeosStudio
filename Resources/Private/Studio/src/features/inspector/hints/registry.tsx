@@ -1,5 +1,6 @@
-import type { Node } from '@/api/neos/schema'
+import { type Node, nodeAddressKey } from '@/api/neos/schema'
 import { Icon } from '@/components/ui/icon'
+import { runAction, useActionBusy } from '@/features/actions/registry'
 import { ObservableRegistry, useRegistry } from '@/lib/registry'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +27,26 @@ export interface PropertyHint {
   message: string
   /** Who says it, shown before the message when given, e.g. "Content audit". */
   source?: string
+  /**
+   * Something to do about it, shown as a link under the message - mark a
+   * finding as an exception, open the rule's explanation. Optional; a hint
+   * without one only informs.
+   */
+  action?: PropertyHintAction
+}
+
+/** The link under a hint's message. */
+export interface PropertyHintAction {
+  /** The link's text, e.g. "Exception …" - an ellipsis when it asks for more. */
+  label: string
+  /**
+   * What clicking it does. A returned promise keeps the link busy until it
+   * settles; a throw or a rejection ends as an error toast titled with the
+   * label, as for node actions. To ask for something first, open a dialog
+   * (`dialogs.open`) and return its `result`. When done, refresh the hints
+   * whose data changed (`propertyHints.refresh()`).
+   */
+  run: () => void | Promise<unknown>
 }
 
 export interface PropertyHintDefinition {
@@ -58,6 +79,9 @@ export class PropertyHintRegistry extends ObservableRegistry<PropertyHintDefinit
 
 export const propertyHintRegistry = new PropertyHintRegistry()
 
+/** A hint with the provider that gave it. */
+export type CollectedPropertyHint = PropertyHint & { provider: string }
+
 /**
  * All providers' hints for one property, in their order. A provider that
  * throws is skipped and logged - a broken plugin must not take the inspector
@@ -67,11 +91,13 @@ export function collectPropertyHints(
   node: Node,
   propertyName: string,
   providers: PropertyHintDefinition[],
-): PropertyHint[] {
-  const hints: PropertyHint[] = []
+): CollectedPropertyHint[] {
+  const hints: CollectedPropertyHint[] = []
   for (const provider of providers) {
     try {
-      hints.push(...(provider.hints(node, propertyName) ?? []))
+      for (const hint of provider.hints(node, propertyName) ?? []) {
+        hints.push({ ...hint, provider: provider.id })
+      }
     } catch (error) {
       console.error(
         `Property hint provider "${provider.id}" threw and was skipped:`,
@@ -117,9 +143,46 @@ export function PropertyHints({
               <span className="type-small-strong">{hint.source}: </span>
             )}
             {hint.message}
+            {hint.action && (
+              <HintAction
+                action={hint.action}
+                busyKey={`hint ${hint.provider} ${nodeAddressKey(node)} ${propertyName} ${index}`}
+                provider={hint.provider}
+              />
+            )}
           </span>
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * A hint's action: a link on a line of its own under the message, busy while
+ * its run is pending, failing as an error toast.
+ */
+function HintAction({
+  action,
+  busyKey,
+  provider,
+}: {
+  action: PropertyHintAction
+  busyKey: string
+  provider: string
+}) {
+  const busy = useActionBusy(busyKey)
+  return (
+    <button
+      type="button"
+      className="block type-small text-primary-text hover:underline disabled:opacity-50"
+      disabled={busy}
+      onClick={() =>
+        runAction({ id: provider, label: action.label }, busyKey, () =>
+          Promise.resolve(action.run()).then(() => undefined),
+        )
+      }
+    >
+      {action.label}
+    </button>
   )
 }

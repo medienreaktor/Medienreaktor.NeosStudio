@@ -499,6 +499,7 @@ export type {
 export type { DialogControls, DialogHandle } from '@/features/dialogs/store'
 export type {
   PropertyHint,
+  PropertyHintAction,
   PropertyHintDefinition,
   PropertyHintTone,
 } from '@/features/inspector/hints/registry'
