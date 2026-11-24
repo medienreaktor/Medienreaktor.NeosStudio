@@ -47,6 +47,7 @@ import {
   evaluateInspectorTabs,
 } from './clientEval'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
+import { PropertyActions } from './actions/registry'
 import { PropertyHints } from './hints/registry'
 import { PropertyEditor } from './PropertyEditor'
 import { validateValue } from './validators'
@@ -513,6 +514,7 @@ export function InspectorPanel({
                           key={group.id}
                           group={group}
                           node={node}
+                          transientValues={transientValues}
                           validationErrors={validationErrors}
                           onSave={save}
                           onLiveChange={reportLiveChange}
@@ -617,18 +619,32 @@ function ElementLockNotice({ node }: { node: Node }) {
 function PropertyGroup({
   group,
   node,
+  transientValues,
   validationErrors,
   onSave,
   onLiveChange,
 }: {
   group: InspectorGroup
   node: Node
+  /** Values typed but not saved yet, by property: what a property action reads. */
+  transientValues: Record<string, unknown> | undefined
   /** Property name -> errors for the property's current (live) value. */
   validationErrors: Record<string, string[]>
   onSave: (propertyName: string, value: unknown) => void
   /** A keystroke-level (pre-commit) value change - feeds ClientEval. */
   onLiveChange: (propertyName: string, value: unknown) => void
 }) {
+  // Bumped when a property action sets a value: the editor remounts and seeds
+  // from it, instead of keeping an unsaved draft that would write the old text
+  // back on its next commit.
+  const [revisions, setRevisions] = useState<Record<string, number>>({})
+  const setFromAction = (propertyName: string, value: unknown) => {
+    onSave(propertyName, value)
+    setRevisions((previous) => ({
+      ...previous,
+      [propertyName]: (previous[propertyName] ?? 0) + 1,
+    }))
+  }
   return (
     <CollapsibleGroup
       defaultOpen={!group.collapsed}
@@ -658,7 +674,7 @@ function PropertyGroup({
             <PropertyEditor
               // Reset drafts when the inspected node changes, keep them
               // across the refetch after a save.
-              key={`${nodeAddressKey(node)}:${item.property.name}`}
+              key={`${nodeAddressKey(node)}:${item.property.name}:${revisions[item.property.name] ?? 0}`}
               property={
                 inheritedHidden
                   ? {
@@ -676,6 +692,18 @@ function PropertyGroup({
               onSave={onSave}
               onLiveChange={onLiveChange}
             />
+            {!inheritedHidden && (
+              <PropertyActions
+                node={node}
+                property={item.property}
+                value={
+                  transientValues && item.property.name in transientValues
+                    ? transientValues[item.property.name]
+                    : propertyValue(node, item.property.name)
+                }
+                onSave={(value) => setFromAction(item.property.name, value)}
+              />
+            )}
             <PropertyHints node={node} propertyName={item.property.name} />
             {inheritedHidden && (
               <p className="mt-1 type-small text-muted-foreground">

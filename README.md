@@ -87,6 +87,7 @@ Extensibility is built in from the start: the built-in panels, editors and decor
 | Inspector editors    | Property editors for node type properties                                                        |
 | Inspector views      | Read-only views and widgets in the inspector                                                     |
 | Property hints       | Notes under a property's field in the inspector, from a plugin's own data                       |
+| Property actions     | Buttons under a property's field that read and write its value, whatever its editor             |
 | Validators           | Client-side validation                                                                           |
 | Link editor tabs     | New link targets in the link dialog                                                              |
 | Settings sections    | Sections in the settings dialog (`modals` is a deprecated alias)                                 |
@@ -201,8 +202,8 @@ propertyHints.register({
       tone: finding.severe ? 'error' : 'warning', // or 'info'
       message: finding.message,
       source: 'SEO', // optional, shown before the message
-      // optional: a link under the message
-      action: { label: 'Ignore …', run: () => ignoreFinding(finding) },
+      // optional: a button under the message
+      action: { label: 'Ignore …', icon: 'eye-slash', run: () => ignoreFinding(finding) },
     })),
 })
 
@@ -220,9 +221,33 @@ panels.refresh()
 ```
 
 - A hint shows under its field, with an icon and color for its tone. It informs only: unlike a validator it does not mark the field invalid, does not hold up saving and needs no `validation` entry in the node type. Hints of all providers stack, in their `order`.
-- A hint's `action` shows as a link under its message. A promise returned by `run` keeps the link busy until it settles; a throw or rejection ends as an error toast titled with the label, as for node actions. To ask for something first, open a dialog from `run` (see Dialogs below) and return its `result`.
+- A hint's `action` shows as a button under its message, like a property action's. A promise returned by `run` keeps the link busy until it settles; a throw or rejection ends as an error toast titled with the label, as for node actions. To ask for something first, open a dialog from `run` (see Dialogs below) and return its `result`.
 - `hints` and `badge` are called while Studio renders: keep them synchronous and cheap, fetch elsewhere, then `refresh()`. One that throws is logged and skipped.
 - A badge with a count of 0, or null, shows nothing. `tone` is `alert` (red, the default), `warning` (orange) or `neutral`; `label` is the tooltip. `panels.refresh()` re-reads the badges only, the layout stays as it is.
+
+### Property actions
+
+A button under a field - "Generate" a text with a model, look a value up - without replacing the field's editor. The property keeps the editor its node type configures; the action reads the field's value and writes a new one.
+
+```ts
+import { propertyActions } from '@medienreaktor/neos-studio'
+
+propertyActions.register({
+  id: 'acme.ai:generate',
+  label: 'Generate',
+  icon: 'wand-magic-sparkles',
+  // Which fields get it: here every property whose editorOptions configure a prompt.
+  when: ({ property }) => typeof property.editorOptions.prompt === 'string',
+  run: async ({ node, property, value, setValue }) => {
+    setValue(await generate(node, property.editorOptions.prompt, value))
+  },
+})
+```
+
+- `when` gets the node and the property as its node type configures it (`name`, `type`, `label`, `editor`, `editorOptions`). It is called while the inspector renders: keep it synchronous and cheap. A read-only or disabled property gets no actions.
+- `run` gets the same plus `value` - what the field holds now, including text typed and not saved yet - `setValue(value)`, `document` (the document in the preview) and `studio`. `setValue` saves as the editor's commit would and shows the value in the field; an unsaved draft there is replaced.
+- The button is busy while a returned promise is pending; a throw or a rejection ends as an error toast titled with the label, as for node actions. Actions show in `order`, after the field and before its hints.
+- To keep node type configuration written for another editor id, register that id for the editor it should be (`editors.register({ id, component: editors.get('Neos.Neos/Inspector/Editors/TextAreaEditor') })`) and offer the action where `property.editor` is that id.
 
 ### Dialogs
 

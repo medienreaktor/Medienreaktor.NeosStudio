@@ -97,6 +97,10 @@ import {
   nodeDecoratorRegistry,
 } from '@/features/tree/decorators'
 import {
+  PropertyActionRegistry,
+  propertyActionRegistry,
+} from '@/features/inspector/actions/registry'
+import {
   PropertyHintRegistry,
   propertyHintRegistry,
 } from '@/features/inspector/hints/registry'
@@ -185,6 +189,13 @@ export const nodeDecorators: NodeDecoratorRegistry = nodeDecoratorRegistry
  * node type configuration. See {@link PropertyHintDefinition}.
  */
 export const propertyHints: PropertyHintRegistry = propertyHintRegistry
+/**
+ * Register/unregister property actions - buttons under a property's field in
+ * the inspector, whatever editor the property has: "Generate" a text, fill a
+ * value from elsewhere. They read and write the field's value; the field
+ * stays the configured editor. See {@link PropertyActionDefinition}.
+ */
+export const propertyActions: PropertyActionRegistry = propertyActionRegistry
 /**
  * Register/unregister node actions - commands on a node, offered in the
  * context menus of the document tree, the content outliner and the
@@ -498,6 +509,13 @@ export type {
 } from '@/features/tree/decorators'
 export type { DialogControls, DialogHandle } from '@/features/dialogs/store'
 export type {
+  ActionButtonConfig,
+  PropertyActionContext,
+  PropertyActionDefinition,
+  PropertyActionProperty,
+  PropertyActionRunContext,
+} from '@/features/inspector/actions/registry'
+export type {
   PropertyHint,
   PropertyHintAction,
   PropertyHintDefinition,
@@ -535,6 +553,7 @@ export interface NeosStudioPluginApi extends PluginComponents {
   workspaceDecorators: typeof workspaceDecorators
   nodeDecorators: typeof nodeDecorators
   propertyHints: typeof propertyHints
+  propertyActions: typeof propertyActions
   nodeActions: typeof nodeActions
   headerActions: typeof headerActions
   richTextExtensions: typeof richTextExtensions
@@ -605,6 +624,7 @@ export function installPluginApiGlobals(): void {
     workspaceDecorators,
     nodeDecorators,
     propertyHints,
+    propertyActions,
     nodeActions,
     headerActions,
     richTextExtensions,
