@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-11-23
+
+### Added
+
+- Property hints can carry an action (`action: { label, run }`), shown as a
+  link under the hint's message: busy while `run`'s promise is pending, an
+  error toast when it fails, as for node actions. A plugin can offer what to
+  do about a hint where the editor reads it - mark a finding as an exception,
+  for example - and open a dialog from `run` to ask for more.
+
 ## [2.6.1] - 2026-11-19
 
 ### Changed
@@ -1600,7 +1610,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.7.0...HEAD
+[2.7.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.1...2.7.0
 [2.6.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.0...2.6.1
 [2.6.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.5.0...2.6.0
 [2.5.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.4.0...2.5.0

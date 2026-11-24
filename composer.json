@@ -34,7 +34,7 @@
       "package-key": "Medienreaktor.NeosStudio"
     },
     "branch-alias": {
-      "dev-main": "2.6.x-dev"
+      "dev-main": "2.7.x-dev"
     }
   },
   "config": {
