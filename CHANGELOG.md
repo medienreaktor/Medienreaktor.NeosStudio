@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.1] - 2026-11-24
+
+### Fixed
+
+- A property hint's action button is a size smaller (`xs`) than a property
+  action's, to match the hint's text.
+- A property hint's icon is centred on its message's line(s), and its action
+  button sits below the message, aligned with it.
+
 ## [2.8.0] - 2026-11-24
 
 ### Added
@@ -1626,7 +1635,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.0...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.1...HEAD
+[2.8.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.0...2.8.1
 [2.8.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.7.0...2.8.0
 [2.7.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.1...2.7.0
 [2.6.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.0...2.6.1
