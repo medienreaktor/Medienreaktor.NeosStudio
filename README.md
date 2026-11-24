@@ -221,7 +221,7 @@ panels.refresh()
 ```
 
 - A hint shows under its field, with an icon and color for its tone. It informs only: unlike a validator it does not mark the field invalid, does not hold up saving and needs no `validation` entry in the node type. Hints of all providers stack, in their `order`.
-- A hint's `action` shows as a button under its message, like a property action's. A promise returned by `run` keeps the link busy until it settles; a throw or rejection ends as an error toast titled with the label, as for node actions. To ask for something first, open a dialog from `run` (see Dialogs below) and return its `result`.
+- A hint's `action` shows as a button under its message, like a property action's, a size smaller to match the hint's text. A promise returned by `run` keeps the button busy until it settles; a throw or rejection ends as an error toast titled with the label, as for node actions. To ask for something first, open a dialog from `run` (see Dialogs below) and return its `result`.
 - `hints` and `badge` are called while Studio renders: keep them synchronous and cheap, fetch elsewhere, then `refresh()`. One that throws is logged and skipped.
 - A badge with a count of 0, or null, shows nothing. `tone` is `alert` (red, the default), `warning` (orange) or `neutral`; `label` is the tooltip. `panels.refresh()` re-reads the badges only, the layout stays as it is.
 

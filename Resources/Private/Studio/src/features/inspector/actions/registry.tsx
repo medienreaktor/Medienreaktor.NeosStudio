@@ -161,8 +161,9 @@ export function PropertyActions({
 }
 
 /**
- * The button of a property or hint action: outlined, size sm, the icon before
- * the label, a spinner instead of it while the run is pending. Runs through
+ * The button of a property or hint action: outlined, the icon before the
+ * label, a spinner instead of it while the run is pending. Size sm under a
+ * field, xs under a hint, whose text is a size smaller. Runs through
  * runAction, so errors and busy state behave as for node actions.
  */
 export function ActionButton({
@@ -170,18 +171,20 @@ export function ActionButton({
   config,
   busyKey,
   run,
+  size = 'sm',
 }: {
   id: string
   config: ActionButtonConfig
   busyKey: string
   run: () => void | Promise<unknown>
+  size?: 'sm' | 'xs'
 }) {
   const busy = useActionBusy(busyKey)
   return (
     <Button
       type="button"
       variant="outline"
-      size="sm"
+      size={size}
       disabled={busy}
       onClick={() =>
         runAction({ id, label: config.label }, busyKey, () =>

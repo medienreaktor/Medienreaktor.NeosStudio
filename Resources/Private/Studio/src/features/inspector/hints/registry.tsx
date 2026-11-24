@@ -130,31 +130,34 @@ export function PropertyHints({
   return (
     <ul className="mt-1.5 space-y-1" data-property-hints={propertyName}>
       {hints.map((hint, index) => (
+        // Two columns: the icon, centred on the message's line(s), and the
+        // message; the action below the message, in its column.
         <li
           key={index}
-          className="flex gap-1.5 type-small text-muted-foreground"
+          className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-1.5 gap-y-1 type-small text-muted-foreground"
         >
           <Icon
             name={TONE[hint.tone].icon}
             size="s"
-            className={cn('mt-0.5 shrink-0', TONE[hint.tone].className)}
+            className={cn('justify-self-center', TONE[hint.tone].className)}
           />
           <span>
             {hint.source && (
               <span className="type-small-strong">{hint.source}: </span>
             )}
             {hint.message}
-            {hint.action && (
-              <span className="mt-1 block">
-                <ActionButton
-                  id={hint.provider}
-                  config={hint.action}
-                  busyKey={`hint ${hint.provider} ${nodeAddressKey(node)} ${propertyName} ${index}`}
-                  run={hint.action.run}
-                />
-              </span>
-            )}
           </span>
+          {hint.action && (
+            <span className="col-start-2">
+              <ActionButton
+                id={hint.provider}
+                config={hint.action}
+                busyKey={`hint ${hint.provider} ${nodeAddressKey(node)} ${propertyName} ${index}`}
+                run={hint.action.run}
+                size="xs"
+              />
+            </span>
+          )}
         </li>
       ))}
     </ul>
