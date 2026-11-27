@@ -3,9 +3,9 @@ import { useMemo, useState } from 'react'
 import {
   assetReference,
   localAssetIdFor,
-  referenceIdentifier,
   useAsset,
 } from '@/api/neos/endpoints/assets'
+import { referenceIdentifier } from '@/api/neos/endpoints/assetReference'
 import type { Asset } from '@/api/neos/schema'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/toast'
@@ -23,7 +23,7 @@ import { translate as t } from '@/lib/i18n'
  * "image" shows a large preview (and offers cropping), "asset" a compact row;
  * both commit the picked asset's id.
  *
- * A stored value is only ever an identifier (see referenceIdentifier in api/neos/endpoints/assets.ts), so the asset
+ * A stored value is only ever an identifier (see referenceIdentifier in api/neos/endpoints/assetReference.ts), so the asset
  * to display is resolved from the API. A fresh pick is held locally too, so the
  * preview updates instantly, ahead of the resolve. State is seeded from
  * `value` and owned here between value changes - the inspector remounts the

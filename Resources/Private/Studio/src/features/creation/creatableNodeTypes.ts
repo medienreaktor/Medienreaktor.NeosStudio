@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
 import {
-  configuredLabel,
   isOfType,
   type NodeTypeMap,
   useNodeTypeGroups,
   useNodeTypes,
 } from '@/api/neos/endpoints/nodeTypes'
 import type { NodeType } from '@/api/neos/schema'
-import { humanizeLabel } from '@/features/inspector/inspectorSchema'
+import {
+  humanizeLabel,
+  nodeTypeLabel,
+} from '@/features/inspector/inspectorSchema'
 import { sortByPosition } from '@/lib/positional'
 
 export interface CreatableNodeType {
@@ -57,10 +59,7 @@ export function useCreatableNodeTypes(
         )
       )
         continue
-      const label = humanizeLabel(
-        configuredLabel(nodeType),
-        nodeType.name.split(':').pop() ?? nodeType.name,
-      )
+      const label = nodeTypeLabel(nodeType.name, nodeType)
       const entries = byGroup.get(nodeType.group) ?? []
       entries.push({ nodeType, label })
       byGroup.set(nodeType.group, entries)

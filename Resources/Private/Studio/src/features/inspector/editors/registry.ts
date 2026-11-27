@@ -90,6 +90,23 @@ export interface PropertyEditorProps {
 
 export type PropertyEditorComponent = React.ComponentType<PropertyEditorProps>
 
+/** A value as its editor shows it - see PropertyEditorDefinition.formatValue. */
+export interface FormattedValue {
+  /** What the editor shows for the value, one line, plain text. */
+  label: string
+  /** The value points at something that no longer resolves (removed node, asset). */
+  missing?: boolean
+}
+
+/** What formatValue gets besides the value. */
+export interface ValueFormatContext {
+  subject: PropertyEditorSubject
+  /** The editor's options - as the editor gets them. */
+  options: Record<string, unknown>
+  /** The edited node, when there is one: lookups use its subgraph. */
+  nodeAddress?: NodeAddress
+}
+
 export interface PropertyEditorDefinition {
   /**
    * The editor identifier as referenced from node type configuration, e.g.
@@ -106,6 +123,20 @@ export interface PropertyEditorDefinition {
    * to false: the host renders the label above the control.
    */
   rendersOwnLabel?: boolean
+  /**
+   * The value as the editor shows it, as one line of plain text - an option's
+   * label instead of its key, a node's label instead of node://…, for places
+   * that show a value without its editor (a list row, a summary). null when
+   * there is nothing to show (no value, a false checkbox). Return the label
+   * directly when no lookup is needed, a promise only for lookups; lookups go
+   * through the shell's query client under the keys the editor reads with,
+   * so a label and the open editor share one request. Without it, hosts show
+   * the value plainly (strings, numbers, lists of them).
+   */
+  formatValue?: (
+    value: unknown,
+    context: ValueFormatContext,
+  ) => FormattedValue | null | Promise<FormattedValue | null>
 }
 
 /**

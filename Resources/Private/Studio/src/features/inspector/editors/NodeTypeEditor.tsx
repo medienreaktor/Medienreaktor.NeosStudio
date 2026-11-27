@@ -4,11 +4,7 @@ import {
   useNode,
   useNodeAncestors,
 } from '@/api/neos/endpoints/nodes'
-import {
-  configuredLabel,
-  useNodeTypeGroups,
-  useNodeTypes,
-} from '@/api/neos/endpoints/nodeTypes'
+import { useNodeTypeGroups, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import { nodeAddressOf, type NodeType } from '@/api/neos/schema'
 import {
   Select,
@@ -19,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { humanizeLabel } from '@/features/inspector/inspectorSchema'
+import {
+  humanizeLabel,
+  nodeTypeLabel,
+} from '@/features/inspector/inspectorSchema'
 import { NodeTypeIcon } from '@/features/tree/nodeTypeIcon'
 import { sortByPosition } from '@/lib/positional'
 import type { PropertyEditorComponent } from './registry'
@@ -27,10 +26,7 @@ import type { PropertyEditorComponent } from './registry'
 export const NODE_TYPE_EDITOR = 'Neos.Neos/Inspector/Editors/NodeTypeEditor'
 
 const typeLabel = (nodeType: NodeType): string =>
-  humanizeLabel(
-    configuredLabel(nodeType),
-    nodeType.name.split(':').pop() ?? nodeType.name,
-  )
+  nodeTypeLabel(nodeType.name, nodeType)
 
 /**
  * Switches a node's type. The alternatives offered are the node types allowed

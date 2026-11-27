@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  dataSourceSelectOptions,
-  useDataSource,
-} from '@/api/neos/endpoints/dataSources'
+import { dataSourceSelectOptions } from '@/api/neos/endpoints/dataSourceOptions'
+import { useDataSource } from '@/api/neos/endpoints/dataSources'
 import {
   DOCUMENT_NODE_TYPE,
   nodeReferences,

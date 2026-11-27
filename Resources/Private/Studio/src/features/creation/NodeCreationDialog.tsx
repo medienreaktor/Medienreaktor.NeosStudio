@@ -7,11 +7,7 @@ import {
   useState,
 } from 'react'
 import { FieldLabel } from '@/components/ui/field-label'
-import {
-  configuredLabel,
-  type NodeTypeMap,
-  useNodeType,
-} from '@/api/neos/endpoints/nodeTypes'
+import { type NodeTypeMap, useNodeType } from '@/api/neos/endpoints/nodeTypes'
 import {
   type CreationDialogElementConfig,
   type Node,
@@ -35,6 +31,7 @@ import {
   defaultEditorForType,
   editorOptionsFor,
   humanizeLabel,
+  nodeTypeLabel,
 } from '@/features/inspector/inspectorSchema'
 import { useAssetPickerActive } from '@/features/media/AssetPicker'
 import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors/TextFieldEditor'
@@ -196,9 +193,9 @@ export function CreateNodeFlow({
   // disabled Create button and the * markers cover the untouched state.
   const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
 
-  const typeLabel = humanizeLabel(
-    configuredLabel(nodeTypes?.get(request.nodeTypeName)),
-    request.nodeTypeName.split(':').pop() ?? request.nodeTypeName,
+  const typeLabel = nodeTypeLabel(
+    request.nodeTypeName,
+    nodeTypes?.get(request.nodeTypeName),
   )
 
   const submit = async (submittedValues: Record<string, unknown>) => {

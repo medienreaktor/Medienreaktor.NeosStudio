@@ -14232,6 +14232,21 @@ interface PropertyEditorProps {
   nodeAddress?: NodeAddress;
 }
 type PropertyEditorComponent = React$1.ComponentType<PropertyEditorProps>;
+/** A value as its editor shows it - see PropertyEditorDefinition.formatValue. */
+interface FormattedValue {
+  /** What the editor shows for the value, one line, plain text. */
+  label: string;
+  /** The value points at something that no longer resolves (removed node, asset). */
+  missing?: boolean;
+}
+/** What formatValue gets besides the value. */
+interface ValueFormatContext {
+  subject: PropertyEditorSubject;
+  /** The editor's options - as the editor gets them. */
+  options: Record<string, unknown>;
+  /** The edited node, when there is one: lookups use its subgraph. */
+  nodeAddress?: NodeAddress;
+}
 interface PropertyEditorDefinition {
   /**
    * The editor identifier as referenced from node type configuration, e.g.
@@ -14248,6 +14263,17 @@ interface PropertyEditorDefinition {
    * to false: the host renders the label above the control.
    */
   rendersOwnLabel?: boolean;
+  /**
+   * The value as the editor shows it, as one line of plain text - an option's
+   * label instead of its key, a node's label instead of node://…, for places
+   * that show a value without its editor (a list row, a summary). null when
+   * there is nothing to show (no value, a false checkbox). Return the label
+   * directly when no lookup is needed, a promise only for lookups; lookups go
+   * through the shell's query client under the keys the editor reads with,
+   * so a label and the open editor share one request. Without it, hosts show
+   * the value plainly (strings, numbers, lists of them).
+   */
+  formatValue?: (value: unknown, context: ValueFormatContext) => FormattedValue | null | Promise<FormattedValue | null>;
 }
 /**
  * Composes the shared store rather than extending it: its public `get(id)`
@@ -14269,6 +14295,51 @@ declare class PropertyEditorRegistry implements ObservableStore<PropertyEditorDe
   /** The full definition for an editor id (component + metadata), or undefined. */
   getDefinition(id: string | null | undefined): PropertyEditorDefinition | undefined;
 }
+/** formatEditorValue's context: the options default to none. */
+type FormatEditorValueContext = Omit<ValueFormatContext, 'options'> & {
+  options?: Record<string, unknown>;
+};
+/**
+ * A value as the editor `editorId` shows it (see
+ * PropertyEditorDefinition.formatValue), or its plain rendering for an
+ * editor without a formatter. Rejects when a lookup fails; a value pointing
+ * at something gone resolves with `missing`.
+ */
+export declare function formatEditorValue(editorId: string | null | undefined, value: unknown, context: FormatEditorValueContext): Promise<FormattedValue | null>;
+/** One value for useFormattedValues. */
+interface FormattedValueRequest {
+  editorId: string | null | undefined;
+  value: unknown;
+  context: FormatEditorValueContext;
+}
+interface FormattedValues {
+  /**
+   * Per item: its label, null for nothing to show, undefined until the
+   * first one is resolved. While a changed value resolves, the item keeps
+   * its last label.
+   */
+  labels: (FormattedValue | null | undefined)[];
+  /** Some label is still being resolved. */
+  pending: boolean;
+}
+/**
+ * The labels of a list of values, each as its editor shows it - for list
+ * rows and summaries. Items are told apart by their editor, value, options,
+ * subject and node, not by object identity, so a new items array with the
+ * same values neither refetches nor flickers.
+ */
+export declare function useFormattedValues(items: readonly FormattedValueRequest[]): FormattedValues;
+/** The subgraph of a node address: what a batch of node lookups shares. */
+type Subgraph = Pick<NodeAddress, 'contentRepositoryId' | 'workspaceName' | 'dimensionSpacePoint'>;
+/**
+ * The nodes with these aggregate ids in the subgraph of the address (any
+ * node of it; its own id does not matter), null for an id that does not
+ * resolve there - removed, or not readable for the account. Lookups made
+ * within one tick, from anywhere, go out as one listNodes request per
+ * subgraph (100 ids each), and every node is cached under the key useNode()
+ * reads it with.
+ */
+export declare function resolveNodes(address: Subgraph, ids: readonly string[]): Promise<Map<string, Node$1 | null>>;
 /**
  * The inspector view registry: read-only widgets that node type configuration
  * places between inspector properties (ui.inspector.views), registered under
@@ -22450,6 +22521,9 @@ export interface NeosStudioPluginApi extends PluginComponents {
   useStudio: typeof useStudio;
   useStudioActions: typeof useStudioActions;
   useKeyboardShortcut: typeof useKeyboardShortcut;
+  formatEditorValue: typeof formatEditorValue;
+  useFormattedValues: typeof useFormattedValues;
+  resolveNodes: typeof resolveNodes;
   toast: typeof toast;
   dialogs: typeof dialogs;
   apiFetch: typeof apiFetch;
@@ -22492,4 +22566,4 @@ declare global {
  * mounts and before any plugin script executes. Idempotent.
  */
 export declare function installPluginApiGlobals(): void;
-export { type Account, type AccountRole, type ActionButtonConfig, type AnyExtension, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, Badge, type BaseWorkspaceChange, Button, type Change, type ChangeDiff, Checkbox, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, Dialog, DialogContent, type DialogControls, DialogDescription, DialogFooter, type DialogHandle, DialogHeader, DialogTitle, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, type Event$1 as Event, type EventDiff, type ExtensionConfig, Field, type HeaderActionContext, type HeaderActionDefinition, type IconProps, type IconSize, type IconVariant, type InfiniteData, Input, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LazyLabel, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, LoadingState, type MarkConfig, type ModalIcon, type NeosStudioGuestPluginApi, type Node$1 as Node, type NodeActionContext, type NodeActionDefinition, type NodeActionSurface, type NodeAddress, type NodeClassification, type NodeConfig, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelBadge, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, Placeholder, Popover, PopoverContent, PopoverTrigger, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyActionContext, type PropertyActionDefinition, type PropertyActionProperty, type PropertyActionRunContext, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyHint, type PropertyHintAction, type PropertyHintDefinition, type PropertyHintTone, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type QueryClient, type QueryFunctionContext, type QueryKey, type ResolvedKeyboardShortcut, type RichTextExtensionContext, type RichTextExtensionDefinition, type RichTextSurface, type RichTextToolbarItem, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, type SettingsDialogDefinition, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, Skeleton, Slider, Spinner, type StreamEvent, type StructureChange, type StudioActions, type StudioContextValue, type StudioEventHandler, type StudioEventMap, type StudioEventName, type StudioEvents, type StudioInvalidation, type StudioState, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, type Task, type TaskStatus, Textarea, type TiptapBuildingBlocks, type Editor as TiptapEditor, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type TranslateArgs, type UriPathSegment, type UseInfiniteQueryOptions, type UseInfiniteQueryResult, type UseMutationOptions, type UseMutationResult, type UseQueryOptions, type UseQueryResult, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRef, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, type isRemoved, keepPreviousData, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, type nodeTypeConfiguration, type parseDimensionSpacePoint, queryClient, type sameDimensionSpacePoint, type sameNodeAddress, skipToken, studioFetch };
+export { type Account, type AccountRole, type ActionButtonConfig, type AnyExtension, type Asset, type AssetCollection, type AssetCollectionCreate, type AssetCollectionReference, type AssetCollectionUpdate, type AssetIptc, type AssetSource, type AssetTag, type AssetTagCreate, type AssetTagReference, type AssetTagUpdate, type AssetType, type AssetUpdate, type AssetUsage, type AssetUsageListing, type AssetVariantCreate, Badge, type BaseWorkspaceChange, Button, type Change, type ChangeDiff, Checkbox, Combobox, ComboboxCollection, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxStatus, ComboboxTrigger, type ConflictingChange, type ContentDimension, type ContentDimensionValue, type ContentRepository, ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, CountBadge, type CreationDialogElementConfig, type CropRectangle, type CurrentAccount, type DataSourceData, Dialog, DialogContent, type DialogControls, DialogDescription, DialogFooter, type DialogHandle, DialogHeader, DialogTitle, type DimensionCoordinates, type DiscardingResult, type DockRegion, type Domain, type DomainCreate, type DomainUpdate, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, type Event$1 as Event, type EventDiff, type ExtensionConfig, Field, type FormatEditorValueContext, type FormattedValue, type FormattedValueRequest, type FormattedValues, type HeaderActionContext, type HeaderActionDefinition, type IconProps, type IconSize, type IconVariant, type InfiniteData, Input, type InspectorGroupConfig, type InspectorTabConfig, type InspectorViewComponent, type InspectorViewConfig, type InspectorViewDefinition, type InspectorViewProps, type KeyboardShortcutDefinition, type LazyLabel, type LinkTypeDefinition, type LinkTypeTabProps, type ListingLinks, type ListingMeta, LoadingState, type MarkConfig, type ModalIcon, type NeosStudioGuestPluginApi, type Node$1 as Node, type NodeActionContext, type NodeActionDefinition, type NodeActionSurface, type NodeAddress, type NodeClassification, type NodeConfig, type NodeCopy, type NodeCreate, type NodeDecoration, type NodeDecorationContext, type NodeDecorationOverlay, type NodeDecoratorDefinition, type NodeMove, type NodePropertiesUpdate, type NodeReference, type NodeReferencesUpdate, type NodeType, type NodeTypeChange, type NodeTypeConfiguration, type NodeTypeGroup, type NodeTypeListing, type NodeTypeMap, type NodeVariantCreate, type NodeVariantListing, type PaginatedAssetListing, type PaginatedChangeListing, type PaginatedEventListing, type PaginatedNodeListing, type PaginatedUserListing, type PanelBadge, type PanelDefinition, type PanelPlacement, type PanelRect, type PasswordChange, Placeholder, Popover, PopoverContent, PopoverTrigger, type ProblemDocument, type Profile, type ProfileUpdate, type PropertyActionContext, type PropertyActionDefinition, type PropertyActionProperty, type PropertyActionRunContext, type PropertyConfig, type PropertyEditorComponent, type PropertyEditorDefinition, type PropertyEditorProps, type PropertyEditorSubject, type PropertyHint, type PropertyHintAction, type PropertyHintDefinition, type PropertyHintTone, type PropertyInspectorConfig, type PropertyScope, type PublishingResult, type QueryClient, type QueryFunctionContext, type QueryKey, type ResolvedKeyboardShortcut, type RichTextExtensionContext, type RichTextExtensionDefinition, type RichTextSurface, type RichTextToolbarItem, SearchInput, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Separator, type SettingsDialogDefinition, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, type Site, type SiteCreate, type SiteCreationOptions, type SiteListing, type SiteNodeType, type SiteUpdate, Skeleton, Slider, Spinner, type StreamEvent, type StructureChange, type StudioActions, type StudioContextValue, type StudioEventHandler, type StudioEventMap, type StudioEventName, type StudioEvents, type StudioInvalidation, type StudioState, type Subgraph, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger, type Task, type TaskStatus, Textarea, type TiptapBuildingBlocks, type Editor as TiptapEditor, Toggle, ToggleGroup, ToggleGroupItem, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type TranslateArgs, type UriPathSegment, type UseInfiniteQueryOptions, type UseInfiniteQueryResult, type UseMutationOptions, type UseMutationResult, type UseQueryOptions, type UseQueryResult, type User, type UserCreate, type UserOptions, type UserPasswordSet, type UserUpdate, type ValidatorDefinition, type ValidatorFunction, type ValueFormatContext, type ViewData, type Workspace, type WorkspaceClassification, type WorkspaceConflictProblem, type WorkspaceCreate, type WorkspaceDecoration, type WorkspaceDecoratorDefinition, type WorkspaceDiscard, type WorkspaceListing, type WorkspacePublish, type WorkspaceRebase, type WorkspaceRef, type WorkspaceRole, type WorkspaceRoleAssign, type WorkspaceRoleAssignment, type WorkspaceRoleAssignmentListing, type WorkspaceRoleSubject, type WorkspaceUpdate, type isRemoved, keepPreviousData, type nodeAddressFromContextPath, type nodeAddressFromKey, type nodeAddressKey, type nodeAddressOf, type nodeTypeConfiguration, type parseDimensionSpacePoint, queryClient, type sameDimensionSpacePoint, type sameNodeAddress, skipToken, studioFetch };

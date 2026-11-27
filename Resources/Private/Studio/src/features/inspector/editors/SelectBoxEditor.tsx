@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  dataSourceSelectOptions,
-  useDataSource,
-} from '@/api/neos/endpoints/dataSources'
+import { dataSourceSelectOptions } from '@/api/neos/endpoints/dataSourceOptions'
+import { useDataSource } from '@/api/neos/endpoints/dataSources'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -24,6 +22,7 @@ import { sortByPosition } from '@/lib/positional'
 import { moveItem } from '@/lib/arrays'
 import { cn } from '@/lib/utils'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
+import { selectValueKey as valueKey } from './valueFormatters'
 
 export const SELECT_BOX_EDITOR = 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
 
@@ -249,16 +248,6 @@ function SelectBoxControl({
       disabled={disabled}
     />
   )
-}
-
-/**
- * The option key of a stored value - as dataSourceSelectOptions keys them:
- * scalars as strings, objects as their JSON. Null for no value.
- */
-function valueKey(value: unknown): string | null {
-  if (value === null || value === undefined || value === '') return null
-  if (typeof value === 'object') return JSON.stringify(value)
-  return String(value)
 }
 
 /** The selected key of a single select's value - null for none. */

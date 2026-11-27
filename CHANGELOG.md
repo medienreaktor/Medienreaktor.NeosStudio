@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Values as their editors show them: `formatValue` in a property editor's
+  definition, `formatEditorValue` and `useFormattedValues` in the plugin
+  API. They give a value's label - an option's label instead of its key, a
+  page's title instead of `node://…`, `missing` for a removed page or asset
+  - for list rows and summaries. All of Studio's editors have one; lookups
+  share the editors' cache.
+- `resolveNodes` in the plugin API: nodes by aggregate id in a subgraph,
+  `null` for ones that don't resolve. Lookups of one tick go out as one
+  request per subgraph.
 - The Link Editor's Document tab has a search.
 - Link types get the LinkEditor property's `options` and the edited node's
   `nodeAddress`, and can hide their tab with `enabled(options)`.

@@ -70,6 +70,11 @@ import {
   propertyEditorRegistry,
 } from '@/features/inspector/editors/registry'
 import {
+  formatEditorValue,
+  useFormattedValues,
+} from '@/features/inspector/editors/formatValue'
+import { resolveNodes } from '@/api/neos/endpoints/nodes'
+import {
   InspectorViewRegistry,
   inspectorViewRegistry,
 } from '@/features/inspector/views/registry'
@@ -234,6 +239,14 @@ export const tiptap: typeof tiptapBuildingBlocks = tiptapBuildingBlocks
  * never re-renders on its own - prefer it in components that only act.
  */
 export { useStudio, useStudioActions, useKeyboardShortcut }
+
+export { formatEditorValue, useFormattedValues, resolveNodes }
+export type {
+  FormatEditorValueContext,
+  FormattedValueRequest,
+  FormattedValues,
+} from '@/features/inspector/editors/formatValue'
+export type { Subgraph } from '@/api/neos/endpoints/nodes'
 
 /**
  * Typed requests sharing the shell's OAuth session (bearer token,
@@ -449,10 +462,12 @@ export type {
 export type { PanelRect } from '@/features/panels/geometry'
 export type { DockRegion } from '@/features/panels/panelLayout'
 export type {
+  FormattedValue,
   PropertyEditorComponent,
   PropertyEditorDefinition,
   PropertyEditorProps,
   PropertyEditorSubject,
+  ValueFormatContext,
 } from '@/features/inspector/editors/registry'
 export type {
   StudioActions,
@@ -562,6 +577,9 @@ export interface NeosStudioPluginApi extends PluginComponents {
   useStudio: typeof useStudio
   useStudioActions: typeof useStudioActions
   useKeyboardShortcut: typeof useKeyboardShortcut
+  formatEditorValue: typeof formatEditorValue
+  useFormattedValues: typeof useFormattedValues
+  resolveNodes: typeof resolveNodes
   toast: typeof toast
   dialogs: typeof dialogs
   apiFetch: typeof apiFetch
@@ -633,6 +651,9 @@ export function installPluginApiGlobals(): void {
     useStudio,
     useStudioActions,
     useKeyboardShortcut,
+    formatEditorValue,
+    useFormattedValues,
+    resolveNodes,
     toast,
     dialogs,
     apiFetch,

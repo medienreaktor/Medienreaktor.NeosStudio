@@ -414,6 +414,49 @@ They need a `nodeAddress`:
 - `ReferenceEditor`, `ReferencesEditor` - picking works without one, but the current references are read from the node, not from `value`, so they start empty.
 - `NodeTypeEditor` - without a node it only shows the type in `value`.
 
+### Showing values like their editors
+
+A list row or a summary that shows a value without its editor should show what the editor shows: an option's label instead of its key, a page's title instead of `node://…`. `formatEditorValue(editorId, value, context)` returns that as a `FormattedValue` - `{ label, missing? }`, one line of plain text - or `null` when there is nothing to show (no value, an unchecked checkbox). `missing` marks a value that points at something gone, a removed page or asset; the label is then the stored value. The context is what the editor gets: `subject`, `options` (its `editorOptions`) and the `nodeAddress`, whose workspace and dimensions lookups use (the active ones without it).
+
+In a component, `useFormattedValues` formats a whole list. Items are told apart by editor, value and options, not by object identity, so building the array anew on every render costs nothing; while a changed value loads, its item keeps the previous label instead of flashing empty.
+
+```tsx
+import { useFormattedValues } from '@medienreaktor/neos-studio'
+
+function EntryRows({ entries, fields, nodeAddress }) {
+  const { labels, pending } = useFormattedValues(
+    entries.map((entry) => ({
+      editorId: fields.title.editor,
+      value: entry.title,
+      context: { subject: fields.title.subject, options: fields.title.editorOptions, nodeAddress },
+    })),
+  )
+  return entries.map((entry, index) => (
+    <Row key={entry.id} muted={labels[index]?.missing} title={labels[index]?.label ?? '…'} />
+  ))
+}
+```
+
+`labels[index]` is `undefined` until an item's first label is known; `pending` tells that some label is still loading. Lookups go through the shell's query cache under the keys the editors read with, so a label and the open editor share one request, and showing the same values again does not refetch.
+
+What Studio's editors show: text fields, text areas and code as their text (markup stripped, on one line); a select box its options' labels, translated, from the data source when it has one, in stored order; a checkbox the property label when checked; a date in its `format`; a link the page's title (with `#anchor`), the asset's name or the URL; references the pages' titles; a node type its label; a range the number with its `unit`; assets and images their names. An editor without a formatter shows plain values: strings, numbers, booleans and lists of them.
+
+Your own editor can do the same with `formatValue` in its definition. Return the label directly when it needs no lookup, a promise only when it does:
+
+```ts
+editors.register({
+  id: 'Acme.Shop/Editors/Product',
+  component: ProductEditor,
+  formatValue: async (value) => {
+    if (typeof value !== 'string' || value === '') return null
+    const product = await queryClient.fetchQuery(productQuery(value))
+    return product ? { label: product.name } : { label: value, missing: true }
+  },
+})
+```
+
+`resolveNodes(address, ids)` reads nodes by aggregate id in the subgraph of `address` (any node in it) - for an editor that stores node ids. It resolves to a `Map` from id to node, `null` for an id that does not resolve there (removed, or not readable). Lookups made in the same tick, from anywhere, go out as one request per subgraph (split at 100 ids), and the nodes land in the cache the shell reads nodes from.
+
 ### Data fetching
 
 A plugin reads and writes through `apiFetch` (Neos.Api, with the shell's session) and caches with the shell's TanStack Query: `useQuery`, `useInfiniteQuery`, `useMutation`, `useQueryClient`, `queryOptions`, `skipToken` and `keepPreviousData` come from the plugin API, bound to the shell's client. Its reads then share the shell's cache and show up in the query devtools. Don't bundle `@tanstack/react-query` yourself: a second copy finds no client above your components ("No QueryClient set"). Its types are part of the declaration file.

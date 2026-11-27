@@ -2,6 +2,7 @@ import * as React from 'react'
 import type { Node, NodeAddress, Site } from '@/api/neos/schema'
 import type { PreviewElementUpdate } from '@/features/preview/PreviewPane'
 import type { NodeEdit } from '@/features/tree/ContentOutliner'
+import { publishEditingSubgraph } from './editingSubgraph'
 
 /**
  * App state and actions exposed to panels. Panels (built-in and third-party
@@ -133,6 +134,13 @@ export function StudioProvider({
   actions: StudioActions
   children: React.ReactNode
 }) {
+  // During render, not in an effect: the children format values while they
+  // render, and their effects run before this component's.
+  publishEditingSubgraph(
+    state.site,
+    state.workspaceName,
+    state.selectedDocument?.dimensionSpacePoint,
+  )
   return (
     <StudioActionsContext.Provider value={actions}>
       <StudioStateContext.Provider value={state}>

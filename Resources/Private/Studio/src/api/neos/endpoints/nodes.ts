@@ -1,5 +1,5 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
-import { queryClient } from '@/app/queryClient'
+import { fetchQueryOrNull, queryClient } from '@/app/queryClient'
 import { api, fetchAllPages, unwrap } from '../client'
 import { neosKeys } from '../keys'
 import type {
@@ -11,6 +11,7 @@ import type {
 } from '../schema'
 import { nodeAddressKey } from '../schema'
 import type { operations } from '../schema/openapi'
+import { createBatchLoader } from '@/lib/batchLoader'
 import { fetchNodeTypes, matchesNodeTypeFilter, nodeTypeMap } from './nodeTypes'
 
 /**
@@ -637,4 +638,72 @@ export async function fetchChildren(
     )
   }
   return nodes
+}
+
+/** The subgraph of a node address: what a batch of node lookups shares. */
+export type Subgraph = Pick<
+  NodeAddress,
+  'contentRepositoryId' | 'workspaceName' | 'dimensionSpacePoint'
+>
+
+/** Thrown by a batched node read for an id the subgraph lacks - cached as such. */
+class NodeMissing extends Error {}
+
+const loadNodeBatched = createBatchLoader<Node>({
+  load: (group, ids) => {
+    const [contentRepositoryId, workspaceName, dimensionSpacePoint] =
+      JSON.parse(group) as [string, string, string]
+    return listNodesById(
+      contentRepositoryId,
+      { workspaceName, dimensionSpacePoint },
+      ids,
+      { include: 'hasChildren' },
+    )
+  },
+  idOf: (node) => node.nodeAggregateId,
+  maxPerRequest: NODE_IDS_PER_REQUEST,
+})
+
+function resolveNode(subgraph: Subgraph, id: string): Promise<Node | null> {
+  // The key useNode() reads the node under, with the same hasChildren, so
+  // a label and an open editor share the read.
+  return fetchQueryOrNull(
+    {
+      queryKey: neosKeys.nodes.get(
+        { ...subgraph, nodeAggregateId: id },
+        undefined,
+        false,
+      ),
+      queryFn: async () => {
+        const node = await loadNodeBatched(
+          JSON.stringify([
+            subgraph.contentRepositoryId,
+            subgraph.workspaceName,
+            subgraph.dimensionSpacePoint,
+          ]),
+          id,
+        )
+        if (node === null) throw new NodeMissing(id)
+        return node
+      },
+    },
+    (error) => error instanceof NodeMissing,
+  )
+}
+
+/**
+ * The nodes with these aggregate ids in the subgraph of the address (any
+ * node of it; its own id does not matter), null for an id that does not
+ * resolve there - removed, or not readable for the account. Lookups made
+ * within one tick, from anywhere, go out as one listNodes request per
+ * subgraph (100 ids each), and every node is cached under the key useNode()
+ * reads it with.
+ */
+export async function resolveNodes(
+  address: Subgraph,
+  ids: readonly string[],
+): Promise<Map<string, Node | null>> {
+  const unique = [...new Set(ids)]
+  const nodes = await Promise.all(unique.map((id) => resolveNode(address, id)))
+  return new Map(unique.map((id, index) => [id, nodes[index] ?? null]))
 }

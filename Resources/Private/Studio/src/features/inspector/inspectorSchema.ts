@@ -7,6 +7,7 @@ import {
   type PropertyConfig,
   type PropertyScope,
 } from '@/api/neos/schema'
+import { configuredLabel } from '@/api/neos/endpoints/nodeTypes'
 import { translateLabel } from '@/lib/i18n'
 import { sortByPosition } from '@/lib/positional'
 
@@ -108,6 +109,14 @@ export function humanizeLabel(
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .toLowerCase()
   return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/** A node type's label: its configured one, or its humanized short name. */
+export function nodeTypeLabel(
+  name: string,
+  nodeType: NodeType | undefined,
+): string {
+  return humanizeLabel(configuredLabel(nodeType), name.split(':').pop() ?? name)
 }
 
 function looksLikeI18nId(label: string): boolean {
