@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import type { NodeAddress } from '@/api/neos/schema'
+
 import { labelOf } from '@/lib/registry'
 import { ExtensionBoundary } from '@/components/ExtensionBoundary'
 import { Button } from '@/components/ui/button'
@@ -16,7 +18,10 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { translate as t } from '@/lib/i18n'
 import { isAllowedHref, type LinkValue } from './linkValue'
+import { enabledLinkTypes } from './linkTypes'
 import { useLinkTypes, type LinkTypeDefinition } from './registry'
+
+const NO_OPTIONS: Record<string, unknown> = {}
 
 /**
  * The Link Editor: one modal for every place a link is created or edited -
@@ -42,6 +47,8 @@ export function LinkEditorDialog({
   withOptions,
   onApply,
   onRemove,
+  editorOptions = NO_OPTIONS,
+  nodeAddress,
 }: {
   open: boolean
   /** Called with false when the dialog is dismissed without a result. */
@@ -55,11 +62,23 @@ export function LinkEditorDialog({
   onApply: (value: LinkValue) => void
   /** Offered as a "Remove link" button when set and an existing link is edited. */
   onRemove?: () => void
+  /**
+   * The editorOptions of the LinkEditor property the link is for: they
+   * decide which link types are offered (see LinkTypeDefinition.enabled) and
+   * reach every tab. None for a rich text link.
+   */
+  editorOptions?: Record<string, unknown>
+  /** The node whose property the link is for - the tabs look targets up in its subgraph. */
+  nodeAddress?: NodeAddress
 }) {
-  const types = useLinkTypes()
-  const [activeId, setActiveId] = useState<string>(
-    () => matchType(types, value)?.id ?? '',
-  )
+  const allTypes = useLinkTypes()
+  const types = enabledLinkTypes(allTypes, editorOptions)
+  // A link of a type that is not offered (an asset link where assets are
+  // off) opens on the first offered tab, to be replaced.
+  const [activeId, setActiveId] = useState<string>(() => {
+    const matched = matchType(allTypes, value)
+    return (matched && types.includes(matched) ? matched : types[0])?.id ?? ''
+  })
   // One href draft per tab, seeded with the edited link's href on its own
   // tab: switching tabs keeps each tab's progress, and Apply takes the
   // active tab's draft.
@@ -149,6 +168,8 @@ export function LinkEditorDialog({
                 >
                   <type.component
                     href={drafts[type.id] ?? null}
+                    options={editorOptions}
+                    nodeAddress={nodeAddress}
                     onChange={(next) =>
                       setDrafts((previous) => ({
                         ...previous,

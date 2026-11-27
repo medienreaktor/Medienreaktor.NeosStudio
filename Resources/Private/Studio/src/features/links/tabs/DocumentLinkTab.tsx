@@ -7,8 +7,14 @@ import {
   fetchNode,
   useAnchoredContent,
 } from '@/api/neos/endpoints/nodes'
-import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
-import { siteNodeAddress } from '@/api/neos/endpoints/sites'
+import {
+  fetchNodeTypes,
+  matchesNodeTypeFilter,
+  nodeTypeMap,
+  useNodeTypes,
+  type NodeTypeMap,
+} from '@/api/neos/endpoints/nodeTypes'
+import { editingSiteNode } from '@/api/neos/endpoints/sites'
 import type { Node, NodeAddress } from '@/api/neos/schema'
 import { config } from '@/config'
 import {
@@ -21,6 +27,14 @@ import {
   ComboboxStatus,
 } from '@/components/ui/combobox'
 import { Placeholder } from '@/components/ui/placeholder'
+import { SearchInput } from '@/components/ui/search-input'
+import { Spinner } from '@/components/ui/spinner'
+import { nodeTypesFilter } from '@/features/inspector/editors/editorOptions'
+import {
+  documentBreadcrumb,
+  useDocumentSearch,
+} from '@/features/tree/documentSearch'
+import { resolveNodeTypeIconClass } from '@/features/tree/nodeTypeIcon'
 import { useStudio } from '@/app/StudioContext'
 import { useNodeDecorators } from '@/features/tree/decorators'
 import { nodeDecor } from '@/features/tree/nodeDecor'
@@ -28,6 +42,7 @@ import { TreeList } from '@/features/tree/TreeList'
 import { useAutoExpand } from '@/features/tree/useAutoExpand'
 import { useRevealSelection } from '@/features/tree/useRevealSelection'
 import { translate as t } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { documentAnchors, type DocumentAnchor } from '../documentAnchors'
 import { documentUri, parseDocumentUri } from '../linkValue'
 import type { LinkTypeTabProps } from '../registry'
@@ -59,12 +74,29 @@ type TreeItemData = Node | typeof ROOT_ID
  * A read-only sibling of the DocumentTree panel: same data loading, eager
  * expansion and row decor, but no context menus or drag-and-drop - picking is
  * the only interaction. Like the document tree it shows one subgraph - the
- * active workspace in the selected document's dimension space point - so
- * item ids are node aggregate ids.
+ * edited node's, or the active workspace in the selected document's
+ * dimension space point - so item ids are node aggregate ids.
+ *
+ * The nodeTypes option limits what can be picked: the search finds only
+ * those, and the tree dims the other documents, which only lead the way to
+ * the ones below them.
  */
-export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
+export function DocumentLinkTab({
+  href,
+  onChange,
+  options,
+  nodeAddress,
+}: LinkTypeTabProps) {
   const { site, workspaceName, selectedDocument } = useStudio()
   const { data: nodeTypes } = useNodeTypes()
+  const filter = nodeTypesFilter(options, DOCUMENT_NODE_TYPE)
+  // The tree lists every document, to reach the pickable ones below others.
+  // Until the node types are known no row is dimmed, and a click waits for them.
+  const pickableWith = (types: NodeTypeMap, node: Node) =>
+    filter === DOCUMENT_NODE_TYPE ||
+    matchesNodeTypeFilter(types, node.nodeType, filter)
+  const pickable = (node: Node) =>
+    nodeTypes === undefined || pickableWith(nodeTypes, node)
   const decorators = useNodeDecorators()
   const parsed = href !== null ? parseDocumentUri(href) : null
   // The anchor is owned here (typing must not wait for a picked document);
@@ -73,14 +105,12 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
   // Flips once the site node's children resolve (see DocumentTree).
   const [rootLoaded, setRootLoaded] = useState(false)
 
-  const siteNode =
-    site && workspaceName !== null
-      ? siteNodeAddress(
-          site,
-          workspaceName,
-          selectedDocument?.dimensionSpacePoint,
-        )
-      : null
+  const siteNode = editingSiteNode(
+    site,
+    workspaceName,
+    selectedDocument?.dimensionSpacePoint,
+    nodeAddress,
+  )
   const addressOf = (nodeAggregateId: string): NodeAddress | null =>
     siteNode === null ? null : { ...siteNode, nodeAggregateId }
 
@@ -105,6 +135,16 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
     )
   }
 
+  const [search, setSearch] = useState('')
+  const searching = search.trim() !== ''
+  const hits = useDocumentSearch(
+    siteNode,
+    site?.nodeName ?? '',
+    search,
+    filter,
+    {},
+  )
+
   const tree = useTree<TreeItemData>({
     rootItemId: ROOT_ID,
     getItemName: (item) => {
@@ -120,7 +160,23 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
     },
     onPrimaryAction: (item) => {
       const data = item.getItemData()
-      if (data !== ROOT_ID && data !== null) emit(data.nodeAggregateId, anchor)
+      if (data === ROOT_ID || data === null) return
+      void (
+        nodeTypes
+          ? Promise.resolve(nodeTypes)
+          : fetchNodeTypes(data.contentRepositoryId).then(nodeTypeMap)
+      ).then((types) => {
+        if (pickableWith(types, data)) {
+          emit(data.nodeAggregateId, anchor)
+          return
+        }
+        // Not a link target here: the row only opens the way to the ones below.
+        tree.setSelectedItems(parsed ? [parsed.aggregateId] : [])
+        if (item.isFolder()) {
+          if (item.isExpanded()) item.collapse()
+          else item.expand()
+        }
+      })
     },
     dataLoader: {
       getItem: async (itemId): Promise<TreeItemData> => {
@@ -177,20 +233,41 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
     // TabsContent carries no padding (the media tab is edge-to-edge), so
     // every tab brings its own p-3.
     <div className="flex h-full min-h-0 flex-col gap-2 p-3">
+      <SearchInput
+        wrapperClassName="flex-none"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder={t('link.searchDocuments', 'Search documents…')}
+        aria-label={t('link.searchDocuments', 'Search documents…')}
+      />
       <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-divider bg-background p-1">
-        <TreeList
-          tree={tree}
-          label={t('link.targetDocument', 'Link target document')}
-          loading={!rootLoaded}
-          loadingText={t('link.loadingDocuments', 'Loading documents…')}
-          emptyText={t('link.noDocuments', 'This site has no documents yet.')}
-          emptyIcon="fa-sitemap"
-          decorate={(data) =>
-            data === ROOT_ID || data === null
-              ? null
-              : nodeDecor(data, nodeTypes, null, [], decorators)
-          }
-        />
+        {searching ? (
+          <SearchHits
+            nodes={hits.hits}
+            loading={hits.loading}
+            failed={hits.error !== null}
+            selectedId={parsed?.aggregateId ?? null}
+            nodeTypes={nodeTypes}
+            onPick={(node) => {
+              emit(node.nodeAggregateId, anchor)
+              setSearch('')
+            }}
+          />
+        ) : (
+          <TreeList
+            tree={tree}
+            label={t('link.targetDocument', 'Link target document')}
+            loading={!rootLoaded}
+            loadingText={t('link.loadingDocuments', 'Loading documents…')}
+            emptyText={t('link.noDocuments', 'This site has no documents yet.')}
+            emptyIcon="fa-sitemap"
+            decorate={(data) => {
+              if (data === ROOT_ID || data === null) return null
+              const decor = nodeDecor(data, nodeTypes, null, [], decorators)
+              return pickable(data) ? decor : { ...decor, dimmed: true }
+            }}
+          />
+        )}
       </div>
       <div className="flex flex-col gap-1">
         <label className="flex items-center gap-2 type-small text-muted-foreground">
@@ -269,5 +346,72 @@ export function DocumentLinkTab({ href, onChange }: LinkTypeTabProps) {
         ) : null}
       </div>
     </div>
+  )
+}
+
+/** The search's hits, each with the documents above it. */
+function SearchHits({
+  nodes,
+  loading,
+  failed,
+  selectedId,
+  nodeTypes,
+  onPick,
+}: {
+  nodes: Node[]
+  loading: boolean
+  failed: boolean
+  selectedId: string | null
+  nodeTypes: NodeTypeMap | undefined
+  onPick: (node: Node) => void
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 p-2 type-body text-muted-foreground">
+        <Spinner />
+        {t('link.searching', 'Searching…')}
+      </div>
+    )
+  }
+  if (failed || nodes.length === 0) {
+    return (
+      <p className="p-2 type-body text-muted-foreground">
+        {failed
+          ? t('editor.searchFailed', 'Search failed')
+          : t('editor.noMatches', 'No matches')}
+      </p>
+    )
+  }
+  return (
+    <ul className="flex flex-col">
+      {nodes.map((node) => (
+        <li key={node.nodeAggregateId}>
+          <button
+            type="button"
+            onClick={() => onPick(node)}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
+              node.nodeAggregateId === selectedId && 'bg-accent',
+            )}
+          >
+            <i
+              className={cn(
+                resolveNodeTypeIconClass(nodeTypes, node.nodeType),
+                'fa-fw type-icon-m shrink-0 text-muted-foreground',
+              )}
+              aria-hidden
+            />
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate type-body">
+                {node.label || node.nodeAggregateId}
+              </span>
+              <span className="truncate type-small text-muted-foreground">
+                {documentBreadcrumb(node, nodeTypes).slice(0, -1).join(' › ')}
+              </span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
   )
 }

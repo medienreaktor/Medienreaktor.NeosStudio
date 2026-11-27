@@ -14,7 +14,8 @@ import {
   type LinkValue,
 } from '@/features/links/linkValue'
 import { linkEditorRegistry } from '@/features/links/registry'
-import { translate as t } from '@/lib/i18n'
+import { plainEditorOption } from '@/features/inspector/inspectorSchema'
+import { translate as t, translateLabel } from '@/lib/i18n'
 import type { PropertyEditorComponent } from './registry'
 
 export const LINK_EDITOR = 'Neos.Neos/Inspector/Editors/LinkEditor'
@@ -34,6 +35,9 @@ export const LINK_EDITOR = 'Neos.Neos/Inspector/Editors/LinkEditor'
  *
  * Only links of the allowed schemes are stored (see isAllowedHref); a stored
  * value of another one (javascript:, data:, ...) shows an inline error.
+ *
+ * The editorOptions reach the dialog: assets: false hides the media tab,
+ * nodeTypes limits the documents, placeholder labels the empty field.
  */
 export const LinkFieldEditor: PropertyEditorComponent = ({
   id,
@@ -41,6 +45,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
   value,
   onCommit,
   onChange,
+  options,
   nodeAddress,
 }) => {
   const stored = typeof value === 'string' && value !== '' ? value : null
@@ -102,7 +107,7 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
           className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-2.5 type-body text-muted-foreground hover:border-placeholder hover:text-foreground"
         >
           <i className="fas fa-link type-icon-xl" aria-hidden />
-          {t('editor.link.set', 'Set link…')}
+          {linkPlaceholder(options)}
         </button>
       ) : (
         <div className="flex items-center gap-2 rounded-md border border-border bg-background py-1 pr-1 pl-2.5">
@@ -148,6 +153,8 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
           subject={subject.label}
           value={href !== null ? plainLink(href) : null}
           withOptions={false}
+          editorOptions={options}
+          nodeAddress={nodeAddress}
           onApply={(next: LinkValue) => {
             commit(next.href)
             setOpen(false)
@@ -164,6 +171,32 @@ export const LinkFieldEditor: PropertyEditorComponent = ({
       )}
     </>
   )
+}
+
+/**
+ * Neos' default placeholder for the LinkEditor (Neos.Neos Settings.yaml),
+ * written for its search field: "Paste a link, or type to search" reads
+ * wrong on this button, so it gets the button's own label. Neos.Api merges
+ * the editor defaults into the options and translates them, so it can
+ * arrive as the id, its translation or the English text.
+ */
+const NEOS_DEFAULT_PLACEHOLDER =
+  'Neos.Neos:Main:content.inspector.editors.linkEditor.search'
+
+function isNeosDefaultPlaceholder(placeholder: unknown): boolean {
+  return (
+    placeholder === NEOS_DEFAULT_PLACEHOLDER ||
+    placeholder === 'Paste a link, or type to search' ||
+    placeholder === translateLabel(NEOS_DEFAULT_PLACEHOLDER)
+  )
+}
+
+/** The empty field's label: editorOptions.placeholder, plain or a translation id. */
+function linkPlaceholder(options: Record<string, unknown>): string {
+  const configured = isNeosDefaultPlaceholder(options.placeholder)
+    ? undefined
+    : plainEditorOption(options, 'placeholder')
+  return configured ?? t('editor.link.set', 'Set link…')
 }
 
 /** A stored href as a LinkValue - a string property carries no options. */

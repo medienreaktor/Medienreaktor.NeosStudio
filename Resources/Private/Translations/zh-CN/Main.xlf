@@ -1578,6 +1578,14 @@
         <source>Search assets…</source>
         <target xml:lang="zh-CN">搜索资产…</target>
       </trans-unit>
+      <trans-unit id="link.searchDocuments" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="zh-CN">搜索文档…</target>
+      </trans-unit>
+      <trans-unit id="link.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="zh-CN">正在搜索…</target>
+      </trans-unit>
       <trans-unit id="link.targetDocument" xml:space="preserve">
         <source>Link target document</source>
         <target xml:lang="zh-CN">链接目标文档</target>

@@ -1,4 +1,5 @@
 import type * as React from 'react'
+import type { NodeAddress } from '@/api/neos/schema'
 import { ObservableRegistry, useRegistry, type LazyLabel } from '@/lib/registry'
 
 /**
@@ -28,6 +29,18 @@ export interface LinkTypeTabProps {
    * incomplete - the dialog's Apply button follows.
    */
   onChange: (href: string | null) => void
+  /**
+   * The editorOptions of the LinkEditor property the link is for (e.g.
+   * nodeTypes, assets); empty for a rich text link.
+   */
+  options: Record<string, unknown>
+  /**
+   * The edited node, when the link is for one of its properties: look
+   * targets up in its subgraph (workspace + dimension space point). Absent
+   * in the creation dialog and for rich text links - the active workspace
+   * and the selected document's dimensions serve there.
+   */
+  nodeAddress?: NodeAddress
 }
 
 export interface LinkTypeDefinition {
@@ -53,6 +66,13 @@ export interface LinkTypeDefinition {
    * registered type should set this.
    */
   isFallback?: boolean
+  /**
+   * Whether the type is offered for the LinkEditor property's editorOptions
+   * - false hides its tab (the asset type for `assets: false`). A stored
+   * href of the type still shows in the field, and can be removed or
+   * replaced. Offered always when absent.
+   */
+  enabled?: (options: Record<string, unknown>) => boolean
 }
 
 /** Link types (tabs) in registration order, plus href → type matching. */

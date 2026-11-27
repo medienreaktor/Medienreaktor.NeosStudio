@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
   dataSourceSelectOptions,
   useDataSource,
@@ -7,30 +6,25 @@ import {
 import {
   DOCUMENT_NODE_TYPE,
   nodeReferences,
-  searchNodes,
   useNodeReferences,
 } from '@/api/neos/endpoints/nodes'
-import {
-  isOfType,
-  useNodeTypes,
-  type NodeTypeMap,
-} from '@/api/neos/endpoints/nodeTypes'
-import { siteNodeAddress } from '@/api/neos/endpoints/sites'
-import { neosKeys } from '@/api/neos/keys'
+import { isOfType, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
+import { editingSiteNode } from '@/api/neos/endpoints/sites'
 import {
   nodeAddressOf,
-  type Node,
   type NodeAddress,
   type NodeReference,
 } from '@/api/neos/schema'
 import { useStudio, useStudioActions } from '@/app/StudioContext'
-import { nodeAccessState } from '@/features/access/rules'
-import { useAccess } from '@/features/access/useAccess'
 import { FieldIconButton } from '@/components/ui/field-icon-button'
 import { faClassName } from '@/components/ui/icon'
 import { toast } from '@/components/ui/toast'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
 import { translate } from '@/lib/i18n'
+import {
+  documentBreadcrumb,
+  useDocumentSearch,
+} from '@/features/tree/documentSearch'
 import { resolveNodeTypeIconClass } from '@/features/tree/nodeTypeIcon'
 import { moveItem } from '@/lib/arrays'
 import { cn } from '@/lib/utils'
@@ -39,26 +33,11 @@ import {
   SelectedItemRow,
   type ReferenceOption,
 } from './ReferencePicker'
+import { nodeTypesFilter } from './editorOptions'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const REFERENCE_EDITOR = 'Neos.Neos/Inspector/Editors/ReferenceEditor'
 export const REFERENCES_EDITOR = 'Neos.Neos/Inspector/Editors/ReferencesEditor'
-
-/**
- * The labels of the documents from the site down to a search hit, the hit's
- * own label last - computed from the ancestors it was read with.
- */
-function searchHitBreadcrumb(
-  node: Node,
-  nodeTypes: NodeTypeMap | undefined,
-): string[] {
-  const documents = nodeTypes
-    ? (node.ancestors ?? []).filter((ancestor) =>
-        isOfType(nodeTypes, ancestor.nodeType, DOCUMENT_NODE_TYPE),
-      )
-    : []
-  return [...documents.map((ancestor) => ancestor.label).reverse(), node.label]
-}
 
 /**
  * The pickable options for a reference editor. Two sources, mirroring the
@@ -76,7 +55,6 @@ function useReferenceOptions(
 ): { options: ReferenceOption[]; loading: boolean; hint: string | null } {
   const { data: nodeTypes } = useNodeTypes()
   const { site, workspaceName, selectedDocument } = useStudio()
-  const access = useAccess()
 
   const dataSourceIdentifier =
     plainEditorOption(options, 'dataSourceIdentifier') ?? null
@@ -105,48 +83,22 @@ function useReferenceOptions(
     typeof options.threshold === 'number' && options.threshold >= 0
       ? options.threshold
       : 2
-  const nodeTypesFilter = Array.isArray(options.nodeTypes)
-    ? options.nodeTypes
-        .filter((t): t is string => typeof t === 'string')
-        .join(',')
-    : typeof options.nodeTypes === 'string' && options.nodeTypes !== ''
-      ? options.nodeTypes
-      : 'Neos.Neos:Document'
+  const nodeTypeFilter = nodeTypesFilter(options)
   // Search the site the edited node lives in, within its subgraph (workspace +
   // dimensions); the creation dialog has no node yet and falls back to the
-  // active site's node in the active workspace and the selected document's
-  // dimension space point.
-  const searchContext: NodeAddress | null = site?.nodeAggregateId
-    ? nodeAddress
-      ? { ...nodeAddressOf(nodeAddress), nodeAggregateId: site.nodeAggregateId }
-      : workspaceName !== null
-        ? siteNodeAddress(
-            site,
-            workspaceName,
-            selectedDocument?.dimensionSpacePoint,
-          )
-        : null
-    : null
-
-  const [debouncedTerm, setDebouncedTerm] = useState('')
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
-
-  const searchEnabled =
-    dataSourceIdentifier === null &&
-    open &&
-    searchContext !== null &&
-    debouncedTerm.length >= threshold
-  const search = useQuery({
-    queryKey: neosKeys.nodes.descendants(searchContext, {
-      nodeTypes: nodeTypesFilter,
-      search: debouncedTerm,
-    }),
-    queryFn: () => searchNodes(searchContext!, debouncedTerm, nodeTypesFilter),
-    enabled: searchEnabled,
-  })
+  // active workspace and the selected document's dimension space point.
+  const search = useDocumentSearch(
+    editingSiteNode(
+      site,
+      workspaceName,
+      selectedDocument?.dimensionSpacePoint,
+      nodeAddress,
+    ),
+    site?.nodeName ?? '',
+    searchTerm,
+    nodeTypeFilter,
+    { minLength: threshold, enabled: dataSourceIdentifier === null && open },
+  )
   useEffect(() => {
     if (search.error)
       toast.error(search.error, {
@@ -175,29 +127,13 @@ function useReferenceOptions(
   }
 
   return {
-    options: (searchEnabled ? (search.data ?? []) : [])
-      // The search does not apply the account's access roles - hits the
-      // roles hide are not offered (pages that are merely restricted are).
-      .filter(
-        (node) =>
-          nodeAccessState(
-            access,
-            [
-              node.nodeAggregateId,
-              ...(node.ancestors ?? []).map(
-                (ancestor) => ancestor.nodeAggregateId,
-              ),
-            ],
-            site?.nodeName ?? '',
-          ) !== 'hidden',
-      )
-      .map((node): ReferenceOption => ({
-        id: node.nodeAggregateId,
-        label: node.label || node.nodeAggregateId,
-        iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
-        secondary: searchHitBreadcrumb(node, nodeTypes).join(' › '),
-      })),
-    loading: searchEnabled && search.isPending,
+    options: search.hits.map((node): ReferenceOption => ({
+      id: node.nodeAggregateId,
+      label: node.label || node.nodeAggregateId,
+      iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
+      secondary: documentBreadcrumb(node, nodeTypes).join(' › '),
+    })),
+    loading: search.loading,
     hint:
       searchTerm.trim().length < threshold
         ? threshold === 1

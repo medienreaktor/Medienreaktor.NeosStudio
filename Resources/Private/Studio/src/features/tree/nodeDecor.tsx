@@ -24,6 +24,17 @@ export interface TreeRowDecor {
 }
 
 /**
+ * The label's opacity: a decorator's and the binary dimming multiply, so
+ * a dimmed row stays dimmed whatever a decorator sets.
+ */
+export function rowOpacity(
+  decor: TreeRowDecor | null | undefined,
+): number | undefined {
+  if (!decor?.dimmed) return decor?.opacity
+  return (decor.opacity ?? 1) * 0.5
+}
+
+/**
  * Badge corner offsets on the type icon, by NodeDecorationOverlay position.
  * At most 2px outside the icon box: the rows clip their content
  * (overflow-hidden), so a badge reaching further out gets cropped.

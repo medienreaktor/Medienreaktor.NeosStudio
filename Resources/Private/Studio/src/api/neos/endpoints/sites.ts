@@ -1,6 +1,7 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
 import { api, unwrap } from '../client'
 import { neosKeys } from '../keys'
+import { nodeAddressOf } from '../schema'
 import type {
   Domain,
   DomainCreate,
@@ -115,4 +116,28 @@ export async function deleteDomain(
       params: { path: { siteNodeName, domainId } },
     }),
   )
+}
+
+/**
+ * The site node in the subgraph of the edited node, or - without one (the
+ * creation dialog, a rich text link, a plugin's UI) - in the active workspace
+ * and the selected document's dimension space point: where pickers and
+ * lookups search.
+ */
+export function editingSiteNode(
+  site: Site | null,
+  workspaceName: string | null,
+  dimensionSpacePoint: string | undefined,
+  nodeAddress?: NodeAddress,
+): NodeAddress | null {
+  if (!site?.nodeAggregateId) return null
+  if (nodeAddress) {
+    return {
+      ...nodeAddressOf(nodeAddress),
+      nodeAggregateId: site.nodeAggregateId,
+    }
+  }
+  return workspaceName === null
+    ? null
+    : siteNodeAddress(site, workspaceName, dimensionSpacePoint)
 }

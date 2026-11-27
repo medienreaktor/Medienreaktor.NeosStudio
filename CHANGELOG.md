@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The Link Editor's Document tab has a search.
+- Link types get the LinkEditor property's `options` and the edited node's
+  `nodeAddress`, and can hide their tab with `enabled(options)`.
+
+### Fixed
+
+- The LinkEditor honours its `editorOptions`: `assets: false` hides the
+  Media tab, `nodeTypes` limits the documents a link can point at, and
+  `placeholder` labels the empty field. Neos' default placeholder, meant
+  for a search field, is ignored.
+- The Link Editor of a node property shows the documents of that node's
+  workspace and dimensions, not those of the active ones.
+
 ## [2.8.1] - 2026-11-24
 
 ### Fixed

@@ -1312,6 +1312,12 @@
       <trans-unit id="link.searchAssets" xml:space="preserve">
         <source>Search assets…</source>
       </trans-unit>
+      <trans-unit id="link.searchDocuments" xml:space="preserve">
+        <source>Search documents…</source>
+      </trans-unit>
+      <trans-unit id="link.searching" xml:space="preserve">
+        <source>Searching…</source>
+      </trans-unit>
       <trans-unit id="link.targetDocument" xml:space="preserve">
         <source>Link target document</source>
       </trans-unit>

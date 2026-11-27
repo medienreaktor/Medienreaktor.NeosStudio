@@ -1626,6 +1626,14 @@
         <source>Search assets…</source>
         <target xml:lang="ru">Поиск медиа-ресурсов…</target>
       </trans-unit>
+      <trans-unit id="link.searchDocuments" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="ru">Поиск документов…</target>
+      </trans-unit>
+      <trans-unit id="link.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="ru">Поиск…</target>
+      </trans-unit>
       <trans-unit id="link.targetDocument" xml:space="preserve">
         <source>Link target document</source>
         <target xml:lang="ru">Целевой документ ссылки</target>

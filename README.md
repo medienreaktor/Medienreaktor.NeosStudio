@@ -401,6 +401,14 @@ These built-in editors (ids `Neos.Neos/Inspector/Editors/…`) work without a no
 - `AssetEditor`, `ImageEditor` - `{id}` of the picked asset; a collection with an `array<…>` type. Picking switches the main area to the Media Library, so a dialog hosting them closes while `useAssetPickerActive()` is true, as above. Not in a settings section, whose modal would cover the Media Library.
 - `UriPathSegmentEditor` - as a text field; generating the segment from the title needs the node.
 
+The `LinkEditor` honours these `editorOptions`, on node properties and in a plugin's UI alike:
+
+- `assets: false` hides the Media tab. A stored `asset://` link still shows in the field and can be removed or replaced.
+- `nodeTypes` - a node type or a list of them (`Neos.Neos:Document` by default, `!` excludes one) - limits what the Document tab offers: its search finds only those, and in the tree the other documents are dimmed and only lead to the ones below them.
+- `placeholder` - plain text or a translation id - labels the empty field instead of "Set link…". Neos' own default for the LinkEditor ("Paste a link, or type to search") is meant for a search field and is ignored.
+
+With a `nodeAddress`, the Link Editor looks targets up in that node's workspace and dimensions; without one, in the active workspace and the selected document's dimensions. A plugin's link type gets the same: its tab component receives the property's `options` and the `nodeAddress` (both empty for a rich text link), and a link type with `enabled: (options) => boolean` is offered only where that returns true - the Media tab is one, with `enabled: (options) => options.assets !== false`.
+
 They need a `nodeAddress`:
 
 - `ReferenceEditor`, `ReferencesEditor` - picking works without one, but the current references are read from the node, not from `value`, so they start empty.

@@ -1594,6 +1594,14 @@
         <source>Search assets…</source>
         <target xml:lang="da">Søg efter filer…</target>
       </trans-unit>
+      <trans-unit id="link.searchDocuments" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="da">Søg i dokumenter…</target>
+      </trans-unit>
+      <trans-unit id="link.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="da">Søger…</target>
+      </trans-unit>
       <trans-unit id="link.targetDocument" xml:space="preserve">
         <source>Link target document</source>
         <target xml:lang="da">Linkets måldokument</target>

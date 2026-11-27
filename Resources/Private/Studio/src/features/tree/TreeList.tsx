@@ -2,7 +2,7 @@ import type { ItemInstance, TreeInstance } from '@headless-tree/core'
 import { cn } from '@/lib/utils'
 import { Placeholder } from '@/components/ui/placeholder'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { TreeRowDecor } from './nodeDecor'
+import { rowOpacity, type TreeRowDecor } from './nodeDecor'
 
 /**
  * The drag-and-drop feature's additions to the tree/item instances, absent
@@ -186,7 +186,12 @@ export function TreeList<T>({
               </span>
             )}
             {decor?.icon && (
-              <span className="shrink-0 text-foreground">{decor.icon}</span>
+              <span
+                className="shrink-0 text-foreground"
+                style={{ opacity: decor.dimmed ? 0.5 : undefined }}
+              >
+                {decor.icon}
+              </span>
             )}
             {/* Not isLoading(): that also covers children-loading, which
                 would swap an expanding folder's own label out for a skeleton
@@ -198,11 +203,8 @@ export function TreeList<T>({
               />
             ) : (
               <span
-                className={cn(
-                  'overflow-hidden text-ellipsis motion-safe:animate-fade-in',
-                  decor?.dimmed && 'opacity-50',
-                )}
-                style={{ color: decor?.color, opacity: decor?.opacity }}
+                className="overflow-hidden text-ellipsis motion-safe:animate-fade-in"
+                style={{ color: decor?.color, opacity: rowOpacity(decor) }}
               >
                 {item.getItemName()}
               </span>

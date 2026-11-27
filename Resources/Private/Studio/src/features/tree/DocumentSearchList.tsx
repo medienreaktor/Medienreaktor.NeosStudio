@@ -3,11 +3,7 @@ import {
   DOCUMENT_NODE_TYPE,
   useFilteredDescendants,
 } from '@/api/neos/endpoints/nodes'
-import {
-  isOfType,
-  type NodeTypeMap,
-  useNodeTypes,
-} from '@/api/neos/endpoints/nodeTypes'
+import { useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
 import { siteNodeAddress } from '@/api/neos/endpoints/sites'
 import {
   type Node,
@@ -16,7 +12,6 @@ import {
   sameNodeAddress,
   type Site,
 } from '@/api/neos/schema'
-import { nodeAccessState } from '@/features/access/rules'
 import { useAccess } from '@/features/access/useAccess'
 import { LoadingState } from '@/components/ui/spinner'
 import { Placeholder } from '@/components/ui/placeholder'
@@ -24,25 +19,9 @@ import { toast } from '@/components/ui/toast'
 import { translate as t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useNodeDecorators } from './decorators'
-import { nodeDecor } from './nodeDecor'
+import { documentBreadcrumb, visibleToAccount } from './documentSearch'
+import { nodeDecor, rowOpacity } from './nodeDecor'
 import { usePendingChanges } from './usePendingChanges'
-
-/**
- * The labels of the documents from the site down to the node, the node's own
- * last - from the ancestors a search hit is read with.
- */
-function breadcrumbOf(node: Node, nodeTypes: NodeTypeMap | undefined) {
-  if (nodeTypes === undefined) return []
-  return [
-    ...(node.ancestors ?? [])
-      .filter((ancestor) =>
-        isOfType(nodeTypes, ancestor.nodeType, DOCUMENT_NODE_TYPE),
-      )
-      .map((ancestor) => ancestor.label)
-      .reverse(),
-    node.label,
-  ]
-}
 
 /**
  * The document toolbar's search/filter result view: a flat, depth-independent
@@ -86,18 +65,8 @@ export function DocumentSearchList({
   // the tree - located by the ancestors each hit is read with.
   const nodes = useMemo(
     () =>
-      (results.data ?? []).filter(
-        (node) =>
-          nodeAccessState(
-            access,
-            [
-              node.nodeAggregateId,
-              ...(node.ancestors ?? []).map(
-                (ancestor) => ancestor.nodeAggregateId,
-              ),
-            ],
-            site.nodeName,
-          ) !== 'hidden',
+      (results.data ?? []).filter((node) =>
+        visibleToAccount(node, access, site.nodeName),
       ),
     [results.data, access, site.nodeName],
   )
@@ -135,7 +104,7 @@ export function DocumentSearchList({
     >
       {nodes.map((node) => {
         const decor = nodeDecor(node, nodeTypes, pendingChanges, [], decorators)
-        const breadcrumb = breadcrumbOf(node, nodeTypes)
+        const breadcrumb = documentBreadcrumb(node, nodeTypes)
         return (
           <button
             key={nodeAddressKey(node)}
@@ -149,14 +118,17 @@ export function DocumentSearchList({
             )}
           >
             {decor.icon && (
-              <span className="mt-0.5 shrink-0 text-foreground">
+              <span
+                className="mt-0.5 shrink-0 text-foreground"
+                style={{ opacity: decor.dimmed ? 0.5 : undefined }}
+              >
                 {decor.icon}
               </span>
             )}
             <span className="min-w-0 flex-1">
               <span
-                className={cn('block truncate', decor.dimmed && 'opacity-50')}
-                style={{ color: decor.color, opacity: decor.opacity }}
+                className="block truncate"
+                style={{ color: decor.color, opacity: rowOpacity(decor) }}
               >
                 {node.label || node.nodeAggregateId}
               </span>

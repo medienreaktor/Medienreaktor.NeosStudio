@@ -1,5 +1,6 @@
 import { translate as t } from '@/lib/i18n'
 import { isAssetUri, isDocumentUri } from './linkValue'
+import { assetLinksEnabled } from './linkTypes'
 import { linkEditorRegistry } from './registry'
 import { AssetLinkTab } from './tabs/AssetLinkTab'
 import { DocumentLinkTab } from './tabs/DocumentLinkTab'
@@ -30,6 +31,7 @@ export function registerBuiltinLinkTypes(): void {
     icon: <i className="fas fa-paperclip" aria-hidden />,
     component: AssetLinkTab,
     matches: isAssetUri,
+    enabled: assetLinksEnabled,
   })
   linkEditorRegistry.register({
     id: EXTERNAL_LINK_TYPE,

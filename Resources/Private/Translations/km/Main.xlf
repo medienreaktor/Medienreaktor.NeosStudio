@@ -1578,6 +1578,14 @@
         <source>Search assets…</source>
         <target xml:lang="km">ស្វែងរកមេឌា…</target>
       </trans-unit>
+      <trans-unit id="link.searchDocuments" xml:space="preserve">
+        <source>Search documents…</source>
+        <target xml:lang="km">ស្វែងរកឯកសារ…</target>
+      </trans-unit>
+      <trans-unit id="link.searching" xml:space="preserve">
+        <source>Searching…</source>
+        <target xml:lang="km">កំពុងស្វែងរក…</target>
+      </trans-unit>
       <trans-unit id="link.targetDocument" xml:space="preserve">
         <source>Link target document</source>
         <target xml:lang="km">ឯកសារគោលដៅរបស់តំណ</target>
