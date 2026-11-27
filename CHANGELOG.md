@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-11-27
+
 ### Added
 
 - Values as their editors show them: `formatValue` in a property editor's
@@ -1659,7 +1661,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `Resources/Private/StudioApi`. A plugin bundle is loaded through a single
   `Medienreaktor.NeosStudio.plugins` entry in `Settings.yaml`.
 
-[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.1...HEAD
+[Unreleased]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.9.0...HEAD
+[2.9.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.1...2.9.0
 [2.8.1]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.8.0...2.8.1
 [2.8.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.7.0...2.8.0
 [2.7.0]: https://github.com/medienreaktor/Medienreaktor.NeosStudio/compare/2.6.1...2.7.0
