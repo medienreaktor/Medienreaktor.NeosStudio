@@ -411,8 +411,115 @@ With a `nodeAddress`, the Link Editor looks targets up in that node's workspace 
 
 They need a `nodeAddress`:
 
-- `ReferenceEditor`, `ReferencesEditor` - picking works without one, but the current references are read from the node, not from `value`, so they start empty.
+- `ReferenceEditor`, `ReferencesEditor` - on a Neos 9 reference they read the current references from the node, so without one they start empty. On a value (any other `subject.type`) they need no node: see [Node ids as values](#node-ids-as-values).
 - `NodeTypeEditor` - without a node it only shows the type in `value`.
+
+### Node ids as values
+
+The `ReferenceEditor` and `ReferencesEditor` also edit node ids stored as plain values: in a `string` or `array` property, or in a plugin's own field. That suits links that need no backlinks, content migrated from Neos 8, settings-like properties, and plugin hosts that keep sub-fields in one property (list and entries editors, property actions, dialogs).
+
+Which one they edit follows the property type, `subject.type` in a plugin's UI:
+
+| `subject.type`                                       | The editor reads                    | It commits                                                                          |
+| ---------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `reference`, `references` (a Neos 9 reference)       | the node's references (`node.references`), not `value` | the target ids, which the inspector persists with SetNodeReferences |
+| anything else (`string`, `array`, a host's own type) | `value`: an id, a list of ids, or nothing | `ReferenceEditor`: the id, `null` when cleared; `ReferencesEditor`: a list of ids, `[]` when cleared (through `onCommit` and `onChange`) |
+
+Studio passes `reference` / `references` for exactly the entries of a node type's `references:` section, and persists with SetNodeReferences on the same two types, so an existing reference can't end up stored as a property. (Neos 9 moves legacy `type: reference(s)` properties into `references:` itself.)
+
+```yaml
+'Acme.Site:Content.Teaser':
+  properties:
+    target:
+      type: string
+      ui:
+        label: 'Target page'
+        inspector:
+          group: general
+          editor: 'Neos.Neos/Inspector/Editors/ReferenceEditor'
+    relatedPages:
+      type: array
+      ui:
+        label: 'Related pages'
+        inspector:
+          group: general
+          editor: 'Neos.Neos/Inspector/Editors/ReferencesEditor'
+          editorOptions:
+            nodeTypes: ['Acme.Site:Document.Page']
+            threshold: 2
+```
+
+The stored value is the node aggregate id as a string (`"a3474e1d-…"`), or a list of them in the picked order (`["a3474e1d-…", "5e2c…"]`). Both editors keep what a graph reference has in the editor: search over the site in the edited node's workspace and dimensions, `nodeTypes`, `threshold`, `placeholder`, `dataSourceIdentifier`, hits filtered by the account's access roles, node type icons, breadcrumbs, go to page, and drag reordering in the multi variant. Stored ids are resolved with `resolveNodes`, one request per subgraph for all editors on screen.
+
+Nothing in the content repository keeps such an id valid. An id that no longer resolves - the page was removed, or the account may not read it - shows as **Missing** in the field, with the id in its tooltip; it stays stored until it is removed or replaced, and an edit of another entry keeps it. A target that is hidden, or inside a hidden page, shows **Hidden**: it doesn't render in live. `formatValue` labels the ids and marks unresolved ones `missing`.
+
+Compared with a graph reference, a value gives up:
+
+- **Backlinks**: Neos doesn't know about the link, so there are no "referenced by" lookups, and listNodes' `filterByReference` doesn't find it.
+- **Delete warnings**: removing a target doesn't tell about the nodes pointing at it; they keep a missing id.
+- **Cache flushing by reference**: the rendering has to tag its cache entries itself (below).
+
+On the Fusion side, resolve each id in the site and skip the ones that don't resolve (removed, hidden in live, not readable), and tag the cache entry with every id, so a change to a target, or its removal, flushes it. `nodeTagForIdentifier` returns a list of tags per id, and `entryTags` merges one level of arrays only, so build one flat list:
+
+```neosfusion
+prototype(Acme.Site:Content.RelatedPages) < prototype(Neos.Neos:ContentComponent) {
+    @private {
+        ids = ${Array.filter(Type.isArray(q(node).property('relatedPages')) ? q(node).property('relatedPages') : [], id => Type.isString(id) && id != '')}
+        pages = ${Array.filter(Array.map(private.ids, id => q(site).find('#' + id).get(0)), page => page != null)}
+    }
+
+    renderer = afx`
+        <ul>
+            <Neos.Fusion:Loop items={private.pages} itemName="page">
+                <li><Neos.Neos:NodeLink node={page} /></li>
+            </Neos.Fusion:Loop>
+        </ul>
+    `
+
+    @cache {
+        mode = 'cached'
+        entryIdentifier.node = ${Neos.Caching.entryIdentifierForNode(node)}
+        entryTags {
+            node = ${Neos.Caching.nodeTag(node)}
+            relatedPages = ${Array.reduce(Type.isArray(q(node).property('relatedPages')) ? q(node).property('relatedPages') : [], (tags, id) => Type.isString(id) && id != '' ? Array.concat(tags, Neos.Caching.nodeTagForIdentifier(id, node)) : tags, [])}
+        }
+    }
+}
+```
+
+For a single id in a `string` property: `${q(site).find('#' + q(node).property('target')).get(0)}`, rendered with `@if` on the result.
+
+### Picking nodes in your own UI
+
+`NodePicker` is the field the reference editors are built on, for a plugin's dialog, link type tab or settings section: the same search, access filtering, icons, breadcrumbs and missing / hidden marks. It is controlled: it shows `value` and reports every pick, removal and reorder through `onChange`.
+
+```tsx
+import { Field, NodePicker, translate } from '@medienreaktor/neos-studio'
+
+function FeaturedPages({ nodeAddress }) {
+  const [pages, setPages] = useState<string[]>([])
+  return (
+    <Field label={translate('Vendor.Package:Main:featured', 'Featured pages')} htmlFor="featured-pages">
+      <NodePicker id="featured-pages" multiple value={pages} onChange={setPages} nodeAddress={nodeAddress} nodeTypes={['Acme.Site:Document.Page']} />
+    </Field>
+  )
+}
+```
+
+| Prop | |
+| ---- | --- |
+| `value` | The picked node aggregate ids, in order. The single variant shows the first. |
+| `onChange(ids)` | The new selection, `[]` when cleared. |
+| `multiple` | Pick several, listed as sortable rows above the search. One by default. |
+| `nodeAddress` | A node in the subgraph (workspace and dimensions) to search and to resolve `value` in, usually the edited node. Without one: the active workspace and the selected document's dimensions. The site searched is the active one. |
+| `nodeTypes` | A node type or a list, or a comma-separated string in Neos' NodeTypeCriteria syntax (`!` excludes). Documents by default. |
+| `threshold` | How many characters start a search, 2 by default. |
+| `placeholder` | The empty field's text, plain (translate it yourself). "Type to search" by default. |
+| `dataSourceIdentifier`, `dataSourceAdditionalData`, `dataSourceDisableCaching` | Offer a data source's options instead of searching; their values are node aggregate ids. |
+| `disabled` | Shows the selection without changing it. |
+| `id` | The id of the search trigger, for a label's `htmlFor`. |
+
+`useNodeSearch({ searchTerm, nodeAddress, nodeTypes, threshold, dataSourceIdentifier, enabled })` is the search alone, for a picker of your own: it returns `{ hits, loading, hint, dataSourceOptions }`, each hit with `id`, `label`, `iconClass` and the breadcrumb as `secondary`. To show stored ids without a picker, use `resolveNodes` or `useFormattedValues` (below).
 
 ### Showing values like their editors
 

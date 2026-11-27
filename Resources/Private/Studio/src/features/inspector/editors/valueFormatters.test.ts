@@ -333,6 +333,24 @@ void describe('reference formatter', () => {
     )
     assert.equal(await formatters.reference([], context()), null)
   })
+
+  void it('labels ids stored in string and array properties, marking missing ones', async () => {
+    const { formatters } = setup()
+    const asValue = (type: string) =>
+      context({}, { subject: { name: 'target', type, label: 'Target' } })
+    assert.deepEqual(await formatters.reference('home', asValue('string')), {
+      label: 'Home',
+    })
+    assert.deepEqual(await formatters.reference('gone', asValue('string')), {
+      label: 'gone',
+      missing: true,
+    })
+    assert.deepEqual(
+      await formatters.reference(['home', 'gone'], asValue('array')),
+      { label: 'Home, gone', missing: true },
+    )
+    assert.equal(await formatters.reference('', asValue('string')), null)
+  })
 })
 
 void describe('node type formatter', () => {

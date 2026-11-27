@@ -1026,6 +1026,22 @@
         <source>Go to page</source>
         <target xml:lang="ru">Перейти на страницу</target>
       </trans-unit>
+      <trans-unit id="editor.reference.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="ru">Скрыто</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.hiddenTitle" xml:space="preserve">
+        <source>Hidden - does not show on the live site</source>
+        <target xml:lang="ru">Скрыто - не отображается на сайте</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missing" xml:space="preserve">
+        <source>Missing</source>
+        <target xml:lang="ru">Отсутствует</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missingTitle" xml:space="preserve">
+        <source>Not found - removed, or not readable: {0}</source>
+        <target xml:lang="ru">Не найдено - удалено или недоступно для чтения: {0}</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="ru">Введите не менее {0} символов для поиска</target>

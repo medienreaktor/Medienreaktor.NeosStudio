@@ -35,6 +35,7 @@ import {
 } from '@/features/inspector/inspectorSchema'
 import { useAssetPickerActive } from '@/features/media/AssetPicker'
 import { TEXT_FIELD_EDITOR } from '@/features/inspector/editors/TextFieldEditor'
+import { parseReferenceIds } from '@/features/inspector/editors/referenceValue'
 import { usePropertyEditor } from '@/features/inspector/editors/registry'
 import { validateValue } from '@/features/inspector/validators'
 import { ValidationErrors } from '@/features/inspector/validators/ValidationErrors'
@@ -93,14 +94,6 @@ function creationDialogElements(
     )
   }
   return elements
-}
-
-/** A reference element's value (one id, or a list of them) as target ids. */
-function referenceTargets(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter((id): id is string => typeof id === 'string')
-  }
-  return typeof value === 'string' ? [value] : []
 }
 
 /**
@@ -214,12 +207,12 @@ export function CreateNodeFlow({
       if (name in properties) {
         initialPropertyValues[name] = value
       } else if (name in references) {
-        const targets = referenceTargets(value)
+        const targets = parseReferenceIds(value)
         if (targets.length > 0) initialReferences[name] = targets
       }
       if (elementValues !== null) {
         elementValues[name] =
-          name in references ? referenceTargets(value) : value
+          name in references ? parseReferenceIds(value) : value
       }
     }
     try {

@@ -75,6 +75,11 @@ import {
 } from '@/features/inspector/editors/formatValue'
 import { resolveNodes } from '@/api/neos/endpoints/nodes'
 import {
+  NodePicker as InternalNodePicker,
+  type NodePickerProps,
+} from '@/features/inspector/editors/NodePicker'
+import { useNodeSearch } from '@/features/inspector/editors/useNodeSearch'
+import {
   InspectorViewRegistry,
   inspectorViewRegistry,
 } from '@/features/inspector/views/registry'
@@ -247,6 +252,21 @@ export type {
   FormattedValues,
 } from '@/features/inspector/editors/formatValue'
 export type { Subgraph } from '@/api/neos/endpoints/nodes'
+
+/**
+ * NodePicker: a field to pick nodes by search, the one the reference
+ * editors are built on - same search, access filtering, icons, breadcrumbs
+ * and missing / hidden marks. useNodeSearch is its search alone.
+ */
+const NodePicker: (props: NodePickerProps) => React.JSX.Element =
+  InternalNodePicker
+export { NodePicker, useNodeSearch }
+export type { NodePickerProps }
+export type {
+  NodeSearch,
+  NodeSearchHit,
+  NodeSearchParams,
+} from '@/features/inspector/editors/useNodeSearch'
 
 /**
  * Typed requests sharing the shell's OAuth session (bearer token,
@@ -580,6 +600,8 @@ export interface NeosStudioPluginApi extends PluginComponents {
   formatEditorValue: typeof formatEditorValue
   useFormattedValues: typeof useFormattedValues
   resolveNodes: typeof resolveNodes
+  NodePicker: typeof NodePicker
+  useNodeSearch: typeof useNodeSearch
   toast: typeof toast
   dialogs: typeof dialogs
   apiFetch: typeof apiFetch
@@ -654,6 +676,8 @@ export function installPluginApiGlobals(): void {
     formatEditorValue,
     useFormattedValues,
     resolveNodes,
+    NodePicker,
+    useNodeSearch,
     toast,
     dialogs,
     apiFetch,

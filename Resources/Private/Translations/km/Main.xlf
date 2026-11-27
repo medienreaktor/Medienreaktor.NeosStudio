@@ -978,6 +978,22 @@
         <source>Go to page</source>
         <target xml:lang="km">ទៅកាន់ទំព័រ</target>
       </trans-unit>
+      <trans-unit id="editor.reference.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="km">លាក់</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.hiddenTitle" xml:space="preserve">
+        <source>Hidden - does not show on the live site</source>
+        <target xml:lang="km">លាក់ - មិនបង្ហាញនៅលើគេហទំព័រផ្ទាល់</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missing" xml:space="preserve">
+        <source>Missing</source>
+        <target xml:lang="km">បាត់</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missingTitle" xml:space="preserve">
+        <source>Not found - removed, or not readable: {0}</source>
+        <target xml:lang="km">រកមិនឃើញ - ត្រូវបានលុប ឬមិនអាចអានបាន: {0}</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="km">វាយយ៉ាងហោចណាស់ {0} តួអក្សរដើម្បីស្វែងរក</target>

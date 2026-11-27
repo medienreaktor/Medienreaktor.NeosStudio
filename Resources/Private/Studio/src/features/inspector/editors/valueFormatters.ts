@@ -3,6 +3,7 @@ import { referenceIdentifier } from '../../../api/neos/endpoints/assetReference.
 import { dataSourceSelectOptions } from '../../../api/neos/endpoints/dataSourceOptions.ts'
 import { parseAssetUri, parseDocumentUri } from '../../links/linkValue.ts'
 import { parseIso, phpFormat } from '../../../lib/phpDate.ts'
+import { objectOption } from './editorOptions.ts'
 import type {
   FormattedValue,
   PropertyEditorDefinition,
@@ -153,16 +154,6 @@ function joined(parts: FormattedValue[]): FormattedValue | null {
   return parts.some((part) => part.missing)
     ? { label, missing: true }
     : { label }
-}
-
-function objectOption(
-  options: Record<string, unknown>,
-  name: string,
-): Record<string, unknown> | undefined {
-  const value = options[name]
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined
 }
 
 const labelMaps = new WeakMap<object, Map<string, string>>()

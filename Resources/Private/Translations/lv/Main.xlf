@@ -1010,6 +1010,22 @@
         <source>Go to page</source>
         <target xml:lang="lv">Doties uz lapu</target>
       </trans-unit>
+      <trans-unit id="editor.reference.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="lv">Paslēpts</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.hiddenTitle" xml:space="preserve">
+        <source>Hidden - does not show on the live site</source>
+        <target xml:lang="lv">Paslēpts - netiek rādīts publiskajā vietnē</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missing" xml:space="preserve">
+        <source>Missing</source>
+        <target xml:lang="lv">Trūkst</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missingTitle" xml:space="preserve">
+        <source>Not found - removed, or not readable: {0}</source>
+        <target xml:lang="lv">Nav atrasts - noņemts vai nav lasāms: {0}</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="lv">Ievadiet vismaz {0} rakstzīmes, lai meklētu</target>

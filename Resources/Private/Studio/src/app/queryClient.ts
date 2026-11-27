@@ -6,14 +6,17 @@ import {
 import { ApiError } from '@/api/http/errors'
 import { installQueryDebug } from './queryDebug'
 
+// 4xx responses are deterministic (auth, permissions, bad address) —
+// retrying only delays the error state. Network errors and 5xx retry.
+export function defaultRetry(failureCount: number, error: unknown): boolean {
+  return !(error instanceof ApiError && error.status < 500) && failureCount < 2
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      // 4xx responses are deterministic (auth, permissions, bad address) —
-      // retrying only delays the error state. Network errors and 5xx retry.
-      retry: (failureCount, error) =>
-        !(error instanceof ApiError && error.status < 500) && failureCount < 2,
+      retry: defaultRetry,
     },
   },
 })

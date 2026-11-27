@@ -24,3 +24,14 @@ export function nodeTypesFilter(
     ? `${fallback},${filter}`
     : filter
 }
+
+/** An editor option that holds an object (dataSourceAdditionalData, ...). */
+export function objectOption(
+  options: Record<string, unknown>,
+  name: string,
+): Record<string, unknown> | undefined {
+  const value = options[name]
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined
+}

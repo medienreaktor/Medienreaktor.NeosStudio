@@ -1026,6 +1026,22 @@
         <source>Go to page</source>
         <target xml:lang="pl">Przejdź do strony</target>
       </trans-unit>
+      <trans-unit id="editor.reference.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="pl">Ukryty</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.hiddenTitle" xml:space="preserve">
+        <source>Hidden - does not show on the live site</source>
+        <target xml:lang="pl">Ukryty - nie wyświetla się na stronie publicznej</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missing" xml:space="preserve">
+        <source>Missing</source>
+        <target xml:lang="pl">Brak</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missingTitle" xml:space="preserve">
+        <source>Not found - removed, or not readable: {0}</source>
+        <target xml:lang="pl">Nie znaleziono - usunięty lub nieczytelny: {0}</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="pl">Wpisz co najmniej {0} znaków, aby wyszukać</target>

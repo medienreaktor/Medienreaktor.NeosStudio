@@ -1,5 +1,5 @@
-import { skipToken, useQuery } from '@tanstack/react-query'
-import { fetchQueryOrNull, queryClient } from '@/app/queryClient'
+import { skipToken, useQueries, useQuery } from '@tanstack/react-query'
+import { defaultRetry, fetchQueryOrNull, queryClient } from '@/app/queryClient'
 import { api, fetchAllPages, unwrap } from '../client'
 import { neosKeys } from '../keys'
 import type {
@@ -664,30 +664,64 @@ const loadNodeBatched = createBatchLoader<Node>({
   maxPerRequest: NODE_IDS_PER_REQUEST,
 })
 
-function resolveNode(subgraph: Subgraph, id: string): Promise<Node | null> {
+function resolveNodeQuery(subgraph: Subgraph, id: string) {
   // The key useNode() reads the node under, with the same hasChildren, so
   // a label and an open editor share the read.
-  return fetchQueryOrNull(
-    {
-      queryKey: neosKeys.nodes.get(
-        { ...subgraph, nodeAggregateId: id },
-        undefined,
-        false,
-      ),
-      queryFn: async () => {
-        const node = await loadNodeBatched(
-          JSON.stringify([
-            subgraph.contentRepositoryId,
-            subgraph.workspaceName,
-            subgraph.dimensionSpacePoint,
-          ]),
-          id,
-        )
-        if (node === null) throw new NodeMissing(id)
-        return node
-      },
+  return {
+    queryKey: neosKeys.nodes.get(
+      { ...subgraph, nodeAggregateId: id },
+      undefined,
+      false,
+    ),
+    queryFn: async () => {
+      const node = await loadNodeBatched(
+        JSON.stringify([
+          subgraph.contentRepositoryId,
+          subgraph.workspaceName,
+          subgraph.dimensionSpacePoint,
+        ]),
+        id,
+      )
+      if (node === null) throw new NodeMissing(id)
+      return node
     },
+  }
+}
+
+function resolveNode(subgraph: Subgraph, id: string): Promise<Node | null> {
+  return fetchQueryOrNull(
+    resolveNodeQuery(subgraph, id),
     (error) => error instanceof NodeMissing,
+  )
+}
+
+/**
+ * resolveNodes as a hook: per id its node, null when it does not resolve in
+ * the subgraph (removed, or not readable), undefined while it loads or when
+ * the read failed. Batched and cached with resolveNodes.
+ */
+export function useResolvedNodes(
+  subgraph: Subgraph | null,
+  ids: readonly string[],
+): Map<string, Node | null | undefined> {
+  const results = useQueries({
+    queries:
+      subgraph === null
+        ? []
+        : ids.map((id) => ({
+            ...resolveNodeQuery(subgraph, id),
+            retry: (failureCount: number, error: unknown) =>
+              !(error instanceof NodeMissing) &&
+              defaultRetry(failureCount, error),
+          })),
+  })
+  return new Map(
+    ids.map((id, index) => {
+      const result = results[index]
+      // A refetch that finds the node gone keeps the node it read before.
+      if (result?.error instanceof NodeMissing) return [id, null]
+      return [id, result?.data]
+    }),
   )
 }
 

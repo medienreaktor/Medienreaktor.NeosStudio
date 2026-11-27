@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The Reference and References editors edit node ids stored as values:
+  on a `string` or `array` property, or in a plugin host's own field,
+  they read the selection from `value` and commit an id (`null` when
+  cleared) or a list of ids (`[]`). Neos 9 references
+  (`reference` / `references`) work as before. Search, `nodeTypes`,
+  `threshold`, data sources, access filtering, icons, breadcrumbs, go to
+  page and reordering work the same in both.
+- A stored id that no longer resolves shows as missing, with the id in its
+  tooltip, and stays stored until it is removed or replaced. A hidden
+  target is marked hidden, in both kinds of reference.
+- `NodePicker` in the plugin API: the field the reference editors are
+  built on, for a plugin's dialog, link type tab or settings section, and
+  `useNodeSearch`, its search alone.
+- The README explains storing node ids in properties: the YAML, the stored
+  format, what it gives up compared with references, and the Fusion to
+  resolve the ids and tag the cache.
+
 ## [2.9.0] - 2026-11-27
 
 ### Added

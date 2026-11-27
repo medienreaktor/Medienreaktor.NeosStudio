@@ -978,6 +978,22 @@
         <source>Go to page</source>
         <target xml:lang="zh-CN">转到页面</target>
       </trans-unit>
+      <trans-unit id="editor.reference.hidden" xml:space="preserve">
+        <source>Hidden</source>
+        <target xml:lang="zh-CN">已隐藏</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.hiddenTitle" xml:space="preserve">
+        <source>Hidden - does not show on the live site</source>
+        <target xml:lang="zh-CN">已隐藏 - 不会在线上网站显示</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missing" xml:space="preserve">
+        <source>Missing</source>
+        <target xml:lang="zh-CN">缺失</target>
+      </trans-unit>
+      <trans-unit id="editor.reference.missingTitle" xml:space="preserve">
+        <source>Not found - removed, or not readable: {0}</source>
+        <target xml:lang="zh-CN">未找到 - 已删除或无法读取：{0}</target>
+      </trans-unit>
       <trans-unit id="editor.reference.typeAtLeast" xml:space="preserve">
         <source>Type at least {0} characters to search</source>
         <target xml:lang="zh-CN">至少输入 {0} 个字符开始搜索</target>

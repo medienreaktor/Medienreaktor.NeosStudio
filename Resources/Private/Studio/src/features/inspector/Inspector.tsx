@@ -46,6 +46,10 @@ import {
   deepEqual,
   evaluateInspectorTabs,
 } from './clientEval'
+import {
+  parseReferenceIds,
+  referenceEditorMode,
+} from './editors/referenceValue'
 import { buildInspectorSchema, type InspectorGroup } from './inspectorSchema'
 import { PropertyActions } from './actions/registry'
 import { PropertyHints } from './hints/registry'
@@ -73,18 +77,6 @@ const HIDDEN_PROPERTY = '_hidden'
  * written with SetNodeProperties.
  */
 const NODE_TYPE_PROPERTY = '_nodeType'
-
-/**
- * Normalize a reference editor's committed value to the target id list the
- * SetNodeReferences transport expects: single editors commit a string or null,
- * multi editors an array; empty means "clear the reference".
- */
-function referenceTargets(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter((v): v is string => typeof v === 'string' && v !== '')
-  }
-  return typeof value === 'string' && value !== '' ? [value] : []
-}
 
 /**
  * The value to feed a property's editor. Ordinary properties read straight from
@@ -262,10 +254,7 @@ export function InspectorPanel({
       // them through the /references relation), so before any edit there is
       // nothing to validate against - a NotEmpty on a set reference would
       // falsely report empty. Validate references only once edited.
-      if (
-        (property.type === 'reference' || property.type === 'references') &&
-        !hasLiveValue
-      ) {
+      if (referenceEditorMode(property.type) === 'graph' && !hasLiveValue) {
         continue
       }
       const value = hasLiveValue
@@ -308,11 +297,12 @@ export function InspectorPanel({
           : unhideNodes([address])
         : propertyName === NODE_TYPE_PROPERTY
           ? changeNodeType(address, String(value))
-          : propertyType === 'reference' || propertyType === 'references'
+          : propertyType !== undefined &&
+              referenceEditorMode(propertyType) === 'graph'
             ? persistReferenceChange(
                 address,
                 propertyName,
-                referenceTargets(value),
+                parseReferenceIds(value),
               )
             : persistPropertyChange(address, propertyName, value)
     // How the preview refreshes follows ui.reloadPageIfChanged ('page') /

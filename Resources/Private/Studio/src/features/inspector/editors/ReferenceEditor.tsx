@@ -1,396 +1,82 @@
-import { useEffect, useMemo, useState } from 'react'
-import { dataSourceSelectOptions } from '@/api/neos/endpoints/dataSourceOptions'
-import { useDataSource } from '@/api/neos/endpoints/dataSources'
-import {
-  DOCUMENT_NODE_TYPE,
-  nodeReferences,
-  useNodeReferences,
-} from '@/api/neos/endpoints/nodes'
-import { isOfType, useNodeTypes } from '@/api/neos/endpoints/nodeTypes'
-import { editingSiteNode } from '@/api/neos/endpoints/sites'
-import {
-  nodeAddressOf,
-  type NodeAddress,
-  type NodeReference,
-} from '@/api/neos/schema'
-import { useStudio, useStudioActions } from '@/app/StudioContext'
-import { FieldIconButton } from '@/components/ui/field-icon-button'
-import { faClassName } from '@/components/ui/icon'
-import { toast } from '@/components/ui/toast'
+import { useState } from 'react'
+import { nodeReferences, useNodeReferences } from '@/api/neos/endpoints/nodes'
+import type { NodeReference } from '@/api/neos/schema'
 import { plainEditorOption } from '@/features/inspector/inspectorSchema'
-import { translate } from '@/lib/i18n'
+import { nodeTypesFilter, objectOption } from './editorOptions'
+import { NodePicker } from './NodePicker'
 import {
-  documentBreadcrumb,
-  useDocumentSearch,
-} from '@/features/tree/documentSearch'
-import { resolveNodeTypeIconClass } from '@/features/tree/nodeTypeIcon'
-import { moveItem } from '@/lib/arrays'
-import { cn } from '@/lib/utils'
-import {
-  ReferencePicker,
-  SelectedItemRow,
-  type ReferenceOption,
-} from './ReferencePicker'
-import { nodeTypesFilter } from './editorOptions'
+  committedReferenceValue,
+  parseReferenceIds,
+  referenceEditorMode,
+} from './referenceValue'
 import type { PropertyEditorComponent, PropertyEditorProps } from './registry'
 
 export const REFERENCE_EDITOR = 'Neos.Neos/Inspector/Editors/ReferenceEditor'
 export const REFERENCES_EDITOR = 'Neos.Neos/Inspector/Editors/ReferencesEditor'
 
 /**
- * The pickable options for a reference editor. Two sources, mirroring the
- * select box editor: a data source (editorOptions.dataSourceIdentifier) whose
- * option values are node aggregate ids - filtered client-side by the search
- * term - or the default fulltext node search over the current site
- * (editorOptions.nodeTypes, default documents), server-side with the old UI's
- * cadence: minimum `threshold` characters (default 2), 300 ms debounce.
- */
-function useReferenceOptions(
-  options: Record<string, unknown>,
-  nodeAddress: NodeAddress | undefined,
-  searchTerm: string,
-  open: boolean,
-): { options: ReferenceOption[]; loading: boolean; hint: string | null } {
-  const { data: nodeTypes } = useNodeTypes()
-  const { site, workspaceName, selectedDocument } = useStudio()
-
-  const dataSourceIdentifier =
-    plainEditorOption(options, 'dataSourceIdentifier') ?? null
-  const additionalData =
-    options.dataSourceAdditionalData &&
-    typeof options.dataSourceAdditionalData === 'object'
-      ? (options.dataSourceAdditionalData as Record<string, unknown>)
-      : undefined
-  const dataSource = useDataSource({
-    identifier: dataSourceIdentifier,
-    node: nodeAddress,
-    additionalData,
-    disableCaching: options.dataSourceDisableCaching === true,
-  })
-  useEffect(() => {
-    if (dataSource.error)
-      toast.error(dataSource.error, {
-        title: translate(
-          'editor.loadingOptionsFailed',
-          'Loading options failed',
-        ),
-      })
-  }, [dataSource.error])
-
-  const threshold =
-    typeof options.threshold === 'number' && options.threshold >= 0
-      ? options.threshold
-      : 2
-  const nodeTypeFilter = nodeTypesFilter(options)
-  // Search the site the edited node lives in, within its subgraph (workspace +
-  // dimensions); the creation dialog has no node yet and falls back to the
-  // active workspace and the selected document's dimension space point.
-  const search = useDocumentSearch(
-    editingSiteNode(
-      site,
-      workspaceName,
-      selectedDocument?.dimensionSpacePoint,
-      nodeAddress,
-    ),
-    site?.nodeName ?? '',
-    searchTerm,
-    nodeTypeFilter,
-    { minLength: threshold, enabled: dataSourceIdentifier === null && open },
-  )
-  useEffect(() => {
-    if (search.error)
-      toast.error(search.error, {
-        title: translate('editor.searchFailed', 'Search failed'),
-      })
-  }, [search.error])
-
-  if (dataSourceIdentifier !== null) {
-    const all = dataSourceSelectOptions(dataSource.data).map(
-      (option): ReferenceOption => ({
-        id: option.key,
-        label: option.label,
-        iconClass: option.icon ? faClassName(option.icon) : null,
-        group: option.group,
-        disabled: option.disabled,
-      }),
-    )
-    const term = searchTerm.trim().toLowerCase()
-    return {
-      options: term
-        ? all.filter((option) => option.label.toLowerCase().includes(term))
-        : all,
-      loading: dataSource.isPending,
-      hint: null,
-    }
-  }
-
-  return {
-    options: search.hits.map((node): ReferenceOption => ({
-      id: node.nodeAggregateId,
-      label: node.label || node.nodeAggregateId,
-      iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
-      secondary: documentBreadcrumb(node, nodeTypes).join(' › '),
-    })),
-    loading: search.loading,
-    hint:
-      searchTerm.trim().length < threshold
-        ? threshold === 1
-          ? translate(
-              'editor.reference.typeAtLeastOne',
-              'Type at least {0} character to search',
-              [threshold],
-            )
-          : translate(
-              'editor.reference.typeAtLeast',
-              'Type at least {0} characters to search',
-              [threshold],
-            )
-        : null,
-  }
-}
-
-/**
- * Reference (single) and References (multi) editors, modelled on the old UI:
- * search-as-you-type over site documents (or a data source's curated list),
- * committing node aggregate ids - the inspector persists them with
- * SetNodeReferences. The multi variant lists the selection as sortable rows
- * (order is the stored order; the MultiAssetFieldEditor drag pattern) with a
- * picker below to add more; the single variant is the picker itself plus a
- * clear button.
- *
- * The current value is resolved through the node's references (reference
- * "properties" are not in node.properties in Neos 9); fresh picks display
- * from a local cache until the refetch lands. In the creation dialog (no
- * nodeAddress - the node does not exist yet) there is no current value: the
- * picks are committed for the dialog to create the node with
- * (ui.showInCreationDialog references). Selection state is
- * server-derived until the first local edit, then owned here - the inspector
- * remounts the editor when the edited subject changes.
- *
- * A referenced document opens in the preview from its label (multi) or the
- * go-to button (single), like the old UI's reference link.
+ * Reference (single) and References (multi) editors: NodePicker over the
+ * editor options, reading and committing as referenceEditorMode says. In
+ * graph mode, targets the account may not read come without their node and
+ * are left out; in the creation dialog (no nodeAddress) there is nothing to
+ * read. The selection is the host's until the first local edit, then owned
+ * here - the hosts remount the editor when the subject changes.
  */
 function ReferenceEditorBase({
   id,
   subject,
+  value,
   onCommit,
+  onChange,
   options,
   nodeAddress,
   multiple,
 }: PropertyEditorProps & { multiple: boolean }) {
-  const { data: nodeTypes } = useNodeTypes()
-  const { navigateToNode } = useStudioActions()
-  const { data: referencing } = useNodeReferences(nodeAddress ?? null)
-  // Targets the account may not read come without their node - left out.
-  const serverTargets = useMemo(
-    () =>
-      referencing
-        ? (nodeReferences(referencing)[subject.name] ?? []).flatMap(
-            (reference: NodeReference) =>
-              reference.node ? [reference.node] : [],
-          )
-        : [],
-    [referencing, subject.name],
+  const mode = referenceEditorMode(subject.type)
+  const { data: referencing } = useNodeReferences(
+    nodeAddress ?? null,
+    mode === 'graph',
   )
+  const graphTargets =
+    mode === 'graph' && referencing
+      ? (nodeReferences(referencing)[subject.name] ?? []).flatMap(
+          (reference: NodeReference) =>
+            reference.node ? [reference.node] : [],
+        )
+      : []
 
   const [dirty, setDirty] = useState<string[] | null>(null)
-  const [pickedById, setPickedById] = useState<Record<string, ReferenceOption>>(
-    {},
-  )
-  const [dragIndex, setDragIndex] = useState<number | null>(null)
-  // The order when the drag started - a drop that ends there saves nothing.
-  const [dragStartOrder, setDragStartOrder] = useState<string[] | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const selected =
+    dirty ??
+    (mode === 'graph'
+      ? graphTargets.map((node) => node.nodeAggregateId)
+      : parseReferenceIds(value))
 
-  const selected = dirty ?? serverTargets.map((node) => node.nodeAggregateId)
-  const picker = useReferenceOptions(
-    options,
-    nodeAddress,
-    searchTerm,
-    pickerOpen,
-  )
-
-  const commit = (ids: string[]) => {
+  const change = (ids: string[]) => {
     setDirty(ids)
-    onCommit(multiple ? ids : (ids[0] ?? null))
+    const committed = committedReferenceValue(ids, multiple)
+    onCommit(committed)
+    if (mode === 'value') onChange?.(committed)
   }
-
-  const displayFor = (
-    id: string,
-  ): {
-    label: string
-    iconClass: string | null
-    /** Set for a document target - the address to open in the preview. */
-    documentAddress: NodeAddress | null
-  } => {
-    const node = serverTargets.find((target) => target.nodeAggregateId === id)
-    if (node) {
-      return {
-        label: node.label || node.nodeAggregateId,
-        iconClass: resolveNodeTypeIconClass(nodeTypes, node.nodeType),
-        documentAddress:
-          nodeTypes && isOfType(nodeTypes, node.nodeType, DOCUMENT_NODE_TYPE)
-            ? nodeAddressOf(node)
-            : null,
-      }
-    }
-    // A fresh pick, shown from the picked option until the refetch lands - or
-    // a target not visible in this subgraph, shown as its bare id. Neither has
-    // an address to open yet.
-    const picked = pickedById[id]
-    return picked
-      ? { ...picked, documentAddress: null }
-      : { label: id, iconClass: null, documentAddress: null }
-  }
-
-  const goToPageLabel = translate('editor.reference.goToPage', 'Go to page')
-
-  const pick = (option: ReferenceOption) => {
-    setPickedById((cache) => ({ ...cache, [option.id]: option }))
-    commit(multiple ? [...selected, option.id] : [option.id])
-  }
-
-  const placeholder =
-    plainEditorOption(options, 'placeholder') ??
-    translate('editor.reference.typeToSearch', 'Type to search')
-  const availableOptions = picker.options.filter(
-    (option) => !selected.includes(option.id),
-  )
-
-  const pickerProps = {
-    id,
-    options: availableOptions,
-    loading: picker.loading,
-    hint: picker.hint,
-    searchTerm,
-    onSearchTermChange: setSearchTerm,
-    onPick: pick,
-    open: pickerOpen,
-    onOpenChange: (open: boolean) => {
-      setPickerOpen(open)
-      if (!open) setSearchTerm('')
-    },
-  }
-
-  if (!multiple) {
-    const current = selected[0] ?? null
-    const display = current !== null ? displayFor(current) : null
-    return (
-      <div className="flex items-center gap-1">
-        <div className="min-w-0 flex-1">
-          <ReferencePicker
-            {...pickerProps}
-            triggerContent={
-              display ? (
-                <>
-                  {display.iconClass && (
-                    <i
-                      className={cn(
-                        display.iconClass,
-                        'fa-fw type-icon-m text-muted-foreground',
-                      )}
-                      aria-hidden
-                    />
-                  )}
-                  <span className="truncate">{display.label}</span>
-                </>
-              ) : (
-                <span className="text-muted-foreground">{placeholder}</span>
-              )
-            }
-          />
-        </div>
-        {display?.documentAddress && (
-          <FieldIconButton
-            icon="fa-arrow-up-right-from-square"
-            label={goToPageLabel}
-            onClick={() => navigateToNode(display.documentAddress!)}
-          />
-        )}
-        {current !== null && (
-          <FieldIconButton
-            icon="fa-xmark"
-            label={translate('editor.remove', 'Remove')}
-            onClick={() => commit([])}
-          />
-        )}
-      </div>
-    )
-  }
-
-  // Reorder live as the pointer passes over another row; persist on drop only,
-  // so a drag does not fire a save per hovered row.
-  const handleDragOver = (index: number) => {
-    if (dragIndex === null || dragIndex === index) return
-    setDirty((current) => moveItem(current ?? selected, dragIndex, index))
-    setDragIndex(index)
-  }
-  const handleDragEnd = () => {
-    setDragIndex(null)
-    const startOrder = dragStartOrder
-    setDragStartOrder(null)
-    if (startOrder && startOrder.join('|') === selected.join('|')) return
-    onCommit(selected)
-  }
-
-  const draggable = selected.length > 1
 
   return (
-    <div className="flex flex-col gap-1">
-      {selected.map((id, index) => {
-        const display = displayFor(id)
-        return (
-          <SelectedItemRow
-            key={id}
-            draggable={draggable}
-            onDragStart={(event) => {
-              // Firefox only starts a drag once dataTransfer carries something.
-              event.dataTransfer.effectAllowed = 'move'
-              event.dataTransfer.setData('text/plain', id)
-              setDragIndex(index)
-              setDragStartOrder(selected)
-            }}
-            onDragOver={(event) => {
-              event.preventDefault()
-              handleDragOver(index)
-            }}
-            onDragEnd={handleDragEnd}
-            className={cn(dragIndex === index && 'opacity-50')}
-            leading={
-              draggable && (
-                <i
-                  className="fas fa-grip-vertical type-icon-xl shrink-0 cursor-grab text-placeholder"
-                  aria-hidden
-                />
-              )
-            }
-            iconClass={display.iconClass}
-            label={
-              display.documentAddress ? (
-                <button
-                  type="button"
-                  title={goToPageLabel}
-                  onClick={() => navigateToNode(display.documentAddress!)}
-                  className="min-w-0 flex-1 truncate rounded-sm text-left outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                >
-                  {display.label}
-                </button>
-              ) : (
-                display.label
-              )
-            }
-            onRemove={() => commit(selected.filter((other) => other !== id))}
-          />
-        )
-      })}
-      <ReferencePicker
-        {...pickerProps}
-        triggerContent={
-          <span className="text-muted-foreground">{placeholder}</span>
-        }
-      />
-    </div>
+    <NodePicker
+      id={id}
+      multiple={multiple}
+      value={selected}
+      onChange={change}
+      knownNodes={graphTargets}
+      nodeAddress={nodeAddress}
+      nodeTypes={nodeTypesFilter(options)}
+      threshold={options.threshold as number | undefined}
+      placeholder={plainEditorOption(options, 'placeholder')}
+      dataSourceIdentifier={plainEditorOption(options, 'dataSourceIdentifier')}
+      dataSourceAdditionalData={objectOption(
+        options,
+        'dataSourceAdditionalData',
+      )}
+      dataSourceDisableCaching={options.dataSourceDisableCaching === true}
+    />
   )
 }
 

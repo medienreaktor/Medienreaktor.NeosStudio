@@ -24,7 +24,11 @@ import {
 export interface PropertyEditorSubject {
   /** Property / element name. */
   name: string
-  /** The type from node type configuration, e.g. "string", "integer", "reference". */
+  /**
+   * The type from node type configuration, e.g. "string", "integer". A
+   * node type's `references:` come as "reference" (maxItems 1) or
+   * "references", and only they - see referenceEditorMode.
+   */
   type: string
   /** Resolved, human-readable label. */
   label: string
